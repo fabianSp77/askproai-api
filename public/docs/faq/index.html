@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - AskProAI Dokumentation</title>
+    <link href="../css/styles.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16 items-center">
+                    <div class="flex items-center">
+                        <a href="../index.html" class="flex items-center">
+                            <div class="h-8 w-8 rounded-md bg-indigo-600 flex items-center justify-center text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm14 1H4v8h12V6zM4 4a1 1 0 100-2h12a1 1 0 100 2H4z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <span class="ml-2 text-xl font-bold text-indigo-600">AskProAI Docs</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main class="flex-1">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <h1 class="text-3xl font-bold text-gray-900">Häufig gestellte Fragen</h1>
+                <p class="mt-2 text-gray-600">Antworten auf die wichtigsten Fragen zum AskProAI-Projekt</p>
+                
+                <div class="mt-8">
+                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                        <div class="px-4 py-5 sm:p-6">
+                            <!-- FAQ 1 -->
+                            <div class="border-b border-gray-200 pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
+                                <button class="w-full flex justify-between items-start text-left">
+                                    <span class="text-lg font-medium text-gray-900">Wie wird AskProAI in bestehende Kalendersysteme integriert?</span>
+                                    <span class="ml-6 h-7 flex items-center">
+                                        <svg class="h-6 w-6 transform -rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <div class="mt-2">
+                                    <p class="text-gray-600">
+                                        AskProAI integriert sich nahtlos mit Cal.com oder Google Calendar über deren API-Schnittstellen. Die Integration wird über die Einstellungen im Dashboard konfiguriert, wo API-Schlüssel, Benutzer-IDs und Event-Typen eingerichtet werden können.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- FAQ 2 -->
+                            <div class="border-b border-gray-200 pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
+                                <button class="w-full flex justify-between items-start text-left">
+                                    <span class="text-lg font-medium text-gray-900">Welche Sicherheitsmaßnahmen sind implementiert?</span>
+                                    <span class="ml-6 h-7 flex items-center">
+                                        <svg class="h-6 w-6 transform rotate-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <div class="mt-2 hidden">
+                                    <p class="text-gray-600">
+                                        AskProAI implementiert OAuth2 via Laravel Passport für sichere API-Zugriffe. Alle sensiblen Daten werden DSGVO-konform verarbeitet und Passwörter werden gesalzen und gehasht. Die Kommunikation erfolgt ausschließlich über HTTPS, und regelmäßige Sicherheitsaudits werden durchgeführt.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- FAQ 3 -->
+                            <div class="border-b border-gray-200 pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0">
+                                <button class="w-full flex justify-between items-start text-left">
+                                    <span class="text-lg font-medium text-gray-900">Wie funktioniert die Spracherkennung der Telefon-KI?</span>
+                                    <span class="ml-6 h-7 flex items-center">
+                                        <svg class="h-6 w-6 transform rotate-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <div class="mt-2 hidden">
+                                    <p class="text-gray-600">
+                                        Die Telefon-KI nutzt fortschrittliche Spracherkennungstechnologie von retell.ai. Diese erkennt und versteht natürliche Sprache in Echtzeit, identifiziert Kundenbedürfnisse und extrahiert relevante Informationen für Terminbuchungen.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="bg-white border-t border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <p class="text-sm text-gray-500">© 2025 AskProAI. Alle Rechte vorbehalten.</p>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // Einfaches Accordion für FAQs
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                const icon = button.querySelector('svg');
+                
+                // Toggle Content
+                content.classList.toggle('hidden');
+                
+                // Toggle Icon
+                if (content.classList.contains('hidden')) {
+                    icon.classList.remove('-rotate-180');
+                    icon.classList.add('rotate-0');
+                } else {
+                    icon.classList.remove('rotate-0');
+                    icon.classList.add('-rotate-180');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

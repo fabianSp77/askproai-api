@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body class="bg-gray-100">
+    <div id="loginContainer">
+        <div class="min-h-screen flex items-center justify-center">
+            <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-8">AskProAI Dokumentationsportal</h2>
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700">Benutzername</label>
+                        <input type="text" id="username" name="username" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Passwort</label>
+                        <input type="password" id="password" name="password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Anmelden</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="dashboardContainer" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-900">AskProAI Projektdokumentation</h1>
+                <div class="flex items-center">
+                    <span class="mr-4 text-sm text-gray-500" id="currentDate"></span>
+                    <button id="logoutBtn" class="bg-gray-200 text-gray-700 py-1 px-3 rounded-md text-sm hover:bg-gray-300">Abmelden</button>
+                </div>
+            </div>
+        </header>
+        <!-- Navigation -->
+        <nav class="bg-gray-800">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex items-center h-16">
+                    <div class="flex space-x-4">
+                        <a href="#dashboard" class="nav-link text-white px-3 py-2 rounded-md text-sm font-medium active">Dashboard</a>
+                        <a href="#ressourcen" class="nav-link text-gray-300 hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium">Ressourcen</a>
+                        <a href="#roadmap" class="nav-link text-gray-300 hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium">Roadmap</a>
+                        <a href="#dokumentation" class="nav-link text-gray-300 hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium">Dokumentation</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <!-- Inhaltsbereich -->
+        <main class="max-w-7xl mx-auto py-6 px-4">
+            <div id="dashboard" class="content-section active">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Projektübersicht</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <!-- Hier kommen KPI-Karten -->
+                </div>
+            </div>
+            <div id="ressourcen" class="content-section hidden">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Ressourcen & Links</h2>
+                <!-- Ressourcen-Inhalte -->
+            </div>
+            <div id="roadmap" class="content-section hidden">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Projektplan & Roadmap</h2>
+                <!-- Roadmap-Inhalte -->
+            </div>
+            <div id="dokumentation" class="content-section hidden">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Dokumentation</h2>
+                <a href="assets/askproai-implementation-report.md" target="_blank" class="text-blue-600 hover:underline">Vollständige Implementierungsdokumentation öffnen</a>
+            </div>
+        </main>
+    </div>
+    <!-- JavaScript einbinden -->
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+Projekt: AskProAI (API-Gateway zu Cal.com)
+Stand: 12.03.2025
+
+✅ ERLEDIGT:
+- Laravel & Passport korrekt eingerichtet.
+- Cal.com API-Key generiert und eingebunden.
+- EventTypes für Musterfriseur angelegt:
+  - Herren: 2026901
+  - Damen: 2031153
+- API-Integration vollständig getestet, Setup korrekt.
+
+⏳ OFFEN (wartend auf Cal.com-Support):
+- Cal.com interner API-Fehler ("Internal server error") blockiert Buchungserstellung.
+
+🔜 NÄCHSTE SCHRITTE:
+- Antwort Cal.com-Support prüfen und Lösung umsetzen.
+- Abschließender API-Test durchführen.
+- Projekt final in Produktion nehmen.
