@@ -3,22 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Customer extends Model
 {
-    protected $table = 'kunden';
+    protected $fillable = ['name', 'email', 'phone', 'notes'];
 
-    protected $fillable = [
-        'name', 'email', 'telefonnummer', 'notizen'
-    ];
-
-    public function calls()
+    public function branches(): HasMany
     {
-        return $this->hasMany(Call::class, 'kunde_id');
-    }
-
-    public function appointments()
-    {
-        return $this->hasMany(Appointment::class, 'kunde_id');
+        return $this->hasMany(Branch::class);
     }
 }

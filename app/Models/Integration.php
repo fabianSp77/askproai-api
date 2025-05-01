@@ -3,13 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Integration extends Model
 {
-    protected $fillable = ['kunde_id', 'name', 'details'];
+    protected $fillable = [
+        'customer_id',
+        'system',
+        'credentials',
+        'active',
+    ];
 
-    public function kunde()
+    protected $casts = [
+        'credentials' => 'array',
+        'active'      => 'boolean',
+    ];
+
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(Kunde::class);
+        return $this->belongsTo(Customer::class);
     }
 }

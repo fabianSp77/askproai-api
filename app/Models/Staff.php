@@ -1,44 +1,19 @@
 <?php
-
 namespace App\Models;
+use Illuminate\Database\Eloquent\{Model,Relations\BelongsTo,Relations\BelongsToMany,Concerns\HasUuids};
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+class Staff extends Model{
+    use HasUuids;
+    public $incrementing=false; protected $keyType='string';
+    protected $fillable=['name','email','phone','active','home_branch_id'];
 
-class Staff extends Model
-{
-    use HasFactory;
-
-    protected $fillable = [
-        'customer_id', 'name', 'email', 'phone', 'external_id', 'active'
-    ];
-
-    protected $casts = [
-        'active' => 'boolean'
-    ];
-
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class);
+    public function homeBranch():BelongsTo{
+        return $this->belongsTo(Branch::class,'home_branch_id');
     }
-
-    public function appointments()
-    {
-        return $this->hasMany(Appointment::class);
+    public function branches():BelongsToMany{
+        return $this->belongsToMany(Branch::class,'branch_staff')->withTimestamps();
     }
-}
-
-public function company(): BelongsTo
-{
-    return $this->belongsTo(Company::class);
-}
-
-public function services(): BelongsToMany
-{
-    return $this->belongsToMany(Service::class);
-}
-
-public function workingHours(): HasMany
-{
-    return $this->hasMany(WorkingHour::class);
+    public function services():BelongsToMany{
+        return $this->belongsToMany(Service::class,'staff_service')->withTimestamps();
+    }
 }

@@ -2,41 +2,53 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Appointment extends Model
 {
-    use HasFactory;
+    use HasUuids, SoftDeletes;
+
+    /* ---------- Grundeinstellungen ----------------- */
+    protected $table        = 'appointments';
+    protected $keyType      = 'string';   // UUID = string
+    public    $incrementing = false;
 
     protected $fillable = [
-        'kunde_id', 'call_id', 'start_time', 'end_time',
-        'service', 'service_id', 'staff_id', 'notes',
-        'status', 'external_id', 'external_system'
+        'branch_id',
+        'service_id',
+        'staff_id',
+        'customer_id',
+        'starts_at',
+        'ends_at',
     ];
-    
+
     protected $casts = [
-        'start_time' => 'datetime',
-        'end_time' => 'datetime'
+        'starts_at' => 'datetime',
+        'ends_at'   => 'datetime',
     ];
-    
-    public function kunde()
+
+    /* ------------- Beziehungen ---------------------- */
+
+    public function branch(): BelongsTo
     {
-        return $this->belongsTo(Kunde::class);
+        return $this->belongsTo(Branch::class);
     }
-    
-    public function call()
-    {
-        return $this->belongsTo(Call::class);
-    }
-    
-    public function service()
+
+    public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
     }
-    
-    public function staff()
+
+    public function staff(): BelongsTo
     {
         return $this->belongsTo(Staff::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 }
