@@ -34,3 +34,8 @@ Route::get('/csrf-refresh', function () {
 
 require __DIR__.'/auth.php';
 Route::get('/test', [App\Http\Controllers\TestController::class, 'index']);
+
+// Health-Check für /
+Route::get('/', function () {
+    return response()->json(['status' => 'API online']);
+});

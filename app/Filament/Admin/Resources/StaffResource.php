@@ -3,62 +3,64 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\StaffResource\Pages;
-use App\Filament\Admin\Resources\StaffResource\RelationManagers;
+use App\Filament\Admin\Resources\StaffResource\RelationManagers\ServicesRelationManager;
 use App\Models\Staff;
-use Filament\Forms;
+use Filament\Forms\Components\BelongsToSelect;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class StaffResource extends Resource
 {
-    protected static ?string $model = Staff::class;
+    protected static ?string $model           = Staff::class;
+    protected static ?string $navigationIcon  = 'heroicon-o-user-group';
+    protected static ?string $navigationGroup = 'Stammdaten';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
+    /* -------------------------------------------------------------------- */
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                //
-            ]);
+        return $form->schema([
+            BelongsToSelect::make('branch_id')
+                ->relationship('branch', 'name')
+                ->label('Filiale')
+                ->required(),
+
+            TextInput::make('name')->required(),
+            TextInput::make('email')->email(),
+            TextInput::make('phone'),
+            Toggle::make('active')->label('Aktiv')->default(true),
+        ]);
     }
 
+    /* -------------------------------------------------------------------- */
     public static function table(Table $table): Table
     {
-        return $table
-            ->columns([
-                //
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+        return $table->columns([
+            Tables\Columns\TextColumn::make('name')->searchable(),
+            Tables\Columns\TextColumn::make('branch.name')->label('Filiale'),
+            Tables\Columns\TextColumn::make('email'),
+            Tables\Columns\IconColumn::make('active')->boolean(),
+        ]);
     }
 
+    /* -------------------------------------------------------------------- */
     public static function getRelations(): array
     {
         return [
-            //
+            ServicesRelationManager::class,
         ];
     }
 
+    /* -------------------------------------------------------------------- */
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListStaff::route('/'),
+            'index'  => Pages\ListStaff::route('/'),
             'create' => Pages\CreateStaff::route('/create'),
-            'edit' => Pages\EditStaff::route('/{record}/edit'),
+            'edit'   => Pages\EditStaff::route('/{record}/edit'),
         ];
     }
 }

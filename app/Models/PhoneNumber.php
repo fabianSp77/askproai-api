@@ -2,24 +2,25 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\IsUuid;
 use Illuminate\Database\Eloquent\Model;
 
 class PhoneNumber extends Model
 {
-    protected $fillable = ['customer_id', 'phone_number'];
+    use IsUuid;
 
-    public function customer()
+    public $incrementing = false;
+    protected $keyType   = 'string';
+
+    protected $fillable = [
+        'branch_id',
+        'number',
+        'active',
+    ];
+
+    /* Beziehung */
+    public function branch()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Branch::class);
     }
-}
-
-public function company(): BelongsTo
-{
-    return $this->belongsTo(Company::class);
-}
-
-public function retellAgent(): HasOne
-{
-    return $this->hasOne(RetellAgent::class);
 }
