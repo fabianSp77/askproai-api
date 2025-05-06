@@ -3,22 +3,23 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+// use Laravel\Horizon\Horizon;   // Horizon vorerst deaktiviert
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
+        /*
+         |--------------------------------------------------------------
+         | Horizon deaktiviert
+         |--------------------------------------------------------------
+         | Wenn du Horizon erneut installierst, die Slashes unten entfernen.
+         */
+        // Horizon::auth(fn () => auth()->user()?->hasRole('super_admin'));
     }
 }

@@ -9,6 +9,7 @@
         "filament/filament": "^3.3",
         "illuminate/view": "*",
         "laravel/framework": "^11.0",
+        "laravel/horizon": "^5",
         "laravel/sanctum": "^4",
         "livewire/livewire": "^3.6",
         "spatie/laravel-permission": "^6",

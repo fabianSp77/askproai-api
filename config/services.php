@@ -4,45 +4,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Third Party Services
+    | Third-Party Service Credentials
     |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
+    | Trage hier nur Services ein, die ENV-Keys brauchen.
     */
 
-    'postmark' => [
-        'token' => env('POSTMARK_TOKEN'),
+    'stripe' => [
+        'key'            => env('STRIPE_KEY'),
+        'secret'         => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
-    'ses' => [
-        'key' => env('AWS_ACCESS_KEY_ID'),
-        'secret' => env('AWS_SECRET_ACCESS_KEY'),
-        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
-    ],
-
-    'resend' => [
-        'key' => env('RESEND_KEY'),
-    ],
-
-    'slack' => [
-        'notifications' => [
-            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
-        ],
-    ],
-
-    'calcom' => [
-        'api_key' => env('CALCOM_API_KEY', 'cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da'),
-        'base_url' => 'https://api.cal.com/v1',
-    ],
-
-    // ... andere services ...
-
-    'admin' => [
-        'email' => env('ADMIN_EMAIL') // Holt den Wert aus .env
-    ],
-]; // <- Dies ist die schließende Klammer des return-Arrays
+];

@@ -2,45 +2,63 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Filament\Admin\Resources\BookingResource\Pages;
+use App\Filament\Admin\Resources\BookingResource\RelationManagers;
 use App\Models\Booking;
 use Filament\Forms;
-use Filament\Tables;
 use Filament\Forms\Form;
-use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BookingResource extends Resource
 {
-    protected static ?string $model            = Booking::class;
-    protected static ?string $navigationGroup  = 'Buchungen';
-    protected static ?string $navigationIcon   = 'heroicon-o-calendar-days';
+    protected static ?string $model = Booking::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
-        return $form->schema([
-            Forms\Components\Select::make('service_id')
-                ->relationship('service', 'name')
-                ->required(),
-
-            Forms\Components\Select::make('staff_id')
-                ->relationship('staff', 'name')
-                ->required(),
-
-            Forms\Components\DateTimePicker::make('starts_at')->required(),
-            Forms\Components\DateTimePicker::make('ends_at')->required(),
-
-            Forms\Components\TextInput::make('status')->required(),
-        ]);
+        return $form
+            ->schema([
+                //
+            ]);
     }
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            Tables\Columns\TextColumn::make('starts_at')->dateTime(),
-            Tables\Columns\TextColumn::make('ends_at')->dateTime(),
-            Tables\Columns\TextColumn::make('staff.name')->label('Mitarbeiter'),
-            Tables\Columns\TextColumn::make('service.name')->label('Leistung'),
-            Tables\Columns\TextColumn::make('status'),
-        ]);
+        return $table
+            ->columns([
+                //
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListBookings::route('/'),
+            'create' => Pages\CreateBooking::route('/create'),
+            'edit' => Pages\EditBooking::route('/{record}/edit'),
+        ];
     }
 }

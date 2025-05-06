@@ -1,42 +1,60 @@
 <?php
 
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Auth Guard & Password Broker
+    |--------------------------------------------------------------------------
+    */
     'defaults' => [
-        'guard' => 'web',
+        'guard'     => 'web',
         'passwords' => 'users',
     ],
-'guards' => [
-    'web' => [
-        'driver' => 'session',
-        'provider' => 'users',
-    ],
-    'api' => [
-        'driver' => 'passport',
-        'provider' => 'users',
-        'hash' => false,
-    ],
-    'filament' => [
-        'driver' => 'session',
-        'provider' => 'users',
-    ],
-],
 
-    'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\User::class,
+    /*
+    |--------------------------------------------------------------------------
+    | Guards
+    |--------------------------------------------------------------------------
+    */
+    'guards' => [
+        'web' => [
+            'driver'   => 'session',
+            'provider' => 'users',
+        ],
+
+        'api' => [
+            'driver'   => 'passport',
+            'provider' => 'users',
+            'hash'     => false,
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | User Providers
+    |--------------------------------------------------------------------------
+    */
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model'  => App\Models\User::class,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Password Reset / Confirmation
+    |--------------------------------------------------------------------------
+    */
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => 'password_resets',
-            'expire' => 60,
+            'table'    => 'password_reset_tokens',
+            'expire'   => 60,
             'throttle' => 60,
         ],
     ],
 
     'password_timeout' => 10800,
 ];
-
