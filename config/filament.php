@@ -4,86 +4,134 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Broadcasting
+    | Welches Panel ist das „Standard-Panel“?
     |--------------------------------------------------------------------------
-    |
-    | By uncommenting the Laravel Echo configuration, you may connect Filament
-    | to any Pusher-compatible websockets server.
-    |
-    | This will allow your users to receive real-time notifications.
-    |
+    | Bei einer einzigen Admin-Oberfläche genügt eine ID – hier: „admin“.
     */
 
-    'broadcasting' => [
+    'default_panel_id' => 'admin',
 
-        // 'echo' => [
-        //     'broadcaster' => 'pusher',
-        //     'key' => env('VITE_PUSHER_APP_KEY'),
-        //     'cluster' => env('VITE_PUSHER_APP_CLUSTER'),
-        //     'wsHost' => env('VITE_PUSHER_HOST'),
-        //     'wsPort' => env('VITE_PUSHER_PORT'),
-        //     'wssPort' => env('VITE_PUSHER_PORT'),
-        //     'authEndpoint' => '/broadcasting/auth',
-        //     'disableStats' => true,
-        //     'encrypted' => true,
-        //     'forceTLS' => true,
-        // ],
+    /*
+    |--------------------------------------------------------------------------
+    | Panel-Definitionen
+    |--------------------------------------------------------------------------
+    | Bei Bedarf kannst du mehrere Panels definieren.
+    */
 
+    'panels' => [
+
+        'admin' => [
+
+            /*
+            |------------------------------------------------------------------
+            | Basis-Pfad & ID des Panels
+            |------------------------------------------------------------------
+            */
+
+            'id'   => 'admin',
+            'path' => 'admin',
+
+            /*
+            |------------------------------------------------------------------
+            | Auth-Seiten einzeln aktivieren
+            |------------------------------------------------------------------
+            | Da der Name  auth()  in deinem Projekt kollidiert,
+            | registrieren wir die Login-Features separat.
+            */
+
+            'login'             => true,
+            'password_reset'    => true,
+            'email_verification'=> true,
+            'profile'           => true,
+
+            /*
+            |------------------------------------------------------------------
+            | Ressourcen / Seiten / Widgets automatisch einsammeln
+            |------------------------------------------------------------------
+            */
+
+            'discover' => [
+                'resources' => [
+                    'in'  => app_path('Filament/Admin/Resources'),
+                    'for' => 'App\\Filament\\Admin\\Resources',
+                ],
+                'pages' => [
+                    'in'  => app_path('Filament/Admin/Pages'),
+                    'for' => 'App\\Filament\\Admin\\Pages',
+                ],
+                'widgets' => [
+                    'in'  => app_path('Filament/Admin/Widgets'),
+                    'for' => 'App\\Filament\\Admin\\Widgets',
+                ],
+            ],
+
+            /*
+            |------------------------------------------------------------------
+            | Plugins
+            |------------------------------------------------------------------
+            | !!!  Filament-Shield hier bewusst NICHT eingetragen  !!!
+            */
+
+            'plugins' => [
+                // Beispiel: \Filament\Notifications\NotificationsPlugin::make(),
+            ],
+        ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Default Filesystem Disk
+    | Broadcasting / Echo (optional)
     |--------------------------------------------------------------------------
-    |
-    | This is the storage disk Filament will use to store files. You may use
-    | any of the disks defined in the `config/filesystems.php`.
-    |
+    | Standard-Setup – lass es so, wenn du Echo nicht benutzt.
+    */
+
+    'broadcasting' => [
+
+        'enabled' => false,
+
+        // Beispiel-Konfiguration:
+        /*
+        'pusher' => [
+            'key'          => env('PUSHER_APP_KEY'),
+            'host'         => env('PUSHER_HOST', 'api.pusherapp.com'),
+            'port'         => env('PUSHER_PORT', 443),
+            'scheme'       => 'https',
+            'encrypted'    => true,
+            'authEndpoint' => '/broadcasting/auth',
+            'disableStats' => true,
+        ],
+        */
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Standard-Speicherdisk
+    |--------------------------------------------------------------------------
     */
 
     'default_filesystem_disk' => env('FILAMENT_FILESYSTEM_DISK', 'public'),
 
     /*
     |--------------------------------------------------------------------------
-    | Assets Path
+    | Pfad für veröffentlichte Assets
     |--------------------------------------------------------------------------
-    |
-    | This is the directory where Filament's assets will be published to. It
-    | is relative to the `public` directory of your Laravel application.
-    |
-    | After changing the path, you should run `php artisan filament:assets`.
-    |
     */
 
     'assets_path' => null,
 
     /*
     |--------------------------------------------------------------------------
-    | Cache Path
+    | Cache-Pfad für Filament-Komponenten
     |--------------------------------------------------------------------------
-    |
-    | This is the directory that Filament will use to store cache files that
-    | are used to optimize the registration of components.
-    |
-    | After changing the path, you should run `php artisan filament:cache-components`.
-    |
     */
 
     'cache_path' => base_path('bootstrap/cache/filament'),
 
     /*
     |--------------------------------------------------------------------------
-    | Livewire Loading Delay
+    | Livewire-Loading-Delay
     |--------------------------------------------------------------------------
-    |
-    | This sets the delay before loading indicators appear.
-    |
-    | Setting this to 'none' makes indicators appear immediately, which can be
-    | desirable for high-latency connections. Setting it to 'default' applies
-    | Livewire's standard 200ms delay.
-    |
     */
 
     'livewire_loading_delay' => 'default',
-
 ];

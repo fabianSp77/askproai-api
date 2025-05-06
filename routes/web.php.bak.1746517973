@@ -1,0 +1,52 @@
+<?php
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Dokumentationsroute
+Route::middleware(['auth'])->group(function () {
+    Route::get('/docs/{path?}', function ($path = 'index.html') {
+        $filePath = public_path('docs/' . $path);
+        if (file_exists($filePath)) {
+            return response()->file($filePath);
+        }
+        abort(404);
+    })->where('path', '.*');
+});
+
+// CSRF-Token Refresh Route
+Route::get('/csrf-refresh', function () {
+    return response()->json(['csrf' => csrf_token()]);
+});
+
+require __DIR__.'/auth.php';
+Route::get('/test', [App\Http\Controllers\TestController::class, 'index']);
+
+// Health-Check für /
+Route::get('/', function () {
+    return response()->json(['status' => 'API online']);
+});
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/billing/checkout', [\App\Http\Controllers\BillingController::class, 'checkout'])
+        ->name('billing.checkout');
+});
+
+Route::post('/billing/webhook', [\App\Http\Controllers\BillingController::class, 'webhook'])
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+Route::middleware(['auth','verified'])->get(
+    '/billing/checkout',
+    [\App\Http\Controllers\BillingController::class, 'checkout']
+)->name('billing.checkout');

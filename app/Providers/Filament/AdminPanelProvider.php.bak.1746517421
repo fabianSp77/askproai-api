@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->id('admin')
+            ->path('admin')
+
+            // Login, Passwort-Reset, Mail-Verify & Profil aktivieren
+            ->auth()            //  GET + POST /admin/login etc.
+            ->authGuard('web')  //  benutzt den "web"-Guard
+
+            // Ressourcen / Seiten / Widgets automatisch registrieren
+            ->discoverResources(app_path('Filament/Admin/Resources'), 'App\\Filament\\Admin\\Resources')
+            ->discoverPages    (app_path('Filament/Admin/Pages'),     'App\\Filament\\Admin\\Pages')
+            ->discoverWidgets  (app_path('Filament/Admin/Widgets'),   'App\\Filament\\Admin\\Widgets');
+    }
+}

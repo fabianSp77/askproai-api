@@ -1,0 +1,150 @@
+<?php
+
+namespace App\Filament\Admin\Resources;
+
+use App\Filament\Admin\Resources\CallResource\Pages;
+use App\Models\Call;
+use App\Services\CallDataRefresher;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+
+class CallResource extends Resource
+{
+    protected static ?string $model           = Call::class;
+    protected static ?string $navigationGroup = 'Buchungen';
+    protected static ?string $navigationIcon  = 'heroicon-o-phone';
+
+    /* ─ Formular – nicht benutzt ─ */
+    public static function form(Form $form): Form
+    {
+        return $form->schema([]);
+    }
+
+    /* ─ Tabelle ─ */
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->defaultSort('created_at', 'desc')
+
+            /* ─ Spalten ─ */
+            ->columns([
+                TextColumn::make('created_at')->label('Erstellt')
+                    ->dateTime('d.m.Y H:i')->sortable(),
+
+                TextColumn::make('customer.name')->label('Kunde')->searchable(),
+
+                TextColumn::make('branch.name')->label('Filiale')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('duration_sec')->label('Dauer')->sortable()
+                    ->formatStateUsing(
+                        fn (int $s) => $s.' s ('.gmdate('i:s', $s).' min)'
+                    ),
+
+                TextColumn::make('cost_euro')->label('Kosten')
+                    ->money('eur')->sortable(),
+
+                /* Analyse */
+                TextColumn::make('analysis.silence_ratio')->label('Stille %')
+                    ->formatStateUsing(
+                        fn ($v) => $v === null ? '–' : round($v * 100).' %'
+                    )
+                    ->color(fn ($v) => $v === null
+                        ? null
+                        : ($v > .4 ? 'danger'
+                                   : ($v > .2 ? 'warning' : 'success')))
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                IconColumn::make('call_successful')->label('Erfolg')->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('from_number')->label('Von')->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('to_number')->label('Zu')->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                /* Status */
+                BadgeColumn::make('call_status')->label('Status')
+                    ->formatStateUsing(fn ($s) => [
+                        'completed' => 'Fertig',
+                        'no-answer' => 'Kein Antwort',
+                        'failed'    => 'Fehlgeschlagen',
+                    ][$s] ?? ($s ?? '–'))
+                    ->colors([
+                        'completed' => 'success',
+                        'no-answer' => 'warning',
+                        'failed'    => 'danger',
+                        null        => 'gray',
+                    ])
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+
+            /* ─ Zeilen-Action ─ */
+            ->actions([
+                Action::make('refresh')
+                    ->label('Aktualisieren')
+                    ->icon('heroicon-o-arrow-path')
+                    ->requiresConfirmation()
+                    ->tooltip('Live-Daten dieses Anrufs nachladen')
+                    ->action(fn (Call $rec) =>
+                        app(CallDataRefresher::class)->refresh($rec)),
+            ])
+
+            /* ─ Bulk-Action ─ */
+            ->bulkActions([
+                BulkAction::make('refresh_selected')
+                    ->label('Ausgewählte aktualisieren')
+                    ->icon('heroicon-o-arrow-path')
+                    ->requiresConfirmation()
+                    ->action(function ($records) {
+                        $srv = app(CallDataRefresher::class);
+                        $records->each(fn (Call $c) => $srv->refresh($c));
+                    }),
+            ])
+
+            /* ─ Filter ─ */
+            ->filters([
+                SelectFilter::make('customer_id')->label('Kunde')
+                    ->relationship('customer', 'name')->searchable(),
+
+                SelectFilter::make('branch_id')->label('Filiale')
+                    ->relationship('branch', 'name')->searchable(),
+
+                Filter::make('Zeitraum')
+                    ->form([
+                        DatePicker::make('from')->label('Von'),
+                        DatePicker::make('to')->label('Bis'),
+                    ])
+                    ->query(fn (Builder $q, array $d) =>
+                        $q->when($d['from'] ?? null,
+                                 fn ($q, $v) => $q->whereDate('created_at','>=',$v))
+                          ->when($d['to'] ?? null,
+                                 fn ($q, $v) => $q->whereDate('created_at','<=',$v))),
+            ])
+
+            ->paginated([25, 50, 100, 'all']);
+    }
+
+    /* ─ Pages ─ */
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListCalls::route('/'),
+        ];
+    }
+}
+### END OF FILE ###

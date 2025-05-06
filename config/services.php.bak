@@ -1,0 +1,41 @@
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Third Party Services
+    |--------------------------------------------------------------------------
+    |
+    | Hier stehen alle externen APIs (Mailgun, AWS SES, Retell usw.).
+    | Lass die vorhandenen Blöcke, wir fügen nur Retell hinzu.
+    |
+    */
+
+    // ───── Beispiel-Einträge (lass sie stehen) ─────
+    'mailgun' => [
+        'domain'   => env('MAILGUN_DOMAIN'),
+        'secret'   => env('MAILGUN_SECRET'),
+        'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+    ],
+
+    // …
+
+    /* -----------------------------------------------------------------
+     | Retell AI – Telefon-Webhook / Analyse
+     |------------------------------------------------------------------
+     | base  = Basis-URL der Retell REST-API
+     | token = Dein persönlicher API-Key (Bearer Token)
+     */
+    'retell' => [
+        'base'  => env('RETELL_BASE',  'https://api.retellai.com'),
+        'token' => env('RETELL_TOKEN', ''),
+    ],
+
+];
+    'stripe' => [
+        'key'             => env('STRIPE_KEY'),
+        'secret'          => env('STRIPE_SECRET'),
+        'webhook_secret'  => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+];

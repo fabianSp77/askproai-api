@@ -3,20 +3,24 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Laravel\Passport\Passport;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    protected $policies = [];
-
+    /**
+     * Register any authentication / authorization services.
+     */
     public function boot(): void
     {
         $this->registerPolicies();
 
-        // Passport configuration
-        Passport::loadKeysFrom(base_path('storage'));
-        Passport::tokensExpireIn(now()->addDays(15));
-        Passport::refreshTokensExpireIn(now()->addDays(30));
-        Passport::personalAccessTokensExpireIn(now()->addMonths(6));
+        /*
+         |--------------------------------------------------------------
+         | Passport deaktiviert
+         |--------------------------------------------------------------
+         |  use Laravel\Passport\Passport;
+         |  Passport::routes();
+         | einfach wieder aktivieren, wenn das Paket installiert ist.
+         */
     }
 }

@@ -6,16 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Call extends Model
 {
-    /** mass-assignable Felder */
-    protected $fillable = [
-        'external_id',
-        'transcript',
-        'raw',
-        'customer_id',   //  ← NEU
-    ];
+    /** Alle Spalten frei geben – einfachste Variante  */
+    protected $guarded = [];
 
-    /** Casts */
+    /** Typ-Casts */
     protected $casts = [
-        'raw' => 'array',
+        'analysis'        => 'array',
+        'call_successful' => 'boolean',
     ];
 }
