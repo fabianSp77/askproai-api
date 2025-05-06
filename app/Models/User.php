@@ -2,40 +2,34 @@
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
+use Spatie\Permission\Traits\HasRoles;           // ← NEU
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;   // ← Trait eingebunden
 
+    /* Mass-Assignment ------------------------------------------------------- */
     protected $fillable = [
         'name',
         'email',
         'password',
+        'email_verified_at',
     ];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
 
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
-    
-    public function canAccessFilament(): bool
-    {
-        return true;
-    }
-    
+    protected $casts = ['email_verified_at' => 'datetime'];
+
+    /* Filament-Zugriff ------------------------------------------------------- */
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        // nur noch Benutzer mit Rolle "admin"
+        return $this->hasRole('admin');
     }
 }
