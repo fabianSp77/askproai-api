@@ -1,97 +1,37 @@
 <?php
 
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\ServiceProvider;
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Application Name
-    |--------------------------------------------------------------------------
-    */
-
-    'name' => env('APP_NAME', 'Laravel'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Environment
-    |--------------------------------------------------------------------------
-    */
-
-    'env' => env('APP_ENV', 'production'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Debug Mode
-    |--------------------------------------------------------------------------
-    */
-
-    'debug' => (bool) env('APP_DEBUG', false),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application URL
-    |--------------------------------------------------------------------------
-    */
-
-    'url' => env('APP_URL', 'http://localhost'),
-
-    'asset_url' => env('ASSET_URL'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Timezone
-    |--------------------------------------------------------------------------
-    */
-
-    'timezone' => 'UTC', // Beibehalten oder auf Europe/Berlin ändern?
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Locale Configuration
-    |--------------------------------------------------------------------------
-    */
-
-    'locale' => 'en', // Beibehalten oder auf 'de' ändern?
-
+    /* ----------------------------------------------------------------------
+     | Basics
+     |--------------------------------------------------------------------- */
+    'name'            => env('APP_NAME', 'Laravel'),
+    'env'             => env('APP_ENV',  'production'),
+    'debug'           => (bool) env('APP_DEBUG', false),
+    'url'             => env('APP_URL',  'http://localhost'),
+    'asset_url'       => env('ASSET_URL'),
+    'timezone'        => 'UTC',
+    'locale'          => 'en',
     'fallback_locale' => 'en',
+    'faker_locale'    => 'en_US',
+    'key'             => env('APP_KEY'),
+    'cipher'          => 'AES-256-CBC',
 
-    'faker_locale' => 'en_US', // Beibehalten oder auf 'de_DE' ändern?
-
-    /*
-    |--------------------------------------------------------------------------
-    | Encryption Key
-    |--------------------------------------------------------------------------
-    */
-
-    'key' => env('APP_KEY'),
-
-    'cipher' => 'AES-256-CBC',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Maintenance Mode Driver
-    |--------------------------------------------------------------------------
-    */
-
-    'maintenance' => [
-        'driver' => 'file',
-        // 'store'  => 'redis',
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Autoloaded Service Providers
-    |--------------------------------------------------------------------------
-    */
-
+    /* ----------------------------------------------------------------------
+     | Autoloaded Service Providers
+     |--------------------------------------------------------------------- */
     'providers' => [
 
-        /*
-         * Laravel Framework Service Providers...
-         * DIESE NICHT AUSKOMMENTIEREN!
-         */
+        /* ——— Zusatz-Pakete (alle vorerst deaktiviert) ——— */
+        // Laravel\Horizon\HorizonServiceProvider::class,
+        // App\Providers\HorizonServiceProvider::class,
+        // Laravel\Sanctum\SanctumServiceProvider::class,
+        // L5Swagger\L5SwaggerServiceProvider::class,
+        // BezhanSalleh\FilamentShield\FilamentShieldServiceProvider::class,
+
+        /* ——— Laravel Core ——— */
         Illuminate\Auth\AuthServiceProvider::class,
         Illuminate\Broadcasting\BroadcastServiceProvider::class,
         Illuminate\Bus\BusServiceProvider::class,
@@ -115,33 +55,19 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
 
-        /*
-         * Package Service Providers...
-         * HIER BEGINNEN WIR MIT DEM AUSKOMMENTIEREN
-         */
-        // Laravel\Sanctum\SanctumServiceProvider::class,
-        // Laravel\Passport\PassportServiceProvider::class, // <-- Hauptverdächtiger
-        // L5Swagger\L5SwaggerServiceProvider::class,
+        /* ——— App-eigene Provider ——— */
+        App\Providers\AppServiceProvider::class,
+        App\Providers\AuthServiceProvider::class,
+        App\Providers\EventServiceProvider::class,
+        App\Providers\RouteServiceProvider::class,
+        App\Providers\Filament\AdminPanelProvider::class,
+        // App\Providers\HorizonServiceProvider::class,   // bleibt deaktiviert
+    ],
 
-        /*
-         * Application Service Providers...
-         * AUCH HIER AUSKOMMENTIEREN
-         */
-        // App\Providers\AppServiceProvider::class,
-        // App\Providers\AuthServiceProvider::class, // Dieser ist oft Framework-intern verknüpft, ggf. einzeln testen
-        // App\Providers\RouteServiceProvider::class, // Wichtig für Routen! Nur auskommentieren, wenn unbedingt nötig
-
-    ], // Ende 'providers'-Array
-
-    /*
-    |--------------------------------------------------------------------------
-    | Class Aliases
-    |--------------------------------------------------------------------------
-    */
-
+    /* ----------------------------------------------------------------------
+     | Facade-Aliase
+     |--------------------------------------------------------------------- */
     'aliases' => Facade::defaultAliases()->merge([
-        // 'Example' => App\Facades\Example::class,
-        'Http' => Illuminate\Support\Facades\Http::class, // Sicherstellen, dass dieser Alias bleibt
+        'Http' => Illuminate\Support\Facades\Http::class,
     ])->toArray(),
-
 ];

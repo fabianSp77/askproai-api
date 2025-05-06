@@ -1,23 +1,18 @@
 {
-    "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "askproai/api-gateway",
+    "description": "AskProAI – Laravel 11 × Filament 3",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
-    "license": "MIT",
+    "license": "proprietary",
     "require": {
         "php": "^8.2",
-        "bezhansalleh/filament-shield": "*",
-        "darkaonline/l5-swagger": "^9.0",
-        "filament/filament": "^3.0",
-        "filament/forms": "^3.0",
-        "filament/tables": "^3.0",
-        "guzzlehttp/guzzle": "^7.9",
-        "laravel/framework": "^12.0",
-        "laravel/passport": "^12.4",
-        "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.10.1",
-        "livewire/livewire": "^3.6"
+        "bezhansalleh/filament-shield": "^3",
+        "filament/filament": "^3.3",
+        "illuminate/view": "*",
+        "laravel/framework": "^11.0",
+        "laravel/sanctum": "^4",
+        "livewire/livewire": "^3.6",
+        "spatie/laravel-permission": "^6",
+        "stripe/stripe-php": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -25,6 +20,7 @@
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",
+        "laravel/tinker": "^2.10",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "phpunit/phpunit": "^11.5.3"
@@ -43,7 +39,7 @@
     },
     "scripts": {
         "post-autoload-dump": [
-            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "Illuminate\\\\Foundation\\\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi",
             "@php artisan filament:upgrade"
         ],
@@ -57,10 +53,6 @@
             "@php artisan key:generate --ansi",
             "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi"
-        ],
-        "dev": [
-            "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite"
         ]
     },
     "extra": {
@@ -77,6 +69,6 @@
             "php-http/discovery": true
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }

@@ -1,41 +1,50 @@
 <?php
-use App\Http\Controllers\ProfileController;
+
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{
+    ProfileController,
+    BillingController,
+    TestController    // ← kannst du später entfernen
+};
 
-Route::get('/', function () {
-    return view('welcome');
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+| – Health-Check
+| – Breeze-/Jetstream-Routen
+| – Billing-Webhook
+| – evtl. temporäre Test-Routen
+| Alle Filament-Routen werden NICHT hier, sondern
+|   von deinem AdminPanelProvider registriert.
+*/
+
+/*--- Health-Check --------------------------------------------------------*/
+Route::get('/', fn () => response()->json(['status' => 'API online']));
+
+/*--- Breeze / Dashboard --------------------------------------------------*/
+Route::middleware(['auth', 'verified'])
+    ->get('/dashboard', fn () => view('dashboard'))
+    ->name('dashboard');
+
+/*--- Profil --------------------------------------------------------------*/
+Route::middleware('auth')->group(static function () {
+    Route::get   ('/profile', [ProfileController::class,'edit'  ])->name('profile.edit');
+    Route::patch ('/profile', [ProfileController::class,'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class,'destroy'])->name('profile.destroy');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+/*--- Billing -------------------------------------------------------------*/
+Route::middleware(['auth', 'verified'])
+    ->get('/billing/checkout', [BillingController::class,'checkout'])
+    ->name('billing.checkout');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+Route::post('/billing/webhook', [BillingController::class,'webhook'])
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 
-// Dokumentationsroute
-Route::middleware(['auth'])->group(function () {
-    Route::get('/docs/{path?}', function ($path = 'index.html') {
-        $filePath = public_path('docs/' . $path);
-        if (file_exists($filePath)) {
-            return response()->file($filePath);
-        }
-        abort(404);
-    })->where('path', '.*');
-});
+/*--- TEMP-Test-Routen (kannst du löschen) --------------------------------*/
+Route::get('/test',         [TestController::class,'index']);
+Route::get('/session-test', fn () => 'OK');
 
-// CSRF-Token Refresh Route
-Route::get('/csrf-refresh', function () {
-    return response()->json(['csrf' => csrf_token()]);
-});
-
+/*--- Breeze-/Jetstream Auth ---------------------------------------------*/
 require __DIR__.'/auth.php';
-Route::get('/test', [App\Http\Controllers\TestController::class, 'index']);
-
-// Health-Check für /
-Route::get('/', function () {
-    return response()->json(['status' => 'API online']);
-});
