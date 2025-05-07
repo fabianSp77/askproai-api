@@ -21,17 +21,11 @@ class DashboardStats extends StatsOverviewWidget
                 ->icon('heroicon-o-user-plus')
                 ->color('primary'),
 
-            Stat::make('Durchschnittliches Alter', function () {
-                $customers = \App\Models\Customer::whereNotNull('birthdate')->get();
-                if ($customers->isEmpty()) {
-                    return 'N/A';
-                }
-
-                $avg = $customers
-                    ->map(fn ($c) => now()->diffInYears($c->birthdate))
-                    ->avg();
-
-                return round($avg) . ' Jahre';
+            Stat::make('Ø Alter', function () {
+                $ages = \App\Models\Customer::whereNotNull('birthdate')
+                        ->get()
+                        ->map(fn ($c) => now()->diffInYears($c->birthdate));
+                return $ages->isEmpty() ? 'N/A' : round($ages->avg()).' Jahre';
             })
                 ->icon('heroicon-o-calendar')
                 ->color('warning'),

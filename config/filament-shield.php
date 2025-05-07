@@ -4,52 +4,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Grund­einstellungen
+    | Permission Prefixes
     |--------------------------------------------------------------------------
+    | Welche Verb-Präfixe für Ressourcen-/Page-/Widget-Rechte generiert werden.
     */
-
-    'enabled'   => env('FILAMENT_SHIELD_ENABLED', true),
-    'auth_guard'=> env('FILAMENT_SHIELD_GUARD',  'web'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Berechtigungs-Präfixe
-    |--------------------------------------------------------------------------
-    */
-
     'permission_prefixes' => [
-        'view',
-        'view_any',
-        'create',
-        'update',
-        'restore',
-        'restore_any',
-        'replicate',
-        'reorder',
-        'delete',
-        'delete_any',
-        'force_delete',
-        'force_delete_any',
+        'resource' => [               //  ← **diese Zeile fehlte**
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+        ],
+        'page'    => 'page',          // z. B.  page_dashboard
+        'widget'  => 'widget',        // z. B.  widget_account-stats
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Rollen / Policies
+    | Role that will get ALL permissions irrespective of the above prefixes.
     |--------------------------------------------------------------------------
     */
-
-    'generate_policies'      => true,
-    'super_admin_role_name'  => env('FILAMENT_SHIELD_SUPER_ADMIN_ROLE', 'super_admin'),
-    'register_permissions_on_sync' => true,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache
-    |--------------------------------------------------------------------------
-    */
-
-    'cache' => [
-        'enabled' => true,
-        'ttl'     => 60 * 60 * 24,   // 24 h
-    ],
+    'super_admin' => 'super_admin',
 ];

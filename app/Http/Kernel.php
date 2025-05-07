@@ -25,7 +25,7 @@ class Kernel extends HttpKernel
              \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
         'api' => [
-            \App\Http\Middleware\IdentifyTenant::class, // Unsere Tenant Middleware
+            // \App\Http\Middleware\IdentifyTenant::class, // Unsere Tenant Middleware
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],

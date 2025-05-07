@@ -1,0 +1,98 @@
+<?php
+
+use Illuminate\Support\Facades\Facade;
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Basics
+    |--------------------------------------------------------------------------
+    */
+
+    'name'            => env('APP_NAME', 'Laravel'),
+    'env'             => env('APP_ENV',  'production'),
+    'debug'           => (bool) env('APP_DEBUG', false),
+    'url'             => env('APP_URL',  'http://localhost'),
+    'asset_url'       => env('ASSET_URL'),
+    'timezone'        => 'UTC',
+    'locale'          => 'en',
+    'fallback_locale' => 'en',
+    'faker_locale'    => 'en_US',
+    'key'             => env('APP_KEY'),
+    'cipher'          => 'AES-256-CBC',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Autoloaded Service Providers
+    |--------------------------------------------------------------------------
+    */
+
+    'providers' => [
+
+        /* ––––– Zusatz-Pakete ––––– */
+        Laravel\Horizon\HorizonServiceProvider::class,
+        App\Providers\HorizonServiceProvider::class,
+
+        /* ––––– Laravel Core ––––– */
+        Illuminate\Auth\AuthServiceProvider::class,
+        Illuminate\Broadcasting\BroadcastServiceProvider::class,
+        Illuminate\Bus\BusServiceProvider::class,
+        Illuminate\Cache\CacheServiceProvider::class,
+        Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
+        Illuminate\Cookie\CookieServiceProvider::class,
+        Illuminate\Database\DatabaseServiceProvider::class,
+        Illuminate\Encryption\EncryptionServiceProvider::class,
+        Illuminate\Filesystem\FilesystemServiceProvider::class,
+        Illuminate\Foundation\Providers\FoundationServiceProvider::class,
+        Illuminate\Hashing\HashServiceProvider::class,
+        Illuminate\Mail\MailServiceProvider::class,
+        Illuminate\Notifications\NotificationServiceProvider::class,
+        Illuminate\Pagination\PaginationServiceProvider::class,
+        Illuminate\Pipeline\PipelineServiceProvider::class,
+        Illuminate\Queue\QueueServiceProvider::class,
+        Illuminate\Redis\RedisServiceProvider::class,
+        Illuminate\Auth\Passwords\PasswordResetServiceProvider::class,
+        Illuminate\Session\SessionServiceProvider::class,
+        Illuminate\Translation\TranslationServiceProvider::class,
+        Illuminate\Validation\ValidationServiceProvider::class,
+        Illuminate\View\ViewServiceProvider::class,
+
+        /* ––––– Third-Party (zurzeit deaktiviert) ––––– */
+        // Laravel\Sanctum\SanctumServiceProvider::class,
+        // Laravel\Passport\PassportServiceProvider::class,
+PHP ])->toArray(),Illuminate\Support\Facades\Http::class,----------------------
+fabian@v2202503255565320322:/var/www/api-gateway$ php artisan optimize:clear
+composer dump-autoload -o
+sudo systemctl reload php8.2-fpm
+BOOTSTRAP DEBUG: bootstrap/app.php - START
+BOOTSTRAP DEBUG: Application instance CREATED.
+BOOTSTRAP DEBUG: bootstrap/app.php - RETURNING Application instance.
+BOOTSTRAP DEBUG: Configuring Exceptions...
+
+In ProviderRepository.php line 205:
+
+  Class "BezhanSalleh\FilamentShield\FilamentShieldServiceProvider" not found
+
+
+Generating optimized autoload files
+> Illuminate\Foundation\ComposerScripts::postAutoloadDump
+> @php artisan package:discover --ansi
+BOOTSTRAP DEBUG: bootstrap/app.php - START
+BOOTSTRAP DEBUG: Application instance CREATED.
+BOOTSTRAP DEBUG: bootstrap/app.php - RETURNING Application instance.
+BOOTSTRAP DEBUG: Configuring Exceptions...
+
+In ProviderRepository.php line 205:
+
+  Class "BezhanSalleh\FilamentShield\FilamentShieldServiceProvider" not found
+
+
+Script @php artisan package:discover --ansi handling the post-autoload-dump event returned with error code 1
+[sudo] Passwort für fabian:
+fabian@v2202503255565320322:/var/www/api-gateway$ php artisan route:list | grep admin/login
+BOOTSTRAP DEBUG: bootstrap/app.php - START
+BOOTSTRAP DEBUG: Application instance CREATED.
+BOOTSTRAP DEBUG: bootstrap/app.php - RETURNING Application instance.
+BOOTSTRAP DEBUG: Configuring Exceptions...
+fabian@v2202503255565320322:/var/www/api-gateway$

@@ -82,4 +82,3 @@ return [
         'Str'     => Illuminate\Support\Str::class,
     ],
 ];
-
