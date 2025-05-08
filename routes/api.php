@@ -14,3 +14,8 @@ Route::post(
     '/webhooks/retell-conversation-ended',
     RetellConversationEndedController::class      // Controller wird direkt aufgerufen
 )->name('retell.webhook');
+
+// ─── Retell Catch-all Webhook ─────────────────────────────────────────────
+Route::post('/webhooks/retell',
+    \App\Http\Controllers\API\RetellWebhookController::class
+)->middleware(\App\Http\Middleware\VerifyRetellSignature::class);
