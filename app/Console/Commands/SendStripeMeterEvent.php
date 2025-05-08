@@ -14,36 +14,35 @@ class SendStripeMeterEvent extends Command
 
     protected $description = 'Sendet ein Meter-Event an Stripe (Billing Meter Events API)';
 
-    /**  Konstante: Stripe-Ereignisname des Zählers  */
-    private const EVENT_NAME = 'call-minutes';
+    /**  Stripe-Ereignisname des Zählers  */
+    private const EVENT_NAME   = 'call-minutes';
 
-    /**  Konstante: Key, mit dem Stripe den Kunden zuordnet  */
+    /**  Key, mit dem Stripe den Kunden zuordnet  */
     private const CUSTOMER_KEY = 'stripe_customer_id';
 
     public function handle(): int
     {
-        // 1 · Secret Key besorgen
+        /* 1 ▸ Secret Key holen  */
         $secret = config('services.stripe.secret') ?: env('STRIPE_SECRET');
         if (! $secret) {
             $this->error('❌  STRIPE_SECRET fehlt – .env prüfen!');
             return self::FAILURE;
         }
 
-        // 2 · Basisinfos aus CLI-Argumenten
+        /* 2 ▸ CLI-Argumente  */
         $itemId    = $this->argument('subscription_item');
         $value     = (int) $this->argument('quantity');
         $timestamp = (int) ($this->option('timestamp') ?: time());
 
-        // 3 · Kunde aus Subscription-Item ermitteln
+        /* 3 ▸ Kunde auflösen  */
         $stripe     = new StripeClient($secret);
         $customerId = $this->resolveCustomerId($stripe, $itemId);
-
         if (! $customerId) {
             $this->error('❌  Kunde zum übergebenen subscription_item nicht gefunden.');
             return self::FAILURE;
         }
 
-        // 4 · Meter-Event absetzen
+        /* 4 ▸ Meter-Event senden  */
         try {
             $event = $stripe->billing->meterEvents->create([
                 'event_name' => self::EVENT_NAME,
@@ -54,34 +53,43 @@ class SendStripeMeterEvent extends Command
                 ],
             ]);
 
-            $this->info('✅  MeterEvent gesendet  →  '.$event->id);
+            $this->info('✅  MeterEvent gesendet  →  ' . $event->id);
             return self::SUCCESS;
 
         } catch (\Throwable $e) {
-            $this->error('❌  Stripe-Fehler: '.$e->getMessage());
+            $this->error('❌  Stripe-Fehler: ' . $e->getMessage());
             return self::FAILURE;
         }
     }
 
     /**
-     * Holt zum gegebenen Subscription-Item die zugehörige stripe_customer_id.
+     * Ermittelt zur subscription_item-ID die zugehörige stripe_customer_id.
      */
     private function resolveCustomerId(StripeClient $stripe, string $itemId): ?string
     {
         try {
-            // subscription + customer in einem Rutsch mit expand holen
-            $subItem = $stripe->subscriptionItems->retrieve(
+            // A ▸ subscription_item abrufen (inkl. Subscription-Objekt)
+            $item = $stripe->subscriptionItems->retrieve(
                 $itemId,
-                ['expand' => ['subscription.customer']]
+                ['expand' => ['subscription']]   // nur 'subscription' expanden
             );
 
-            // subscription ist hier bereits ein Objekt
-            return $subItem->subscription->customer ?? null;
+            // B ▸ Falls expand geklappt hat: Customer direkt auslesen
+            if (!empty($item->subscription->customer)) {
+                return $item->subscription->customer;
+            }
+
+            // C ▸ Fallback: separate Abfrage über die Subscription-ID
+            $subscriptionId = $item->subscription;
+            if ($subscriptionId) {
+                $subscription = $stripe->subscriptions->retrieve($subscriptionId);
+                return $subscription->customer ?? null;
+            }
 
         } catch (\Throwable $e) {
-            // Fehler protokollieren, aber nicht abstürzen
-            $this->error('⚠️  Kunde konnte nicht ermittelt werden: '.$e->getMessage());
-            return null;
+            $this->error('⚠️  Kunde konnte nicht ermittelt werden: ' . $e->getMessage());
         }
+
+        return null;
     }
 }
