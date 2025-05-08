@@ -9,15 +9,15 @@ use Stripe\SubscriptionItem;
 class SendStripeUsage extends Command
 {
     protected $signature = 'stripe:usage
-                            {subscription_item : z. B. si_********}
-                            {quantity : Nutzungseinheiten (Sek./Min.)}
-                            {--timestamp= : Unix-Timestamp (Default: jetzt)}';
+                            {subscription_item : z.B. si_******** }
+                            {quantity          : Nutzungseinheiten (Sekunden / Minuten)}
+                            {--timestamp=      : Unix-Timestamp (Default: jetzt)}';
 
-    protected $description = 'Überträgt einen Usage-Record an Stripe (Metered Billing)';
+    protected $description = 'Überträgt einzelne Usage-Records an Stripe';
 
     public function handle(): int
     {
-        /* 1) API-Key ermitteln ------------------------------------------------ */
+        /** 1) API-Key laden */
         $secret = config('services.stripe.secret') ?: env('STRIPE_SECRET');
         if (! $secret) {
             $this->error('❌  STRIPE_SECRET fehlt – .env prüfen!');
@@ -25,21 +25,20 @@ class SendStripeUsage extends Command
         }
         Stripe::setApiKey($secret);
 
-        /* 2) Argumente einlesen --------------------------------------------- */
+        /** 2) Parameter einlesen */
         $itemId    = $this->argument('subscription_item');
         $quantity  = (int) $this->argument('quantity');
         $timestamp = $this->option('timestamp') ?: time();
 
-        /* 3) UsageRecord erzeugen ------------------------------------------- */
         try {
-            $record = SubscriptionItem::createUsageRecord([
-                'subscription_item' => $itemId,
-                'quantity'          => $quantity,
-                'timestamp'         => $timestamp,
-                'action'            => 'increment',
+            /** 3) Usage-Record anlegen (Stripe API) */
+            $record = SubscriptionItem::createUsageRecord($itemId, [
+                'quantity'  => $quantity,
+                'timestamp' => $timestamp,
+                'action'    => 'increment',
             ]);
 
-            $this->info('✅  UsageRecord gesendet →  ' . $record->id);
+            $this->info('✅  UsageRecord gesendet  →  ' . $record->id);
             return self::SUCCESS;
         } catch (\Throwable $e) {
             $this->error('❌  Stripe-Fehler: ' . $e->getMessage());
