@@ -34,7 +34,7 @@ class SendStripeMeterEvent extends Command
         $value     = (int) $this->argument('quantity');
         $timestamp = (int) ($this->option('timestamp') ?: time());
 
-        /* 3 ▸ Kunde aus subscription_item ableiten */
+        /* 3 ▸ Kunde ermitteln */
         $stripe     = new StripeClient($secret);
         $customerId = $this->resolveCustomerId($stripe, $itemId);
 
@@ -54,7 +54,8 @@ class SendStripeMeterEvent extends Command
                 ],
             ]);
 
-            $this->info('✅  MeterEvent gesendet  →  ' . $event->id);
+                 $identifier = $event->identifier ?? 'ohne-Identifier';
+                 $this->info("✅  MeterEvent gesendet  →  $identifier");
             return self::SUCCESS;
 
         } catch (\Throwable $e) {
@@ -64,23 +65,23 @@ class SendStripeMeterEvent extends Command
     }
 
     /**
-     * Liefert zur subscription_item-ID die zugehörige stripe_customer_id zurück.
+     * Liefert zur subscription_item-ID die zugehörige stripe_customer_id.
      */
     private function resolveCustomerId(StripeClient $stripe, string $itemId): ?string
     {
         try {
-            // 1 ▸ subscription_item abrufen
-            $item          = $stripe->subscriptionItems->retrieve($itemId);
+            // ▸ subscription_item abrufen
+            $item           = $stripe->subscriptionItems->retrieve($itemId);
             $subscriptionId = $item->subscription ?? null;
             if (!$subscriptionId) {
                 return null;
             }
 
-            // 2 ▸ Subscription abrufen (ohne expand)
-            $subscription  = $stripe->subscriptions->retrieve($subscriptionId);
-            $customer      = $subscription->customer ?? null;
+            // ▸ Subscription abrufen
+            $subscription = $stripe->subscriptions->retrieve($subscriptionId);
+            $customer     = $subscription->customer ?? null;
 
-            // Falls customer ein Objekt statt String ist, ID herausziehen
+            // customer kann String ODER Objekt sein
             if (is_object($customer) && isset($customer->id)) {
                 $customer = $customer->id;
             }
