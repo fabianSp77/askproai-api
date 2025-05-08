@@ -22,27 +22,28 @@ class SendStripeMeterEvent extends Command
 
     public function handle(): int
     {
-        /* 1 ▸ Secret Key holen  */
+        /* 1 ▸ Secret Key holen */
         $secret = config('services.stripe.secret') ?: env('STRIPE_SECRET');
-        if (! $secret) {
+        if (!$secret) {
             $this->error('❌  STRIPE_SECRET fehlt – .env prüfen!');
             return self::FAILURE;
         }
 
-        /* 2 ▸ CLI-Argumente  */
+        /* 2 ▸ CLI-Argumente */
         $itemId    = $this->argument('subscription_item');
         $value     = (int) $this->argument('quantity');
         $timestamp = (int) ($this->option('timestamp') ?: time());
 
-        /* 3 ▸ Kunde auflösen  */
+        /* 3 ▸ Kunde aus subscription_item ableiten */
         $stripe     = new StripeClient($secret);
         $customerId = $this->resolveCustomerId($stripe, $itemId);
-        if (! $customerId) {
+
+        if (!$customerId) {
             $this->error('❌  Kunde zum übergebenen subscription_item nicht gefunden.');
             return self::FAILURE;
         }
 
-        /* 4 ▸ Meter-Event senden  */
+        /* 4 ▸ Meter-Event senden */
         try {
             $event = $stripe->billing->meterEvents->create([
                 'event_name' => self::EVENT_NAME,
@@ -63,33 +64,32 @@ class SendStripeMeterEvent extends Command
     }
 
     /**
-     * Ermittelt zur subscription_item-ID die zugehörige stripe_customer_id.
+     * Liefert zur subscription_item-ID die zugehörige stripe_customer_id zurück.
      */
     private function resolveCustomerId(StripeClient $stripe, string $itemId): ?string
     {
         try {
-            // A ▸ subscription_item abrufen (inkl. Subscription-Objekt)
-            $item = $stripe->subscriptionItems->retrieve(
-                $itemId,
-                ['expand' => ['subscription']]   // nur 'subscription' expanden
-            );
-
-            // B ▸ Falls expand geklappt hat: Customer direkt auslesen
-            if (!empty($item->subscription->customer)) {
-                return $item->subscription->customer;
+            // 1 ▸ subscription_item abrufen
+            $item          = $stripe->subscriptionItems->retrieve($itemId);
+            $subscriptionId = $item->subscription ?? null;
+            if (!$subscriptionId) {
+                return null;
             }
 
-            // C ▸ Fallback: separate Abfrage über die Subscription-ID
-            $subscriptionId = $item->subscription;
-            if ($subscriptionId) {
-                $subscription = $stripe->subscriptions->retrieve($subscriptionId);
-                return $subscription->customer ?? null;
+            // 2 ▸ Subscription abrufen (ohne expand)
+            $subscription  = $stripe->subscriptions->retrieve($subscriptionId);
+            $customer      = $subscription->customer ?? null;
+
+            // Falls customer ein Objekt statt String ist, ID herausziehen
+            if (is_object($customer) && isset($customer->id)) {
+                $customer = $customer->id;
             }
+
+            return is_string($customer) ? $customer : null;
 
         } catch (\Throwable $e) {
             $this->error('⚠️  Kunde konnte nicht ermittelt werden: ' . $e->getMessage());
+            return null;
         }
-
-        return null;
     }
 }
