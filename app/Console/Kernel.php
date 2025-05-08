@@ -7,31 +7,19 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    /**
-     * Hier alle eigenen Artisan-Befehle registrieren.
-     *
-     * @var array<int, class-string>
-     */
     protected $commands = [
-        \App\Console\Commands\SendStripeUsage::class,
+        \App\Console\Commands\SendStripeMeterEvent::class,
+        // (alter SendStripeUsage bleibt für Legacy-Preise)
     ];
 
-    /**
-     * Artisan Commands, die automatisch getimt laufen sollen.
-     */
     protected function schedule(Schedule $schedule): void
     {
-        // Beispiel:
-        // $schedule->command('horizon:snapshot')->hourly();
+        // hier später Cron-Jobs eintragen
     }
 
-    /**
-     * Commands aus `app/Console/Commands` automatisch finden.
-     */
     protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');
-
         require base_path('routes/console.php');
     }
 }
