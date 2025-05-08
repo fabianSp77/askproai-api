@@ -19,3 +19,8 @@ Route::post(
 Route::post('/webhooks/retell',
     \App\Http\Controllers\API\RetellWebhookController::class
 )->middleware(\App\Http\Middleware\VerifyRetellSignature::class);
+
+// Alias: alte Inbound-URL akzeptieren
+Route::post('/webhooks/retell-inbound',
+    \App\Http\Controllers\API\RetellWebhookController::class
+)->middleware(\App\Http\Middleware\VerifyRetellSignature::class);
