@@ -9,12 +9,12 @@ class Kernel extends ConsoleKernel
 {
     protected $commands = [
         \App\Console\Commands\SendStripeMeterEvent::class,
-        // (alter SendStripeUsage bleibt für Legacy-Preise)
+        \App\Console\Commands\SendStripeUsage::class, // ← Legacy-Command kann bleiben
     ];
 
     protected function schedule(Schedule $schedule): void
     {
-        // hier später Cron-Jobs eintragen
+        // Später: Cron-Jobs hier eintragen
     }
 
     protected function commands(): void

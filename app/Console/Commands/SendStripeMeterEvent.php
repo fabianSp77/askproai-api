@@ -8,14 +8,17 @@ use Stripe\StripeClient;
 class SendStripeMeterEvent extends Command
 {
     protected $signature = 'stripe:meter
-                            {subscription_item : z.B. si_SGyycOxUig4SRf }
-                            {quantity          : Nutzungseinheiten (Sekunden / Minuten)}
-                            {--timestamp=      : Unix-Timestamp (Default: jetzt)}';
+                            {event_name           : Technischer Name des Zählers (z.B. api_requests)}
+                            {customer_id          : Stripe-Customer-ID (cus_****)}
+                            {quantity             : Nutzungseinheiten (Sekunden / Minuten)}
+                            {--timestamp=         : Unix-Timestamp (Standard = jetzt)}
+                            {--identifier=        : Optional eindeutige ID (wird sonst generiert)}';
 
-    protected $description = 'Sendet ein Meter Event an Stripe (neues Usage-Based-Billing)';
+    protected $description = 'Sendet ein Billing-Meter-Event an Stripe (Usage-based Billing, API v1)';
 
     public function handle(): int
     {
+        /** 1) API-Key laden */
         $secret = config('services.stripe.secret') ?: env('STRIPE_SECRET');
         if (! $secret) {
             $this->error('❌  STRIPE_SECRET fehlt – .env prüfen!');
@@ -24,24 +27,30 @@ class SendStripeMeterEvent extends Command
 
         $stripe = new StripeClient($secret);
 
-        $itemId    = $this->argument('subscription_item');
-        $quantity  = (int) $this->argument('quantity');
-        $timestamp = $this->option('timestamp') ?: time();
+        /** 2) Argumente einlesen */
+        $eventName  = $this->argument('event_name');
+        $customerId = $this->argument('customer_id');
+        $quantity   = (int) $this->argument('quantity');
+        $timestamp  = $this->option('timestamp') ?: time();
+        $identifier = $this->option('identifier');       // z.B. UUID – Stripe sorgt 24 h für Einzigartigkeit
 
+        /** 3) Call an /v1/billing/meter_events */
         try {
-            // Das PHP-SDK hat (Stand Mai 2025) noch keine Convenience-Klasse,
-            // daher roher Request:
-            $resp = $stripe->request('post', '/v1/billing/meter_events', [
-                'subscription_item' => $itemId,
-                'quantity'          => $quantity,
-                'timestamp'         => $timestamp,
+            $resp = $stripe->billing->meterEvents->create([
+                'event_name' => $eventName,
+                'payload'    => [
+                    'value'              => $quantity,
+                    'stripe_customer_id' => $customerId,
+                ],
+                'timestamp'  => $timestamp,
+                'identifier' => $identifier,
             ]);
 
-            $this->info('✅  MeterEvent gesendet  →  ' . $resp->json()['id']);
+            $this->info('✅  MeterEvent gesendet  →  '.$resp->id);
             return self::SUCCESS;
 
         } catch (\Throwable $e) {
-            $this->error('❌  Stripe-Fehler: ' . $e->getMessage());
+            $this->error('❌  Stripe-Fehler: '.$e->getMessage());
             return self::FAILURE;
         }
     }
