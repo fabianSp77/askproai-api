@@ -9,19 +9,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('working_hours', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();                                              // PK (BIGINT)
+            $table->foreignId('staff_id')                              // FK → staff.id
+                  ->constrained('staff')
+                  ->cascadeOnDelete();
 
-            $table->uuid('staff_id');
-            $table->foreign('staff_id')
-                  ->references('id')->on('staff')
-                  ->onDelete('cascade');
-
-            // Beispiel-Felder (anpassen, falls nötig)
-            $table->unsignedTinyInteger('weekday');   // 0 = So … 6 = Sa
+            $table->unsignedTinyInteger('weekday');                    // 1 = Mo … 7 = So
             $table->time('start');
             $table->time('end');
 
             $table->timestamps();
+
+            // Ein Mitarbeiter darf pro Zeitfenster nur einen Eintrag haben
+            $table->unique(['staff_id', 'weekday', 'start', 'end']);
         });
     }
 

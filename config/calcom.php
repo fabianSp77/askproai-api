@@ -1,6 +1,14 @@
 <?php
 
 return [
-    'api_key' => 'cal_live_c053a3802d8f99d740b346bbc0339fcf',
-    'base_url' => 'https://api.cal.com/v1',
+    /* Basis-URL der REST-API  */
+    'base_url'  => env('CALCOM_BASE', 'https://api.cal.com'),
+
+    /* Dein Secret-Key  */
+    'api_key'   => env('CALCOM_API_KEY'),
+
+    /* EINE der beiden Varianten setzen                           *
+     * Mit deinem Test klappt → teamUsername (= Workspace-Slug)   */
+    'team_slug' => env('CALCOM_TEAM_SLUG'),   // z. B. askproai
+    'user_slug' => env('CALCOM_USER_SLUG'),   // leer lassen
 ];

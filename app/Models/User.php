@@ -2,26 +2,27 @@
 
 namespace App\Models;
 
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Permission\Traits\HasRoles;   // Rollen
+use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, Notifiable, HasRoles;
 
-    /* -------------------------------------------------------------------- */
-    protected $fillable = ['name', 'email', 'password', 'email_verified_at'];
+    protected $fillable = ['name', 'email', 'password'];
     protected $hidden   = ['password', 'remember_token'];
     protected $casts    = ['email_verified_at' => 'datetime'];
 
-    /*  Zugriff aufs Admin-Panel – nur mit Rolle admin                     */
-    public function canAccessPanel(Panel $panel): bool
+    /**  ► Filament: darf dieser User das Panel sehen?  */
+    public function canAccessPanel(\Filament\Panel $panel): bool
     {
-        return $this->hasRole('admin');
+        // simplest-possible Regel:
+        //   – super_admin kommt immer rein
+        //   – alle anderen nur, wenn sie die Shield-Permission haben
+        return $this->hasRole('super_admin')
+            || $this->can('access_admin_panel');
     }
 }

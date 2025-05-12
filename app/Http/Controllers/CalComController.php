@@ -13,7 +13,7 @@ class CalComController extends Controller
 
     public function __construct()
     {
-        $this->apiKey = env('CALCOM_API_KEY', 'cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da');
+        $this->apiKey = config('calcom.api_key');
         $this->baseUrl = env('CALCOM_BASE_URL', 'https://api.cal.com/v1');
     }
 

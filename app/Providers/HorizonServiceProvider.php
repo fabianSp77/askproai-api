@@ -9,13 +9,12 @@ class HorizonServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        /*
-         |------------------------------------------------------------------
-         | Zugriffsschutz – nur Benutzer mit Rolle „admin“
-         |------------------------------------------------------------------
-         */
+        // E-Mails, die das Dashboard sehen dürfen:
         Horizon::auth(fn ($request) =>
-            $request->user() && $request->user()->hasRole('admin')
+            in_array(
+                optional($request->user())->email,
+                ['fabian@askproai.de']    // ⚠️ weitere Admin-Mails hier eintragen
+            )
         );
     }
 }

@@ -9,21 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('staff_service', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // ----- Beziehungen -----
-            $table->uuid('staff_id');
-            $table->foreign('staff_id')
-                  ->references('id')->on('staff')
-                  ->onDelete('cascade');
-
-            $table->uuid('service_id');
-            $table->foreign('service_id')
-                  ->references('id')->on('services')
-                  ->onDelete('cascade');
-
-            // ----- Metadaten -----
+            $table->id();
+            $table->foreignId('staff_id')->constrained('staff')->cascadeOnDelete();
+            $table->foreignId('service_id')->constrained('services')->cascadeOnDelete();
             $table->timestamps();
+            $table->unique(['staff_id', 'service_id']);
         });
     }
 

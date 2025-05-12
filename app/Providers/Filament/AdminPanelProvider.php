@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use Filament\Panel;
 use Filament\PanelProvider;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -12,19 +13,13 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')
             ->path('admin')
+            ->middleware(['web'])
 
-            /* ---------- Auth ---------- */
-            ->login()
-            ->passwordReset()
-            ->emailVerification()
-            ->profile()
+            ->authGuard('web')          //  <<<  NEU: Guard auf 'web' stellen
 
-            /* ---------- Auto-Discovery ---------- */
-            ->discoverResources(app_path('Filament/Resources'), 'App\\Filament\\Resources')
-            ->discoverPages    (app_path('Filament/Pages'),     'App\\Filament\\Pages')
-            ->discoverWidgets  (app_path('Filament/Widgets'),   'App\\Filament\\Widgets')
-
-            /* ---------- Middleware ---------- */
-            ->middleware(['web']);
+            ->login()                   // Login- / Logout-Seiten aktivieren
+            ->plugins([
+                FilamentShieldPlugin::make(),
+            ]);
     }
 }

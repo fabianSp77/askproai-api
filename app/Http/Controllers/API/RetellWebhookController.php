@@ -2,24 +2,17 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use App\Models\RetellWebhook;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
-class RetellWebhookController extends Controller
+class RetellWebhookController
 {
-    public function __invoke(Request $r)
+    public function __invoke(Request $request): Response
     {
-        $payload    = $r->all();
-        $eventType  = $payload['event_type']    ?? 'unknown';
-        $callId     = $payload['call_id']       ?? ($payload['conversation_id'] ?? null);
+        // TODO: echte Verarbeitung
+        Log::info('Retell‑Webhook OK', $request->all());
 
-        RetellWebhook::create([
-            'event_type' => $eventType,
-            'call_id'    => $callId,
-            'payload'    => $payload,
-        ]);
-
-        return response()->json(['status' => 'ok']);
+        return response()->noContent();   // 204
     }
 }

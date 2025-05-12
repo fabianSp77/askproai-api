@@ -1,0 +1,56 @@
+Hier die **komplette `routes/api.php`** – einfach in `nano` einfügen,
+speichern (`Ctrl-O ↵`, `Ctrl-X`) und anschließend wie gewohnt
+
+```bash
+composer dump-autoload -o
+php artisan optimize:clear
+sudo systemctl restart php8.2-fpm    # ggf. Dienstnamen anpassen
+```
+
+```php
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\CalcomBookingController;
+use App\Http\Controllers\RetellConversationEndedController;
+use App\Http\Controllers\RetellWebhookController;
+use App\Http\Middleware\VerifyRetellSignature;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes  (Prefix „api/“, Middleware-Gruppe „api“)
+|--------------------------------------------------------------------------
+| Hier definierst du sämtliche Endpunkte deiner JSON-API.
+*/
+
+/* ---------------------------------------------------------------------- */
+/*  Cal.com – Buchungs-API                                               */
+/* ---------------------------------------------------------------------- */
+Route::post(
+    'calcom/bookings',
+    [CalcomBookingController::class, 'createBooking']
+)
+/* ►►  LogCalcom läuft jetzt immer mit  ◄◄ */
+->middleware(\App\Http\Middleware\LogCalcom::class)
+->name('calcom.bookings.create');
+
+/* ---------------------------------------------------------------------- */
+/*  Retell Webhooks                                                      */
+/* ---------------------------------------------------------------------- */
+Route::post(
+    'webhooks/retell-conversation-ended',
+    RetellConversationEndedController::class
+)->name('retell.webhook.ended');
+
+Route::post(
+    'webhooks/retell',
+    RetellWebhookController::class
+)->middleware(VerifyRetellSignature::class)
+  ->name('retell.webhook.main');
+
+Route::post(
+    'webhooks/retell-inbound',
+    RetellWebhookController::class
+)->middleware(VerifyRetellSignature::class)
+  ->name('retell.webhook.inbound');
+```
