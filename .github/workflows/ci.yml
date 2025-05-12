@@ -1,0 +1,52 @@
+name: CI & Deploy (staging)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, pdo_mysql, intl, bcmath, gmp
+          tools: composer:v2
+
+      - name: Install Composer deps (no-dev cache)
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Copy .env.example → .env
+        run: cp .env.example .env && php artisan key:generate
+
+      - name: Run PHPUnit
+        run: php artisan test --parallel --compact --display-errors
+
+      - name: Upload PHPUnit artefacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-log
+          path: storage/logs
+
+  deploy-staging:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_SSH_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: 22
+          script: |
+            bash /var/www/api-gateway-staging/deploy.sh

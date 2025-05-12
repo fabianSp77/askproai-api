@@ -1,0 +1,37 @@
+#!/usr/bin/env php
+<?php
+require __DIR__.'/vendor/autoload.php';
+
+$app = require __DIR__.'/bootstrap/app.php';
+
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+
+/* -------------------------------------------------------------
+ |  Tenancy-Provider während des CLI-Aufrufs deaktivieren
+ * ----------------------------------------------------------- */
+$app->forgetInstance(Spatie\Multitenancy\MultitenancyServiceProvider::class);
+$app->forgetInstance(Stancl\Tenancy\TenancyServiceProvider::class);
+/*  Falls Sie andere Provider nutzen, passen Sie die Klassen­namen an
+    oder kommentieren Sie die beiden Zeilen komplett aus.           */
+
+$kernel->bootstrap();
+
+/* -----  Admin-Rolle + Benutzer  -------------------------------- */
+use Illuminate\Support\Facades\Artisan;                //  ←  Import nachholen
+Artisan::call('tinker', [
+    '--execute' => <<<'PHP'
+        use App\Models\User;
+        use Spatie\Permission\Models\Role;
+
+        $role = Role::firstOrCreate(['name' => 'admin']);
+        $user = User::firstWhere('email', 'fabian@askproai.de');
+
+        if ($user) {
+            $user->assignRole($role);
+            echo "✔︎ admin-Rolle zugewiesen\n";
+        } else {
+            echo "✖︎ Benutzer nicht gefunden\n";
+        }
+    PHP
+]);
+?>

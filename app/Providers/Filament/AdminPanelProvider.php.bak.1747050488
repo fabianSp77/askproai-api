@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Navigation\NavigationItem;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->id('admin')
+            ->path('admin')
+
+            /* vollständige web-Middleware  (Cookies, Session, CSRF …) */
+            ->middleware(['web'])
+
+            /* Login-, Logout-, Password-Reset-Seiten aktivieren */
+            ->login()          #  <<<  **die entscheidende Zeile**
+
+            /* Plugins */
+            ->plugins([
+                FilamentShieldPlugin::make(),
+            ])
+
+            /* Beispiel-Eintrag in der Seitennavigation */
+            ->navigationItems([
+                NavigationItem::make('Dashboard')
+                    ->url(fn () => url('/admin'))
+                    ->icon('heroicon-o-home'),
+            ]);
+    }
+}
