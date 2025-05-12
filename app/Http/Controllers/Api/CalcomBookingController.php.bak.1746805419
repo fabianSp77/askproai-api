@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+
+class CalcomBookingController extends Controller
+{
+    private string $baseUrl;
+    private string $apiKey;
+
+    public function __construct()
+    {
+        $this->baseUrl = rtrim(config('calcom.base_url'), '/');
+        $this->apiKey  = config('calcom.api_key');
+    }
+
+    /**
+     *  POST /api/calcom/bookings
+     *  Erwartet alle Pflichfelder der Cal-API.
+     */
+    public function createBooking(Request $request)
+    {
+        $data = $request->validate([
+            // Pflichtfelder (Top-Level)
+            'eventTypeId' => 'required|integer',
+            'start'       => 'required|date',
+            'timeZone'    => 'required|string',
+            'language'    => 'required|string',
+            // Optional aber als Objekt erlaubt
+            'metadata'    => 'sometimes|array',
+
+            // Attendee-Objekt
+            'attendee.name'     => 'required|string',
+            'attendee.email'    => 'required|email',
+            'attendee.timeZone' => 'required|string',
+        ]);
+
+        $url = "{$this->baseUrl}/v1/bookings?apiKey={$this->apiKey}";
+
+        /*  ↓ Bei Bedarf Cal-API-Version mitschicken
+        $resp = Http::acceptJson()
+                    ->withHeader('cal-api-version', '2024-08-13')
+                    ->post($url, $data);
+        */
+        $resp = Http::acceptJson()->post($url, $data);
+
+        return $resp->successful()
+            ? response()->json($resp->json(), 201)
+            : response()->json(
+                ['error' => 'Cal.com-Fehler', 'details' => $resp->json()],
+                $resp->status()
+              );
+    }
+}

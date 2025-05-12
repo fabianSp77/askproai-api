@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+// use Filament\Http\Middleware\Authenticate; // Oft benötigt für authMiddleware()
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->id('admin')
+            ->path('admin')
+            // Füge hier andere Panel-Einstellungen wie favicon, theme etc. ein, falls du sie hattest
+
+            /*
+             * DIESER Aufruf registriert ALLE Standard-Auth-Routen (GET & POST Login, Logout,
+             * Passwort Reset, E-Mail Verify, Profil) UND kümmert sich um die Middleware-Zuordnung
+             * für diese Routen (inkl. Session und CSRF für die Auth-Seiten).
+             */
+            ->auth() // <-- Das ist der entscheidende Fix! Verwende DIESEN Befehl.
+
+            /*
+             * Definiere den Standard-Auth-Guard für dieses Panel.
+             * 'web' ist der übliche Guard für User im Standard Laravel Setup.
+             * In Filament v3 heisst die Methode defaultAuthGuard().
+             */
+            ->defaultAuthGuard('web') // <-- Korrekte Methode in v3
+
+            /*
+             * Standard Middlewares für das gesamte Panel.
+             * Session und CSRF sollten hier oder in der 'web' Middleware-Gruppe des Kernels sein,
+             * ODER durch den ->auth() Aufruf spezifisch für die Auth-Routen behandelt werden.
+             * Standardmässig sind sie in der web-Gruppe.
+             */
+            // ->middleware([
+                // \Illuminate\Cookie\Middleware\EncryptCookies::class, // Beispiele, oft in Kernel $middlewareGroups['web']
+                // \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class, // Beispiele
+                // \Illuminate\Session\Middleware\StartSession::class, // Beispiele
+                // \Illuminate\View\Middleware\ShareErrorsFromSession::class, // Beispiele
+                // \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, // Beispiele
+                // \Illuminate\Routing\Middleware\SubstituteBindings::class, // Beispiele
+                // ... andere spezifische Middlewares für DIESES Panel
+            // ])
+
+            /*
+             * Middlewares, die NUR auf Seiten angewendet werden, die Authentifizierung erfordern (nach dem Login).
+             * Authenticate::class ist hier Standard, oft aus dem Kernel importiert oder direkt verwendet.
+             */
+            // ->authMiddleware([
+               // Authenticate::class, // Beispiel, erfordert 'use Filament\Http\Middleware\Authenticate;' oben
+            // ])
+
+
+            /* Automatische Discovery von Ressourcen, Seiten, Widgets etc. */
+            ->discoverResources(app_path('Filament/Admin/Resources'), 'App\\Filament\\Admin\\Resources')
+            ->discoverPages(app_path('Filament/Admin/Pages'), 'App\\Filament\\Admin\\Pages')
+            ->discoverWidgets(app_path('Filament/Admin/Widgets'), 'App\\Filament\\Admin\\Widgets');
+            // Füge hier weitere Discovery-Methoden oder Panel-Einstellungen ein
+    }
+
+    // Falls vorhanden: Hier enden oft boot() oder andere Methoden der PanelProvider-Klasse
+}

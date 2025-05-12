@@ -1,0 +1,8 @@
+<?php
+namespace App\Http\Middleware;
+use Closure, Illuminate\Http\Request, Illuminate\Support\Facades\Log;
+class LogCalcom{
+    public function handle(Request $r, Closure $n){
+        Log::channel('calcom')->info('[HIT]', ['path'=>$r->path()]);
+        return $n($r);
+    }}

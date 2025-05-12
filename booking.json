@@ -1,0 +1,12 @@
+{
+  "eventTypeId": 2026302,
+  "start"      : "2025-05-13T09:00:00Z",
+  "timeZone"   : "Europe/Berlin",
+  "language"   : "de",
+  "metadata"   : {},
+  "attendee"   : {
+    "name"     : "Max Mustermann",
+    "email"    : "max@example.com",
+    "timeZone" : "Europe/Berlin"
+  }
+}

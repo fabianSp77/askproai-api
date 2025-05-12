@@ -1,0 +1,182 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "AskProAI API Dokumentation",
+        "description": "API-Dokumentation der AskProAI-Schnittstelle zur Verwaltung von Kunden und Authentifizierung",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api"
+        }
+    ],
+    "paths": {
+        "/kunden": {
+            "get": {
+                "summary": "Liste aller Kunden abrufen",
+                "responses": {
+                    "200": {
+                        "description": "Liste aller Kunden erfolgreich abgerufen",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {"type": "integer", "example": 1},
+                                            "name": {"type": "string", "example": "Test Praxis"},
+                                            "email": {"type": "string", "example": "praxis@test.de"},
+                                            "telefonnummer": {"type": "string", "example": "0123456789"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Neuen Kunden anlegen",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["name", "email"],
+                                "properties": {
+                                    "name": {"type": "string", "example": "Test Praxis"},
+                                    "email": {"type": "string", "example": "praxis@test.de"},
+                                    "telefonnummer": {"type": "string", "example": "0123456789"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Kunde erfolgreich erstellt"
+                    }
+                }
+            }
+        },
+        "/kunden/{kunden}": {
+            "get": {
+                "summary": "Einen bestimmten Kunden abrufen",
+                "parameters": [
+                    {
+                        "name": "kunden",
+                        "in": "path",
+                        "required": true,
+                        "schema": {"type": "integer"}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Kundendetails erfolgreich abgerufen",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {"type": "integer", "example": 1},
+                                        "name": {"type": "string", "example": "Test Praxis"},
+                                        "email": {"type": "string", "example": "praxis@test.de"},
+                                        "telefonnummer": {"type": "string", "example": "0123456789"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "summary": "Kunde aktualisieren",
+                "parameters": [
+                    {
+                        "name": "kunden",
+                        "in": "path",
+                        "required": true,
+                        "schema": {"type": "integer"}
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {"type": "string", "example": "Neue Praxis"},
+                                    "email": {"type": "string", "example": "neu@test.de"},
+                                    "telefonnummer": {"type": "string", "example": "0987654321"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Kunde erfolgreich aktualisiert"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Kunden löschen",
+                "parameters": [
+                    {
+                        "name": "kunden",
+                        "in": "path",
+                        "required": true,
+                        "schema": {"type": "integer"}
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Kunde erfolgreich gelöscht"
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "summary": "Login durchführen und Token erhalten",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["email", "password"],
+                                "properties": {
+                                    "email": {"type": "string", "example": "testuser@example.com"},
+                                    "password": {"type": "string", "example": "Passwort123!"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Erfolgreiche Authentifizierung, Token zurückgegeben",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string",
+                                            "description": "JWT Token",
+                                            "example": "GENERIERTER_TOKEN_STRING"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
