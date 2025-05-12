@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Navigation\NavigationItem;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            // eindeutige ID + URL-Präfix
+            ->id('admin')
+            ->path('admin')
+
+            // **Shield-Plugin aktivieren**
+            ->plugins([
+                FilamentShieldPlugin::make(),
+            ])
+
+            // einfaches Dashboard-Item (Demo)
+            ->navigationItems([
+                NavigationItem::make('Dashboard')
+                    ->url(fn () => url('/admin'))
+                    ->icon('heroicon-o-home'),
+            ]);
+    }
+}

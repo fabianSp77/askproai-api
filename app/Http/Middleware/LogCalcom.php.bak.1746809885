@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+class LogCalcom
+{
+    /**
+     * loggt Request + Response für alle Routen,
+     * deren Name mit  calcom.bookings  beginnt
+     */
+    public function handle(Request $request, Closure $next)
+    {
+        if ($request->routeIs('calcom.bookings.*')) {
+            Log::channel('calcom')->info('[OUT]', [
+                'method'  => $request->method(),
+                'uri'     => $request->path(),
+                'payload' => $request->all(),
+            ]);
+        }
+
+        $response = $next($request);
+
+        if ($request->routeIs('calcom.bookings.*')) {
+            Log::channel('calcom')->info('[IN ]', [
+                'status' => $response->status(),
+                'body'   => $response->getContent(),
+            ]);
+        }
+
+        return $response;
+    }
+}

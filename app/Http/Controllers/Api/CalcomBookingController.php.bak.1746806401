@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+
+class CalcomBookingController extends Controller
+{
+    private string $baseUrl;
+    private string $apiKey;
+
+    public function __construct()
+    {
+        $this->baseUrl = rtrim(config('calcom.base_url'), '/');
+        $this->apiKey  = config('calcom.api_key');
+    }
+
+    /**  POST /api/calcom/bookings  */
+    public function createBooking(Request $request)
+    {
+        $validated = $request->validate([
+            /* ---------------- Pflichtfelder ---------------- */
+            'eventTypeId'       => 'required|integer',
+            'start'             => 'required|date',
+            'timeZone'          => 'required|string',
+            'language'          => 'required|string',
+
+            /* optionale Objekte */
+            'metadata'          => 'sometimes|array',
+            'responses'         => 'sometimes|array',
+
+            /* Attendee-Objekt */
+            'attendee.name'     => 'required|string',
+            'attendee.email'    => 'required|email',
+            'attendee.timeZone' => 'required|string',
+        ]);
+
+        /* ---- leere Felder im richtigen Typ liefern --------------------- */
+        if (empty($validated['metadata']  ?? null)) $validated['metadata']  = (object) [];
+        if (empty($validated['responses'] ?? null)) $validated['responses'] = (object) [];   //  ◀︎ statt []
+
+        $url  = "{$this->baseUrl}/v1/bookings?apiKey={$this->apiKey}";
+        $resp = Http::acceptJson()->post($url, $validated);
+
+        return $resp->successful()
+            ? response()->json($resp->json(), 201)
+            : response()->json(
+                ['error' => 'Cal.com-Fehler', 'details' => $resp->json()],
+                $resp->status() ?: 400
+              );
+    }
+}

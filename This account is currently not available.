@@ -1,0 +1,178 @@
+public function createBooking(array $data)
+{
+    $maxRetries = 3;
+    $retryDelay = 500;
+
+    Log::info('Cal.com Buchungsversuch gestartet', [
+        'eventTypeId' => $data['eventTypeId'],
+        'start' => $data['start']
+    ]);
+
+    // Überprüfen des EventType, um die korrekte Dauer zu ermitteln
+    $eventTypeId = (int)$data['eventTypeId'];
+    
+    // Standard-Dauer basierend auf Event-Typ (in Minuten)
+    $defaultDuration = 30;
+    if ($eventTypeId == 2026901) {
+        $defaultDuration = 30; // Herren
+    } elseif ($eventTypeId == 2031153) {
+        $defaultDuration = 45; // Damen
+    }
+    
+    for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+        try {
+            // API-Schlüssel als Query-Parameter
+            $url = "{$this->baseUrl}/bookings?apiKey={$this->apiKey}";
+            
+            // Grundlegende Daten
+            $name = $data['name'];
+            $email = $data['email'];
+            
+            // Zeit im korrekten Format, entsprechend der Ereignistyp-Dauer
+            $startTime = new \DateTime($data['start']);
+            $endTime = clone $startTime;
+            $endTime->modify("+{$defaultDuration} minutes");
+            
+            // In ISO8601 konvertieren ohne Mikrosekunden
+            $start = $startTime->format('c');
+            $end = $endTime->format('c');
+            
+            $payload = [
+                'eventTypeId' => $eventTypeId,
+                'start' => $start,
+                'end' => $end,
+                'timeZone' => $this->timeZone,
+                'language' => $this->language,
+                'attendee' => [
+                    'name' => $name,
+                    'email' => $email
+                ],
+                'responses' => [
+                    'name' => $name,
+                    'email' => $email
+                ],
+'metadata' => [
+    'source' => 'askproai',
+    'version' => '1.0',
+    'clientId' => $data['clientId'] ?? null,
+    'bookingOrigin' => 'api'
+],                'location' => $data['location'] ?? 'Vor Ort'
+            ];
+            
+            Log::info('Cal.com API-Anfrage senden', [
+                'url' => $url,
+                'payload' => $payload
+            ]);
+            
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
+            ])->post($url, $payload);
+            
+            Log::info('Cal.com API-Antwort erhalten', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::warning('Buchungsversuch fehlgeschlagen', [
+                'attempt' => $attempt,
+                'status' => $response->status(),
+                'response' => $response->json()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Fehler bei Cal.com Buchung', [
+                'error' => $e->getMessage(),
+                'attempt' => $attempt
+            ]);
+        }
+
+        if ($attempt < $maxRetries) {
+            usleep($retryDelay * 1000);
+        }
+    }
+
+    throw new \Exception('Cal.com Buchung fehlgeschlagen nach ' . $maxRetries . ' Versuchen.');
+}
+[90m= [39m[
+    {#7265
+      +"[1mTables_in_askproai_staging_db[22m": "[32mapi_health_logs[39m",
+    },
+    {#7268
+      +"[1mTables_in_askproai_staging_db[22m": "[32mappointments[39m",
+    },
+    {#7269
+      +"[1mTables_in_askproai_staging_db[22m": "[32mbranch_service[39m",
+    },
+    {#7270
+      +"[1mTables_in_askproai_staging_db[22m": "[32mbranch_staff[39m",
+    },
+    {#7271
+      +"[1mTables_in_askproai_staging_db[22m": "[32mbranches[39m",
+    },
+    {#7284
+      +"[1mTables_in_askproai_staging_db[22m": "[32mcache[39m",
+    },
+    {#7285
+      +"[1mTables_in_askproai_staging_db[22m": "[32mcache_locks[39m",
+    },
+    {#7286
+      +"[1mTables_in_askproai_staging_db[22m": "[32mcalendars[39m",
+    },
+    {#7287
+      +"[1mTables_in_askproai_staging_db[22m": "[32mcalls[39m",
+    },
+    {#7288
+      +"[1mTables_in_askproai_staging_db[22m": "[32mcompanies[39m",
+    },
+    {#7289
+      +"[1mTables_in_askproai_staging_db[22m": "[32mcustomers[39m",
+    },
+    {#7290
+      +"[1mTables_in_askproai_staging_db[22m": "[32mintegrations[39m",
+    },
+    {#7291
+      +"[1mTables_in_askproai_staging_db[22m": "[32mkunden[39m",
+    },
+    {#7292
+      +"[1mTables_in_askproai_staging_db[22m": "[32mmigrations[39m",
+    },
+    {#7293
+      +"[1mTables_in_askproai_staging_db[22m": "[32moauth_access_tokens[39m",
+    },
+    {#7294
+      +"[1mTables_in_askproai_staging_db[22m": "[32moauth_auth_codes[39m",
+    },
+    {#7295
+      +"[1mTables_in_askproai_staging_db[22m": "[32moauth_refresh_tokens[39m",
+    },
+    {#7296
+      +"[1mTables_in_askproai_staging_db[22m": "[32mphone_numbers[39m",
+    },
+    {#7297
+      +"[1mTables_in_askproai_staging_db[22m": "[32mretell_agents[39m",
+    },
+    {#7298
+      +"[1mTables_in_askproai_staging_db[22m": "[32mservices[39m",
+    },
+    {#7299
+      +"[1mTables_in_askproai_staging_db[22m": "[32mstaff[39m",
+    },
+    {#7300
+      +"[1mTables_in_askproai_staging_db[22m": "[32mstaff_service[39m",
+    },
+    {#7301
+      +"[1mTables_in_askproai_staging_db[22m": "[32mtenants[39m",
+    },
+    {#7302
+      +"[1mTables_in_askproai_staging_db[22m": "[32musers[39m",
+    },
+    {#7303
+      +"[1mTables_in_askproai_staging_db[22m": "[32mworking_hours[39m",
+    },
+  ]
+

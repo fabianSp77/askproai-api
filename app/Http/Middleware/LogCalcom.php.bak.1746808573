@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+class LogCalcom
+{
+    public function handle(Request $request, Closure $next)
+    {
+        /* --------------------------------------------------------------
+         |  Nur die API-Route `calcom.bookings.create` mitschneiden
+         * ------------------------------------------------------------ */
+        if ($request->routeIs('calcom.bookings.create')) {
+            Log::channel('calcom')->info('[OUT]', ['payload' => $request->all()]);
+        }
+
+        $response = $next($request);
+
+        if ($request->routeIs('calcom.bookings.create')) {
+            Log::channel('calcom')->info('[IN ]', [
+                'status' => $response->status(),
+                'body'   => $response->getContent(),
+            ]);
+        }
+
+        return $response;
+    }
+}
