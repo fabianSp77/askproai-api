@@ -19,6 +19,7 @@
         "stripe/stripe-php": "^14.0"
     },
     "require-dev": {
+        "brianium/paratest": "^7.0",
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
