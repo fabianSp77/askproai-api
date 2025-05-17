@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Facades\Filament;
+use Filament\Navigation\NavigationBuilder;
+use Filament\Panel;
+use Illuminate\Support\ServiceProvider;
+
+class AdminPanelProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        Filament::registerPanel(
+            Panel::make('admin')
+                ->path('admin')          // /admin
+                ->login()                // erzeugt /admin/login (GET|POST)
+                ->default()              // Standard-Panel
+                ->authGuard('web')       // Guard = web  (gleich wie Login-Form)
+                ->discoverResources(      // ► Verzeichnis + Namespace
+                    in:  app_path('Filament/Admin/Resources'),
+                    for: 'App\\Filament\\Admin\\Resources',
+                )
+                ->discoverPages(
+                    in:  app_path('Filament/Admin/Pages'),
+                    for: 'App\\Filament\\Admin\\Pages',
+                )
+                ->discoverWidgets(
+                    in:  app_path('Filament/Admin/Widgets'),
+                    for: 'App\\Filament\\Admin\\Widgets',
+                )
+                ->navigation(fn (NavigationBuilder $nav) => $nav)
+        );
+    }
+}

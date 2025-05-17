@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\IntegrationResource\Pages;
+use App\Filament\Admin\Resources\IntegrationResource\RelationManagers;
 use App\Models\Integration;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -10,71 +11,80 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class IntegrationResource extends Resource
 {
-    /* ---------- Basis ---------- */
-    protected static ?string $model           = Integration::class;
-    protected static ?string $navigationIcon  = 'heroicon-o-key';
-    protected static ?string $navigationGroup = 'Stammdaten';
-    protected static ?string $navigationLabel = 'Integrationen';
-    public    static bool   $canCreateAnother = false;
+    protected static ?string $model = Integration::class;
 
-    /* ---------- Formular ---------- */
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static bool $shouldRegisterNavigation = true;
+    protected static ?string $navigationGroup = 'Stammdaten';
+
     public static function form(Form $form): Form
     {
-        return $form->schema([
-            Forms\Components\Select::make('customer_id')
-                ->relationship('customer', 'name')
-                ->searchable()
-                ->required()
-                ->label('Kunde'),
+        return $form
+            ->schema([
+                Forms\Components\Select::make('customer_id')
+                    ->relationship('customer', 'name')
+                    ->required(),
+                Forms\Components\TextInput::make('system')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\Textarea::make('credentials')
+                    ->columnSpanFull(),
+                Forms\Components\Toggle::make('active')
+                    ->required(),
+            ]);
 
-            Forms\Components\Select::make('system')
-                ->options([
-                    'calcom' => 'Cal.com',
-                    'retell' => 'Retell.ai',
-                    'twilio' => 'Twilio',
-                    'google' => 'Google Calendar',
-                ])
-                ->required()
-                ->label('System'),
-
-            Forms\Components\KeyValue::make('credentials')
-                ->label('Zugangsdaten (Key → Wert)')
-                ->required(),
-
-            Forms\Components\Toggle::make('active')
-                ->label('Aktiv')
-                ->default(true),
-        ]);
     }
 
-    /* ---------- Tabelle ---------- */
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('customer.name')->label('Kunde'),
-                Tables\Columns\BadgeColumn::make('system')->label('System'),
-                Tables\Columns\IconColumn::make('active')->boolean()->label('Aktiv'),
+                Tables\Columns\TextColumn::make('customer.name')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('system')
+                    ->searchable(),
+                Tables\Columns\IconColumn::make('active')
+                    ->boolean(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->actions([ Tables\Actions\EditAction::make() ]);
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
-    /* ---------- Query-Filter ---------- */
-    public static function getEloquentQuery(): Builder
+    public static function getRelations(): array
     {
-        return parent::getEloquentQuery()->whereNotNull('customer_id');
+        return [
+            //
+        ];
     }
 
-    /* ---------- Seiten-Routing ---------- */
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListIntegrations::route('/'),
+            'index' => Pages\ListIntegrations::route('/'),
             'create' => Pages\CreateIntegration::route('/create'),
-            'edit'   => Pages\EditIntegration::route('/{record}/edit'),
+            'edit' => Pages\EditIntegration::route('/{record}/edit'),
         ];
     }
 }

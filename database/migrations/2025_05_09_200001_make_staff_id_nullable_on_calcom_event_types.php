@@ -6,17 +6,33 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * staff_id in calcom_event_types auf NULL-fähig umstellen.
+     * Läuft nur, wenn Tabelle & Spalte bereits vorhanden sind.
+     */
     public function up(): void
     {
-        Schema::table('calcom_event_types', function (Blueprint $table) {
-            $table->uuid('staff_id')->nullable()->change();   // NULL erlaubt
-        });
+        if (Schema::hasTable('calcom_event_types')
+            && Schema::hasColumn('calcom_event_types', 'staff_id')) {
+
+            Schema::table('calcom_event_types', function (Blueprint $table) {
+                $table->char('staff_id', 36)->nullable()->change();   // NULL jetzt erlaubt
+            });
+        }
     }
 
+    /**
+     * Rollback: staff_id wieder NOT NULL.
+     * Ebenfalls nur, wenn Tabelle & Spalte existieren.
+     */
     public function down(): void
     {
-        Schema::table('calcom_event_types', function (Blueprint $table) {
-            $table->uuid('staff_id')->nullable(false)->change(); // wieder NOT NULL
-        });
+        if (Schema::hasTable('calcom_event_types')
+            && Schema::hasColumn('calcom_event_types', 'staff_id')) {
+
+            Schema::table('calcom_event_types', function (Blueprint $table) {
+                $table->char('staff_id', 36)->nullable(false)->change(); // NULL-Verbot wiederherstellen
+            });
+        }
     }
 };

@@ -3,146 +3,109 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\BranchResource\Pages;
-use App\Models\{Branch, Service};
+use App\Filament\Admin\Resources\BranchResource\RelationManagers;
+use App\Models\Branch;
 use Filament\Forms;
-use Filament\Forms\Components\{Repeater, Select, TextInput, Toggle};
-use Filament\Notifications\Notification;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BranchResource extends Resource
 {
-    protected static ?string $model           = Branch::class;
-    protected static ?string $navigationIcon  = 'heroicon-o-building-storefront';
+    protected static ?string $model = Branch::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static bool $shouldRegisterNavigation = true;
     protected static ?string $navigationGroup = 'Stammdaten';
 
-    /* ─────────────  Formular  ───────────── */
-    public static function form(Forms\Form $form): Forms\Form
+    public static function form(Form $form): Form
     {
-        return $form->schema([
-            TextInput::make('name')->required(),
-            TextInput::make('city')->label('Ort'),
-            TextInput::make('phone_number')->label('Telefon'),
-            Toggle::make('active')->label('Aktiv')->default(true),
-        ]);
+        return $form
+            ->schema([
+                Forms\Components\Select::make('customer_id')
+                    ->relationship('customer', 'name')
+                    ->default(null),
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('slug')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('city')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('phone_number')
+                    ->tel()
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\Toggle::make('active')
+                    ->required(),
+            ]);
+
     }
 
-    /* ─────────────  Tabelle  ───────────── */
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('city'),
-                Tables\Columns\IconColumn::make('active')->boolean(),
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('customer.name')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('slug')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('city')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('phone_number')
+                    ->searchable(),
+                Tables\Columns\IconColumn::make('active')
+                    ->boolean(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-
-                /* -------- Service-Import -------- */
-                Action::make('importServices')
-                    ->label('Services importieren')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->modalHeading('Services aus anderer Filiale kopieren')
-                    ->form([
-                        /* Quelle-Filiale */
-                        Select::make('source_branch_id')
-                            ->label('Quelle-Filiale')
-                            ->options(fn () => Branch::pluck('name', 'id'))
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                // direkt nach Filial-Auswahl Services in den Repeater einfüllen
-                                $services = Branch::find($state)?->services()->get() ?? collect();
-                                $set(
-                                    'items',
-                                    $services
-                                        ->map(fn ($s) => [
-                                            'service_id' => $s->id,
-                                            'name'       => $s->name,
-                                            'price'      => $s->price,
-                                        ])
-                                        ->toArray(),
-                                );
-                            })
-                            ->required(),
-
-                        /* Services + Edit */
-                        Repeater::make('items')
-                            ->label('Services auswählen & anpassen')
-                            ->schema([
-                                Select::make('service_id')
-                                    ->label('Service')
-                                    ->options(fn (Forms\Get $get) => $get('source_branch_id')
-                                        ? Branch::find($get('source_branch_id'))
-                                            ?->services()
-                                            ->pluck('name', 'id')
-                                            ->toArray()
-                                        : []
-                                    )
-                                    ->required(),
-
-                                TextInput::make('name')
-                                    ->label('Name')
-                                    ->placeholder('wie Original   (optional)'),
-
-                                TextInput::make('price')
-                                    ->label('Preis (€)')
-                                    ->numeric()
-                                    ->step(0.01),
-                            ])
-                            ->columns(3),
-                    ])
-                    ->action(function (array $data, Branch $record) {
-
-                        $source = Branch::find($data['source_branch_id']);
-                        if (! $source) {
-                            Notification::make()
-                                ->title('Quelle-Filiale nicht gefunden')
-                                ->danger()
-                                ->send();
-                            return;
-                        }
-
-                        $copied = 0;
-
-                        foreach ($data['items'] as $item) {
-                            /* Original-Service */
-                            $orig = $source->services()->find($item['service_id']);
-                            if (! $orig) {
-                                continue;
-                            }
-
-                            /* Duplikat anlegen */
-                            $new = Service::create([
-                                'name'        => $item['name'] ?: $orig->name,
-                                'description' => $orig->description,
-                                'price'       => $item['price'] ?? $orig->price,
-                                'active'      => $orig->active,
-                            ]);
-
-                            /* In Ziel-Filiale verknüpfen */
-                            $record->services()->attach($new->id);
-                            $copied++;
-                        }
-
-                        Notification::make()
-                            ->title("$copied Service(s) kopiert")
-                            ->success()
-                            ->send();
-                    })
-                    ->modalSubmitActionLabel('Kopieren'),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
     }
 
-    /* ─────────────  Seiten  ───────────── */
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListBranches::route('/'),
+            'index' => Pages\ListBranches::route('/'),
             'create' => Pages\CreateBranch::route('/create'),
-            'edit'   => Pages\EditBranch::route('/{record}/edit'),
+            'edit' => Pages\EditBranch::route('/{record}/edit'),
         ];
     }
 }

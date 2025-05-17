@@ -3,82 +3,76 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\ServiceResource\Pages;
+use App\Filament\Admin\Resources\ServiceResource\RelationManagers;
 use App\Models\Service;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ServiceResource extends Resource
 {
-    /** Modell, das die Resource repräsentiert */
     protected static ?string $model = Service::class;
 
-    /** Icon in der Sidebar */
-    protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
-
-    /** Ordner-Gruppe in der Navigation (optional) */
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static bool $shouldRegisterNavigation = true;
     protected static ?string $navigationGroup = 'Stammdaten';
 
-    /* -------------------------------------------------------------------------
-     |  Formulare (Create & Edit)
-     * ---------------------------------------------------------------------- */
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                TextInput::make('name')
+                Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+            ]);
 
-                TextInput::make('price')
-                    ->numeric()
-                    ->step(0.01)          // zwei Nachkommastellen
-                    ->prefix('€')
-                    ->required(),
-
-                TextInput::make('description')
-                    ->columnSpanFull(),
-
-                Toggle::make('active')
-                    ->label('Aktiv')
-                    ->default(true),
-            ])
-            ->columns(2);                 // zwei Spalten nebeneinander
     }
 
-    /* -------------------------------------------------------------------------
-     |  Tabellenansicht
-     * ---------------------------------------------------------------------- */
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('price')
-                    ->money('eur', locale: 'de_DE')
-                    ->sortable(),
-
-                Tables\Columns\IconColumn::make('active')
-                    ->boolean(),
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('name');
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
-    /* -------------------------------------------------------------------------
-     |  Routenzuordnung für die Filament-Seiten
-     * ---------------------------------------------------------------------- */
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListServices::route('/'),
+            'index' => Pages\ListServices::route('/'),
             'create' => Pages\CreateService::route('/create'),
-            'edit'   => Pages\EditService::route('/{record}/edit'),
+            'edit' => Pages\EditService::route('/{record}/edit'),
         ];
     }
 }

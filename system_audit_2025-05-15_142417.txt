@@ -1,0 +1,469 @@
+### System-Audit v3  –  Do 15. Mai 14:24:17 CEST 2025 ###
+### System-Audit v3  –  Do 15. Mai 14:24:17 CEST 2025 ###
+
+## 1) Host & Software
+## 1) Host & Software
+v2202503255565320322.happysrv.de
+fabian
+
+Description:	Debian GNU/Linux 12 (bookworm)
+PHP 8.2.28 (cli) (built: Mar 13 2025 18:21:38) (NTS)
+Composer version 2.5.5 2023-03-21 11:50:05
+
+
+## 2) Git
+## 2) Git
+* commit dd9f1a7ce04d19f53805bf9ee245e26d2a37be8f (HEAD -> chore/use-mysql-for-tests, origin/main, main)
+| Author: Fabian S <fabian@askproai.de>
+| Date:   Tue May 13 05:14:41 2025 +0200
+| 
+|     test: skip SET foreign_key_checks migration on SQLite
+| 
+* commit 68eafc6cb34cc15730d7c1f60858e8fe19a78fef
+| Author: Fabian S <fabian@askproai.de>
+| Date:   Tue May 13 05:10:32 2025 +0200
+| 
+|     test: skip branch→customer FK migration on SQLite
+| 
+* commit c9b5c5028363d568cc9d1e4c41b9da866fd40645
+| Author: Fabian S <fabian@askproai.de>
+| Date:   Tue May 13 05:07:51 2025 +0200
+| 
+|     test: skip MODIFY migration on SQLite + adjust ExampleTest
+| 
+* commit 5e28473c1231a6f1de6548ee7074d76ad668ad3f
+| Author: Fabian S <fabian@askproai.de>
+| Date:   Tue May 13 04:58:28 2025 +0200
+| 
+|     ci: run tests sequentially (no ParaTest required)
+| 
+* commit 9123cc11c2f74d742dd008eb6dbe4b47c954d05c
+| Author: Fabian S <fabian@askproai.de>
+| Date:   Tue May 13 04:58:18 2025 +0200
+| 
+|     test: add ParaTest 7.x for parallel test runner
+| 
+* commit a397ff09af1cdca076b72cb5943e480f87a02f3d
+| Author: Fabian S <fabian@askproai.de>
+| Date:   Tue May 13 04:54:50 2025 +0200
+| 
+|     chore(ci): add workflow_dispatch trigger
+| 
+* commit 67442e40d190610d8fe0a5e998f8dc7f85080746
+| Author: Fabian S <fabian@askproai.de>
+| Date:   Tue May 13 04:50:11 2025 +0200
+| 
+|     chore(ci): trigger after secret purge
+| 
+* commit 6c09a032a029d353bcbb1a21bf29e39a6e97c511 (tag: v0.2.0, origin/clean-main, clean-main)
+  Author: Fabian S <fabian@askproai.de>
+  Date:   Mon May 12 19:19:49 2025 +0200
+  
+      feat: clean snapshot after secret purge
+
+## 3) Composer – top level
+## 3) Composer – top level
+anourvalar/eloquent-serialize              
+bezhansalleh/filament-shield               
+blade-ui-kit/blade-heroicons               
+blade-ui-kit/blade-icons                   
+brianium/paratest                          
+brick/math                                 
+carbonphp/carbon-doctrine-types            
+danharrin/date-format-converter            
+danharrin/livewire-rate-limiting           
+defuse/php-encryption                      
+dflydev/dot-access-data                    
+doctrine/dbal                              
+doctrine/deprecations                      
+doctrine/inflector                         
+doctrine/lexer                             
+dragonmantank/cron-expression              
+egulias/email-validator                    
+fakerphp/faker                             
+fidry/cpu-core-counter                     
+filament/actions                           
+filament/filament                          
+filament/forms                             
+filament/infolists                         
+filament/notifications                     
+filament/support                           
+filament/tables                            
+filament/widgets                           
+filp/whoops                                
+firebase/php-jwt                           
+fruitcake/php-cors                         
+graham-campbell/result-type                
+guzzlehttp/guzzle                          
+guzzlehttp/promises                        
+guzzlehttp/psr7                            
+guzzlehttp/uri-template                    
+hamcrest/hamcrest-php                      
+jean85/pretty-package-versions             
+kirschbaum-development/eloquent-power-joins
+laravel/breeze                             
+laravel/framework                          
+laravel/horizon                            
+laravel/pail                               
+laravel/passport                           
+laravel/pint                               
+laravel/prompts                            
+laravel/sail                               
+laravel/sanctum                            
+laravel/serializable-closure               
+laravel/tinker                             
+lcobucci/clock                             
+lcobucci/jwt                               
+league/commonmark                          
+league/config                              
+league/csv                                 
+league/event                               
+league/flysystem                           
+league/flysystem-local                     
+league/mime-type-detection                 
+league/oauth2-server                       
+league/uri                                 
+league/uri-interfaces                      
+livewire/livewire                          
+masterminds/html5                          
+mockery/mockery                            
+monolog/monolog                            
+myclabs/deep-copy                          
+nesbot/carbon                              
+nette/schema                               
+nette/utils                                
+nikic/php-parser                           
+nunomaduro/collision                       
+nunomaduro/termwind                        
+nyholm/psr7                                
+openspout/openspout                        
+paragonie/constant_time_encoding           
+paragonie/random_compat                    
+phar-io/manifest                           
+phar-io/version                            
+phpoption/phpoption                        
+phpseclib/phpseclib                        
+phpunit/php-code-coverage                  
+phpunit/php-file-iterator                  
+phpunit/php-invoker                        
+phpunit/php-text-template                  
+phpunit/php-timer                          
+phpunit/phpunit                            
+psr/cache                                  
+psr/clock                                  
+psr/container                              
+psr/event-dispatcher                       
+psr/http-client                            
+psr/http-factory                           
+psr/http-message                           
+psr/log                                    
+psr/simple-cache                           
+psy/psysh                                  
+ralouphie/getallheaders                    
+ramsey/collection                          
+ramsey/uuid                                
+ryangjchandler/blade-capture-directive     
+
+## 4) .env (sanitised – Schlüssel ausgeblendet)
+## 4) .env (sanitised – Schlüssel ausgeblendet)
+APP_NAME=***SANITISED***
+APP_ENV=***SANITISED***
+APP_KEY=***SANITISED***
+APP_CIPHER=***SANITISED***
+APP_DEBUG=***SANITISED***
+APP_URL=***SANITISED***
+CALCOM_API_KEY=***SANITISED***
+CALCOM_EVENT_TYPE_ID=***SANITISED***
+CALCOM_TEAM_SLUG=***SANITISED***
+CALCOM_BASE_URL=***SANITISED***
+CALCOM_WEBHOOK_SECRET=***SANITISED***
+RETELL_BASE=***SANITISED***
+RETELL_TOKEN=***SANITISED***
+RETELL_WEBHOOK_SECRET=***SANITISED***
+STRIPE_SECRET=***SANITISED***
+MAIL_MAILER=***SANITISED***
+MAIL_HOST=***SANITISED***
+MAIL_PORT=***SANITISED***
+MAIL_ENCRYPTION=***SANITISED***
+MAIL_USERNAME=***SANITISED***
+MAIL_PASSWORD=***SANITISED***
+MAIL_FROM_ADDRESS=***SANITISED***
+MAIL_FROM_NAME=***SANITISED***
+REDIS_CLIENT=***SANITISED***
+REDIS_HOST=***SANITISED***
+REDIS_PORT=***SANITISED***
+QUEUE_CONNECTION=***SANITISED***
+AWS_ACCESS_KEY_ID=***SANITISED***
+AWS_SECRET_ACCESS_KEY=***SANITISED***
+AWS_DEFAULT_REGION=***SANITISED***
+AWS_BUCKET=***SANITISED***
+AWS_USE_PATH_STYLE_ENDPOINT=***SANITISED***
+VITE_APP_NAME=***SANITISED***
+DB_CONNECTION=***SANITISED***
+DB_HOST=***SANITISED***
+DB_PORT=***SANITISED***
+DB_DATABASE=***SANITISED***
+DB_USERNAME=***SANITISED***
+DB_PASSWORD=***SANITISED***
+CACHE_DRIVER=***SANITISED***
+SESSION_DRIVER=***SANITISED***
+SESSION_SECURE_COOKIE=***SANITISED***
+SESSION_SAME_SITE=***SANITISED***
+SESSION_DOMAIN=***SANITISED***
+HORIZON_PREFIX=***SANITISED***
+SHIELD_PANEL_ADMIN_ID=***SANITISED***
+SHIELD_GUARD=***SANITISED***
+SHIELD_ENABLED=***SANITISED***
+SESSION_SAME_SITE=***SANITISED***
+
+## 5) Laravel – about
+## 5) Laravel – about
+
+  [32;1mEnvironment[39;22m [90m..................................................................................................................................[39m  
+  Application Name [90m....................................................................................................................[39m AskProAI  
+  Laravel Version [90m......................................................................................................................[39m 11.44.7  
+  PHP Version [90m...........................................................................................................................[39m 8.2.28  
+  Composer Version [90m.......................................................................................................................[39m 2.5.5  
+  Environment [90m.......................................................................................................................[39m production  
+  Debug Mode [90m...........................................................................................................................[39m [33;1mENABLED[39;22m  
+  URL [90m..........................................................................................................................[39m api.askproai.de  
+  Maintenance Mode [90m.........................................................................................................................[39m OFF  
+  Timezone [90m.......................................................................................................................[39m Europe/Berlin  
+  Locale [90m....................................................................................................................................[39m de  
+
+  [32;1mCache[39;22m [90m........................................................................................................................................[39m  
+  Config [90m................................................................................................................................[39m [32;1mCACHED[39;22m  
+  Events [90m............................................................................................................................[39m [33;1mNOT CACHED[39;22m  
+  Routes [90m............................................................................................................................[39m [33;1mNOT CACHED[39;22m  
+  Views [90m.................................................................................................................................[39m [32;1mCACHED[39;22m  
+
+  [32;1mDrivers[39;22m [90m......................................................................................................................................[39m  
+  Broadcasting [90m............................................................................................................................[39m null  
+  Cache [90m...............................................................................................................................[39m database  
+  Database [90m...............................................................................................................................[39m mysql  
+  Logs [90m..........................................................................................................................[39m [33;1mstack[39;22m [90;1m/[39;22m single  
+  Mail [90m....................................................................................................................................[39m smtp  
+  Queue [90m...................................................................................................................................[39m sync  
+  Session [90m.................................................................................................................................[39m file  
+
+  [32;1mShield[39;22m [90m.......................................................................................................................................[39m  
+  Auth Provider [90m.....................................................................................................[39m App\Models\User|[32;1mCONFIGURED[39;22m  
+  Tenancy [90m.............................................................................................................................[39m [90;1mDISABLED[39;22m  
+  Tenant Model [90m.................................................................................................................................[39m  
+  Translations [90m...................................................................................................................[39m [32;1mNOT PUBLISHED[39;22m  
+  Version [90m..............................................................................................................................[39m 3.x-dev  
+  Views [90m..........................................................................................................................[39m [32;1mNOT PUBLISHED[39;22m  
+
+  [32;1mFilament[39;22m [90m.....................................................................................................................................[39m  
+  Blade Icons [90m.......................................................................................................................[39m [33;1mNOT CACHED[39;22m  
+  Packages [90m.....................................................................................[39m filament, forms, notifications, support, tables  
+  Panel Components [90m..................................................................................................................[39m [33;1mNOT CACHED[39;22m  
+  Version [90m..............................................................................................................................[39m v3.3.14  
+  Views [90m..........................................................................................................................[39m [32;1mNOT PUBLISHED[39;22m  
+
+  [32;1mLivewire[39;22m [90m.....................................................................................................................................[39m  
+  Livewire [90m..............................................................................................................................[39m v3.6.3  
+
+  [32;1mSpatie Permissions[39;22m [90m...........................................................................................................................[39m  
+  Features Enabled [90m.....................................................................................................................[39m Default  
+  Version [90m...............................................................................................................................[39m 6.17.0  
+
+
+###   Routes (json)
+###   Routes (json)
+[{"domain":null,"method":"GET|HEAD","uri":"/","name":null,"action":"Closure","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"admin","name":"filament.admin.redirect-to-dashboard","action":"Closure","middleware":["web"]},{"domain":null,"method":"GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS","uri":"admin","name":null,"action":"Illuminate\\Routing\\RedirectController","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/appointments","name":"filament.admin.resources.appointments.index","action":"App\\Filament\\Admin\\Resources\\AppointmentResource\\Pages\\ListAppointments","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/appointments/create","name":"filament.admin.resources.appointments.create","action":"App\\Filament\\Admin\\Resources\\AppointmentResource\\Pages\\CreateAppointment","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/appointments/{record}/edit","name":"filament.admin.resources.appointments.edit","action":"App\\Filament\\Admin\\Resources\\AppointmentResource\\Pages\\EditAppointment","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/bookings","name":"filament.admin.resources.bookings.index","action":"App\\Filament\\Admin\\Resources\\BookingResource\\Pages\\ListBookings","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/bookings/create","name":"filament.admin.resources.bookings.create","action":"App\\Filament\\Admin\\Resources\\BookingResource\\Pages\\CreateBooking","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/bookings/{record}/edit","name":"filament.admin.resources.bookings.edit","action":"App\\Filament\\Admin\\Resources\\BookingResource\\Pages\\EditBooking","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/branches","name":"filament.admin.resources.branches.index","action":"App\\Filament\\Admin\\Resources\\BranchResource\\Pages\\ListBranches","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/branches/create","name":"filament.admin.resources.branches.create","action":"App\\Filament\\Admin\\Resources\\BranchResource\\Pages\\CreateBranch","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/branches/{record}/edit","name":"filament.admin.resources.branches.edit","action":"App\\Filament\\Admin\\Resources\\BranchResource\\Pages\\EditBranch","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/calls","name":"filament.admin.resources.calls.index","action":"App\\Filament\\Admin\\Resources\\CallResource\\Pages\\ListCalls","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/calls/create","name":"filament.admin.resources.calls.create","action":"App\\Filament\\Admin\\Resources\\CallResource\\Pages\\CreateCall","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/calls/{record}/edit","name":"filament.admin.resources.calls.edit","action":"App\\Filament\\Admin\\Resources\\CallResource\\Pages\\EditCall","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/companies","name":"filament.admin.resources.companies.index","action":"App\\Filament\\Admin\\Resources\\CompanyResource\\Pages\\ListCompanies","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/companies/create","name":"filament.admin.resources.companies.create","action":"App\\Filament\\Admin\\Resources\\CompanyResource\\Pages\\CreateCompany","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/companies/{record}/edit","name":"filament.admin.resources.companies.edit","action":"App\\Filament\\Admin\\Resources\\CompanyResource\\Pages\\EditCompany","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/customers","name":"filament.admin.resources.customers.index","action":"App\\Filament\\Admin\\Resources\\CustomerResource\\Pages\\ListCustomers","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/customers/create","name":"filament.admin.resources.customers.create","action":"App\\Filament\\Admin\\Resources\\CustomerResource\\Pages\\CreateCustomer","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/customers/{record}/edit","name":"filament.admin.resources.customers.edit","action":"App\\Filament\\Admin\\Resources\\CustomerResource\\Pages\\EditCustomer","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/dashboard","name":"filament.admin.pages.dashboard","action":"App\\Filament\\Admin\\Pages\\Dashboard","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/integrations","name":"filament.admin.resources.integrations.index","action":"App\\Filament\\Admin\\Resources\\IntegrationResource\\Pages\\ListIntegrations","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/integrations/create","name":"filament.admin.resources.integrations.create","action":"App\\Filament\\Admin\\Resources\\IntegrationResource\\Pages\\CreateIntegration","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/integrations/{record}/edit","name":"filament.admin.resources.integrations.edit","action":"App\\Filament\\Admin\\Resources\\IntegrationResource\\Pages\\EditIntegration","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/login","name":"filament.admin.auth.login","action":"Filament\\Pages\\Auth\\Login","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"POST","uri":"admin/logout","name":"filament.admin.auth.logout","action":"Filament\\Http\\Controllers\\Auth\\LogoutController","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/services","name":"filament.admin.resources.services.index","action":"App\\Filament\\Admin\\Resources\\ServiceResource\\Pages\\ListServices","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/services/create","name":"filament.admin.resources.services.create","action":"App\\Filament\\Admin\\Resources\\ServiceResource\\Pages\\CreateService","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/services/{record}/edit","name":"filament.admin.resources.services.edit","action":"App\\Filament\\Admin\\Resources\\ServiceResource\\Pages\\EditService","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/shield/roles","name":"filament.admin.resources.shield.roles.index","action":"BezhanSalleh\\FilamentShield\\Resources\\RoleResource\\Pages\\ListRoles","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/shield/roles/create","name":"filament.admin.resources.shield.roles.create","action":"BezhanSalleh\\FilamentShield\\Resources\\RoleResource\\Pages\\CreateRole","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/shield/roles/{record}","name":"filament.admin.resources.shield.roles.view","action":"BezhanSalleh\\FilamentShield\\Resources\\RoleResource\\Pages\\ViewRole","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/shield/roles/{record}/edit","name":"filament.admin.resources.shield.roles.edit","action":"BezhanSalleh\\FilamentShield\\Resources\\RoleResource\\Pages\\EditRole","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/staff","name":"filament.admin.resources.staff.index","action":"App\\Filament\\Admin\\Resources\\StaffResource\\Pages\\ListStaff","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/staff/create","name":"filament.admin.resources.staff.create","action":"App\\Filament\\Admin\\Resources\\StaffResource\\Pages\\CreateStaff","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/staff/{record}/edit","name":"filament.admin.resources.staff.edit","action":"App\\Filament\\Admin\\Resources\\StaffResource\\Pages\\EditStaff","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/users","name":"filament.admin.resources.users.index","action":"App\\Filament\\Admin\\Resources\\UserResource\\Pages\\ListUsers","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/users/create","name":"filament.admin.resources.users.create","action":"App\\Filament\\Admin\\Resources\\UserResource\\Pages\\CreateUser","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/users/{record}/edit","name":"filament.admin.resources.users.edit","action":"App\\Filament\\Admin\\Resources\\UserResource\\Pages\\EditUser","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/working-hours","name":"filament.admin.resources.working-hours.index","action":"App\\Filament\\Admin\\Resources\\WorkingHourResource\\Pages\\ListWorkingHours","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/working-hours/create","name":"filament.admin.resources.working-hours.create","action":"App\\Filament\\Admin\\Resources\\WorkingHourResource\\Pages\\CreateWorkingHour","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"admin/working-hours/{record}/edit","name":"filament.admin.resources.working-hours.edit","action":"App\\Filament\\Admin\\Resources\\WorkingHourResource\\Pages\\EditWorkingHour","middleware":["Filament\\Http\\Middleware\\SetUpPanel:admin","web"]},{"domain":null,"method":"GET|HEAD","uri":"api/calcom/webhook","name":null,"action":"App\\Http\\Controllers\\CalcomWebhookController@ping","middleware":["api"]},{"domain":null,"method":"POST","uri":"api/calcom/webhook","name":null,"action":"App\\Http\\Controllers\\CalcomWebhookController@handle","middleware":["api","App\\Http\\Middleware\\VerifyCalcomSignature"]},{"domain":null,"method":"GET|HEAD","uri":"filament/exports/{export}/download","name":"filament.exports.download","action":"Filament\\Actions\\Exports\\Http\\Controllers\\DownloadExport","middleware":["filament.actions"]},{"domain":null,"method":"GET|HEAD","uri":"filament/imports/{import}/failed-rows/download","name":"filament.imports.failed-rows.download","action":"Filament\\Actions\\Imports\\Http\\Controllers\\DownloadImportFailureCsv","middleware":["filament.actions"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/batches","name":"horizon.jobs-batches.index","action":"Laravel\\Horizon\\Http\\Controllers\\BatchesController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"POST","uri":"horizon/api/batches/retry/{id}","name":"horizon.jobs-batches.retry","action":"Laravel\\Horizon\\Http\\Controllers\\BatchesController@retry","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/batches/{id}","name":"horizon.jobs-batches.show","action":"Laravel\\Horizon\\Http\\Controllers\\BatchesController@show","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/jobs/completed","name":"horizon.completed-jobs.index","action":"Laravel\\Horizon\\Http\\Controllers\\CompletedJobsController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/jobs/failed","name":"horizon.failed-jobs.index","action":"Laravel\\Horizon\\Http\\Controllers\\FailedJobsController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/jobs/failed/{id}","name":"horizon.failed-jobs.show","action":"Laravel\\Horizon\\Http\\Controllers\\FailedJobsController@show","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/jobs/pending","name":"horizon.pending-jobs.index","action":"Laravel\\Horizon\\Http\\Controllers\\PendingJobsController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"POST","uri":"horizon/api/jobs/retry/{id}","name":"horizon.retry-jobs.show","action":"Laravel\\Horizon\\Http\\Controllers\\RetryController@store","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/jobs/silenced","name":"horizon.silenced-jobs.index","action":"Laravel\\Horizon\\Http\\Controllers\\SilencedJobsController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/jobs/{id}","name":"horizon.jobs.show","action":"Laravel\\Horizon\\Http\\Controllers\\JobsController@show","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/masters","name":"horizon.masters.index","action":"Laravel\\Horizon\\Http\\Controllers\\MasterSupervisorController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/metrics/jobs","name":"horizon.jobs-metrics.index","action":"Laravel\\Horizon\\Http\\Controllers\\JobMetricsController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/metrics/jobs/{id}","name":"horizon.jobs-metrics.show","action":"Laravel\\Horizon\\Http\\Controllers\\JobMetricsController@show","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/metrics/queues","name":"horizon.queues-metrics.index","action":"Laravel\\Horizon\\Http\\Controllers\\QueueMetricsController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/metrics/queues/{id}","name":"horizon.queues-metrics.show","action":"Laravel\\Horizon\\Http\\Controllers\\QueueMetricsController@show","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/monitoring","name":"horizon.monitoring.index","action":"Laravel\\Horizon\\Http\\Controllers\\MonitoringController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"POST","uri":"horizon/api/monitoring","name":"horizon.monitoring.store","action":"Laravel\\Horizon\\Http\\Controllers\\MonitoringController@store","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/monitoring/{tag}","name":"horizon.monitoring-tag.paginate","action":"Laravel\\Horizon\\Http\\Controllers\\MonitoringController@paginate","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"DELETE","uri":"horizon/api/monitoring/{tag}","name":"horizon.monitoring-tag.destroy","action":"Laravel\\Horizon\\Http\\Controllers\\MonitoringController@destroy","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/stats","name":"horizon.stats.index","action":"Laravel\\Horizon\\Http\\Controllers\\DashboardStatsController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/api/workload","name":"horizon.workload.index","action":"Laravel\\Horizon\\Http\\Controllers\\WorkloadController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"horizon/{view?}","name":"horizon.index","action":"Laravel\\Horizon\\Http\\Controllers\\HomeController@index","middleware":["web","Laravel\\Horizon\\Http\\Middleware\\Authenticate"]},{"domain":null,"method":"GET|HEAD","uri":"livewire/livewire.js","name":null,"action":"Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile","middleware":[]},{"domain":null,"method":"GET|HEAD","uri":"livewire/livewire.min.js.map","name":null,"action":"Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@maps","middleware":[]},{"domain":null,"method":"GET|HEAD","uri":"livewire/preview-file/{filename}","name":"livewire.preview-file","action":"Livewire\\Features\\SupportFileUploads\\FilePreviewController@handle","middleware":["web"]},{"domain":null,"method":"POST","uri":"livewire/update","name":"livewire.update","action":"Livewire\\Mechanisms\\HandleRequests\\HandleRequests@handleUpdate","middleware":["web"]},{"domain":null,"method":"POST","uri":"livewire/upload-file","name":"livewire.upload-file","action":"Livewire\\Features\\SupportFileUploads\\FileUploadController@handle","middleware":["web","Illuminate\\Routing\\Middleware\\ThrottleRequests:60,1"]},{"domain":null,"method":"GET|HEAD","uri":"oauth/authorize","name":"passport.authorizations.authorize","action":"Laravel\\Passport\\Http\\Controllers\\AuthorizationController@authorize","middleware":["web"]},{"domain":null,"method":"POST","uri":"oauth/authorize","name":"passport.authorizations.approve","action":"Laravel\\Passport\\Http\\Controllers\\ApproveAuthorizationController@approve","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"DELETE","uri":"oauth/authorize","name":"passport.authorizations.deny","action":"Laravel\\Passport\\Http\\Controllers\\DenyAuthorizationController@deny","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"GET|HEAD","uri":"oauth/clients","name":"passport.clients.index","action":"Laravel\\Passport\\Http\\Controllers\\ClientController@forUser","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"POST","uri":"oauth/clients","name":"passport.clients.store","action":"Laravel\\Passport\\Http\\Controllers\\ClientController@store","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"PUT","uri":"oauth/clients/{client_id}","name":"passport.clients.update","action":"Laravel\\Passport\\Http\\Controllers\\ClientController@update","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"DELETE","uri":"oauth/clients/{client_id}","name":"passport.clients.destroy","action":"Laravel\\Passport\\Http\\Controllers\\ClientController@destroy","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"GET|HEAD","uri":"oauth/personal-access-tokens","name":"passport.personal.tokens.index","action":"Laravel\\Passport\\Http\\Controllers\\PersonalAccessTokenController@forUser","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"POST","uri":"oauth/personal-access-tokens","name":"passport.personal.tokens.store","action":"Laravel\\Passport\\Http\\Controllers\\PersonalAccessTokenController@store","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"DELETE","uri":"oauth/personal-access-tokens/{token_id}","name":"passport.personal.tokens.destroy","action":"Laravel\\Passport\\Http\\Controllers\\PersonalAccessTokenController@destroy","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"GET|HEAD","uri":"oauth/scopes","name":"passport.scopes.index","action":"Laravel\\Passport\\Http\\Controllers\\ScopeController@all","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"POST","uri":"oauth/token","name":"passport.token","action":"Laravel\\Passport\\Http\\Controllers\\AccessTokenController@issueToken","middleware":["Illuminate\\Routing\\Middleware\\ThrottleRequests"]},{"domain":null,"method":"POST","uri":"oauth/token/refresh","name":"passport.token.refresh","action":"Laravel\\Passport\\Http\\Controllers\\TransientTokenController@refresh","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"GET|HEAD","uri":"oauth/tokens","name":"passport.tokens.index","action":"Laravel\\Passport\\Http\\Controllers\\AuthorizedAccessTokenController@forUser","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"DELETE","uri":"oauth/tokens/{token_id}","name":"passport.tokens.destroy","action":"Laravel\\Passport\\Http\\Controllers\\AuthorizedAccessTokenController@destroy","middleware":["web","App\\Http\\Middleware\\Authenticate:web"]},{"domain":null,"method":"GET|HEAD","uri":"sanctum/csrf-cookie","name":"sanctum.csrf-cookie","action":"Laravel\\Sanctum\\Http\\Controllers\\CsrfCookieController@show","middleware":["web"]},{"domain":null,"method":"GET|HEAD","uri":"storage/{path}","name":"storage.local","action":"Closure","middleware":[]},{"domain":null,"method":"GET|HEAD","uri":"up","name":null,"action":"Closure","middleware":[]}]
+
+###   Migration status
+###   Migration status
+
+  [90mMigration name[39m [90m................................................................................................................[39m [90mBatch / Status[39m  
+  2025_03_19_150030_create_users_table [90m.................................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_19_150040_create_kunden_table [90m................................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_19_150056_add_kunde_id_to_users_table [90m........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_19_150110_create_integrations_table [90m..........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_19_160234_create_cache_table [90m.................................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_20_181810_ensure_calls_table_exists [90m..........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_20_181815_align_calls_table_with_model [90m.......................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_20_181820_add_kunde_id_to_calls_table [90m........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_21_150758_create_oauth_clients_table [90m.........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_21_150759_create_oauth_personal_access_clients_table [90m.........................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_22_085045_create_customers_table [90m.............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_22_085045_create_phone_numbers_table [90m.........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_22_085045_create_staff_table [90m.................................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_22_112544_create_oauth_auth_codes_table [90m......................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_22_112545_create_oauth_access_tokens_table [90m...................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_22_112546_create_oauth_refresh_tokens_table [90m..................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_27_151813_create_companies_table [90m.............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_27_151814_create_api_health_logs_table [90m.......................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_03_27_151814_create_retell_agents_table [90m.........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_04_142048_add_tenant_id_to_calls_table [90m.......................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_29_134517_create_branches_table [90m..............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_29_134518_create_calendars_table [90m.............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_29_152000_create_services_table [90m..............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_29_152815_create_staff_service_table [90m.........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_29_153012_create_working_hours_table [90m.........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_30_072730_alter_branches_customer_id_back_to_bigint [90m..........................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_30_072859_add_branch_customer_fk [90m.............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_30_143324_update_integrations_table [90m..........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_30_164923_fix_integrations_fk [90m................................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_04_30_165307_fix_integrations_fk [90m................................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_01_083530_create_failed_jobs_table [90m...........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_01_083530_create_jobs_table [90m..................................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_01_085108_ensure_appointments_table_exists [90m...................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_01_091735_alter_calls_raw_to_json [90m............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_01_091740_add_customer_fk_to_calls [90m...........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_02_135535_alter_calls_add_retell_columns [90m.....................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_02_142413_alter_calls_retell_nullable [90m........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_02_145708_alter_calls_add_details [90m............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_02_150542_alter_calls_add_details [90m............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_03_070914_add_duration_sec_to_calls_table [90m....................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_03_071357_add_duration_sec_to_calls_table [90m....................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_03_075425_add_relations_and_cost_to_calls_table [90m..............................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_03_075425_create_agents_table [90m................................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_04_091545_calls_add_retell_missing [90m...........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_04_111306_add_conversation_id_to_calls_table [90m.................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_04_112000_calls_add_conversation_id [90m..........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_04_145240_add_call_id_to_calls_table [90m.........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_05_162425_create_tenants_table [90m...............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_05_162426_add_balance_cents_to_tenants_table [90m.................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_05_163431_create_permission_tables [90m...........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_06_170852_add_slug_to_tenants_table [90m..........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_06_171214_add_slug_and_api_key_to_tenants_table [90m..............................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_06_192113_alter_tenants_for_uuid [90m.............................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_07_113058_add_birthdate_to_customers_table [90m...................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_08_120000_create_retell_webhooks_table [90m.......................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_09_200001_make_staff_id_nullable_on_calcom_event_types [90m.......................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_10_173530_create_password_reset_tokens_table [90m.................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_11_183656_add_details_to_services_table [90m......................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_11_190001_create_branch_staff_table [90m..........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_11_190002_create_branch_service_table [90m........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_11_190003_add_home_branch_to_staff [90m...........................................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_11_200000_create_calcom_event_types_and_bookings_tables [90m......................................................................[39m [1m[1][22m [32;1mRan[39;22m  
+  2025_05_13_000000_add_fields_to_calls [90m................................................................................................[39m [1m[2][22m [32;1mRan[39;22m  
+  2025_05_13_065443_recreate_integrations_if_missing [90m...................................................................................[39m [1m[2][22m [32;1mRan[39;22m  
+  2025_05_13_071116_2025_05_10_090000_recreate_staff_if_missing [90m........................................................................[39m [1m[2][22m [32;1mRan[39;22m  
+
+
+###   Horizon status
+###   Horizon status
+
+   ERROR  Horizon is inactive.  
+
+Horizon not installed
+
+###   Scheduler list
+###   Scheduler list
+
+   INFO  No scheduled tasks have been defined.  
+
+
+###   Queue failed (7 days)
+###   Queue failed (7 days)
+
+                                        
+  The "--since" option does not exist.  
+                                        
+
+
+## 6) File tree (maxdepth 3)
+## 6) File tree (maxdepth 3)
+,
+-
+[
+]
+$MIG
+2025_05_02_140901_alter_calls_retell_nullable.php
+2025_05_02_142413_alter_calls_retell_nullable.php
+2025_05_02_145708_alter_calls_add_details.php
+2025_05_02_150542_alter_calls_add_details.php
+2025_05_06_192113_alter_tenants_for_uuid.php
+2025_05_06_192823_create_tenants_table_uuid.php
+2025_05_11_125943_create_password_reset_tokens_table.php
++491234567890,
+access_admin_panel,
+AES-256-CBC,
+[analysis]
+API-Fehler bei Cal.com,
+api_key
+api_provider
+app/Console/Kernel.php
+app/Http/Kernel.php
+app/Http/Kernel.php.bak.1747045296
+app/Http/Kernel.php.bak.1747047304
+app/Http/Kernel.php.bak.2025-05-15-1057
+app/Http/Kernel.php.bak.2025-05-15-1100
+app/Http/Kernel.php.bak.2025-05-15-1117
+app/Http/Kernel.php.bak.2025-05-15-1123
+app/Http/Kernel.php.bak.2025-05-15-1124
+app/Http/Kernel.php.bak.2025-05-15-1128
+app/Http/Kernel.php.bak.2025-05-15-1134
+app/Http/Kernel.php.bak.2025-05-15-1140
+app/Http/Kernel.php.bak.2025-05-15-1149
+app/Http/Kernel.php.bak.2025-05-15-1151
+AppHttpMiddlewareAuthenticate::class,
+AppHttpMiddlewareVerifyCalcomSignature::class,
+app/Jobs/HeartbeatJob.php
+app/Jobs/HorizonSmokeTestJob.php
+app/Jobs/ProcessRetellCallJob.php
+app/Jobs/ProcessRetellCallJob.php.bak.2025-05-14-1803
+app/Jobs/ProcessRetellCallJob.php.bak.2025-05-14-1820
+app/Jobs/ProcessRetellCallJob.php.bak.2025-05-14-1824
+app/Jobs/ProcessRetellCallJob.php.bak.2025-05-14-1829
+app/Jobs/RefreshCallDataJob.php
+app/Jobs/SmokeJob.php
+app/Mail/ErrorNotificationMail.php
+app/Models/Agent.php
+app/Models/Appointment.php
+app/Models/Booking.php
+app/Models/Branch.php
+app/Models/Business.php
+app/Models/CalcomBooking.php
+app/Models/CalcomEventType.php
+app/Models/Calendar.php
+app/Models/CallLog.php
+app/Models/Call.php
+app/Models/Company.php
+app/Models/Customer.php
+app/Models/Dienstleistung.php
+app/Models/Dienstleistung.php.temp
+app/Models/Faq.php
+app/Models/FAQ.php
+app/Models/Faq.php.temp
+app/Models/Integration.php
+app/Models/Kunde.php
+app/Models/Mitarbeiter.php
+app/Models/PhoneNumber.php
+app/Models/PremiumService.php
+app/Models/RetellAgent.php
+app/Models/RetellWebhook.php
+app/Models/Service.php
+app/Models/Staff.php
+app/Models/StaffService.php
+app/Models/Telefonnummer.php
+app/Models/Telefonnummer.php.temp
+app/Models/Tenant.php
+app/Models/Termin.php
+app/Models/Termin.php.temp
+app/Models/User.php
+app/Models/User.php.bak.1746463136
+app/Models/User.php.bak.1746985684
+app/Models/WorkingHour.php
+app/Notifications/VerifyEmail.php
+app/Policies/AppointmentPolicy.php
+app/Policies/BookingPolicy.php
+app/Policies/BranchPolicy.php
+app/Policies/CallPolicy.php
+app/Policies/CompanyPolicy.php
+app/Policies/CustomerPolicy.php
+app/Policies/IntegrationPolicy.php
+app/Policies/RolePolicy.php
+app/Policies/ServicePolicy.php
+app/Policies/StaffPolicy.php
+app/Policies/UserPolicy.php
+app/Policies/WorkingHourPolicy.php
+app/Providers/AppServiceProvider.php
+app/Providers/AppServiceProvider.php.bak.2025-05-15-1201
+app/Providers/AuthServiceProvider.php
+app/Providers/EventServiceProvider.php
+app/Providers/FilamentBadgeServiceProvider.php
+app/Providers/HorizonServiceProvider.php

@@ -1,0 +1,7 @@
+
+    /** Simple GET-Ping (keine Signatur) */
+    public function ping(): \Illuminate\Http\JsonResponse
+    {
+        return response()->json(['ping' => 'ok']);
+    }
+}

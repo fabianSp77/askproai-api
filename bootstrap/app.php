@@ -4,37 +4,66 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-// Funktion nur deklarieren, wenn sie noch nicht existiert
-if (!function_exists('bootstrap_debug_log')) {
-    function bootstrap_debug_log(string $message): void {
-        error_log("BOOTSTRAP DEBUG: {$message}");
-    }
-}
+/*
+|--------------------------------------------------------------------------
+| Create The Application
+|--------------------------------------------------------------------------
+|
+| Hier konfigurieren wir die Laravel-Instanz. Am Ende liefern wir das
+| Application-Objekt zurück, damit der Aufrufer Services auflösen kann.
+|
+*/
 
-bootstrap_debug_log("bootstrap/app.php - START");
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web:      __DIR__.'/../routes/web.php',
+        api:      __DIR__.'/../routes/api.php',      // ← API-Routes einbinden
+        commands: __DIR__.'/../routes/console.php',
+        health:   '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
 
-try {
-    $app = Application::configure(basePath: dirname(__DIR__))
-        ->withRouting(
-            web: __DIR__.'/../routes/web.php',
-            api: __DIR__.'/../routes/api.php',
-            commands: __DIR__.'/../routes/console.php',
-            health: '/up',
-        )
-        ->withMiddleware(function (Middleware $middleware) {
-            bootstrap_debug_log("Configuring Middleware...");
-        })
-        ->withExceptions(function (Exceptions $exceptions) {
-            bootstrap_debug_log("Configuring Exceptions...");
-        })->create();
+        /* ---------------------------------------------------------
+         |  WEB-Gruppe  (Standard-Middleware für Browser-Requests)
+         * -------------------------------------------------------- */
+        $middleware->web(append: [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
 
-    bootstrap_debug_log("Application instance CREATED.");
+        /* ---------------------------------------------------------
+         |  API-Gruppe  (typisch für stateless Requests / SPA)
+         * -------------------------------------------------------- */
+        $middleware->api(prepend: [
+            'throttle:api',
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
 
-} catch (\Throwable $e) {
-    bootstrap_debug_log("CRITICAL ERROR DURING BOOTSTRAP (configure/create): " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
-    throw $e;
-}
+        /* ---------------------------------------------------------
+         |  Middleware-Aliase  (Array-Syntax!)
+         * -------------------------------------------------------- */
+        $middleware->alias([
+            /* ✨ Eigener Alias – Cal.com-Webhook-Signaturprüfung */
+            'calcom.signature' => \App\Http\Middleware\VerifyCalcomSignature::class,
 
-bootstrap_debug_log("bootstrap/app.php - RETURNING Application instance.");
-
-return $app;
+            /* ── Laravel-Standard ─────────────────────────────── */
+            'auth'              => \App\Http\Middleware\Authenticate::class,
+            'auth.basic'        => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+            'cache.headers'     => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+            'can'               => \Illuminate\Auth\Middleware\Authorize::class,
+            'guest'             => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'password.confirm'  => \Illuminate\Auth\Middleware\RequirePassword::class,
+            'signed'            => \Illuminate\Routing\Middleware\ValidateSignature::class,
+            'throttle'          => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            'verified'          => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        // Hier könntest du z. B. eigene Exception-Handler registrieren
+    })
+    ->create();

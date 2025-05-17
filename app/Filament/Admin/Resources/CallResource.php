@@ -3,97 +3,166 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\CallResource\Pages;
-use App\Jobs\RefreshCallDataJob;
+use App\Filament\Admin\Resources\CallResource\RelationManagers;
 use App\Models\Call;
+use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CallResource extends Resource
 {
-    /** Model & Menü-Infos */
-    protected static ?string $model           = Call::class;
-    protected static ?string $navigationGroup = 'Buchungen';
-    protected static ?string $navigationIcon  = 'heroicon-o-phone';
+    protected static ?string $model = Call::class;
 
-    /** Tabelle */
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static bool $shouldRegisterNavigation = true;
+    protected static ?string $navigationGroup = 'Kommunikation';
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\TextInput::make('call_id')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('external_id')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('conversation_id')
+                    ->maxLength(36)
+                    ->default(null),
+                Forms\Components\TextInput::make('call_status')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\Toggle::make('call_successful'),
+                Forms\Components\TextInput::make('retell_call_id')
+                    ->tel()
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('tmp_call_id')
+                    ->maxLength(36)
+                    ->default(null),
+                Forms\Components\TextInput::make('from_number')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('to_number')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('duration_sec')
+                    ->numeric()
+                    ->default(null),
+                Forms\Components\Textarea::make('analysis')
+                    ->columnSpanFull(),
+                Forms\Components\TextInput::make('cost_cents')
+                    ->numeric()
+                    ->default(null),
+                Forms\Components\Textarea::make('transcript')
+                    ->columnSpanFull(),
+                Forms\Components\Textarea::make('raw')
+                    ->columnSpanFull(),
+                Forms\Components\TextInput::make('kunde_id')
+                    ->numeric()
+                    ->default(null),
+                Forms\Components\TextInput::make('customer_id')
+                    ->numeric()
+                    ->default(null),
+                Forms\Components\TextInput::make('branch_id')
+                    ->numeric()
+                    ->default(null),
+                Forms\Components\TextInput::make('phone_number_id')
+                    ->tel()
+                    ->numeric()
+                    ->default(null),
+                Forms\Components\TextInput::make('agent_id')
+                    ->numeric()
+                    ->default(null),
+                Forms\Components\Textarea::make('details')
+                    ->columnSpanFull(),
+            ]);
+
+    }
+
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('created_at', 'desc')
             ->columns([
-                /* Datum */
-                TextColumn::make('created_at')
-                    ->label('Erstellt')
-                    ->dateTime('d.m.Y H:i')
-                    ->sortable(),
-
-                /* Kunde */
-                TextColumn::make('customer.name')
-                    ->label('Kunde')
+                Tables\Columns\TextColumn::make('call_id')
                     ->searchable(),
-
-                /* Dauer */
-                TextColumn::make('duration_sec')
-                    ->label('Dauer')
-                    ->formatStateUsing(
-                        fn (?int $state) => $state
-                            ? $state.' s ('.gmdate('i:s', $state).' min)'
-                            : '–'
-                    ),
-
-                /* Kosten */
-                TextColumn::make('cost_euro')
-                    ->label('Kosten')
-                    ->money('eur'),
-
-                /* Ampel-Icon – hat Transkript? */
-                IconColumn::make('transcript')
-                    ->label('tg.')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')->trueColor('success')
-                    ->falseIcon('heroicon-o-clock')->falseColor('warning'),
-
-                /* Kurz-Vorschau */
-                TextColumn::make('transcript')
-                    ->label('Transkript')
-                    ->limit(120)
-                    ->wrap()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->extraAttributes(['style' => 'max-width:400px']),
+                Tables\Columns\TextColumn::make('external_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('conversation_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('call_status')
+                    ->searchable(),
+                Tables\Columns\IconColumn::make('call_successful')
+                    ->boolean(),
+                Tables\Columns\TextColumn::make('retell_call_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('tmp_call_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('from_number')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('to_number')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('duration_sec')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('cost_cents')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('kunde_id')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('customer_id')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('branch_id')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('phone_number_id')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('agent_id')
+                    ->numeric()
+                    ->sortable(),
             ])
-
+            ->filters([
+                //
+            ])
             ->actions([
-                /* Vollansicht als Modal */
-                Action::make('showTranscript')
-                    ->label('Voll')
-                    ->icon('heroicon-o-document-text')
-                    ->visible(fn (Call $c) => filled($c->transcript))
-                    ->modalHeading('Vollständiges Transkript')
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Schließen')
-                    ->modalContent(fn (Call $c) => view(
-                        'filament.modals.transcript',
-                        ['text' => $c->transcript]
-                    )),
-
-                /* Daten bei Retell nachladen */
-                Action::make('refresh')
-                    ->label('Aktualisieren')
-                    ->icon('heroicon-o-arrow-path')
-                    ->action(fn (Call $c) => RefreshCallDataJob::dispatch($c))
-                    ->successNotificationTitle('Job gestartet'),
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ]);
     }
 
-    /** Seiten-Routing */
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListCalls::route('/'),
+            'create' => Pages\CreateCall::route('/create'),
+            'edit' => Pages\EditCall::route('/{record}/edit'),
         ];
     }
 }

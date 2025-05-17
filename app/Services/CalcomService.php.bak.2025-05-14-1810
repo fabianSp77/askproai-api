@@ -1,0 +1,82 @@
+<?php
+
+namespace App\Services;
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Log;
+
+class CalcomService
+{
+    protected string $baseUrl;
+    protected string $apiKey;
+    protected string $teamSlug;
+    protected string $eventTypeId;
+
+    public function __construct()
+    {
+        $this->baseUrl      = rtrim(config('services.calcom.base_url'), '/');
+        $this->apiKey       = config('services.calcom.api_key');
+        $this->teamSlug     = config('services.calcom.team_slug');
+        $this->eventTypeId  = config('services.calcom.event_type_id');
+    }
+
+    /* -------------------------------------------------------------
+     |  Public API
+     | -------------------------------------------------------------
+     */
+
+    /** Hole verfügbare Slots */
+    public function availableSlots(string $from, string $to): Response
+    {
+        return $this->get("/v1/availability/time-slots", [
+            'eventTypeId' => $this->eventTypeId,
+            'start'       => $from,
+            'end'         => $to,
+            'user'        => $this->teamSlug,
+        ]);
+    }
+
+    /** Buche einen Slot */
+    public function createBooking(array $payload): Response
+    {
+        return $this->post('/v1/bookings', $payload);
+    }
+
+    /** Storniere eine Buchung */
+    public function cancelBooking(string $bookingId): Response
+    {
+        return $this->post("/v1/bookings/{$bookingId}/cancel");
+    }
+
+    /* -------------------------------------------------------------
+     |  Helper
+     | -------------------------------------------------------------
+     */
+
+    protected function get(string $uri, array $query = []): Response
+    {
+        return Http::withToken($this->apiKey)
+                   ->acceptJson()
+                   ->get($this->baseUrl . $uri, $query)
+                   ->tap(fn ($r) => $this->log($uri, 'GET', $query, $r));
+    }
+
+    protected function post(string $uri, array $data = []): Response
+    {
+        return Http::withToken($this->apiKey)
+                   ->acceptJson()
+                   ->post($this->baseUrl . $uri, $data)
+                   ->tap(fn ($r) => $this->log($uri, 'POST', $data, $r));
+    }
+
+    protected function log(string $uri, string $method, array $payload, Response $r): void
+    {
+        Log::channel('calcom')->debug("[Cal.com] {$method} {$uri}", [
+            'payload' => $payload,
+            'status'  => $r->status(),
+            'body'    => $r->json(),
+        ]);
+    }
+}
+PHP

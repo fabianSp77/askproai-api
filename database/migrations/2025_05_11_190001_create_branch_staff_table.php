@@ -6,23 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Erstellt die Pivot-Tabelle branch_staff nur,
+     * wenn sie nicht bereits existiert.
+     */
     public function up(): void
     {
-        Schema::create('branch_staff', function (Blueprint $table) {
-            // UUID ↔ BIGINT – beide Typen exakt wie in den Referenztabellen!
-            $table->uuid('branch_id');
-            $table->unsignedBigInteger('staff_id');
-            $table->timestamps();
+        if (! Schema::hasTable('branch_staff')) {
+            Schema::create('branch_staff', function (Blueprint $table) {
+                $table->char('branch_id', 36);
+                $table->unsignedBigInteger('staff_id');
+                $table->timestamps();
 
-            $table->primary(['branch_id', 'staff_id']);
-
-            $table->foreign('branch_id')->references('id')->on('branches')->cascadeOnDelete();
-            $table->foreign('staff_id')->references('id')->on('staff')->cascadeOnDelete();
-        });
+                $table->primary(['branch_id', 'staff_id']);
+            });
+        }
     }
 
+    /**
+     * Rollback: Tabelle wieder löschen,
+     * aber nur falls sie wirklich existiert.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('branch_staff');
+        if (Schema::hasTable('branch_staff')) {
+            Schema::dropIfExists('branch_staff');
+        }
     }
 };

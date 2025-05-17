@@ -4,22 +4,7 @@ use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 
-
 return [
-        "mail" => [
-            "driver" => "single",
-            "path"   => storage_path("logs/mail.log"),
-            "level"  => "debug",
-        ],
-        "mail" => [
-
-            "driver" => "single",
-
-            "path"   => storage_path("logs/mail.log"),
-
-            "level"  => "debug",
-
-        ],
 
     'default' => env('LOG_CHANNEL', 'stack'),
 
@@ -29,10 +14,6 @@ return [
     ],
 
     'channels' => [
-
-        /* -------------------------------------------------------------- *
-         *  Standard-Stack (unverändert)                                  *
-         * -------------------------------------------------------------- */
         'stack' => [
             'driver'   => 'stack',
             'channels' => ['single'],
@@ -45,19 +26,25 @@ return [
             'level'  => env('LOG_LEVEL', 'debug'),
         ],
 
-        /* -------------------------------------------------------------- *
-         *  Neuer Channel „calcom“                                        *
-         * -------------------------------------------------------------- */
+        'mail' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/mail.log'),
+            'level'  => 'debug',
+        ],
+
+        // Calcom-Log
         'calcom' => [
             'driver' => 'single',
             'path'   => storage_path('logs/calcom.log'),
-            'level'  => 'info',
+            'level'  => 'debug',
         ],
 
-        /* … alle weiteren Standard-Channels kannst du lassen … */
         'null' => [
             'driver' => 'monolog',
             'handler' => NullHandler::class,
         ],
+        // ... weitere Channels falls benötigt
     ],
+
 ];
+

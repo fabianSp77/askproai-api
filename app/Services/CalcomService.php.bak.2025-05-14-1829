@@ -1,0 +1,79 @@
+<?php
+namespace App\Services;
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Log;
+
+class CalcomService
+{
+    protected string $baseUrl;
+    protected string $apiKey;
+    protected string $teamSlug;
+    protected string $eventTypeId;
+
+    public function __construct()
+    {
+        $this->baseUrl     = rtrim(config('services.calcom.base_url'), '/');
+        $this->apiKey      = config('services.calcom.api_key');
+        $this->teamSlug    = config('services.calcom.team_slug');
+        $this->eventTypeId = config('services.calcom.event_type_id');
+    }
+
+    /* ---------- Public API ---------- */
+
+    /** freie Slots (Cal.com /slots) */
+    public function availableSlots(string $from, string $to): Response
+    {
+        return $this->get('/slots', [
+            'eventTypeId' => $this->eventTypeId,
+            'startTime'   => $from,
+            'endTime'     => $to,
+            'timeZone'    => config('app.timezone', 'UTC'),
+        ]);
+    }
+
+### END PART A ###
+    /** Slot buchen */
+    public function createBooking(array $payload): Response
+    {
+        return $this->post('/bookings', $payload);
+    }
+
+    /** Buchung stornieren */
+    public function cancelBooking(string $bookingId): Response
+    {
+        return $this->post("/bookings/{$bookingId}/cancel");
+    }
+
+    /* ---------- Helpers ----------- */
+
+    protected function get(string $uri, array $query = []): Response
+    {
+        $response = Http::withToken($this->apiKey)
+                        ->acceptJson()
+                        ->get($this->baseUrl.$uri, $query);
+
+        $this->log($uri,'GET',$query,$response);
+        return $response;
+    }
+
+    protected function post(string $uri, array $data = []): Response
+    {
+        $response = Http::withToken($this->apiKey)
+                        ->acceptJson()
+                        ->post($this->baseUrl.$uri, $data);
+
+        $this->log($uri,'POST',$data,$response);
+        return $response;
+    }
+
+    protected function log(string $uri,string $method,array $payload,Response $r): void
+    {
+        Log::channel('calcom')->debug("[Cal.com] {$method} {$uri}",[
+            'payload'=>$payload,
+            'status' =>$r->status(),
+            'body'   =>$r->json(),
+        ]);
+    }
+}
