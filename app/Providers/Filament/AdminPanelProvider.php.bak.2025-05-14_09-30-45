@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Navigation\NavigationBuilder;
+use Filament\Panel;
+use Filament\PanelProvider;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->id('admin')                   // interne ID  (Pflicht!)
+            ->path('admin')                 // /admin  …und  /admin/login
+            ->login()
+            ->default()
+            ->authGuard('web')
+            ->sidebarFullyCollapsedOnDesktop(false)
+
+            // *** WICHTIG: komplette web-Middleware anhängen ***
+            ->middleware(['web'])
+
+            /* ---------- Auto-Discovery ---------- */
+            ->discoverResources(
+                in:  app_path('Filament/Admin/Resources'),
+                for: 'App\\Filament\\Admin\\Resources',
+            )
+            ->discoverPages(
+                in:  app_path('Filament/Admin/Pages'),
+                for: 'App\\Filament\\Admin\\Pages',
+            )
+            ->discoverWidgets(
+                in:  app_path('Filament/Admin/Widgets'),
+                for: 'App\\Filament\\Admin\\Widgets',
+            )
+
+            ->navigation(fn (NavigationBuilder $nav) => $nav);
+    }
+}

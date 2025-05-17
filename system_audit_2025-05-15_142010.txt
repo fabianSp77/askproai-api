@@ -1,0 +1,78 @@
+###  System-Audit  –  Do 15. Mai 14:20:10 CEST 2025 ###
+
+## Host & Software
+$ hostname -f && whoami
+v2202503255565320322.happysrv.de
+fabian
+
+Description:	Debian GNU/Linux 12 (bookworm)
+
+PHP 8.2.28 (cli) (built: Mar 13 2025 18:21:38) (NTS)
+
+Composer version 2.5.5 2023-03-21 11:50:05
+
+./system_audit.sh: Zeile 18: nginx: Kommando nicht gefunden.
+–––
+
+## Git HEAD
+dd9f1a7 test: skip SET foreign_key_checks migration on SQLite
+
+## Composer packages (top level)
+anourvalar/eloquent-serialize              
+bezhansalleh/filament-shield               
+blade-ui-kit/blade-heroicons               
+blade-ui-kit/blade-icons                   
+brianium/paratest                          
+brick/math                                 
+carbonphp/carbon-doctrine-types            
+danharrin/date-format-converter            
+danharrin/livewire-rate-limiting           
+defuse/php-encryption                      
+–––
+
+## .env (sanitised)
+APP_NAME=***SANITISED***
+APP_ENV=***SANITISED***
+APP_KEY=***SANITISED***
+APP_CIPHER=***SANITISED***
+APP_DEBUG=***SANITISED***
+APP_URL=***SANITISED***
+CALCOM_API_KEY=***SANITISED***
+CALCOM_EVENT_TYPE_ID=***SANITISED***
+CALCOM_TEAM_SLUG=***SANITISED***
+CALCOM_BASE_URL=***SANITISED***
+CALCOM_WEBHOOK_SECRET=***SANITISED***
+STRIPE_SECRET=***SANITISED***
+MAIL_MAILER=***SANITISED***
+MAIL_HOST=***SANITISED***
+MAIL_PORT=***SANITISED***
+MAIL_ENCRYPTION=***SANITISED***
+MAIL_USERNAME=***SANITISED***
+MAIL_PASSWORD=***SANITISED***
+MAIL_FROM_ADDRESS=***SANITISED***
+MAIL_FROM_NAME=***SANITISED***
+REDIS_CLIENT=***SANITISED***
+REDIS_HOST=***SANITISED***
+REDIS_PORT=***SANITISED***
+QUEUE_CONNECTION=***SANITISED***
+AWS_ACCESS_KEY_ID=***SANITISED***
+AWS_SECRET_ACCESS_KEY=***SANITISED***
+AWS_DEFAULT_REGION=***SANITISED***
+AWS_BUCKET=***SANITISED***
+AWS_USE_PATH_STYLE_ENDPOINT=***SANITISED***
+DB_CONNECTION=***SANITISED***
+DB_HOST=***SANITISED***
+DB_PORT=***SANITISED***
+DB_DATABASE=***SANITISED***
+DB_USERNAME=***SANITISED***
+DB_PASSWORD=***SANITISED***
+–––
+
+## Laravel
+Laravel Framework 11.44.7
+
+
+                                          
+  The "--compact" option does not exist.  
+                                          
+

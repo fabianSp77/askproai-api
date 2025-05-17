@@ -8,9 +8,6 @@ return new class extends Migration
     public function up(): void
     {
         // CI / PHPUnit verwenden SQLite → einfach überspringen
-        if (app()->environment('testing') || DB::getDriverName() === 'sqlite') {
-            return;
-        }
 
         // MySQL-/MariaDB-Logic bleibt unverändert
         DB::statement('SET foreign_key_checks = 0');
@@ -23,9 +20,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (app()->environment('testing') || DB::getDriverName() === 'sqlite') {
-            return;
-        }
 
         // down-Migrations (Original übernehmen)
         DB::statement('SET foreign_key_checks = 0');

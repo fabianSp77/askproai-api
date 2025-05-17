@@ -18,6 +18,9 @@ return [
 
     'key'    => env('APP_KEY'),
     'cipher' => 'AES-256-CBC',
+    
+// Retell Webhook Secret explizit in die Konfiguration aufnehmen!
+    'retell_webhook_secret' => env('RETELL_WEBHOOK_SECRET'),
 
     /*-----------------------------------------------------------------------
     | Service-Provider

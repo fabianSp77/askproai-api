@@ -2,35 +2,49 @@
 
 namespace App\Services;
 
-use App\Models\Integration;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Log;
 
 class CalcomService
 {
-    public function __construct(private Integration $integration) {}
+    protected string $baseUrl;
+    protected string $apiKey;
+    protected string $eventTypeId;
 
-    private function key(): string
+    public function __construct()
     {
-        return $this->integration->credentials['cal_api_key'];
+        $this->baseUrl     = rtrim(config('services.calcom.base_url'), '/');
+        $this->apiKey      = config('services.calcom.api_key');
+        $this->eventTypeId = config('services.calcom.event_type_id');
     }
 
-    private function endpoint(string $path): string
+    public function createBooking(array $bookingDetails): Response
     {
-        return "https://api.cal.com/v1/$path";
-    }
+        $payload = [
+            'eventTypeId' => (int)($bookingDetails['eventTypeId'] ?? $this->eventTypeId),
+            'start'       => $bookingDetails['startTime'],
+            'end'         => $bookingDetails['endTime'],
+            'timeZone'    => $bookingDetails['timeZone'] ?? 'Europe/Berlin',
+            'language'    => $bookingDetails['language'] ?? 'de',
+            'metadata'    => (object)[],
+            'responses'   => [
+                'name'  => $bookingDetails['name'],
+                'email' => $bookingDetails['email'],
+            ],
+        ];
 
-    /** Verfügbarkeiten holen */
-    public function availability(array $payload): Response
-    {
-        return Http::withToken($this->key())
-                   ->post($this->endpoint('availability'), $payload);
-    }
+        Log::channel('calcom')->debug('[Cal.com] Sende createBooking Payload:', $payload);
 
-    /** Termin buchen */
-    public function book(array $payload): Response
-    {
-        return Http::withToken($this->key())
-                   ->post($this->endpoint('booking'), $payload);
+        $query = ['apiKey' => $this->apiKey];
+        $fullUrl = $this->baseUrl . '/bookings?' . http_build_query($query);
+        $resp = Http::acceptJson()->post($fullUrl, $payload);
+
+        Log::channel('calcom')->debug('[Cal.com] Booking Response:', [
+            'status' => $resp->status(),
+            'body'   => $resp->json() ?? $resp->body(),
+        ]);
+
+        return $resp;
     }
 }

@@ -8,10 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // ----------------- event-types -----------------
+        /* ----------------- event-types ----------------- */
         Schema::create('calcom_event_types', function (Blueprint $table) {
-            $table->bigIncrements('id');                    // BIGINT PK
-            $table->unsignedBigInteger('staff_id')->index();
+            $table->bigIncrements('id');               // BIGINT PK
+            $table->char('staff_id', 36)->nullable()->index();   // FK → staff.uuid
             $table->string('name');
             $table->timestamps();
 
@@ -20,11 +20,11 @@ return new class extends Migration
                   ->cascadeOnDelete();
         });
 
-        // ----------------- bookings -----------------
+        /* ----------------- bookings ----------------- */
         Schema::create('calcom_bookings', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('event_type_id')->index();
-            $table->uuid('branch_id')->nullable();          // passt zu branches.uuid
+            $table->uuid('branch_id')->nullable();     // FK → branches.uuid
             $table->string('external_id')->nullable();
             $table->timestamp('starts_at');
             $table->timestamp('ends_at');

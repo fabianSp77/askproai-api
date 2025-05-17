@@ -1,0 +1,30 @@
+<?php
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
+
+class CalcomWebhookController extends Controller
+{
+    /** GET-Ping – wird von Cal.com-Pingtest aufgerufen (keine Signaturprüfung) */
+    public function ping(): JsonResponse
+    {
+        return response()->json(['ping' => 'ok']);
+    }
+    /** POST-Webhook – Signatur wird per Middleware geprüft */
+    public function handle(Request $request): JsonResponse
+    {
+        // Später: Event-Parsing (booking.created usw.)
+        Log::channel('calcom')->info('[Cal.com] Webhook-Event', $request->all());
+
+        return response()->json(['received' => true]);
+    }
+}
+
+    // ───────────────────────────────────────────────────────────────
+    // TEMP-DEBUG ▸ Header + Raw-Body in calcom-Channel loggen
+    //   ➜ tail -f storage/logs/laravel.log | grep "\[Debug\]"
+    // ───────────────────────────────────────────────────────────────
+    Log::channel('calcom')->info('[Debug] headers', $request->headers->all());
+    Log::channel('calcom')->info('[Debug] body',    ['raw' => $request->getContent()]);

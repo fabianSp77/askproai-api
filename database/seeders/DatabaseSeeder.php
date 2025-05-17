@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
+        $this->call(AdminUserSeeder::class);
+        $this->call(RolesAndPermissionsSeeder::class);
 {
     /**
      * Seed the application's database.

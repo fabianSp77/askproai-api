@@ -6,22 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Arbeitszeiten-Tabelle: gehört zu einem Staff-Mitglied (UUID)
+     */
     public function up(): void
     {
         Schema::create('working_hours', function (Blueprint $table) {
-            $table->id();                                              // PK (BIGINT)
-            $table->foreignId('staff_id')                              // FK → staff.id
-                  ->constrained('staff')
-                  ->cascadeOnDelete();
+            $table->id();                   // bigint auto-inc (PK)
 
-            $table->unsignedTinyInteger('weekday');                    // 1 = Mo … 7 = So
+            // FK-Spalten -----------------
+            $table->char('staff_id', 36);   // UUID – muss zu staff.id passen
+            $table->tinyInteger('weekday'); // 0=So … 6=Sa
             $table->time('start');
             $table->time('end');
 
-            $table->timestamps();
+            // FK-Constraint --------------
+            $table->foreign('staff_id')
+                  ->references('id')->on('staff')
+                  ->cascadeOnDelete();
 
-            // Ein Mitarbeiter darf pro Zeitfenster nur einen Eintrag haben
-            $table->unique(['staff_id', 'weekday', 'start', 'end']);
+            $table->timestamps();
         });
     }
 

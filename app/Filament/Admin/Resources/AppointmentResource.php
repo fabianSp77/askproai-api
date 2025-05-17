@@ -3,83 +3,98 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\AppointmentResource\Pages;
+use App\Filament\Admin\Resources\AppointmentResource\RelationManagers;
 use App\Models\Appointment;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Select;
+use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AppointmentResource extends Resource
 {
     protected static ?string $model = Appointment::class;
-    protected static ?string $navigationIcon  = 'heroicon-o-calendar';
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static bool $shouldRegisterNavigation = true;
     protected static ?string $navigationGroup = 'Buchungen';
 
-    /* -------- Formular (Create / Edit) -------------------- */
     public static function form(Form $form): Form
     {
-        return $form->schema([
-            Select::make('branch_id')
-                ->relationship('branch', 'name')
-                ->label('Filiale')
-                ->required(),
+        return $form
+            ->schema([
+                Forms\Components\Select::make('customer_id')
+                    ->relationship('customer', 'name')
+                    ->required(),
+                Forms\Components\TextInput::make('external_id')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\DateTimePicker::make('starts_at'),
+                Forms\Components\DateTimePicker::make('ends_at'),
+                Forms\Components\Textarea::make('payload')
+                    ->columnSpanFull(),
+                Forms\Components\TextInput::make('status')
+                    ->required()
+                    ->maxLength(255)
+                    ->default('pending'),
+            ]);
 
-            Select::make('service_id')
-                ->relationship('service', 'name')
-                ->label('Service')
-                ->required(),
-
-            Select::make('staff_id')
-                ->relationship('staff', 'name')
-                ->label('Mitarbeiter'),
-
-            Select::make('customer_id')
-                ->relationship('customer', 'name')
-                ->label('Kunde'),
-
-            DateTimePicker::make('starts_at')
-                ->label('Start')
-                ->seconds(false)
-                ->required(),
-
-            DateTimePicker::make('ends_at')
-                ->label('Ende')
-                ->seconds(false)
-                ->required(),
-        ]);
     }
 
-    /* ---------------- Tabelle ----------------------------- */
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            Tables\Columns\TextColumn::make('branch.name')
-                ->label('Filiale')
-                ->sortable(),
-
-            Tables\Columns\TextColumn::make('service.name')
-                ->label('Service')
-                ->searchable(),
-
-            Tables\Columns\TextColumn::make('staff.name')
-                ->label('Mitarbeiter'),
-
-            Tables\Columns\TextColumn::make('starts_at')
-                ->label('Start')
-                ->dateTime('d.m.Y H:i')
-                ->sortable(),
-        ]);
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('customer.name')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('external_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('starts_at')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('ends_at')
+                    ->dateTime()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
     }
 
-    /* -------------- Seiten-Routing ------------------------ */
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListAppointments::route('/'),
+            'index' => Pages\ListAppointments::route('/'),
             'create' => Pages\CreateAppointment::route('/create'),
-            'edit'   => Pages\EditAppointment::route('/{record}/edit'),
+            'edit' => Pages\EditAppointment::route('/{record}/edit'),
         ];
     }
 }

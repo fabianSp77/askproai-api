@@ -1,44 +1,24 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\CalcomBookingController;
-use App\Http\Controllers\RetellConversationEndedController;
-use App\Http\Controllers\RetellWebhookController;
-use App\Http\Middleware\VerifyRetellSignature;
-use App\Http\Middleware\LogCalcom;
+use App\Http\Controllers\CalcomWebhookController;
+use App\Http\Controllers\RetellWebhookController;   // ← HIERHER!
 
 /*
 |--------------------------------------------------------------------------
-| API Routes  (Prefix „api/“, Middleware-Gruppe „api“)
+| API Routes
 |--------------------------------------------------------------------------
 */
 
-/* --------------------------------------------------------------------- */
-/*  Cal.com – Buchungs-API                                               */
-/* --------------------------------------------------------------------- */
-Route::post(
-    'calcom/bookings',
-    [CalcomBookingController::class, 'createBooking']
-)
-    ->middleware(LogCalcom::class)          // Request/Response-Logging
-    ->name('calcom.bookings.create');
+// ---- Cal.com Webhook -------------------------------------------
 
-/* --------------------------------------------------------------------- */
-/*  Retell Webhooks                                                      */
-/* --------------------------------------------------------------------- */
-Route::post(
-    'webhooks/retell-conversation-ended',
-    RetellConversationEndedController::class
-)->name('retell.webhook.ended');
+// 1) Ping-Route (GET)  ➜ ohne Signaturprüfung
+Route::get('calcom/webhook', [CalcomWebhookController::class, 'ping']);
 
-Route::post(
-    'webhooks/retell',
-    RetellWebhookController::class
-)->middleware(VerifyRetellSignature::class)
-  ->name('retell.webhook.main');
+// 2) Produktiver Webhook (POST) ➜ mit Signaturprüfung
+Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle'])
+     ->middleware('calcom.signature');
 
-Route::post(
-    'webhooks/retell-inbound',
-    RetellWebhookController::class
-)->middleware(VerifyRetellSignature::class)
-  ->name('retell.webhook.inbound');
+// Retell Webhook (POST)
+Route::post('retell/webhook', [RetellWebhookController::class, '__invoke']);

@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Http;
+
+use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Foundation\Configuration\Middleware;
+
+class Kernel extends HttpKernel
+{
+    /**
+     * Hier konfigurieren wir ► Gruppen + Aliase (Laravel 11 Style)
+     */
+    protected function middleware(Middleware $middleware): void
+    {
+        /* ------------ WEB / API Gruppen ------------ */
+        $middleware->group('web', [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+
+        $middleware->group('api', [
+            'throttle:api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+
+        /* ------------- Alias-Tabelle ---------------- */
+        $middleware->alias([
+            // 🔑  **NEU** – löst das 500-Problem
+            'calcom.signature' => \App\Http\Middleware\VerifyCalcomSignature::class,
+
+            // Standard-Aliases (unverändert)
+            'auth'              => \App\Http\Middleware\Authenticate::class,
+            'auth.basic'        => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+            'cache.headers'     => \Illuminate\Http\Middleware\SetCacheHeaders::class,
+            'can'               => \Illuminate\Auth\Middleware\Authorize::class,
+            'guest'             => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'password.confirm'  => \Illuminate\Auth\Middleware\RequirePassword::class,
+            'signed'            => \Illuminate\Routing\Middleware\ValidateSignature::class,
+            'throttle'          => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+            'verified'          => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        ]);
+    }
+}

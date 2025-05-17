@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
+
+class VerifyCalcomSignature
+{
+    /**
+     * HMAC-Prüfung für Cal.com-Webhooks.
+     *
+     * Akzeptierte Header (alle lower/upper egal):
+     *   • X-Cal-Signature-256   • Cal-Signature-256
+     *   • X-Cal-Signature       • Cal-Signature
+     * Wertformat:  sha256=<hexdigest>
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        /* 1) Secret holen */
+        $secret = env('CALCOM_WEBHOOK_SECRET');
+        if ($secret === '' || $secret === null) {
+            Log::warning('[Cal.com] Secret missing');
+            return response('Cal.com secret missing', 500);
+        }
+
+        /* 2) Payload */
+        $raw      = $request->getContent();       // genau wie geliefert
+        $trimmed  = rtrim($raw, "\r\n");          // Variante ohne \n / \r\n
+
+        /* 3) Erwartete Digests */
+        $valid = [
+            'sha256=' . hash_hmac('sha256', $raw,     $secret),
+            'sha256=' . hash_hmac('sha256', $trimmed, $secret),
+        ];
+
+        /* 4) Header auslesen (alle möglichen Varianten) */
+        $provided = $request->header('X-Cal-Signature-256')
+            ?? $request->header('Cal-Signature-256')
+            ?? $request->header('X-Cal-Signature')
+            ?? $request->header('Cal-Signature')
+            ?? '';
+
+        /* 5) Vergleich */
+        if (! in_array($provided, $valid, true)) {
+            Log::debug('[Cal.com] Signature failed', compact('provided', 'valid'));
+            return response('Invalid Cal.com signature', 401);
+        }
+
+        /* 6) alles gut → weiter */
+        return $next($request);
+    }
+}
