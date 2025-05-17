@@ -28,3 +28,7 @@ true,
 .env
 .env.*
 *.bak
+
+.env
+.env.*
+*.bak
