@@ -22,4 +22,11 @@ class AdminPanelProvider extends PanelProvider
                 FilamentShieldPlugin::make(),
             ]);
     }
+
+    public function registerPages(Panel $panel): void
+    {
+        $panel->pages([
+            \App\Filament\Pages\Dashboard::class,
+        ]);
+    }
 }
