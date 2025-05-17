@@ -24,11 +24,7 @@ yarn-error.log
 .env*.bak
 +491234567890,
 true,
-
 .env
 .env.*
 *.bak
-
-.env
-.env.*
-*.bak
+*.bak*

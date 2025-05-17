@@ -3,12 +3,22 @@
 namespace App\Filament\Pages;
 
 use Filament\Pages\Dashboard as BaseDashboard;
+use App\Filament\Widgets\{
+    StatsOverview,
+    RecentCalls,
+    RecentAppointments,
+    SystemStatus
+};
 
 class Dashboard extends BaseDashboard
 {
-    /** Widgets, die im Header erscheinen */
-    protected static ?array $widgets = [
-        \App\Filament\Widgets\DashboardStats::class,
-        // weitere Widgets hier ergänzen …
-    ];
+    public static function getWidgets(): array
+    {
+        return [
+            StatsOverview::class,
+            RecentCalls::class,
+            RecentAppointments::class,
+            SystemStatus::class,
+        ];
+    }
 }
