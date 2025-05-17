@@ -35,4 +35,11 @@ class AdminPanelProvider extends PanelProvider
                 for: 'App\\Filament\\Admin\\Widgets',
             );
     }
+
+    public function registerPages(Panel $panel): void
+    {
+        $panel->pages([
+            \App\Filament\Pages\Dashboard::class,
+        ]);
+    }
 }
