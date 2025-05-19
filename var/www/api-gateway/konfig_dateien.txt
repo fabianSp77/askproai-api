@@ -32,8 +32,8 @@ MAIL_FROM_ADDRESS="info@askproai.de"
 MAIL_FROM_NAME="${APP_NAME}"
 CALCOM_API_KEY=cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da
 CALCOM_BASE_URL=https://api.cal.com/v1
-RETELLAI_API_KEY=key_6ff998ba48e842092e04a5455d19
-RETELLAI_BASE_URL=https://api.retell.ai/v1
+RETELL_AI_API_KEY=key_6ff998ba48e842092e04a5455d19
+RETELL_AI_BASE_URL=https://api.retell.ai/v1
 PASSPORT_PRIVATE_KEY=/var/www/api-gateway/storage/oauth-private.key
 PASSPORT_PUBLIC_KEY=/var/www/api-gateway/storage/oauth-public.key
 # Samedi API Konfiguration

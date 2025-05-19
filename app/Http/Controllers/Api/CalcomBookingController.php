@@ -13,8 +13,8 @@ class CalcomBookingController extends Controller
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('calcom.base_url'), '/');
-        $this->apiKey  = config('calcom.api_key');
+        $this->baseUrl = rtrim(config('services.calcom.base_url'), '/');
+        $this->apiKey  = config('services.calcom.api_key');
     }
 
     /**  POST /api/calcom/bookings  */
@@ -52,7 +52,7 @@ class CalcomBookingController extends Controller
         }
 
         /* ---------- 4. Call an Cal.com --------------------------------- */
-        $url   = "{$this->baseUrl}/v1/bookings?apiKey={$this->apiKey}";
+        $url   = "{$this->baseUrl}/bookings?apiKey={$this->apiKey}";
         $resp  = Http::acceptJson()->post($url, $data);
 
         return $resp->successful()
