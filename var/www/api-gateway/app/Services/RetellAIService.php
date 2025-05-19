@@ -10,8 +10,8 @@ class RetellAIService
 
     public function __construct()
     {
-        $this->apiKey = env('RETELLAI_API_KEY');
-        $this->baseUrl = env('RETELLAI_BASE_URL', 'https://api.retell.ai/v1');
+        $this->apiKey = env('RETELL_AI_API_KEY');
+        $this->baseUrl = env('RETELL_AI_BASE_URL', 'https://api.retell.ai/v1');
     }
 
     public function getCalls($limit = 10)
