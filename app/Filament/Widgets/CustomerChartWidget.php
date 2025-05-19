@@ -26,7 +26,7 @@ class CustomerChartWidget extends ChartWidget
         $counts = [];
 
         for ($i = 1; $i <= 12; $i++) {
-            $labels[] = Carbon::create()->month($i)->format('F');
+            $labels[] = Carbon::create()->month($i)->translatedFormat('F');
             $monthData = collect($data)->firstWhere('month', $i);
             $counts[] = $monthData ? $monthData['count'] : 0;
         }
@@ -36,7 +36,6 @@ class CustomerChartWidget extends ChartWidget
                 [
                     'label' => 'Neue Kunden',
                     'data' => $counts,
-                    'backgroundColor' => '#36A2EB',
                 ],
             ],
             'labels' => $labels,
@@ -47,4 +46,4 @@ class CustomerChartWidget extends ChartWidget
     {
         return 'bar';
     }
-}#
+}

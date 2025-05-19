@@ -2,9 +2,7 @@
 
 return [
 
-    /*-----------------------------------------------------------------------
-    | Basics
-    |----------------------------------------------------------------------*/
+    /* ------------------------------------------------ Basics ------------ */
     'name'            => env('APP_NAME', 'AskProAI'),
     'env'             => env('APP_ENV', 'production'),
     'debug'           => (bool) env('APP_DEBUG', false),
@@ -18,16 +16,11 @@ return [
 
     'key'    => env('APP_KEY'),
     'cipher' => 'AES-256-CBC',
-    
-// Retell Webhook Secret explizit in die Konfiguration aufnehmen!
-    'retell_webhook_secret' => env('RETELL_WEBHOOK_SECRET'),
 
-    /*-----------------------------------------------------------------------
-    | Service-Provider
-    |----------------------------------------------------------------------*/
+    /* ------------- Service-Provider – jeder Eintrag genau EINMAL -------- */
     'providers' => [
 
-        /* Laravel */
+        /* Laravel Core */
         Illuminate\Auth\AuthServiceProvider::class,
         Illuminate\Broadcasting\BroadcastServiceProvider::class,
         Illuminate\Bus\BusServiceProvider::class,
@@ -53,6 +46,8 @@ return [
 
         /* Packages */
         Laravel\Horizon\HorizonServiceProvider::class,
+        Filament\FilamentServiceProvider::class,
+//         App\Providers\Filament\TestPanelProvider::class,
         BezhanSalleh\FilamentShield\FilamentShieldServiceProvider::class,
 
         /* App */
@@ -60,29 +55,24 @@ return [
         App\Providers\AuthServiceProvider::class,
         App\Providers\EventServiceProvider::class,
 
-        /* Filament-Panels */
+        /* Filament Panel */
         App\Providers\Filament\AdminPanelProvider::class,
-        App\Providers\HorizonServiceProvider::class,
     ],
-
-    /*-----------------------------------------------------------------------
-    | Aliases
-    |----------------------------------------------------------------------*/
+    /* --------------------------- Facades -------------------------------- */
     'aliases' => [
-        'App'     => Illuminate\Support\Facades\App::class,
-        'Arr'     => Illuminate\Support\Arr::class,
-        'Auth'    => Illuminate\Support\Facades\Auth::class,
-        'Cache'   => Illuminate\Support\Facades\Cache::class,
-        'Config'  => Illuminate\Support\Facades\Config::class,
-        'DB'      => Illuminate\Support\Facades\DB::class,
-        'Event'   => Illuminate\Support\Facades\Event::class,
-        'File'    => Illuminate\Support\Facades\File::class,
-        'Gate'    => Illuminate\Support\Facades\Gate::class,
-        'Log'     => Illuminate\Support\Facades\Log::class,
-        'Queue'   => Illuminate\Support\Facades\Queue::class,
-        'Route'   => Illuminate\Support\Facades\Route::class,
-        'Schema'  => Illuminate\Support\Facades\Schema::class,
-        'Str'     => Illuminate\Support\Str::class,
+        'App'    => Illuminate\Support\Facades\App::class,
+        'Arr'    => Illuminate\Support\Arr::class,
+        'Auth'   => Illuminate\Support\Facades\Auth::class,
+        'Cache'  => Illuminate\Support\Facades\Cache::class,
+        'Config' => Illuminate\Support\Facades\Config::class,
+        'DB'     => Illuminate\Support\Facades\DB::class,
+        'Event'  => Illuminate\Support\Facades\Event::class,
+        'File'   => Illuminate\Support\Facades\File::class,
+        'Gate'   => Illuminate\Support\Facades\Gate::class,
+        'Log'    => Illuminate\Support\Facades\Log::class,
+        'Queue'  => Illuminate\Support\Facades\Queue::class,
+        'Route'  => Illuminate\Support\Facades\Route::class,
+        'Schema' => Illuminate\Support\Facades\Schema::class,
+        'Str'    => Illuminate\Support\Str::class,
     ],
 ];
-

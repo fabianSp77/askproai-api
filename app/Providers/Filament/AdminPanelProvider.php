@@ -3,7 +3,6 @@
 namespace App\Providers\Filament;
 
 use Filament\Panel;
-use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\PanelProvider;
 
 class AdminPanelProvider extends PanelProvider
@@ -11,42 +10,28 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('admin')
-            ->path('admin')          // /admin  &  /admin/login
-            ->login()
-            ->default()
-            ->authGuard('web')
-            ->middleware(['web'])
-            ->plugins([
-                FilamentShieldPlugin::make(),
-            ])
-
-            /* ---------- Auto-Discovery ---------- */
-            ->discoverResources(
-                in: app_path('Filament/Admin/Resources'),
-                for: 'App\\Filament\\Admin\\Resources',
-            )
+            ->id('admin')->path('admin')
+            ->login()->default()
+            ->authGuard('web')->middleware(['web'])
             ->discoverPages(
                 in: app_path('Filament/Admin/Pages'),
-                for: 'App\\Filament\\Admin\\Pages',
+                for: 'App\\Filament\\Admin\\Pages'
             )
-            ->discoverWidgets(
-                in: app_path('Filament/Admin/Widgets'),
-                for: 'App\\Filament\\Admin\\Widgets',
-            );
-    }
-
-    public function registerPages(Panel $panel): void
-    {
-        $panel->pages([
-            \App\Filament\Pages\Dashboard::class,
-        ]);
-    }
-
-    public function registerPages(Panel $panel): void
-    {
-        $panel->pages([
-            \App\Filament\Pages\Dashboard::class,
-        ]);
+            ->discoverResources(
+                in: app_path('Filament/Admin/Resources'),
+                for: 'App\\Filament\\Admin\\Resources'
+            )
+            // State-of-the-Art: Reihenfolge selbst festlegen!
+            ->widgets([
+                \App\Filament\Widgets\StatsOverviewWidget::class,
+                \App\Filament\Widgets\SystemStatus::class,
+                \App\Filament\Widgets\AppointmentsWidget::class,
+                \App\Filament\Widgets\CustomerChartWidget::class,
+                \App\Filament\Widgets\CompaniesChartWidget::class,
+                \App\Filament\Widgets\LatestCustomersWidget::class,
+                \App\Filament\Widgets\RecentAppointments::class,
+                \App\Filament\Widgets\RecentCalls::class,
+                \App\Filament\Widgets\ActivityLogWidget::class,
+            ]);
     }
 }

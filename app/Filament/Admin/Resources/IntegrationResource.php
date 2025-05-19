@@ -16,48 +16,24 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class IntegrationResource extends Resource
 {
     protected static ?string $model = Integration::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static bool $shouldRegisterNavigation = true;
     protected static ?string $navigationGroup = 'Stammdaten';
+    protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';
+    protected static ?string $navigationLabel = 'Integrations';
+    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('customer_id')
-                    ->relationship('customer', 'name')
-                    ->required(),
-                Forms\Components\TextInput::make('system')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Textarea::make('credentials')
-                    ->columnSpanFull(),
-                Forms\Components\Toggle::make('active')
-                    ->required(),
+                // Formularfelder hier ergänzen
             ]);
-
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('customer.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('system')
-                    ->searchable(),
-                Tables\Columns\IconColumn::make('active')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                // Tabellenspalten hier ergänzen
             ])
             ->filters([
                 //

@@ -2,11 +2,10 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
+use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogWidget extends BaseWidget
 {
@@ -17,22 +16,21 @@ class ActivityLogWidget extends BaseWidget
     {
         return $table
             ->query(
-                User::latest()->limit(10)
+                Activity::query()->latest()->limit(10)
             )
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->label('Benutzer')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->label('E-Mail'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Registriert am')
+                    ->label('Zeit')
                     ->dateTime()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Letztes Update')
-                    ->dateTime()
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('description')
+                    ->label('Aktion'),
+                Tables\Columns\TextColumn::make('causer.name')
+                    ->label('User'),
+                Tables\Columns\TextColumn::make('subject_type')
+                    ->label('Objekt'),
+                Tables\Columns\TextColumn::make('subject_id')
+                    ->label('Objekt-ID'),
             ]);
     }
 }

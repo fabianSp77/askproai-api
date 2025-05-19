@@ -7,12 +7,12 @@ Route::get('/', function () {
 });
 
 // ---------- Filament Admin-Dashboard als Root des Panels ----------
-Route::redirect('/admin', '/admin/dashboard')
-     ->middleware('web');        // schützt weiterhin durch Sessions & CSRF
+// // // Route::redirect('/admin', '/admin/dashboard')
+//      ->middleware('web');        // schützt weiterhin durch Sessions & CSRF
 // ---------- Filament Admin-Dashboard als Root des Panels ----------
-Route::get('/admin', fn () => redirect('/admin/dashboard'))
-     ->middleware('web');
+// // // Route::get('/admin', fn () => redirect('/admin/dashboard'))
+//      ->middleware('web');
 // ---------- Filament Admin-Dashboard als Root des Panels ----------
-Route::get('/admin', fn () => redirect('/admin/dashboard'))
-     ->name('filament.admin.redirect-to-dashboard')
-     ->middleware('web');
+// // // Route::get('/admin', fn () => redirect('/admin/dashboard'))
+//      ->name('filament.admin.redirect-to-dashboard')
+//      ->middleware('web');
