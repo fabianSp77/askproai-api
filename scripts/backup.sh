@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Umfassendes Backup-Skript für AskProAI
-# Sicherere Variante mit verbesserter Struktur und Funktionalität
+# Sichere Variante mit verbesserter Struktur und Funktionalität
 
 # Basiskonfiguration
 TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)

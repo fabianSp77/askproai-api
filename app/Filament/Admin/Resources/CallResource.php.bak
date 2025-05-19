@@ -81,7 +81,7 @@ class CallResource extends Resource
                 BadgeColumn::make('call_status')->label('Status')
                     ->formatStateUsing(fn ($s) => [
                         'completed' => 'Fertig',
-                        'no-answer' => 'Kein Antwort',
+                        'no-answer' => 'Keine Antwort',
                         'failed'    => 'Fehlgeschlagen',
                     ][$s] ?? ($s ?? '–'))
                     ->colors([
