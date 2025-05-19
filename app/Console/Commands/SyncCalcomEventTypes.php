@@ -48,7 +48,8 @@ class SyncCalcomEventTypes extends Command
                 [
                     'title'  => $et['title']  ?? $et['name'] ?? '—',
                     'active' => !($et['hidden'] ?? false),
-              'staff_id' =>  \App\Models\CalcomEventType::where('calcom_id', $et['id'])->value('staff_id') ?: null,
+                    'staff_id' => \App\Models\CalcomEventType::where('calcom_id', $et['id'])
+                        ->value('staff_id') ?: null,
                 ]
             );
             $count++;
