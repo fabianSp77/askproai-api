@@ -42,4 +42,11 @@ class AdminPanelProvider extends PanelProvider
             \App\Filament\Pages\Dashboard::class,
         ]);
     }
+
+    public function registerPages(Panel $panel): void
+    {
+        $panel->pages([
+            \App\Filament\Pages\Dashboard::class,
+        ]);
+    }
 }
