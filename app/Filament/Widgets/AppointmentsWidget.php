@@ -14,23 +14,28 @@ class AppointmentsWidget extends ChartWidget
     protected function getData(): array
     {
         $appointments = Appointment::select(
-            DB::raw('MONTH(start_time) as month'),
+            DB::raw('MONTH(starts_at) as month'),
             DB::raw('COUNT(*) as count')
         )
-        ->whereYear('start_time', now()->year)
+        ->whereYear('starts_at', now()->year)
         ->groupBy('month')
         ->orderBy('month')
         ->get();
 
         return [
             'labels' => $appointments->pluck('month')->map(function($month) {
-                return date('F', mktime(0, 0, 0, $month, 1));
+                // Monatsnamen auf Deutsch ausgeben
+                $de = [
+                    1 => 'Januar', 2 => 'Februar', 3 => 'März', 4 => 'April',
+                    5 => 'Mai', 6 => 'Juni', 7 => 'Juli', 8 => 'August',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Dezember'
+                ];
+                return $de[intval($month)] ?? $month;
             }),
             'datasets' => [
                 [
                     'label' => 'Termine',
                     'data' => $appointments->pluck('count'),
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.5)', // Blau-Akzent
                 ]
             ]
         ];

@@ -1,22 +1,34 @@
 <?php
 
 return [
+
     /*
     |--------------------------------------------------------------------------
-    | Shield aktivieren / deaktivieren
+    | Shield ein-/ausschalten
     |--------------------------------------------------------------------------
-    |
-    | Auf "false" setzen, wenn du Shield ganz abschalten willst.
-    | Standard bleibt "true".
-    |
     */
     'enable' => true,
 
     /*
     |--------------------------------------------------------------------------
-    | Voreinstellungen
+    | Welcher Guard soll für Rollen & Permissions benutzt werden?
+    | Für unser Filament-Panel auf /admin = ganz normales „web“
+    |--------------------------------------------------------------------------
+    */
+    'guard'  => 'web',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Name der Super-Admin-Rolle
     |--------------------------------------------------------------------------
     */
     'super_admin_role_name' => 'super_admin',
-    'panel_fqcn'            => \Filament\Panel::class, // Standard-Admin-Panel
+
+    /*
+    |--------------------------------------------------------------------------
+    | Welches Panel betrifft Shield?  –  Standard-Admin-Panel
+    |--------------------------------------------------------------------------
+    */
+    'panel_fqcn' => \Filament\Panel::class,
+
 ];

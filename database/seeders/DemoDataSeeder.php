@@ -1,36 +1,40 @@
 <?php
+
 namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use App\Models\{Branch,Service,Staff};
+use App\Models\Customer;
+use App\Models\Appointment;
+use App\Models\Company;
+use App\Models\Call;
+use App\Models\Staff;
+use App\Models\Branch;
 
-class DemoDataSeeder extends Seeder{
-    public function run():void{
-        DB::transaction(function(){
-            $branchA=Branch::firstOrCreate(['slug'=>'downtown'],
-                ['id'=>Str::uuid(),'name'=>'Downtown Studio','city'=>'Musterstadt','phone_number'=>'01234 1','active'=>1]);
-            $branchB=Branch::firstOrCreate(['slug'=>'uptown'  ],
-                ['id'=>Str::uuid(),'name'=>'Uptown Studio'  ,'city'=>'Musterstadt','phone_number'=>'01234 2','active'=>1]);
+class DemoDataSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // Eltern-Objekte zuerst (so können FKs genutzt werden)
+        $customers = Customer::factory()->count(50)->create();
+        $branches = Branch::factory()->count(5)->create();
+        $companies = Company::factory()->count(10)->create();
 
-            $servicePT=Service::firstOrCreate(['name'=>'Personal Training'],
-                ['id'=>Str::uuid(),'description'=>'1-zu-1 Training','price'=>79,'active'=>1]);
-            $serviceMS=Service::firstOrCreate(['name'=>'Massage 30 min'],
-                ['id'=>Str::uuid(),'description'=>'Entspannungsmassage','price'=>39,'active'=>1]);
+        // Staff mit bestehender Branch zuordnen
+        Staff::factory()->count(15)->make()->each(function($staff) use ($branches) {
+            $staff->branch_id = $branches->random()->id;
+            $staff->save();
+        });
 
-            $staffAnna=Staff::firstOrCreate(['email'=>'anna@example.com'],
-                ['id'=>Str::uuid(),'name'=>'Anna Trainer','phone'=>'0170 1','active'=>1,'home_branch_id'=>$branchA->id]);
-            $staffBen =Staff::firstOrCreate(['email'=>'ben@example.com' ],
-                ['id'=>Str::uuid(),'name'=>'Ben Masseur','phone'=>'0170 2','active'=>1,'home_branch_id'=>$branchB->id]);
+        // Appointments zu bestehenden Kunden
+        Appointment::factory()->count(100)->make()->each(function($appointment) use ($customers) {
+            $appointment->customer_id = $customers->random()->id;
+            $appointment->save();
+        });
 
-            $branchA->services()->sync([$servicePT->id,$serviceMS->id]);
-            $branchB->services()->sync([$serviceMS->id]);
-
-            $branchA->staff()->sync([$staffAnna->id,$staffBen->id]);
-            $branchB->staff()->sync([$staffBen->id]);
-
-            $staffAnna->services()->sync([$servicePT->id]);
-            $staffBen ->services()->sync([$serviceMS->id]);
+        // Calls zu bestehenden Kunden
+        Call::factory()->count(30)->make()->each(function($call) use ($customers) {
+            $call->customer_id = $customers->random()->id;
+            $call->save();
         });
     }
 }

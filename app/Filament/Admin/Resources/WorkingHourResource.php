@@ -16,48 +16,24 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class WorkingHourResource extends Resource
 {
     protected static ?string $model = WorkingHour::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static bool $shouldRegisterNavigation = true;
     protected static ?string $navigationGroup = 'Stammdaten';
+    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static ?string $navigationLabel = 'Working Hours';
+    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('staff_id')
-                    ->relationship('staff', 'name')
-                    ->required(),
-                Forms\Components\TextInput::make('weekday')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('start')
-                    ->required(),
-                Forms\Components\TextInput::make('end')
-                    ->required(),
+                // Formularfelder hier ergänzen
             ]);
-
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('staff.name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('weekday')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('start'),
-                Tables\Columns\TextColumn::make('end'),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                // Tabellenspalten hier ergänzen
             ])
             ->filters([
                 //

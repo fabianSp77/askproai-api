@@ -16,10 +16,10 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class AppointmentResource extends Resource
 {
     protected static ?string $model = Appointment::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static bool $shouldRegisterNavigation = true;
     protected static ?string $navigationGroup = 'Buchungen';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+    protected static ?string $navigationLabel = 'Termine';
+    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
     {
@@ -40,7 +40,6 @@ class AppointmentResource extends Resource
                     ->maxLength(255)
                     ->default('pending'),
             ]);
-
     }
 
     public static function table(Table $table): Table

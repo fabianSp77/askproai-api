@@ -1,37 +1,38 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Admin\Widgets;
 
-use App\Models\Customer;
+use App\Models\User;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Database\Eloquent\Builder;
 
-class LatestCustomersWidget extends BaseWidget
+class ActivityLogWidget extends BaseWidget
 {
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 4;
     protected int | string | array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
         return $table
             ->query(
-                Customer::query()->latest()->limit(5)
+                User::latest()->limit(10)
             )
-            ->heading('Neueste Kunden')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Name')
+                    ->label('Benutzer')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->label('E-Mail'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Erstellt am')
+                    ->label('Registriert am')
                     ->dateTime()
                     ->sortable(),
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Letztes Update')
+                    ->dateTime()
+                    ->sortable(),
             ]);
     }
 }

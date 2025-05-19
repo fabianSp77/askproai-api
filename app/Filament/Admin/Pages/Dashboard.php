@@ -1,15 +1,9 @@
 <?php
-
 namespace App\Filament\Admin\Pages;
 
-use Filament\Pages\Page;
+use Filament\Pages\Dashboard as BaseDashboard;
 
-class Dashboard extends Page
+class Dashboard extends BaseDashboard
 {
-    /** @var string|null  Route-Slug – leer = "/admin"  */
-    protected static ?string $slug = '';
-
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
-    protected static string $view = 'filament.admin.pages.dashboard';
+    protected static ?string $navigationIcon = 'heroicon-o-home';
 }

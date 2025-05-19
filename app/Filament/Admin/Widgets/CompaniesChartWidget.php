@@ -1,6 +1,5 @@
 <?php
-
-namespace App\Filament\Widgets;
+namespace App\Filament\Admin\Widgets;
 
 use App\Models\Company;
 use Filament\Widgets\ChartWidget;
@@ -16,19 +15,25 @@ class CompaniesChartWidget extends ChartWidget
     {
         $data = [];
         $labels = [];
+
+        // Letzten 6 Monate anzeigen
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
             $count = Company::whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->count();
+            
             $data[] = $count;
-            $labels[] = $month->translatedFormat('F Y'); // Monatsnamen automatisch in Deutsch
+            $labels[] = $month->format('M Y');
         }
+
         return [
             'datasets' => [
                 [
                     'label' => 'Neue Unternehmen',
                     'data' => $data,
+                    'backgroundColor' => '#f59e0b',
+                    'borderColor' => '#f59e0b',
                 ],
             ],
             'labels' => $labels,
@@ -37,6 +42,6 @@ class CompaniesChartWidget extends ChartWidget
 
     protected function getType(): string
     {
-        return 'bar';
+        return 'line';
     }
 }
