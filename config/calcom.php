@@ -2,7 +2,7 @@
 
 return [
     /* Basis-URL der REST-API  */
-    'base_url'  => env('CALCOM_BASE', 'https://api.cal.com'),
+    'base_url'  => env('CALCOM_BASE_URL', 'https://api.cal.com'),
 
     /* Dein Secret-Key  */
     'api_key'   => env('CALCOM_API_KEY'),

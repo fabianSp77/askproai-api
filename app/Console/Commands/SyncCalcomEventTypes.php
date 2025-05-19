@@ -13,10 +13,10 @@ class SyncCalcomEventTypes extends Command
 
     public function handle(): int
     {
-        $apiKey = config('calcom.api_key');
-        $team   = config('calcom.team_slug');   // ← askproai
+        $apiKey = config('services.calcom.api_key');
+        $team   = config('services.calcom.team_slug');   // ← askproai
         $user   = config('calcom.user_slug');   // ← leer
-        $base   = rtrim(config('calcom.base_url'), '/');
+        $base   = rtrim(config('services.calcom.base_url'), '/');
 
         if (! $apiKey) {
             $this->error('❌  CALCOM_API_KEY fehlt in .env');
@@ -28,7 +28,7 @@ class SyncCalcomEventTypes extends Command
         if ($team)      $query .= '&teamUsername=' . $team;
         elseif ($user)  $query .= '&userUsername=' . $user;
 
-        $url  = "{$base}/v1/event-types?{$query}";
+        $url  = "{$base}/event-types?{$query}";
 
         /* ----------- API-Call ------------------------------------------- */
         $resp = Http::acceptJson()->get($url);
