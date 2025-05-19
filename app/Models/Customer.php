@@ -20,7 +20,7 @@ class Customer extends Model
      *
      * @var array<string>
      */
-    protected $fillable = ['name', 'email', 'phone', 'notes'];
+    protected array $fillable = ['name', 'email', 'phone', 'notes'];
 
     /**
      * Branches that belong to the customer.
