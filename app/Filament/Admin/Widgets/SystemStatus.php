@@ -11,7 +11,7 @@ class SystemStatus extends StatsOverviewWidget
     protected function getStats(): array
     {
         $retell = $this->check(config('retellai.base_url'));
-        $cal = $this->check(config('calcom.base_url'));
+        $cal = $this->check(config('services.calcom.base_url'));
 
         return [
             Stat::make('Retell', $retell['label'])->color($retell['color']),
