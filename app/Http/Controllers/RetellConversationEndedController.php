@@ -10,7 +10,7 @@ class RetellConversationEndedController
 {
     public function __invoke(Request $request): Response
     {
-        // TODO: Conversation‑Ended Event verarbeiten
+        // TODO: Conversation-Ended-Event verarbeiten
         Log::info('Retell Conversation Ended', $request->all());
 
         return response()->noContent();   // 204

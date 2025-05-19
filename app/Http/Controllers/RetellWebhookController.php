@@ -22,23 +22,23 @@ class RetellWebhookController extends Controller
         $intent = $data['payload']['intent'] ?? null;
         $slotsData = $data['payload']['slots'] ?? [];
 
-        // 1. Telefonnummer aus Webhook-Payload extrahieren (je nach Struktur!)
-        $incomingNumber = $slotsData['to_number'] ?? $slotsData['callee'] ?? null; // Passe ggf. an, je nach Payload!
+        // 1. Telefonnummer aus der Webhook-Payload extrahieren (je nach Struktur)
+        $incomingNumber = $slotsData['to_number'] ?? $slotsData['callee'] ?? null; // Bei Bedarf an die Payload anpassen
 
         if ($intent === 'booking_create') {
-            // a) PhoneNumber suchen
+            // a) PhoneNumber-Eintrag suchen
             $phoneNumber = PhoneNumber::where('number', $incomingNumber)->first();
             if (!$phoneNumber) {
                 return response()->json(['message' => 'Telefonnummer ist keinem Branch zugeordnet!'], 400);
             }
 
-            // b) Branch holen
+            // b) Branch (Filiale) laden
             $branch = Branch::where('id', $phoneNumber->branch_id)->first();
             if (!$branch) {
                 return response()->json(['message' => 'Branch/Filiale nicht gefunden!'], 400);
             }
 
-            // c) Customer und Tenant holen (jetzt per Name-Matching)
+            // c) Customer- und Tenant-Modell laden (aktuell per Namensabgleich)
             $customer = Customer::where('id', $branch->customer_id)->first();
             if (!$customer) {
                 return response()->json(['message' => 'Customer/Kunde nicht gefunden!'], 400);
@@ -48,13 +48,13 @@ class RetellWebhookController extends Controller
                 return response()->json(['message' => 'Mandant/Firma nicht gefunden!'], 400);
             }
 
-            // d) Staff im Branch finden (optional: alle, oder nur 1)
+            // d) Staff-Mitglied im Branch finden (optional alle oder nur eins)
             $staff = Staff::where('branch_id', $branch->id)->first();
             if (!$staff) {
                 return response()->json(['message' => 'Kein Mitarbeiter für diese Filiale gefunden!'], 400);
             }
 
-            // e) EventType zum Staff holen
+            // e) EventType zum Staff-Mitglied ermitteln
             $eventType = CalcomEventType::where('staff_id', $staff->id)
                 ->where('is_active', true)
                 ->first();

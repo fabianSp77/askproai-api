@@ -3,15 +3,15 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CalcomWebhookController;
-use App\Http\Controllers\RetellWebhookController;   // Handles webhook events from Retell
+use App\Http\Controllers\RetellWebhookController;   // Controller für Retell-Webhook
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| API-Routen
 |--------------------------------------------------------------------------
 */
 
-// ---- Cal.com Webhook -------------------------------------------
+// ---- Cal.com-Webhook -------------------------------------------
 
 // 1) Ping-Route (GET)  ➜ ohne Signaturprüfung
 Route::get('calcom/webhook', [CalcomWebhookController::class, 'ping']);
@@ -20,5 +20,5 @@ Route::get('calcom/webhook', [CalcomWebhookController::class, 'ping']);
 Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle'])
      ->middleware('calcom.signature');
 
-// Retell Webhook (POST)
+// Retell-Webhook (POST)
 Route::post('retell/webhook', [RetellWebhookController::class, '__invoke']);
