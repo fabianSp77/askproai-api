@@ -1,7 +1,6 @@
 # AskProAI - KI-Telefonassistenz
 
 Ein System zur automatischen Anrufverarbeitung und Terminbuchung für Praxen, Salons und Dienstleister.
-
 ## Features
 - RetellAI-Integration für KI-gestützte Anrufe
 - Dashboard zur Anrufübersicht und Statistiken
