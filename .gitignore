@@ -6,6 +6,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+
 .env
 .env.backup
 .env.production
@@ -21,10 +22,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
 .env*.bak
-+491234567890,
-true,
-.env
-.env.*
-*.bak
 *.bak*
+*.save*
+.env.*
