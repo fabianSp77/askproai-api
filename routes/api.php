@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CalcomWebhookController;
-use App\Http\Controllers\RetellWebhookController;   // ← HIERHER!
+use App\Http\Controllers\RetellWebhookController;   // Handles webhook events from Retell
 
 /*
 |--------------------------------------------------------------------------
