@@ -13,8 +13,9 @@ class StaffFactory extends Factory
             'name' => $this->faker->name,
             'email' => $this->faker->unique()->safeEmail,
             'phone' => $this->faker->phoneNumber,
-            'active' => $this->faker->boolean,
-            'branch_id' => Branch::factory(),        // jede/r Mitarbeiter:in bekommt eine Branch
+            'active' => true,
+            'company_id' => \App\Models\Company::factory(),
+            'branch_id' => Branch::factory(),
             'home_branch_id' => null,
         ];
     }

@@ -17,3 +17,4 @@ class EditCompany extends EditRecord
         ];
     }
 }
+

@@ -20,20 +20,33 @@ return Application::configure(basePath: dirname(__DIR__))
         api:      __DIR__.'/../routes/api.php',      // ← API-Routes einbinden
         commands: __DIR__.'/../routes/console.php',
         health:   '/up',
+        then: function ($router) {
+            // Load API v2 routes - temporarily disabled due to missing controllers
+            // Route::prefix('api')
+            //     ->middleware('api')
+            //     ->group(base_path('routes/api/v2.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        
+        /* ---------------------------------------------------------
+         |  Global Middleware (runs on every request)
+         * -------------------------------------------------------- */
+        $middleware->prepend(\App\Http\Middleware\DebugUltimateSystemCockpit::class);
+        $middleware->prepend(\App\Http\Middleware\ComprehensiveErrorLogger::class);
+        $middleware->prepend(\App\Http\Middleware\TrustProxies::class);
+        $middleware->append(\App\Http\Middleware\SessionManager::class);
+        $middleware->append(\App\Http\Middleware\LoginDebugger::class);
+        
+        /* ---------------------------------------------------------
+         |  Web Middleware Group
+         * -------------------------------------------------------- */
+        // Remove Livewire fix middleware that may be causing issues
 
         /* ---------------------------------------------------------
          |  WEB-Gruppe  (Standard-Middleware für Browser-Requests)
          * -------------------------------------------------------- */
-        $middleware->web(append: [
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ]);
+        // Removed FixLivewireAssets middleware - causing issues
 
         /* ---------------------------------------------------------
          |  API-Gruppe  (typisch für stateless Requests / SPA)
@@ -42,6 +55,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'throttle:api',
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            // Temporarily disabled due to errors
+            // \App\Http\Middleware\ThreatDetectionMiddleware::class,
+            // \App\Http\Middleware\AdaptiveRateLimitMiddleware::class,
         ]);
 
         /* ---------------------------------------------------------
@@ -50,6 +66,19 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             /* ✨ Eigener Alias – Cal.com-Webhook-Signaturprüfung */
             'calcom.signature' => \App\Http\Middleware\VerifyCalcomSignature::class,
+            
+            /* ✨ Retell Webhook Signature Verification */
+            'verify.retell.signature' => \App\Http\Middleware\VerifyRetellSignature::class,
+
+            /* 🛡️ Security Layer Middleware */
+            'threat.detection' => \App\Http\Middleware\ThreatDetectionMiddleware::class,
+            'rate.limit' => \App\Http\Middleware\AdaptiveRateLimitMiddleware::class,
+            
+            /* 🚀 Performance Optimization Middleware */
+            'eager.loading' => \App\Http\Middleware\EagerLoadingMiddleware::class,
+            
+            /* 📱 Mobile Detection Middleware */
+            'mobile.detector' => \App\Http\Middleware\MobileDetector::class,
 
             /* ── Laravel-Standard ─────────────────────────────── */
             'auth'              => \App\Http\Middleware\Authenticate::class,
@@ -64,6 +93,42 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Hier könntest du z. B. eigene Exception-Handler registrieren
+        // Handle custom booking exceptions
+        $exceptions->render(function (\App\Exceptions\BookingException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $e->getUserMessage(),
+                    'error_code' => $e->getErrorCode(),
+                    'context' => app()->environment('local') ? $e->getContext() : null
+                ], 400);
+            }
+        });
+        
+        // Handle availability exceptions
+        $exceptions->render(function (\App\Exceptions\AvailabilityException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $e->getUserMessage(),
+                    'error_code' => $e->getErrorCode(),
+                    'alternatives' => $e->getAlternatives(),
+                    'alternatives_message' => $e->getAlternativesMessage()
+                ], 400);
+            }
+        });
+        
+        // Log all exceptions for debugging
+        $exceptions->report(function (Throwable $e) {
+            if (request()->is('admin/*')) {
+                \Illuminate\Support\Facades\Log::error('Admin Panel Error', [
+                    'url' => request()->fullUrl(),
+                    'exception' => get_class($e),
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+            }
+        });
     })
     ->create();

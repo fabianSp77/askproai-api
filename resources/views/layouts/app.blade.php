@@ -13,6 +13,11 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
+        {{-- Error Handler temporarily disabled - was causing navigation issues --}}
+        {{-- @if(config('app.debug'))
+            <script src="{{ asset('js/error-handler.js') }}" defer></script>
+        @endif --}}
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">

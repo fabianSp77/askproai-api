@@ -1,0 +1,330 @@
+{
+    "Event Types - V1 API": {
+        "success": false,
+        "details": {
+            "http_code": 403,
+            "count": 0,
+            "sample": null
+        },
+        "error": "{\"error\":\"You are not authorized to perform this request.\"}"
+    },
+    "Event Types - V2 API": {
+        "success": false,
+        "details": {
+            "http_code": 404,
+            "response": {
+                "status": "error",
+                "timestamp": "2025-06-12T18:00:24.366Z",
+                "path": "\/v2\/event-types",
+                "error": {
+                    "code": "NotFoundException",
+                    "message": "Cannot GET \/api\/v2\/event-types",
+                    "details": {
+                        "message": "Cannot GET \/api\/v2\/event-types",
+                        "error": "Not Found",
+                        "statusCode": 404
+                    }
+                }
+            },
+            "raw": "{\"status\":\"error\",\"timestamp\":\"2025-06-12T18:00:24.366Z\",\"path\":\"\/v2\/event-types\",\"error\":{\"code\":\"NotFoundException\",\"message\":\"Cannot GET \/api\/v2\/event-types\",\"details\":{\"message\":\"Cannot GET \/api\/v2\/event-types\",\"error\":\"Not Found\",\"statusCode\":404}}}"
+        },
+        "error": "{\"status\":\"error\",\"timestamp\":\"2025-06-12T18:00:24.366Z\",\"path\":\"\/v2\/event-types\",\"error\":{\"code\":\"NotFoundException\",\"message\":\"Cannot GET \/api\/v2\/event-types\",\"details\":{\"message\":\"Cannot GET \/api\/v2\/event-types\",\"error\":\"Not Found\",\"statusCode\":404}}}"
+    },
+    "User Profile - V1 API": {
+        "success": false,
+        "details": {
+            "http_code": 403,
+            "user": null
+        },
+        "error": "{\"error\":\"You are not authorized to perform this request.\"}"
+    },
+    "User Profile - V2 API": {
+        "success": false,
+        "details": {
+            "http_code": 404,
+            "response": {
+                "status": "error",
+                "timestamp": "2025-06-12T18:00:24.843Z",
+                "path": "\/v2\/users\/me",
+                "error": {
+                    "code": "NotFoundException",
+                    "message": "Cannot GET \/api\/v2\/users\/me",
+                    "details": {
+                        "message": "Cannot GET \/api\/v2\/users\/me",
+                        "error": "Not Found",
+                        "statusCode": 404
+                    }
+                }
+            }
+        },
+        "error": "{\"status\":\"error\",\"timestamp\":\"2025-06-12T18:00:24.843Z\",\"path\":\"\/v2\/users\/me\",\"error\":{\"code\":\"NotFoundException\",\"message\":\"Cannot GET \/api\/v2\/users\/me\",\"details\":{\"message\":\"Cannot GET \/api\/v2\/users\/me\",\"error\":\"Not Found\",\"statusCode\":404}}}"
+    },
+    "Availability Check - V1 API": {
+        "success": false,
+        "details": {
+            "http_code": 403,
+            "request_params": {
+                "eventTypeId": 2563193,
+                "dateFrom": "2025-06-12",
+                "dateTo": "2025-06-19"
+            },
+            "slots_count": 0,
+            "sample_slot": null
+        },
+        "error": "{\"error\":\"You are not authorized to perform this request.\"}"
+    },
+    "Availability Check - V2 API": {
+        "success": true,
+        "details": {
+            "http_code": 200,
+            "request_params": {
+                "eventTypeId": 2563193,
+                "startTime": "2025-06-12T00:00:00.000Z",
+                "endTime": "2025-06-13T23:59:59.999Z"
+            },
+            "response": {
+                "data": {
+                    "slots": {
+                        "2025-06-12": [
+                            {
+                                "time": "2025-06-12T22:30:25.825+02:00"
+                            },
+                            {
+                                "time": "2025-06-12T23:00:25.825+02:00"
+                            }
+                        ],
+                        "2025-06-13": [
+                            {
+                                "time": "2025-06-13T09:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T09:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T10:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T10:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T11:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T11:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T12:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T12:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T13:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T13:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T14:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T14:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T15:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T15:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T16:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T16:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T17:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T17:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T18:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T18:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T19:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T19:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T20:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T20:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T21:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T21:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T22:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T22:30:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T23:00:00.000+02:00"
+                            },
+                            {
+                                "time": "2025-06-13T23:30:00.000+02:00"
+                            }
+                        ]
+                    }
+                },
+                "status": "success"
+            }
+        },
+        "error": null
+    },
+    "Create Booking - V1 API (Test Mode)": {
+        "success": true,
+        "details": {
+            "test_mode": true,
+            "would_send": {
+                "eventTypeId": 2563193,
+                "start": "2025-06-14T14:00:00.000Z",
+                "timeZone": "Europe\/Berlin",
+                "language": "de",
+                "metadata": {
+                    "source": "askproai",
+                    "via": "api_test"
+                },
+                "responses": {
+                    "name": "API Test User",
+                    "email": "api-test@example.com",
+                    "location": "phone",
+                    "notes": "This is a test booking from V1 API test suite"
+                }
+            },
+            "endpoint": "https:\/\/api.cal.com\/v1\/bookings?apiKey=cal_live_bd7aedbdf12085c5312c79ba73585920"
+        }
+    },
+    "Create Booking - V2 API (Test Mode)": {
+        "success": true,
+        "details": {
+            "test_mode": true,
+            "would_send": {
+                "eventTypeId": 2563193,
+                "start": "2025-06-14T14:00:00.000Z",
+                "attendee": {
+                    "name": "API Test User V2",
+                    "email": "api-test-v2@example.com",
+                    "timeZone": "Europe\/Berlin",
+                    "language": "de"
+                },
+                "metadata": {
+                    "source": "askproai",
+                    "via": "api_test_v2"
+                },
+                "location": "phone"
+            },
+            "endpoint": "https:\/\/api.cal.com\/v2\/bookings"
+        }
+    },
+    "Webhooks List - V1 API": {
+        "success": false,
+        "details": {
+            "http_code": 403,
+            "webhooks_count": 0,
+            "webhooks": []
+        },
+        "error": "{\"error\":\"You are not authorized to perform this request.\"}"
+    },
+    "Webhooks List - V2 API": {
+        "success": true,
+        "details": {
+            "http_code": 200,
+            "response": {
+                "status": "success",
+                "data": [
+                    {
+                        "id": "040f32e7-9304-48df-8616-6cea7323f7e1",
+                        "payloadTemplate": null,
+                        "triggers": [
+                            "BOOKING_CANCELLED",
+                            "BOOKING_CREATED",
+                            "BOOKING_REJECTED",
+                            "BOOKING_REQUESTED",
+                            "BOOKING_PAYMENT_INITIATED",
+                            "BOOKING_RESCHEDULED",
+                            "BOOKING_PAID",
+                            "BOOKING_NO_SHOW_UPDATED",
+                            "MEETING_ENDED",
+                            "MEETING_STARTED",
+                            "RECORDING_READY",
+                            "OOO_CREATED",
+                            "RECORDING_TRANSCRIPTION_GENERATED",
+                            "AFTER_HOSTS_CAL_VIDEO_NO_SHOW",
+                            "AFTER_GUESTS_CAL_VIDEO_NO_SHOW",
+                            "FORM_SUBMITTED",
+                            "FORM_SUBMITTED_NO_EVENT"
+                        ],
+                        "subscriberUrl": "https:\/\/api.askproai.de\/api\/calcom\/webhook",
+                        "active": true,
+                        "secret": "6846aed4d55f6f3df70c40781e02d964aae34147f72763e1ccedd726e66dfff7",
+                        "userId": 1414768
+                    }
+                ]
+            }
+        },
+        "error": null
+    },
+    "Organizations - V2 API": {
+        "success": false,
+        "details": {
+            "http_code": 404,
+            "response": {
+                "status": "error",
+                "timestamp": "2025-06-12T18:00:26.457Z",
+                "path": "\/v2\/organizations",
+                "error": {
+                    "code": "NotFoundException",
+                    "message": "Cannot GET \/api\/v2\/organizations",
+                    "details": {
+                        "message": "Cannot GET \/api\/v2\/organizations",
+                        "error": "Not Found",
+                        "statusCode": 404
+                    }
+                }
+            }
+        },
+        "error": "{\"status\":\"error\",\"timestamp\":\"2025-06-12T18:00:26.457Z\",\"path\":\"\/v2\/organizations\",\"error\":{\"code\":\"NotFoundException\",\"message\":\"Cannot GET \/api\/v2\/organizations\",\"details\":{\"message\":\"Cannot GET \/api\/v2\/organizations\",\"error\":\"Not Found\",\"statusCode\":404}}}"
+    },
+    "Schedules - V2 API": {
+        "success": false,
+        "details": {
+            "http_code": 404,
+            "response": {
+                "status": "error",
+                "timestamp": "2025-06-12T18:00:26.667Z",
+                "path": "\/v2\/schedules",
+                "error": {
+                    "code": "NotFoundException",
+                    "message": "Cannot GET \/api\/v2\/schedules",
+                    "details": {
+                        "message": "Cannot GET \/api\/v2\/schedules",
+                        "error": "Not Found",
+                        "statusCode": 404
+                    }
+                }
+            }
+        },
+        "error": "{\"status\":\"error\",\"timestamp\":\"2025-06-12T18:00:26.667Z\",\"path\":\"\/v2\/schedules\",\"error\":{\"code\":\"NotFoundException\",\"message\":\"Cannot GET \/api\/v2\/schedules\",\"details\":{\"message\":\"Cannot GET \/api\/v2\/schedules\",\"error\":\"Not Found\",\"statusCode\":404}}}"
+    }
+}

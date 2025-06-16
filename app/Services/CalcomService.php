@@ -3,48 +3,145 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
+use App\Services\CacheService;
 
 class CalcomService
 {
-    protected string $baseUrl;
-    protected string $apiKey;
-    protected string $eventTypeId;
+    private $apiKey;
+    private $baseUrl;
+    private $teamSlug;
+    private $cacheService;
 
     public function __construct()
     {
-        $this->baseUrl     = rtrim(config('services.calcom.base_url'), '/');
-        $this->apiKey      = config('services.calcom.api_key');
-        $this->eventTypeId = config('services.calcom.event_type_id');
+        $this->apiKey = config('services.calcom.api_key');
+        $this->baseUrl = 'https://api.cal.com/v1';
+        $this->teamSlug = 'askproai'; // Team-Slug aus den Dokumenten
+        $this->cacheService = app(CacheService::class);
+    }
+    
+    /**
+     * Set API key (for dynamic configuration)
+     */
+    public function setApiKey(string $apiKey): self
+    {
+        $this->apiKey = $apiKey;
+        return $this;
     }
 
-    public function createBooking(array $bookingDetails): Response
+    public function checkAvailability($eventTypeId, $dateFrom, $dateTo)
     {
-        $payload = [
-            'eventTypeId' => (int)($bookingDetails['eventTypeId'] ?? $this->eventTypeId),
-            'start'       => $bookingDetails['startTime'],
-            'end'         => $bookingDetails['endTime'],
-            'timeZone'    => $bookingDetails['timeZone'] ?? 'Europe/Berlin',
-            'language'    => $bookingDetails['language'] ?? 'de',
-            'metadata'    => (object)[],
-            'responses'   => [
-                'name'  => $bookingDetails['name'],
-                'email' => $bookingDetails['email'],
-            ],
-        ];
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->get($this->baseUrl . '/availability', [
+                'apiKey' => $this->apiKey,
+                'eventTypeId' => $eventTypeId,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+                'teamSlug' => $this->teamSlug // Team-Slug hinzufügen
+            ]);
 
-        Log::channel('calcom')->debug('[Cal.com] Sende createBooking Payload:', $payload);
+            if ($response->successful()) {
+                return $response->json();
+            }
 
-        $query = ['apiKey' => $this->apiKey];
-        $fullUrl = $this->baseUrl . '/bookings?' . http_build_query($query);
-        $resp = Http::acceptJson()->post($fullUrl, $payload);
+            Log::error('Cal.com availability check failed', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
 
-        Log::channel('calcom')->debug('[Cal.com] Booking Response:', [
-            'status' => $resp->status(),
-            'body'   => $resp->json() ?? $resp->body(),
-        ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Cal.com availability error', [
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
 
-        return $resp;
+    public function bookAppointment($eventTypeId, $startTime, $endTime, $customerData, $notes = null)
+    {
+        try {
+            $data = [
+                'eventTypeId' => (int)$eventTypeId,
+                'start' => $startTime,
+                'timeZone' => 'Europe/Berlin',
+                'language' => 'de',
+                'metadata' => [
+                    'source' => 'askproai',
+                    'via' => 'phone_ai'
+                ],
+                'responses' => [
+                    'name' => $customerData['name'] ?? 'Unbekannt',
+                    'email' => $customerData['email'] ?? 'kunde@example.com',
+                    'location' => 'phone'
+                ]
+            ];
+
+            if ($notes) {
+                $data['responses']['notes'] = $notes;
+            }
+
+            if (!empty($customerData['phone'])) {
+                $phoneNote = "Telefon: " . $customerData['phone'];
+                if (isset($data['responses']['notes'])) {
+                    $data['responses']['notes'] = $phoneNote . "\n" . $data['responses']['notes'];
+                } else {
+                    $data['responses']['notes'] = $phoneNote;
+                }
+            }
+
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . '/bookings?apiKey=' . $this->apiKey, $data);
+
+            if ($response->successful()) {
+                Log::info('Cal.com booking successful', [
+                    'response' => $response->json()
+                ]);
+                return $response->json();
+            }
+
+            Log::error('Cal.com booking failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'request' => $data
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Cal.com booking error', [
+                'error' => $e->getMessage(),
+                'eventTypeId' => $eventTypeId
+            ]);
+            throw $e;
+        }
+    }
+
+    public function getEventTypes($companyId = null)
+    {
+        // Use company ID for cache key, default to config if not provided
+        $cacheCompanyId = $companyId ?? 'default';
+        
+        return $this->cacheService->getEventTypes($cacheCompanyId, function () {
+            try {
+                $response = Http::withHeaders([
+                    'Content-Type' => 'application/json',
+                ])->get($this->baseUrl . '/event-types?apiKey=' . $this->apiKey);
+
+                if ($response->successful()) {
+                    return $response->json();
+                }
+
+                return null;
+            } catch (\Exception $e) {
+                Log::error('Cal.com get event types error', [
+                    'error' => $e->getMessage()
+                ]);
+                return null;
+            }
+        });
     }
 }

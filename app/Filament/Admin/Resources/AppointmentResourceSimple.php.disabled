@@ -1,0 +1,163 @@
+<?php
+
+namespace App\Filament\Admin\Resources;
+
+use App\Filament\Admin\Resources\AppointmentResource\Pages;
+use App\Models\Appointment;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use Filament\Support\Enums\MaxWidth;
+use Illuminate\Database\Eloquent\Builder;
+
+class AppointmentResourceSimple extends Resource
+{
+    protected static ?string $model = Appointment::class;
+    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    protected static ?string $navigationLabel = 'Termine (Temp)';
+    protected static ?string $pluralLabel = 'Termine';
+    protected static ?string $label = 'Termin';
+    protected static ?string $navigationGroup = 'Geschäftsvorgänge';
+    protected static ?int $navigationSort = 11;
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Termindetails')
+                    ->schema([
+                        Forms\Components\TextInput::make('customer_id')
+                            ->label('Kunde ID')
+                            ->numeric(),
+                            
+                        Forms\Components\TextInput::make('service_id')
+                            ->label('Service ID')
+                            ->numeric(),
+                            
+                        Forms\Components\TextInput::make('staff_id')
+                            ->label('Mitarbeiter ID')
+                            ->numeric(),
+                            
+                        Forms\Components\TextInput::make('branch_id')
+                            ->label('Filiale ID')
+                            ->numeric(),
+                            
+                        Forms\Components\DateTimePicker::make('starts_at')
+                            ->label('Beginn')
+                            ->required(),
+                            
+                        Forms\Components\DateTimePicker::make('ends_at')
+                            ->label('Ende')
+                            ->required(),
+                            
+                        Forms\Components\Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                'pending' => 'Ausstehend',
+                                'confirmed' => 'Bestätigt',
+                                'completed' => 'Abgeschlossen',
+                                'cancelled' => 'Abgesagt',
+                                'no_show' => 'Nicht erschienen',
+                            ])
+                            ->default('pending')
+                            ->required(),
+                            
+                        Forms\Components\Textarea::make('notes')
+                            ->label('Notizen')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable()
+                    ->searchable(),
+                    
+                Tables\Columns\TextColumn::make('customer_id')
+                    ->label('Kunde ID')
+                    ->sortable(),
+                    
+                Tables\Columns\TextColumn::make('service_id')
+                    ->label('Service ID')
+                    ->sortable(),
+                    
+                Tables\Columns\TextColumn::make('staff_id')
+                    ->label('Mitarbeiter ID')
+                    ->sortable(),
+                    
+                Tables\Columns\TextColumn::make('starts_at')
+                    ->label('Beginn')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable(),
+                    
+                Tables\Columns\TextColumn::make('ends_at')
+                    ->label('Ende')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable(),
+                    
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'confirmed' => 'info',
+                        'completed' => 'success',
+                        'cancelled' => 'danger',
+                        'no_show' => 'gray',
+                        default => 'gray',
+                    }),
+                    
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Erstellt')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'pending' => 'Ausstehend',
+                        'confirmed' => 'Bestätigt',
+                        'completed' => 'Abgeschlossen',
+                        'cancelled' => 'Abgesagt',
+                        'no_show' => 'Nicht erschienen',
+                    ])
+                    ->multiple(),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ])
+            ->defaultSort('starts_at', 'desc');
+    }
+
+    public static function getRelations(): array
+    {
+        return [];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListAppointments::route('/'),
+            'create' => Pages\CreateAppointment::route('/create'),
+            'edit' => Pages\EditAppointment::route('/{record}/edit'),
+        ];
+    }
+}

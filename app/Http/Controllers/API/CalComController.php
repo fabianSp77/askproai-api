@@ -3,105 +3,110 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Services\CalcomService;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class CalComController extends Controller
 {
-    public function bookAppointment(Request $request): JsonResponse
+    private $calcomService;
+
+    public function __construct(CalcomService $calcomService)
+    {
+        $this->calcomService = $calcomService;
+    }
+
+    public function checkAvailability(Request $request)
     {
         try {
-            // Validate incoming request
-            $validatedData = $request->validate([
-                'eventTypeId' => 'required|numeric',
-                'start' => 'required|date_format:Y-m-d\TH:i:s.u\Z',
-                'name' => 'required|string',
-                'email' => 'required|email',
-                'timeZone' => 'required|string',
-            ]);
-            
-            // Set duration based on event type (from screenshots)
-            $duration = ($validatedData['eventTypeId'] == 2031153) ? 60 : 45; // Damen: 60min, Herren: 45min
-            
-            // Parse start date and add appropriate duration
-            $startTime = new \DateTime($validatedData['start']);
-            $endTime = clone $startTime;
-            $endTime->modify("+{$duration} minutes");
-            $endTimeFormatted = $endTime->format('Y-m-d\TH:i:s.u\Z');
-            
-            // Cal.com API details
-            $apiKey = 'cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da';
-            $userId = '1346408';
-            
-            // Build the correct format for Cal.com API - matching their exact expected format
-            $payload = [
-                'eventTypeId' => (int)$validatedData['eventTypeId'],
-                'start' => $validatedData['start'],
-                'end' => $endTimeFormatted,
-                'timeZone' => $validatedData['timeZone'],
-                'language' => 'de',
-                'metadata' => (object)[],
-                'responses' => [
-                    'name' => $validatedData['name'],
-                    'email' => $validatedData['email'],
-                    'guests' => [],
-                    'location' => ['optionValue' => '', 'value' => 'Vor Ort'],
-                    'notes' => ''
-                ],
-                'hasHashedBookingLink' => false,
-                'hashedLink' => null,
-                'smsReminderNumber' => null
-            ];
-            
-            // Log what we're sending
-            Log::info('Cal.com Request Payload', ['payload' => $payload]);
-            
-            // Make the actual API call
-            $ch = curl_init("https://api.cal.com/v1/bookings?apiKey={$apiKey}");
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
-            
-            // Log the raw response
-            Log::info('Cal.com Raw Response', [
-                'response' => $response,
-                'httpCode' => $httpCode,
-                'curlError' => $curlError
-            ]);
-            
-            $responseData = json_decode($response, true);
-            
-            if ($httpCode >= 400 || $curlError) {
-                $errorDetails = $responseData ?? ['curlError' => $curlError];
+            $eventTypeId = $request->eventTypeId ?? env('CALCOM_EVENT_TYPE_ID');
+            $dateFrom = $request->dateFrom ?? Carbon::now()->toIso8601String();
+            $dateTo = $request->dateTo ?? Carbon::now()->addHours(24)->toIso8601String();
+
+            // KEINE userId mehr verwenden!
+
+            $result = $this->calcomService->checkAvailability(
+                $eventTypeId,
+                $dateFrom,
+                $dateTo
+            );
+
+            if ($result) {
                 return response()->json([
-                    'error' => 'Terminbuchung fehlgeschlagen',
-                    'details' => $errorDetails
-                ], $httpCode ?: 500);
+                    'success' => true,
+                    'availability' => $result
+                ]);
             }
-            
-            // Success response
+
             return response()->json([
-                'success' => true,
-                'data' => $responseData
-            ], 200);
+                'success' => false,
+                'message' => 'Keine Verfügbarkeit gefunden'
+            ], 404);
+
         } catch (\Exception $e) {
-            Log::error('Cal.com Exception', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+            Log::error('Cal.com API availability error', [
+                'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
-                'error' => 'Terminbuchung fehlgeschlagen',
-                'details' => ['message' => $e->getMessage()]
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function createBooking(Request $request)
+    {
+        try {
+            $request->validate([
+                'eventTypeId' => 'required|integer',
+                'start' => 'required|date',
+                'name' => 'required|string',
+                'email' => 'required|email'
+            ]);
+
+            // KEINE userId mehr verwenden!
+
+            $startTime = Carbon::parse($request->start);
+            $endTime = $startTime->copy()->addMinutes(30); // Standard 30 Minuten
+
+            $customerData = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone ?? null
+            ];
+
+            $result = $this->calcomService->bookAppointment(
+                $request->eventTypeId,
+                $startTime->toIso8601String(),
+                $endTime->toIso8601String(),
+                $customerData,
+                $request->notes ?? null
+            );
+
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'booking' => $result
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Buchung fehlgeschlagen'
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('Cal.com API booking error', [
+                'error' => $e->getMessage(),
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 }
-

@@ -1,0 +1,19 @@
+<x-filament-panels::page>
+    @if($this->hasWidgets())
+        <x-filament-widgets::widgets
+            :widgets="$this->getVisibleWidgets()"
+            :columns="$this->getColumns()"
+        />
+    @else
+        <div>
+            <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 20px;">Dashboard</h1>
+            <p>Willkommen im AskProAI Admin Dashboard!</p>
+            
+            <div style="margin-top: 20px;">
+                <p>Angemeldet als: {{ auth()->user()->email }}</p>
+                <p>Benutzer-ID: {{ auth()->id() }}</p>
+                <p>Aktuelle Zeit: {{ now()->format('d.m.Y H:i:s') }}</p>
+            </div>
+        </div>
+    @endif
+</x-filament-panels::page>

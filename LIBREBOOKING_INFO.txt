@@ -1,0 +1,26 @@
+=== LIBREBOOKING INSTALLATION INFO ===
+Datum: 02.06.2025
+
+DATENBANK:
+- Name: askproai_db (gemeinsam genutzt mit Präfix)
+- Benutzer: askproai_user
+- Passwort: Vb39!pLc#7Lqwp$X
+- Tabellen-Präfix: lb_
+
+WEBSERVER:
+- Domain: booking.askproai.de ✅ 
+- Pfad: /var/www/librebooking
+- Port: 443 (HTTPS)
+
+BACKUPS:
+- Dateien: /var/backups/askproai-before-librebooking/files-*.tar.gz ✅
+- Datenbank: /var/backups/askproai-before-librebooking/database-*.sql.gz ✅
+
+ADMIN-ZUGANG (wird bei Installation erstellt):
+- URL: https://booking.askproai.de/Web/index.php
+- User: admin@askproai.de
+- Pass: AskPro!2024#Booking
+
+LARAVEL INTEGRATION:
+- Booking System Flag: BOOKING_SYSTEM=librebooking
+- Service Pfad: /app/Services/LibreBookingService.php

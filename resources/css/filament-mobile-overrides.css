@@ -1,0 +1,235 @@
+/* Filament Mobile Overrides */
+/* Responsive adjustments for Filament admin panel on mobile devices */
+
+/* Mobile breakpoint: max-width 767px */
+@media (max-width: 767px) {
+    /* Make sidebar full width on mobile */
+    .fi-sidebar {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Adjust main content area */
+    .fi-main {
+        padding: 0 !important;
+    }
+    
+    /* Mobile-friendly table adjustments */
+    .fi-ta-table {
+        font-size: 14px;
+    }
+    
+    .fi-ta-table th,
+    .fi-ta-table td {
+        padding: 8px 4px !important;
+    }
+    
+    /* Hide less important columns on mobile */
+    .fi-ta-table th:nth-child(n+4),
+    .fi-ta-table td:nth-child(n+4) {
+        display: none;
+    }
+    
+    /* Make action buttons touch-friendly */
+    .fi-ta-actions {
+        gap: 8px !important;
+    }
+    
+    .fi-ta-action {
+        padding: 8px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+    
+    /* Responsive form layout */
+    .fi-form-component-container {
+        gap: 16px !important;
+    }
+    
+    .fi-fo-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Touch-friendly form inputs */
+    .fi-input-wrapper input,
+    .fi-input-wrapper textarea,
+    .fi-input-wrapper select {
+        min-height: 48px !important;
+        font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+    
+    /* Mobile modal adjustments */
+    .fi-modal {
+        max-width: 100% !important;
+        margin: 0 !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+    }
+    
+    .fi-modal-window {
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+    }
+    
+    /* Responsive stats */
+    .fi-stats {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Touch-friendly buttons */
+    .fi-btn {
+        min-height: 48px !important;
+        padding: 12px 20px !important;
+    }
+    
+    /* Notification adjustments */
+    .fi-notification {
+        width: calc(100vw - 32px) !important;
+        max-width: none !important;
+    }
+    
+    /* Breadcrumb on mobile */
+    .fi-breadcrumbs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+    
+    /* Global header adjustments */
+    .fi-global-header {
+        padding: 12px !important;
+    }
+    
+    /* Page header mobile */
+    .fi-page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    
+    .fi-page-header-heading {
+        font-size: 20px !important;
+    }
+    
+    /* Filter form on mobile */
+    .fi-ta-filters {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 50 !important;
+        background: white !important;
+        padding: 20px !important;
+        overflow-y: auto !important;
+    }
+    
+    /* Widgets responsive grid */
+    .fi-widgets-container {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+        padding: 16px !important;
+    }
+}
+
+/* Tablet adjustments: 768px - 1023px */
+@media (min-width: 768px) and (max-width: 1023px) {
+    /* Two column layout for tablets */
+    .fi-fo-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .fi-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    /* Show more table columns on tablet */
+    .fi-ta-table th:nth-child(n+4),
+    .fi-ta-table td:nth-child(n+4) {
+        display: table-cell;
+    }
+    
+    .fi-ta-table th:nth-child(n+6),
+    .fi-ta-table td:nth-child(n+6) {
+        display: none;
+    }
+}
+
+/* Touch device specific styles */
+@media (hover: none) and (pointer: coarse) {
+    /* Increase touch targets */
+    a, button, [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .fi-ta-row:hover {
+        background-color: inherit !important;
+    }
+    
+    /* Add active states for better feedback */
+    .fi-btn:active {
+        transform: scale(0.98);
+    }
+    
+    .fi-ta-action:active {
+        opacity: 0.7;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .fi-btn {
+        border: 2px solid currentColor !important;
+    }
+    
+    .fi-input-wrapper input,
+    .fi-input-wrapper textarea,
+    .fi-input-wrapper select {
+        border: 2px solid currentColor !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Dark mode adjustments for mobile */
+@media (max-width: 767px) {
+    .dark {
+        /* Ensure good contrast on mobile screens */
+        .fi-modal {
+            background-color: rgb(31, 41, 55) !important;
+        }
+        
+        .fi-input-wrapper input,
+        .fi-input-wrapper textarea,
+        .fi-input-wrapper select {
+            background-color: rgb(55, 65, 81) !important;
+            color: white !important;
+        }
+    }
+}
+
+/* Landscape mode adjustments */
+@media (max-width: 767px) and (orientation: landscape) {
+    /* Reduce vertical spacing in landscape */
+    .fi-page-header {
+        padding: 8px 16px !important;
+    }
+    
+    .fi-global-header {
+        padding: 8px !important;
+    }
+    
+    /* Hide less critical elements */
+    .fi-breadcrumbs {
+        display: none !important;
+    }
+}

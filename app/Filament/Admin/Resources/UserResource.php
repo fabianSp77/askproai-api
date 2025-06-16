@@ -3,47 +3,33 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\UserResource\Pages;
-use App\Filament\Admin\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\DeleteAction;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+    protected static ?string $navigationGroup = 'Konfiguration';
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    protected static ?string $navigationGroup = 'Stammdaten';
     protected static ?string $navigationLabel = 'Benutzer';
-    protected static ?string $recordTitleAttribute = 'name';
-    protected static ?string $slug = 'benutzer';
+    protected static ?int $navigationSort = 30;
+    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('email')
-                    ->email()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\DateTimePicker::make('email_verified_at'),
-                Forms\Components\TextInput::make('password')
-                    ->password()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('kunde_id')
-                    ->numeric()
-                    ->default(null),
+                Forms\Components\TextInput::make('name')->label('Name')->required(),
+                Forms\Components\TextInput::make('email')->label('E-Mail')->email()->required(),
+                Forms\Components\Select::make('tenant_id')
+                    ->label('Mandant')
+                    ->relationship('tenant', 'name')
+                    ->required(),
+                Forms\Components\TextInput::make('password')->label('Passwort')->password()->required()->maxLength(255),
             ]);
     }
 
@@ -51,27 +37,10 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('kunde_id')
-                    ->numeric()
-                    ->sortable(),
-            ])
-            ->filters([
-                //
+                Tables\Columns\TextColumn::make('name')->label('Name'),
+                Tables\Columns\TextColumn::make('email')->label('E-Mail'),
+                Tables\Columns\TextColumn::make('tenant.name')->label('Mandant'),
+                Tables\Columns\TextColumn::make('created_at')->label('Erstellt')->dateTime('d.m.Y H:i'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -85,9 +54,7 @@ class UserResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

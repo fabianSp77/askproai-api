@@ -4,18 +4,44 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Repositories\AppointmentRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class AppointmentController extends Controller
 {
+    protected AppointmentRepository $repository;
+    
+    public function __construct(AppointmentRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+    
     /**
      * Alle Termine anzeigen.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $appointments = Appointment::all();
-        return response()->json(['data' => $appointments]);
+        // Use repository with standard loading profile
+        $query = $this->repository->standard();
+        
+        // Apply filters
+        if ($request->has('status')) {
+            $query->pushCriteria(function ($q) use ($request) {
+                $q->where('status', $request->input('status'));
+            });
+        }
+        
+        if ($request->has('date')) {
+            $query->pushCriteria(function ($q) use ($request) {
+                $q->whereDate('starts_at', $request->input('date'));
+            });
+        }
+        
+        // Get paginated results
+        $appointments = $query->paginate($request->input('per_page', 15));
+        
+        return response()->json($appointments);
     }
 
     /**
@@ -45,6 +71,13 @@ class AppointmentController extends Controller
      */
     public function show(Appointment $appointment): JsonResponse
     {
+        // Load full relationships for detail view
+        if (method_exists($appointment, 'loadForDetailView')) {
+            $appointment->loadForDetailView();
+        } else {
+            $appointment->load(['customer', 'staff', 'branch', 'service', 'company']);
+        }
+        
         return response()->json(['data' => $appointment]);
     }
 

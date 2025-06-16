@@ -20,11 +20,13 @@ class FilamentBadgeServiceProvider extends ServiceProvider
             );
         }
 
-        // Horizon-Badge
-        \Filament\Facades\Filament::registerRenderHook(
-            'panels::topbar.end',
-            fn (): string => view('livewire.admin.horizon-badge')->render(),
-        );
+        // Horizon-Badge (temporarily disabled due to error)
+        // if (view()->exists('livewire.admin.horizon-badge')) {
+        //     \Filament\Facades\Filament::registerRenderHook(
+        //         'panels::topbar.end',
+        //         fn (): string => view('livewire.admin.horizon-badge')->render(),
+        //     );
+        // }
 
         // + künftige Badges hier andocken …
     }

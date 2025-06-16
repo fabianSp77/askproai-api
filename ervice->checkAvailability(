@@ -1,0 +1,92 @@
+Array
+(
+    [event_type] => Array
+        (
+            [id] => 2281004
+            [title] => Testtermin: Friseur Website
+            [slug] => testtermin-friseur
+            [length] => 30
+            [hidden] => 
+            [position] => 0
+            [userId] => 1414768
+            [teamId] => 
+            [scheduleId] => 539940
+            [eventName] => 
+            [timeZone] => 
+            [periodType] => UNLIMITED
+            [periodStartDate] => 
+            [periodEndDate] => 
+            [periodDays] => 
+            [periodCountCalendarDays] => 
+            [requiresConfirmation] => 
+            [recurringEvent] => 
+            [disableGuests] => 
+            [hideCalendarNotes] => 
+            [minimumBookingNotice] => 15
+            [beforeEventBuffer] => 0
+            [afterEventBuffer] => 0
+            [schedulingType] => 
+            [price] => 0
+            [currency] => usd
+            [slotInterval] => 
+            [parentId] => 
+            [successRedirectUrl] => 
+            [description] => Professionelles Waschen, individueller Haarschnitt und Styling durch unsere Experten.
+            [locations] => Array
+                (
+                    [0] => Array
+                        (
+                            [type] => attendeeInPerson
+                        )
+
+                )
+
+            [metadata] => Array
+                (
+                    [apps] => Array
+                        (
+                            [giphy] => Array
+                                (
+                                    [enabled] => 
+                                    [thankYouPage] => 
+                                )
+
+                        )
+
+                    [multipleDuration] => Array
+                        (
+                            [0] => 15
+                            [1] => 30
+                            [2] => 45
+                            [3] => 60
+                        )
+
+                )
+
+            [seatsPerTimeSlot] => 
+            [seatsShowAttendees] => 
+            [seatsShowAvailabilityCount] => 1
+            [bookingFields] => 
+            [bookingLimits] => 
+            [onlyShowFirstAvailableSlot] => 
+            [durationLimits] => 
+            [children] => Array
+                (
+                )
+
+            [hosts] => Array
+                (
+                )
+
+            [customInputs] => Array
+                (
+                )
+
+            [link] => https://cal.com/askproai/testtermin-friseur
+            [hashedLink] => Array
+                (
+                )
+
+        )
+
+)

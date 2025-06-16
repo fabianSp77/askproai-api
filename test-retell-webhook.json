@@ -1,0 +1,16 @@
+{
+  "call_id": "test_call_123",
+  "phone_number": "+491234567890",
+  "status": "completed",
+  "duration": 120,
+  "user_sentiment": "positive",
+  "call_successful": true,
+  "_name": "Max Mustermann",
+  "_email": "max@example.com",
+  "_datum__termin": "2025-06-15",
+  "_uhrzeit__termin": "14:00",
+  "_dienstleistung": "Herren",
+  "_zusammenfassung": "Kunde möchte Haarschnitt",
+  "transcript": "Guten Tag, ich hätte gerne einen Termin...",
+  "summary": "Terminbuchung Haarschnitt"
+}

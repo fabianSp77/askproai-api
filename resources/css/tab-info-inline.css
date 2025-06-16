@@ -1,0 +1,92 @@
+/* Tab Info direkt unter dem aktiven Tab */
+.fi-resource-tabs-wrapper {
+    position: relative;
+}
+
+/* Container für Tab-Beschreibung */
+.tab-info-container {
+    position: relative;
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+    padding-top: 1rem;
+}
+
+/* Verbindungslinie vom Tab zur Beschreibung */
+.tab-info-line {
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 1rem;
+    background-color: rgb(var(--primary-500));
+    transition: all 0.3s ease;
+}
+
+/* Punkt am Ende der Linie */
+.tab-info-line::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgb(var(--primary-500));
+    border: 2px solid white;
+}
+
+.dark .tab-info-line::after {
+    border-color: rgb(var(--gray-900));
+}
+
+/* Beschreibungsbox */
+.tab-info-box {
+    background-color: rgb(var(--primary-50));
+    border: 1px solid rgb(var(--primary-200));
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 0.5rem;
+}
+
+.dark .tab-info-box {
+    background-color: rgba(var(--primary-950), 0.1);
+    border-color: rgb(var(--primary-800));
+}
+
+/* Farben für verschiedene Tab-Typen */
+.tab-info-box.success {
+    background-color: rgb(var(--success-50));
+    border-color: rgb(var(--success-200));
+}
+
+.dark .tab-info-box.success {
+    background-color: rgba(var(--success-950), 0.1);
+    border-color: rgb(var(--success-800));
+}
+
+.tab-info-box.danger {
+    background-color: rgb(var(--danger-50));
+    border-color: rgb(var(--danger-200));
+}
+
+.dark .tab-info-box.danger {
+    background-color: rgba(var(--danger-950), 0.1);
+    border-color: rgb(var(--danger-800));
+}
+
+.tab-info-box.warning {
+    background-color: rgb(var(--warning-50));
+    border-color: rgb(var(--warning-200));
+}
+
+.dark .tab-info-box.warning {
+    background-color: rgba(var(--warning-950), 0.1);
+    border-color: rgb(var(--warning-800));
+}
+
+/* Position der Linie je nach aktivem Tab */
+[data-active-tab="all"] .tab-info-line { left: 10%; }
+[data-active-tab="today"] .tab-info-line { left: 25%; }
+[data-active-tab="high_conversion"] .tab-info-line { left: 40%; }
+[data-active-tab="needs_followup"] .tab-info-line { left: 55%; }
+[data-active-tab="with_appointment"] .tab-info-line { left: 70%; }
+[data-active-tab="without_customer"] .tab-info-line { left: 85%; }

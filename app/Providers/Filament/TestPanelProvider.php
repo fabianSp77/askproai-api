@@ -13,7 +13,6 @@ class TestPanelProvider extends PanelProvider
             ->id('testpanel')
             ->path('testpanel')      # -> /testpanel
             ->login()                # -> /testpanel/login
-            ->default()              # startet auf TestDashboard
             ->discoverPages(
                 in: app_path('Filament/TestPanel/Pages'),
                 for: 'App\\Filament\\TestPanel\\Pages',

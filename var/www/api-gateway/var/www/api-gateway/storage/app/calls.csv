@@ -1,0 +1,4 @@
+Time,Call Duration,Type,Cost,Call ID,Disconnection Reason,Call Status,User Sentiment,From,To,Call Successful,End to End Latency,datum_termin,rezeptstatus,zusammenfassung_telefonat,telefonnummer_anrufers,information_anruf,behandlung_und_dauer,versicherungsstatus,uhrzeit_termin,datum_uhrzeit_anrufs,name,dienstleistung,telefonnummer_anrufer,zusammenfassung,email,zusammenfassung_anruf,telefonnummer,name_des_haustiere,grund
+01/21/2025 10:53,0:17,web_call,$0.023,call_d40dcbf16ceefef3e981557bd5c,user_hangup,ended,Negative,,,Unsuccessful,1589,,,,,,,,,,,,,,,,,,
+01/21/2025 11:16,1:04,web_call,$0.082,call_9e9d2fbb5e80182c2423c3cccbb,user_hangup,ended,Positive,,,Successful,2247,,,,,,,,,,,,,,,,,,
+01/25/2025 16:17,0:11,web_call,$0.024,call_5ca2fec149a5a5b60655ff234d0,user_hangup,ended,Neutral,,,Unsuccessful,,,,,,,,,,,,,,,,,,,,

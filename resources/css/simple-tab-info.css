@@ -1,0 +1,108 @@
+/* Einfache Tab-Info Styles */
+.inline-tab-info-widget {
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+}
+
+.inline-tab-info-widget .tab-info-container {
+    position: relative;
+    padding-top: 1.5rem;
+}
+
+/* Verbindungslinie */
+.inline-tab-info-widget .tab-line-connector {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 1.5rem;
+    background-color: currentColor;
+    opacity: 0.5;
+}
+
+/* Punkt am Ende */
+.inline-tab-info-widget .tab-line-dot {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: currentColor;
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .inline-tab-info-widget .tab-line-dot {
+    border-color: rgb(31, 41, 55);
+}
+
+/* Info Box Styles */
+.inline-tab-info-widget .info-box {
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border: 1px solid;
+}
+
+/* Farben */
+.inline-tab-info-widget .info-box.gray {
+    background-color: rgb(249, 250, 251);
+    border-color: rgb(229, 231, 235);
+    color: rgb(107, 114, 128);
+}
+
+.dark .inline-tab-info-widget .info-box.gray {
+    background-color: rgba(31, 41, 55, 0.5);
+    border-color: rgb(75, 85, 99);
+    color: rgb(156, 163, 175);
+}
+
+.inline-tab-info-widget .info-box.primary {
+    background-color: rgb(254, 252, 232);
+    border-color: rgb(254, 240, 138);
+    color: rgb(202, 138, 4);
+}
+
+.dark .inline-tab-info-widget .info-box.primary {
+    background-color: rgba(202, 138, 4, 0.1);
+    border-color: rgba(254, 240, 138, 0.3);
+    color: rgb(254, 240, 138);
+}
+
+.inline-tab-info-widget .info-box.success {
+    background-color: rgb(240, 253, 244);
+    border-color: rgb(187, 247, 208);
+    color: rgb(22, 163, 74);
+}
+
+.dark .inline-tab-info-widget .info-box.success {
+    background-color: rgba(22, 163, 74, 0.1);
+    border-color: rgba(187, 247, 208, 0.3);
+    color: rgb(134, 239, 172);
+}
+
+.inline-tab-info-widget .info-box.danger {
+    background-color: rgb(254, 242, 242);
+    border-color: rgb(254, 202, 202);
+    color: rgb(220, 38, 38);
+}
+
+.dark .inline-tab-info-widget .info-box.danger {
+    background-color: rgba(220, 38, 38, 0.1);
+    border-color: rgba(254, 202, 202, 0.3);
+    color: rgb(252, 165, 165);
+}
+
+.inline-tab-info-widget .info-box.warning {
+    background-color: rgb(254, 252, 232);
+    border-color: rgb(254, 240, 138);
+    color: rgb(217, 119, 6);
+}
+
+.dark .inline-tab-info-widget .info-box.warning {
+    background-color: rgba(217, 119, 6, 0.1);
+    border-color: rgba(254, 240, 138, 0.3);
+    color: rgb(252, 211, 77);
+}

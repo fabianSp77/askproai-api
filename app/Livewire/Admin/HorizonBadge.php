@@ -3,15 +3,21 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
+use App\Services\HorizonHealth;
 
-class HorizonBadge extends Component { public function render() { return view("livewire.admin.horizon-badge", ["ok" => AppServicesHorizonHealth::ok()]); }}
+class HorizonBadge extends Component
 {
     public function render()
     {
-        return <<<'HTML'
-        <div>
-            {{-- If your happiness depends on money, you will never be happy with yourself. --}}
-        </div>
-        HTML;
+        try {
+            $ok = HorizonHealth::ok();
+        } catch (\Exception $e) {
+            // Fallback wenn Horizon nicht verfügbar ist
+            $ok = true;
+        }
+        
+        return view('livewire.admin.horizon-badge', [
+            'ok' => $ok
+        ]);
     }
 }

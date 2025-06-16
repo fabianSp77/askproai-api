@@ -1,4 +1,10 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import '../../mobile-framework.css';
+@import '../../filament-mobile-overrides.css';
+@import './call-resource.css';
+@import '../../column-toggle-fix.css';
+@import '../../tab-tooltips.css';
+@import '../../column-editor-modern.css';
 
 :root {
     --color-primary-50: 254 252 232;
@@ -24,4 +30,173 @@
 
 .fi-sidebar-item-active {
     @apply bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300;
+}
+
+/* Prevent black screen during navigation */
+.fi-body {
+    transition: none !important;
+}
+
+/* Remove any black overlays */
+body.dark .fi-body,
+html.dark .fi-body {
+    background-color: rgb(249 250 251) !important; /* gray-50 */
+}
+
+/* Ensure page content is always visible */
+.fi-page {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Disable Livewire navigation progress bar delay */
+[wire\:navigate-progress] {
+    transition-delay: 0s !important;
+}
+
+/* Column Toggle Dropdown Improvements */
+.fi-ta-col-toggle .fi-dropdown-panel {
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+}
+
+.fi-ta-col-toggle .fi-dropdown-panel > div {
+    max-height: calc(80vh - 4rem);
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Scrollbar styling for column toggle */
+.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar,
+.fi-ta-col-toggle .fi-dropdown-panel > div::-webkit-scrollbar {
+    width: 6px;
+}
+
+.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-track,
+.fi-ta-col-toggle .fi-dropdown-panel > div::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-thumb,
+.fi-ta-col-toggle .fi-dropdown-panel > div::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+}
+
+.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-thumb:hover,
+.fi-ta-col-toggle .fi-dropdown-panel > div::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.8);
+}
+
+/* Column groups styling */
+.column-toggle-group {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(229, 231, 235, 1);
+}
+
+.dark .column-toggle-group {
+    border-bottom-color: rgba(55, 65, 81, 1);
+}
+
+.column-toggle-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.column-toggle-group-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: rgba(107, 114, 128, 1);
+    margin-bottom: 0.5rem;
+}
+
+.dark .column-toggle-group-label {
+    color: rgba(156, 163, 175, 1);
+}
+
+/* Tab descriptions styling */
+.tab-descriptions-widget {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.tab-descriptions-container {
+    display: flex;
+    gap: 2rem;
+    padding: 1rem;
+    background: rgba(249, 250, 251, 1);
+    border-radius: 0.5rem;
+    position: relative;
+}
+
+.dark .tab-descriptions-container {
+    background: rgba(31, 41, 55, 1);
+}
+
+.tab-description {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+.tab-description h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgba(17, 24, 39, 1);
+    margin-bottom: 0.25rem;
+}
+
+.dark .tab-description h3 {
+    color: rgba(243, 244, 246, 1);
+}
+
+.tab-description p {
+    font-size: 0.75rem;
+    color: rgba(107, 114, 128, 1);
+}
+
+.dark .tab-description p {
+    color: rgba(156, 163, 175, 1);
+}
+
+/* Connecting line for active tab */
+.tab-description-connector {
+    position: absolute;
+    bottom: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 1.5rem;
+    background: rgba(234, 179, 8, 1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.tab-description.active .tab-description-connector {
+    opacity: 1;
+}
+
+.tab-description-connector::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background: rgba(234, 179, 8, 1);
+    border-radius: 50%;
+}
+
+/* Active tab highlight */
+.tab-description.active h3 {
+    color: rgba(234, 179, 8, 1);
+}
+
+.dark .tab-description.active h3 {
+    color: rgba(251, 191, 36, 1);
 }

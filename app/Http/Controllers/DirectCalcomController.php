@@ -2,121 +2,146 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\CalcomService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class DirectCalcomController extends Controller
 {
-    const BASE_URL = 'https://api.cal.com/v1';
-    const API_KEY = 'cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da';
-    const TIMEZONE = 'Europe/Berlin';
-    const LANGUAGE = 'de';
+    private $calcomService;
 
-    private function callWithRetry($url, $method = 'GET', $payload = [])
+    public function __construct(CalcomService $calcomService)
     {
-        $attempts = 3;
-        $response = null;
-
-        while ($attempts-- > 0) {
-            try {
-                if ($method === 'GET') {
-                    $response = Http::get($url);
-                } else {
-                    $response = Http::post($url, $payload);
-                }
-
-                if ($response->successful()) {
-                    return ['success' => true, 'data' => $response->json()];
-                }
-
-                \Log::warning("API-Aufruf fehlgeschlagen", [
-                    'httpCode' => $response->status(),
-                    'response' => $response->body()
-                ]);
-            } catch (\Throwable $e) {
-                \Log::error("API-Aufruf Exception", ['exception' => $e->getMessage()]);
-            }
-
-            sleep(1);
-        }
-
-        return ['success' => false, 'data' => $response ? $response->json() : null];
+        $this->calcomService = $calcomService;
     }
 
     public function checkAvailability(Request $request)
     {
-        $request->validate([
-            'dateFrom' => 'required|date',
-            'dateTo' => 'required|date',
-            'eventTypeId' => 'required|integer',
-            'userId' => 'nullable|integer'
-        ]);
+        try {
+            $request->validate([
+                'eventTypeId' => 'required|integer',
+                'dateFrom' => 'required|date',
+                'dateTo' => 'required|date'
+            ]);
 
-        $userId = $request->userId ?? 1346408; // Verwende Default-User-ID wenn nicht angegeben
+            $result = $this->calcomService->checkAvailability(
+                $request->eventTypeId,
+                $request->dateFrom,
+                $request->dateTo
+            );
 
-        $url = self::BASE_URL . "/availability?apiKey=" . self::API_KEY;
-        $url .= "&eventTypeId=" . $request->eventTypeId;
-        $url .= "&userId=" . $userId;
-        $url .= "&dateFrom=" . urlencode($request->dateFrom);
-        $url .= "&dateTo=" . urlencode($request->dateTo);
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $result
+                ]);
+            }
 
-        $result = $this->callWithRetry($url);
-
-        if (!$result['success']) {
             return response()->json([
-                'error' => 'Verfügbarkeitsprüfung fehlgeschlagen',
-                'details' => $result['data'] ?? 'Keine Daten verfügbar'
+                'success' => false,
+                'message' => 'Keine Verfügbarkeit gefunden'
+            ], 404);
+
+        } catch (\Exception $e) {
+            Log::error('DirectCalcom availability error', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Fehler bei der Verfügbarkeitsprüfung',
+                'error' => $e->getMessage()
             ], 500);
         }
-        return response()->json($result['data']);
     }
-    
-    public function createBooking(Request $request)
+
+    public function bookAppointment(Request $request)
     {
-        $request->validate([
-            'eventTypeId' => 'required|integer',
-            'start' => 'required|date',
-            'name' => 'required|string',
-            'email' => 'required|email',
-        ]);
-        $eventTypeDetails = $this->callWithRetry(self::BASE_URL."/event-types/{$request->eventTypeId}?apiKey=".self::API_KEY);
-        if (!$eventTypeDetails['success'] || !isset($eventTypeDetails['data']['event_type']['length'])) {
-            return response()->json([
-                'error' => 'Event-Typ-Daten konnten nicht geladen werden',
-                'details' => $eventTypeDetails['data'] ?? 'Keine Daten verfügbar'
-            ], 500);
-        }
-        $duration = $eventTypeDetails['data']['event_type']['length'];
-        $startTime = new \DateTime($request->start);
-        $endTime = clone $startTime;
-        $endTime->modify("+{$duration} minutes");
-        $payload = [
-            'eventTypeId' => $request->eventTypeId,
-            'start' => $startTime->format('c'),
-            'end' => $endTime->format('c'),
-            'timeZone' => self::TIMEZONE,
-            'language' => self::LANGUAGE,
-            'attendees' => [
-                [
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'timeZone' => self::TIMEZONE,
-                    'language' => self::LANGUAGE,
-                ]
-            ],
-            'metadata' => (object)[],
-            'responses' => (object)[
+        try {
+            $request->validate([
+                'eventTypeId' => 'required|integer',
+                'startTime' => 'required|date',
+                'name' => 'required|string',
+                'email' => 'required|email'
+            ]);
+
+            // KEINE userId mehr! Cal.com wählt automatisch einen verfügbaren User
+            
+            // Endzeit berechnen (30 Minuten Standard)
+            $startTime = Carbon::parse($request->startTime);
+            $endTime = $startTime->copy()->addMinutes(30);
+
+            $customerData = [
+                'name' => $request->name,
                 'email' => $request->email,
-                'name' => $request->name
-            ]
-        ];
-        $bookingResult = $this->callWithRetry(self::BASE_URL."/bookings?apiKey=".self::API_KEY, 'POST', $payload);
-        if (!$bookingResult['success']) {
+                'phone' => $request->phone ?? null
+            ];
+
+            $notes = $request->notes ?? null;
+
+            $result = $this->calcomService->bookAppointment(
+                $request->eventTypeId,
+                $startTime->toIso8601String(),
+                $endTime->toIso8601String(),
+                $customerData,
+                $notes
+            );
+
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $result,
+                    'message' => 'Termin erfolgreich gebucht'
+                ]);
+            }
+
             return response()->json([
-                'error' => 'Buchung fehlgeschlagen',
-                'details' => $bookingResult['data'] ?? 'Keine Daten verfügbar'
+                'success' => false,
+                'message' => 'Terminbuchung fehlgeschlagen'
+            ], 400);
+
+        } catch (\Exception $e) {
+            Log::error('DirectCalcom booking error', [
+                'error' => $e->getMessage(),
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Fehler bei der Terminbuchung',
+                'error' => $e->getMessage()
             ], 500);
         }
-        return response()->json(['status' => 'success', 'booking' => $bookingResult['data']]);
+    }
+
+    public function getEventTypes()
+    {
+        try {
+            $result = $this->calcomService->getEventTypes();
+
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'data' => $result
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Keine Event-Typen gefunden'
+            ], 404);
+
+        } catch (\Exception $e) {
+            Log::error('DirectCalcom get event types error', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Fehler beim Abrufen der Event-Typen',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

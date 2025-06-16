@@ -25,6 +25,7 @@ class RolesAndPermissionsSeeder extends Seeder
             }
         }
         Permission::findOrCreate('access_filament');
+        Permission::findOrCreate('view_security_dashboard');
 
         // 2)  Rollen anlegen (falls fehlen) -----------------------------------
         $super = Role::findOrCreate('super_admin');

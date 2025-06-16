@@ -2,65 +2,65 @@
 
 namespace App\Filament\Admin\Resources;
 
-use App\Filament\Admin\Resources\WorkingHourResource\Pages;
-use App\Filament\Admin\Resources\WorkingHourResource\RelationManagers;
 use App\Models\WorkingHour;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class WorkingHourResource extends Resource
 {
     protected static ?string $model = WorkingHour::class;
-    protected static ?string $navigationGroup = 'Stammdaten';
     protected static ?string $navigationIcon = 'heroicon-o-clock';
-    protected static ?string $navigationLabel = 'Working Hours';
-    protected static bool $shouldRegisterNavigation = true;
+    protected static ?string $navigationLabel = 'Arbeitszeiten';
+    protected static ?string $navigationGroup = 'Konfiguration';
+    protected static ?int $navigationSort = 10;
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                // Formularfelder hier ergänzen
-            ]);
+        return $form->schema([
+            Forms\Components\Select::make('staff_id')
+                ->label('Mitarbeiter')
+                ->relationship('staff', 'name')
+                ->required(),
+            Forms\Components\Select::make('weekday')
+                ->label('Wochentag')
+                ->options([
+                    1 => 'Montag',
+                    2 => 'Dienstag',
+                    3 => 'Mittwoch',
+                    4 => 'Donnerstag',
+                    5 => 'Freitag',
+                    6 => 'Samstag',
+                    7 => 'Sonntag',
+                ])
+                ->required(),
+            Forms\Components\TimePicker::make('start')->label('Beginn')->required(),
+            Forms\Components\TimePicker::make('end')->label('Ende')->required(),
+        ]);
     }
 
     public static function table(Table $table): Table
     {
-        return $table
-            ->columns([
-                // Tabellenspalten hier ergänzen
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
+        return $table->columns([
+            Tables\Columns\TextColumn::make('staff.name')->label('Mitarbeiter'),
+            Tables\Columns\TextColumn::make('weekday')->label('Tag'),
+            Tables\Columns\TextColumn::make('start')->label('Beginn'),
+            Tables\Columns\TextColumn::make('end')->label('Ende'),
+        ])
+        ->filters([])
+        ->actions([
+            Tables\Actions\EditAction::make(),
+        ]);
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListWorkingHours::route('/'),
-            'create' => Pages\CreateWorkingHour::route('/create'),
-            'edit' => Pages\EditWorkingHour::route('/{record}/edit'),
+            'index' => \App\Filament\Admin\Resources\WorkingHourResource\Pages\ListWorkingHours::route('/'),
+            'create' => \App\Filament\Admin\Resources\WorkingHourResource\Pages\CreateWorkingHour::route('/create'),
+            'edit' => \App\Filament\Admin\Resources\WorkingHourResource\Pages\EditWorkingHour::route('/{record}/edit'),
         ];
     }
 }

@@ -10,6 +10,13 @@ class ListIntegrations extends ListRecords
 {
     protected static string $resource = IntegrationResource::class;
 
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\Admin\Widgets\IntegrationStatusWidget::class,
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -2,25 +2,25 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\IsUuid;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PhoneNumber extends Model
 {
-    use IsUuid;
+    use HasFactory;
 
     public $incrementing = false;
-    protected $keyType   = 'string';
+    protected $keyType = 'string';
 
     protected $fillable = [
+        'id',
         'branch_id',
         'number',
         'active',
     ];
 
-    /* Beziehung */
     public function branch()
     {
-        return $this->belongsTo(Branch::class);
+        return $this->belongsTo(\App\Models\Branch::class, 'branch_id', 'id');
     }
 }

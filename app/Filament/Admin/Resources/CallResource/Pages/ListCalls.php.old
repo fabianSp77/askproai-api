@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Filament\Admin\Resources\CallResource\Pages;
+
+use App\Filament\Admin\Resources\CallResource;
+use Filament\Actions;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Components\Tab;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\Call;
+use Illuminate\Support\Facades\Log;
+
+class ListCalls extends ListRecords
+{
+    protected static string $resource = CallResource::class;
+    
+    public function mount(): void
+    {
+        try {
+            Log::info('ListCalls mount started', [
+                'url' => request()->fullUrl(),
+                'tab' => request()->query('tab'),
+                'filters' => request()->query('tableFilters'),
+                'user' => auth()->id()
+            ]);
+            
+            parent::mount();
+            
+            Log::info('ListCalls mount completed');
+        } catch (\Exception $e) {
+            Log::error('ListCalls mount error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+    
+    public function getTitle(): string
+    {
+        return 'Anrufliste';
+    }
+    
+    // Debug methods removed to fix compatibility issue
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\CreateAction::make(),
+        ];
+    }
+    
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            // Temporarily disabled to debug redirect issue
+            // CallResource\Widgets\CallAnalyticsWidget::class,
+        ];
+    }
+    
+    public function getTabs(): array
+    {
+        try {
+            return [
+                'all' => Tab::make('Alle')
+                    ->icon('heroicon-m-list-bullet'),
+                    
+                'today' => Tab::make('Heute')
+                    ->modifyQueryUsing(function (Builder $query) {
+                        try {
+                            return $query->today();
+                        } catch (\Exception $e) {
+                            Log::error('Tab filter error: today', ['error' => $e->getMessage()]);
+                            return $query;
+                        }
+                    })
+                    ->icon('heroicon-m-calendar'),
+                    
+                'with_appointment' => Tab::make('Mit Termin')
+                    ->modifyQueryUsing(function (Builder $query) {
+                        try {
+                            return $query->withAppointment();
+                        } catch (\Exception $e) {
+                            Log::error('Tab filter error: with_appointment', ['error' => $e->getMessage()]);
+                            return $query;
+                        }
+                    })
+                    ->icon('heroicon-m-calendar-days'),
+                    
+                'without_customer' => Tab::make('Ohne Kunde')
+                    ->modifyQueryUsing(function (Builder $query) {
+                        try {
+                            return $query->withoutCustomer();
+                        } catch (\Exception $e) {
+                            Log::error('Tab filter error: without_customer', ['error' => $e->getMessage()]);
+                            return $query;
+                        }
+                    })
+                    ->icon('heroicon-m-user-minus'),
+            ];
+        } catch (\Exception $e) {
+            Log::error('getTabs error in CallResource', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Return minimal tabs on error
+            return [
+                'all' => Tab::make('Alle'),
+            ];
+        }
+    }
+    
+    protected function shouldPersistTableFiltersInSession(): bool
+    {
+        return false;
+    }
+    
+    protected function shouldPersistTableSearchInSession(): bool
+    {
+        return false;
+    }
+    
+    protected function shouldPersistTableSortInSession(): bool
+    {
+        return false;
+    }
+}

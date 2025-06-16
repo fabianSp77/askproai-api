@@ -31,8 +31,12 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('AskProAI Admin')
-// ->theme(asset('css/filament/admin/theme.css'))           
+            ->viteTheme('resources/css/filament/admin/theme.css')           
             ->favicon(asset('images/favicon.ico'))
+            ->renderHook(
+                'panels::head.end',
+                fn () => \Illuminate\Support\Facades\Vite::__invoke(['resources/js/column-toggle-enhancements.js'])
+            )
             ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
                 return $builder
                     ->groups([

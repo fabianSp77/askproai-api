@@ -1,0 +1,43 @@
+groups:
+  - name: security_alerts
+    interval: 30s
+    rules:
+      - alert: HighThreatDetectionRate
+        expr: rate(security_threats_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "High rate of security threats detected"
+          description: "{{ $labels.instance }} has detected {{ $value }} threats per second"
+          
+      - alert: SQLInjectionAttempt
+        expr: security_threats_total{type="sql_injection"} > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: "SQL Injection attempt detected"
+          description: "SQL injection attempt from IP {{ $labels.ip }}"
+          
+      - alert: RateLimitExceeded
+        expr: rate(rate_limit_exceeded_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: ops
+        annotations:
+          summary: "High rate of rate limit violations"
+          description: "{{ $value }} rate limit violations per second"
+          
+      - alert: UnauthorizedAPIAccess
+        expr: rate(http_requests_total{status="401"}[5m]) > 50
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High rate of unauthorized API access"
+          description: "{{ $value }} unauthorized requests per second"

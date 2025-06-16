@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Filament\Admin\Resources\AppointmentResource\Pages;
+
+use App\Filament\Admin\Resources\AppointmentResource;
+use App\Filament\Admin\Widgets\AppointmentStats;
+use App\Filament\Admin\Widgets\AppointmentCalendar;
+use Filament\Actions;
+use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Components\Tab;
+use Illuminate\Database\Eloquent\Builder;
+
+class ListAppointments extends ListRecords
+{
+    protected static string $resource = AppointmentResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\CreateAction::make()
+                ->label('Neuer Termin')
+                ->icon('heroicon-o-plus'),
+                
+            Actions\Action::make('export')
+                ->label('Exportieren')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->action(function () {
+                    // Export logic here
+                }),
+        ];
+    }
+    
+    public function getTitle(): string
+    {
+        return 'Termine verwalten';
+    }
+    
+    protected function getTableRecordsPerPageSelectOptions(): array
+    {
+        return [10, 25, 50, 100];
+    }
+    
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            // AppointmentStats::class,
+            // AppointmentCalendar::class,
+        ];
+    }
+    
+    public function getHeaderWidgetsColumns(): int | array
+    {
+        return [
+            'md' => 4,
+            'xl' => 4,
+        ];
+    }
+    
+    // public function getTabs(): array
+    // {
+    //     $model = $this->getModel();
+        
+    //     return [
+    //         'all' => Tab::make('Alle')
+    //             ->icon('heroicon-m-calendar-days'),
+                
+    //         'today' => Tab::make('Heute')
+    //             ->modifyQueryUsing(fn (Builder $query) => $query->whereDate('starts_at', today()))
+    //             ->badge($model::whereDate('starts_at', today())->count())
+    //             ->icon('heroicon-m-sun'),
+                
+    //         'upcoming' => Tab::make('Bevorstehend')
+    //             ->modifyQueryUsing(fn (Builder $query) => $query->where('starts_at', '>', now()))
+    //             ->badge($model::where('starts_at', '>', now())->count())
+    //             ->icon('heroicon-m-clock'),
+                
+    //         'pending' => Tab::make('Ausstehend')
+    //             ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'pending'))
+    //             ->badge($model::where('status', 'pending')->count())
+    //             ->badgeColor('warning')
+    //             ->icon('heroicon-m-question-mark-circle'),
+                
+    //         'no_show' => Tab::make('Nicht erschienen')
+    //             ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'no_show'))
+    //             ->badge($model::where('status', 'no_show')->count())
+    //             ->badgeColor('danger')
+    //             ->icon('heroicon-m-x-circle'),
+    //     ];
+    // }
+}

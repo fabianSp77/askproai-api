@@ -1,0 +1,161 @@
+======================================
+AskProAI COMPLETE SYSTEM CHECK
+======================================
+Datum: Mo 26. Mai 07:00:47 CEST 2025
+
+1. DATENBANKSTRUKTUR
+--------------------
+Tables_in_askproai_db
+activity_log
+agents
+api_health_logs
+appointments
+branch_service
+branch_staff
+branches
+cache
+cache_locks
+calcom_bookings
+calcom_event_types
+calendars
+calls
+companies
+customers
+failed_jobs
+integrations
+jobs
+kunden
+migrations
+model_has_permissions
+model_has_roles
+oauth_access_tokens
+oauth_auth_codes
+oauth_clients
+oauth_personal_access_clients
+oauth_refresh_tokens
+password_reset_tokens
+permissions
+phone_numbers
+reseller_tenant
+retell_agents
+retell_webhooks
+role_has_permissions
+roles
+services
+staff
+staff_service
+tenants
+tests
+users
+working_hours
+
+2. PROJEKTSTRUKTUR
+--------------------
+app/Console/Commands/RetellImportCommand.php
+app/Console/Commands/SyncCalcomEventTypes.php
+app/Filament/Admin/Resources/AppointmentResource/Pages/CreateAppointment.php
+app/Filament/Admin/Resources/AppointmentResource/Pages/EditAppointment.php
+app/Filament/Admin/Resources/AppointmentResource/Pages/ListAppointments.php
+app/Filament/Admin/Resources/AppointmentResource.php
+app/Filament/Admin/Resources/CalcomEventTypeResource/Pages/CreateCalcomEventType.php
+app/Filament/Admin/Resources/CalcomEventTypeResource/Pages/EditCalcomEventType.php
+app/Filament/Admin/Resources/CalcomEventTypeResource/Pages/ListCalcomEventTypes.php
+app/Filament/Admin/Resources/CalcomEventTypeResource.php
+app/Filament/Admin/Resources/CallResource/Pages/CreateCall.php
+app/Filament/Admin/Resources/CallResource/Pages/EditCall.php
+app/Filament/Admin/Resources/CallResource/Pages/ListCalls.php
+app/Filament/Admin/Resources/CallResource.php
+app/Filament/Admin/Resources/CustomerResource/RelationManagers/AppointmentsRelationManager.php
+app/Filament/Admin/Resources/CustomerResource/RelationManagers/CallsRelationManager.php
+app/Filament/Widgets/AppointmentsTodayWidget.php
+app/Filament/Widgets/AppointmentsWidget.php
+app/Filament/Widgets/CallsSuccessRateTodayWidget.php
+app/Filament/Widgets/RecentAppointments.php
+app/Filament/Widgets/RecentCalls.php
+app/Http/Controllers/API/AppointmentController.php
+app/Http/Controllers/Api/CalcomBookingController.php
+app/Http/Controllers/API/CallController.php
+app/Http/Controllers/API/RetellConversationEndedController.php
+app/Http/Controllers/API/RetellInboundWebhookController.php
+app/Http/Controllers/API/RetellWebhookController.php
+app/Http/Controllers/CalcomController.php
+app/Http/Controllers/CalcomWebhookController.php
+app/Http/Controllers/CallController.php
+app/Http/Controllers/DirectCalcomController.php
+app/Http/Controllers/MainCalcomController.php
+app/Http/Controllers/RetellAiController.php
+app/Http/Controllers/RetellAIController.php
+app/Http/Controllers/RetellConversationEndedController.php
+app/Http/Controllers/RetellWebhookController.php
+app/Http/Middleware/LogCalcom.php
+app/Http/Middleware/VerifyCalcomSignature.php
+app/Http/Middleware/VerifyRetellSignature.php
+app/Http/Requests/RetellConversationEndedRequest.php
+app/Jobs/ProcessRetellCallJob.php
+app/Jobs/RefreshCallDataJob.php
+app/Models/Appointment.php
+app/Models/CalcomBooking.php
+app/Models/CalcomEventType.php
+app/Models/CallLog.php
+app/Models/Call.php
+app/Models/RetellAgent.php
+app/Models/RetellWebhook.php
+app/Policies/AppointmentPolicy.php
+app/Policies/CallPolicy.php
+app/Services/CalcomService.php
+app/Services/CallDataRefresher.php
+app/Services/RetellAIService.php
+app/Services/RetellService.php
+app/Services/RetellV1Service.php
+app/Services/RetellV2Service.php
+
+3. KONFIGURATION
+--------------------
+
+                                                                             
+  Too many arguments to "config:show" command, expected arguments "config".  
+                                                                             
+
+Config konnte nicht geladen werden
+
+4. MIGRATIONS STATUS
+--------------------
+  2025_05_18_143854_add_event_column_to_activity_log_table ................................................................................. [4] Ran  
+  2025_05_18_143855_add_batch_uuid_column_to_activity_log_table ............................................................................ [4] Ran  
+  2025_05_19_181131_create_reseller_tenant_table ........................................................................................... [5] Ran  
+  2025_05_19_183401_add_tenant_id_to_calls_table ........................................................................................... [6] Ran  
+  2025_05_20_103010_add_tenant_id_to_customers_table ....................................................................................... [7] Ran  
+  2025_05_20_103018_add_tenant_id_to_appointments_table .................................................................................... [7] Ran  
+  2025_05_20_111233_change_tenant_id_to_uuid ............................................................................................... [8] Ran  
+  2025_05_20_111456_change_customer_tenant_id_to_uuid ...................................................................................... [8] Ran  
+  2025_05_20_111631_change_customer_tenant_id_to_uuid ...................................................................................... [8] Ran  
+  2025_05_20_181815_alter_calcom_bookings_for_webhook ...................................................................................... [9] Ran  
+  2025_05_20_181853_alter_calcom_bookings_for_webhook ...................................................................................... [9] Ran  
+  2025_05_20_194803_add_tenant_id_to_calcom_event_types_table ............................................................................. [10] Ran  
+  2025_05_20_194806_add_tenant_id_to_calcom_event_types_table ............................................................................. [10] Ran  
+  2025_05_20_200357_add_tenant_id_to_staff_table .......................................................................................... [11] Ran  
+  2025_05_21_093130_add_calendar_mode_and_mapping_to_flexible_tables ...................................................................... [12] Ran  
+  2025_05_21_102624_create_tests_table .................................................................................................... [13] Ran  
+  2025_05_22_000000_add_onboarding_complete_to_customers_table ............................................................................ [14] Ran  
+  2025_05_22_080016_create_billings_table .................................................................................................. Pending  
+  2025_05_22_080021_create_roles_table ..................................................................................................... Pending  
+
+
+5. QUEUE STATUS
+--------------------
+
+   INFO  Processing jobs from the [default] queue.  
+
+
+6. COMPOSER PACKAGES
+--------------------
+guzzlehttp/guzzle                           7.9.3     Guzzle is a PHP HTTP client library
+guzzlehttp/promises                         2.2.0     Guzzle promises library
+guzzlehttp/psr7                             2.7.1     PSR-7 message implementation that also provides common utility methods
+guzzlehttp/uri-template                     v1.0.4    A polyfill class for uri_template of PHP
+psr/http-client                             1.0.3     Common interface for HTTP clients
+psr/http-factory                            1.1.0     PSR-17: Common interfaces for PSR-7 HTTP message factories
+psr/http-message                            2.0       Common interface for HTTP messages
+symfony/http-foundation                     v7.2.6    Defines an object-oriented layer for the HTTP specification
+symfony/http-kernel                         v7.2.6    Provides a structured process for converting a Request into a Response
+symfony/psr-http-message-bridge             v7.2.0    PSR HTTP message bridge

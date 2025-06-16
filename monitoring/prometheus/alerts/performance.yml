@@ -1,0 +1,43 @@
+groups:
+  - name: performance_alerts
+    interval: 30s
+    rules:
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, http_request_duration_seconds_bucket) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile response time is {{ $value }}s"
+          
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          team: ops
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+          
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: ops
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}%"
+          
+      - alert: QueueBacklog
+        expr: queue_size{queue="default"} > 1000
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Large queue backlog"
+          description: "Queue {{ $labels.queue }} has {{ $value }} pending jobs"

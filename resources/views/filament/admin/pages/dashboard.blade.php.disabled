@@ -1,0 +1,114 @@
+<x-filament-panels::page>
+    @if($editMode)
+        <!-- Edit Mode -->
+        <div class="mb-6 rounded-lg border-2 border-warning-200 bg-warning-50 p-6 dark:border-warning-800 dark:bg-warning-900/20">
+            <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Dashboard-Anpassung
+                </h3>
+                <div class="flex gap-2">
+                    <x-filament::button
+                        wire:click="resetConfiguration"
+                        color="gray"
+                        size="sm"
+                    >
+                        Zurücksetzen
+                    </x-filament::button>
+                    <x-filament::button
+                        wire:click="saveConfiguration"
+                        size="sm"
+                    >
+                        Speichern
+                    </x-filament::button>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Widgets aktivieren/deaktivieren
+                </h4>
+                
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach($this->getAvailableWidgets() as $widgetKey => $widgetName)
+                        <label class="flex items-center space-x-3 rounded-lg border border-gray-200 bg-white p-3 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+                            <input
+                                type="checkbox"
+                                wire:click="toggleWidget('{{ $widgetKey }}')"
+                                @checked($widgetSettings[$widgetKey]['enabled'] ?? false)
+                                class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            />
+                            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {{ $widgetName }}
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+                
+                <div class="mt-6">
+                    <h4 class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Widget-Reihenfolge (Drag & Drop kommt bald)
+                    </h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Die Widgets werden in der Reihenfolge angezeigt, wie sie in der Liste erscheinen.
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+    
+    <!-- Dashboard Widgets -->
+    <div class="fi-wi-widgets grid gap-4 @if($layoutSettings['columns'] ?? 3 == 3) lg:grid-cols-3 @elseif($layoutSettings['columns'] ?? 3 == 2) lg:grid-cols-2 @else lg:grid-cols-1 @endif">
+        @livewire(\Filament\Widgets\AccountWidget::class)
+        
+        @foreach($this->getWidgets() as $widget)
+            @if(class_exists($widget))
+                @livewire($widget)
+            @endif
+        @endforeach
+    </div>
+    
+    <!-- Loading Overlay with wire:loading.remove to ensure it's hidden after loading -->
+    <div
+        wire:loading.flex
+        wire:loading.remove.delay.longest
+        wire:target="refreshDashboard"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"
+    >
+        <div class="rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+            <div class="flex items-center space-x-3">
+                <x-filament::loading-indicator class="h-8 w-8 text-primary-500" />
+                <span class="text-gray-700 dark:text-gray-300">Dashboard wird aktualisiert...</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Keyboard Shortcuts Help -->
+    <div class="mt-8 rounded-lg bg-gray-50 p-4 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        <p class="font-medium">Tastaturkürzel:</p>
+        <div class="mt-1 flex flex-wrap gap-3">
+            <span><kbd class="rounded bg-gray-200 px-2 py-1 font-mono dark:bg-gray-700">A</kbd> Neuer Termin</span>
+            <span><kbd class="rounded bg-gray-200 px-2 py-1 font-mono dark:bg-gray-700">C</kbd> Anruf erfassen</span>
+            <span><kbd class="rounded bg-gray-200 px-2 py-1 font-mono dark:bg-gray-700">K</kbd> Neuer Kunde</span>
+            <span><kbd class="rounded bg-gray-200 px-2 py-1 font-mono dark:bg-gray-700">R</kbd> Aktualisieren</span>
+        </div>
+    </div>
+    
+    @push('scripts')
+        <script>
+            // Global keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Only trigger if no input is focused
+                if (document.activeElement.tagName === 'INPUT' || 
+                    document.activeElement.tagName === 'TEXTAREA' ||
+                    document.activeElement.tagName === 'SELECT') {
+                    return;
+                }
+                
+                if (e.key === 'r' || e.key === 'R') {
+                    e.preventDefault();
+                    Livewire.dispatch('refresh-dashboard');
+                }
+            });
+        </script>
+    @endpush
+</x-filament-panels::page>

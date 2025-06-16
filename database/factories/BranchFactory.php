@@ -10,11 +10,12 @@ class BranchFactory extends Factory
     {
         return [
             'name' => $this->faker->company . ' Filiale',
-            'customer_id' => null, // optional: oder Customer::factory(), falls Pflicht
+            'company_id' => \App\Models\Company::factory(),
+            'customer_id' => null,
             'slug' => $this->faker->slug,
             'city' => $this->faker->city,
             'phone_number' => $this->faker->phoneNumber,
-            'active' => $this->faker->boolean,
+            'active' => true,
         ];
     }
 }

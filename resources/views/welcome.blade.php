@@ -1,38 +1,43 @@
-@extends('layouts.admin')
-@section('title', 'Willkommen bei AskProAI')
-@section('content')
-<div class="text-center my-5">
-    <h1 class="display-4 mb-4">AskProAI</h1>
-    <p class="lead mb-5">KI-gestützte Telefonassistenz für Praxen und Dienstleister</p>
-    
-    <div class="row justify-content-center mt-5">
-        <div class="col-md-3">
-            <div class="card mb-4">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Dashboard</h5>
-                    <p class="card-text">Anrufe und Statistiken</p>
-                    <a href="/dashboard" class="btn btn-primary">Öffnen</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card mb-4">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Premium-Services</h5>
-                    <p class="card-text">Dienste verwalten</p>
-                    <a href="/admin/premium-services" class="btn btn-primary">Verwalten</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card mb-4">
-                <div class="card-body text-center">
-                    <h5 class="card-title">FAQs</h5>
-                    <p class="card-text">Häufige Fragen</p>
-                    <a href="/admin/faqs" class="btn btn-primary">Bearbeiten</a>
-                </div>
-            </div>
-        </div>
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AskProAI</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f3f4f6;
+        }
+        .container {
+            text-align: center;
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AskProAI</h1>
+        <p>KI-gestützte Telefonassistenz für Praxen und Dienstleister</p>
+        <p style="margin-top: 30px;">
+            <a href="/admin">Zum Admin-Panel →</a>
+        </p>
     </div>
-</div>
-@endsection
+</body>
+</html>

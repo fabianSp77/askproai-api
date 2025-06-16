@@ -1,0 +1,9 @@
+{
+  "call_id": "test_v2_$(date +%s)",
+  "phone_number": "+491234567890",
+  "_datum__termin": "2025-06-02",
+  "_uhrzeit__termin": "14:00",
+  "_dienstleistung": "Test V2 Service",
+  "_name": "Test V2 Kunde",
+  "_email": "testv2@example.com"
+}

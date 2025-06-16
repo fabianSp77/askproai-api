@@ -1,0 +1,133 @@
+/* Fix für Spaltenauswahl-Dropdown */
+.fi-ta-col-toggle .fi-dropdown-panel {
+    max-height: 70vh !important;
+    max-width: 600px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* Mobile Anpassungen */
+@media (max-width: 640px) {
+    .fi-ta-col-toggle .fi-dropdown-panel {
+        max-height: 60vh !important;
+        width: 90vw !important;
+        max-width: none !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+    
+    /* Auf Mobile einspaltiges Layout */
+    .fi-ta-col-toggle .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Desktop: 3-spaltiges Layout für bessere Raumnutzung */
+@media (min-width: 768px) {
+    .fi-ta-col-toggle .grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.75rem !important;
+    }
+}
+
+/* Scrollbar Styling */
+.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Gruppierung der Spalten */
+.fi-ta-col-toggle .fi-dropdown-panel .grid {
+    gap: 1rem;
+}
+
+/* Spalten-Gruppen */
+.column-group {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.column-group:last-child {
+    margin-bottom: 0;
+}
+
+.column-group-title {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: rgba(0, 0, 0, 0.7);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.column-group-title::before {
+    content: '';
+    width: 3px;
+    height: 12px;
+    border-radius: 2px;
+    background-color: currentColor;
+    opacity: 0.5;
+}
+
+/* Kompakte Checkbox-Labels */
+.fi-ta-col-toggle label {
+    font-size: 0.875rem !important;
+    padding: 0.25rem 0 !important;
+}
+
+/* Dark Mode Anpassungen */
+.dark .fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark .fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.dark .fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.dark .column-group {
+    border-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.dark .column-group-title {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Sticky Header für Dropdown */
+.fi-ta-col-toggle .fi-dropdown-header {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 10;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.dark .fi-ta-col-toggle .fi-dropdown-header {
+    background-color: rgb(var(--gray-900));
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}

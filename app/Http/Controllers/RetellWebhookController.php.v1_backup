@@ -1,0 +1,589 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Call;
+use App\Models\Customer;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Appointment;
+use App\Services\CalcomService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+
+class RetellWebhookController extends Controller
+{
+    private $calcomService;
+
+    public function __construct(CalcomService $calcomService)
+    {
+        $this->calcomService = $calcomService;
+    }
+
+    /**
+     * Verarbeitet den Webhook von Retell.ai
+     */
+    public function handleWebhook(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $data = $request->all();
+
+            // Webhook-Daten loggen
+            $this->logWebhookData($data);
+
+            // Call-ID extrahieren
+            $callId = $this->extractCallId($data);
+
+            // Branch über angerufene Nummer identifizieren
+            $branchInfo = $this->identifyBranchByPhoneNumber($data);
+
+            if (!$branchInfo) {
+                Log::warning('Keine Branch für angerufene Nummer gefunden', [
+                    'to_number' => $data['To'] ?? $data['to_number'] ?? 'unbekannt'
+                ]);
+            }
+
+            // Call-Daten vorbereiten mit Branch/Company Zuordnung
+            $callData = $this->prepareCallData($data, $callId, $branchInfo);
+
+            // Call speichern
+            $call = Call::updateOrCreate(
+                ['call_id' => $callId],
+                $callData
+            );
+
+            // Kunde verarbeiten (wenn Email oder Telefonnummer vorhanden)
+            if (!empty($callData['email']) || !empty($callData['telefonnummer'])) {
+                $customer = $this->processCustomer($call, $callData, $branchInfo);
+                if ($customer) {
+                    $call->customer_id = $customer->id;
+                    $call->save();
+                }
+            }
+
+            // Terminbuchung versuchen (wenn alle Daten vorhanden)
+            if ($this->shouldBookAppointment($call)) {
+                $this->bookAppointment($call, $branchInfo);
+            }
+
+            DB::commit();
+
+            return response()->json(['status' => 'success', 'call_id' => $callId]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Fehler bei Webhook-Verarbeitung', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Loggt eingehende Webhook-Daten
+     */
+    private function logWebhookData($data)
+    {
+        Log::info('Retell Webhook empfangen', [
+            'call_id' => $data['Call ID'] ?? $data['call_id'] ?? null,
+            'to_number' => $data['To'] ?? $data['to_number'] ?? null,
+            'from_number' => $data['From'] ?? $data['from_number'] ?? null,
+            'duration' => $data['Call Duration'] ?? $data['duration'] ?? null,
+            'data_keys' => array_keys($data)
+        ]);
+    }
+
+    /**
+     * Extrahiert die Call-ID aus den Webhook-Daten
+     */
+    private function extractCallId($data)
+    {
+        return $data['Call ID'] ?? $data['call_id'] ?? null;
+    }
+
+    /**
+     * Identifiziert Branch anhand der angerufenen Nummer
+     */
+    private function identifyBranchByPhoneNumber($data)
+    {
+        $toNumber = $data['To'] ?? $data['to_number'] ?? null;
+
+        if (!$toNumber) {
+            return null;
+        }
+
+        // Nummer normalisieren
+        $normalizedNumber = $this->normalizePhoneNumber($toNumber);
+
+        // Branch über Phone Number suchen
+        $branch = Branch::where('phone_number', $normalizedNumber)
+            ->orWhere('phone_number', $toNumber)
+            ->with('company')
+            ->first();
+
+        if ($branch) {
+            return [
+                'branch' => $branch,
+                'company' => $branch->company,
+                'branch_id' => $branch->id,
+                'company_id' => $branch->company_id,
+                'tenant_id' => $branch->company->tenant_id ?? null
+            ];
+        }
+
+        return null;
+    }
+
+
+
+
+
+
+/**
+     * Bereitet Call-Daten für die Speicherung vor
+     */
+    private function prepareCallData($data, $callId, $branchInfo = null)
+    {
+        // Prüfen ob Daten im 'variables' Objekt verschachtelt sind (neues Format)
+        $extractData = $data;
+        if (isset($data['variables']) && is_array($data['variables'])) {
+            // Neues Format: Merge die variables mit den Hauptdaten
+            $extractData = array_merge($data, $data['variables']);
+            Log::info('Neues Retell.ai Format erkannt - verwende variables Objekt', [
+                'call_id' => $callId,
+                'variables_keys' => array_keys($data['variables'])
+            ]);
+        }
+        
+        // Basis-Felder extrahieren (CSV Format von Retell.ai berücksichtigen)
+        $callData = [
+            'call_id' => $callId,
+            'phone_number' => $extractData['From'] ?? $extractData['from_number'] ?? $extractData['_telefonnummer__anrufers'] ?? $extractData['_telefonnummer__anrufer'] ?? $extractData['_telefonnummer'] ?? null,
+            'call_time' => $this->parseCallTime($extractData),
+            'call_duration' => $extractData['Call Duration'] ?? $extractData['duration'] ?? null,
+            'call_status' => $extractData['Call Status'] ?? $extractData['status'] ?? 'completed',
+            'disconnect_reason' => $extractData['Disconnection Reason'] ?? $extractData['disconnect_reason'] ?? null,
+            'type' => $extractData['Type'] ?? $extractData['type'] ?? 'inbound',
+            'cost' => $extractData['Cost'] ?? $extractData['cost'] ?? null,
+            'successful' => $this->parseBoolean($extractData['Call Successful'] ?? $extractData['call_successful'] ?? true),
+            'user_sentiment' => $extractData['User Sentiment'] ?? $extractData['user_sentiment'] ?? null,
+            'summary' => $extractData['_zusammenfassung _telefonat'] ?? $extractData['_zusammenfassung'] ?? $extractData['_zusammenfassung__anruf'] ?? $extractData['zusammenfassung'] ?? null,
+            'transcript' => $extractData['transcript'] ?? null,
+            'raw_data' => json_encode($data), // Original-Daten speichern
+
+            // Kunde-bezogene Felder
+            'name' => $extractData['_name'] ?? $extractData['name'] ?? null,
+            'email' => $extractData['_email'] ?? $extractData['email'] ?? null,
+            'telefonnummer' => $this->extractPhoneNumber($extractData),
+
+            // Termin-bezogene Felder
+            'dienstleistung' => $extractData['_dienstleistung'] ?? $extractData['dienstleistung'] ?? null,
+            'datum_termin' => $extractData['_datum__termin'] ?? $extractData['datum_termin'] ?? null,
+            'uhrzeit_termin' => $extractData['_uhrzeit__termin'] ?? $extractData['uhrzeit_termin'] ?? null,
+            'grund' => $extractData['_grund'] ?? $extractData['grund'] ?? null,
+            'behandlung_dauer' => $extractData['_behandlung und _dauer'] ?? $extractData['behandlung_dauer'] ?? null,
+            'rezeptstatus' => $extractData['_rezeptstatus'] ?? $extractData['rezeptstatus'] ?? null,
+            'versicherungsstatus' => $extractData['_versicherungsstatus'] ?? $extractData['versicherungsstatus'] ?? null,
+            'haustiere_name' => $extractData['_name des oder der _haustiere'] ?? $extractData['haustiere_name'] ?? null,
+            'notiz' => $extractData['_information__anruf'] ?? $extractData['_notiz'] ?? $extractData['notiz'] ?? null,
+        ];
+
+        // "To" Nummer für spätere Verwendung speichern
+        if (isset($extractData['To']) || isset($extractData['to_number'])) {
+            $callData['to_number'] = $extractData['To'] ?? $extractData['to_number'];
+        }
+
+        // End to End Latency falls vorhanden
+        if (isset($extractData['End to End Latency'])) {
+            $callData['latency'] = $extractData['End to End Latency'];
+        }
+
+        // Branch/Company Informationen hinzufügen
+        if ($branchInfo) {
+            $callData['branch_id'] = $branchInfo['branch_id'];
+            $callData['company_id'] = $branchInfo['company_id'];
+            $callData['tenant_id'] = $branchInfo['tenant_id'];
+        }
+
+        return $callData;
+    }
+
+
+
+
+
+
+    /**
+     * Parst Boolean-Werte aus verschiedenen Formaten
+     */
+    private function parseBoolean($value)
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            $value = strtolower(trim($value));
+            return in_array($value, ['true', 'yes', 'ja', '1', 'erfolg', 'erfolgreich']);
+        }
+
+        return (bool) $value;
+    }
+
+    
+
+
+/**
+     * Extrahiert Telefonnummer aus verschiedenen möglichen Feldern
+     */
+    private function extractPhoneNumber($data)
+    {
+        // Prüfen ob Daten im 'variables' Objekt sind
+        $searchData = $data;
+        if (isset($data['variables']) && is_array($data['variables'])) {
+            $searchData = array_merge($data, $data['variables']);
+        }
+        
+        $possibleFields = [
+            '_telefonnummer__anrufers',
+            '_telefonnummer__anrufer',
+            '_telefonnummer',
+            'telefonnummer__anrufers',
+            'telefonnummer__anrufer',
+            'telefonnummer',
+            'From',
+            'from_number'
+        ];
+
+        foreach ($possibleFields as $field) {
+            if (!empty($searchData[$field])) {
+                return $searchData[$field];
+            }
+        }
+
+        return null;
+    }
+
+
+/**
+     * Parst die Anrufzeit
+     */
+    private function parseCallTime($data)
+    {
+        // Prüfen ob Daten im 'variables' Objekt sind
+        $searchData = $data;
+        if (isset($data['variables']) && is_array($data['variables'])) {
+            $searchData = array_merge($data, $data['variables']);
+        }
+        
+        // Priorität: Time -> call_time -> _datum__uhrzeit__anrufs -> timestamp
+        $timeField = $searchData['Time'] ??
+                     $searchData['call_time'] ??
+                     $searchData['_datum__uhrzeit__anrufs'] ??
+                     $searchData['timestamp'] ??
+                     null;
+
+        if ($timeField) {
+            try {
+                return Carbon::parse($timeField);
+            } catch (\Exception $e) {
+                Log::warning('Konnte Anrufzeit nicht parsen', ['time' => $timeField]);
+            }
+        }
+
+        return now();
+    }
+    /**
+     * Normalisiert Telefonnummern
+     */
+    private function normalizePhoneNumber($number)
+    {
+        if (!$number) return null;
+
+        // Entferne alle nicht-numerischen Zeichen außer +
+        $normalized = preg_replace('/[^0-9+]/', '', $number);
+
+        // Konvertiere 00 zu +
+        if (substr($normalized, 0, 2) === '00') {
+            $normalized = '+' . substr($normalized, 2);
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Verarbeitet oder erstellt Kundendaten
+     */
+    private function processCustomer($call, $callData, $branchInfo = null)
+    {
+        try {
+            $searchCriteria = [];
+
+            // Suchkriterien aufbauen
+            if (!empty($callData['email'])) {
+                $searchCriteria['email'] = $callData['email'];
+            }
+
+            if (!empty($callData['telefonnummer'])) {
+                $normalizedPhone = $this->normalizePhoneNumber($callData['telefonnummer']);
+                $searchCriteria['phone'] = $normalizedPhone;
+            }
+
+            if (empty($searchCriteria)) {
+                return null;
+            }
+
+            // Tenant-ID hinzufügen wenn vorhanden
+            if ($branchInfo && isset($branchInfo['tenant_id'])) {
+                $searchCriteria['tenant_id'] = $branchInfo['tenant_id'];
+            }
+
+            // Kunde suchen oder erstellen
+            $customer = Customer::where(function($query) use ($searchCriteria) {
+                foreach ($searchCriteria as $field => $value) {
+                    if ($value) {
+                        $query->orWhere($field, $value);
+                    }
+                }
+            });
+
+            // Wenn Tenant-ID vorhanden, auf diesen Tenant beschränken
+            if (isset($searchCriteria['tenant_id'])) {
+                $customer->where('tenant_id', $searchCriteria['tenant_id']);
+            }
+
+            $customer = $customer->first();
+
+            if (!$customer) {
+                // Neuen Kunden erstellen
+                $customerData = [
+                    'name' => $callData['name'] ?? 'Unbekannt',
+                    'email' => $callData['email'],
+                    'phone' => $callData['telefonnummer'] ? $this->normalizePhoneNumber($callData['telefonnummer']) : null,
+                ];
+
+                if ($branchInfo) {
+                    $customerData['tenant_id'] = $branchInfo['tenant_id'];
+                    $customerData['company_id'] = $branchInfo['company_id'];
+                }
+
+                $customer = Customer::create($customerData);
+
+                Log::info('Neuer Kunde erstellt', [
+                    'customer_id' => $customer->id,
+                    'name' => $customer->name
+                ]);
+            }
+
+            return $customer;
+
+        } catch (\Exception $e) {
+            Log::error('Fehler bei Kundenverarbeitung', [
+                'error' => $e->getMessage(),
+                'call_id' => $call->id
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Prüft ob eine Terminbuchung versucht werden soll
+     */
+    private function shouldBookAppointment($call)
+    {
+        return !empty($call->datum_termin) &&
+               !empty($call->uhrzeit_termin) &&
+               (!empty($call->dienstleistung) || !empty($call->grund));
+    }
+
+    /**
+     * Bucht einen Termin über Cal.com
+     */
+    private function bookAppointment($call, $branchInfo)
+    {
+        try {
+            // Service-Name ermitteln
+            $serviceName = $call->dienstleistung ?? $call->grund ?? 'Termin';
+
+            // Datum und Zeit kombinieren
+            $dateTime = $this->combineDateAndTime($call->datum_termin, $call->uhrzeit_termin);
+
+            if (!$dateTime) {
+                Log::error('Ungültiges Datum/Zeit für Terminbuchung', [
+                    'datum' => $call->datum_termin,
+                    'uhrzeit' => $call->uhrzeit_termin
+                ]);
+                return;
+            }
+
+            // Dauer ermitteln (Standard: 30 Minuten)
+            $duration = 30;
+            if ($call->behandlung_dauer) {
+                // Versuche Dauer aus Text zu extrahieren
+                preg_match('/(\d+)/', $call->behandlung_dauer, $matches);
+                if (!empty($matches[1])) {
+                    $duration = (int) $matches[1];
+                }
+            }
+
+            // Event Type ID ermitteln
+            $eventTypeId = null;
+            if ($branchInfo && $branchInfo['branch']) {
+                $eventTypeId = $branchInfo['branch']->calcom_event_type_id;
+            }
+
+            // Fallback auf Company Event Type ID
+            if (!$eventTypeId && $branchInfo && $branchInfo['company']) {
+                $eventTypeId = $branchInfo['company']->calcom_event_type_id;
+            }
+
+            // Fallback auf ENV
+            if (!$eventTypeId) {
+                $eventTypeId = env('CALCOM_EVENT_TYPE_ID');
+            }
+
+            if (!$eventTypeId) {
+                Log::error('Keine Event Type ID für Terminbuchung gefunden', [
+                    'call_id' => $call->id,
+                    'branch_id' => $branchInfo['branch_id'] ?? null
+                ]);
+                return;
+            }
+
+            // Start- und Endzeit berechnen
+            $startTime = $dateTime->toIso8601String();
+            $endTime = $dateTime->copy()->addMinutes($duration)->toIso8601String();
+
+            // Kundendaten für Cal.com vorbereiten
+            $customerData = [
+                'name' => $call->name ?? 'Kunde',
+                'email' => $call->email ?? 'kunde@example.com',
+                'phone' => $call->telefonnummer
+            ];
+
+            // Notizen vorbereiten
+            $notes = $this->prepareBookingNotes($call);
+
+            // Termin über CalcomService buchen
+            $result = $this->calcomService->bookAppointment(
+                $eventTypeId,
+                $startTime,
+                $endTime,
+                $customerData,
+                $notes
+            );
+
+            if ($result && isset($result['id'])) {
+                // Erfolgreich gebucht - Appointment erstellen
+                $appointment = Appointment::create([
+                    'call_id' => $call->id,  // Dies ist die interne ID, nicht die call_id string
+                    'customer_id' => $call->customer_id,
+                    'tenant_id' => $branchInfo['tenant_id'] ?? null,
+                    'company_id' => $branchInfo['company_id'] ?? null,
+                    'external_id' => $result['id'],  // Cal.com booking ID
+                    'starts_at' => $dateTime,
+                    'ends_at' => Carbon::parse($dateTime)->addMinutes($duration),
+                    'status' => 'booked',
+                    'payload' => json_encode([
+                        'service_name' => $serviceName,
+                        'calcom_response' => $result,
+                        'notes' => $notes
+                    ])
+                ]);
+
+                // Cal.com Booking ID auch im Call speichern
+                $call->calcom_booking_id = $result['id'];
+                $call->save();
+
+                Log::info('Termin erfolgreich gebucht', [
+                    'appointment_id' => $appointment->id,
+                    'calcom_id' => $result['id'],
+                    'datetime' => $dateTime
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Fehler bei Terminbuchung', [
+                'error' => $e->getMessage(),
+                'call_id' => $call->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+
+    /**
+     * Kombiniert Datum und Uhrzeit
+     */
+    private function combineDateAndTime($date, $time)
+    {
+        try {
+            // Datum parsen
+            $dateStr = $date;
+            if (!strpos($date, '-')) {
+                // Versuche deutsches Format zu konvertieren
+                $dateStr = str_replace('.', '-', $date);
+            }
+
+            // Zeit normalisieren (füge :00 hinzu wenn nur Stunde angegeben)
+            $timeStr = $time;
+            if (strlen($time) <= 2) {
+                $timeStr = $time . ':00';
+            }
+
+            // Kombinieren und mit Zeitzone
+            $dateTimeStr = $dateStr . ' ' . $timeStr;
+            return Carbon::parse($dateTimeStr, 'Europe/Berlin');
+
+        } catch (\Exception $e) {
+            Log::error('Fehler beim Parsen von Datum/Zeit', [
+                'date' => $date,
+                'time' => $time,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Bereitet Notizen für die Buchung vor
+     */
+    private function prepareBookingNotes($call)
+    {
+        $notes = [];
+
+        if ($call->dienstleistung) {
+            $notes[] = "Dienstleistung: " . $call->dienstleistung;
+        }
+
+        if ($call->grund) {
+            $notes[] = "Grund: " . $call->grund;
+        }
+
+        if ($call->rezeptstatus) {
+            $notes[] = "Rezept: " . $call->rezeptstatus;
+        }
+
+        if ($call->versicherungsstatus) {
+            $notes[] = "Versicherung: " . $call->versicherungsstatus;
+        }
+
+        if ($call->haustiere_name) {
+            $notes[] = "Haustier(e): " . $call->haustiere_name;
+        }
+
+        if ($call->notiz) {
+            $notes[] = "Notiz: " . $call->notiz;
+        }
+
+        if ($call->summary) {
+            $notes[] = "Zusammenfassung: " . $call->summary;
+        }
+
+        return implode("\n", $notes);
+    }
+}

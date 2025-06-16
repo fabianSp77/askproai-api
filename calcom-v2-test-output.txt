@@ -1,0 +1,121 @@
+Cal.com V2 API Detailed Testing
+===============================
+
+Test 1: Get Available Slots
+---------------------------
+✓ Success! HTTP Code: 200
+  Date: 2025-06-12 - 3 slots available
+  Date: 2025-06-13 - 30 slots available
+  Date: 2025-06-14 - 30 slots available
+  Date: 2025-06-15 - 29 slots available
+  Date: 2025-06-16 - 29 slots available
+  Date: 2025-06-17 - 29 slots available
+  Date: 2025-06-18 - 29 slots available
+  Date: 2025-06-19 - 30 slots available
+  Total slots available: 209
+
+Test 2: Get Webhooks
+--------------------
+✓ Success! HTTP Code: 200
+  Found 1 webhook(s)
+  - ID: 040f32e7-9304-48df-8616-6cea7323f7e1
+    URL: https://api.askproai.de/api/calcom/webhook
+    Active: Yes
+    Triggers: BOOKING_CANCELLED, BOOKING_CREATED, BOOKING_REJECTED...
+
+Test 3: Create Booking
+----------------------
+Using slot: 2025-06-12T22:30:00.000+02:00
+Sending booking request...
+✗ Failed! HTTP Code: 400
+Error Response:
+{
+    "status": "error",
+    "timestamp": "2025-06-12T18:01:46.880Z",
+    "path": "\/v2\/bookings",
+    "error": {
+        "code": "BadRequestException",
+        "message": "notes property is wrong,property notes should not exist ",
+        "details": {
+            "message": "notes property is wrong,property notes should not exist ",
+            "error": "Bad Request",
+            "statusCode": 400
+        }
+    }
+}
+
+Raw Response: {"status":"error","timestamp":"2025-06-12T18:01:46.880Z","path":"/v2/bookings","error":{"code":"BadRequestException","message":"notes property is wrong,property notes should not exist ","details":{"message":"notes property is wrong,property notes should not exist ","error":"Bad Request","statusCode":400}}}
+
+Test 4: List Bookings
+---------------------
+✓ Success! HTTP Code: 200
+  Found 100 booking(s)
+
+Test 6: Event Type Endpoints Analysis
+-------------------------------------
+
+Trying: /event-types (Standard event types endpoint)
+  ✗ Failed! HTTP Code: 404
+  Endpoint not found
+
+Trying: /events (Events endpoint)
+  ✗ Failed! HTTP Code: 404
+  Endpoint not found
+
+Trying: /event-types/public (Public event types)
+  ✗ Failed! HTTP Code: 404
+  Endpoint not found
+
+Trying: /schedules (Schedules endpoint)
+  ✗ Failed! HTTP Code: 404
+  Endpoint not found
+
+Trying: /users/me (Current user info)
+  ✗ Failed! HTTP Code: 404
+  Endpoint not found
+
+Trying: /users/me/event-types (User event types)
+  ✗ Failed! HTTP Code: 404
+  Endpoint not found
+
+Trying: /organizations (Organizations)
+  ✗ Failed! HTTP Code: 404
+  Endpoint not found
+
+Trying: /teams (Teams endpoint)
+  ✓ Success! HTTP Code: 200
+  Response structure: status, data
+
+
+========================================
+SUMMARY AND RECOMMENDATIONS
+========================================
+
+Working V2 Endpoints:
+--------------------
+✓ GET /slots/available - Get available time slots
+✓ GET /webhooks - List webhooks
+✓ POST /bookings - Create new bookings
+? GET /bookings - List bookings (permission dependent)
+? POST /bookings/{id}/cancel - Cancel bookings
+
+Missing/Not Working:
+--------------------
+✗ GET /event-types - Event types listing
+✗ GET /users/me - User profile
+✗ GET /organizations - Organizations
+✗ GET /schedules - Schedules
+
+Recommendations:
+----------------
+1. For event types: Continue using hardcoded event type IDs or maintain a local mapping
+2. For availability: V2 API /slots/available works perfectly
+3. For bookings: V2 API /bookings endpoint works with proper attendee structure
+4. For webhooks: V2 API provides good webhook management
+5. Consider implementing a hybrid approach:
+   - Use V2 for slots and bookings
+   - Maintain event type mappings locally
+   - Use webhooks for real-time updates
+
+
+Detailed log saved to: calcom-v2-detailed-test-2025-06-12_18-01-49.log

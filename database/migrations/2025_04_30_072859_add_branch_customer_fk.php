@@ -10,6 +10,9 @@ return new class extends Migration
     public function up(): void
     {
         // In PHPUnit-/GH-Actions-Runs (SQLite) komplett auslassen
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
 
         Schema::table('branches', function (Blueprint $table) {
             // FK nur hinzufügen, falls sie noch nicht existiert
@@ -29,6 +32,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
 
         Schema::table('branches', function (Blueprint $table) {
             $table->dropForeign(['customer_id']);

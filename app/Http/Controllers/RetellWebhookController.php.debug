@@ -1,0 +1,12 @@
+// Debug-Version mit mehr Logging
+// Nach Zeile 29 (vor der if-Abfrage) einfügen:
+
+Log::info('RetellWebhook Debug', [
+    'phone_number' => $phoneNumber,
+    'branch_found' => $branch ? true : false,
+    'branch_name' => $branch ? $branch->name : null,
+    'company_found' => $company ? true : false,
+    'company_name' => $company ? $company->name : null,
+    'company_api_key' => $company ? ($company->calcom_api_key ? 'vorhanden' : 'fehlt') : 'keine company',
+    'company_user_id' => $company ? ($company->calcom_user_id ? 'vorhanden' : 'fehlt') : 'keine company'
+]);

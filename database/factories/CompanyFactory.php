@@ -8,8 +8,10 @@ class CompanyFactory extends Factory
 {
     public function definition(): array
     {
+        $name = $this->faker->company;
         return [
-            'name' => $this->faker->company,
+            'name' => $name,
+            'slug' => \Illuminate\Support\Str::slug($name),
             'email' => $this->faker->companyEmail,
             'phone' => $this->faker->phoneNumber,
             'address' => $this->faker->address,
@@ -18,7 +20,7 @@ class CompanyFactory extends Factory
             'calcom_api_key' => null,
             'calcom_user_id' => null,
             'retell_api_key' => null,
-            'active' => $this->faker->boolean,
+            'active' => true,
         ];
     }
 }

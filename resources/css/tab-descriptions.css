@@ -1,0 +1,120 @@
+/* Tab Beschreibungen */
+.tab-descriptions-container {
+    position: relative;
+    margin-top: -1rem;
+    margin-bottom: 1rem;
+}
+
+.tab-description {
+    display: none;
+    position: relative;
+    background-color: rgb(var(--gray-50));
+    border: 1px solid rgb(var(--gray-200));
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.2s ease-in-out;
+}
+
+.dark .tab-description {
+    background-color: rgb(var(--gray-900));
+    border-color: rgb(var(--gray-700));
+}
+
+/* Zeige Beschreibung für aktiven Tab */
+.tab-description.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Verbindungslinie */
+.tab-description::before {
+    content: '';
+    position: absolute;
+    top: -1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 1rem;
+    background-color: rgb(var(--primary-500));
+}
+
+/* Punkt am Ende der Linie */
+.tab-description::after {
+    content: '';
+    position: absolute;
+    top: -1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgb(var(--primary-500));
+    border: 2px solid white;
+}
+
+.dark .tab-description::after {
+    border-color: rgb(var(--gray-900));
+}
+
+/* Icon und Text Layout */
+.tab-description-content {
+    display: flex;
+    align-items: start;
+    gap: 0.75rem;
+}
+
+.tab-description-icon {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: rgb(var(--primary-600));
+}
+
+.dark .tab-description-icon {
+    color: rgb(var(--primary-400));
+}
+
+.tab-description-text h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgb(var(--gray-900));
+    margin-bottom: 0.25rem;
+}
+
+.dark .tab-description-text h4 {
+    color: rgb(var(--gray-100));
+}
+
+.tab-description-text p {
+    font-size: 0.875rem;
+    color: rgb(var(--gray-600));
+    line-height: 1.5;
+}
+
+.dark .tab-description-text p {
+    color: rgb(var(--gray-400));
+}
+
+/* Hover Effekt für Tabs */
+.fi-tabs-item:hover + .tab-descriptions-container .tab-description[data-tab]:not(.active) {
+    display: block;
+    opacity: 0.8;
+    transform: translateY(0);
+}
+
+/* Mobile Anpassungen */
+@media (max-width: 640px) {
+    .tab-description {
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+    }
+    
+    .tab-description::before,
+    .tab-description::after {
+        left: 2rem;
+    }
+}

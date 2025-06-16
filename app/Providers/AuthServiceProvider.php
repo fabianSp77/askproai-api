@@ -8,6 +8,15 @@ use Illuminate\Support\Facades\Gate;
 class AuthServiceProvider extends ServiceProvider
 {
     /**
+     * The model to policy mappings for the application.
+     *
+     * @var array<class-string, class-string>
+     */
+    protected $policies = [
+        \App\Models\CalcomEventType::class => \App\Policies\CalcomEventTypePolicy::class,
+    ];
+
+    /**
      * Register any authentication / authorization services.
      */
     public function boot(): void
@@ -16,17 +25,9 @@ class AuthServiceProvider extends ServiceProvider
 
         /**
          * -----------------------------------------------------------------
-         *  Sofort-Bypass für Filament-Login
-         *  (entfernen, sobald Shield/Permissions korrekt greifen)
+         *  Gate::before() ENTFERNT - Permissions funktionieren jetzt normal
          * -----------------------------------------------------------------
          */
-        Gate::before(function ($user, string $ability) {
-            // erlaubt JEDEM eingeloggten User den Zugang zu allen Panels
-            if ($ability === 'viewFilament') {
-                return true;
-            }
-            return null; // andere Abilities normal prüfen
-        });
 
         /*
          |--------------------------------------------------------------

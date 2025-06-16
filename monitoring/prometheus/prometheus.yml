@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+    service: 'askproai'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+rule_files:
+  - "alerts/*.yml"
+
+scrape_configs:
+  # Laravel Metrics
+  - job_name: 'laravel'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+    metrics_path: '/metrics'
+    
+  # Node Exporter
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+      
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+      
+  # MySQL Exporter
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+      
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

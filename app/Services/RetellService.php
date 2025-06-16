@@ -1,16 +1,131 @@
 <?php
+
 namespace App\Services;
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class RetellService
 {
-    public static function buildInboundResponse(string $agentId, string $caller): array
+    private $apiKey;
+    private $baseUrl = 'https://api.retellai.com';
+
+    public function __construct()
     {
-        // NEUES 5-/30-Schema = Felder auf Root-Level
-        return [
-            'override_agent_id' => $agentId,
-            'dynamic_variables' => [
-                'customer_phone' => $caller,
-            ],
-        ];
+        // Try multiple config keys for compatibility
+        $this->apiKey = config('services.retell.api_key') 
+            ?? config('services.retell.token') 
+            ?? env('RETELL_TOKEN');
+        
+        // Use the base URL from config or env
+        $baseUrl = config('services.retell.base') ?? env('RETELL_BASE');
+        if ($baseUrl) {
+            $this->baseUrl = rtrim($baseUrl, '/');
+        }
+    }
+
+    /**
+     * Alle Agenten abrufen
+     */
+    public function getAgents()
+    {
+        // Cache für 5 Minuten
+        return Cache::remember('retell_agents', 300, function () {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                ])->post($this->baseUrl . '/v2/list-agents', []);
+
+                if ($response->successful()) {
+                    return $response->json();
+                }
+
+                Log::error('Retell API Error beim Abrufen der Agenten', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+
+                return [];
+            } catch (\Exception $e) {
+                Log::error('Retell API Exception', ['error' => $e->getMessage()]);
+                return [];
+            }
+        });
+    }
+
+    /**
+     * Einzelnen Agenten abrufen
+     */
+    public function getAgent($agentId)
+    {
+        return Cache::remember('retell_agent_' . $agentId, 300, function () use ($agentId) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                ])->post($this->baseUrl . '/v2/get-agent', ['agent_id' => $agentId]);
+
+                if ($response->successful()) {
+                    return $response->json();
+                }
+
+                return null;
+            } catch (\Exception $e) {
+                Log::error('Retell API Exception', ['error' => $e->getMessage()]);
+                return null;
+            }
+        });
+    }
+
+    /**
+     * Update agent metadata
+     */
+    public function updateAgent($agentId, array $data)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . '/v2/update-agent', array_merge(['agent_id' => $agentId], $data));
+
+            if ($response->successful()) {
+                // Clear cache for this agent
+                Cache::forget('retell_agent_' . $agentId);
+                Cache::forget('retell_agents');
+                
+                Log::info('Retell agent updated successfully', [
+                    'agent_id' => $agentId,
+                    'data' => $data
+                ]);
+                
+                return $response->json();
+            }
+
+            Log::error('Failed to update Retell agent', [
+                'agent_id' => $agentId,
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'url' => $this->baseUrl . '/agents/' . $agentId,
+                'api_key_length' => strlen($this->apiKey ?? ''),
+                'data' => $data
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Retell API Exception during update', [
+                'agent_id' => $agentId,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Cache leeren
+     */
+    public function clearCache()
+    {
+        Cache::forget('retell_agents');
+        // Einzelne Agent-Caches werden bei Bedarf geleert
     }
 }

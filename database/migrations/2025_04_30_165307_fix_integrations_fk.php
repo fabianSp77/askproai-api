@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+
         Schema::table('integrations', function (Blueprint $table) {
             // 1) FK nur droppen, wenn er existiert
             $fkExists = DB::table('information_schema.KEY_COLUMN_USAGE')
@@ -37,6 +41,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+
         Schema::table('integrations', function (Blueprint $table) {
             $table->dropForeign('integrations_kunde_id_foreign');
             $table->unsignedInteger('kunde_id')->change();

@@ -1,0 +1,59 @@
+/* Tab Description Widget mit Verbindungslinie */
+.tab-description-widget {
+    position: relative;
+    margin-top: -0.5rem;
+}
+
+/* Verbindungslinie vom Tab zur Beschreibung */
+.tab-description-widget::before {
+    content: '';
+    position: absolute;
+    top: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 1.5rem;
+    background: linear-gradient(to bottom, 
+        rgb(var(--primary-500)) 0%, 
+        rgb(var(--primary-500)) calc(100% - 4px),
+        transparent 100%
+    );
+}
+
+/* Punkt am oberen Ende der Linie */
+.tab-description-widget::after {
+    content: '';
+    position: absolute;
+    top: -1.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgb(var(--primary-500));
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .tab-description-widget::after {
+    border-color: rgb(var(--gray-900));
+}
+
+/* Anpassung der Widget-Card */
+.tab-description-widget .fi-wi-stats-overview-card {
+    border-color: rgb(var(--primary-200)) !important;
+    background-color: rgb(var(--primary-50)) !important;
+}
+
+.dark .tab-description-widget .fi-wi-stats-overview-card {
+    border-color: rgb(var(--primary-800)) !important;
+    background-color: rgba(var(--primary-950), 0.1) !important;
+}
+
+/* Mobile Anpassungen */
+@media (max-width: 640px) {
+    .tab-description-widget::before,
+    .tab-description-widget::after {
+        left: 3rem;
+    }
+}

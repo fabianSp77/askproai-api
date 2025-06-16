@@ -7,16 +7,19 @@ use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvi
 class EventServiceProvider extends ServiceProvider
 {
     /**
-     * Hier kannst du später Event→Listener-Zuordnungen eintragen.
-     *
-     * protected $listen = [
-     *     SomeEvent::class => [ SomeListener::class ],
-     * ];
+     * The event listener mappings for the application.
      */
     protected $listen = [];
+    
+    /**
+     * The subscriber classes to register.
+     */
+    protected $subscribe = [
+        \App\Listeners\LogAuthenticationEvents::class,
+    ];
 
     public function boot(): void
     {
-        // leer reicht – Hauptsache die Klasse existiert
+        parent::boot();
     }
 }

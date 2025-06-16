@@ -1,0 +1,523 @@
+/* AskProAI Mobile-First CSS Framework */
+
+/* ===========================
+   Base Mobile Variables
+   =========================== */
+:root {
+    /* Touch-friendly sizes */
+    --touch-target-min: 44px;
+    --touch-target-ideal: 48px;
+    --touch-target-large: 56px;
+    
+    /* Mobile spacing scale */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+    
+    /* Mobile-optimized typography */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    
+    /* Z-index layers */
+    --z-base: 1;
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    
+    /* Transitions */
+    --transition-fast: 150ms ease-in-out;
+    --transition-base: 250ms ease-in-out;
+    --transition-slow: 350ms ease-in-out;
+    
+    /* Safe areas for notched devices */
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-right: env(safe-area-inset-right);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    --safe-area-inset-left: env(safe-area-inset-left);
+}
+
+/* ===========================
+   Responsive Breakpoints
+   =========================== */
+/* Mobile First: Default styles are for mobile */
+/* Tablet: 768px and up */
+/* Desktop: 1024px and up */
+/* Wide: 1280px and up */
+
+/* ===========================
+   Base Reset & Mobile Optimizations
+   =========================== */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: contain;
+}
+
+/* Prevent scroll on iOS when modal is open */
+body.modal-open {
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* ===========================
+   Touch-Friendly Utilities
+   =========================== */
+.touch-target {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+}
+
+.touch-target-ideal {
+    min-height: var(--touch-target-ideal);
+    min-width: var(--touch-target-ideal);
+}
+
+.touch-target-large {
+    min-height: var(--touch-target-large);
+    min-width: var(--touch-target-large);
+}
+
+/* Touch ripple effect */
+.touch-ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.touch-ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.touch-ripple:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* ===========================
+   Mobile Navigation Patterns
+   =========================== */
+.mobile-nav-bottom {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-fixed);
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: var(--safe-area-inset-bottom);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-target-ideal);
+    padding: var(--space-sm);
+    transition: all var(--transition-fast);
+}
+
+.mobile-nav-item:active {
+    background: rgba(0, 0, 0, 0.05);
+    transform: scale(0.95);
+}
+
+/* Slide-out drawer navigation */
+.mobile-drawer {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 85%;
+    max-width: 320px;
+    height: 100%;
+    background: white;
+    z-index: var(--z-modal);
+    transition: left var(--transition-base);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-drawer.open {
+    left: 0;
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: var(--z-modal-backdrop);
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-base);
+}
+
+.mobile-drawer-backdrop.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ===========================
+   Gesture Support Styles
+   =========================== */
+.swipeable {
+    touch-action: pan-y;
+    user-select: none;
+}
+
+.swipeable-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.swipeable-content {
+    position: relative;
+    z-index: 2;
+    background: white;
+    transition: transform var(--transition-fast);
+}
+
+.swipeable-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-md);
+}
+
+.swipeable-item.swiping .swipeable-content {
+    transition: none;
+}
+
+/* Pull to refresh */
+.pull-to-refresh-container {
+    position: relative;
+}
+
+.pull-to-refresh-indicator {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+}
+
+.pull-to-refresh-indicator.visible {
+    top: 20px;
+}
+
+/* ===========================
+   Mobile Modals & Overlays
+   =========================== */
+.mobile-modal {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    padding: var(--space-md);
+    padding-bottom: calc(var(--space-md) + var(--safe-area-inset-bottom));
+    z-index: var(--z-modal);
+    transform: translateY(100%);
+    transition: transform var(--transition-base);
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-modal.open {
+    transform: translateY(0);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-modal-handle {
+    width: 48px;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+    margin: 0 auto var(--space-md);
+}
+
+/* Full screen modal for mobile */
+.mobile-modal-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: var(--z-modal);
+    transform: translateY(100%);
+    transition: transform var(--transition-base);
+    padding-top: var(--safe-area-inset-top);
+}
+
+.mobile-modal-fullscreen.open {
+    transform: translateY(0);
+}
+
+/* ===========================
+   Mobile Form Elements
+   =========================== */
+.mobile-input {
+    width: 100%;
+    min-height: var(--touch-target-ideal);
+    padding: var(--space-md);
+    font-size: 16px; /* Prevents zoom on iOS */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background: white;
+    transition: all var(--transition-fast);
+}
+
+.mobile-input:focus {
+    outline: none;
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.1);
+}
+
+.mobile-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--touch-target-ideal);
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--text-base);
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all var(--transition-fast);
+    user-select: none;
+    cursor: pointer;
+}
+
+.mobile-button:active {
+    transform: scale(0.97);
+}
+
+.mobile-button-primary {
+    background: var(--color-primary-500);
+    color: white;
+}
+
+.mobile-button-secondary {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-gray-700);
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: calc(80px + var(--safe-area-inset-bottom));
+    right: var(--space-md);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--color-primary-500);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: var(--z-fixed);
+    transition: all var(--transition-fast);
+}
+
+.fab:active {
+    transform: scale(0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ===========================
+   Mobile Lists & Cards
+   =========================== */
+.mobile-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mobile-list-item {
+    display: flex;
+    align-items: center;
+    min-height: var(--touch-target-ideal);
+    padding: var(--space-md);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: background var(--transition-fast);
+}
+
+.mobile-list-item:active {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.mobile-card {
+    background: white;
+    border-radius: 12px;
+    padding: var(--space-md);
+    margin: var(--space-sm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all var(--transition-fast);
+}
+
+.mobile-card:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* ===========================
+   Mobile-Specific Utilities
+   =========================== */
+/* Hide scrollbars on mobile but keep scrolling */
+.mobile-scroll-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.mobile-scroll-hidden::-webkit-scrollbar {
+    display: none;
+}
+
+/* Horizontal scroll container */
+.mobile-scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+}
+
+.mobile-scroll-x > * {
+    scroll-snap-align: start;
+}
+
+/* Safe area padding utilities */
+.safe-top {
+    padding-top: var(--safe-area-inset-top);
+}
+
+.safe-bottom {
+    padding-bottom: var(--safe-area-inset-bottom);
+}
+
+.safe-left {
+    padding-left: var(--safe-area-inset-left);
+}
+
+.safe-right {
+    padding-right: var(--safe-area-inset-right);
+}
+
+/* Mobile visibility utilities */
+@media (min-width: 768px) {
+    .mobile-only {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .desktop-only {
+        display: none !important;
+    }
+    
+    /* Force mobile-friendly table layout */
+    .mobile-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .mobile-table table {
+        min-width: 100%;
+    }
+}
+
+/* ===========================
+   Performance Optimizations
+   =========================== */
+/* Hardware acceleration for animations */
+.hardware-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Optimize for 60fps scrolling */
+.smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===========================
+   Loading States
+   =========================== */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: var(--color-primary-500);
+    border-radius: 50%;
+    animation: spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes spinner-rotate {
+    to { transform: rotate(360deg); }
+}

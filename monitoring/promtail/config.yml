@@ -1,0 +1,46 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: laravel
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: laravel
+          __path__: /var/www/api-gateway/storage/logs/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            level: level
+            message: message
+            context: context
+      - labels:
+          level:
+      - timestamp:
+          source: time
+          format: RFC3339
+
+  - job_name: security
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: security
+          __path__: /var/www/api-gateway/storage/logs/security.log
+    pipeline_stages:
+      - json:
+          expressions:
+            threat_type: threat_type
+            ip: ip
+            severity: severity
+      - labels:
+          threat_type:
+          severity:

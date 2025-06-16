@@ -5,7 +5,7 @@ return [
     /* ------------------------------------------------ Basics ------------ */
     'name'            => env('APP_NAME', 'AskProAI'),
     'env'             => env('APP_ENV', 'production'),
-    'debug'           => (bool) env('APP_DEBUG', false),
+    'debug'           => env('APP_DEBUG', false),
     'url'             => env('APP_URL', 'https://api.askproai.de'),
     'asset_url'       => env('ASSET_URL'),
 
@@ -74,5 +74,6 @@ return [
         'Route'  => Illuminate\Support\Facades\Route::class,
         'Schema' => Illuminate\Support\Facades\Schema::class,
         'Str'    => Illuminate\Support\Str::class,
+        'URL'    => Illuminate\Support\Facades\URL::class,
     ],
 ];

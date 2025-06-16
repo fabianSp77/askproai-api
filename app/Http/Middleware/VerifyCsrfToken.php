@@ -12,6 +12,11 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'admin/*',
+        // Only exclude specific API endpoints that need to be accessed externally
+        'api/retell/webhook',
+        'api/calcom/webhook',
+        'api/calcom/direct-webhook',
+        // Debug endpoints temporarily
+        'debug/*',
     ];
 }

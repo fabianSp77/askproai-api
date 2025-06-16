@@ -1,0 +1,639 @@
+===== activity_log =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+log_name	varchar(255)	YES	MUL	NULL	
+description	text	NO		NULL	
+subject_type	varchar(255)	YES	MUL	NULL	
+event	varchar(255)	YES		NULL	
+subject_id	bigint(20) unsigned	YES		NULL	
+causer_type	varchar(255)	YES	MUL	NULL	
+causer_id	bigint(20) unsigned	YES		NULL	
+properties	longtext	YES		NULL	
+batch_uuid	char(36)	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== agents =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+customer_id	bigint(20) unsigned	NO	MUL	NULL	
+name	varchar(255)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== api_health_logs =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+service	varchar(255)	NO		NULL	
+company_id	bigint(20) unsigned	YES	MUL	NULL	
+status	varchar(255)	NO		NULL	
+message	text	YES		NULL	
+response_time	double	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== appointments =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+tenant_id	char(36)	YES	MUL	NULL	
+customer_id	bigint(20) unsigned	NO	MUL	NULL	
+external_id	varchar(255)	YES	MUL	NULL	
+starts_at	timestamp	YES		NULL	
+ends_at	timestamp	YES		NULL	
+payload	longtext	YES		NULL	
+status	varchar(255)	NO		pending	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== branch_service =====
+Field	Type	Null	Key	Default	Extra
+branch_id	char(36)	NO	PRI	NULL	
+service_id	bigint(20) unsigned	NO	PRI	NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== branch_staff =====
+Field	Type	Null	Key	Default	Extra
+branch_id	char(36)	NO	PRI	NULL	
+staff_id	bigint(20) unsigned	NO	PRI	NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== branches =====
+Field	Type	Null	Key	Default	Extra
+id	char(36)	NO	PRI	NULL	
+customer_id	bigint(20) unsigned	YES	MUL	NULL	
+name	varchar(255)	NO		NULL	
+slug	varchar(255)	YES	UNI	NULL	
+city	varchar(255)	YES		NULL	
+phone_number	varchar(255)	YES		NULL	
+active	tinyint(1)	NO		0	
+calendar_mode	varchar(255)	NO		inherit	
+calendar_mapping	longtext	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+deleted_at	timestamp	YES		NULL	
+
+===== cache =====
+Field	Type	Null	Key	Default	Extra
+key	varchar(255)	NO	PRI	NULL	
+value	mediumtext	NO		NULL	
+expiration	int(11)	NO		NULL	
+
+===== cache_locks =====
+Field	Type	Null	Key	Default	Extra
+key	varchar(255)	NO	PRI	NULL	
+owner	varchar(255)	NO		NULL	
+expiration	int(11)	NO		NULL	
+
+===== calcom_bookings =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+calcom_uid	varchar(255)	NO	UNI	NULL	
+appointment_id	bigint(20) unsigned	YES		NULL	
+status	varchar(255)	YES		NULL	
+raw_payload	longtext	YES		NULL	
+event_type_id	bigint(20) unsigned	NO	MUL	NULL	
+branch_id	char(36)	YES	MUL	NULL	
+external_id	varchar(255)	YES		NULL	
+starts_at	timestamp	NO		NULL	
+ends_at	timestamp	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== calcom_event_types =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+staff_id	char(36)	YES	MUL	NULL	
+tenant_id	char(36)	YES		NULL	
+name	varchar(255)	NO		NULL	
+calcom_numeric_event_type_id	bigint(20) unsigned	YES	MUL	NULL	
+duration_minutes	int(11)	YES		NULL	
+description	text	YES		NULL	
+price	decimal(8,2)	YES		NULL	
+is_active	tinyint(1)	NO		1	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== calendars =====
+Field	Type	Null	Key	Default	Extra
+id	char(36)	NO	PRI	NULL	
+staff_id	char(36)	NO	MUL	NULL	
+provider	enum('calcom','google')	NO		calcom	
+api_key	text	YES		NULL	
+event_type_id	varchar(255)	YES		NULL	
+external_user_id	varchar(255)	YES		NULL	
+validated_at	timestamp	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+deleted_at	timestamp	YES		NULL	
+
+===== calls =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+tenant_id	char(36)	YES	MUL	NULL	
+call_id	varchar(255)	YES	MUL	NULL	
+external_id	varchar(255)	YES	MUL	NULL	
+conversation_id	char(36)	YES	MUL	NULL	
+call_status	varchar(255)	YES		NULL	
+call_successful	tinyint(1)	YES		NULL	
+retell_call_id	varchar(255)	NO	UNI	NULL	
+tmp_call_id	char(36)	YES		NULL	
+from_number	varchar(255)	YES		NULL	
+to_number	varchar(255)	YES		NULL	
+duration_sec	int(10) unsigned	YES		NULL	
+analysis	longtext	YES		NULL	
+cost_cents	int(10) unsigned	YES		NULL	
+transcript	text	YES		NULL	
+raw	longtext	YES		NULL	
+kunde_id	bigint(20) unsigned	YES	MUL	NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+customer_id	bigint(20) unsigned	YES	MUL	NULL	
+branch_id	bigint(20) unsigned	YES		NULL	
+phone_number_id	bigint(20) unsigned	YES		NULL	
+agent_id	bigint(20) unsigned	YES		NULL	
+details	longtext	YES		NULL	
+
+===== companies =====
+
+===== customers =====
+
+===== failed_jobs =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+uuid	varchar(255)	NO	UNI	NULL	
+connection	text	NO		NULL	
+queue	text	NO		NULL	
+payload	longtext	NO		NULL	
+exception	longtext	NO		NULL	
+failed_at	timestamp	NO		current_timestamp()	
+
+===== integrations =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+customer_id	bigint(20) unsigned	NO	MUL	NULL	
+system	varchar(255)	NO		NULL	
+credentials	longtext	YES		NULL	
+active	tinyint(1)	NO		1	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== jobs =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+queue	varchar(255)	NO	MUL	NULL	
+payload	longtext	NO		NULL	
+attempts	tinyint(3) unsigned	NO		NULL	
+reserved_at	int(10) unsigned	YES		NULL	
+available_at	int(10) unsigned	NO		NULL	
+created_at	int(10) unsigned	NO		NULL	
+
+===== kunden =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+name	varchar(255)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== migrations =====
+Field	Type	Null	Key	Default	Extra
+id	int(10) unsigned	NO	PRI	NULL	auto_increment
+migration	varchar(255)	NO		NULL	
+batch	int(11)	NO		NULL	
+
+===== model_has_permissions =====
+Field	Type	Null	Key	Default	Extra
+permission_id	bigint(20) unsigned	NO	PRI	NULL	
+model_type	varchar(255)	NO	PRI	NULL	
+model_id	bigint(20) unsigned	NO	PRI	NULL	
+
+===== model_has_roles =====
+Field	Type	Null	Key	Default	Extra
+role_id	bigint(20) unsigned	NO	PRI	NULL	
+model_type	varchar(255)	NO	PRI	NULL	
+model_id	bigint(20) unsigned	NO	PRI	NULL	
+
+===== oauth_access_tokens =====
+===== activity_log =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+log_name	varchar(255)	YES	MUL	NULL	
+description	text	NO		NULL	
+subject_type	varchar(255)	YES	MUL	NULL	
+event	varchar(255)	YES		NULL	
+subject_id	bigint(20) unsigned	YES		NULL	
+causer_type	varchar(255)	YES	MUL	NULL	
+causer_id	bigint(20) unsigned	YES		NULL	
+properties	longtext	YES		NULL	
+batch_uuid	char(36)	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== agents =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+customer_id	bigint(20) unsigned	NO	MUL	NULL	
+name	varchar(255)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== api_health_logs =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+service	varchar(255)	NO		NULL	
+company_id	bigint(20) unsigned	YES	MUL	NULL	
+status	varchar(255)	NO		NULL	
+message	text	YES		NULL	
+response_time	double	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== appointments =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+tenant_id	char(36)	YES	MUL	NULL	
+customer_id	bigint(20) unsigned	NO	MUL	NULL	
+external_id	varchar(255)	YES	MUL	NULL	
+starts_at	timestamp	YES		NULL	
+ends_at	timestamp	YES		NULL	
+payload	longtext	YES		NULL	
+status	varchar(255)	NO		pending	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== branch_service =====
+Field	Type	Null	Key	Default	Extra
+branch_id	char(36)	NO	PRI	NULL	
+service_id	bigint(20) unsigned	NO	PRI	NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== branch_staff =====
+Field	Type	Null	Key	Default	Extra
+branch_id	char(36)	NO	PRI	NULL	
+staff_id	bigint(20) unsigned	NO	PRI	NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== branches =====
+Field	Type	Null	Key	Default	Extra
+id	char(36)	NO	PRI	NULL	
+customer_id	bigint(20) unsigned	YES	MUL	NULL	
+name	varchar(255)	NO		NULL	
+slug	varchar(255)	YES	UNI	NULL	
+city	varchar(255)	YES		NULL	
+phone_number	varchar(255)	YES		NULL	
+active	tinyint(1)	NO		0	
+calendar_mode	varchar(255)	NO		inherit	
+calendar_mapping	longtext	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+deleted_at	timestamp	YES		NULL	
+
+===== cache =====
+Field	Type	Null	Key	Default	Extra
+key	varchar(255)	NO	PRI	NULL	
+value	mediumtext	NO		NULL	
+expiration	int(11)	NO		NULL	
+
+===== cache_locks =====
+Field	Type	Null	Key	Default	Extra
+key	varchar(255)	NO	PRI	NULL	
+owner	varchar(255)	NO		NULL	
+expiration	int(11)	NO		NULL	
+
+===== calcom_bookings =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+calcom_uid	varchar(255)	NO	UNI	NULL	
+appointment_id	bigint(20) unsigned	YES		NULL	
+status	varchar(255)	YES		NULL	
+raw_payload	longtext	YES		NULL	
+event_type_id	bigint(20) unsigned	NO	MUL	NULL	
+branch_id	char(36)	YES	MUL	NULL	
+external_id	varchar(255)	YES		NULL	
+starts_at	timestamp	NO		NULL	
+ends_at	timestamp	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== calcom_event_types =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+staff_id	char(36)	YES	MUL	NULL	
+tenant_id	char(36)	YES		NULL	
+name	varchar(255)	NO		NULL	
+calcom_numeric_event_type_id	bigint(20) unsigned	YES	MUL	NULL	
+duration_minutes	int(11)	YES		NULL	
+description	text	YES		NULL	
+price	decimal(8,2)	YES		NULL	
+is_active	tinyint(1)	NO		1	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== calendars =====
+Field	Type	Null	Key	Default	Extra
+id	char(36)	NO	PRI	NULL	
+staff_id	char(36)	NO	MUL	NULL	
+provider	enum('calcom','google')	NO		calcom	
+api_key	text	YES		NULL	
+event_type_id	varchar(255)	YES		NULL	
+external_user_id	varchar(255)	YES		NULL	
+validated_at	timestamp	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+deleted_at	timestamp	YES		NULL	
+
+===== calls =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+tenant_id	char(36)	YES	MUL	NULL	
+call_id	varchar(255)	YES	MUL	NULL	
+external_id	varchar(255)	YES	MUL	NULL	
+conversation_id	char(36)	YES	MUL	NULL	
+call_status	varchar(255)	YES		NULL	
+call_successful	tinyint(1)	YES		NULL	
+retell_call_id	varchar(255)	NO	UNI	NULL	
+tmp_call_id	char(36)	YES		NULL	
+from_number	varchar(255)	YES		NULL	
+to_number	varchar(255)	YES		NULL	
+duration_sec	int(10) unsigned	YES		NULL	
+analysis	longtext	YES		NULL	
+cost_cents	int(10) unsigned	YES		NULL	
+transcript	text	YES		NULL	
+raw	longtext	YES		NULL	
+kunde_id	bigint(20) unsigned	YES	MUL	NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+customer_id	bigint(20) unsigned	YES	MUL	NULL	
+branch_id	bigint(20) unsigned	YES		NULL	
+phone_number_id	bigint(20) unsigned	YES		NULL	
+agent_id	bigint(20) unsigned	YES		NULL	
+details	longtext	YES		NULL	
+
+===== companies =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+name	varchar(255)	NO		NULL	
+address	text	YES		NULL	
+contact_person	varchar(255)	YES		NULL	
+phone	varchar(255)	YES		NULL	
+email	varchar(255)	YES		NULL	
+opening_hours	longtext	YES		NULL	
+calcom_api_key	varchar(255)	YES		NULL	
+calcom_user_id	varchar(255)	YES		NULL	
+retell_api_key	varchar(255)	YES		NULL	
+active	tinyint(1)	NO		1	
+calendar_mode	varchar(255)	NO		pro_mitarbeiter	
+calendar_mapping	longtext	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== customers =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+tenant_id	char(36)	YES	MUL	NULL	
+name	varchar(255)	NO		NULL	
+email	varchar(255)	YES		NULL	
+phone	varchar(255)	YES		NULL	
+notes	text	YES		NULL	
+onboarding_complete	tinyint(1)	NO		0	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== failed_jobs =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+uuid	varchar(255)	NO	UNI	NULL	
+connection	text	NO		NULL	
+queue	text	NO		NULL	
+payload	longtext	NO		NULL	
+exception	longtext	NO		NULL	
+failed_at	timestamp	NO		current_timestamp()	
+
+===== integrations =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+customer_id	bigint(20) unsigned	NO	MUL	NULL	
+system	varchar(255)	NO		NULL	
+credentials	longtext	YES		NULL	
+active	tinyint(1)	NO		1	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== jobs =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+queue	varchar(255)	NO	MUL	NULL	
+payload	longtext	NO		NULL	
+attempts	tinyint(3) unsigned	NO		NULL	
+reserved_at	int(10) unsigned	YES		NULL	
+available_at	int(10) unsigned	NO		NULL	
+created_at	int(10) unsigned	NO		NULL	
+
+===== kunden =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+name	varchar(255)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== migrations =====
+Field	Type	Null	Key	Default	Extra
+id	int(10) unsigned	NO	PRI	NULL	auto_increment
+migration	varchar(255)	NO		NULL	
+batch	int(11)	NO		NULL	
+
+===== model_has_permissions =====
+Field	Type	Null	Key	Default	Extra
+permission_id	bigint(20) unsigned	NO	PRI	NULL	
+model_type	varchar(255)	NO	PRI	NULL	
+model_id	bigint(20) unsigned	NO	PRI	NULL	
+
+===== model_has_roles =====
+Field	Type	Null	Key	Default	Extra
+role_id	bigint(20) unsigned	NO	PRI	NULL	
+model_type	varchar(255)	NO	PRI	NULL	
+model_id	bigint(20) unsigned	NO	PRI	NULL	
+
+===== oauth_access_tokens =====
+Field	Type	Null	Key	Default	Extra
+id	varchar(100)	NO	PRI	NULL	
+user_id	bigint(20) unsigned	YES	MUL	NULL	
+client_id	bigint(20) unsigned	NO		NULL	
+name	varchar(255)	YES		NULL	
+scopes	text	YES		NULL	
+revoked	tinyint(1)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+expires_at	datetime	YES		NULL	
+
+===== oauth_auth_codes =====
+Field	Type	Null	Key	Default	Extra
+id	varchar(100)	NO	PRI	NULL	
+user_id	bigint(20) unsigned	NO	MUL	NULL	
+client_id	bigint(20) unsigned	NO		NULL	
+scopes	text	YES		NULL	
+revoked	tinyint(1)	NO		NULL	
+expires_at	datetime	YES		NULL	
+
+===== oauth_clients =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+user_id	bigint(20) unsigned	YES	MUL	NULL	
+name	varchar(255)	NO		NULL	
+secret	varchar(100)	YES		NULL	
+provider	varchar(255)	YES		NULL	
+redirect	text	NO		NULL	
+personal_access_client	tinyint(1)	NO		NULL	
+password_client	tinyint(1)	NO		NULL	
+revoked	tinyint(1)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== oauth_personal_access_clients =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+client_id	bigint(20) unsigned	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== oauth_refresh_tokens =====
+Field	Type	Null	Key	Default	Extra
+id	varchar(100)	NO	PRI	NULL	
+access_token_id	varchar(100)	NO	MUL	NULL	
+revoked	tinyint(1)	NO		NULL	
+expires_at	datetime	YES		NULL	
+
+===== password_reset_tokens =====
+Field	Type	Null	Key	Default	Extra
+email	varchar(255)	NO	MUL	NULL	
+token	varchar(255)	NO		NULL	
+created_at	timestamp	YES		NULL	
+
+===== permissions =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+name	varchar(255)	NO	MUL	NULL	
+guard_name	varchar(255)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== phone_numbers =====
+Field	Type	Null	Key	Default	Extra
+id	char(36)	NO	PRI	NULL	
+branch_id	char(36)	NO	MUL	NULL	
+number	varchar(255)	NO	UNI	NULL	
+active	tinyint(1)	NO		1	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== reseller_tenant =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+reseller_id	bigint(20) unsigned	NO	MUL	NULL	
+tenant_id	char(36)	NO	MUL	NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== retell_agents =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+name	varchar(255)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== retell_webhooks =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+event_type	varchar(255)	NO	MUL	NULL	
+call_id	varchar(255)	YES	MUL	NULL	
+payload	longtext	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== role_has_permissions =====
+Field	Type	Null	Key	Default	Extra
+permission_id	bigint(20) unsigned	NO	PRI	NULL	
+role_id	bigint(20) unsigned	NO	PRI	NULL	
+
+===== roles =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+name	varchar(255)	NO	MUL	NULL	
+guard_name	varchar(255)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== services =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+name	varchar(255)	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== staff =====
+Field	Type	Null	Key	Default	Extra
+id	char(36)	NO	PRI	NULL	
+tenant_id	char(36)	YES	MUL	NULL	
+home_branch_id	char(36)	YES	MUL	NULL	
+branch_id	char(36)	NO	MUL	NULL	
+name	varchar(255)	NO		NULL	
+email	varchar(255)	YES		NULL	
+calendar_id	varchar(255)	YES		NULL	
+phone	varchar(255)	YES		NULL	
+active	tinyint(1)	NO		1	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+deleted_at	timestamp	YES		NULL	
+
+===== staff_service =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+staff_id	char(36)	NO	MUL	NULL	
+service_id	bigint(20) unsigned	NO	MUL	NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== tenants =====
+Field	Type	Null	Key	Default	Extra
+id	char(36)	NO	PRI	NULL	
+name	varchar(255)	NO		NULL	
+email	varchar(255)	YES		NULL	
+slug	varchar(255)	NO	UNI	NULL	
+api_key	varchar(255)	YES		NULL	
+calcom_team_slug	varchar(255)	YES	MUL	NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+balance_cents	bigint(20) unsigned	NO		0	
+
+===== tests =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+
+===== users =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+tenant_id	char(36)	YES	MUL	NULL	
+name	varchar(255)	NO		NULL	
+email	varchar(255)	NO	UNI	NULL	
+email_verified_at	timestamp	YES		NULL	
+password	varchar(255)	NO		NULL	
+remember_token	varchar(100)	YES		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+kunde_id	bigint(20) unsigned	YES	MUL	NULL	
+
+===== working_hours =====
+Field	Type	Null	Key	Default	Extra
+id	bigint(20) unsigned	NO	PRI	NULL	auto_increment
+staff_id	char(36)	NO	MUL	NULL	
+weekday	tinyint(4)	NO		NULL	
+start	time	NO		NULL	
+end	time	NO		NULL	
+created_at	timestamp	YES		NULL	
+updated_at	timestamp	YES		NULL	
+

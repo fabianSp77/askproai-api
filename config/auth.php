@@ -37,12 +37,6 @@ return [
             'provider' => 'users',
         ],
 
-        /*  ────────── Filament-Admin-Panel ───────── */
-        'filament' => [
-            'driver'   => 'session',
-            'provider' => 'users',
-        ],
-
         /*  ────────── API (Token / Passport) ─────── */
         'api' => [
             'driver'   => 'passport',

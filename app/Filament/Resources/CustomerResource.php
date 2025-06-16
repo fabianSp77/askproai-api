@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CustomerResource\Pages;
@@ -12,9 +13,11 @@ use Filament\Tables\Table;
 class CustomerResource extends Resource
 {
     protected static ?string $model = Customer::class;
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationLabel = 'Kunden';
-    protected static ?string $pluralLabel = 'Kunden';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationGroup = 'Stammdaten';
+    protected static ?int $navigationSort = 2;
+    protected static ?string $modelLabel = 'Kunde';
+    protected static ?string $pluralModelLabel = 'Kunden';
 
     public static function form(Form $form): Form
     {
@@ -25,11 +28,18 @@ class CustomerResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('email')
                     ->label('E-Mail')
-                    ->email()
+                    ->email(),
+                Forms\Components\TextInput::make('phone')
+                    ->label('Telefon')
+                    ->tel()
                     ->required(),
-                Forms\Components\DatePicker::make('birthdate')
-                    ->label('Geburtsdatum')
-                    ->nullable(),
+                Forms\Components\Select::make('company_id')
+                    ->label('Unternehmen')
+                    ->relationship('company', 'name')
+                    ->searchable(),
+                Forms\Components\Textarea::make('notes')
+                    ->label('Notizen')
+                    ->rows(3),
             ]);
     }
 
@@ -37,13 +47,21 @@ class CustomerResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')->sortable(),
-                Tables\Columns\TextColumn::make('name')->label('Name')->searchable(),
-                Tables\Columns\TextColumn::make('email')->label('E-Mail')->searchable(),
-                Tables\Columns\TextColumn::make('birthdate')->label('Geburtsdatum')->date(),
-                Tables\Columns\TextColumn::make('created_at')->label('Erstellt am')->dateTime(),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Name')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('email')
+                    ->label('E-Mail')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('Telefon')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('company.name')
+                    ->label('Unternehmen'),
             ])
-            ->filters([])
+            ->filters([
+                //
+            ])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
@@ -52,11 +70,6 @@ class CustomerResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [];
     }
 
     public static function getPages(): array
