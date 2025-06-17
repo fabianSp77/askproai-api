@@ -13,6 +13,11 @@ class UltimateSystemCockpitMinimal extends Page
     protected static string $view = 'filament.admin.pages.ultimate-system-cockpit-minimal';
     protected static ?int $navigationSort = 6;
     
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - redundant
+    }
+    
     public array $systemMetrics = [];
     
     public function mount(): void

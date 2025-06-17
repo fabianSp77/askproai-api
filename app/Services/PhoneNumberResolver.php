@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Models\Branch;
+use App\Models\Company;
 use App\Models\PhoneNumber;
 use App\Models\Agent;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 
 class PhoneNumberResolver
 {
@@ -119,33 +121,63 @@ class PhoneNumberResolver
      */
     protected function resolveFromAgentId(string $retellAgentId): ?array
     {
-        // 1. Check if we have a local Agent record
-        $agent = Agent::where('agent_id', $retellAgentId)
-            ->orWhere('retell_agent_id', $retellAgentId)
-            ->first();
-            
-        if ($agent && $agent->branch_id) {
-            return [
-                'branch_id' => $agent->branch_id,
-                'company_id' => $agent->company_id,
-                'agent_id' => $agent->id
-            ];
+        // 1. Try to check if we have a local Agent record (if table has retell_agent_id column)
+        try {
+            if (Schema::hasTable('agents') && Schema::hasColumn('agents', 'retell_agent_id')) {
+                $agent = Agent::where('retell_agent_id', $retellAgentId)
+                    ->first();
+                    
+                if ($agent && $agent->branch_id) {
+                    return [
+                        'branch_id' => $agent->branch_id,
+                        'company_id' => $agent->company_id,
+                        'agent_id' => $agent->id
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Could not query agents table', ['error' => $e->getMessage()]);
         }
         
-        // 2. Check branches for this agent
-        $branch = Branch::where('retell_agent_id', $retellAgentId)->first();
+        // 2. Check branches for this agent (if column exists)
+        try {
+            if (Schema::hasColumn('branches', 'retell_agent_id')) {
+                $branch = Branch::where('retell_agent_id', $retellAgentId)->first();
+                
+                if ($branch) {
+                    Log::info('Branch resolved from agent ID', [
+                        'agent_id' => $retellAgentId,
+                        'branch_id' => $branch->id
+                    ]);
+                    
+                    return [
+                        'branch_id' => $branch->id,
+                        'company_id' => $branch->company_id,
+                        'agent_id' => null // No agent record available
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Could not query branches for retell_agent_id', ['error' => $e->getMessage()]);
+        }
         
-        if ($branch) {
-            Log::info('Branch resolved from agent ID', [
-                'agent_id' => $retellAgentId,
-                'branch_id' => $branch->id
-            ]);
-            
-            return [
-                'branch_id' => $branch->id,
-                'company_id' => $branch->company_id,
-                'agent_id' => $agent?->id
-            ];
+        // 3. Fallback: Use first branch of first company
+        $company = Company::first();
+        if ($company) {
+            $branch = $company->branches()->first();
+            if ($branch) {
+                Log::info('Using fallback branch resolution', [
+                    'agent_id' => $retellAgentId,
+                    'branch_id' => $branch->id,
+                    'company_id' => $company->id
+                ]);
+                
+                return [
+                    'branch_id' => $branch->id,
+                    'company_id' => $company->id,
+                    'agent_id' => null
+                ];
+            }
         }
         
         return null;
@@ -162,12 +194,19 @@ class PhoneNumberResolver
             return null;
         }
         
-        // Find local agent record
-        $agent = Agent::where('agent_id', $retellAgentId)
-            ->orWhere('retell_agent_id', $retellAgentId)
-            ->first();
-            
-        return $agent?->id;
+        // Find local agent record (if column exists)
+        try {
+            if (Schema::hasTable('agents') && Schema::hasColumn('agents', 'retell_agent_id')) {
+                $agent = Agent::where('retell_agent_id', $retellAgentId)
+                    ->first();
+                    
+                return $agent?->id;
+            }
+        } catch (\Exception $e) {
+            Log::warning('Could not find agent by retell_agent_id', ['error' => $e->getMessage()]);
+        }
+        
+        return null;
     }
     
     /**

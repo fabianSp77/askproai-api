@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Log;
 
 class SystemHealthMonitorDebug extends Page
 {
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - Debug-Version
+    }
     protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
     protected static ?string $navigationLabel = 'System Health (Debug)';
     protected static ?string $navigationGroup = 'System & Monitoring';

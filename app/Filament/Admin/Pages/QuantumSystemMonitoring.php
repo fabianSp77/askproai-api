@@ -23,6 +23,11 @@ class QuantumSystemMonitoring extends Page
     protected static string $view = 'filament.admin.pages.quantum-system-monitoring';
     protected static ?int $navigationSort = 0;
     
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - zu experimentell
+    }
+    
     // Core Metrics
     public array $realtimeMetrics = [];
     public array $businessIntelligence = [];

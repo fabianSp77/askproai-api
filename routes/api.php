@@ -46,6 +46,14 @@ Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle'])
 Route::post('/retell/webhook', [RetellWebhookController::class, 'processWebhook'])
     ->middleware('verify.retell.signature');
 
+// ---- Retell Function Call Handler (for real-time during calls) ----
+Route::post('/retell/function-call', [App\Http\Controllers\RetellRealtimeController::class, 'handleFunctionCall'])
+    ->middleware('verify.retell.signature');
+
+// ---- Stripe Webhook (POST) --------------------------------------
+Route::post('/stripe/webhook', [App\Http\Controllers\Api\StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook');
+
 // ---- Frontend Error Logging -------------------------------------
 Route::post('/log-frontend-error', [\App\Http\Controllers\FrontendErrorController::class, 'log'])
     ->middleware(['throttle:10,1']); // Max 10 error reports per minute

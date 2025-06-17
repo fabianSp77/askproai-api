@@ -128,4 +128,44 @@ class RetellService
         Cache::forget('retell_agents');
         // Einzelne Agent-Caches werden bei Bedarf geleert
     }
+    
+    /**
+     * Build response for inbound calls with dynamic variables
+     * 
+     * @param string $agentId The agent ID to handle the call
+     * @param string $fromNumber The caller's phone number
+     * @param array $dynamicVariables Additional variables to pass to the agent
+     * @return array
+     */
+    public static function buildInboundResponse($agentId, $fromNumber = null, $dynamicVariables = [])
+    {
+        $response = [
+            'response' => [
+                'agent_id' => $agentId
+            ]
+        ];
+        
+        // Add dynamic variables if provided
+        if (!empty($dynamicVariables) || $fromNumber) {
+            $response['response']['dynamic_variables'] = $dynamicVariables;
+            
+            if ($fromNumber) {
+                $response['response']['dynamic_variables']['caller_number'] = $fromNumber;
+            }
+        }
+        
+        // Add metadata for tracking
+        $response['response']['metadata'] = [
+            'handled_by' => 'AskProAI',
+            'timestamp' => now()->toIso8601String()
+        ];
+        
+        Log::info('Built inbound response for Retell.ai', [
+            'agent_id' => $agentId,
+            'caller' => $fromNumber,
+            'variables' => $dynamicVariables
+        ]);
+        
+        return $response;
+    }
 }

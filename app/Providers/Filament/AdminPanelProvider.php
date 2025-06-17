@@ -59,17 +59,13 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->navigationGroups([
                 'Geschäftsvorgänge',
+                'Analytics',
                 'Unternehmensstruktur',
                 'Kalender & Events',
                 'Konfiguration',
                 'System & Monitoring',
                 'Entwicklung'
             ])
-            ->pages([
-                \App\Filament\Admin\Pages\SimpleDashboard::class,
-            ])
-            ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
-            ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->renderHook(
                 'panels::scripts.after',
                 fn (): string => '<script type="module" src="' . \Illuminate\Support\Facades\Vite::asset('resources/js/column-editor-modern.js') . '"></script>'

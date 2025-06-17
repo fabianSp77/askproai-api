@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\SmartLoader;
 use App\Models\Traits\HasLoadingProfiles;
@@ -196,6 +197,53 @@ public function tenants()
 {
     return $this->hasMany(Tenant::class);
 }
+
+    /**
+     * Get the pricing models for the company.
+     */
+    public function pricingModels(): HasMany
+    {
+        return $this->hasMany(CompanyPricing::class);
+    }
+    
+    /**
+     * Get the active pricing model.
+     */
+    public function activePricing()
+    {
+        return $this->hasOne(CompanyPricing::class)
+            ->where('is_active', true)
+            ->where('valid_from', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('valid_until')
+                    ->orWhere('valid_until', '>=', now());
+            })
+            ->orderBy('valid_from', 'desc');
+    }
+
+    /**
+     * Get the invoices for the company.
+     */
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * Get the additional services for the company.
+     */
+    public function additionalServices()
+    {
+        return $this->hasMany(AdditionalService::class);
+    }
+
+    /**
+     * Get the customer services for the company.
+     */
+    public function customerServices()
+    {
+        return $this->hasMany(CustomerService::class);
+    }
 
 
     /**

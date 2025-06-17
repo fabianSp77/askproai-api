@@ -24,6 +24,11 @@ class UltimateSystemCockpit extends Page
     protected static string $view = 'filament.admin.pages.ultimate-system-cockpit-v4';
     protected static ?int $navigationSort = 5;
     
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - zu komplex
+    }
+    
     public array $systemMetrics = [];
     public array $serviceHealth = [];
     public array $companyMetrics = [];

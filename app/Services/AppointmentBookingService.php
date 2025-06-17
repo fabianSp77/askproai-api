@@ -18,59 +18,113 @@ use App\Exceptions\AvailabilityException;
 
 class AppointmentBookingService
 {
+    private $calcomService;
+    private $notificationService;
+    private $availabilityService;
+    
     public function __construct(
-        private CalcomV2Service $calcomService,
-        private NotificationService $notificationService,
-        private AvailabilityService $availabilityService
-    ) {}
+        ?CalcomV2Service $calcomService = null,
+        ?NotificationService $notificationService = null,
+        ?AvailabilityService $availabilityService = null
+    ) {
+        $this->calcomService = $calcomService ?? new CalcomV2Service();
+        $this->notificationService = $notificationService ?? new NotificationService();
+        // AvailabilityService requires CacheService
+        if (!$availabilityService) {
+            $cacheService = app(\App\Services\CacheService::class);
+            $this->availabilityService = new AvailabilityService($cacheService);
+        } else {
+            $this->availabilityService = $availabilityService;
+        }
+    }
     
     /**
      * Complete phone-to-appointment booking flow
+     * Supports both old format and new collect_appointment_data format
      */
-    public function bookFromPhoneCall(array $data, ?Call $call = null): Appointment
+    public function bookFromPhoneCall($callOrData, ?array $appointmentData = null): array
     {
-        return DB::transaction(function () use ($data, $call) {
+        return DB::transaction(function () use ($callOrData, $appointmentData) {
             try {
-                // 1. Validate and prepare data
-                $bookingData = $this->prepareBookingData($data, $call);
+                // Determine if we're working with a Call object or data array
+                $call = null;
+                $data = [];
+                
+                if ($callOrData instanceof Call) {
+                    $call = $callOrData;
+                    $data = $appointmentData ?? [];
+                } else {
+                    $data = $callOrData;
+                }
+                
+                // 1. Prepare booking data from new format
+                $bookingData = $this->prepareBookingDataFromCollectFunction($data, $call);
                 
                 // 2. Find or create customer
                 $customer = $this->findOrCreateCustomer($bookingData['customer']);
                 
-                // 3. Validate service and staff
-                $service = $this->validateService($bookingData['service_id']);
-                $staff = $this->validateStaff($bookingData['staff_id'], $service);
-                $branch = $this->validateBranch($bookingData['branch_id'] ?? $staff->home_branch_id);
+                // 3. Validate service and staff (make them optional for now)
+                $service = null;
+                $staff = null;
+                $branch = null;
                 
-                // 4. Check availability
-                $timeSlot = $this->checkAndReserveTimeSlot(
-                    $staff,
-                    $bookingData['starts_at'],
-                    $bookingData['ends_at'] ?? $this->calculateEndTime($bookingData['starts_at'], $service)
-                );
+                if (!empty($bookingData['service_id'])) {
+                    $service = $this->validateService($bookingData['service_id']);
+                }
+                
+                if (!empty($bookingData['staff_id'])) {
+                    $staff = $this->validateStaff($bookingData['staff_id'], $service);
+                }
+                
+                // Get default branch if not specified
+                if ($call && $call->branch_id) {
+                    $branch = Branch::find($call->branch_id);
+                } elseif ($staff) {
+                    $branch = Branch::find($staff->home_branch_id);
+                } else {
+                    $branch = Branch::where('company_id', $call?->company_id ?? $customer->company_id)->first();
+                }
+                
+                // 4. Check availability (skip for now if no staff)
+                if ($staff) {
+                    $timeSlot = $this->checkAndReserveTimeSlot(
+                        $staff,
+                        $bookingData['starts_at'],
+                        $bookingData['ends_at'] ?? $this->calculateEndTime($bookingData['starts_at'], $service)
+                    );
+                } else {
+                    // Just use the provided times
+                    $timeSlot = [
+                        'start' => $bookingData['starts_at'],
+                        'end' => $bookingData['ends_at'] ?? Carbon::parse($bookingData['starts_at'])->addHour()
+                    ];
+                }
                 
                 // 5. Create appointment
                 $appointment = $this->createAppointment([
                     'customer_id' => $customer->id,
-                    'service_id' => $service->id,
-                    'staff_id' => $staff->id,
-                    'branch_id' => $branch->id,
-                    'company_id' => $staff->company_id,
+                    'service_id' => $service?->id,
+                    'staff_id' => $staff?->id,
+                    'branch_id' => $branch?->id,
+                    'company_id' => $call?->company_id ?? $customer->company_id,
                     'starts_at' => $timeSlot['start'],
                     'ends_at' => $timeSlot['end'],
-                    'status' => 'confirmed',
+                    'status' => 'scheduled',
                     'call_id' => $call?->id,
                     'source' => 'phone',
                     'notes' => $bookingData['notes'] ?? null,
                     'metadata' => [
                         'booked_via' => 'phone_ai',
-                        'call_duration' => $call?->duration,
+                        'call_duration' => $call?->duration_sec,
                         'customer_phone' => $customer->phone,
+                        'raw_booking_data' => $data
                     ]
                 ]);
                 
-                // 6. Sync with calendar system
-                $this->syncWithCalendar($appointment);
+                // 6. Sync with calendar system (if we have the necessary data)
+                if ($service && $staff) {
+                    $this->syncWithCalendar($appointment);
+                }
                 
                 // 7. Send confirmations
                 $this->sendConfirmations($appointment);
@@ -88,7 +142,11 @@ class AppointmentBookingService
                     'call_id' => $call?->id
                 ]);
                 
-                return $appointment;
+                return [
+                    'success' => true,
+                    'appointment' => $appointment,
+                    'message' => 'Termin erfolgreich gebucht'
+                ];
                 
             } catch (\Exception $e) {
                 Log::error('Failed to book appointment from phone call', [
@@ -97,24 +155,147 @@ class AppointmentBookingService
                     'call_id' => $call?->id
                 ]);
                 
-                // Check if it's a known exception type
-                if ($e instanceof BookingException || $e instanceof AvailabilityException) {
-                    throw $e;
-                }
-                
-                // Otherwise wrap in BookingException
-                throw new BookingException(
-                    'Terminbuchung fehlgeschlagen: ' . $e->getMessage(),
-                    BookingException::ERROR_GENERAL,
-                    [
-                        'original_error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ],
-                    $e->getCode(),
-                    $e
-                );
+                return [
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'error' => $e instanceof BookingException ? $e->getErrorCode() : 'general_error'
+                ];
             }
         });
+    }
+    
+    /**
+     * Prepare booking data from collect_appointment_data format
+     */
+    private function prepareBookingDataFromCollectFunction(array $data, ?Call $call = null): array
+    {
+        // Parse date and time
+        $dateStr = $data['datum'] ?? '';
+        $timeStr = $data['uhrzeit'] ?? '';
+        
+        // Try to parse German date format (e.g., "15.04.2025")
+        try {
+            if (strpos($dateStr, '.') !== false) {
+                $date = Carbon::createFromFormat('d.m.Y', $dateStr);
+            } else {
+                $date = Carbon::parse($dateStr);
+            }
+            
+            // Parse time (e.g., "14:30" or "14:30 Uhr")
+            $timeStr = str_replace(' Uhr', '', $timeStr);
+            list($hour, $minute) = explode(':', $timeStr . ':00');
+            $date->setTime((int)$hour, (int)$minute);
+            
+        } catch (\Exception $e) {
+            Log::warning('Failed to parse date/time', [
+                'datum' => $dateStr,
+                'uhrzeit' => $timeStr,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Fallback to tomorrow at 10:00
+            $date = Carbon::tomorrow()->setTime(10, 0);
+        }
+        
+        return [
+            'starts_at' => $date,
+            'ends_at' => null, // Will be calculated based on service
+            'customer' => [
+                'name' => $data['name'] ?? 'Unbekannt',
+                'phone' => $data['telefonnummer'] ?? $call?->from_number,
+                'email' => $data['email'] ?? 'info@askproai.de', // Standard-E-Mail wenn keine angegeben
+                'company_id' => $call?->company_id
+            ],
+            'service_name' => $data['dienstleistung'] ?? null,
+            'service_id' => $this->findServiceIdByName($data['dienstleistung'] ?? '', $call?->company_id),
+            'staff_name' => $data['mitarbeiter_wunsch'] ?? null,
+            'staff_id' => $this->findStaffIdByName($data['mitarbeiter_wunsch'] ?? '', $call?->company_id),
+            'branch_id' => $call?->branch_id,
+            'notes' => $this->generateNotesFromData($data),
+            'customer_preferences' => $data['kundenpraeferenzen'] ?? null
+        ];
+    }
+    
+    /**
+     * Find service ID by name
+     */
+    private function findServiceIdByName(string $serviceName, ?int $companyId = null): ?int
+    {
+        if (empty($serviceName)) {
+            return null;
+        }
+        
+        $query = Service::where('name', 'LIKE', '%' . $serviceName . '%');
+        
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        
+        $service = $query->first();
+        
+        return $service?->id;
+    }
+    
+    /**
+     * Generate notes from appointment data
+     */
+    private function generateNotesFromData(array $data): string
+    {
+        $notes = [];
+        
+        if (!empty($data['dienstleistung'])) {
+            $notes[] = "Gewünschte Dienstleistung: " . $data['dienstleistung'];
+        }
+        
+        if (!empty($data['email'])) {
+            $notes[] = "E-Mail: " . $data['email'];
+        }
+        
+        // Add any additional fields that might be useful
+        foreach ($data as $key => $value) {
+            if (!in_array($key, ['datum', 'uhrzeit', 'name', 'telefonnummer', 'email', 'dienstleistung']) && !empty($value)) {
+                $notes[] = ucfirst($key) . ": " . $value;
+            }
+        }
+        
+        return implode("\n", $notes);
+    }
+    
+    /**
+     * Find staff ID by name
+     */
+    private function findStaffIdByName(string $staffName, ?int $companyId = null): ?int
+    {
+        if (empty($staffName)) {
+            return null;
+        }
+        
+        $query = Staff::where(function($q) use ($staffName) {
+            $q->where('name', 'LIKE', '%' . $staffName . '%')
+              ->orWhere('first_name', 'LIKE', '%' . $staffName . '%')
+              ->orWhere('last_name', 'LIKE', '%' . $staffName . '%');
+        });
+        
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        
+        $staff = $query->first();
+        
+        if ($staff) {
+            Log::info('Found staff member by name', [
+                'search_name' => $staffName,
+                'found_staff' => $staff->name,
+                'staff_id' => $staff->id
+            ]);
+        } else {
+            Log::warning('No staff member found', [
+                'search_name' => $staffName,
+                'company_id' => $companyId
+            ]);
+        }
+        
+        return $staff?->id;
     }
     
     /**
@@ -349,4 +530,5 @@ class AppointmentBookingService
     {
         return Carbon::parse($startTime)->addMinutes($service->duration ?? 30);
     }
+    
 }

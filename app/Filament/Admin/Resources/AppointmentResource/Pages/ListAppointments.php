@@ -16,6 +16,63 @@ class ListAppointments extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('sync_calcom')
+                ->label('Termine abrufen')
+                ->icon('heroicon-o-arrow-path')
+                ->color('primary')
+                ->requiresConfirmation()
+                ->modalHeading('Termine von Cal.com abrufen')
+                ->modalDescription('Möchten Sie alle Termine von Cal.com synchronisieren? Dies kann einen Moment dauern.')
+                ->modalSubmitActionLabel('Ja, synchronisieren')
+                ->action(function () {
+                    $company = auth()->user()->company;
+                    
+                    if (!$company) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Fehler')
+                            ->body('Keine Company zugeordnet.')
+                            ->danger()
+                            ->send();
+                        return;
+                    }
+                    
+                    try {
+                        // Verwende Company-spezifische API Key
+                        $apiKey = $company->calcom_api_key;
+                        
+                        // Fallback auf globale Config
+                        if (empty($apiKey)) {
+                            $apiKey = config('services.calcom.api_key');
+                        }
+                        
+                        if (empty($apiKey)) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Konfigurationsfehler')
+                                ->body('Cal.com API Key ist weder für Ihre Firma noch global konfiguriert.')
+                                ->danger()
+                                ->persistent()
+                                ->send();
+                            return;
+                        }
+                        
+                        // Dispatch sync job
+                        \App\Jobs\SyncCalcomBookingsJob::dispatch($company, $apiKey);
+                        
+                        \Filament\Notifications\Notification::make()
+                            ->title('Synchronisation gestartet')
+                            ->body('Die Termine werden im Hintergrund synchronisiert. Sie werden benachrichtigt, sobald der Vorgang abgeschlossen ist.')
+                            ->success()
+                            ->send();
+                            
+                    } catch (\Exception $e) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Fehler beim Synchronisieren')
+                            ->body('Fehler: ' . $e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
+                }),
+                
             Actions\CreateAction::make()
                 ->label('Neuer Termin')
                 ->icon('heroicon-o-plus'),
@@ -62,58 +119,124 @@ class ListAppointments extends ListRecords
     
     public function getTabs(): array
     {
+        $model = \App\Models\Appointment::class;
+        
         return [
-            'all' => Tab::make('Alle')
-                ->icon('heroicon-o-squares-2x2')
-                ->badge(static::getResource()::getModel()::count()),
+            'all' => Tab::make('Alle Termine')
+                ->icon('heroicon-m-calendar-days')
+                ->badge($model::count())
+                ->badgeColor('gray')
+                ->extraAttributes([
+                    'title' => 'Zeigt alle Termine unabhängig vom Status oder Datum. Nutzen Sie diese Ansicht für eine vollständige Übersicht aller Buchungen.',
+                    'class' => 'tab-with-tooltip'
+                ]),
                 
             'today' => Tab::make('Heute')
-                ->icon('heroicon-o-calendar')
+                ->icon('heroicon-m-calendar')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereDate('starts_at', today()))
-                ->badge(static::getResource()::getModel()::whereDate('starts_at', today())->count())
-                ->badgeColor('primary'),
+                ->badge($model::whereDate('starts_at', today())->count())
+                ->badgeColor('primary')
+                ->extraAttributes([
+                    'title' => 'Zeigt nur die heutigen Termine. Ideal für die tägliche Planung und Vorbereitung.',
+                    'class' => 'tab-with-tooltip'
+                ]),
                 
-            'tomorrow' => Tab::make('Morgen')
-                ->icon('heroicon-o-calendar-days')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereDate('starts_at', today()->addDay()))
-                ->badge(static::getResource()::getModel()::whereDate('starts_at', today()->addDay())->count()),
-                
-            'this_week' => Tab::make('Diese Woche')
-                ->icon('heroicon-o-calendar-days')
+            'upcoming' => Tab::make('Kommend')
+                ->icon('heroicon-m-arrow-trending-up')
                 ->modifyQueryUsing(fn (Builder $query) => $query
-                    ->whereBetween('starts_at', [
-                        now()->startOfWeek(),
-                        now()->endOfWeek()
-                    ]))
-                ->badge(static::getResource()::getModel()::whereBetween('starts_at', [
-                    now()->startOfWeek(),
-                    now()->endOfWeek()
-                ])->count()),
+                    ->where('starts_at', '>', now())
+                    ->where('status', '!=', 'cancelled')
+                    ->orderBy('starts_at', 'asc'))
+                ->badge($model::where('starts_at', '>', now())
+                    ->where('status', '!=', 'cancelled')
+                    ->count())
+                ->badgeColor('info')
+                ->extraAttributes([
+                    'title' => 'Alle zukünftigen Termine (außer abgesagte). Sortiert nach Datum für optimale Übersicht.',
+                    'class' => 'tab-with-tooltip'
+                ]),
                 
-            'pending' => Tab::make('Ausstehend')
-                ->icon('heroicon-o-clock')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'pending'))
-                ->badge(static::getResource()::getModel()::where('status', 'pending')->count())
-                ->badgeColor('warning'),
+            'needs_confirmation' => Tab::make('Zu bestätigen')
+                ->icon('heroicon-m-exclamation-triangle')
+                ->modifyQueryUsing(fn (Builder $query) => $query
+                    ->where('status', 'pending')
+                    ->where('starts_at', '>', now())
+                    ->where('starts_at', '<', now()->addDays(7)))
+                ->badge($model::where('status', 'pending')
+                    ->where('starts_at', '>', now())
+                    ->where('starts_at', '<', now()->addDays(7))
+                    ->count())
+                ->badgeColor('warning')
+                ->extraAttributes([
+                    'title' => 'Termine der nächsten 7 Tage, die noch bestätigt werden müssen. Diese benötigen Ihre Aufmerksamkeit!',
+                    'class' => 'tab-with-tooltip'
+                ]),
                 
-            'confirmed' => Tab::make('Bestätigt')
-                ->icon('heroicon-o-check-circle')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'confirmed'))
-                ->badge(static::getResource()::getModel()::where('status', 'confirmed')->count())
-                ->badgeColor('info'),
+            'no_shows' => Tab::make('Nicht erschienen')
+                ->icon('heroicon-m-user-minus')
+                ->modifyQueryUsing(fn (Builder $query) => $query
+                    ->where('status', 'no_show')
+                    ->orWhere(function($q) {
+                        $q->where('status', 'confirmed')
+                          ->where('ends_at', '<', now()->subHours(2));
+                    }))
+                ->badge($model::where('status', 'no_show')->count())
+                ->badgeColor('danger')
+                ->extraAttributes([
+                    'title' => 'Kunden, die nicht zum Termin erschienen sind. Wichtig für Nachverfolgung und ggf. No-Show-Gebühren.',
+                    'class' => 'tab-with-tooltip'
+                ]),
                 
-            'cancelled' => Tab::make('Abgesagt')
-                ->icon('heroicon-o-x-circle')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'cancelled'))
-                ->badge(static::getResource()::getModel()::where('status', 'cancelled')->count())
-                ->badgeColor('danger'),
+            'completed' => Tab::make('Abgeschlossen')
+                ->icon('heroicon-m-check-circle')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'completed'))
+                ->badge($model::where('status', 'completed')->count())
+                ->badgeColor('success')
+                ->extraAttributes([
+                    'title' => 'Erfolgreich durchgeführte Termine. Zeigt Ihre abgeschlossenen Leistungen.',
+                    'class' => 'tab-with-tooltip'
+                ]),
+                
+            'synced' => Tab::make('Cal.com')
+                ->icon('heroicon-m-cloud-arrow-down')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where(function($q) {
+                    $q->whereNotNull('calcom_booking_id')
+                      ->orWhereNotNull('calcom_v2_booking_id');
+                }))
+                ->badge($model::where(function($q) {
+                    $q->whereNotNull('calcom_booking_id')
+                      ->orWhereNotNull('calcom_v2_booking_id');
+                })->count())
+                ->badgeColor('success')
+                ->extraAttributes([
+                    'title' => 'Termine, die mit Cal.com synchronisiert sind. Zeigt die Integration mit Ihrem Kalendersystem.',
+                    'class' => 'tab-with-tooltip'
+                ]),
+                
+            'manual' => Tab::make('Manuell')
+                ->icon('heroicon-m-pencil-square')
+                ->modifyQueryUsing(fn (Builder $query) => $query
+                    ->whereNull('calcom_booking_id')
+                    ->whereNull('calcom_v2_booking_id')
+                    ->whereNull('call_id'))
+                ->badge($model::whereNull('calcom_booking_id')
+                    ->whereNull('calcom_v2_booking_id')
+                    ->whereNull('call_id')
+                    ->count())
+                ->badgeColor('gray')
+                ->extraAttributes([
+                    'title' => 'Manuell erstellte Termine ohne Cal.com oder Anruf-Verbindung.',
+                    'class' => 'tab-with-tooltip'
+                ]),
         ];
     }
     
     protected function getHeaderWidgets(): array
     {
         return [
-            AppointmentResource\Widgets\AppointmentStats::class,
+            \App\Filament\Admin\Resources\AppointmentResource\Widgets\AppointmentStatsWidget::class,
+            \App\Filament\Admin\Resources\AppointmentResource\Widgets\AppointmentTrendsWidget::class,
+            \App\Filament\Admin\Resources\AppointmentResource\Widgets\StaffPerformanceWidget::class,
         ];
     }
     

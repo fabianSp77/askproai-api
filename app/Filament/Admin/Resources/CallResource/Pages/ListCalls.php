@@ -84,8 +84,17 @@ class ListCalls extends ListRecords
                             $params['agent_id'] = $company->retell_agent_id;
                         }
                         
+                        // Debug-Logging vor dem API-Call
+                        \Illuminate\Support\Facades\Log::info('Attempting Retell API call', [
+                            'baseUrl' => $baseUrl,
+                            'params' => $params,
+                            'api_key_present' => !empty($apiKey),
+                            'api_key_start' => substr($apiKey, 0, 10) . '...'
+                        ]);
+                        
                         // Methode 1: Mit withToken (wie in CallDataRefresher)
                         $response = \Illuminate\Support\Facades\Http::withToken($apiKey)
+                            ->timeout(30)
                             ->post($baseUrl . '/v2/list-calls', $params);
                         
                         if (!$response->successful()) {
@@ -283,10 +292,10 @@ class ListCalls extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Resources\CallResource\Widgets\CallPerformanceWidget::class,
-            \App\Filament\Admin\Resources\CallResource\Widgets\CallQualityWidget::class,
-            \App\Filament\Admin\Resources\CallResource\Widgets\CallTrendsWidget::class,
-            \App\Filament\Admin\Resources\CallResource\Widgets\CallStatsWidget::class,
+            // \App\Filament\Admin\Resources\CallResource\Widgets\CallPerformanceWidget::class,
+            // \App\Filament\Admin\Resources\CallResource\Widgets\CallQualityWidget::class,
+            // \App\Filament\Admin\Resources\CallResource\Widgets\CallTrendsWidget::class,
+            // \App\Filament\Admin\Resources\CallResource\Widgets\CallStatsWidget::class,
         ];
     }
     

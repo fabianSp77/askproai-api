@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "properties": {
+    "datum": {
+      "type": "string",
+      "description": "Das gewünschte Datum für den Termin"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name des Kunden"
+    },
+    "telefonnummer": {
+      "type": "string",
+      "description": "Telefonnummer des Kunden"
+    },
+    "dienstleistung": {
+      "type": "string",
+      "description": "Gewünschte Dienstleistung"
+    },
+    "uhrzeit": {
+      "type": "string",
+      "description": "Gewünschte Uhrzeit"
+    },
+    "email": {
+      "type": "string",
+      "description": "E-Mail-Adresse des Kunden"
+    },
+    "kundenpraeferenzen": {
+      "type": "string",
+      "description": "Zeitliche Präferenzen des Kunden (z.B. 'nur vormittags', 'donnerstags von 16 bis 19 Uhr')"
+    },
+    "mitarbeiter_wunsch": {
+      "type": "string",
+      "description": "Name des gewünschten Mitarbeiters falls genannt"
+    },
+    "verfuegbarkeit_pruefen": {
+      "type": "boolean",
+      "description": "Ob die Verfügbarkeit geprüft werden soll bevor gebucht wird"
+    },
+    "alternative_termine_gewuenscht": {
+      "type": "boolean", 
+      "description": "Ob alternative Termine vorgeschlagen werden sollen wenn der Wunschtermin nicht verfügbar ist"
+    }
+  },
+  "required": ["datum", "name", "telefonnummer", "uhrzeit"]
+}

@@ -223,6 +223,32 @@ class AppointmentResource extends Resource
                         ->relationship('service', 'name')
                         ->searchable()
                         ->preload(),
+                        
+                    Tables\Filters\TernaryFilter::make('calcom_sync')
+                        ->label('Cal.com Sync')
+                        ->placeholder('Alle')
+                        ->trueLabel('Mit Cal.com')
+                        ->falseLabel('Ohne Cal.com')
+                        ->queries(
+                            true: fn (Builder $query) => $query->where(function($q) {
+                                $q->whereNotNull('calcom_booking_id')
+                                  ->orWhereNotNull('calcom_v2_booking_id');
+                            }),
+                            false: fn (Builder $query) => $query->where(function($q) {
+                                $q->whereNull('calcom_booking_id')
+                                  ->whereNull('calcom_v2_booking_id');
+                            }),
+                        ),
+                        
+                    Tables\Filters\TernaryFilter::make('has_call')
+                        ->label('Mit Anruf')
+                        ->placeholder('Alle')
+                        ->trueLabel('Aus Anruf')
+                        ->falseLabel('Ohne Anruf')
+                        ->queries(
+                            true: fn (Builder $query) => $query->whereNotNull('call_id'),
+                            false: fn (Builder $query) => $query->whereNull('call_id'),
+                        ),
                     
                     Tables\Filters\Filter::make('date_range')
                     ->form([

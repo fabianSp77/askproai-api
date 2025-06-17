@@ -5,6 +5,8 @@ namespace App\Jobs;
 use App\Models\Call;
 use App\Models\RetellWebhook;
 use App\Services\PhoneNumberResolver;
+use App\Services\CurrencyConverter;
+use App\Services\AppointmentBookingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -48,6 +50,9 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             if (!empty($this->data['call']['transcript_object'])) {
                 $this->processTranscript($call);
             }
+            
+            // Process appointment booking if appointment data is present
+            $this->processAppointmentBooking($call);
             
             // Update call status
             $call->update(['call_status' => 'analyzed']);
@@ -151,8 +156,13 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             
             // Additional Retell fields
             'agent_version' => $callData['agent_version'] ?? null,
-            'retell_cost' => isset($callData['call_cost']['total_cost']) 
-                ? $callData['call_cost']['total_cost'] 
+            'cost' => isset($callData['call_cost']) 
+                ? CurrencyConverter::convertRetellCostToEuros($callData['call_cost'])
+                : null,
+            'retell_cost' => isset($callData['call_cost']) 
+                ? (is_array($callData['call_cost']) 
+                    ? ($callData['call_cost']['combined_cost'] ?? $callData['call_cost']['total_cost'] ?? null) / 100
+                    : $callData['call_cost'] / 100)
                 : null,
             'custom_sip_headers' => $callData['custom_sip_headers'] ?? null,
         ];
@@ -184,9 +194,9 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             $analysis['latency'] = $callData['latency'];
         }
         
-        // Cost breakdown
+        // Cost breakdown (convert cents to euros)
         if (isset($callData['call_cost'])) {
-            $analysis['cost_breakdown'] = $callData['call_cost'];
+            $analysis['cost_breakdown'] = CurrencyConverter::formatCostBreakdown($callData['call_cost']);
         }
         
         // LLM usage
@@ -271,5 +281,95 @@ class ProcessRetellCallEndedJob implements ShouldQueue
         ];
         
         $call->update(['analysis' => $analysis]);
+    }
+    
+    protected function processAppointmentBooking(Call $call): void
+    {
+        try {
+            $callData = $this->data['call'] ?? $this->data;
+            
+            // Check if appointment data exists from collect_appointment_data function
+            $appointmentFields = ['datum', 'name', 'telefonnummer', 'dienstleistung', 'uhrzeit', 'email', 'kundenpraeferenzen', 'mitarbeiter_wunsch', 'verfuegbarkeit_pruefen', 'alternative_termine_gewuenscht'];
+            $hasAppointmentData = false;
+            $appointmentData = [];
+            
+            // First check in retell_llm_dynamic_variables
+            if (isset($callData['retell_llm_dynamic_variables'])) {
+                foreach ($appointmentFields as $field) {
+                    if (isset($callData['retell_llm_dynamic_variables'][$field])) {
+                        $appointmentData[$field] = $callData['retell_llm_dynamic_variables'][$field];
+                        $hasAppointmentData = true;
+                    }
+                }
+            }
+            
+            // Also check in custom fields (with _ prefix)
+            foreach ($callData as $key => $value) {
+                if (strpos($key, '_') === 0) {
+                    $fieldName = substr($key, 1); // Remove _ prefix
+                    if (in_array($fieldName, $appointmentFields) && !empty($value)) {
+                        $appointmentData[$fieldName] = $value;
+                        $hasAppointmentData = true;
+                    }
+                }
+            }
+            
+            // Also check in details if already stored
+            if ($call->details) {
+                foreach ($appointmentFields as $field) {
+                    $prefixedField = '_' . $field;
+                    if (isset($call->details[$prefixedField]) && !isset($appointmentData[$field])) {
+                        $appointmentData[$field] = $call->details[$prefixedField];
+                        $hasAppointmentData = true;
+                    }
+                }
+            }
+            
+            if (!$hasAppointmentData || empty($appointmentData['datum']) || empty($appointmentData['uhrzeit'])) {
+                Log::info('No appointment data found or incomplete data in call', [
+                    'call_id' => $call->id,
+                    'found_data' => $appointmentData
+                ]);
+                return;
+            }
+            
+            Log::info('Processing appointment booking from call', [
+                'call_id' => $call->id,
+                'appointment_data' => $appointmentData
+            ]);
+            
+            // Use AppointmentBookingService to create the appointment
+            $bookingService = new AppointmentBookingService();
+            $result = $bookingService->bookFromPhoneCall($call, $appointmentData);
+            
+            if ($result['success']) {
+                Log::info('Appointment successfully booked from call', [
+                    'call_id' => $call->id,
+                    'appointment_id' => $result['appointment']->id ?? null
+                ]);
+                
+                // Update call with appointment reference
+                $call->update([
+                    'appointment_id' => $result['appointment']->id,
+                    'metadata' => array_merge($call->metadata ?? [], [
+                        'appointment_booked' => true,
+                        'appointment_booking_result' => $result
+                    ])
+                ]);
+            } else {
+                Log::warning('Failed to book appointment from call', [
+                    'call_id' => $call->id,
+                    'error' => $result['message'] ?? 'Unknown error',
+                    'appointment_data' => $appointmentData
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Error processing appointment booking', [
+                'call_id' => $call->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 }

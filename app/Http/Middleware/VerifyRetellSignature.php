@@ -50,9 +50,41 @@ class VerifyRetellSignature
             $currentTime = time();
             $webhookTime = (int) $timestamp;
             
-            // Only validate if timestamp looks like Unix timestamp (not too large)
-            if ($webhookTime > 1000000000 && abs($currentTime - $webhookTime) > 300) {
+            Log::info('Retell webhook timestamp validation', [
+                'raw_timestamp' => $timestamp,
+                'webhook_time' => $webhookTime,
+                'current_time' => $currentTime,
+                'timestamp_length' => strlen((string)$timestamp),
+            ]);
+            
+            // Check if timestamp is in milliseconds (13 digits) vs seconds (10 digits)
+            if (strlen((string)$timestamp) >= 13) {
+                // Convert milliseconds to seconds
+                $webhookTime = (int)($timestamp / 1000);
+                Log::info('Retell webhook timestamp converted from milliseconds', [
+                    'original' => $timestamp,
+                    'converted' => $webhookTime
+                ]);
+            } elseif (strlen((string)$timestamp) >= 16) {
+                // Might be microseconds or nanoseconds
+                $webhookTime = (int)($timestamp / 1000000);
+                Log::info('Retell webhook timestamp converted from microseconds', [
+                    'original' => $timestamp,
+                    'converted' => $webhookTime
+                ]);
+            }
+            
+            // Skip timestamp validation if it seems completely wrong (< year 2020)
+            if ($webhookTime < 1577836800) { // Jan 1, 2020
+                Log::warning('Retell webhook timestamp seems invalid, skipping validation', [
+                    'webhook_time' => $webhookTime,
+                    'raw_timestamp' => $timestamp
+                ]);
+            } else if (abs($currentTime - $webhookTime) > 300) {
+                // Only validate if timestamp looks reasonable
                 Log::error('Retell webhook timestamp expired', [
+                    'current_time' => $currentTime,
+                    'webhook_time' => $webhookTime,
                     'difference_seconds' => abs($currentTime - $webhookTime),
                 ]);
                 
