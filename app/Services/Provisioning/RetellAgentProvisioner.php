@@ -397,8 +397,7 @@ EOT;
             }
         }
         
-        return config('services.retell.api_key')
-            ?? env('DEFAULT_RETELL_API_KEY');
+        return config('services.retell.api_key');
     }
     
     /**

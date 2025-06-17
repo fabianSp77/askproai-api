@@ -20,7 +20,7 @@ class CalcomV2Service
 
     public function __construct($apiKey = null)
     {
-        $this->apiKey = $apiKey ?? config('services.calcom.api_key') ?? env('DEFAULT_CALCOM_API_KEY');
+        $this->apiKey = $apiKey ?? config('services.calcom.api_key');
         $this->circuitBreaker = new CircuitBreaker();
         $this->logger = new ProductionLogger();
     }

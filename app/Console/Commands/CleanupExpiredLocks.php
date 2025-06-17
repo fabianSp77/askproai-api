@@ -3,8 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\AppointmentBookingService;
-use Illuminate\Support\Facades\Log;
+use App\Services\Locking\TimeSlotLockManager;
 
 class CleanupExpiredLocks extends Command
 {
@@ -13,45 +12,54 @@ class CleanupExpiredLocks extends Command
      *
      * @var string
      */
-    protected $signature = 'appointments:cleanup-locks';
+    protected $signature = 'locks:cleanup';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Clean up expired appointment locks to prevent deadlocks';
+    protected $description = 'Clean up expired appointment time slot locks';
 
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(TimeSlotLockManager $lockManager): int
     {
-        $bookingService = new AppointmentBookingService();
-        
         $this->info('Cleaning up expired appointment locks...');
         
-        try {
-            $deletedCount = $bookingService->cleanupExpiredLocks();
-            
-            $this->info("Successfully deleted {$deletedCount} expired locks.");
-            
-            Log::info('Cleaned up expired appointment locks', [
-                'deleted_count' => $deletedCount,
-                'timestamp' => now()
-            ]);
-            
-            return Command::SUCCESS;
-            
-        } catch (\Exception $e) {
-            $this->error('Failed to clean up locks: ' . $e->getMessage());
-            
-            Log::error('Failed to clean up appointment locks', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return Command::FAILURE;
+        $cleanedCount = $lockManager->cleanupExpiredLocks();
+        
+        if ($cleanedCount > 0) {
+            $this->info("Successfully cleaned up {$cleanedCount} expired locks.");
+        } else {
+            $this->info('No expired locks found.');
         }
+        
+        // Also show current lock statistics
+        $stats = $lockManager->getLockStatistics();
+        
+        $this->newLine();
+        $this->info('Current Lock Statistics:');
+        $this->table(
+            ['Metric', 'Value'],
+            [
+                ['Total Active Locks', $stats['total_active_locks']],
+                ['Total Expired Locks', $stats['total_expired_locks']],
+                ['Average Lock Duration (minutes)', $stats['average_lock_duration'] ?? 'N/A'],
+            ]
+        );
+        
+        if (!empty($stats['locks_by_branch'])) {
+            $this->newLine();
+            $this->info('Active Locks by Branch:');
+            $branchData = [];
+            foreach ($stats['locks_by_branch'] as $branchId => $count) {
+                $branchData[] = ["Branch ID: {$branchId}", $count];
+            }
+            $this->table(['Branch', 'Active Locks'], $branchData);
+        }
+        
+        return Command::SUCCESS;
     }
 }

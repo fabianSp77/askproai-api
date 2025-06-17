@@ -39,13 +39,11 @@ Route::get('/metrics-test', function() {
 // 1) Ping-Route (GET)  ➜ ohne Signaturprüfung
 Route::get('calcom/webhook', [CalcomWebhookController::class, 'ping']);
 
-// 2) Produktiver Webhook (POST) ➜ mit Signaturprüfung
-Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle'])
-     ->middleware('calcom.signature');
+// 2) Produktiver Webhook (POST) ➜ Signature verification now handled by WebhookProcessor
+Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle']);
 
-// ---- Retell Webhook (POST) --------------------------------------
-Route::post('/retell/webhook', [RetellWebhookController::class, 'processWebhook'])
-    ->middleware('verify.retell.signature');
+// ---- Retell Webhook (POST) ➜ Signature verification now handled by WebhookProcessor
+Route::post('/retell/webhook', [RetellWebhookController::class, 'processWebhook']);
 
 // ---- Retell Function Call Handler (for real-time during calls) ----
 Route::post('/retell/function-call', [App\Http\Controllers\RetellRealtimeController::class, 'handleFunctionCall'])
@@ -55,12 +53,20 @@ Route::post('/retell/function-call', [App\Http\Controllers\RetellRealtimeControl
 Route::post('/stripe/webhook', [App\Http\Controllers\Api\StripeWebhookController::class, 'handle'])
     ->name('stripe.webhook');
 
+// ---- Billing Webhook (Stripe) - NO AUTH REQUIRED ----
+Route::post('/billing/webhook', [App\Http\Controllers\BillingController::class, 'webhook'])
+    ->name('billing.webhook');
+
 // ---- UNIFIED WEBHOOK HANDLER (NEW) ------------------------------
 // Automatically detects and routes webhooks from any source
 Route::post('/webhook', [UnifiedWebhookController::class, 'handle'])
     ->name('webhook.unified');
 Route::get('/webhook/health', [UnifiedWebhookController::class, 'health'])
     ->name('webhook.health');
+
+// ---- Cal.com V2 Health Check ------------------------------------
+Route::get('/health/calcom', [App\Http\Controllers\Api\CalcomHealthController::class, '__invoke'])
+    ->name('health.calcom');
 
 // ---- Frontend Error Logging -------------------------------------
 Route::post('/log-frontend-error', [\App\Http\Controllers\FrontendErrorController::class, 'log'])
@@ -167,8 +173,32 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/session/refresh', [App\Http\Controllers\SessionHealthController::class, 'refresh']);
 });
 
-// Event Management API Routes
-Route::prefix('event-management')->group(function () {
+// ---- Protected API Routes (require authentication) ----
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Customer API
+    Route::apiResource('customers', App\Http\Controllers\API\CustomerController::class);
+    
+    // Appointment API
+    Route::apiResource('appointments', App\Http\Controllers\API\AppointmentController::class);
+    
+    // Staff API
+    Route::apiResource('staff', App\Http\Controllers\API\StaffController::class);
+    
+    // Service API
+    Route::apiResource('services', App\Http\Controllers\API\ServiceController::class);
+    
+    // Business API
+    Route::apiResource('businesses', App\Http\Controllers\API\BusinessController::class);
+    
+    // Call API
+    Route::apiResource('calls', App\Http\Controllers\API\CallController::class);
+    
+    // Billing routes
+    Route::get('/billing/checkout', [App\Http\Controllers\BillingController::class, 'checkout']);
+});
+
+// Event Management API Routes (also protected)
+Route::prefix('event-management')->middleware(['auth:sanctum'])->group(function () {
     // Event-Type Sync
     Route::get('/sync/event-types/{company}', [App\Http\Controllers\API\EventManagementController::class, 'syncEventTypes']);
     Route::get('/sync/team/{company}', [App\Http\Controllers\API\EventManagementController::class, 'syncTeamMembers']);
@@ -185,7 +215,7 @@ Route::prefix('event-management')->group(function () {
 });
 
 // Validation API Routes
-Route::middleware(['auth:api'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/validation/last-test/{entityId}', function ($entityId) {
         $result = \App\Models\ValidationResult::getLatestForEntity('branch', $entityId);
         return response()->json($result);
@@ -233,7 +263,7 @@ Route::prefix('mobile')->group(function () {
     });
     
     // Protected routes
-    Route::middleware(['auth:api'])->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
         // Event Types
         Route::get('/event-types', [App\Http\Controllers\API\MobileAppController::class, 'getEventTypes']);
         

@@ -67,6 +67,12 @@ class Kernel extends ConsoleKernel
         $schedule->command('alerts:cleanup')
             ->daily()
             ->at('03:00');
+            
+        // Clean up expired appointment locks every 5 minutes
+        $schedule->command('locks:cleanup')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**

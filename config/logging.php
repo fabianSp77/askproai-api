@@ -111,6 +111,22 @@ return [
             'permission' => 0664,
         ],
 
+        'booking_flow' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/booking_flow.log'),
+            'level' => 'info',
+            'days' => 30,
+            'permission' => 0664,
+        ],
+
+        'api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/api_calls.log'),
+            'level' => 'info',
+            'days' => 14,
+            'permission' => 0664,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

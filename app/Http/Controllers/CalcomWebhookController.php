@@ -2,12 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\WebhookProcessor;
+use App\Models\WebhookEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Jobs\ProcessCalcomWebhookJob;
 
 class CalcomWebhookController extends Controller
 {
+    protected WebhookProcessor $webhookProcessor;
+    
+    public function __construct(WebhookProcessor $webhookProcessor)
+    {
+        $this->webhookProcessor = $webhookProcessor;
+    }
+    
     /**
      * Handle ping request from Cal.com
      */
@@ -31,40 +39,69 @@ class CalcomWebhookController extends Controller
     }
     
     /**
-     * Handle incoming webhook from Cal.com
+     * Handle incoming webhook from Cal.com using WebhookProcessor
      */
     public function handle(Request $request)
     {
-        // Log incoming webhook
-        Log::info('Cal.com webhook received', [
-            'headers' => $request->headers->all(),
-            'payload' => $request->all()
-        ]);
+        $correlationId = $request->input('correlation_id') ?? app('correlation_id');
+        $payload = $request->all();
+        $headers = $request->headers->all();
         
         try {
-            $payload = $request->all();
-            
-            // Cal.com sendet verschiedene Event-Typen
+            // Validate required fields
             $triggerEvent = $payload['triggerEvent'] ?? null;
             
             if (!$triggerEvent) {
-                Log::warning('Cal.com webhook missing triggerEvent', $payload);
+                Log::warning('Cal.com webhook missing triggerEvent', [
+                    'payload' => $payload,
+                    'correlation_id' => $correlationId
+                ]);
                 return response()->json(['error' => 'Missing triggerEvent'], 400);
             }
             
-            // Dispatch job for async processing
-            ProcessCalcomWebhookJob::dispatch($triggerEvent, $payload);
+            // Process webhook through the WebhookProcessor service
+            $result = $this->webhookProcessor->process(
+                WebhookEvent::PROVIDER_CALCOM,
+                $payload,
+                $headers,
+                $correlationId
+            );
             
-            // Cal.com erwartet eine schnelle Response
-            return response()->json(['status' => 'accepted'], 200);
+            // Return appropriate response
+            if ($result['duplicate']) {
+                return response()->json([
+                    'status' => 'duplicate',
+                    'message' => 'Webhook already processed'
+                ], 200);
+            }
+            
+            return response()->json([
+                'status' => 'accepted',
+                'correlation_id' => $correlationId
+            ], 200);
+            
+        } catch (\App\Exceptions\WebhookSignatureException $e) {
+            Log::error('Cal.com webhook signature verification failed', [
+                'error' => $e->getMessage(),
+                'correlation_id' => $correlationId
+            ]);
+            
+            return response()->json([
+                'error' => 'Invalid signature',
+                'message' => $e->getMessage()
+            ], 401);
             
         } catch (\Exception $e) {
             Log::error('Cal.com webhook error', [
                 'error' => $e->getMessage(),
+                'correlation_id' => $correlationId,
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return response()->json(['error' => 'Internal server error'], 500);
+            return response()->json([
+                'error' => 'Internal server error',
+                'message' => app()->environment('local') ? $e->getMessage() : null
+            ], 500);
         }
     }
 }

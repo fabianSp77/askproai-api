@@ -9,6 +9,11 @@ use Illuminate\Http\JsonResponse;
 
 class ServiceController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+    }
+
     /**
      * Alle Dienstleistungen anzeigen.
      */

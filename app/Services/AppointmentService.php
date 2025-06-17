@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Appointment;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\CustomerRepository;
+use App\Traits\TransactionalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +17,7 @@ use App\Events\AppointmentRescheduled;
 
 class AppointmentService
 {
+    use TransactionalService;
     protected AppointmentRepository $appointmentRepository;
     protected CustomerRepository $customerRepository;
     protected CalcomService $calcomService;
@@ -35,69 +37,96 @@ class AppointmentService
      */
     public function create(array $data): Appointment
     {
-        return DB::transaction(function () use ($data) {
-            // Find or create customer
-            $customer = $this->customerRepository->findOrCreate([
-                'name' => $data['customer_name'],
-                'email' => $data['customer_email'] ?? null,
-                'phone' => $data['customer_phone'],
-                'company_id' => $data['company_id'] ?? auth()->user()->company_id,
-            ]);
+        $startTime = microtime(true);
+        $context = [
+            'customer_phone' => $data['customer_phone'] ?? 'unknown',
+            'staff_id' => $data['staff_id'] ?? null,
+            'operation' => 'create_appointment'
+        ];
+        
+        try {
+            return $this->executeInTransaction(function () use ($data) {
+                // Find or create customer
+                $customer = $this->customerRepository->findOrCreate([
+                    'name' => $data['customer_name'],
+                    'email' => $data['customer_email'] ?? null,
+                    'phone' => $data['customer_phone'],
+                    'company_id' => $data['company_id'] ?? auth()->user()->company_id,
+                ]);
 
-            // Check availability
-            if (!$this->checkAvailability($data['staff_id'], $data['starts_at'], $data['ends_at'])) {
-                throw new \Exception('Time slot is not available');
-            }
-
-            // Create appointment
-            $appointment = $this->appointmentRepository->create([
-                'customer_id' => $customer->id,
-                'staff_id' => $data['staff_id'],
-                'service_id' => $data['service_id'] ?? null,
-                'branch_id' => $data['branch_id'],
-                'company_id' => $data['company_id'] ?? auth()->user()->company_id,
-                'starts_at' => $data['starts_at'],
-                'ends_at' => $data['ends_at'],
-                'status' => 'scheduled',
-                'price' => $data['price'] ?? 0,
-                'notes' => $data['notes'] ?? null,
-                'source' => $data['source'] ?? 'manual',
-            ]);
-
-            // Create Cal.com booking if event type is provided
-            if (!empty($data['calcom_event_type_id'])) {
-                try {
-                    $calcomBooking = $this->calcomService->createBooking([
-                        'eventTypeId' => $data['calcom_event_type_id'],
-                        'start' => $data['starts_at'],
-                        'responses' => [
-                            'name' => $customer->name,
-                            'email' => $customer->email ?? 'noreply@askproai.de',
-                            'phone' => $customer->phone,
-                        ],
-                        'metadata' => [
-                            'appointment_id' => $appointment->id,
-                        ],
-                    ]);
-
-                    // Update appointment with Cal.com booking ID
-                    $appointment->update([
-                        'calcom_booking_id' => $calcomBooking['id'] ?? null,
-                        'calcom_event_type_id' => $data['calcom_event_type_id'],
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('Failed to create Cal.com booking', [
-                        'appointment_id' => $appointment->id,
-                        'error' => $e->getMessage(),
-                    ]);
+                // Check availability
+                if (!$this->checkAvailability($data['staff_id'], $data['starts_at'], $data['ends_at'])) {
+                    throw new \Exception('Time slot is not available');
                 }
-            }
 
-            // Fire event
-            event(new AppointmentCreated($appointment));
+                // Create appointment
+                $appointment = $this->appointmentRepository->create([
+                    'customer_id' => $customer->id,
+                    'staff_id' => $data['staff_id'],
+                    'service_id' => $data['service_id'] ?? null,
+                    'branch_id' => $data['branch_id'],
+                    'company_id' => $data['company_id'] ?? auth()->user()->company_id,
+                    'starts_at' => $data['starts_at'],
+                    'ends_at' => $data['ends_at'],
+                    'status' => 'scheduled',
+                    'price' => $data['price'] ?? 0,
+                    'notes' => $data['notes'] ?? null,
+                    'source' => $data['source'] ?? 'manual',
+                ]);
 
-            return $appointment->fresh(['customer', 'staff', 'service', 'branch']);
-        });
+                // Create Cal.com booking if event type is provided
+                if (!empty($data['calcom_event_type_id'])) {
+                    try {
+                        $calcomBooking = $this->calcomService->createBooking([
+                            'eventTypeId' => $data['calcom_event_type_id'],
+                            'start' => $data['starts_at'],
+                            'responses' => [
+                                'name' => $customer->name,
+                                'email' => $customer->email ?? 'noreply@askproai.de',
+                                'phone' => $customer->phone,
+                            ],
+                            'metadata' => [
+                                'appointment_id' => $appointment->id,
+                            ],
+                        ]);
+
+                        // Update appointment with Cal.com booking ID
+                        $appointment->update([
+                            'calcom_booking_id' => $calcomBooking['id'] ?? null,
+                            'calcom_event_type_id' => $data['calcom_event_type_id'],
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to create Cal.com booking', [
+                            'appointment_id' => $appointment->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        // Don't fail the appointment creation if Cal.com sync fails
+                    }
+                }
+
+                // Fire event
+                event(new AppointmentCreated($appointment));
+                
+                $this->logTransactionMetrics('create', $startTime, true, [
+                    'appointment_id' => $appointment->id,
+                    'customer_id' => $customer->id,
+                ]);
+
+                return $appointment->fresh(['customer', 'staff', 'service', 'branch']);
+            }, $context, 2);
+            
+        } catch (\Throwable $e) {
+            $this->logTransactionMetrics('create', $startTime, false, [
+                'error' => $e->getMessage()
+            ]);
+            
+            Log::error('Failed to create appointment', array_merge($context, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]));
+            
+            throw $e;
+        }
     }
 
     /**
@@ -105,49 +134,75 @@ class AppointmentService
      */
     public function update(int $appointmentId, array $data): Appointment
     {
-        return DB::transaction(function () use ($appointmentId, $data) {
-            $appointment = $this->appointmentRepository->findOrFail($appointmentId);
-            
-            // Check if rescheduling
-            $isRescheduling = isset($data['starts_at']) && 
-                              $data['starts_at'] != $appointment->starts_at;
+        $startTime = microtime(true);
+        $context = [
+            'appointment_id' => $appointmentId,
+            'operation' => 'update_appointment'
+        ];
+        
+        try {
+            return $this->executeInTransaction(function () use ($appointmentId, $data) {
+                $appointment = $this->appointmentRepository->findOrFail($appointmentId);
+                
+                // Check if rescheduling
+                $isRescheduling = isset($data['starts_at']) && 
+                                  $data['starts_at'] != $appointment->starts_at;
 
-            if ($isRescheduling) {
-                // Check new availability
-                if (!$this->checkAvailability(
-                    $data['staff_id'] ?? $appointment->staff_id,
-                    $data['starts_at'],
-                    $data['ends_at'],
-                    $appointmentId
-                )) {
-                    throw new \Exception('New time slot is not available');
-                }
+                if ($isRescheduling) {
+                    // Check new availability
+                    if (!$this->checkAvailability(
+                        $data['staff_id'] ?? $appointment->staff_id,
+                        $data['starts_at'],
+                        $data['ends_at'],
+                        $appointmentId
+                    )) {
+                        throw new \Exception('New time slot is not available');
+                    }
 
-                // Update Cal.com booking if exists
-                if ($appointment->calcom_booking_id) {
-                    try {
-                        $this->calcomService->rescheduleBooking(
-                            $appointment->calcom_booking_id,
-                            $data['starts_at']
-                        );
-                    } catch (\Exception $e) {
-                        Log::error('Failed to reschedule Cal.com booking', [
-                            'appointment_id' => $appointmentId,
-                            'error' => $e->getMessage(),
-                        ]);
+                    // Update Cal.com booking if exists
+                    if ($appointment->calcom_booking_id) {
+                        try {
+                            $this->calcomService->rescheduleBooking(
+                                $appointment->calcom_booking_id,
+                                $data['starts_at']
+                            );
+                        } catch (\Exception $e) {
+                            Log::error('Failed to reschedule Cal.com booking', [
+                                'appointment_id' => $appointmentId,
+                                'error' => $e->getMessage(),
+                            ]);
+                            // Don't fail the update if Cal.com sync fails
+                        }
                     }
                 }
-            }
 
-            // Update appointment
-            $this->appointmentRepository->update($appointmentId, $data);
+                // Update appointment
+                $this->appointmentRepository->update($appointmentId, $data);
+                
+                if ($isRescheduling) {
+                    event(new AppointmentRescheduled($appointment->fresh()));
+                }
+                
+                $this->logTransactionMetrics('update', $startTime, true, [
+                    'appointment_id' => $appointmentId,
+                    'is_rescheduling' => $isRescheduling,
+                ]);
+
+                return $appointment->fresh();
+            }, $context, 2);
             
-            if ($isRescheduling) {
-                event(new AppointmentRescheduled($appointment->fresh()));
-            }
-
-            return $appointment->fresh();
-        });
+        } catch (\Throwable $e) {
+            $this->logTransactionMetrics('update', $startTime, false, [
+                'error' => $e->getMessage()
+            ]);
+            
+            Log::error('Failed to update appointment', array_merge($context, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]));
+            
+            throw $e;
+        }
     }
 
     /**
@@ -155,35 +210,68 @@ class AppointmentService
      */
     public function cancel(int $appointmentId, string $reason = null): bool
     {
-        return DB::transaction(function () use ($appointmentId, $reason) {
-            $appointment = $this->appointmentRepository->findOrFail($appointmentId);
-            
-            // Cancel Cal.com booking if exists
-            if ($appointment->calcom_booking_id) {
-                try {
-                    $this->calcomService->cancelBooking(
-                        $appointment->calcom_booking_id,
-                        $reason
-                    );
-                } catch (\Exception $e) {
-                    Log::error('Failed to cancel Cal.com booking', [
-                        'appointment_id' => $appointmentId,
-                        'error' => $e->getMessage(),
+        $startTime = microtime(true);
+        $context = [
+            'appointment_id' => $appointmentId,
+            'operation' => 'cancel_appointment'
+        ];
+        
+        try {
+            return $this->executeInTransaction(function () use ($appointmentId, $reason) {
+                $appointment = $this->appointmentRepository->findOrFail($appointmentId);
+                
+                // Check if already cancelled
+                if ($appointment->status === 'cancelled') {
+                    Log::warning('Appointment already cancelled', [
+                        'appointment_id' => $appointmentId
                     ]);
+                    return true;
                 }
-            }
+                
+                // Cancel Cal.com booking if exists
+                if ($appointment->calcom_booking_id) {
+                    try {
+                        $this->calcomService->cancelBooking(
+                            $appointment->calcom_booking_id,
+                            $reason
+                        );
+                    } catch (\Exception $e) {
+                        Log::error('Failed to cancel Cal.com booking', [
+                            'appointment_id' => $appointmentId,
+                            'error' => $e->getMessage(),
+                        ]);
+                        // Don't fail the cancellation if Cal.com sync fails
+                    }
+                }
 
-            // Update status
-            $this->appointmentRepository->update($appointmentId, [
-                'status' => 'cancelled',
-                'cancelled_at' => now(),
-                'cancellation_reason' => $reason,
+                // Update status
+                $this->appointmentRepository->update($appointmentId, [
+                    'status' => 'cancelled',
+                    'cancelled_at' => now(),
+                    'cancellation_reason' => $reason,
+                ]);
+
+                event(new AppointmentCancelled($appointment->fresh()));
+                
+                $this->logTransactionMetrics('cancel', $startTime, true, [
+                    'appointment_id' => $appointmentId,
+                ]);
+
+                return true;
+            }, $context, 2);
+            
+        } catch (\Throwable $e) {
+            $this->logTransactionMetrics('cancel', $startTime, false, [
+                'error' => $e->getMessage()
             ]);
-
-            event(new AppointmentCancelled($appointment->fresh()));
-
-            return true;
-        });
+            
+            Log::error('Failed to cancel appointment', array_merge($context, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]));
+            
+            throw $e;
+        }
     }
 
     /**

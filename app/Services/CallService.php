@@ -6,6 +6,7 @@ use App\Models\Call;
 use App\Repositories\CallRepository;
 use App\Repositories\CustomerRepository;
 use App\Repositories\AppointmentRepository;
+use App\Traits\TransactionalService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Events\CallCompleted;
@@ -13,6 +14,7 @@ use App\Events\CallFailed;
 
 class CallService
 {
+    use TransactionalService;
     protected CallRepository $callRepository;
     protected CustomerRepository $customerRepository;
     protected AppointmentRepository $appointmentRepository;
@@ -35,35 +37,76 @@ class CallService
      */
     public function processWebhook(array $webhookData): Call
     {
-        return DB::transaction(function () use ($webhookData) {
-            // Find or create call record
-            $call = $this->callRepository->findOneBy([
-                'retell_call_id' => $webhookData['call_id']
+        $startTime = microtime(true);
+        $context = [
+            'retell_call_id' => $webhookData['call_id'] ?? 'unknown',
+            'event' => $webhookData['event'] ?? 'unknown',
+            'operation' => 'process_webhook'
+        ];
+        
+        try {
+            return $this->executeInTransaction(function () use ($webhookData) {
+                // Find or create call record
+                $call = $this->callRepository->findOneBy([
+                    'retell_call_id' => $webhookData['call_id']
+                ]);
+
+                if (!$call) {
+                    $call = $this->createCall($webhookData);
+                    Log::info('Created new call record from webhook', [
+                        'call_id' => $call->id,
+                        'retell_call_id' => $call->retell_call_id
+                    ]);
+                } else {
+                    $this->updateCall($call, $webhookData);
+                    Log::info('Updated existing call record from webhook', [
+                        'call_id' => $call->id,
+                        'retell_call_id' => $call->retell_call_id
+                    ]);
+                }
+
+                // Process based on event type
+                switch ($webhookData['event'] ?? null) {
+                    case 'call_started':
+                        $this->handleCallStarted($call, $webhookData);
+                        break;
+                        
+                    case 'call_ended':
+                        $this->handleCallEnded($call, $webhookData);
+                        break;
+                        
+                    case 'call_analyzed':
+                        $this->handleCallAnalyzed($call, $webhookData);
+                        break;
+                        
+                    default:
+                        Log::warning('Unknown webhook event type', [
+                            'event' => $webhookData['event'] ?? 'null',
+                            'call_id' => $call->id
+                        ]);
+                }
+                
+                $this->logTransactionMetrics('processWebhook', $startTime, true, [
+                    'call_id' => $call->id,
+                    'event' => $webhookData['event'] ?? 'unknown'
+                ]);
+
+                return $call->fresh(['customer', 'appointment']);
+            }, $context, 2); // Allow 2 attempts for deadlocks
+            
+        } catch (\Throwable $e) {
+            $this->logTransactionMetrics('processWebhook', $startTime, false, [
+                'error' => $e->getMessage()
             ]);
-
-            if (!$call) {
-                $call = $this->createCall($webhookData);
-            } else {
-                $this->updateCall($call, $webhookData);
-            }
-
-            // Process based on event type
-            switch ($webhookData['event'] ?? null) {
-                case 'call_started':
-                    $this->handleCallStarted($call, $webhookData);
-                    break;
-                    
-                case 'call_ended':
-                    $this->handleCallEnded($call, $webhookData);
-                    break;
-                    
-                case 'call_analyzed':
-                    $this->handleCallAnalyzed($call, $webhookData);
-                    break;
-            }
-
-            return $call->fresh(['customer', 'appointment']);
-        });
+            
+            Log::error('Failed to process call webhook', array_merge($context, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'webhook_data' => $webhookData
+            ]));
+            
+            throw $e;
+        }
     }
 
     /**

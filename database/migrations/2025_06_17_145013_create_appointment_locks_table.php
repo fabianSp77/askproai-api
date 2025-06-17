@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('appointment_locks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('staff_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('staff_id')->constrained()->onDelete('cascade');
             $table->timestamp('starts_at');
             $table->timestamp('ends_at');
             $table->string('lock_token')->unique();

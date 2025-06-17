@@ -14,6 +14,7 @@ class AppointmentController extends Controller
     
     public function __construct(AppointmentRepository $repository)
     {
+        $this->middleware('auth:sanctum');
         $this->repository = $repository;
     }
     

@@ -67,7 +67,9 @@
     63 => 'App\\Providers\\FilamentColumnToggleServiceProvider',
     64 => 'App\\Providers\\Filament\\AdminPanelProvider',
     65 => 'App\\Providers\\HorizonServiceProvider',
-    66 => 'App\\Providers\\RouteServiceProvider',
+    66 => 'App\\Providers\\LockingServiceProvider',
+    67 => 'App\\Providers\\LoggingServiceProvider',
+    68 => 'App\\Providers\\RouteServiceProvider',
   ),
   'eager' => 
   array (
@@ -122,7 +124,9 @@
     48 => 'App\\Providers\\FilamentColumnToggleServiceProvider',
     49 => 'App\\Providers\\Filament\\AdminPanelProvider',
     50 => 'App\\Providers\\HorizonServiceProvider',
-    51 => 'App\\Providers\\RouteServiceProvider',
+    51 => 'App\\Providers\\LockingServiceProvider',
+    52 => 'App\\Providers\\LoggingServiceProvider',
+    53 => 'App\\Providers\\RouteServiceProvider',
   ),
   'deferred' => 
   array (

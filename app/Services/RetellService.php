@@ -7,24 +7,27 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use App\Services\Security\SensitiveDataMasker;
 
 class RetellService
 {
     private $apiKey;
     private $baseUrl = 'https://api.retellai.com';
+    private SensitiveDataMasker $masker;
 
     public function __construct()
     {
         // Try multiple config keys for compatibility
         $this->apiKey = config('services.retell.api_key') 
-            ?? config('services.retell.token') 
-            ?? env('RETELL_TOKEN');
+            ?? config('services.retell.token');
         
-        // Use the base URL from config or env
-        $baseUrl = config('services.retell.base') ?? env('RETELL_BASE');
+        // Use the base URL from config
+        $baseUrl = config('services.retell.base', 'https://api.retellai.com');
         if ($baseUrl) {
             $this->baseUrl = rtrim($baseUrl, '/');
         }
+        
+        $this->masker = new SensitiveDataMasker();
     }
 
     /**

@@ -55,6 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'throttle:api',
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\CorrelationIdMiddleware::class, // Add correlation ID tracking
             // Temporarily disabled due to errors
             // \App\Http\Middleware\ThreatDetectionMiddleware::class,
             // \App\Http\Middleware\AdaptiveRateLimitMiddleware::class,
@@ -69,6 +70,9 @@ return Application::configure(basePath: dirname(__DIR__))
             
             /* ✨ Retell Webhook Signature Verification */
             'verify.retell.signature' => \App\Http\Middleware\VerifyRetellSignature::class,
+
+            /* 🔗 Correlation ID Tracking */
+            'correlation.id' => \App\Http\Middleware\CorrelationIdMiddleware::class,
 
             /* 🛡️ Security Layer Middleware */
             'threat.detection' => \App\Http\Middleware\ThreatDetectionMiddleware::class,

@@ -9,6 +9,11 @@ use Illuminate\Http\JsonResponse;
 
 class CallController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+    }
+
     /**
      * Alle Anrufe anzeigen.
      */

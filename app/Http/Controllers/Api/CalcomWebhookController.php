@@ -3,71 +3,84 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\WebhookProcessor;
+use App\Models\WebhookEvent;
 use Illuminate\Http\Request;
-use App\Models\Company;
-use App\Models\Appointment;
-use App\Jobs\ProcessCalcomWebhookJob;
 use Illuminate\Support\Facades\Log;
 
 class CalcomWebhookController extends Controller
 {
+    protected WebhookProcessor $webhookProcessor;
+    
+    public function __construct(WebhookProcessor $webhookProcessor)
+    {
+        $this->webhookProcessor = $webhookProcessor;
+    }
+    
     /**
-     * Handle incoming Cal.com webhook
+     * Handle incoming Cal.com webhook using WebhookProcessor
      */
     public function handle(Request $request)
     {
-        Log::info('Cal.com webhook received', [
-            'headers' => $request->headers->all(),
-            'payload' => $request->all()
-        ]);
+        $correlationId = $request->input('correlation_id') ?? app('correlation_id');
+        $payload = $request->all();
+        $headers = $request->headers->all();
         
         try {
-            $payload = $request->all();
-            
-            // Cal.com sendet verschiedene Event-Typen
+            // Validate required fields
             $triggerEvent = $payload['triggerEvent'] ?? null;
             
             if (!$triggerEvent) {
-                Log::warning('Cal.com webhook missing triggerEvent', $payload);
+                Log::warning('Cal.com webhook missing triggerEvent', [
+                    'payload' => $payload,
+                    'correlation_id' => $correlationId
+                ]);
                 return response()->json(['error' => 'Missing triggerEvent'], 400);
             }
             
-            // Dispatch job for async processing
-            ProcessCalcomWebhookJob::dispatch($triggerEvent, $payload);
+            // Process webhook through the WebhookProcessor service
+            $result = $this->webhookProcessor->process(
+                WebhookEvent::PROVIDER_CALCOM,
+                $payload,
+                $headers,
+                $correlationId
+            );
             
-            return response()->json(['status' => 'accepted'], 200);
+            // Return appropriate response
+            if ($result['duplicate']) {
+                return response()->json([
+                    'status' => 'duplicate',
+                    'message' => 'Webhook already processed'
+                ], 200);
+            }
+            
+            return response()->json([
+                'status' => 'accepted',
+                'correlation_id' => $correlationId
+            ], 200);
+            
+        } catch (\App\Exceptions\WebhookSignatureException $e) {
+            Log::error('Cal.com webhook signature verification failed', [
+                'error' => $e->getMessage(),
+                'correlation_id' => $correlationId
+            ]);
+            
+            return response()->json([
+                'error' => 'Invalid signature',
+                'message' => $e->getMessage()
+            ], 401);
             
         } catch (\Exception $e) {
             Log::error('Cal.com webhook error', [
                 'error' => $e->getMessage(),
+                'correlation_id' => $correlationId,
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return response()->json(['error' => 'Internal server error'], 500);
+            return response()->json([
+                'error' => 'Internal server error',
+                'message' => app()->environment('local') ? $e->getMessage() : null
+            ], 500);
         }
-    }
-    
-    /**
-     * Verify webhook signature
-     */
-    protected function verifySignature(Request $request): bool
-    {
-        $signature = $request->header('X-Cal-Signature-256');
-        
-        if (!$signature) {
-            return false;
-        }
-        
-        $secret = config('services.calcom.webhook_secret');
-        if (!$secret) {
-            // If no secret is configured, accept all (not recommended for production)
-            Log::warning('Cal.com webhook secret not configured');
-            return true;
-        }
-        
-        $payload = $request->getContent();
-        $calculated = hash_hmac('sha256', $payload, $secret);
-        
-        return hash_equals($calculated, $signature);
     }
 }

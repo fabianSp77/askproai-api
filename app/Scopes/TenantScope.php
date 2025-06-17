@@ -28,6 +28,10 @@ class TenantScope implements Scope
         
         if ($companyId) {
             $builder->where($model->getTable() . '.company_id', $companyId);
+        } else {
+            // CRITICAL: If no company context is set, return NO records
+            // This prevents data leakage when context is missing
+            $builder->whereRaw('1 = 0'); // This ensures no records are returned
         }
     }
     

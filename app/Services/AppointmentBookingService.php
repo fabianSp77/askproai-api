@@ -8,6 +8,7 @@ use App\Models\Staff;
 use App\Models\Service;
 use App\Models\Branch;
 use App\Models\Call;
+use App\Traits\TransactionalService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,18 +16,22 @@ use App\Services\CalcomV2Service;
 use App\Services\NotificationService;
 use App\Exceptions\BookingException;
 use App\Exceptions\AvailabilityException;
+use App\Services\Locking\TimeSlotLockManager;
 use Illuminate\Support\Str;
 
 class AppointmentBookingService
 {
+    use TransactionalService;
     private $calcomService;
     private $notificationService;
     private $availabilityService;
+    private $lockManager;
     
     public function __construct(
         ?CalcomV2Service $calcomService = null,
         ?NotificationService $notificationService = null,
-        ?AvailabilityService $availabilityService = null
+        ?AvailabilityService $availabilityService = null,
+        ?TimeSlotLockManager $lockManager = null
     ) {
         $this->calcomService = $calcomService ?? new CalcomV2Service();
         $this->notificationService = $notificationService ?? new NotificationService();
@@ -37,6 +42,7 @@ class AppointmentBookingService
         } else {
             $this->availabilityService = $availabilityService;
         }
+        $this->lockManager = $lockManager ?? new TimeSlotLockManager();
     }
     
     /**
@@ -45,19 +51,27 @@ class AppointmentBookingService
      */
     public function bookFromPhoneCall($callOrData, ?array $appointmentData = null): array
     {
-        return DB::transaction(function () use ($callOrData, $appointmentData) {
-            try {
-                // Determine if we're working with a Call object or data array
-                $call = null;
-                $data = [];
-                
-                if ($callOrData instanceof Call) {
-                    $call = $callOrData;
-                    $data = $appointmentData ?? [];
-                } else {
-                    $data = $callOrData;
-                }
-                
+        $lockToken = null;
+        $startTime = microtime(true);
+        
+        try {
+            // Determine if we're working with a Call object or data array
+            $call = null;
+            $data = [];
+            
+            if ($callOrData instanceof Call) {
+                $call = $callOrData;
+                $data = $appointmentData ?? [];
+            } else {
+                $data = $callOrData;
+            }
+            
+            $context = [
+                'call_id' => $call?->id,
+                'has_appointment_data' => !empty($data),
+            ];
+            
+            return $this->executeInTransaction(function () use ($call, $data, &$lockToken) {
                 // 1. Prepare booking data from new format
                 $bookingData = $this->prepareBookingDataFromCollectFunction($data, $call);
                 
@@ -93,6 +107,8 @@ class AppointmentBookingService
                         $bookingData['starts_at'],
                         $bookingData['ends_at'] ?? $this->calculateEndTime($bookingData['starts_at'], $service)
                     );
+                    // Store the lock token for later release
+                    $lockToken = $timeSlot['lock_token'] ?? null;
                 } else {
                     // Just use the provided times
                     $timeSlot = [
@@ -118,12 +134,18 @@ class AppointmentBookingService
                         'booked_via' => 'phone_ai',
                         'call_duration' => $call?->duration_sec,
                         'customer_phone' => $customer->phone,
-                        'raw_booking_data' => $data
+                        'raw_booking_data' => $data,
+                        'lock_token' => $lockToken // Store lock token for reference
                     ]
                 ]);
                 
                 // 6. Sync with calendar system (if we have the necessary data)
                 if ($service && $staff) {
+                    // Extend lock before potentially long calendar sync
+                    if ($lockToken) {
+                        $this->lockManager->extendLock($lockToken, 3);
+                    }
+                    
                     $this->syncWithCalendar($appointment);
                 }
                 
@@ -138,9 +160,20 @@ class AppointmentBookingService
                     ]);
                 }
                 
+                // 9. Release the lock after successful booking
+                if ($lockToken) {
+                    $this->lockManager->releaseLock($lockToken);
+                    $lockToken = null; // Clear reference
+                }
+                
                 Log::info('Appointment booked successfully from phone call', [
                     'appointment_id' => $appointment->id,
                     'call_id' => $call?->id
+                ]);
+                
+                $this->logTransactionMetrics('bookFromPhoneCall', $startTime, true, [
+                    'appointment_id' => $appointment->id,
+                    'customer_id' => $customer->id,
                 ]);
                 
                 return [
@@ -148,21 +181,48 @@ class AppointmentBookingService
                     'appointment' => $appointment,
                     'message' => 'Termin erfolgreich gebucht'
                 ];
-                
-            } catch (\Exception $e) {
-                Log::error('Failed to book appointment from phone call', [
-                    'error' => $e->getMessage(),
-                    'data' => $data,
-                    'call_id' => $call?->id
-                ]);
-                
+            }, $context, 3); // Allow 3 attempts for deadlocks
+            
+        } catch (\Throwable $e) {
+            // Always release lock on error
+            if ($lockToken) {
+                try {
+                    $this->lockManager->releaseLock($lockToken);
+                } catch (\Exception $lockException) {
+                    Log::error('Failed to release lock after error', [
+                        'lock_token' => $lockToken,
+                        'error' => $lockException->getMessage(),
+                    ]);
+                }
+            }
+            
+            $this->logTransactionMetrics('bookFromPhoneCall', $startTime, false, [
+                'error' => $e->getMessage(),
+            ]);
+            
+            // Determine if it's a known booking exception
+            if ($e instanceof BookingException || $e instanceof AvailabilityException) {
                 return [
                     'success' => false,
                     'message' => $e->getMessage(),
-                    'error' => $e instanceof BookingException ? $e->getErrorCode() : 'general_error'
+                    'error' => $e instanceof BookingException ? $e->getErrorCode() : 'availability_error'
                 ];
             }
-        });
+            
+            // For unexpected errors, log more details
+            Log::error('Unexpected error in bookFromPhoneCall', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $data ?? [],
+                'call_id' => $call?->id ?? null
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+                'error' => 'system_error'
+            ];
+        }
     }
     
     /**
@@ -339,25 +399,32 @@ class AppointmentBookingService
     {
         $start = Carbon::parse($startTime);
         $end = Carbon::parse($endTime);
-        
-        // Generate a unique lock token for this booking attempt
-        $lockToken = Str::uuid()->toString();
-        $lockExpiry = now()->addMinutes(5); // Lock expires in 5 minutes
-        
-        // Try to acquire a lock on this time slot
-        $lockAcquired = $this->acquireTimeSlotLock($staff, $start, $end, $lockToken, $lockExpiry);
-        
-        if (!$lockAcquired) {
-            throw new AvailabilityException(
-                'Dieser Termin wird gerade von einem anderen Nutzer gebucht. Bitte versuchen Sie es erneut.'
-            );
-        }
+        $lockToken = null;
         
         try {
+            // Try to acquire a lock on this time slot using TimeSlotLockManager
+            // Use the staff's home branch ID or a default if not available
+            $branchId = $staff->home_branch_id ?? $staff->branch_id ?? '1';
+            
+            $lockToken = $this->lockManager->acquireLock(
+                $branchId,
+                $staff->id,
+                $start,
+                $end,
+                5 // Lock expires in 5 minutes
+            );
+            
+            if (!$lockToken) {
+                throw new AvailabilityException(
+                    'Dieser Termin wird gerade von einem anderen Nutzer gebucht. Bitte versuchen Sie es erneut.'
+                );
+            }
+            
             // Double-check availability with lock held
             if (!$this->isSlotStillAvailable($staff, $start, $end)) {
                 // Release lock before looking for alternatives
-                $this->releaseTimeSlotLock($lockToken);
+                $this->lockManager->releaseLock($lockToken);
+                $lockToken = null;
                 
                 // Try to find alternative slots
                 $alternatives = $this->availabilityService->findAlternativeSlots(
@@ -379,10 +446,15 @@ class AppointmentBookingService
                 $end = $alternative['end'];
                 
                 // Try to acquire lock on alternative slot
-                $lockToken = Str::uuid()->toString();
-                $lockAcquired = $this->acquireTimeSlotLock($staff, $start, $end, $lockToken, $lockExpiry);
+                $lockToken = $this->lockManager->acquireLock(
+                    $branchId,
+                    $staff->id,
+                    $start,
+                    $end,
+                    5 // Lock expires in 5 minutes
+                );
                 
-                if (!$lockAcquired) {
+                if (!$lockToken) {
                     throw new AvailabilityException(
                         'Alternative Termine sind nicht mehr verfügbar'
                     );
@@ -400,7 +472,9 @@ class AppointmentBookingService
             
         } catch (\Exception $e) {
             // Always release lock on error
-            $this->releaseTimeSlotLock($lockToken);
+            if ($lockToken) {
+                $this->lockManager->releaseLock($lockToken);
+            }
             throw $e;
         }
     }
@@ -571,43 +645,6 @@ class AppointmentBookingService
     }
     
     /**
-     * Try to acquire a lock on a time slot
-     */
-    private function acquireTimeSlotLock(Staff $staff, Carbon $start, Carbon $end, string $lockToken, Carbon $lockExpiry): bool
-    {
-        // Check if there's an existing lock on overlapping time slots
-        $existingLock = Appointment::where('staff_id', $staff->id)
-            ->where('status', '!=', 'cancelled')
-            ->where(function ($query) use ($start, $end) {
-                $query->whereBetween('starts_at', [$start, $end->subMinute()])
-                    ->orWhereBetween('ends_at', [$start->addMinute(), $end])
-                    ->orWhere(function ($q) use ($start, $end) {
-                        $q->where('starts_at', '<=', $start)
-                            ->where('ends_at', '>=', $end);
-                    });
-            })
-            ->where('lock_expires_at', '>', now())
-            ->lockForUpdate()
-            ->exists();
-        
-        if ($existingLock) {
-            return false;
-        }
-        
-        // Create a temporary lock record
-        DB::table('appointment_locks')->insert([
-            'staff_id' => $staff->id,
-            'starts_at' => $start,
-            'ends_at' => $end,
-            'lock_token' => $lockToken,
-            'lock_expires_at' => $lockExpiry,
-            'created_at' => now()
-        ]);
-        
-        return true;
-    }
-    
-    /**
      * Check if slot is still available (with lock held)
      */
     private function isSlotStillAvailable(Staff $staff, Carbon $start, Carbon $end): bool
@@ -626,23 +663,28 @@ class AppointmentBookingService
     }
     
     /**
-     * Release a time slot lock
-     */
-    private function releaseTimeSlotLock(string $lockToken): void
-    {
-        DB::table('appointment_locks')
-            ->where('lock_token', $lockToken)
-            ->delete();
-    }
-    
-    /**
-     * Clean up expired locks (should be run periodically)
+     * Clean up expired locks (delegates to TimeSlotLockManager)
      */
     public function cleanupExpiredLocks(): int
     {
-        return DB::table('appointment_locks')
-            ->where('lock_expires_at', '<', now())
-            ->delete();
+        return $this->lockManager->cleanupExpiredLocks();
+    }
+    
+    /**
+     * Extend an existing lock (useful for long-running operations)
+     */
+    public function extendLock(string $lockToken, int $additionalMinutes = 5): bool
+    {
+        return $this->lockManager->extendLock($lockToken, $additionalMinutes);
+    }
+    
+    /**
+     * Check if a time slot is currently locked
+     */
+    public function isSlotLocked($staff, $startTime, $endTime): bool
+    {
+        $staffId = is_object($staff) ? $staff->id : $staff;
+        return $this->lockManager->isSlotLocked($staffId, $startTime, $endTime);
     }
     
 }

@@ -2,120 +2,85 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ProcessRetellWebhookJob;
+use App\Services\WebhookProcessor;
 use App\Services\CalcomV2Service;
-use App\Services\RetellService;
 use App\Models\Company;
 use App\Models\WebhookEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 
 class RetellWebhookController extends Controller
 {
+    protected WebhookProcessor $webhookProcessor;
+    
+    public function __construct(WebhookProcessor $webhookProcessor)
+    {
+        $this->webhookProcessor = $webhookProcessor;
+    }
+    
     /**
-     * Process Retell webhook asynchronously
+     * Process Retell webhook using the new WebhookProcessor service
      */
     public function processWebhook(Request $request)
     {
-        $correlationId = Str::uuid()->toString();
+        $correlationId = $request->input('correlation_id') ?? app('correlation_id');
         $payload = $request->all();
+        $headers = $request->headers->all();
         
-        // Log incoming webhook for debugging
-        Log::info('Retell webhook received', [
-            'method' => $request->method(),
-            'url' => $request->fullUrl(),
-            'headers' => $request->headers->all(),
-            'body' => $payload,
-            'correlation_id' => $correlationId
-        ]);
-
         try {
-            $eventType = $request->input('event');
+            // Special handling for call_inbound events (synchronous)
+            if ($request->input('event') === 'call_inbound') {
+                return $this->handleInboundCall($request);
+            }
             
-            // Generate idempotency key
-            $idempotencyKey = WebhookEvent::generateIdempotencyKey(
+            // Process webhook through the WebhookProcessor service
+            $result = $this->webhookProcessor->process(
                 WebhookEvent::PROVIDER_RETELL,
-                $payload
+                $payload,
+                $headers,
+                $correlationId
             );
             
-            // Check if we've already processed this webhook
-            if (WebhookEvent::hasBeenProcessed($idempotencyKey)) {
-                Log::info('Webhook already processed, skipping', [
-                    'idempotency_key' => $idempotencyKey,
-                    'event_type' => $eventType,
-                    'correlation_id' => $correlationId
-                ]);
-                
+            // Return appropriate response based on processing result
+            if ($result['duplicate']) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Webhook already processed',
-                    'duplicate' => true
+                    'duplicate' => true,
+                    'correlation_id' => $correlationId
                 ], 200);
             }
             
-            // Create webhook event record
-            $webhookEvent = WebhookEvent::create([
-                'provider' => WebhookEvent::PROVIDER_RETELL,
-                'event_type' => $eventType,
-                'event_id' => $payload['call']['call_id'] ?? $payload['call_id'] ?? Str::uuid(),
-                'idempotency_key' => $idempotencyKey,
-                'payload' => $payload,
-                'status' => WebhookEvent::STATUS_PENDING,
+            return response()->json([
+                'success' => true,
+                'message' => 'Webhook processed successfully',
+                'correlation_id' => $correlationId
+            ], 200);
+            
+        } catch (\App\Exceptions\WebhookSignatureException $e) {
+            Log::error('Retell webhook signature verification failed', [
+                'error' => $e->getMessage(),
                 'correlation_id' => $correlationId
             ]);
             
-            // Route to appropriate job based on event type
-            switch ($eventType) {
-                case 'call_ended':
-                    // Use new comprehensive job for call_ended events
-                    \App\Jobs\ProcessRetellCallEndedJob::dispatch($payload, $webhookEvent->id, $correlationId)
-                        ->onQueue('webhooks')
-                        ->delay(now()->addSeconds(1));
-                    
-                    Log::info('Dispatched ProcessRetellCallEndedJob for call_ended event', [
-                        'webhook_event_id' => $webhookEvent->id,
-                        'correlation_id' => $correlationId
-                    ]);
-                    break;
-                    
-                case 'call_inbound':
-                    // Handle inbound calls synchronously for real-time response
-                    return $this->handleInboundCall($request);
-                    
-                case 'call_started':
-                case 'call_analyzed':
-                case 'call_outbound':
-                default:
-                    // Use legacy job for other events or backward compatibility
-                    ProcessRetellWebhookJob::dispatch($payload, $webhookEvent->id, $correlationId)
-                        ->onQueue('webhooks')
-                        ->delay(now()->addSeconds(1));
-                    
-                    Log::info('Dispatched ProcessRetellWebhookJob for event: ' . ($eventType ?? 'unknown'), [
-                        'webhook_event_id' => $webhookEvent->id,
-                        'correlation_id' => $correlationId
-                    ]);
-                    break;
-            }
-            
-            // Return immediate response
             return response()->json([
-                'success' => true,
-                'message' => 'Webhook received and queued for processing'
-            ], 202); // 202 Accepted
+                'error' => 'Invalid signature',
+                'message' => $e->getMessage()
+            ], 401);
             
         } catch (\Exception $e) {
-            Log::error('Failed to queue Retell webhook', [
+            Log::error('Failed to process Retell webhook', [
                 'error' => $e->getMessage(),
+                'correlation_id' => $correlationId,
                 'trace' => $e->getTraceAsString()
             ]);
             
-            // Still return success to avoid webhook retries
+            // Still return success to avoid webhook retries from Retell
             return response()->json([
                 'success' => true,
-                'message' => 'Webhook received'
+                'message' => 'Webhook received',
+                'error' => app()->environment('local') ? $e->getMessage() : null
             ], 200);
         }
     }

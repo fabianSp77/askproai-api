@@ -5,6 +5,19 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
 {
+    /**
+     * The application's global HTTP middleware stack.
+     */
+    protected $middleware = [
+        // \App\Http\Middleware\TrustHosts::class,
+        \App\Http\Middleware\TrustProxies::class,
+        \Illuminate\Http\Middleware\HandleCors::class,
+        \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
+        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+        \App\Http\Middleware\TrimStrings::class,
+        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \App\Http\Middleware\EnsureTenantContext::class, // Add tenant context globally
+    ];
     /* -------------------------------------------------------------------- *
      | 1) Web & API Gruppen (unverändert)                                   |
      * -------------------------------------------------------------------- */
@@ -29,6 +42,9 @@ class Kernel extends HttpKernel
     protected array $middlewareAliases = [
         // ✨ unsere neue Signatur-Prüfung
         'calcom.signature' => \App\Http\Middleware\VerifyCalcomSignature::class,
+        'tenant.context' => \App\Http\Middleware\EnsureTenantContext::class,
+        'api.auth' => \App\Http\Middleware\ApiAuthMiddleware::class,
+        'verify.retell.signature' => \App\Http\Middleware\VerifyRetellSignature::class,
 
         // ── Laravel-Standard ──────────────────────────────────────────────
         'auth'              => \App\Http\Middleware\Authenticate::class,

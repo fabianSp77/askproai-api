@@ -6,23 +6,30 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
     {
         Schema::create('circuit_breaker_metrics', function (Blueprint $table) {
             $table->id();
-            $table->string('service', 50)->index();
-            $table->enum('status', ['success', 'failure'])->index();
-            $table->enum('state', ['closed', 'open', 'half_open'])->index();
+            $table->string('service', 50)->index(); // calcom, retell, stripe
+            $table->enum('status', ['success', 'failure']);
+            $table->enum('state', ['closed', 'open', 'half_open']);
             $table->decimal('duration_ms', 10, 2)->nullable();
-            $table->timestamp('created_at')->index();
+            $table->timestamp('created_at')->nullable();
             
-            // Composite index for performance
-            $table->index(['service', 'created_at']);
+            // Indexes for monitoring queries
             $table->index(['service', 'status', 'created_at']);
+            $table->index(['service', 'state', 'created_at']);
+            $table->index('created_at');
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
         Schema::dropIfExists('circuit_breaker_metrics');
     }

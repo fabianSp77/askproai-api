@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Customer;
 use App\Repositories\CustomerRepository;
 use App\Repositories\AppointmentRepository;
+use App\Traits\TransactionalService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,7 @@ use App\Services\CacheService;
 
 class CustomerService
 {
+    use TransactionalService;
     protected CustomerRepository $customerRepository;
     protected AppointmentRepository $appointmentRepository;
     protected CacheService $cacheService;
@@ -119,45 +121,95 @@ class CustomerService
      */
     public function mergeDuplicates(int $primaryId, int $duplicateId): Customer
     {
-        return DB::transaction(function () use ($primaryId, $duplicateId) {
-            $primary = $this->customerRepository->findOrFail($primaryId);
-            $duplicate = $this->customerRepository->findOrFail($duplicateId);
+        $startTime = microtime(true);
+        $context = [
+            'primary_id' => $primaryId,
+            'duplicate_id' => $duplicateId,
+            'operation' => 'merge_customers'
+        ];
+        
+        try {
+            return $this->executeInTransaction(function () use ($primaryId, $duplicateId) {
+                $primary = $this->customerRepository->findOrFail($primaryId);
+                $duplicate = $this->customerRepository->findOrFail($duplicateId);
 
-            // Merge data (primary takes precedence)
-            $mergedData = [
-                'phone' => $primary->phone ?: $duplicate->phone,
-                'email' => $primary->email ?: $duplicate->email,
-                'address' => $primary->address ?: $duplicate->address,
-                'birthdate' => $primary->birthdate ?: $duplicate->birthdate,
-                'notes' => $this->mergeNotes($primary->notes, $duplicate->notes),
-                'tags' => array_unique(array_merge($primary->tags ?? [], $duplicate->tags ?? [])),
-            ];
+                // Ensure they're from the same company
+                if ($primary->company_id !== $duplicate->company_id) {
+                    throw new \InvalidArgumentException('Cannot merge customers from different companies');
+                }
 
-            // Update primary customer
-            $this->customerRepository->update($primaryId, $mergedData);
+                // Merge data (primary takes precedence)
+                $mergedData = [
+                    'phone' => $primary->phone ?: $duplicate->phone,
+                    'email' => $primary->email ?: $duplicate->email,
+                    'address' => $primary->address ?: $duplicate->address,
+                    'birthdate' => $primary->birthdate ?: $duplicate->birthdate,
+                    'notes' => $this->mergeNotes($primary->notes, $duplicate->notes),
+                    'tags' => array_unique(array_merge($primary->tags ?? [], $duplicate->tags ?? [])),
+                ];
 
-            // Move all appointments to primary customer
-            $this->appointmentRepository->pushCriteria(function ($query) use ($duplicateId, $primaryId) {
-                $query->where('customer_id', $duplicateId)
-                      ->update(['customer_id' => $primaryId]);
-            });
+                // Update primary customer
+                $this->customerRepository->update($primaryId, $mergedData);
 
-            // Move all calls to primary customer
-            DB::table('calls')
-                ->where('customer_id', $duplicateId)
-                ->update(['customer_id' => $primaryId]);
+                // Move all appointments to primary customer
+                $appointmentCount = DB::table('appointments')
+                    ->where('customer_id', $duplicateId)
+                    ->update(['customer_id' => $primaryId]);
+                    
+                Log::info('Moved appointments during customer merge', [
+                    'count' => $appointmentCount,
+                    'from_customer' => $duplicateId,
+                    'to_customer' => $primaryId
+                ]);
 
-            // Update no-show count
-            $primary->increment('no_show_count', $duplicate->no_show_count);
+                // Move all calls to primary customer
+                $callCount = DB::table('calls')
+                    ->where('customer_id', $duplicateId)
+                    ->update(['customer_id' => $primaryId]);
+                    
+                Log::info('Moved calls during customer merge', [
+                    'count' => $callCount,
+                    'from_customer' => $duplicateId,
+                    'to_customer' => $primaryId
+                ]);
 
-            // Delete duplicate
-            $this->customerRepository->delete($duplicateId);
+                // Update no-show count
+                $primary->increment('no_show_count', $duplicate->no_show_count);
 
-            // Fire event
-            event(new CustomerMerged($primary->fresh(), $duplicate));
+                // Clear cache for both customers
+                if ($primary->phone) {
+                    $this->cacheService->clearCustomerCache($primary->phone);
+                }
+                if ($duplicate->phone && $duplicate->phone !== $primary->phone) {
+                    $this->cacheService->clearCustomerCache($duplicate->phone);
+                }
 
-            return $primary->fresh();
-        });
+                // Delete duplicate
+                $this->customerRepository->delete($duplicateId);
+
+                // Fire event
+                event(new CustomerMerged($primary->fresh(), $duplicate));
+                
+                $this->logTransactionMetrics('mergeDuplicates', $startTime, true, [
+                    'appointments_moved' => $appointmentCount,
+                    'calls_moved' => $callCount,
+                ]);
+
+                return $primary->fresh();
+            }, $context, 2); // Allow 2 attempts for potential deadlocks
+            
+        } catch (\Throwable $e) {
+            $this->logTransactionMetrics('mergeDuplicates', $startTime, false, [
+                'error' => $e->getMessage(),
+            ]);
+            
+            Log::error('Failed to merge customers', array_merge($context, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]));
+            
+            throw $e;
+        }
     }
 
     /**

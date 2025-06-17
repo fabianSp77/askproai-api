@@ -5,10 +5,17 @@ namespace App\Services\Logging;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use App\Services\Security\SensitiveDataMasker;
 
 class ProductionLogger
 {
     private static ?string $traceId = null;
+    private SensitiveDataMasker $masker;
+    
+    public function __construct()
+    {
+        $this->masker = new SensitiveDataMasker();
+    }
     
     /**
      * Get or generate trace ID for request
@@ -31,7 +38,11 @@ class ProductionLogger
         
         $fullContext = array_merge($defaultContext, $errorContext, $context);
         
-        Log::error($e->getMessage(), $fullContext);
+        // Mask sensitive data before logging
+        $safeContext = $this->masker->createSafeContext($fullContext);
+        $safeMessage = $this->masker->mask($e->getMessage());
+        
+        Log::error($safeMessage, $safeContext);
         
         // Also log to separate error tracking if critical
         if ($this->isCriticalError($e)) {
@@ -48,14 +59,16 @@ class ProductionLogger
             'api_call' => [
                 'service' => $service,
                 'method' => $method,
-                'params' => $this->sanitizeParams($params),
+                'params' => $this->masker->mask($params),
                 'duration_ms' => round($duration * 1000, 2),
                 'success' => $response !== null,
                 'response_size' => is_string($response) ? strlen($response) : strlen(json_encode($response)),
             ]
         ]);
         
-        Log::info("API call to {$service}::{$method}", $context);
+        // Mask sensitive data before logging
+        $safeContext = $this->masker->createSafeContext($context);
+        Log::info("API call to {$service}::{$method}", $safeContext);
     }
     
     /**
@@ -68,11 +81,13 @@ class ProductionLogger
                 'source' => $source,
                 'event' => $event,
                 'payload_size' => strlen(json_encode($payload)),
-                'headers' => request()->headers->all(),
+                'headers' => $this->masker->maskHeaders(request()->headers->all()),
             ]
         ]);
         
-        Log::info("Webhook received from {$source}", $context);
+        // Mask sensitive data before logging
+        $safeContext = $this->masker->createSafeContext($context);
+        Log::info("Webhook received from {$source}", $safeContext);
     }
     
     /**
@@ -89,7 +104,9 @@ class ProductionLogger
             ], $metrics)
         ]);
         
-        Log::info("Performance metric: {$operation}", $context);
+        // Mask sensitive data before logging
+        $safeContext = $this->masker->createSafeContext($context);
+        Log::info("Performance metric: {$operation}", $safeContext);
     }
     
     /**
@@ -106,7 +123,9 @@ class ProductionLogger
             ], $details)
         ]);
         
-        Log::warning("Security event: {$event}", $context);
+        // Mask sensitive data before logging
+        $safeContext = $this->masker->createSafeContext($context);
+        Log::warning("Security event: {$event}", $safeContext);
     }
     
     /**
@@ -147,7 +166,7 @@ class ProductionLogger
                 'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $this->sanitizeStackTrace($e->getTrace()),
+                'trace' => $this->masker->maskStackTrace($e->getTrace()),
                 'previous' => $e->getPrevious() ? get_class($e->getPrevious()) : null,
             ]
         ];
@@ -178,32 +197,20 @@ class ProductionLogger
     
     /**
      * Sanitize sensitive data from parameters
+     * @deprecated Use SensitiveDataMasker instead
      */
     private function sanitizeParams(array $params): array
     {
-        $sensitiveKeys = ['password', 'api_key', 'token', 'secret', 'credit_card'];
-        
-        array_walk_recursive($params, function (&$value, $key) use ($sensitiveKeys) {
-            foreach ($sensitiveKeys as $sensitive) {
-                if (stripos($key, $sensitive) !== false) {
-                    $value = '***REDACTED***';
-                }
-            }
-        });
-        
-        return $params;
+        return $this->masker->mask($params);
     }
     
     /**
      * Sanitize stack trace to remove sensitive data
+     * @deprecated Use SensitiveDataMasker instead
      */
     private function sanitizeStackTrace(array $trace): array
     {
-        return array_map(function ($frame) {
-            // Remove args to prevent sensitive data exposure
-            unset($frame['args']);
-            return $frame;
-        }, array_slice($trace, 0, 10)); // Limit to first 10 frames
+        return $this->masker->maskStackTrace(array_slice($trace, 0, 10)); // Limit to first 10 frames
     }
     
     /**
@@ -234,18 +241,20 @@ class ProductionLogger
      */
     private function logCriticalError(\Throwable $e, array $context): void
     {
-        // Log to critical channel
-        Log::channel('critical')->error("CRITICAL: " . $e->getMessage(), $context);
+        // Log to critical channel with masked data
+        $safeContext = $this->masker->createSafeContext($context);
+        $safeMessage = $this->masker->mask($e->getMessage());
+        Log::channel('critical')->error("CRITICAL: " . $safeMessage, $safeContext);
         
         // Store in database for monitoring
         \DB::table('critical_errors')->insert([
             'trace_id' => self::getTraceId(),
             'error_class' => get_class($e),
-            'error_message' => $e->getMessage(),
+            'error_message' => $this->masker->mask($e->getMessage()),
             'error_code' => $e->getCode(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'context' => json_encode($context),
+            'context' => json_encode($this->masker->createSafeContext($context)),
             'created_at' => now(),
         ]);
         

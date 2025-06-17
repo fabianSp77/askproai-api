@@ -9,6 +9,11 @@ use Illuminate\Http\JsonResponse;
 
 class BusinessController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+    }
+
     /**
      * Alle Unternehmen anzeigen.
      */

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use App\Services\Traits\RetryableHttpClient;
 use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\Logging\ProductionLogger;
+use App\Services\Security\SensitiveDataMasker;
 
 class RetellV2Service          //  Telefon- & Agent-API (AWS)
 {
@@ -16,19 +17,20 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     private string $token;
     private CircuitBreaker $circuitBreaker;
     private ProductionLogger $logger;
+    private SensitiveDataMasker $masker;
 
     public function __construct(?string $apiKey = null)
     {
         // Check multiple config locations
         $this->url = rtrim(
             config('retellai.base_url') ?? 
-            config('services.retell.base_url') ?? 
-            env('RETELL_BASE_URL', 'https://api.retellai.com'), 
+            config('services.retell.base_url', 'https://api.retellai.com'), 
             '/'
         );
-        $this->token = $apiKey ?? config('services.retell.api_key') ?? env('RETELL_TOKEN');
+        $this->token = $apiKey ?? config('services.retell.api_key');
         $this->circuitBreaker = new CircuitBreaker();
         $this->logger = new ProductionLogger();
+        $this->masker = new SensitiveDataMasker();
     }
 
     /**
@@ -59,7 +61,7 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
             
             if ($response->successful()) {
                 $data = $response->json();
-                $this->logger->logApiCall('RetellV2', 'createAgent', $config, $data, 0);
+                $this->logger->logApiCall('RetellV2', 'createAgent', $this->masker->mask($config), $data, 0);
                 return $data;
             }
             
@@ -81,7 +83,7 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
             
             if ($response->successful()) {
                 $data = $response->json();
-                $this->logger->logApiCall('RetellV2', 'updateAgent', $payload, $data, 0);
+                $this->logger->logApiCall('RetellV2', 'updateAgent', $this->masker->mask($payload), $data, 0);
                 return $data;
             }
             
@@ -97,12 +99,8 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
         return $this->circuitBreaker->call('retell', function() use ($agentId) {
             $url = $this->url . '/v2/list-agents';
             
-            // Log the URL for debugging
-            Log::info('Retell API call', [
-                'url' => $url,
-                'base_url' => $this->url,
-                'agent_id' => $agentId,
-            ]);
+            // Log the API call with masked data
+            $this->logger->logApiCall('RetellV2', 'getAgent', ['agent_id' => $agentId], null, 0);
             
             // First try to get from list of agents
             $response = $this->httpWithRetry()
@@ -121,9 +119,10 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
                 }
             }
             
-            Log::error('Failed to get agent', [
+            $this->logger->logError(new \Exception('Failed to get agent'), [
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'body' => substr($response->body(), 0, 500), // Limit body size
+                'agent_id' => $agentId
             ]);
             
             return null;

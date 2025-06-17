@@ -3,12 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Scopes\TenantScope;
+use App\Scopes\TenantScope;
 
-class AdditionalService extends Model
+class AdditionalService extends TenantModel
 {
     use HasFactory;
 
@@ -36,25 +35,22 @@ class AdditionalService extends Model
 
     protected static function booted()
     {
-        // Only apply tenant scope if company_id is not null
-        static::addGlobalScope('optional_tenant', function ($builder) {
-            $user = auth()->user();
-            if ($user && !$user->hasRole('Super Admin') && $user->company_id) {
-                $builder->where(function ($query) use ($user) {
-                    $query->whereNull('company_id')
-                          ->orWhere('company_id', $user->company_id);
-                });
+        parent::booted();
+        
+        // Additional scope for platform-wide services (company_id = null)
+        // This allows seeing both company-specific and platform-wide services
+        static::addGlobalScope('include_platform_services', function ($builder) {
+            if (app()->bound('current_company_id')) {
+                $companyId = app('current_company_id');
+                $builder->withoutGlobalScope(TenantScope::class)
+                       ->where(function ($query) use ($companyId) {
+                           $query->whereNull('company_id')
+                                 ->orWhere('company_id', $companyId);
+                       });
             }
         });
     }
 
-    /**
-     * Get the company that owns the service.
-     */
-    public function company(): BelongsTo
-    {
-        return $this->belongsTo(Company::class);
-    }
 
     /**
      * Get the customer services using this service.
