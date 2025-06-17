@@ -74,17 +74,23 @@ class PhoneNumberResolver
         $cacheKey = "phone_resolver:{$normalized}";
         
         return Cache::remember($cacheKey, 300, function() use ($normalized, $phoneNumber) {
-            // 1. Check phone_numbers table
-            $phoneRecord = PhoneNumber::where('number', $normalized)
-                ->orWhere('number', $phoneNumber)
+            // 1. Check phone_numbers table (only with active branches)
+            $phoneRecord = PhoneNumber::where(function($query) use ($normalized, $phoneNumber) {
+                    $query->where('number', $normalized)
+                          ->orWhere('number', $phoneNumber);
+                })
                 ->where('active', true)
+                ->whereHas('branch', function($query) {
+                    $query->where('active', true);
+                })
                 ->with('branch')
                 ->first();
                 
             if ($phoneRecord && $phoneRecord->branch) {
                 Log::info('Branch resolved from phone_numbers table', [
                     'number' => $phoneNumber,
-                    'branch_id' => $phoneRecord->branch_id
+                    'branch_id' => $phoneRecord->branch_id,
+                    'branch_active' => true
                 ]);
                 
                 return [
@@ -94,15 +100,19 @@ class PhoneNumberResolver
                 ];
             }
             
-            // 2. Check branch main phone number
-            $branch = Branch::where('phone_number', $normalized)
-                ->orWhere('phone_number', $phoneNumber)
+            // 2. Check branch main phone number (only active branches)
+            $branch = Branch::where(function($query) use ($normalized, $phoneNumber) {
+                    $query->where('phone_number', $normalized)
+                          ->orWhere('phone_number', $phoneNumber);
+                })
+                ->where('active', true)
                 ->first();
                 
             if ($branch) {
                 Log::info('Branch resolved from main phone number', [
                     'number' => $phoneNumber,
-                    'branch_id' => $branch->id
+                    'branch_id' => $branch->id,
+                    'active' => true
                 ]);
                 
                 return [
@@ -139,15 +149,18 @@ class PhoneNumberResolver
             Log::warning('Could not query agents table', ['error' => $e->getMessage()]);
         }
         
-        // 2. Check branches for this agent (if column exists)
+        // 2. Check branches for this agent (if column exists) - only active branches
         try {
             if (Schema::hasColumn('branches', 'retell_agent_id')) {
-                $branch = Branch::where('retell_agent_id', $retellAgentId)->first();
+                $branch = Branch::where('retell_agent_id', $retellAgentId)
+                    ->where('active', true)
+                    ->first();
                 
                 if ($branch) {
                     Log::info('Branch resolved from agent ID', [
                         'agent_id' => $retellAgentId,
-                        'branch_id' => $branch->id
+                        'branch_id' => $branch->id,
+                        'active' => true
                     ]);
                     
                     return [

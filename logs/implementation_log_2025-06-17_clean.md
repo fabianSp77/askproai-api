@@ -32,6 +32,52 @@ Vereinfachung des Systems von 119 auf 20 Tabellen, von 7 auf 3 Services, und Imp
 
 ---
 
+### 3. System-Status vor Änderungen (07:22 Uhr)
+**AskProAI Berlin Status:**
+- ❌ Filiale ist INAKTIV!
+- ✅ Telefonnummer korrekt zugeordnet
+- ✅ Retell Agent konfiguriert
+- ✅ Cal.com Event Type vorhanden
+
+**Service-Chaos bestätigt:**
+- Total Services: 36 (!!)
+- Cal.com Services: 10 (9 zu viel)
+- Retell Services: 5 (4 zu viel)
+
+---
+
 ## 🔄 Änderungs-Protokoll
 
-Alle Änderungen werden hier dokumentiert.
+### 1. Filiale Status (07:25 Uhr)
+- Filiale war bereits aktiv (Spalte heißt `active`, nicht `is_active`)
+- ✅ Keine Änderung nötig
+
+### 2. Test-Files Aufräumen (07:30 Uhr)
+- ✅ 16 Test-Files von Root nach `/tests/manual/` verschoben
+- Root-Verzeichnis ist jetzt sauber
+
+### 3. Service Konsolidierung vorbereitet (07:35 Uhr)
+**Markiert für Löschung:**
+- Cal.com Services: 9 von 10 markiert
+- Retell Services: 4 von 5 markiert  
+- Andere Services: 1 markiert
+- **Total**: 14 Services zur Löschung markiert
+
+**Behalten werden:**
+- CalcomV2Service.php
+- RetellV2Service.php
+- Andere wichtige Services
+
+### 4. SmartBookingService erstellt (07:45 Uhr)
+✅ **Neuer zentraler Service implementiert:**
+- Konsolidiert AppointmentService, BookingService und Teile von CallService
+- Klare Verantwortlichkeiten und Dokumentation
+- Vollständiger Booking-Flow in einer Klasse
+- Umfassendes Error Handling und Logging
+
+### 5. PhoneNumberResolver verbessert (07:50 Uhr)
+✅ **Nur noch aktive Branches werden berücksichtigt:**
+- phone_numbers Table: Prüft ob verknüpfte Branch aktiv ist
+- branches Table: Filtert auf active=true
+- Retell Agent Resolution: Nur aktive Branches
+- Cache für Performance (5 Minuten)
