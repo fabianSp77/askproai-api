@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,14 @@ class MasterService extends Model
         'retell_service_identifier',
         'active'
     ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
 
     protected $casts = [
         'base_duration' => 'integer',

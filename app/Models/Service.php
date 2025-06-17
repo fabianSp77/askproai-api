@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Scopes\TenantScope;
 
 class Service extends Model
 {
@@ -51,6 +52,14 @@ class Service extends Model
         'min_staff_required' => 1,
         'buffer_time_minutes' => 0
     ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
 
     // Getter für duration (Rückwärtskompatibilität)
     public function getDurationAttribute($value)

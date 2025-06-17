@@ -15,9 +15,12 @@ class SimpleDashboard extends Dashboard
     {
         return [
             \App\Filament\Admin\Widgets\GlobalTenantFilter::class,
+            \App\Filament\Admin\Widgets\ApiHealthOverview::class,
             \App\Filament\Admin\Widgets\StatsOverview::class,
+            \App\Filament\Admin\Widgets\SystemStatsOverview::class,
             \App\Filament\Admin\Widgets\RecentAppointments::class,
             \App\Filament\Admin\Widgets\RecentCalls::class,
+            \App\Filament\Admin\Widgets\RecentActivityWidget::class,
             \App\Filament\Admin\Widgets\ActivityLogWidget::class,
         ];
     }

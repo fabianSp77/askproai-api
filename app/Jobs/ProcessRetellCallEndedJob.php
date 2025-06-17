@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Call;
 use App\Models\RetellWebhook;
+use App\Models\WebhookEvent;
 use App\Services\PhoneNumberResolver;
 use App\Services\CurrencyConverter;
 use App\Services\AppointmentBookingService;
@@ -22,10 +23,14 @@ class ProcessRetellCallEndedJob implements ShouldQueue
     public $backoff = [10, 30, 60];
     
     protected array $data;
+    protected ?int $webhookEventId;
+    protected ?string $correlationId;
     
-    public function __construct(array $data)
+    public function __construct(array $data, ?int $webhookEventId = null, ?string $correlationId = null)
     {
         $this->data = $data;
+        $this->webhookEventId = $webhookEventId;
+        $this->correlationId = $correlationId;
         $this->queue = 'webhooks';
     }
 
@@ -33,8 +38,16 @@ class ProcessRetellCallEndedJob implements ShouldQueue
     {
         Log::info('Processing Retell call_ended webhook', [
             'call_id' => $this->data['call']['call_id'] ?? 'unknown',
-            'event' => $this->data['event'] ?? 'unknown'
+            'event' => $this->data['event'] ?? 'unknown',
+            'correlation_id' => $this->correlationId,
+            'webhook_event_id' => $this->webhookEventId
         ]);
+
+        // Mark webhook event as processing
+        if ($this->webhookEventId) {
+            $webhookEvent = WebhookEvent::find($this->webhookEventId);
+            $webhookEvent?->markAsProcessing();
+        }
 
         try {
             // Store raw webhook data
@@ -59,15 +72,29 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             
             Log::info('Successfully processed Retell call_ended webhook', [
                 'call_id' => $call->id,
-                'retell_call_id' => $call->retell_call_id
+                'retell_call_id' => $call->retell_call_id,
+                'correlation_id' => $this->correlationId
             ]);
+            
+            // Mark webhook event as completed
+            if ($this->webhookEventId) {
+                $webhookEvent = WebhookEvent::find($this->webhookEventId);
+                $webhookEvent?->markAsCompleted();
+            }
             
         } catch (\Exception $e) {
             Log::error('Failed to process Retell call_ended webhook', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'data' => $this->data
+                'data' => $this->data,
+                'correlation_id' => $this->correlationId
             ]);
+            
+            // Mark webhook event as failed
+            if ($this->webhookEventId) {
+                $webhookEvent = WebhookEvent::find($this->webhookEventId);
+                $webhookEvent?->markAsFailed($e->getMessage());
+            }
             
             throw $e;
         }

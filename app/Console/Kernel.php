@@ -56,6 +56,17 @@ class Kernel extends ConsoleKernel
             ->everyTenSeconds()
             ->withoutOverlapping()
             ->runInBackground();
+            
+        // Run health checks every 5 minutes
+        $schedule->command('health:check')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
+            
+        // Cleanup old alerts daily
+        $schedule->command('alerts:cleanup')
+            ->daily()
+            ->at('03:00');
     }
 
     /**

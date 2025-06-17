@@ -98,22 +98,31 @@ class RetellAgentProvisioner
         }
         
         try {
-            $apiKey = $this->getRetellApiKey($branch->company);
-            $retellService = new RetellV2Service($apiKey);
+            // For existing agents that are just being activated,
+            // we only update the status in our database without
+            // making any changes to the Retell.ai configuration
+            if ($branch->retell_agent_status !== 'active') {
+                // Just update the status to active
+                $branch->update([
+                    'retell_agent_status' => 'active',
+                    'retell_agent_created_at' => $branch->retell_agent_created_at ?? now(),
+                ]);
+                
+                // Clear cache
+                Cache::forget("retell_agent_{$branch->id}");
+                
+                return [
+                    'success' => true,
+                    'agent_id' => $branch->retell_agent_id,
+                    'message' => 'Agent erfolgreich aktiviert',
+                ];
+            }
             
-            // Generate updated configuration
-            $agentConfig = $this->generateAgentConfig($branch);
-            
-            // Update agent
-            $result = $retellService->updateAgent($branch->retell_agent_id, $agentConfig);
-            
-            // Clear cache
-            Cache::forget("retell_agent_{$branch->id}");
-            
+            // If agent is already active, do nothing
             return [
                 'success' => true,
                 'agent_id' => $branch->retell_agent_id,
-                'message' => 'Agent erfolgreich aktualisiert',
+                'message' => 'Agent ist bereits aktiv',
             ];
             
         } catch (\Exception $e) {

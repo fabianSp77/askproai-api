@@ -33,7 +33,10 @@ class Appointment extends Model
         'reminder_24h_sent_at',
         'reminder_2h_sent_at',
         'reminder_30m_sent_at',
-        'payload'
+        'payload',
+        'version',
+        'lock_expires_at',
+        'lock_token'
     ];
 
     protected $casts = [
@@ -43,8 +46,23 @@ class Appointment extends Model
         'payload' => 'array',
         'reminder_24h_sent_at' => 'datetime',
         'reminder_2h_sent_at' => 'datetime',
-        'reminder_30m_sent_at' => 'datetime'
+        'reminder_30m_sent_at' => 'datetime',
+        'lock_expires_at' => 'datetime',
+        'version' => 'integer'
     ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+        
+        // Increment version on update for optimistic locking
+        static::updating(function ($appointment) {
+            $appointment->version = ($appointment->version ?? 0) + 1;
+        });
+    }
 
     public function customer(): BelongsTo
     {

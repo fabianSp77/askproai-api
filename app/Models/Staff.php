@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Scopes\TenantScope;
 
 class Staff extends Model
 {
@@ -39,6 +40,14 @@ class Staff extends Model
         'is_bookable' => 'boolean',
         'workable_branches' => 'array',
     ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
 
     public function company()
     {

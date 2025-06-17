@@ -19,7 +19,13 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
 
     public function __construct(?string $apiKey = null)
     {
-        $this->url   = rtrim(config('services.retell.base_url', 'https://api.retellai.com'), '/');
+        // Check multiple config locations
+        $this->url = rtrim(
+            config('retellai.base_url') ?? 
+            config('services.retell.base_url') ?? 
+            env('RETELL_BASE_URL', 'https://api.retellai.com'), 
+            '/'
+        );
         $this->token = $apiKey ?? config('services.retell.api_key') ?? env('RETELL_TOKEN');
         $this->circuitBreaker = new CircuitBreaker();
         $this->logger = new ProductionLogger();
@@ -89,13 +95,36 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     public function getAgent(string $agentId): ?array
     {
         return $this->circuitBreaker->call('retell', function() use ($agentId) {
+            $url = $this->url . '/v2/list-agents';
+            
+            // Log the URL for debugging
+            Log::info('Retell API call', [
+                'url' => $url,
+                'base_url' => $this->url,
+                'agent_id' => $agentId,
+            ]);
+            
+            // First try to get from list of agents
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->post($this->url . '/v2/get-agent', ['agent_id' => $agentId]);
+                ->post($url, []);
             
             if ($response->successful()) {
-                return $response->json();
+                $data = $response->json();
+                $agents = $data['agents'] ?? [];
+                
+                // Find the specific agent
+                foreach ($agents as $agent) {
+                    if ($agent['agent_id'] === $agentId) {
+                        return $agent;
+                    }
+                }
             }
+            
+            Log::error('Failed to get agent', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
             
             return null;
         });

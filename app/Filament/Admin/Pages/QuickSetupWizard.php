@@ -391,11 +391,11 @@ class QuickSetupWizard extends Page implements HasForms
                 ->actions([
                     \Filament\Notifications\Actions\Action::make('test_call')
                         ->label('Test-Anruf starten')
-                        ->url(route('filament.admin.pages.test-call'))
+                        ->url('#')
                         ->openUrlInNewTab(),
                     \Filament\Notifications\Actions\Action::make('dashboard')
                         ->label('Zum Dashboard')
-                        ->url(route('filament.admin.pages.dashboard')),
+                        ->url('/admin'),
                 ])
                 ->send();
                 

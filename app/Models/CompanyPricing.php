@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,14 @@ class CompanyPricing extends Model
         'valid_until',
         'notes',
     ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
 
     protected $casts = [
         'price_per_minute' => 'decimal:4',

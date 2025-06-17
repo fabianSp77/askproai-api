@@ -6,9 +6,11 @@ use App\Jobs\ProcessRetellWebhookJob;
 use App\Services\CalcomV2Service;
 use App\Services\RetellService;
 use App\Models\Company;
+use App\Models\WebhookEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class RetellWebhookController extends Controller
 {
@@ -17,26 +19,65 @@ class RetellWebhookController extends Controller
      */
     public function processWebhook(Request $request)
     {
+        $correlationId = Str::uuid()->toString();
+        $payload = $request->all();
+        
         // Log incoming webhook for debugging
         Log::info('Retell webhook received', [
             'method' => $request->method(),
             'url' => $request->fullUrl(),
             'headers' => $request->headers->all(),
-            'body' => $request->all()
+            'body' => $payload,
+            'correlation_id' => $correlationId
         ]);
 
         try {
             $eventType = $request->input('event');
             
+            // Generate idempotency key
+            $idempotencyKey = WebhookEvent::generateIdempotencyKey(
+                WebhookEvent::PROVIDER_RETELL,
+                $payload
+            );
+            
+            // Check if we've already processed this webhook
+            if (WebhookEvent::hasBeenProcessed($idempotencyKey)) {
+                Log::info('Webhook already processed, skipping', [
+                    'idempotency_key' => $idempotencyKey,
+                    'event_type' => $eventType,
+                    'correlation_id' => $correlationId
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Webhook already processed',
+                    'duplicate' => true
+                ], 200);
+            }
+            
+            // Create webhook event record
+            $webhookEvent = WebhookEvent::create([
+                'provider' => WebhookEvent::PROVIDER_RETELL,
+                'event_type' => $eventType,
+                'event_id' => $payload['call']['call_id'] ?? $payload['call_id'] ?? Str::uuid(),
+                'idempotency_key' => $idempotencyKey,
+                'payload' => $payload,
+                'status' => WebhookEvent::STATUS_PENDING,
+                'correlation_id' => $correlationId
+            ]);
+            
             // Route to appropriate job based on event type
             switch ($eventType) {
                 case 'call_ended':
                     // Use new comprehensive job for call_ended events
-                    \App\Jobs\ProcessRetellCallEndedJob::dispatch($request->all())
+                    \App\Jobs\ProcessRetellCallEndedJob::dispatch($payload, $webhookEvent->id, $correlationId)
                         ->onQueue('webhooks')
                         ->delay(now()->addSeconds(1));
                     
-                    Log::info('Dispatched ProcessRetellCallEndedJob for call_ended event');
+                    Log::info('Dispatched ProcessRetellCallEndedJob for call_ended event', [
+                        'webhook_event_id' => $webhookEvent->id,
+                        'correlation_id' => $correlationId
+                    ]);
                     break;
                     
                 case 'call_inbound':
@@ -48,11 +89,14 @@ class RetellWebhookController extends Controller
                 case 'call_outbound':
                 default:
                     // Use legacy job for other events or backward compatibility
-                    ProcessRetellWebhookJob::dispatch($request->all())
+                    ProcessRetellWebhookJob::dispatch($payload, $webhookEvent->id, $correlationId)
                         ->onQueue('webhooks')
                         ->delay(now()->addSeconds(1));
                     
-                    Log::info('Dispatched ProcessRetellWebhookJob for event: ' . ($eventType ?? 'unknown'));
+                    Log::info('Dispatched ProcessRetellWebhookJob for event: ' . ($eventType ?? 'unknown'), [
+                        'webhook_event_id' => $webhookEvent->id,
+                        'correlation_id' => $correlationId
+                    ]);
                     break;
             }
             

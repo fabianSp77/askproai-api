@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Scopes\TenantScope;
 
 class CalcomEventType extends Model
 {
@@ -40,6 +41,14 @@ class CalcomEventType extends Model
         'last_synced_at' => 'datetime',
         'metadata' => 'array'
     ];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
 
     /**
      * Mitarbeiter, die diesem Event-Type zugeordnet sind

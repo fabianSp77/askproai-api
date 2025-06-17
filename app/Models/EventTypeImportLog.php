@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -22,7 +23,15 @@ class EventTypeImportLog extends Model
         'started_at',
         'completed_at'
     ];
-    
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
+
     protected $casts = [
         'import_details' => 'array',
         'error_details' => 'array',

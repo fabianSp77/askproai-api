@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use App\Services\IntegrationTestService;
 use App\Models\Staff;
 use App\Models\WorkingHour;
+use App\Scopes\TenantScope;
 
 class Branch extends Model
 {
@@ -104,6 +105,14 @@ class Branch extends Model
      * @var array<int, string>
      */
     protected $hidden = [];
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new TenantScope);
+    }
 
     /**
      * Get the company that owns the branch.

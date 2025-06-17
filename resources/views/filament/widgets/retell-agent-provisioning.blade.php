@@ -25,7 +25,7 @@
                         @if($status['hasAgent'])
                             <p class="text-xs mt-1 {{ $status['status'] === 'active' ? 'text-success-600' : 'text-gray-600' }}">
                                 Agent ID: {{ $status['agentId'] }}
-                                @if($status['createdAt'])
+                                @if(isset($status['createdAt']) && $status['createdAt'])
                                     | Erstellt: {{ $status['createdAt'] }}
                                 @endif
                             </p>
@@ -98,15 +98,28 @@
                         Agent erstellen
                     </x-filament::button>
                 @elseif($status['status'] === 'active')
+                    {{-- Agent aktualisieren Button temporär deaktiviert wegen Livewire-Problem --}}
+                    <x-filament::button
+                        disabled
+                        color="gray"
+                        size="sm"
+                        title="Funktion temporär deaktiviert"
+                    >
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Agent ist aktiv
+                    </x-filament::button>
+                @elseif($status['hasAgent'] && $status['status'] !== 'active')
                     <x-filament::button
                         wire:click="updateAgent"
-                        color="gray"
+                        color="warning"
                         size="sm"
                     >
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
-                        Agent aktualisieren
+                        Agent aktivieren
                     </x-filament::button>
                     
                     <x-filament::button
@@ -122,7 +135,7 @@
                 @endif
                 
                 <x-filament::link
-                    href="https://app.retell.ai/agents"
+                    href="https://dashboard.retellai.com"
                     target="_blank"
                     color="gray"
                     size="sm"
@@ -153,4 +166,116 @@
             </div>
         </div>
     </x-filament::section>
+    
+    {{-- Agent Details Section --}}
+    @if($status['status'] === 'active' && $status['hasAgent'])
+        <x-filament::section class="mt-6">
+            <x-slot name="heading">
+                📋 Agent Konfiguration
+            </x-slot>
+            
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="text-sm text-gray-700 mb-3">
+                        Um die vollständigen Agent-Einstellungen zu sehen oder zu bearbeiten, besuchen Sie bitte das Retell.ai Dashboard.
+                        <br><br>
+                        <strong>Agent ID:</strong> <code class="bg-gray-200 px-1 rounded">{{ $record->retell_agent_id }}</code>
+                    </p>
+                    
+                    <div class="space-y-2">
+                        <a href="https://dashboard.retellai.com/agents/{{ $record->retell_agent_id }}" 
+                           target="_blank"
+                           class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            Agent-Einstellungen öffnen
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="text-sm text-gray-600">
+                    <p class="font-medium mb-2">In Retell.ai können Sie folgende Einstellungen sehen und bearbeiten:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>System Prompt (Anweisungen für den Agent)</li>
+                        <li>Sprachmodell (GPT-4, GPT-3.5, etc.)</li>
+                        <li>Stimme und Spracheinstellungen</li>
+                        <li>Webhook-Konfiguration</li>
+                        <li>Erweiterte Funktionen und Parameter</li>
+                    </ul>
+                </div>
+            </div>
+        </x-filament::section>
+    @endif
+    
+    @if(false && $agentDetails)
+        @if(isset($agentDetails['error']))
+            {{-- Error handling code --}}
+        @else
+        <x-filament::section class="mt-6">
+            <x-slot name="heading">
+                📋 Agent Konfigurationsdetails
+            </x-slot>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- Basic Info --}}
+                <div class="space-y-2">
+                    <h4 class="font-medium text-sm text-gray-700">Basis-Informationen</h4>
+                    <dl class="text-sm space-y-1">
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">Agent Name:</dt>
+                            <dd class="font-medium">{{ $agentDetails['basic']['agent_name'] }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">Modell:</dt>
+                            <dd class="font-mono">{{ $agentDetails['model']['llm_id'] }}</dd>
+                        </div>
+                    </dl>
+                </div>
+                
+                {{-- Voice Settings --}}
+                <div class="space-y-2">
+                    <h4 class="font-medium text-sm text-gray-700">Sprache & Stimme</h4>
+                    <dl class="text-sm space-y-1">
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">Sprache:</dt>
+                            <dd>{{ $agentDetails['language']['language'] }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">Stimme:</dt>
+                            <dd class="font-mono text-xs">{{ $agentDetails['language']['voice_id'] }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">Geschwindigkeit:</dt>
+                            <dd>{{ $agentDetails['language']['voice_speed'] }}x</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+            
+            {{-- System Prompt --}}
+            <div class="mt-4">
+                <h4 class="font-medium text-sm text-gray-700 mb-2">System Prompt</h4>
+                <div class="bg-gray-50 p-3 rounded text-xs font-mono text-gray-600 max-h-48 overflow-y-auto">
+                    <pre class="whitespace-pre-wrap">{{ Str::limit($agentDetails['model']['system_prompt'], 500) }}</pre>
+                </div>
+                @if(strlen($agentDetails['model']['system_prompt']) > 500)
+                    <p class="text-xs text-gray-500 mt-1">... (gekürzt, vollständiger Prompt in Retell.ai)</p>
+                @endif
+            </div>
+            
+            {{-- Edit Link --}}
+            <div class="mt-4 flex justify-end">
+                <a href="https://dashboard.retellai.com/agents/{{ $record->retell_agent_id }}" 
+                   target="_blank"
+                   class="inline-flex items-center text-sm text-primary-600 hover:text-primary-800">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Vollständige Konfiguration in Retell.ai anzeigen
+                </a>
+            </div>
+        </x-filament::section>
+        @endif
+    @endif
 </x-filament-widgets::widget>

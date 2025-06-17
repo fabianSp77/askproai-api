@@ -15,6 +15,7 @@ use App\Services\CalcomV2Service;
 use App\Services\NotificationService;
 use App\Exceptions\BookingException;
 use App\Exceptions\AvailabilityException;
+use Illuminate\Support\Str;
 
 class AppointmentBookingService
 {
@@ -332,42 +333,76 @@ class AppointmentBookingService
     }
     
     /**
-     * Check availability and reserve time slot
+     * Check availability and reserve time slot with locking
      */
     private function checkAndReserveTimeSlot(Staff $staff, string $startTime, string $endTime): array
     {
         $start = Carbon::parse($startTime);
         $end = Carbon::parse($endTime);
         
-        // Check if slot is available
-        if (!$this->availabilityService->isSlotAvailable($staff, $start, $end)) {
-            // Try to find alternative slots
-            $alternatives = $this->availabilityService->findAlternativeSlots(
-                $staff,
-                $start,
-                $end->diffInMinutes($start),
-                5 // Max 5 alternatives
+        // Generate a unique lock token for this booking attempt
+        $lockToken = Str::uuid()->toString();
+        $lockExpiry = now()->addMinutes(5); // Lock expires in 5 minutes
+        
+        // Try to acquire a lock on this time slot
+        $lockAcquired = $this->acquireTimeSlotLock($staff, $start, $end, $lockToken, $lockExpiry);
+        
+        if (!$lockAcquired) {
+            throw new AvailabilityException(
+                'Dieser Termin wird gerade von einem anderen Nutzer gebucht. Bitte versuchen Sie es erneut.'
             );
-            
-            if (empty($alternatives)) {
-                throw new AvailabilityException(
-                    'Keine verfügbaren Termine in diesem Zeitraum'
-                );
-            }
-            
-            // Use first alternative
-            $alternative = $alternatives[0];
-            $start = $alternative['start'];
-            $end = $alternative['end'];
         }
         
-        // Reserve the slot temporarily (released on rollback if booking fails)
-        $this->availabilityService->reserveSlot($staff, $start, $end);
-        
-        return [
-            'start' => $start,
-            'end' => $end
-        ];
+        try {
+            // Double-check availability with lock held
+            if (!$this->isSlotStillAvailable($staff, $start, $end)) {
+                // Release lock before looking for alternatives
+                $this->releaseTimeSlotLock($lockToken);
+                
+                // Try to find alternative slots
+                $alternatives = $this->availabilityService->findAlternativeSlots(
+                    $staff,
+                    $start,
+                    $end->diffInMinutes($start),
+                    5 // Max 5 alternatives
+                );
+                
+                if (empty($alternatives)) {
+                    throw new AvailabilityException(
+                        'Keine verfügbaren Termine in diesem Zeitraum'
+                    );
+                }
+                
+                // Use first alternative and try to lock it
+                $alternative = $alternatives[0];
+                $start = $alternative['start'];
+                $end = $alternative['end'];
+                
+                // Try to acquire lock on alternative slot
+                $lockToken = Str::uuid()->toString();
+                $lockAcquired = $this->acquireTimeSlotLock($staff, $start, $end, $lockToken, $lockExpiry);
+                
+                if (!$lockAcquired) {
+                    throw new AvailabilityException(
+                        'Alternative Termine sind nicht mehr verfügbar'
+                    );
+                }
+            }
+            
+            // Reserve the slot with lock protection
+            $this->availabilityService->reserveSlot($staff, $start, $end);
+            
+            return [
+                'start' => $start,
+                'end' => $end,
+                'lock_token' => $lockToken
+            ];
+            
+        } catch (\Exception $e) {
+            // Always release lock on error
+            $this->releaseTimeSlotLock($lockToken);
+            throw $e;
+        }
     }
     
     /**
@@ -410,7 +445,11 @@ class AppointmentBookingService
                 'appointment_id' => $appointment->id,
                 'error' => $e->getMessage()
             ]);
-            // Don't fail the booking if calendar sync fails
+            
+            // Queue retry job for calendar sync
+            \App\Jobs\RetryCalendarSyncJob::dispatch($appointment->id)
+                ->delay(now()->addMinutes(5))
+                ->onQueue('calendar-sync');
         }
     }
     
@@ -529,6 +568,81 @@ class AppointmentBookingService
     private function calculateEndTime(string $startTime, Service $service): Carbon
     {
         return Carbon::parse($startTime)->addMinutes($service->duration ?? 30);
+    }
+    
+    /**
+     * Try to acquire a lock on a time slot
+     */
+    private function acquireTimeSlotLock(Staff $staff, Carbon $start, Carbon $end, string $lockToken, Carbon $lockExpiry): bool
+    {
+        // Check if there's an existing lock on overlapping time slots
+        $existingLock = Appointment::where('staff_id', $staff->id)
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('starts_at', [$start, $end->subMinute()])
+                    ->orWhereBetween('ends_at', [$start->addMinute(), $end])
+                    ->orWhere(function ($q) use ($start, $end) {
+                        $q->where('starts_at', '<=', $start)
+                            ->where('ends_at', '>=', $end);
+                    });
+            })
+            ->where('lock_expires_at', '>', now())
+            ->lockForUpdate()
+            ->exists();
+        
+        if ($existingLock) {
+            return false;
+        }
+        
+        // Create a temporary lock record
+        DB::table('appointment_locks')->insert([
+            'staff_id' => $staff->id,
+            'starts_at' => $start,
+            'ends_at' => $end,
+            'lock_token' => $lockToken,
+            'lock_expires_at' => $lockExpiry,
+            'created_at' => now()
+        ]);
+        
+        return true;
+    }
+    
+    /**
+     * Check if slot is still available (with lock held)
+     */
+    private function isSlotStillAvailable(Staff $staff, Carbon $start, Carbon $end): bool
+    {
+        return !Appointment::where('staff_id', $staff->id)
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('starts_at', [$start, $end->subMinute()])
+                    ->orWhereBetween('ends_at', [$start->addMinute(), $end])
+                    ->orWhere(function ($q) use ($start, $end) {
+                        $q->where('starts_at', '<=', $start)
+                            ->where('ends_at', '>=', $end);
+                    });
+            })
+            ->exists();
+    }
+    
+    /**
+     * Release a time slot lock
+     */
+    private function releaseTimeSlotLock(string $lockToken): void
+    {
+        DB::table('appointment_locks')
+            ->where('lock_token', $lockToken)
+            ->delete();
+    }
+    
+    /**
+     * Clean up expired locks (should be run periodically)
+     */
+    public function cleanupExpiredLocks(): int
+    {
+        return DB::table('appointment_locks')
+            ->where('lock_expires_at', '<', now())
+            ->delete();
     }
     
 }
