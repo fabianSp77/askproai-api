@@ -11,6 +11,9 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\Wizard;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
 
 class CompanyResource extends Resource
 {
@@ -53,7 +56,7 @@ class CompanyResource extends Resource
                                         ->tel()
                                         ->columnSpan(1),
                                         
-                                    Forms\Components\TextInput::make('tax_number')
+                                    Forms\Components\TextInput::make('settings.tax_number')
                                         ->label('Steuernummer')
                                         ->columnSpan(1),
                                 ]),
@@ -224,7 +227,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                         )
                                         ->columnSpan(1),
 
-                                    Forms\Components\TextInput::make('retell_webhook_url')
+                                    Forms\Components\TextInput::make('settings.retell_webhook_url')
                                         ->label('🔗 Webhook URL')
                                         ->default('https://api.askproai.de/api/retell/webhook')
                                         ->readonly()
@@ -259,7 +262,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                         ->helperText('Wählen Sie den Standard-Agenten für eingehende Anrufe')
                                         ->columnSpan(1),
 
-                                    Forms\Components\Select::make('retell_voice')
+                                    Forms\Components\Select::make('settings.retell_voice')
                                         ->label('🗣️ Stimme')
                                         ->options([
                                             'nova' => '👩 Nova (Weiblich)',
@@ -302,7 +305,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                         ');
                                     }),
 
-                                Forms\Components\Toggle::make('retell_enabled')
+                                Forms\Components\Toggle::make('settings.retell_enabled')
                                     ->label('Retell.ai aktivieren')
                                     ->helperText('Aktiviert die Telefon-KI für eingehende Anrufe')
                                     ->default(false),
@@ -318,7 +321,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                     ->schema([
                         Forms\Components\Section::make('📧 E-Mail-Benachrichtigungen')
                             ->schema([
-                                Forms\Components\Repeater::make('notification_emails')
+                                Forms\Components\Repeater::make('settings.notification_emails')
                                     ->label('E-Mail-Empfänger')
                                     ->schema([
                                         Forms\Components\Grid::make(3)->schema([
@@ -369,15 +372,15 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                         Forms\Components\Section::make('📱 SMS & WhatsApp (Premium)')
                             ->collapsed()
                             ->schema([
-                                Forms\Components\Toggle::make('sms_enabled')
+                                Forms\Components\Toggle::make('settings.sms_enabled')
                                     ->label('SMS aktivieren')
                                     ->helperText('Erfordert Twilio-Integration'),
                                     
-                                Forms\Components\Toggle::make('whatsapp_enabled')
+                                Forms\Components\Toggle::make('settings.whatsapp_enabled')
                                     ->label('WhatsApp aktivieren')
                                     ->helperText('Erfordert WhatsApp Business API'),
                                     
-                                Forms\Components\Textarea::make('notification_template')
+                                Forms\Components\Textarea::make('settings.notification_template')
                                     ->label('Benachrichtigungs-Template')
                                     ->placeholder('Hallo {customer_name}, Ihr Termin am {date} um {time} wurde bestätigt...')
                                     ->helperText('Variablen: {customer_name}, {date}, {time}, {service}, {staff_name}')
@@ -394,7 +397,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                         Forms\Components\Section::make('🕐 Standard-Öffnungszeiten')
                             ->description('Diese Zeiten gelten als Standard für alle Filialen (können pro Filiale überschrieben werden)')
                             ->schema([
-                                Forms\Components\Repeater::make('business_hours')
+                                Forms\Components\Repeater::make('settings.business_hours')
                                     ->label('Öffnungszeiten')
                                     ->schema([
                                         Forms\Components\Grid::make(4)->schema([
@@ -532,6 +535,28 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
             ]);
     }
 
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Unternehmensinformationen')
+                    ->schema([
+                        TextEntry::make('name')
+                            ->label('Name'),
+                        TextEntry::make('email')
+                            ->label('E-Mail'),
+                        TextEntry::make('phone')
+                            ->label('Telefon'),
+                        TextEntry::make('is_active')
+                            ->label('Status')
+                            ->badge()
+                            ->color(fn (bool $state): string => $state ? 'success' : 'danger')
+                            ->formatStateUsing(fn (bool $state): string => $state ? 'Aktiv' : 'Inaktiv'),
+                    ])
+                    ->columns(2),
+            ]);
+    }
+
     public static function getPages(): array
     {
         return [
@@ -546,7 +571,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
     public static function getRelations(): array
     {
         return [
-            CompanyResource\RelationManagers\EventTypesRelationManager::class,
+            // CompanyResource\RelationManagers\EventTypesRelationManager::class,
         ];
     }
 }

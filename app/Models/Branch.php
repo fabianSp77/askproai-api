@@ -56,6 +56,9 @@ class Branch extends Model
         'retell_agent_id',
         'retell_agent_data',
         'retell_synced_at',
+        'retell_agent_status',
+        'retell_agent_created_at',
+        'settings',
         'calcom_api_key',
         'calcom_event_type_id',
         'calcom_team_slug',
@@ -89,6 +92,10 @@ class Branch extends Model
         'parent_settings' => 'array',
         'business_hours' => 'array',
         'services_override' => 'array',
+        'settings' => 'array',
+        'retell_agent_data' => 'array',
+        'retell_agent_created_at' => 'datetime',
+        'retell_synced_at' => 'datetime',
     ];
 
     /**
@@ -337,6 +344,30 @@ class Branch extends Model
         ]);
 
         return $results;
+    }
+    
+    /**
+     * Get setting value with fallback
+     */
+    public function getSetting(string $key, $default = null)
+    {
+        return data_get($this->settings, $key, $default);
+    }
+    
+    /**
+     * Check if branch has an active Retell agent
+     */
+    public function hasRetellAgent(): bool
+    {
+        return !empty($this->retell_agent_id) && $this->retell_agent_status === 'active';
+    }
+    
+    /**
+     * Check if agent needs provisioning
+     */
+    public function needsAgentProvisioning(): bool
+    {
+        return empty($this->retell_agent_id) || $this->retell_agent_status !== 'active';
     }
 
     /**

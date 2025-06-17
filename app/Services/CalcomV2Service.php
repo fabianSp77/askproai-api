@@ -4,16 +4,25 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\Traits\RetryableHttpClient;
+use App\Services\CircuitBreaker\CircuitBreaker;
+use App\Services\Logging\ProductionLogger;
 
 class CalcomV2Service
 {
+    use RetryableHttpClient;
+    
     private $apiKey;
     private $baseUrlV1 = 'https://api.cal.com/v1';
     private $baseUrlV2 = 'https://api.cal.com/v2';
+    private CircuitBreaker $circuitBreaker;
+    private ProductionLogger $logger;
 
     public function __construct($apiKey = null)
     {
         $this->apiKey = $apiKey ?? config('services.calcom.api_key') ?? env('DEFAULT_CALCOM_API_KEY');
+        $this->circuitBreaker = new CircuitBreaker();
+        $this->logger = new ProductionLogger();
     }
 
     /**
@@ -21,27 +30,28 @@ class CalcomV2Service
      */
     public function getUsers()
     {
-        try {
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->get($this->baseUrlV1 . '/users?apiKey=' . $this->apiKey);
+        return $this->circuitBreaker->call('calcom', function() {
+            $url = $this->baseUrlV1 . '/users';
+            
+            $response = $this->httpWithRetry()
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])
+                ->get($url, ['apiKey' => $this->apiKey]);
 
             if ($response->successful()) {
                 return $response->json();
             }
 
-            Log::error('Cal.com V1 getUsers failed', [
-                'status' => $response->status(),
-                'body' => $response->body()
+            throw new \Exception("Cal.com getUsers failed with status: " . $response->status());
+        }, function() {
+            // Fallback: Return cached data or empty array
+            $this->logger->logError(new \Exception('Cal.com circuit open, using fallback'), [
+                'method' => 'getUsers',
+                'fallback' => 'empty_array'
             ]);
-
-            return null;
-        } catch (\Exception $e) {
-            Log::error('Cal.com getUsers error', [
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
+            return ['users' => []];
+        });
     }
 
     /**
@@ -49,22 +59,29 @@ class CalcomV2Service
      */
     public function getEventTypes()
     {
-        try {
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->get($this->baseUrlV1 . '/event-types?apiKey=' . $this->apiKey);
+        return $this->circuitBreaker->call('calcom', function() {
+            $url = $this->baseUrlV1 . '/event-types';
+            
+            $response = $this->httpWithRetry()
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                ])
+                ->get($url, ['apiKey' => $this->apiKey]);
 
             if ($response->successful()) {
                 return $response->json();
             }
 
-            return null;
-        } catch (\Exception $e) {
-            Log::error('Cal.com getEventTypes error', [
-                'error' => $e->getMessage()
+            throw new \Exception("Cal.com getEventTypes failed with status: " . $response->status());
+        }, function() {
+            // Fallback: Return cached event types if available
+            $cached = \Cache::get('calcom_event_types_' . md5($this->apiKey), []);
+            $this->logger->logError(new \Exception('Cal.com circuit open, using cached data'), [
+                'method' => 'getEventTypes',
+                'cached_count' => count($cached)
             ]);
-            return null;
-        }
+            return ['event_types' => $cached];
+        });
     }
 
     /**

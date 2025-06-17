@@ -1,3 +1,131 @@
+# CRITICAL SERVICE DELETION ANALYSIS - 2025-06-17
+
+## DEEP ANALYSIS RESULTS
+
+### 🔴 SERVICES THAT CANNOT BE DELETED (Critical Dependencies Found)
+
+#### 1. **CalcomImportService** ❌ KEEP
+- **STATUS**: ACTIVELY USED - DO NOT DELETE!
+- **Critical Usage**: 
+  - `UnifiedEventTypeResource` uses it for importing event types from Cal.com
+  - `ListUnifiedEventTypes` page has "Import from Cal.com" button that calls this service
+  - Handles duplicate resolution functionality
+- **Key Methods**:
+  - `importEventTypes()` - Imports event types from Cal.com
+  - `resolveDuplicate()` - Resolves duplicate event types
+  - `processEventType()` - Processes individual event types
+  - `compareEventTypes()` - Compares local vs Cal.com data
+- **Impact if deleted**: LOSS OF EVENT TYPE IMPORT FUNCTIONALITY!
+
+#### 2. **CalcomSyncService** ❌ KEEP
+- **STATUS**: WIDELY USED - DO NOT DELETE!
+- **Critical Usage**:
+  - Used by `SyncCalcomEventTypesCommand` console command
+  - Used by `SyncEventTypesJob` queue job
+  - Registered in `AppServiceProvider` as singleton
+  - Used by multiple other components for availability checking
+- **Key Methods**:
+  - `syncEventTypesForCompany()` - Syncs event types for a company
+  - `syncTeamMembers()` - Syncs team members
+  - `checkAvailability()` - Checks availability for bookings
+  - `syncEventTypeUsers()` - Syncs staff assignments to event types
+- **Impact if deleted**: LOSS OF EVENT TYPE SYNC AND AVAILABILITY CHECKING!
+
+#### 3. **CalcomV2MigrationService** ❌ KEEP  
+- **STATUS**: REGISTERED IN APP - DO NOT DELETE!
+- **Critical Usage**:
+  - Registered as singleton in `AppServiceProvider`
+  - Provides v2 API compatibility layer
+- **Key Methods**:
+  - `getEventTypes()` - Fetches event types using v2 API
+  - `checkAvailability()` - Checks availability using v2 API
+  - `createBooking()` - Creates bookings using v2 API
+  - `testConnection()` - Tests API connectivity
+- **Impact if deleted**: POTENTIAL FUTURE ISSUES WITH V2 API MIGRATION!
+
+#### 4. **RetellAgentService** ❌ KEEP
+- **STATUS**: ACTIVELY USED - DO NOT DELETE!
+- **Critical Usage**:
+  - Used by `BranchResource` for agent management
+  - Registered as singleton in `AppServiceProvider`
+- **Key Methods**:
+  - `getAgentDetails()` - Gets agent configuration details
+  - `getAgentStatistics()` - Gets call statistics for agent
+  - `listAgents()` - Lists all available agents
+  - `validateAgentConfiguration()` - Validates agent setup
+- **Impact if deleted**: LOSS OF AGENT MANAGEMENT IN BRANCH CONFIGURATION!
+
+### ✅ SERVICES SAFE TO DELETE (No Usage Found)
+
+#### 1. **CalcomDebugService** ✅ CAN DELETE
+- **STATUS**: NO USAGE FOUND
+- **Methods**: Debug methods for event type hosts and team members
+- **Impact**: None - purely debug functionality
+
+#### 2. **CalcomUnifiedService** ✅ CAN DELETE
+- **STATUS**: NO USAGE FOUND
+- **Methods**: Unified v1/v2 API wrapper (but not used anywhere)
+- **Impact**: None - functionality covered by other services
+
+#### 3. **RetellAIService** ✅ CAN DELETE
+- **STATUS**: NO USAGE FOUND
+- **Methods**: Mock data methods for testing
+- **Impact**: None - just test/mock functionality
+
+#### 4. **RetellV1Service** ✅ CAN DELETE
+- **STATUS**: NO USAGE FOUND
+- **Methods**: Basic calls() method with TLS issues
+- **Impact**: None - functionality covered by RetellService
+
+## CRITICAL FINDINGS
+
+### 🚨 EVENT TYPE MANAGEMENT AT RISK!
+The following critical functionalities depend on services marked for deletion:
+1. **Event Type Import** - Uses CalcomImportService
+2. **Event Type Sync** - Uses CalcomSyncService  
+3. **Staff Assignment to Event Types** - Uses CalcomSyncService
+4. **Availability Checking** - Uses CalcomSyncService
+5. **Agent Configuration** - Uses RetellAgentService
+
+### 📊 SUMMARY
+- **Safe to delete**: 4 services (CalcomDebugService, CalcomUnifiedService, RetellAIService, RetellV1Service)
+- **MUST KEEP**: 4 services (CalcomImportService, CalcomSyncService, CalcomV2MigrationService, RetellAgentService)
+
+## RECOMMENDED ACTION PLAN
+
+### Phase 1: Delete Safe Services
+```bash
+# Delete services with no usage
+rm app/Services/CalcomDebugService.php
+rm app/Services/CalcomUnifiedService.php
+rm app/Services/RetellAIService.php
+rm app/Services/RetellV1Service.php
+```
+
+### Phase 2: Remove MARKED_FOR_DELETION from Critical Services
+```bash
+# These services MUST be kept!
+# Remove the MARKED_FOR_DELETION comment from:
+# - app/Services/CalcomImportService.php
+# - app/Services/CalcomSyncService.php
+# - app/Services/CalcomV2MigrationService.php
+# - app/Services/RetellAgentService.php
+```
+
+### Phase 3: Update AppServiceProvider
+Remove registrations for deleted services if any exist.
+
+## ⚠️ WARNING
+DO NOT delete CalcomImportService, CalcomSyncService, CalcomV2MigrationService, or RetellAgentService! 
+These are CRITICAL for:
+- Event Type Import functionality
+- Event Type Sync functionality
+- Staff-to-Event-Type assignments
+- Availability checking
+- Agent management in branches
+
+---
+
 # Aufgabe: Reporting auf Anrufliste optimieren
 
 ## Analyse und Vorbereitung
@@ -460,3 +588,35 @@ php test_advanced_availability.php
 2. PoC für WebSocket-Integration
 3. Retell.ai Streaming-API-Dokumentation studieren
 4. Infrastructure-Setup planen
+
+---
+
+# BUGFIX: Missing master_services Table - 2025-06-17
+
+## Problem
+The Branch model has a `masterServices()` relationship that references a `master_services` table, but this table was missing from the database despite the migration showing as "Ran".
+
+## Root Cause
+The migrations for `master_services` and `branch_service_overrides` were marked as run in the migrations table, but the actual tables were not created. This could happen due to:
+- Database reset without clearing migrations table
+- Failed migration that was still marked as completed
+- Manual database manipulation
+
+## Solution
+Created a new migration `2025_06_17_fix_missing_master_services_tables.php` that:
+1. Checks if tables exist before creating them
+2. Creates `master_services` table with proper structure
+3. Creates `branch_service_overrides` pivot table
+4. Sets up foreign key constraints
+
+## Verification
+```bash
+# Tables now exist:
+- master_services (64.00 KB / 0 rows)
+- branch_service_overrides (80.00 KB / 0 rows)
+```
+
+## Impact
+- Branch views now load without errors
+- Master services functionality is available
+- Branch-specific service overrides can be configured

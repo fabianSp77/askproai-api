@@ -15,6 +15,14 @@ class TenantScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
     {
+        // Skip for super admins and resellers
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->hasRole('super_admin') || $user->hasRole('reseller')) {
+                return; // Don't apply any filtering
+            }
+        }
+        
         // Mehrere Möglichkeiten, die aktuelle Company zu bestimmen
         $companyId = $this->getCurrentCompanyId();
         

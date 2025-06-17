@@ -12,8 +12,8 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable, HasRoles;
     
-    protected $table = 'laravel_users';
-    protected $primaryKey = 'id';
+    protected $table = 'users';
+    protected $primaryKey = 'user_id';
     public $timestamps = true;
     
     protected $fillable = [

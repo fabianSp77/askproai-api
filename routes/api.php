@@ -7,6 +7,7 @@ use App\Http\Controllers\HybridBookingController;
 use App\Http\Controllers\MetricsController;
 use Illuminate\Http\Request;
 use App\Services\CalcomV2Service;
+use App\Http\Controllers\UnifiedWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +54,13 @@ Route::post('/retell/function-call', [App\Http\Controllers\RetellRealtimeControl
 // ---- Stripe Webhook (POST) --------------------------------------
 Route::post('/stripe/webhook', [App\Http\Controllers\Api\StripeWebhookController::class, 'handle'])
     ->name('stripe.webhook');
+
+// ---- UNIFIED WEBHOOK HANDLER (NEW) ------------------------------
+// Automatically detects and routes webhooks from any source
+Route::post('/webhook', [UnifiedWebhookController::class, 'handle'])
+    ->name('webhook.unified');
+Route::get('/webhook/health', [UnifiedWebhookController::class, 'health'])
+    ->name('webhook.health');
 
 // ---- Frontend Error Logging -------------------------------------
 Route::post('/log-frontend-error', [\App\Http\Controllers\FrontendErrorController::class, 'log'])

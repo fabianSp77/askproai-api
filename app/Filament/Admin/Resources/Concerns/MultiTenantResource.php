@@ -28,8 +28,11 @@ trait MultiTenantResource
         if ($user && $user->company_id) {
             // Check if model has company_id column
             $model = $query->getModel();
-            if (in_array('company_id', $model->getFillable())) {
-                $query->where($model->getTable() . '.company_id', $user->company_id);
+            $table = $model->getTable();
+            
+            // Check if the table actually has a company_id column
+            if (\Schema::hasColumn($table, 'company_id')) {
+                $query->where($table . '.company_id', $user->company_id);
             }
         }
         

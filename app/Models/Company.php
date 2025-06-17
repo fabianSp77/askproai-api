@@ -6,130 +6,93 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Traits\SmartLoader;
-use App\Models\Traits\HasLoadingProfiles;
-use App\Traits\HasEncryptedAttributes;
 
 class Company extends Model
 {
-    use HasFactory, SoftDeletes, SmartLoader, HasLoadingProfiles, HasEncryptedAttributes;
+    use HasFactory, SoftDeletes;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'companies';
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
-        'contact_person',
+        'slug',
+        'industry',
+        'website',
         'email',
         'phone',
         'address',
         'city',
+        'state',
         'postal_code',
         'country',
-        'tax_number',
-        'company_type',
-        'subscription_plan',
-        'subscription_status',
-        'trial_ends_at',
-        'active',
-        'is_active',
-        'typ',
+        'timezone',
+        'currency',
+        'logo',
         'settings',
+        'metadata',
+        'is_active',
+        'trial_ends_at',
+        'subscription_status',
+        'subscription_plan',
+        // API Keys
+        'retell_api_key',
+        'retell_agent_id',
         'calcom_api_key',
         'calcom_team_slug',
-        'calcom_event_type_id',
         'calcom_user_id',
-        'retell_api_key',
-        'retell_webhook_url',
-        'retell_agent_id',
-        'calcom_calendar_mode',
-        'billing_status',
+        'google_calendar_credentials',
         'stripe_customer_id',
         'stripe_subscription_id',
-        'webhook_url',
-        'opening_hours',
-        'notification_email',
-        'notification_emails',
-        'notify_on_booking',
-        'send_booking_confirmations',
-        'calendar_mode',
-        'calendar_mapping',
-        'api_test_errors',
     ];
 
-    /**
-     * The attributes that should be encrypted.
-     *
-     * @var array<int, string>
-     */
-    protected $encrypted = [
-        'calcom_api_key',
-        'retell_api_key',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'active' => 'boolean',
-        'is_active' => 'boolean',
-        'notify_on_booking' => 'boolean',
-        'send_booking_confirmations' => 'boolean',
         'settings' => 'array',
-        'opening_hours' => 'array',
-        'notification_emails' => 'array',
-        'calendar_mapping' => 'array',
-        'api_test_errors' => 'array',
+        'metadata' => 'array',
+        'google_calendar_credentials' => 'encrypted:array',
+        'is_active' => 'boolean',
         'trial_ends_at' => 'datetime',
+    ];
+
+    protected $hidden = [
+        'retell_api_key',
+        'calcom_api_key',
+        'google_calendar_credentials',
+        'stripe_customer_id',
+    ];
+
+    protected $attributes = [
+        'is_active' => true,
+        'currency' => 'EUR',
+        'timezone' => 'Europe/Berlin',
+        'country' => 'DE',
     ];
 
     /**
      * Get the branches for the company.
      */
-    public function branches()
+    public function branches(): HasMany
     {
         return $this->hasMany(Branch::class);
     }
 
     /**
-     * Get the customers for the company.
-     */
-    public function customers()
-    {
-        return $this->hasMany(Customer::class);
-    }
-
-    /**
      * Get the staff members for the company.
      */
-    public function staff()
+    public function staff(): HasMany
     {
         return $this->hasMany(Staff::class);
     }
 
     /**
-     * Get the services for the company.
+     * Get the customers for the company.
      */
-    public function services()
+    public function customers(): HasMany
     {
-        return $this->hasMany(Service::class);
+        return $this->hasMany(Customer::class);
     }
 
     /**
      * Get the appointments for the company.
      */
-    public function appointments()
+    public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
     }
@@ -137,143 +100,69 @@ class Company extends Model
     /**
      * Get the calls for the company.
      */
-    public function calls()
+    public function calls(): HasMany
     {
         return $this->hasMany(Call::class);
     }
 
     /**
-     * Get the integrations for the company.
+     * Get the services for the company.
      */
-    public function integrations()
+    public function services(): HasMany
     {
-        return $this->hasMany(Integration::class);
+        return $this->hasMany(Service::class);
     }
 
     /**
-     * Get the users for the company.
+     * Get the users associated with the company.
      */
-    public function users()
+    public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
     /**
-     * Get the retell agents for the company.
-     */
-    public function retellAgents()
-    {
-        return $this->hasMany(RetellAgent::class);
-    }
-
-    /**
-     * Get the event types for the company.
-     */
-    public function eventTypes()
-    {
-        return $this->hasMany(CalcomEventType::class);
-    }
-
-    /**
-     * Get the calcom bookings for the company.
-     */
-    public function calcomBookings()
-    {
-        return $this->hasMany(CalcomBooking::class);
-    }
-
-    /**
-     * Scope active companies.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('active', true);
-    }
-
-public function tenants()
-{
-    return $this->hasMany(Tenant::class);
-}
-
-    /**
-     * Get the pricing models for the company.
-     */
-    public function pricingModels(): HasMany
-    {
-        return $this->hasMany(CompanyPricing::class);
-    }
-    
-    /**
-     * Get the active pricing model.
-     */
-    public function activePricing()
-    {
-        return $this->hasOne(CompanyPricing::class)
-            ->where('is_active', true)
-            ->where('valid_from', '<=', now())
-            ->where(function ($query) {
-                $query->whereNull('valid_until')
-                    ->orWhere('valid_until', '>=', now());
-            })
-            ->orderBy('valid_from', 'desc');
-    }
-
-    /**
      * Get the invoices for the company.
      */
-    public function invoices()
+    public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
     }
 
     /**
-     * Get the additional services for the company.
+     * Get the pricing for the company.
      */
-    public function additionalServices()
+    public function pricing()
     {
-        return $this->hasMany(AdditionalService::class);
+        return $this->hasOne(CompanyPricing::class);
     }
 
     /**
-     * Get the customer services for the company.
+     * Get the event types for the company.
      */
-    public function customerServices()
+    public function eventTypes(): HasMany
     {
-        return $this->hasMany(CustomerService::class);
-    }
-
-
-    /**
-     * Check if company is on trial.
-     *
-     * @return bool
-     */
-    public function isOnTrial(): bool
-    {
-        return $this->subscription_status === 'trial' &&
-               $this->trial_ends_at &&
-               $this->trial_ends_at->isFuture();
+        return $this->hasMany(CalcomEventType::class);
     }
 
     /**
-     * Check if company has valid subscription.
-     *
-     * @return bool
+     * Check if company is in trial period
      */
-    public function hasValidSubscription(): bool
+    public function isInTrial(): bool
     {
-        return in_array($this->subscription_status, ['active', 'trial']);
+        return $this->trial_ends_at && $this->trial_ends_at->isFuture();
     }
 
     /**
-     * Get settings value.
-     *
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
+     * Check if company has active subscription
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscription_status === 'active';
+    }
+
+    /**
+     * Get setting value
      */
     public function getSetting(string $key, $default = null)
     {
@@ -281,11 +170,7 @@ public function tenants()
     }
 
     /**
-     * Set settings value.
-     *
-     * @param string $key
-     * @param mixed $value
-     * @return void
+     * Set setting value
      */
     public function setSetting(string $key, $value): void
     {
@@ -296,112 +181,29 @@ public function tenants()
     }
 
     /**
-     * Get the display name with contact person.
-     *
-     * @return string
+     * Get the route key for the model.
      */
-    public function getDisplayNameAttribute(): string
+    public function getRouteKeyName(): string
     {
-        if ($this->contact_person) {
-            return $this->name . ' (' . $this->contact_person . ')';
-        }
-        return $this->name;
+        return 'id';
     }
 
     /**
-     * Get Cal.com configuration for the company
-     *
-     * @return array|null
+     * Boot method
      */
-    public function getCalcomConfig()
+    protected static function boot()
     {
-        if ($this->calcom_api_key) {
-            return [
-                'api_key' => $this->calcom_api_key,
-                'event_type_id' => $this->calcom_event_type_id,
-                'team_slug' => $this->calcom_team_slug,
-                'user_id' => $this->calcom_user_id,
-            ];
-        }
+        parent::boot();
 
-        return null;
-    }
-
-    /**
-     * Get Retell.ai configuration for the company
-     *
-     * @return array|null
-     */
-    public function getRetellConfig()
-    {
-        if ($this->retell_api_key) {
-            return [
-                'api_key' => $this->retell_api_key,
-                'webhook_url' => $this->webhook_url ?? 'https://api.askproai.de/api/retell/webhook',
-            ];
-        }
-
-        return null;
-    }
-    
-    /**
-     * Define the loading profiles for this model
-     */
-    protected static function defineLoadingProfiles(): void
-    {
-        // Minimal profile - no relationships
-        static::defineLoadingProfile('minimal', []);
-        
-        // Standard profile - essential relationships
-        static::defineLoadingProfile('standard', [
-            'branches:id,company_id,name,address,city',
-        ]);
-        
-        // Full profile - all relationships (be careful with this!)
-        static::defineLoadingProfile('full', [
-            'branches',
-            'staff',
-            'services',
-            'users',
-            'integrations',
-        ]);
-        
-        // Counts profile - for dashboard and listings
-        static::defineLoadingProfile('counts', [
-            'branches',
-            'staff',
-            'customers',
-            'appointments',
-            'services',
-        ]);
-    }
-    
-    /**
-     * Get allowed includes for API
-     */
-    protected function getAllowedIncludes(): array
-    {
-        return [
-            'branches',
-            'staff',
-            'services',
-            'customers',
-            'users',
-        ];
-    }
-    
-    /**
-     * Get countable relations
-     */
-    protected function getCountableRelations(): array
-    {
-        return [
-            'branches',
-            'staff',
-            'customers',
-            'appointments',
-            'services',
-            'calls',
-        ];
+        static::creating(function ($company) {
+            if (empty($company->slug)) {
+                $company->slug = \Str::slug($company->name);
+            }
+            
+            // Set trial period for new companies (14 days)
+            if (empty($company->trial_ends_at)) {
+                $company->trial_ends_at = now()->addDays(14);
+            }
+        });
     }
 }

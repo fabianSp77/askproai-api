@@ -87,6 +87,22 @@ return [
             'permission' => 0664,
         ],
 
+        'webhooks' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/webhooks.log'),
+            'level' => 'info',
+            'days' => 30,
+            'permission' => 0664,
+        ],
+
+        'critical' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/critical.log'),
+            'level' => 'error',
+            'days' => 90,
+            'permission' => 0664,
+        ],
+
         'slow_queries' => [
             'driver' => 'daily',
             'path' => storage_path('logs/slow_queries.log'),

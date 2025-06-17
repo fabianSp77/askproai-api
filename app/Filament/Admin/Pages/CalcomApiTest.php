@@ -5,16 +5,19 @@ namespace App\Filament\Admin\Pages;
 use Filament\Pages\Page;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Actions\Action;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Http;
 
-class CalcomApiTest extends Page implements HasForms
+class CalcomApiTest extends Page implements HasForms, HasActions
 {
     use InteractsWithForms;
+    use InteractsWithActions;
     
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
     protected static ?string $navigationGroup = 'System';
@@ -270,21 +273,11 @@ class CalcomApiTest extends Page implements HasForms
         }
     }
     
-    protected function getFormActions(): array
+    public function clearResults(): void
     {
-        return [
-            Action::make('testConnection')
-                ->label('Test API Connection')
-                ->action('testConnection')
-                ->color('primary'),
-                
-            Action::make('clearResults')
-                ->label('Clear')
-                ->action(fn () => $this->form->fill([
-                    'api_key' => $this->data['api_key'],
-                    'test_results' => '',
-                ]))
-                ->color('gray'),
-        ];
+        $this->form->fill([
+            'api_key' => $this->data['api_key'] ?? '',
+            'test_results' => 'Click "Test API Connection" to begin...',
+        ]);
     }
 }

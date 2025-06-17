@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\BranchResource\Pages;
 
 use App\Filament\Admin\Resources\BranchResource;
+use App\Filament\Admin\Resources\BranchResource\Widgets\RetellAgentProvisioningWidget;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
@@ -50,5 +51,17 @@ class EditBranch extends EditRecord
             ->success()
             ->title('Filiale gespeichert')
             ->body('Alle Änderungen wurden erfolgreich gespeichert.');
+    }
+    
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            RetellAgentProvisioningWidget::class,
+        ];
+    }
+    
+    protected function getFooterWidgets(): array 
+    {
+        return [];
     }
 }
