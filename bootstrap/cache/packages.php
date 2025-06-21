@@ -108,6 +108,13 @@
       0 => 'Kirschbaum\\PowerJoins\\PowerJoinsServiceProvider',
     ),
   ),
+  'kirschbaum-development/laravel-loop' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Kirschbaum\\Loop\\LoopServiceProvider',
+    ),
+  ),
   'laravel/breeze' => 
   array (
     'providers' => 
@@ -186,6 +193,17 @@
       0 => 'Termwind\\Laravel\\TermwindServiceProvider',
     ),
   ),
+  'prism-php/prism' => 
+  array (
+    'aliases' => 
+    array (
+      'PrismServer' => 'Prism\\Prism\\Facades\\PrismServer',
+    ),
+    'providers' => 
+    array (
+      0 => 'Prism\\Prism\\PrismServiceProvider',
+    ),
+  ),
   'ryangjchandler/blade-capture-directive' => 
   array (
     'aliases' => 
@@ -195,6 +213,18 @@
     'providers' => 
     array (
       0 => 'RyanChandler\\BladeCaptureDirective\\BladeCaptureDirectiveServiceProvider',
+    ),
+  ),
+  'sentry/sentry-laravel' => 
+  array (
+    'aliases' => 
+    array (
+      'Sentry' => 'Sentry\\Laravel\\Facade',
+    ),
+    'providers' => 
+    array (
+      0 => 'Sentry\\Laravel\\ServiceProvider',
+      1 => 'Sentry\\Laravel\\Tracing\\ServiceProvider',
     ),
   ),
   'spatie/laravel-activitylog' => 

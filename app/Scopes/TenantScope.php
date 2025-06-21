@@ -15,10 +15,10 @@ class TenantScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
     {
-        // Skip for super admins and resellers
-        if (Auth::check()) {
-            $user = Auth::user();
-            if ($user->hasRole('super_admin') || $user->hasRole('reseller')) {
+        // Skip for super admins and resellers (only for admin users)
+        if (Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+            if (method_exists($user, 'hasRole') && ($user->hasRole('super_admin') || $user->hasRole('reseller'))) {
                 return; // Don't apply any filtering
             }
         }
@@ -29,9 +29,16 @@ class TenantScope implements Scope
         if ($companyId) {
             $builder->where($model->getTable() . '.company_id', $companyId);
         } else {
-            // CRITICAL: If no company context is set, return NO records
-            // This prevents data leakage when context is missing
-            $builder->whereRaw('1 = 0'); // This ensures no records are returned
+            // CRITICAL: If no company context is set, throw exception
+            // This prevents silent failures and data issues
+            if (app()->environment(['production', 'staging'])) {
+                throw new \App\Exceptions\MissingTenantException(
+                    'No company context found for model: ' . get_class($model)
+                );
+            }
+            
+            // In development/testing, just return no records
+            $builder->where($model->getTable() . '.id', '<', 0); // This will never match any records
         }
     }
     
@@ -48,9 +55,17 @@ class TenantScope implements Scope
         // 2. Aus dem authentifizierten User
         if (Auth::check()) {
             $user = Auth::user();
-            // Use the virtual company_id attribute we just added
-            if ($user->company_id) {
+            // Use the company_id attribute
+            if (isset($user->company_id) && $user->company_id) {
                 return $user->company_id;
+            }
+        }
+        
+        // 2b. Check customer auth guard specifically
+        if (Auth::guard('customer')->check()) {
+            $customer = Auth::guard('customer')->user();
+            if (isset($customer->company_id) && $customer->company_id) {
+                return $customer->company_id;
             }
         }
         

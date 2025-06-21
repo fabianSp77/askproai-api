@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends CompatibleMigration {
     public function up(): void
     {
         /* nur anlegen, wenn die Tabelle noch nicht existiert */
@@ -13,7 +13,7 @@ return new class extends Migration {
                 $table->id();
                 $table->string('external_id')->nullable()->index();
                 $table->text('transcript')->nullable();
-                $table->json('raw')->nullable();
+                $this->addJsonColumn($table, 'raw', true);
                 $table->timestamps();
             });
         }

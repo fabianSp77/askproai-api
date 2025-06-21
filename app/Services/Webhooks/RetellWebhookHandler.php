@@ -46,8 +46,8 @@ class RetellWebhookHandler extends BaseWebhookHandler
             'call_id' => $callData['call_id'] ?? null
         ]);
         
-        // Create or update call record
-        $call = Call::updateOrCreate(
+        // Create or update call record (disable tenant scope for webhook processing)
+        $call = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)->updateOrCreate(
             ['retell_call_id' => $callData['call_id']],
             [
                 'company_id' => $this->resolveCompanyId($callData),
@@ -91,11 +91,13 @@ class RetellWebhookHandler extends BaseWebhookHandler
         ]);
         
         return $this->withCorrelationId($correlationId, function () use ($callData, $correlationId) {
-            // Find or create call record
-            $call = Call::where('retell_call_id', $callData['call_id'])->first();
+            // Find or create call record (disable tenant scope for webhook processing)
+            $call = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                ->where('retell_call_id', $callData['call_id'])
+                ->first();
             
             if (!$call) {
-                $call = Call::create([
+                $call = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)->create([
                     'retell_call_id' => $callData['call_id'],
                     'company_id' => $this->resolveCompanyId($callData),
                     'from_number' => $callData['from_number'] ?? null,
@@ -159,8 +161,10 @@ class RetellWebhookHandler extends BaseWebhookHandler
             'call_id' => $callData['call_id'] ?? null
         ]);
         
-        // Update call with analysis data
-        $call = Call::where('retell_call_id', $callData['call_id'])->first();
+        // Update call with analysis data (disable tenant scope for webhook processing)
+        $call = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('retell_call_id', $callData['call_id'])
+            ->first();
         
         if ($call) {
             $call->update([
@@ -198,14 +202,16 @@ class RetellWebhookHandler extends BaseWebhookHandler
             'to_number' => $callData['to_number'] ?? null
         ]);
         
-        // Get company based on the to_number
-        $company = Company::where('phone_number', $callData['to_number'])->first();
+        // Get company based on the to_number (disable tenant scope for webhook processing)
+        $company = Company::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('phone_number', $callData['to_number'])
+            ->first();
         
         if (!$company) {
             $this->logWarning('No company found for phone number', [
                 'to_number' => $callData['to_number']
             ]);
-            $company = Company::first(); // Fallback
+            $company = Company::withoutGlobalScope(\App\Scopes\TenantScope::class)->first(); // Fallback
         }
         
         // Build response with dynamic variables
@@ -426,32 +432,38 @@ class RetellWebhookHandler extends BaseWebhookHandler
      * Resolve company ID from call data
      *
      * @param array $callData
-     * @return int
+     * @return int|null
      */
-    protected function resolveCompanyId(array $callData): int
+    protected function resolveCompanyId(array $callData): ?int
     {
-        // Try to find by phone number
-        $toNumber = $callData['to_number'] ?? null;
+        // Use PhoneNumberResolver for comprehensive resolution
+        $phoneResolver = app(PhoneNumberResolver::class);
+        $context = $phoneResolver->resolveFromWebhook([
+            'to' => $callData['to_number'] ?? null,
+            'from' => $callData['from_number'] ?? null,
+            'agent_id' => $callData['agent_id'] ?? null,
+            'metadata' => $callData['metadata'] ?? []
+        ]);
         
-        if ($toNumber) {
-            $company = Company::where('phone_number', $toNumber)->first();
-            if ($company) {
-                return $company->id;
-            }
+        if ($context['company_id']) {
+            return $context['company_id'];
         }
         
-        // Try agent ID
-        $agentId = $callData['agent_id'] ?? null;
+        // Log warning if we can't resolve company
+        Log::warning('Could not resolve company from call data', [
+            'to_number' => $callData['to_number'] ?? null,
+            'agent_id' => $callData['agent_id'] ?? null,
+            'resolution_confidence' => $context['confidence'] ?? 0
+        ]);
         
-        if ($agentId) {
-            $company = Company::where('retell_agent_id', $agentId)->first();
-            if ($company) {
-                return $company->id;
-            }
+        // In production, we should not fallback to a random company
+        // This should be handled by proper configuration
+        if (app()->environment('production')) {
+            throw new \Exception('Unable to determine company from call data');
         }
         
-        // Fallback to first company
-        return Company::first()->id ?? 1;
+        // Only in development/testing
+        return Company::first()->id ?? null;
     }
     
     /**

@@ -11,12 +11,12 @@ return new class extends Migration {
 
             // slug (falls noch nicht da)
             if (!Schema::hasColumn('tenants', 'slug')) {
-                $table->string('slug')->unique()->after('name');
+                $table->string('slug')->unique();
             }
 
             // api_key  (wird von Seeder benötigt)
             if (!Schema::hasColumn('tenants', 'api_key')) {
-                $table->string('api_key')->nullable()->after('slug');
+                $table->string('api_key')->nullable();
             }
         });
     }

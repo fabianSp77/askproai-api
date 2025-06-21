@@ -1,30 +1,53 @@
 <?php
-require_once 'vendor/autoload.php';
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+require_once __DIR__ . '/vendor/autoload.php';
 
-$apiKey = $_ENV['CALCOM_API_KEY'];
-$eventTypeId = $_ENV['CALCOM_EVENT_TYPE_ID'];
+$app = require_once __DIR__ . '/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+$response = $kernel->handle(
+    $request = Illuminate\Http\Request::capture()
+);
 
-// Teste Verfügbarkeit für die nächsten 7 Tage
-$dateFrom = date('Y-m-d');
-$dateTo = date('Y-m-d', strtotime('+7 days'));
+// Check Cal.com availability
+$calcomService = new \App\Services\CalcomV2Service();
 
-echo "Prüfe Verfügbarkeit vom $dateFrom bis $dateTo\n";
-echo "Event Type ID: $eventTypeId\n\n";
+echo "=== Checking Cal.com Availability ===\n\n";
 
-$url = "https://api.cal.com/v1/availability?apiKey=$apiKey&eventTypeId=$eventTypeId&dateFrom=$dateFrom&dateTo=$dateTo";
+$eventTypeId = 2281004;
+$startDate = '2024-12-20'; // December 2024
+$endDate = '2024-12-27';   // One week
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+echo "Event Type ID: $eventTypeId\n";
+echo "Date Range: $startDate to $endDate\n\n";
 
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
-
-echo "HTTP Status: $httpCode\n";
-$data = json_decode($response, true);
-echo "Response: " . json_encode($data, JSON_PRETTY_PRINT) . "\n";
+try {
+    // Get available slots
+    $slots = $calcomService->getSlots($eventTypeId, $startDate, $endDate, 'Europe/Berlin');
+    
+    if ($slots) {
+        echo "Available slots:\n";
+        
+        // Group by date
+        $slotsByDate = [];
+        foreach ($slots['slots'] ?? [] as $slot) {
+            $date = substr($slot, 0, 10);
+            if (!isset($slotsByDate[$date])) {
+                $slotsByDate[$date] = [];
+            }
+            $slotsByDate[$date][] = $slot;
+        }
+        
+        foreach ($slotsByDate as $date => $daySlots) {
+            $dayName = \Carbon\Carbon::parse($date)->format('l, F j');
+            echo "\n$dayName:\n";
+            foreach ($daySlots as $slot) {
+                $time = \Carbon\Carbon::parse($slot)->format('H:i');
+                echo "  - $time\n";
+            }
+        }
+    } else {
+        echo "❌ No slots returned\n";
+    }
+} catch (\Exception $e) {
+    echo "❌ Error: " . $e->getMessage() . "\n";
+}

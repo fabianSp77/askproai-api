@@ -88,15 +88,17 @@ class OnboardingService
      */
     public function getProgress(Company $company, User $user): array
     {
+        $userId = $user->user_id ?? $user->id;
+        
         $progress = DB::table('onboarding_progress')
             ->where('company_id', $company->id)
-            ->where('user_id', $user->id)
+            ->where('user_id', $userId)
             ->first();
 
         if (!$progress) {
             $progressId = DB::table('onboarding_progress')->insertGetId([
                 'company_id' => $company->id,
-                'user_id' => $user->id,
+                'user_id' => $userId,
                 'current_step' => 'welcome',
                 'completed_steps' => json_encode([]),
                 'step_data' => json_encode([]),

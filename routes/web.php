@@ -28,6 +28,17 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
+// Filament dashboard routes fix removed - pages now use default route generation
+
+// Include help center routes
+require __DIR__.'/help-center.php';
+
+// Legal pages routes
+Route::get('/privacy', [App\Http\Controllers\PrivacyController::class, 'privacy'])->name('privacy');
+Route::get('/cookie-policy', [App\Http\Controllers\PrivacyController::class, 'cookiePolicy'])->name('cookie-policy');
+Route::get('/terms', [App\Http\Controllers\PrivacyController::class, 'terms'])->name('terms');
+Route::get('/impressum', [App\Http\Controllers\PrivacyController::class, 'impressum'])->name('impressum');
+
 // Dashboard route - redirects to Filament admin panel
 Route::get('/dashboard', function () {
     return redirect('/admin');
@@ -171,3 +182,8 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__.'/test-errors.php';
+
+// Customer Portal Routes
+Route::prefix('portal')->group(function () {
+    require __DIR__.'/portal.php';
+});

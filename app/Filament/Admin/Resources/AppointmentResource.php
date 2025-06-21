@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\AppointmentResource\Pages;
 use App\Filament\Admin\Resources\Concerns\MultiTenantResource;
+use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Appointment;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -21,12 +22,18 @@ use Filament\Forms\Components\DatePicker;
 
 class AppointmentResource extends Resource
 {
+
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
     use MultiTenantResource;
+    use HasConsistentNavigation;
+    
     protected static ?string $model = Appointment::class;
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $navigationLabel = 'Termine';
-    protected static ?string $navigationGroup = 'Geschäftsvorgänge';
-    protected static ?int $navigationSort = 10;
 
     public static function form(Form $form): Form
     {

@@ -5,6 +5,7 @@
 @import '../../column-toggle-fix.css';
 @import '../../tab-tooltips.css';
 @import '../../column-editor-modern.css';
+@import '../../contrast-fix.css';
 
 :root {
     --color-primary-50: 254 252 232;
@@ -38,15 +39,57 @@
 }
 
 /* Remove any black overlays */
+/* Commented out to fix contrast issues
 body.dark .fi-body,
 html.dark .fi-body {
-    background-color: rgb(249 250 251) !important; /* gray-50 */
+    background-color: rgb(249 250 251) !important;
 }
+*/
 
 /* Ensure page content is always visible */
 .fi-page {
     opacity: 1 !important;
     visibility: visible !important;
+}
+
+/* Fix text contrast issues */
+.fi-body {
+    background-color: rgb(255 255 255) !important; /* Pure white background */
+}
+
+/* Ensure proper text colors */
+.fi-body,
+.fi-body * {
+    color: rgb(17 24 39); /* gray-900 for better contrast */
+}
+
+/* Fix gray text that's too light */
+.text-gray-500 {
+    color: rgb(75 85 99) !important; /* gray-600 for better contrast */
+}
+
+.text-gray-400 {
+    color: rgb(107 114 128) !important; /* gray-500 for better contrast */
+}
+
+/* Ensure cards have proper backgrounds */
+.fi-section,
+.fi-card {
+    background-color: rgb(255 255 255) !important;
+    border-color: rgb(229 231 235) !important;
+}
+
+/* Fix widget text contrast */
+.filament-widget .text-gray-600 {
+    color: rgb(55 65 81) !important; /* gray-700 */
+}
+
+.filament-widget .text-gray-700 {
+    color: rgb(31 41 55) !important; /* gray-800 */
+}
+
+.filament-widget .text-gray-900 {
+    color: rgb(17 24 39) !important; /* gray-900 */
 }
 
 /* Disable Livewire navigation progress bar delay */

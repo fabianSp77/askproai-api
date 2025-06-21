@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\StaffResource\Pages;
 use App\Filament\Admin\Resources\StaffResource\RelationManagers;
+use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Staff;
 use App\Models\Service;
 use App\Models\Branch;
@@ -28,9 +29,16 @@ use Illuminate\Support\HtmlString;
 
 class StaffResource extends EnhancedResourceSimple
 {
+
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    use HasConsistentNavigation;
     protected static ?string $model = Staff::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    protected static ?string $navigationGroup = 'Personal & Services';
     protected static ?string $modelLabel = 'Mitarbeiter';
     protected static ?string $pluralModelLabel = 'Mitarbeiter';
     protected static ?int $navigationSort = 30;
@@ -379,6 +387,7 @@ Tables\Columns\TextColumn::make('email')
         return [
             RelationManagers\WorkingHoursRelationManager::class,
             RelationManagers\AppointmentsRelationManager::class,
+            RelationManagers\EventTypesRelationManager::class,
         ];
     }
 

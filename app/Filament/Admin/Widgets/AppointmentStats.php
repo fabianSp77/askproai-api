@@ -70,24 +70,24 @@ class AppointmentStats extends BaseWidget
         return [
             Stat::make('Termine heute', $appointmentsToday)
                 ->description("Diese Woche: {$appointmentsWeek}")
-                ->descriptionIcon('heroicon-m-calendar')
+                ->descriptionIcon('heroicon-o-calendar')
                 ->chart([7, 5, 10, 3, 15, 4, $appointmentsToday])
                 ->color('primary'),
                 
             Stat::make('Umsatz heute', number_format($revenueToday / 100, 2, ',', '.') . ' €')
                 ->description('Monat: ' . number_format($revenueMonth / 100, 2, ',', '.') . ' €')
-                ->descriptionIcon('heroicon-m-currency-euro')
+                ->descriptionIcon('heroicon-o-currency-euro')
                 ->color('success'),
                 
             Stat::make('Auslastung', $utilizationRate . '%')
                 ->description($utilizationRate > 80 ? 'Hoch' : ($utilizationRate > 50 ? 'Normal' : 'Niedrig'))
-                ->descriptionIcon('heroicon-m-chart-bar')
+                ->descriptionIcon('heroicon-o-chart-bar')
                 ->color($utilizationRate > 80 ? 'danger' : ($utilizationRate > 50 ? 'warning' : 'success'))
                 ->chart($this->getUtilizationTrend()),
                 
             Stat::make('No-Show Rate', $noShowRate . '%')
                 ->description($noShowMonth . ' von ' . $completedMonth . ' Terminen')
-                ->descriptionIcon('heroicon-m-x-circle')
+                ->descriptionIcon('heroicon-o-x-circle')
                 ->color($noShowRate > 20 ? 'danger' : ($noShowRate > 10 ? 'warning' : 'success')),
         ];
     }

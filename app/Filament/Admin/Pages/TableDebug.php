@@ -17,7 +17,7 @@ class TableDebug extends Page implements HasTable
     protected static ?string $navigationIcon = 'heroicon-o-bug-ant';
     protected static ?string $navigationLabel = 'Table Debug';
     protected static string $view = 'filament.admin.pages.table-debug';
-    protected static ?string $navigationGroup = 'Entwicklung';
+    protected static ?string $navigationGroup = 'System & Überwachung';
 
     public function table(Table $table): Table
     {

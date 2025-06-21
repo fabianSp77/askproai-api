@@ -16,4 +16,5 @@ abstract class TestCase extends BaseTestCase
          $app->make(Kernel::class)->bootstrap();
          return $app;
     }
+    
 }

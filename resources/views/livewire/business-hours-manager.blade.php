@@ -7,7 +7,11 @@
                 <select wire:model="selectedTemplate" class="flex-1 rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900">
                     <option value="">-- Vorlage wählen --</option>
                     @foreach($templates as $template)
-                        <option value="{{ $template->id }}">{{ $template->name }}</option>
+                        @if(is_array($template))
+                            <option value="{{ $template['id'] }}">{{ $template['name'] }}</option>
+                        @else
+                            <option value="{{ $template->id }}">{{ $template->name }}</option>
+                        @endif
                     @endforeach
                 </select>
                 <button type="button" wire:click="applyTemplate" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">

@@ -8,7 +8,7 @@ class SystemStatus extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
     protected static ?string $navigationLabel = 'Systemstatus';
-    protected static ?string $navigationGroup = 'System & Monitoring';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static string $view = 'filament.admin.pages.system-status';
     protected static ?int $navigationSort = 30;
 

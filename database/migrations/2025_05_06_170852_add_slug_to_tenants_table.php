@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::table('tenants', function (Blueprint $table) {
             if (! Schema::hasColumn('tenants', 'slug')) {
-                $table->string('slug')->unique()->after('name');
+                $table->string('slug')->unique();
             }
         });
     }

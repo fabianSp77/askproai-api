@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('calls', function (Blueprint $table) {
             // Füge kunde_id als Fremdschlüssel hinzu, wenn noch nicht vorhanden
             if (!Schema::hasColumn('calls', 'kunde_id')) {
-                $table->foreignId('kunde_id')->nullable()->after('raw')
+                $table->foreignId('kunde_id')->nullable()
                     ->constrained('kunden')->nullOnDelete();
             }
         });

@@ -3,17 +3,17 @@
 namespace App\Services\Integrations;
 
 use App\Models\ValidationResult;
-use App\Services\CalcomService;
+use App\Services\CalcomV2Service;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class CalcomEnhancedIntegration
 {
-    private CalcomService $calcomService;
+    private CalcomV2Service $calcomService;
 
     public function __construct()
     {
-        $this->calcomService = app(CalcomService::class);
+        $this->calcomService = app(CalcomV2Service::class);
     }
 
     public function validateAndSyncConfiguration($entity, string $entityType = 'branch'): array

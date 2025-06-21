@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\CompanyResource\Pages;
+use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Company;
 use App\Services\CalcomEventTypeSyncService;
 use Filament\Forms;
@@ -17,11 +18,32 @@ use Filament\Infolists\Components\TextEntry;
 
 class CompanyResource extends Resource
 {
+
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+    
+    public static function canView($record): bool
+    {
+        return true;
+    }
+    
+    public static function canEdit($record): bool
+    {
+        return true;
+    }
+    
+    public static function canCreate(): bool
+    {
+        return true;
+    }
+
+    use HasConsistentNavigation;
+    
     protected static ?string $model = Company::class;
-    protected static ?string $navigationGroup = 'Unternehmensstruktur';
     protected static ?string $navigationLabel = 'Unternehmen';
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
-    protected static ?int $navigationSort = 10;
 
     public static function form(Form $form): Form
     {

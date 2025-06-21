@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -14,22 +14,22 @@ return new class extends Migration
         Schema::table('calls', function (Blueprint $table) {
             // Retell webhook data storage
             if (!Schema::hasColumn('calls', 'webhook_data')) {
-                $table->json('webhook_data')->nullable()->after('raw_data');
+                $this->addJsonColumn($table, 'webhook_data', true);
             }
             
             // Agent version tracking
             if (!Schema::hasColumn('calls', 'agent_version')) {
-                $table->integer('agent_version')->nullable()->after('agent_id');
+                $table->integer('agent_version')->nullable();
             }
             
             // Retell cost tracking (in dollars)
             if (!Schema::hasColumn('calls', 'retell_cost')) {
-                $table->decimal('retell_cost', 10, 4)->nullable()->after('cost');
+                $table->decimal('retell_cost', 10, 4)->nullable();
             }
             
             // Custom SIP headers
             if (!Schema::hasColumn('calls', 'custom_sip_headers')) {
-                $table->json('custom_sip_headers')->nullable()->after('metadata');
+                $this->addJsonColumn($table, 'custom_sip_headers', true);
             }
         });
     }

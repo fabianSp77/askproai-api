@@ -24,9 +24,14 @@ class CalcomLiveTest extends Page implements HasForms
     use InteractsWithForms;
     
     protected static ?string $navigationIcon = 'heroicon-o-beaker';
-    protected static ?string $navigationGroup = 'System';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static ?string $navigationLabel = 'Cal.com Live Test';
     protected static ?int $navigationSort = 11;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
     
     protected static string $view = 'filament.admin.pages.calcom-live-test';
     

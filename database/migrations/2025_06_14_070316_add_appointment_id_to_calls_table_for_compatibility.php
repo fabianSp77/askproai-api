@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('calls', function (Blueprint $table) {
             if (!Schema::hasColumn('calls', 'appointment_id')) {
-                $table->unsignedBigInteger('appointment_id')->nullable()->after('customer_id');
+                $table->unsignedBigInteger('appointment_id')->nullable();
                 $table->index('appointment_id');
                 
                 // Add foreign key constraint

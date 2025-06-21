@@ -6,6 +6,7 @@ use App\Filament\Admin\Resources\CustomerResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use App\Filament\Admin\Widgets\CustomerInsightsWidget;
+use Filament\Notifications\Notification;
 
 class ListCustomers extends ListRecords
 {
@@ -26,7 +27,10 @@ class ListCustomers extends ListRecords
                 ->color('success')
                 ->action(function () {
                     // Export logic would go here
-                    $this->notify('success', 'Export wird vorbereitet...');
+                    Notification::make()
+                        ->title('Export wird vorbereitet...')
+                        ->success()
+                        ->send();
                 }),
         ];
     }
@@ -34,7 +38,10 @@ class ListCustomers extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            CustomerInsightsWidget::class,
+            \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
+            \App\Filament\Admin\Widgets\CustomerKpiWidget::class,
+            \App\Filament\Admin\Widgets\CustomerFunnelWidget::class,
+            \App\Filament\Admin\Widgets\CustomerSourceWidget::class,
         ];
     }
     

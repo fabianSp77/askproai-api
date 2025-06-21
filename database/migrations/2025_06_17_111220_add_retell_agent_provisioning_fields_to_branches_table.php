@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('branches', function (Blueprint $table) {
             // Only add settings column as the other two already exist
-            $table->json('settings')->nullable()->after('website');
+            $this->addJsonColumn($table, 'settings', true);
         });
     }
 

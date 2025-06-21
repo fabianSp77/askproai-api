@@ -17,9 +17,14 @@ class UltimateSystemCockpitOptimized extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
     protected static ?string $navigationLabel = 'System Performance Center';
-    protected static ?string $navigationGroup = 'System & Monitoring';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static string $view = 'filament.admin.pages.ultimate-system-cockpit-optimized';
     protected static ?int $navigationSort = 1;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - redundante Monitoring-Seite
+    }
     
     public array $callMetrics = [];
     public array $appointmentMetrics = [];

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('branches', function (Blueprint $table) {
-            $table->timestamp('integrations_tested_at')->nullable()->after('active');
+            $table->timestamp('integrations_tested_at')->nullable();
         });
     }
 

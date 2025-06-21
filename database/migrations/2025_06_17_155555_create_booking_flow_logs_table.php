@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -19,7 +19,7 @@ return new class extends Migration
             $table->char('branch_id', 36)->nullable()->index();
             $table->unsignedBigInteger('customer_id')->nullable()->index();
             $table->char('appointment_id', 36)->nullable()->index();
-            $table->json('context')->nullable();
+            $this->addJsonColumn($table, 'context', true);
             $table->timestamps();
             
             // Composite indexes for common queries

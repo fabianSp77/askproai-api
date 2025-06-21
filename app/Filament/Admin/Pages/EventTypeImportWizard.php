@@ -6,8 +6,11 @@ use Filament\Pages\Page;
 use App\Models\Company;
 use App\Models\Branch;
 use App\Models\CalcomEventType;
+use App\Models\Staff;
 use App\Services\CalcomSyncService;
 use App\Services\EventTypeNameParser;
+use App\Services\SmartEventTypeNameParser;
+use App\Filament\Admin\Traits\HasLoadingStates;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -25,17 +28,18 @@ use Livewire\Attributes\Computed;
 
 class EventTypeImportWizard extends Page implements HasForms
 {
-    use InteractsWithForms;
+    use InteractsWithForms, HasLoadingStates;
     
     protected static ?string $navigationIcon = 'heroicon-o-arrow-down-tray';
-    protected static ?string $navigationGroup = 'Kalender & Events';
+    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
     protected static ?string $navigationLabel = 'Event-Type Import';
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 14;
     protected static string $view = 'filament.admin.pages.event-type-import-wizard';
     protected static ?string $title = 'Event-Type Import Wizard';
     
     // Wizard Steps
     public int $currentStep = 1;
+    public int $totalSteps = 5; // Added staff mapping step
     
     // Form data
     public ?array $data = [];
@@ -47,15 +51,22 @@ class EventTypeImportWizard extends Page implements HasForms
     // Step 2: Preview
     public array $eventTypesPreview = [];
     public array $importSelections = [];
+    public string $searchQuery = '';
+    public string $filterTeam = 'all';
     
     // Step 3: Mapping
     public array $mappings = [];
     
-    // Step 4: Confirmation
+    // Step 4: Staff Mapping (NEU)
+    public array $calcomUsers = [];
+    public array $staffMappings = [];
+    
+    // Step 5: Confirmation
     public array $importSummary = [];
     
     private ?CalcomSyncService $calcomService = null;
     private ?EventTypeNameParser $nameParser = null;
+    private ?SmartEventTypeNameParser $smartNameParser = null;
     
     public function mount(): void
     {
@@ -63,6 +74,7 @@ class EventTypeImportWizard extends Page implements HasForms
         try {
             $this->calcomService = app(CalcomSyncService::class);
             $this->nameParser = app(EventTypeNameParser::class);
+            $this->smartNameParser = app(SmartEventTypeNameParser::class);
         } catch (\Exception $e) {
             Log::error('Failed to initialize services in EventTypeImportWizard', [
                 'error' => $e->getMessage()
@@ -71,13 +83,20 @@ class EventTypeImportWizard extends Page implements HasForms
             // Create instances directly if service container fails
             $this->calcomService = new CalcomSyncService();
             $this->nameParser = new EventTypeNameParser();
+            $this->smartNameParser = new SmartEventTypeNameParser();
         }
         
         // Initialize form data
+        $user = auth()->user();
         $this->data = [
-            'company_id' => null,
+            'company_id' => $user->company_id ?? null,
             'branch_id' => null,
         ];
+        
+        // Set company_id if user has one
+        if ($user->company_id) {
+            $this->company_id = $user->company_id;
+        }
         
         $this->form->fill($this->data);
     }
@@ -96,6 +115,7 @@ class EventTypeImportWizard extends Page implements HasForms
             2 => $this->getStep2Schema(),
             3 => $this->getStep3Schema(),
             4 => $this->getStep4Schema(),
+            5 => $this->getStep5Schema(),
             default => []
         };
     }
@@ -111,10 +131,38 @@ class EventTypeImportWizard extends Page implements HasForms
                 ->schema([
                     Select::make('company_id')
                         ->label('Unternehmen')
-                        ->options(Company::whereNotNull('calcom_api_key')->pluck('name', 'id'))
+                        ->options(function () {
+                            $user = auth()->user();
+                            
+                            // Super admins can see all companies with Cal.com API key
+                            if ($user->hasRole('super_admin')) {
+                                return Company::whereNotNull('calcom_api_key')->pluck('name', 'id');
+                            }
+                            
+                            // Regular users only see their own company if it has an API key
+                            if ($user->company_id) {
+                                return Company::where('id', $user->company_id)
+                                    ->whereNotNull('calcom_api_key')
+                                    ->pluck('name', 'id');
+                            }
+                            
+                            return [];
+                        })
                         ->required()
                         ->searchable()
                         ->live()
+                        ->disabled(fn() => !auth()->user()->hasRole('super_admin') && auth()->user()->company_id !== null)
+                        ->helperText(function () {
+                            $user = auth()->user();
+                            if (!$user->hasRole('super_admin') && $user->company_id) {
+                                $company = Company::find($user->company_id);
+                                if ($company && !$company->calcom_api_key) {
+                                    return 'Ihr Unternehmen hat noch keinen Cal.com API-Key konfiguriert.';
+                                }
+                                return 'Event-Types werden für Ihr Unternehmen importiert.';
+                            }
+                            return 'Wählen Sie das Unternehmen aus, für das Event-Types importiert werden sollen.';
+                        })
                         ->afterStateUpdated(function ($state, callable $set) {
                             $this->company_id = $state;
                             $this->branch_id = null;
@@ -129,9 +177,24 @@ class EventTypeImportWizard extends Page implements HasForms
                             if (!$companyId) {
                                 return [];
                             }
-                            return Branch::where('company_id', $companyId)
-                                ->where('active', true)
-                                ->pluck('name', 'id');
+                            
+                            try {
+                                $branches = Branch::withoutGlobalScopes()
+                                    ->where('company_id', $companyId)
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->get()
+                                    ->pluck('name', 'id')
+                                    ->toArray();
+                                
+                                return $branches;
+                            } catch (\Exception $e) {
+                                Log::error('Error loading branches', [
+                                    'company_id' => $companyId,
+                                    'error' => $e->getMessage()
+                                ]);
+                                return [];
+                            }
                         })
                         ->required()
                         ->searchable()
@@ -140,7 +203,8 @@ class EventTypeImportWizard extends Page implements HasForms
                         ->live()
                         ->afterStateUpdated(function ($state) {
                             $this->branch_id = $state;
-                        }),
+                        })
+                        ->dehydrated(),
                 ])
         ];
     }
@@ -190,12 +254,60 @@ class EventTypeImportWizard extends Page implements HasForms
     }
     
     /**
-     * Step 4: Import Bestätigung
+     * Step 4: Staff Mapping (NEU)
      */
     protected function getStep4Schema(): array
     {
         return [
-            Section::make('Schritt 4: Import-Zusammenfassung')
+            Section::make('Schritt 4: Mitarbeiter-Zuordnung')
+                ->description('Ordnen Sie Cal.com Benutzer zu Ihren Mitarbeitern zu.')
+                ->schema([
+                    Repeater::make('staffMappings')
+                        ->label('Mitarbeiter-Zuordnungen')
+                        ->schema([
+                            TextInput::make('calcom_user_name')
+                                ->label('Cal.com Benutzer')
+                                ->disabled()
+                                ->helperText('Name aus Cal.com'),
+                            
+                            Select::make('staff_id')
+                                ->label('Zugeordneter Mitarbeiter')
+                                ->options(function () {
+                                    if (!$this->company_id) return [];
+                                    
+                                    return Staff::where('company_id', $this->company_id)
+                                        ->where('active', true)
+                                        ->orderBy('name')
+                                        ->pluck('name', 'id');
+                                })
+                                ->searchable()
+                                ->placeholder('Kein Mitarbeiter zuordnen')
+                                ->helperText('Lassen Sie leer, wenn dieser Cal.com Benutzer keinem Mitarbeiter entspricht'),
+                            
+                            Toggle::make('create_new')
+                                ->label('Neuen Mitarbeiter erstellen')
+                                ->reactive()
+                                ->helperText('Erstellt automatisch einen neuen Mitarbeiter mit diesem Namen')
+                                ->afterStateUpdated(function ($state, callable $set, $get) {
+                                    if ($state) {
+                                        $set('staff_id', null);
+                                    }
+                                }),
+                        ])
+                        ->disableItemCreation()
+                        ->disableItemDeletion()
+                        ->defaultItems(0)
+                ])
+        ];
+    }
+    
+    /**
+     * Step 5: Import Bestätigung
+     */
+    protected function getStep5Schema(): array
+    {
+        return [
+            Section::make('Schritt 5: Import-Zusammenfassung')
                 ->description('Bestätigen Sie den Import der ausgewählten Event-Types.')
                 ->schema([
                     // Zusammenfassung wird in der View angezeigt
@@ -230,11 +342,15 @@ class EventTypeImportWizard extends Page implements HasForms
             $this->prepareMappings();
         }
         elseif ($this->currentStep === 3) {
+            // Lade Cal.com Benutzer für Staff Mapping
+            $this->loadCalcomUsers();
+        }
+        elseif ($this->currentStep === 4) {
             // Erstelle Import-Zusammenfassung
             $this->prepareImportSummary();
         }
         
-        if ($this->currentStep < 4) {
+        if ($this->currentStep < 5) {
             $this->currentStep++;
         }
     }
@@ -279,7 +395,12 @@ class EventTypeImportWizard extends Page implements HasForms
             ]);
             
             // Hole Event-Types von Cal.com
-            $response = $this->fetchEventTypesFromCalcom($company->calcom_api_key);
+            // Decrypt the API key before using it
+            $decryptedApiKey = $company->calcom_api_key ? decrypt($company->calcom_api_key) : null;
+            if (!$decryptedApiKey) {
+                throw new \Exception('Cal.com API-Key fehlt oder konnte nicht entschlüsselt werden.');
+            }
+            $response = $this->fetchEventTypesFromCalcom($decryptedApiKey);
             
             // Debug: Log response
             Log::info('Cal.com API response', [
@@ -315,21 +436,72 @@ class EventTypeImportWizard extends Page implements HasForms
                 throw new \Exception('Keine Event-Types von Cal.com erhalten. Möglicherweise hat der API-Key keine Berechtigung.');
             }
             
-            // Ensure nameParser is initialized
+            // Ensure parsers are initialized
             if (!$this->nameParser) {
                 $this->nameParser = app(EventTypeNameParser::class);
             }
+            if (!$this->smartNameParser) {
+                $this->smartNameParser = app(SmartEventTypeNameParser::class);
+            }
             
-            // Analysiere Event-Types mit dem Parser
-            $this->eventTypesPreview = $this->nameParser->analyzeEventTypesForImport(
+            // Analysiere Event-Types mit dem Smart Parser für bessere Namen
+            $smartAnalysis = $this->smartNameParser->analyzeEventTypesForImport(
                 $eventTypes,
                 $branch
             );
             
-            // Initialisiere Import-Auswahl
-            // Bei 'manual' standardmäßig nicht ausgewählt, User muss aktiv auswählen
+            // Fallback auf alten Parser für Kompatibilität
+            $oldAnalysis = $this->nameParser->analyzeEventTypesForImport(
+                $eventTypes,
+                $branch
+            );
+            
+            // Kombiniere die Ergebnisse - nutze Smart Parser Namen
+            $this->eventTypesPreview = [];
+            foreach ($smartAnalysis as $index => $smartResult) {
+                $oldResult = $oldAnalysis[$index] ?? [];
+                
+                // Keep the old analysis but enhance with smart naming
+                $mergedResult = $oldResult;
+                $mergedResult['original_name'] = $smartResult['original_name'];
+                $mergedResult['extracted_service'] = $smartResult['extracted_service'];
+                $mergedResult['suggested_name'] = $smartResult['recommended_name'];
+                $mergedResult['name_options'] = $smartResult['suggested_names'];
+                
+                // Don't override suggested_action if it's already set
+                if (!isset($mergedResult['suggested_action'])) {
+                    $mergedResult['suggested_action'] = 'import';
+                }
+                
+                $this->eventTypesPreview[] = $mergedResult;
+            }
+            
+            // Initialisiere Import-Auswahl - NICHT alle auswählen!
+            // Intelligente Vorauswahl basierend auf verschiedenen Kriterien
             foreach ($this->eventTypesPreview as $index => $preview) {
-                $this->importSelections[$index] = $preview['suggested_action'] === 'import';
+                // Standardmäßig nicht ausgewählt
+                $shouldSelect = false;
+                
+                // Wähle nur aus wenn:
+                // 1. Der Name zur Filiale passt
+                if ($preview['matches_branch'] ?? false) {
+                    $shouldSelect = true;
+                }
+                
+                // 2. NICHT wenn es ein Test-Event ist
+                $originalName = strtolower($preview['original_name'] ?? '');
+                if (strpos($originalName, 'test') !== false || 
+                    strpos($originalName, 'demo') !== false ||
+                    strpos($originalName, 'example') !== false) {
+                    $shouldSelect = false;
+                }
+                
+                // 3. NICHT wenn es inaktiv ist
+                if (!($preview['original']['active'] ?? true)) {
+                    $shouldSelect = false;
+                }
+                
+                $this->importSelections[$index] = $shouldSelect;
             }
             
             Log::info('Event types preview initialized', [
@@ -371,6 +543,102 @@ class EventTypeImportWizard extends Page implements HasForms
                     'duration' => $preview['original']['length'] ?? 30,
                 ];
             }
+        }
+    }
+    
+    /**
+     * Lade Cal.com Benutzer für Staff Mapping
+     */
+    private function loadCalcomUsers(): void
+    {
+        try {
+            // Extract unique users from selected event types
+            $uniqueUsers = [];
+            
+            foreach ($this->eventTypesPreview as $index => $preview) {
+                if (!$this->importSelections[$index]) continue;
+                
+                // Check for users in the event type
+                $eventType = $preview['original'];
+                
+                // Team events might have multiple users
+                if (isset($eventType['users']) && is_array($eventType['users'])) {
+                    foreach ($eventType['users'] as $user) {
+                        $userId = $user['id'] ?? null;
+                        if ($userId && !isset($uniqueUsers[$userId])) {
+                            $uniqueUsers[$userId] = [
+                                'id' => $userId,
+                                'name' => $user['name'] ?? $user['username'] ?? 'Unknown User',
+                                'email' => $user['email'] ?? null,
+                            ];
+                        }
+                    }
+                }
+                
+                // Single user events
+                if (isset($eventType['user'])) {
+                    $user = $eventType['user'];
+                    $userId = $user['id'] ?? null;
+                    if ($userId && !isset($uniqueUsers[$userId])) {
+                        $uniqueUsers[$userId] = [
+                            'id' => $userId,
+                            'name' => $user['name'] ?? $user['username'] ?? 'Unknown User',
+                            'email' => $user['email'] ?? null,
+                        ];
+                    }
+                }
+                
+                // Owner information
+                if (isset($eventType['owner'])) {
+                    $owner = $eventType['owner'];
+                    $ownerId = $owner['id'] ?? null;
+                    if ($ownerId && !isset($uniqueUsers[$ownerId])) {
+                        $uniqueUsers[$ownerId] = [
+                            'id' => $ownerId,
+                            'name' => $owner['name'] ?? $owner['username'] ?? 'Unknown Owner',
+                            'email' => $owner['email'] ?? null,
+                        ];
+                    }
+                }
+            }
+            
+            // Convert to array and prepare staff mappings
+            $this->calcomUsers = array_values($uniqueUsers);
+            $this->staffMappings = [];
+            
+            foreach ($this->calcomUsers as $user) {
+                // Try to find existing staff by email or name
+                $existingStaff = null;
+                
+                if ($user['email']) {
+                    $existingStaff = Staff::where('company_id', $this->company_id)
+                        ->where('email', $user['email'])
+                        ->first();
+                }
+                
+                if (!$existingStaff && $user['name']) {
+                    $existingStaff = Staff::where('company_id', $this->company_id)
+                        ->where('name', 'LIKE', '%' . $user['name'] . '%')
+                        ->first();
+                }
+                
+                $this->staffMappings[] = [
+                    'calcom_user_id' => $user['id'],
+                    'calcom_user_name' => $user['name'] . ($user['email'] ? ' (' . $user['email'] . ')' : ''),
+                    'staff_id' => $existingStaff?->id,
+                    'create_new' => !$existingStaff,
+                ];
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Error loading Cal.com users', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            // Initialize empty if error
+            $this->calcomUsers = [];
+            $this->staffMappings = [];
         }
     }
     
@@ -478,6 +746,9 @@ class EventTypeImportWizard extends Page implements HasForms
                         ]
                     );
                     
+                    // Handle staff assignments
+                    $this->assignStaffToEventType($eventType, $originalEventType);
+                    
                     $imported++;
                     
                 } catch (\Exception $e) {
@@ -531,7 +802,7 @@ class EventTypeImportWizard extends Page implements HasForms
         try {
             Log::info('Fetching event types from Cal.com', [
                 'api_key_length' => strlen($apiKey),
-                'api_key_prefix' => substr($apiKey, 0, 10) . '...'
+                'api_key_prefix' => str_starts_with($apiKey, 'cal_') ? 'cal_***' : 'unknown_format'
             ]);
             
             // Use the v2 API endpoint that actually returns data
@@ -544,7 +815,7 @@ class EventTypeImportWizard extends Page implements HasForms
             Log::info('Cal.com API raw response', [
                 'status' => $response->status(),
                 'successful' => $response->successful(),
-                'headers' => $response->headers(),
+                'headers' => method_exists($response, 'headers') ? $response->headers() : 'no headers method',
                 'body_preview' => substr($response->body(), 0, 500)
             ]);
             
@@ -608,7 +879,8 @@ class EventTypeImportWizard extends Page implements HasForms
             1 => !empty($this->data['company_id'] ?? null) && !empty($this->data['branch_id'] ?? null),
             2 => count(array_filter($this->importSelections)) > 0,
             3 => count($this->mappings) > 0,
-            4 => true,
+            4 => true, // Staff mapping is optional
+            5 => true,
             default => false
         };
     }
@@ -620,8 +892,177 @@ class EventTypeImportWizard extends Page implements HasForms
             1 => 'Unternehmen & Filiale',
             2 => 'Event-Types Vorschau',
             3 => 'Zuordnungen prüfen',
-            4 => 'Import bestätigen',
+            4 => 'Mitarbeiter zuordnen',
+            5 => 'Import bestätigen',
             default => ''
         };
+    }
+    
+    
+    // Select all event types
+    public function selectAll(): void
+    {
+        foreach ($this->importSelections as $index => $selected) {
+            $this->importSelections[$index] = true;
+        }
+    }
+    
+    // Deselect all event types
+    public function deselectAll(): void
+    {
+        foreach ($this->importSelections as $index => $selected) {
+            $this->importSelections[$index] = false;
+        }
+    }
+    
+    // Smart selection based on criteria
+    public function selectSmart(): void
+    {
+        foreach ($this->eventTypesPreview as $index => $preview) {
+            $shouldSelect = false;
+            
+            // Intelligente Auswahl-Logik
+            if ($preview['matches_branch'] ?? false) {
+                $shouldSelect = true;
+            }
+            
+            $originalName = strtolower($preview['original_name'] ?? '');
+            if (strpos($originalName, 'test') !== false || 
+                strpos($originalName, 'demo') !== false) {
+                $shouldSelect = false;
+            }
+            
+            if (!($preview['original']['active'] ?? true)) {
+                $shouldSelect = false;
+            }
+            
+            $this->importSelections[$index] = $shouldSelect;
+        }
+    }
+    
+    // Get filtered event types based on search and team filter
+    public function getFilteredEventTypes(): array
+    {
+        $filtered = $this->eventTypesPreview;
+        
+        // Suchfilter
+        if (!empty($this->searchQuery)) {
+            $filtered = array_filter($filtered, function($preview) {
+                $searchLower = strtolower($this->searchQuery);
+                $inName = strpos(strtolower($preview['original_name'] ?? ''), $searchLower) !== false;
+                $inService = strpos(strtolower($preview['extracted_service'] ?? ''), $searchLower) !== false;
+                return $inName || $inService;
+            });
+        }
+        
+        // Team-Filter
+        if ($this->filterTeam !== 'all') {
+            $filtered = array_filter($filtered, function($preview) {
+                $teamId = $preview['original']['team']['id'] ?? 'no-team';
+                return $teamId == $this->filterTeam;
+            });
+        }
+        
+        // Preserve array keys
+        return $filtered;
+    }
+    
+    // Get unique teams from event types
+    public function getUniqueTeams(): array
+    {
+        $teams = [];
+        
+        foreach ($this->eventTypesPreview as $preview) {
+            if (isset($preview['original']['team'])) {
+                $team = $preview['original']['team'];
+                $teams[$team['id'] ?? 'unknown'] = $team['name'] ?? 'Unbekanntes Team';
+            }
+        }
+        
+        return $teams;
+    }
+    
+    /**
+     * Assign staff to event type based on mappings
+     */
+    private function assignStaffToEventType(CalcomEventType $eventType, array $originalEventType): void
+    {
+        try {
+            // Clear existing assignments
+            DB::table('staff_event_types')
+                ->where('event_type_id', $eventType->id)
+                ->delete();
+            
+            // Get all Cal.com users associated with this event type
+            $calcomUserIds = [];
+            
+            if (isset($originalEventType['users']) && is_array($originalEventType['users'])) {
+                foreach ($originalEventType['users'] as $user) {
+                    if (isset($user['id'])) {
+                        $calcomUserIds[] = $user['id'];
+                    }
+                }
+            }
+            
+            if (isset($originalEventType['user']['id'])) {
+                $calcomUserIds[] = $originalEventType['user']['id'];
+            }
+            
+            if (isset($originalEventType['owner']['id'])) {
+                $calcomUserIds[] = $originalEventType['owner']['id'];
+            }
+            
+            // Make unique
+            $calcomUserIds = array_unique($calcomUserIds);
+            
+            // Process each Cal.com user
+            foreach ($calcomUserIds as $calcomUserId) {
+                // Find the mapping for this Cal.com user
+                $mapping = collect($this->staffMappings)->firstWhere('calcom_user_id', $calcomUserId);
+                
+                if (!$mapping) continue;
+                
+                $staffId = null;
+                
+                // Create new staff if requested
+                if ($mapping['create_new'] ?? false) {
+                    // Find the Cal.com user info
+                    $calcomUser = collect($this->calcomUsers)->firstWhere('id', $calcomUserId);
+                    
+                    if ($calcomUser) {
+                        $staff = Staff::create([
+                            'company_id' => $this->company_id,
+                            'branch_id' => $this->branch_id,
+                            'name' => $calcomUser['name'],
+                            'email' => $calcomUser['email'] ?? null,
+                            'active' => true,
+                            'can_book_appointments' => true,
+                            'calcom_user_id' => $calcomUserId,
+                        ]);
+                        $staffId = $staff->id;
+                    }
+                } elseif ($mapping['staff_id'] ?? null) {
+                    $staffId = $mapping['staff_id'];
+                }
+                
+                // Create the assignment
+                if ($staffId) {
+                    DB::table('staff_event_types')->insert([
+                        'staff_id' => $staffId,
+                        'event_type_id' => $eventType->id,
+                        'calcom_user_id' => $calcomUserId,
+                        'is_primary' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Error assigning staff to event type', [
+                'event_type_id' => $eventType->id,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

@@ -18,7 +18,7 @@ return new class extends Migration
         
         if (!Schema::hasColumn('laravel_users', 'email_verified_at')) {
             Schema::table('laravel_users', function (Blueprint $table) {
-                $table->timestamp('email_verified_at')->nullable()->after('email');
+                $table->timestamp('email_verified_at')->nullable();
             });
         }
     }

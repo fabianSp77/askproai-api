@@ -291,12 +291,21 @@ class ListCalls extends ListRecords
     
     protected function getHeaderWidgets(): array
     {
-        return [
-            // \App\Filament\Admin\Resources\CallResource\Widgets\CallPerformanceWidget::class,
-            // \App\Filament\Admin\Resources\CallResource\Widgets\CallQualityWidget::class,
-            // \App\Filament\Admin\Resources\CallResource\Widgets\CallTrendsWidget::class,
-            // \App\Filament\Admin\Resources\CallResource\Widgets\CallStatsWidget::class,
-        ];
+        try {
+            return [
+                \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
+                \App\Filament\Admin\Widgets\CallKpiWidget::class,
+                \App\Filament\Admin\Widgets\CallDurationHistogramWidget::class,
+            ];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error loading widgets', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return [];
+        }
     }
     
     // public function updated($property): void

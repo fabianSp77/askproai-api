@@ -234,9 +234,9 @@ class ListAppointments extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Resources\AppointmentResource\Widgets\AppointmentStatsWidget::class,
-            \App\Filament\Admin\Resources\AppointmentResource\Widgets\AppointmentTrendsWidget::class,
-            \App\Filament\Admin\Resources\AppointmentResource\Widgets\StaffPerformanceWidget::class,
+            \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
+            \App\Filament\Admin\Widgets\AppointmentKpiWidget::class,
+            \App\Filament\Admin\Widgets\AppointmentTrendWidget::class,
         ];
     }
     

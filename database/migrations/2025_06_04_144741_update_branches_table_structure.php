@@ -1,24 +1,24 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
         Schema::table('branches', function (Blueprint $table) {
             // Neue Felder für erweiterte Funktionalität
-            $table->json('retell_agent_cache')->nullable()->after('retell_agent_id');
-            $table->timestamp('retell_last_sync')->nullable()->after('retell_agent_cache');
-            $table->json('configuration_status')->nullable()->after('integration_status');
-            $table->json('parent_settings')->nullable()->after('configuration_status');
-            $table->string('address')->nullable()->after('city');
-            $table->string('postal_code', 10)->nullable()->after('address');
-            $table->string('website')->nullable()->after('notification_email');
-            $table->json('business_hours')->nullable()->after('website');
-            $table->json('services_override')->nullable()->after('business_hours');
+            $this->addJsonColumn($table, 'retell_agent_cache', true);
+            $table->timestamp('retell_last_sync')->nullable();
+            $this->addJsonColumn($table, 'configuration_status', true);
+            $this->addJsonColumn($table, 'parent_settings', true);
+            $table->string('address')->nullable();
+            $table->string('postal_code', 10)->nullable();
+            $table->string('website')->nullable();
+            $this->addJsonColumn($table, 'business_hours', true);
+            $this->addJsonColumn($table, 'services_override', true);
         });
     }
 

@@ -15,13 +15,13 @@ return new class extends Migration
             Schema::table('branch_service', function (Blueprint $table) {
                 // Prüfen ob die Spalten schon existieren und nur hinzufügen wenn nicht
                 if (!Schema::hasColumn('branch_service', 'price')) {
-                    $table->decimal('price', 10, 2)->nullable()->after('service_id');
+                    $table->decimal('price', 10, 2)->nullable();
                 }
                 if (!Schema::hasColumn('branch_service', 'duration')) {
-                    $table->integer('duration')->nullable()->after('price');
+                    $table->integer('duration')->nullable();
                 }
                 if (!Schema::hasColumn('branch_service', 'active')) {
-                    $table->boolean('active')->default(true)->after('duration');
+                    $table->boolean('active')->default(true);
                 }
             });
         }

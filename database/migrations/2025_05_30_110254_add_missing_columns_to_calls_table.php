@@ -11,22 +11,22 @@ return new class extends Migration
         Schema::table('calls', function (Blueprint $table) {
             // Nur hinzufügen, wenn die Spalten nicht existieren
             if (!Schema::hasColumn('calls', 'telefonnummer')) {
-                $table->string('telefonnummer')->nullable()->after('email');
+                $table->string('telefonnummer')->nullable();
             }
             if (!Schema::hasColumn('calls', 'dienstleistung')) {
-                $table->string('dienstleistung')->nullable()->after('telefonnummer');
+                $table->string('dienstleistung')->nullable();
             }
             if (!Schema::hasColumn('calls', 'grund')) {
-                $table->text('grund')->nullable()->after('dienstleistung');
+                $table->text('grund')->nullable();
             }
             if (!Schema::hasColumn('calls', 'datum_termin')) {
-                $table->date('datum_termin')->nullable()->after('grund');
+                $table->date('datum_termin')->nullable();
             }
             if (!Schema::hasColumn('calls', 'uhrzeit_termin')) {
-                $table->time('uhrzeit_termin')->nullable()->after('datum_termin');
+                $table->time('uhrzeit_termin')->nullable();
             }
             if (!Schema::hasColumn('calls', 'calcom_booking_id')) {
-                $table->string('calcom_booking_id')->nullable()->after('uhrzeit_termin');
+                $table->string('calcom_booking_id')->nullable();
             }
         });
     }

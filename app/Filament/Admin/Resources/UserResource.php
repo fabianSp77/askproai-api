@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\UserResource\Pages;
+use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -12,12 +13,11 @@ use Filament\Tables\Table;
 
 class UserResource extends Resource
 {
+    use HasConsistentNavigation;
+    
     protected static ?string $model = User::class;
-    protected static ?string $navigationGroup = 'Konfiguration';
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationLabel = 'Benutzer';
-    protected static ?int $navigationSort = 30;
-    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
     {

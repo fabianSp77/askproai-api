@@ -16,6 +16,7 @@ use App\Services\Calcom\DTOs\BookingDTO;
 use App\Services\Calcom\DTOs\AttendeeDTO;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Client\PendingRequest;
 
@@ -201,24 +202,24 @@ class CalcomV2Client
             
             try {
                 // Log request
-                $this->logger->logApiRequest('calcom_v2', $method, $url, [
-                    'request_id' => $requestId,
-                    'options' => $this->sanitizeOptions($options)
+                Log::debug('Cal.com V2 API Request', [
+                    'service' => 'calcom_v2',
+                    'method' => $method,
+                    'endpoint' => $url,
+                    'request_id' => $requestId
                 ]);
                 
                 // Build request
                 $request = $this->buildRequest();
                 
-                // Execute with retry
-                $response = $this->executeWithRetry(function() use ($request, $method, $url, $options) {
-                    return match(strtoupper($method)) {
-                        'GET' => $request->get($url, $options['query'] ?? []),
-                        'POST' => $request->post($url, $options['json'] ?? []),
-                        'PATCH' => $request->patch($url, $options['json'] ?? []),
-                        'DELETE' => $request->delete($url, $options['json'] ?? []),
-                        default => throw new \InvalidArgumentException("Unsupported HTTP method: {$method}")
-                    };
-                });
+                // Execute request directly (retry is handled by circuit breaker)
+                $response = match(strtoupper($method)) {
+                    'GET' => $request->get($url, $options['query'] ?? []),
+                    'POST' => $request->post($url, $options['json'] ?? []),
+                    'PATCH' => $request->patch($url, $options['json'] ?? []),
+                    'DELETE' => $request->delete($url, $options['json'] ?? []),
+                    default => throw new \InvalidArgumentException("Unsupported HTTP method: {$method}")
+                };
                 
                 // Log response
                 $duration = (microtime(true) - $startTime) * 1000;
@@ -234,7 +235,8 @@ class CalcomV2Client
             } catch (\Exception $e) {
                 // Log error
                 $duration = (microtime(true) - $startTime) * 1000;
-                $this->logger->logApiError('calcom_v2', $e, [
+                $this->logger->logError($e, [
+                    'service' => 'calcom_v2',
                     'request_id' => $requestId,
                     'method' => $method,
                     'endpoint' => $endpoint,

@@ -28,11 +28,16 @@ class LivewireDebugMiddleware
 
         $response = $next($request);
 
-        if ($request->hasHeader('X-Livewire') && $response->isRedirect()) {
+        if ($request->hasHeader('X-Livewire') && method_exists($response, 'isRedirect') && $response->isRedirect()) {
+            $location = 'unknown';
+            if ($response instanceof \Illuminate\Http\Response || $response instanceof \Symfony\Component\HttpFoundation\Response) {
+                $location = $response->headers->get('Location');
+            }
+            
             Log::channel('daily')->error('LIVEWIRE REDIRECT DETECTED', [
-                'status' => $response->getStatusCode(),
-                'location' => $response->headers->get('Location'),
-                'content' => substr($response->getContent(), 0, 1000),
+                'status' => method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 'unknown',
+                'location' => $location,
+                'content' => method_exists($response, 'getContent') ? substr($response->getContent(), 0, 1000) : 'unknown',
             ]);
         }
 

@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\BranchResource\Pages;
+use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\RetellAgent;
@@ -23,10 +24,16 @@ use Filament\Support\Enums\MaxWidth;
 
 class BranchResource extends Resource
 {
-    protected static ?string $model = Branch::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    use HasConsistentNavigation;
     
+    protected static ?string $model = Branch::class;
+    protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
     protected static ?string $navigationLabel = 'Filialen';
     
     protected static ?string $pluralLabel = 'Filialen';
@@ -35,7 +42,7 @@ class BranchResource extends Resource
     
     protected static ?string $navigationGroup = 'Unternehmensstruktur';
     
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 12;
 
     public static function form(Form $form): Form
     {
@@ -478,9 +485,19 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
+        $query = parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+            
+        // Filter by user's company if not super admin
+        $user = auth()->user();
+        if ($user && !$user->hasRole('super_admin') && !$user->can('view_any_branch')) {
+            if ($user->company_id) {
+                $query->where('company_id', $user->company_id);
+            }
+        }
+        
+        return $query;
     }
 }

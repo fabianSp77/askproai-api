@@ -16,6 +16,11 @@ class Authenticate extends Middleware
             return null;
         }
         
+        // Check if this is a portal/customer route
+        if ($request->is('portal/*') || $request->routeIs('portal.*')) {
+            return route('portal.login');
+        }
+        
         // Try to use Filament login route, fallback to /admin/login
         try {
             return route('filament.admin.auth.login');

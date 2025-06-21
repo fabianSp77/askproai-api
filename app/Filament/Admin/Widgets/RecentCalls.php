@@ -67,7 +67,7 @@ class RecentCalls extends TableWidget
                     ->formatStateUsing(fn (int $state): string => 
                         $state > 0 ? gmdate('i:s', $state) : '-'
                     )
-                    ->icon('heroicon-m-clock')
+                    ->icon('heroicon-o-clock')
                     ->iconColor(fn (int $state): string => 
                         $state > 300 ? 'warning' : 'gray'
                     ),
@@ -109,7 +109,7 @@ class RecentCalls extends TableWidget
             ->actions([
                 Tables\Actions\Action::make('transcript')
                     ->label('Transkript')
-                    ->icon('heroicon-m-document-text')
+                    ->icon('heroicon-o-document-text')
                     ->iconButton()
                     ->tooltip('Transkript anzeigen')
                     ->modalHeading('Anruf-Transkript')
@@ -125,7 +125,7 @@ class RecentCalls extends TableWidget
                     
                 Tables\Actions\Action::make('create_appointment')
                     ->label('Termin')
-                    ->icon('heroicon-m-calendar-plus')
+                    ->icon('heroicon-o-calendar')
                     ->iconButton()
                     ->tooltip('Termin erstellen')
                     ->color('success')

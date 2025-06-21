@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
@@ -14,7 +14,7 @@ return new class extends Migration
             $table->uuid('master_service_id');
             $table->uuid('branch_id');
             $table->string('calcom_user_id')->nullable();
-            $table->json('availability_rules')->nullable();
+            $this->addJsonColumn($table, 'availability_rules', true);
             $table->boolean('active')->default(true);
             $table->timestamps();
 

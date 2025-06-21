@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('companies', function (Blueprint $table) {
-            //
+            if (!Schema::hasColumn('companies', 'is_active')) {
+                $table->boolean('is_active')->default(true)->after('retell_api_key');
+            }
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('companies', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('companies', 'is_active')) {
+                $table->dropColumn('is_active');
+            }
         });
     }
 };

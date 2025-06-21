@@ -34,11 +34,25 @@ class FindDuplicates extends Page implements HasTable
                     ->selectRaw('COUNT(*) OVER (PARTITION BY LOWER(email)) as email_count')
                     ->selectRaw('COUNT(*) OVER (PARTITION BY phone) as phone_count')
                     ->selectRaw('COUNT(*) OVER (PARTITION BY LOWER(name)) as name_count')
-                    ->whereRaw('(
-                        EXISTS (SELECT 1 FROM customers c2 WHERE c2.id != customers.id AND LOWER(c2.email) = LOWER(customers.email) AND customers.email IS NOT NULL)
-                        OR EXISTS (SELECT 1 FROM customers c2 WHERE c2.id != customers.id AND c2.phone = customers.phone AND customers.phone IS NOT NULL)
-                        OR EXISTS (SELECT 1 FROM customers c2 WHERE c2.id != customers.id AND LOWER(c2.name) = LOWER(customers.name))
-                    )')
+                    ->where(function($query) {
+                        $query->whereExists(function($subquery) {
+                            $subquery->from('customers as c2')
+                                ->whereColumn('c2.id', '!=', 'customers.id')
+                                ->whereRaw('LOWER(c2.email) = LOWER(customers.email)')
+                                ->whereNotNull('customers.email');
+                        })
+                        ->orWhereExists(function($subquery) {
+                            $subquery->from('customers as c2')
+                                ->whereColumn('c2.id', '!=', 'customers.id')
+                                ->whereColumn('c2.phone', 'customers.phone')
+                                ->whereNotNull('customers.phone');
+                        })
+                        ->orWhereExists(function($subquery) {
+                            $subquery->from('customers as c2')
+                                ->whereColumn('c2.id', '!=', 'customers.id')
+                                ->whereRaw('LOWER(c2.name) = LOWER(customers.name)');
+                        });
+                    })
             )
             ->columns([
                 Tables\Columns\TextColumn::make('name')
@@ -89,11 +103,25 @@ class FindDuplicates extends Page implements HasTable
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         if ($data['value'] === 'email') {
-                            return $query->whereRaw('EXISTS (SELECT 1 FROM customers c2 WHERE c2.id != customers.id AND LOWER(c2.email) = LOWER(customers.email) AND customers.email IS NOT NULL)');
+                            return $query->whereExists(function($subquery) {
+                                $subquery->from('customers as c2')
+                                    ->whereColumn('c2.id', '!=', 'customers.id')
+                                    ->whereRaw('LOWER(c2.email) = LOWER(customers.email)')
+                                    ->whereNotNull('customers.email');
+                            });
                         } elseif ($data['value'] === 'phone') {
-                            return $query->whereRaw('EXISTS (SELECT 1 FROM customers c2 WHERE c2.id != customers.id AND c2.phone = customers.phone AND customers.phone IS NOT NULL)');
+                            return $query->whereExists(function($subquery) {
+                                $subquery->from('customers as c2')
+                                    ->whereColumn('c2.id', '!=', 'customers.id')
+                                    ->whereColumn('c2.phone', 'customers.phone')
+                                    ->whereNotNull('customers.phone');
+                            });
                         } elseif ($data['value'] === 'name') {
-                            return $query->whereRaw('EXISTS (SELECT 1 FROM customers c2 WHERE c2.id != customers.id AND LOWER(c2.name) = LOWER(customers.name))');
+                            return $query->whereExists(function($subquery) {
+                                $subquery->from('customers as c2')
+                                    ->whereColumn('c2.id', '!=', 'customers.id')
+                                    ->whereRaw('LOWER(c2.name) = LOWER(customers.name)');
+                            });
                         }
                         return $query;
                     }),
@@ -109,7 +137,8 @@ class FindDuplicates extends Page implements HasTable
                             ->where(function ($query) use ($record) {
                                 $query->where(function ($q) use ($record) {
                                     if ($record->email) {
-                                        $q->whereRaw('LOWER(email) = ?', [strtolower($record->email)]);
+                                        // Secure implementation using whereRaw with parameter binding
+                                        $q->whereRaw('LOWER(email) = LOWER(?)', [$record->email]);
                                     }
                                 })
                                 ->orWhere(function ($q) use ($record) {
@@ -117,7 +146,7 @@ class FindDuplicates extends Page implements HasTable
                                         $q->where('phone', $record->phone);
                                     }
                                 })
-                                ->orWhereRaw('LOWER(name) = ?', [strtolower($record->name)]);
+                                ->orWhereRaw('LOWER(name) = LOWER(?)', [$record->name]);
                             })
                             ->with('company')
                             ->get();

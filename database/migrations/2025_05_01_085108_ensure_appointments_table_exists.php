@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends CompatibleMigration {
     public function up(): void
     {
         if (! Schema::hasTable('appointments')) {
@@ -14,7 +14,7 @@ return new class extends Migration {
                 $table->string('external_id')->nullable()->index();
                 $table->timestamp('starts_at')->nullable();
                 $table->timestamp('ends_at')->nullable();
-                $table->json('payload')->nullable();
+                $this->addJsonColumn($table, 'payload', true);
                 $table->string('status')->default('pending');
                 $table->timestamps();
             });

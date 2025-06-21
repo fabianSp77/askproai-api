@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->integer('duration_minutes')->default(30);
             $table->decimal('price', 10, 2)->nullable();
-            $table->json('provider_data')->nullable(); // Provider-spezifische Daten
+            $this->addJsonColumn($table, 'provider_data', true); // Provider-spezifische Daten
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             

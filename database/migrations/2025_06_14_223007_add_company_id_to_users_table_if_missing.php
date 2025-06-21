@@ -15,7 +15,7 @@ return new class extends Migration
         // Check if laravel_users table exists and add company_id if missing
         if (Schema::hasTable('laravel_users') && !Schema::hasColumn('laravel_users', 'company_id')) {
             Schema::table('laravel_users', function (Blueprint $table) {
-                $table->unsignedBigInteger('company_id')->nullable()->after('tenant_id');
+                $table->unsignedBigInteger('company_id')->nullable();
                 $table->index('company_id');
             });
             

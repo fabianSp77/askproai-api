@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('event_type'); // call_ended, booking.created, etc.
             $table->string('event_id')->unique(); // unique ID from provider
             $table->string('idempotency_key')->unique(); // computed hash for deduplication
-            $table->json('payload'); // full webhook payload
+            $this->addJsonColumn($table, 'payload', false); // full webhook payload
             $table->string('status')->default('pending'); // pending, processing, completed, failed
             $table->timestamp('processed_at')->nullable();
             $table->text('error_message')->nullable();

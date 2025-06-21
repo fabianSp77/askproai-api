@@ -70,10 +70,12 @@ class AdaptiveRateLimitMiddleware
      */
     protected function addHeaders(Response $response, string $key, string $endpoint): Response
     {
-        $response->headers->add([
-            'X-RateLimit-Limit' => $this->rateLimiter->getLimit($endpoint)['requests'] ?? 60,
-            'X-RateLimit-Remaining' => $this->rateLimiter->remaining($key, $endpoint),
-        ]);
+        if ($response instanceof \Illuminate\Http\Response || $response instanceof \Symfony\Component\HttpFoundation\Response) {
+            $response->headers->add([
+                'X-RateLimit-Limit' => $this->rateLimiter->getLimit($endpoint)['requests'] ?? 60,
+                'X-RateLimit-Remaining' => $this->rateLimiter->remaining($key, $endpoint),
+            ]);
+        }
 
         return $response;
     }

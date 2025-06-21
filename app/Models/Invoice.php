@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Scopes\TenantScope;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class Invoice extends Model
 {
@@ -20,6 +21,7 @@ class Invoice extends Model
         'stripe_invoice_id',
         'invoice_number',
         'status',
+        'creation_mode',
         'subtotal',
         'tax_amount',
         'total',
@@ -28,20 +30,39 @@ class Invoice extends Model
         'due_date',
         'paid_date',
         'payment_method',
+        'payment_terms',
         'stripe_payment_intent_id',
         'pdf_url',
         'metadata',
         'notes',
         'billing_reason',
         'auto_advance',
+        // Tax compliance fields
+        'tax_configuration',
+        'is_reverse_charge',
+        'customer_vat_id',
+        'invoice_type',
+        'original_invoice_id',
+        'finalized_at',
+        'tax_note',
+        'is_tax_exempt',
+        // Period fields
+        'period_start',
+        'period_end',
     ];
 
     protected $casts = [
         'metadata' => 'array',
+        'tax_configuration' => 'array',
         'invoice_date' => 'date',
         'due_date' => 'date',
         'paid_date' => 'date',
+        'period_start' => 'date',
+        'period_end' => 'date',
+        'finalized_at' => 'datetime',
         'auto_advance' => 'boolean',
+        'is_reverse_charge' => 'boolean',
+        'is_tax_exempt' => 'boolean',
         'subtotal' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total' => 'decimal:2',
@@ -62,6 +83,17 @@ class Invoice extends Model
     protected static function booted()
     {
         static::addGlobalScope(new TenantScope);
+        
+        // Clear related caches when invoice is updated
+        static::saved(function ($invoice) {
+            Cache::forget('usage_invoice_ids');
+            Cache::forget("invoice_usage_check_{$invoice->id}");
+        });
+        
+        static::deleted(function ($invoice) {
+            Cache::forget('usage_invoice_ids');
+            Cache::forget("invoice_usage_check_{$invoice->id}");
+        });
     }
 
     /**
@@ -86,6 +118,14 @@ class Invoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    /**
+     * Get the flexible invoice items.
+     */
+    public function flexibleItems(): HasMany
+    {
+        return $this->hasMany(InvoiceItemFlexible::class);
     }
 
     /**
@@ -294,5 +334,34 @@ class Invoice extends Model
             self::STATUS_UNCOLLECTIBLE => 'Uneinbringlich',
             default => ucfirst($this->status),
         };
+    }
+
+    /**
+     * Get description for export (DATEV etc.)
+     */
+    public function getDescriptionForExport(): string
+    {
+        $items = $this->items->pluck('description')->filter()->take(3);
+        $description = $items->join(', ');
+        
+        if ($this->items->count() > 3) {
+            $description .= ' ...';
+        }
+        
+        return $description ?: 'Rechnung ' . $this->invoice_number;
+    }
+
+    /**
+     * Get the customer relationship
+     * Note: Currently invoices are created for companies, not individual customers
+     * This method is kept for compatibility but returns null
+     */
+    public function customer()
+    {
+        // In the current implementation, invoices are created for companies
+        // not individual customers. If we need customer-level invoices in the future,
+        // we would need to add a customer_id column to the invoices table
+        // and implement: return $this->belongsTo(Customer::class);
+        return null;
     }
 }

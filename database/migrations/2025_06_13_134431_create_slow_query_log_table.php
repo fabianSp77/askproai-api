@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('sql');
             $table->float('time'); // Execution time in milliseconds
             $table->string('connection', 50);
-            $table->json('backtrace')->nullable();
+            $this->addJsonColumn($table, 'backtrace', true);
             $table->timestamp('created_at');
             
             // Indexes for analysis

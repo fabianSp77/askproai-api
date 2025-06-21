@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up()
     {
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->char('branch_id', 36);
             $table->char('staff_id', 36); // Geändert von unsignedBigInteger zu char(36)
             $table->enum('calendar_type', ['company', 'branch', 'personal']);
-            $table->json('calendar_details')->nullable();
+            $this->addJsonColumn($table, 'calendar_details', true);
             $table->timestamps();
 
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');

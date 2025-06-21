@@ -14,6 +14,8 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         \App\Models\CalcomEventType::class => \App\Policies\CalcomEventTypePolicy::class,
+        \App\Models\Company::class => \App\Policies\CompanyPolicy::class,
+        \App\Models\Branch::class => \App\Policies\BranchPolicy::class,
     ];
 
     /**

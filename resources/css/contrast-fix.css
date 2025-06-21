@@ -1,0 +1,186 @@
+/* Contrast Fix for Filament Admin Panel */
+
+/* Main background should be white for proper contrast */
+body,
+.fi-body,
+.fi-main {
+    background-color: rgb(255 255 255) !important;
+}
+
+/* Ensure all text has proper contrast */
+body,
+.fi-body {
+    color: rgb(17 24 39) !important; /* gray-900 */
+}
+
+/* Fix sidebar contrast */
+.fi-sidebar {
+    background-color: rgb(249 250 251) !important; /* gray-50 */
+    border-right: 1px solid rgb(229 231 235) !important;
+}
+
+.fi-sidebar-nav-item-label {
+    color: rgb(31 41 55) !important; /* gray-800 */
+}
+
+.fi-sidebar-nav-item:hover .fi-sidebar-nav-item-label {
+    color: rgb(17 24 39) !important; /* gray-900 */
+}
+
+/* Fix card backgrounds and borders */
+.fi-section,
+.fi-section-content,
+.fi-card,
+.filament-widget,
+x-filament\:\:card {
+    background-color: rgb(255 255 255) !important;
+    border-color: rgb(229 231 235) !important;
+}
+
+/* Fix light gray text */
+.text-gray-400,
+.text-gray-500 {
+    color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+.text-gray-600 {
+    color: rgb(55 65 81) !important; /* gray-700 */
+}
+
+.text-gray-700 {
+    color: rgb(31 41 55) !important; /* gray-800 */
+}
+
+/* Fix table headers */
+.fi-ta-header-cell,
+th {
+    background-color: rgb(249 250 251) !important; /* gray-50 */
+    color: rgb(31 41 55) !important; /* gray-800 */
+}
+
+/* Fix table rows */
+.fi-ta-row,
+tr {
+    background-color: rgb(255 255 255) !important;
+}
+
+.fi-ta-row:hover,
+tr:hover {
+    background-color: rgb(249 250 251) !important; /* gray-50 */
+}
+
+/* Fix button contrast */
+.fi-btn {
+    border: 1px solid rgb(209 213 219) !important; /* gray-300 */
+}
+
+/* Fix form inputs */
+.fi-input,
+.fi-select-input,
+.fi-textarea {
+    background-color: rgb(255 255 255) !important;
+    border-color: rgb(209 213 219) !important;
+    color: rgb(17 24 39) !important;
+}
+
+/* Fix dropdown menus */
+.fi-dropdown-panel {
+    background-color: rgb(255 255 255) !important;
+    border-color: rgb(229 231 235) !important;
+}
+
+/* Fix tooltips */
+.fi-tooltip-content {
+    background-color: rgb(31 41 55) !important; /* gray-800 */
+    color: rgb(255 255 255) !important;
+}
+
+/* Fix badges and pills */
+.fi-badge,
+.fi-pill {
+    background-color: rgb(243 244 246) !important; /* gray-100 */
+    color: rgb(31 41 55) !important; /* gray-800 */
+}
+
+/* Remove all dark mode overrides that might interfere */
+.dark body,
+.dark .fi-body,
+.dark .fi-main,
+body.dark,
+html.dark {
+    background-color: rgb(255 255 255) !important;
+    color: rgb(17 24 39) !important;
+}
+
+/* Specific widget fixes */
+.filament-widget h2,
+.filament-widget h3,
+.filament-widget h4 {
+    color: rgb(17 24 39) !important; /* gray-900 */
+}
+
+.filament-widget p,
+.filament-widget span:not([class*="text-"]) {
+    color: rgb(55 65 81) !important; /* gray-700 */
+}
+
+/* Fix navigation items */
+.fi-topbar-nav-item {
+    color: rgb(55 65 81) !important;
+}
+
+.fi-topbar-nav-item:hover {
+    color: rgb(31 41 55) !important;
+}
+
+/* Fix breadcrumbs */
+.fi-breadcrumbs-item {
+    color: rgb(75 85 99) !important;
+}
+
+.fi-breadcrumbs-item-label {
+    color: rgb(55 65 81) !important;
+}
+
+/* Ensure links are visible */
+a:not([class*="text-"]) {
+    color: rgb(59 130 246) !important; /* blue-500 */
+}
+
+a:not([class*="text-"]):hover {
+    color: rgb(37 99 235) !important; /* blue-600 */
+}
+
+/* Fix status indicators */
+.text-success-600 {
+    color: rgb(22 163 74) !important;
+}
+
+.text-danger-600 {
+    color: rgb(220 38 38) !important;
+}
+
+.text-warning-600 {
+    color: rgb(217 119 6) !important;
+}
+
+/* Fix disabled states */
+.disabled,
+[disabled],
+.opacity-50 {
+    opacity: 0.6 !important;
+}
+
+/* Override any inline styles with important */
+[style*="color: white"],
+[style*="color: rgb(255"],
+[style*="color: #fff"],
+[style*="color:#fff"] {
+    color: rgb(17 24 39) !important;
+}
+
+[style*="background-color: gray"],
+[style*="background-color: rgb(156"],
+[style*="background-color: rgb(107"] {
+    background-color: rgb(255 255 255) !important;
+}

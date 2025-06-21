@@ -20,15 +20,26 @@ class AppServiceProvider extends ServiceProvider
         // Cal.com Sync Service
         $this->app->singleton(\App\Services\CalcomSyncService::class, function ($app) {
             return new \App\Services\CalcomSyncService(
-                $app->make(\App\Services\CalcomService::class)
+                $app->make(\App\Services\CalcomV2Service::class)
             );
         });
         
         // EventTypeNameParser Service
         $this->app->singleton(\App\Services\EventTypeNameParser::class);
         
-        // Cal.com V2 Migration Service
+        // SmartEventTypeNameParser Service
+        $this->app->singleton(\App\Services\SmartEventTypeNameParser::class);
+        
+        // Cal.com V2 Migration Service (old name)
         $this->app->singleton(\App\Services\CalcomV2MigrationService::class);
+        
+        // Cal.com Migration Service (handles V1 to V2 migration)
+        $this->app->singleton(\App\Services\CalcomMigrationService::class, function ($app) {
+            return new \App\Services\CalcomMigrationService(
+                $app->make(\App\Services\CalcomV2Service::class),
+                $app->make(\App\Services\CalcomV2Service::class)
+            );
+        });
         
         // Security Layer
         $this->app->singleton(AskProAISecurityLayer::class);
@@ -41,11 +52,30 @@ class AppServiceProvider extends ServiceProvider
             return new \App\Services\MobileDetector($app['request']);
         });
         
+        // Dashboard Metrics Service
+        $this->app->singleton(\App\Services\Dashboard\DashboardMetricsService::class);
+        
+        // ROI Calculation Service
+        $this->app->singleton(\App\Services\Analytics\RoiCalculationService::class);
+        
+        // Circuit Breaker Service
+        $this->app->singleton(\App\Services\CircuitBreaker\CircuitBreaker::class, function ($app) {
+            return new \App\Services\CircuitBreaker\CircuitBreaker(
+                failureThreshold: config('circuit-breaker.failure_threshold', 5),
+                successThreshold: config('circuit-breaker.success_threshold', 2),
+                timeout: config('circuit-breaker.timeout', 60),
+                halfOpenRequests: config('circuit-breaker.half_open_requests', 3)
+            );
+        });
+        
         // Filament Login Response
         $this->app->bind(
             \Filament\Http\Responses\Auth\Contracts\LoginResponse::class,
             \App\Http\Responses\LoginResponse::class
         );
+        
+        // MCP Sentry Server
+        $this->app->singleton(\App\Services\MCP\SentryMCPServer::class);
     }
 
     public function boot(Router $router): void

@@ -1,0 +1,100 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('knowledge_documents', function (Blueprint $table) {
+            // Add company_id for multi-tenant support
+            $table->unsignedBigInteger('company_id')->nullable()->after('id');
+            $table->integer('order')->default(0)->after('status');
+            
+            // Add indexes
+            $table->index('company_id');
+            $table->index(['company_id', 'status']);
+            $table->index(['company_id', 'category_id']);
+            
+            // Add foreign key if companies table exists
+            if (Schema::hasTable('companies')) {
+                $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            }
+        });
+        
+        // Add missing columns to knowledge_versions if table exists
+        if (Schema::hasTable('knowledge_versions')) {
+            Schema::table('knowledge_versions', function (Blueprint $table) {
+                if (!Schema::hasColumn('knowledge_versions', 'document_id')) {
+                    $table->unsignedBigInteger('document_id')->after('id');
+                    $table->foreign('document_id')->references('id')->on('knowledge_documents')->onDelete('cascade');
+                }
+                if (!Schema::hasColumn('knowledge_versions', 'title')) {
+                    $table->string('title');
+                }
+                if (!Schema::hasColumn('knowledge_versions', 'content')) {
+                    $table->longText('content');
+                }
+                if (!Schema::hasColumn('knowledge_versions', 'metadata')) {
+                    $table->json('metadata')->nullable();
+                }
+                if (!Schema::hasColumn('knowledge_versions', 'version_number')) {
+                    $table->integer('version_number');
+                }
+                if (!Schema::hasColumn('knowledge_versions', 'created_by')) {
+                    $table->unsignedMediumInteger('created_by')->nullable();
+                    $table->foreign('created_by')->references('user_id')->on('users')->nullOnDelete();
+                }
+                if (!Schema::hasColumn('knowledge_versions', 'change_summary')) {
+                    $table->text('change_summary')->nullable();
+                }
+                if (!Schema::hasColumn('knowledge_versions', 'commit_message')) {
+                    $table->text('commit_message')->nullable();
+                }
+                if (!Schema::hasColumn('knowledge_versions', 'diff')) {
+                    $table->longText('diff')->nullable();
+                }
+            });
+        } else {
+            // Create knowledge_versions table if it doesn't exist
+            Schema::create('knowledge_versions', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('document_id');
+                $table->string('title');
+                $table->longText('content');
+                $table->json('metadata')->nullable();
+                $table->integer('version_number');
+                $table->unsignedMediumInteger('created_by')->nullable();
+                $table->text('change_summary')->nullable();
+                $table->timestamps();
+                
+                $table->foreign('document_id')->references('id')->on('knowledge_documents')->onDelete('cascade');
+                $table->foreign('created_by')->references('user_id')->on('users')->nullOnDelete();
+                $table->index(['document_id', 'version_number']);
+            });
+        }
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('knowledge_documents', function (Blueprint $table) {
+            $table->dropForeign(['company_id']);
+            $table->dropIndex(['company_id']);
+            $table->dropIndex(['company_id', 'status']);
+            $table->dropIndex(['company_id', 'category_id']);
+            $table->dropColumn(['company_id', 'order']);
+        });
+        
+        if (Schema::hasTable('knowledge_versions')) {
+            Schema::dropIfExists('knowledge_versions');
+        }
+    }
+};

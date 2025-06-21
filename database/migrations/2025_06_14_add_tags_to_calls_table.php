@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('calls', function (Blueprint $table) {
             if (!Schema::hasColumn('calls', 'tags')) {
-                $table->json('tags')->nullable()->after('analysis');
+                $this->addJsonColumn($table, 'tags', true);
             }
         });
     }

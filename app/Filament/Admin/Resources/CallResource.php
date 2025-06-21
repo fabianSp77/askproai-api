@@ -6,6 +6,7 @@ use App\Filament\Admin\Resources\CallResource\Pages;
 use App\Filament\Admin\Resources\CallResource\Widgets;
 use App\Filament\Admin\Resources\Concerns\MultiTenantResource;
 use App\Filament\Admin\Resources\Concerns\HasManyColumns;
+use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Call;
 use App\Models\Customer;
 use App\Models\Appointment;
@@ -32,12 +33,11 @@ use Filament\Tables\Enums\FiltersLayout;
 
 class CallResource extends Resource
 {
-    use MultiTenantResource, HasManyColumns;
+    use MultiTenantResource, HasManyColumns, HasConsistentNavigation;
+    
     protected static ?string $model = Call::class;
-    protected static ?string $navigationGroup = 'Geschäftsvorgänge';
-    protected static ?string $navigationIcon = 'heroicon-o-phone';
+    protected static ?string $navigationIcon = 'heroicon-o-phone-arrow-down-left';
     protected static ?string $navigationLabel = 'Anrufe';
-    protected static ?int $navigationSort = 20;
     protected static bool $shouldRegisterNavigation = true;
     protected static ?string $recordTitleAttribute = 'call_id';
     
@@ -56,7 +56,7 @@ class CallResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(['customer', 'appointment', 'branch', 'agent']))
+            ->modifyQueryUsing(fn ($query) => $query->with(['customer', 'appointment', 'branch']))
             ->poll('30s')
             ->striped()
             ->defaultSort('start_timestamp', 'desc')

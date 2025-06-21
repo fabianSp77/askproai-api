@@ -12,13 +12,13 @@ return new class extends Migration
             // calendar_mode und calendar_id existieren bereits
             // Füge nur die neuen Felder hinzu
             if (!Schema::hasColumn('staff', 'calcom_user_id')) {
-                $table->string('calcom_user_id')->nullable()->after('calendar_id');
+                $table->string('calcom_user_id')->nullable();
             }
             if (!Schema::hasColumn('staff', 'calcom_calendar_link')) {
-                $table->string('calcom_calendar_link')->nullable()->after('calcom_user_id');
+                $table->string('calcom_calendar_link')->nullable();
             }
             if (!Schema::hasColumn('staff', 'is_bookable')) {
-                $table->boolean('is_bookable')->default(true)->after('active');
+                $table->boolean('is_bookable')->default(true);
             }
         });
     }

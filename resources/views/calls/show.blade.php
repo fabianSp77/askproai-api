@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('portal.layouts.app')
 
 @section('title', 'Anrufdetails - AskProAI')
 

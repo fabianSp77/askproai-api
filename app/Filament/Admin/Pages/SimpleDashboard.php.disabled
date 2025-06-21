@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Filament\Admin\Pages;
+
+class SimpleDashboard extends \Filament\Pages\Dashboard
+{
+    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static ?string $title = 'Dashboard';
+    protected static ?string $navigationLabel = 'Dashboard';
+    protected static ?int $navigationSort = -100;
+    
+    public function getWidgets(): array
+    {
+        // Return simple widgets that don't require role checks
+        return [
+            \Filament\Widgets\AccountWidget::class,
+            \Filament\Widgets\FilamentInfoWidget::class,
+        ];
+    }
+}

@@ -13,20 +13,20 @@ return new class extends Migration
     {
         // Add version field to appointments for optimistic locking
         Schema::table('appointments', function (Blueprint $table) {
-            $table->unsignedInteger('version')->default(0)->after('updated_at');
+            $table->unsignedInteger('version')->default(0);
             $table->index('version');
         });
         
         // Add version field to calls for optimistic locking
         Schema::table('calls', function (Blueprint $table) {
-            $table->unsignedInteger('version')->default(0)->after('updated_at');
+            $table->unsignedInteger('version')->default(0);
             $table->index('version');
         });
         
         // Add lock_expires_at to appointments for pessimistic locking during booking
         Schema::table('appointments', function (Blueprint $table) {
-            $table->timestamp('lock_expires_at')->nullable()->after('version');
-            $table->string('lock_token')->nullable()->after('lock_expires_at');
+            $table->timestamp('lock_expires_at')->nullable();
+            $table->string('lock_token')->nullable();
             $table->index(['lock_expires_at', 'lock_token']);
         });
     }

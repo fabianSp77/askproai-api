@@ -1,0 +1,137 @@
+/* Filament Contrast Fix - Ensures proper readability */
+
+/* Main content area - white background */
+.fi-page,
+.fi-main,
+.fi-body,
+.filament-main-content,
+.filament-page {
+    background-color: #ffffff !important;
+    color: #1f2937 !important;
+}
+
+/* Sidebar - proper contrast */
+.fi-sidebar,
+.filament-sidebar {
+    background-color: #f9fafb !important;
+}
+
+.fi-sidebar-nav-item a,
+.filament-sidebar-link {
+    color: #374151 !important;
+}
+
+.fi-sidebar-nav-item a:hover,
+.filament-sidebar-link:hover {
+    background-color: #e5e7eb !important;
+    color: #111827 !important;
+}
+
+/* Cards and widgets - white background */
+.fi-widget,
+.fi-card,
+.filament-widget,
+.filament-card,
+.fi-section,
+.rounded-xl.bg-white,
+.bg-gray-50 {
+    background-color: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+/* Text contrast fixes */
+.text-gray-500 {
+    color: #6b7280 !important;
+}
+
+.text-gray-600 {
+    color: #4b5563 !important;
+}
+
+.text-gray-700 {
+    color: #374151 !important;
+}
+
+.text-gray-900 {
+    color: #111827 !important;
+}
+
+/* Form inputs */
+.fi-input,
+.fi-select,
+.filament-forms-text-input-component input,
+.filament-forms-select-component select {
+    background-color: #ffffff !important;
+    border-color: #d1d5db !important;
+    color: #111827 !important;
+}
+
+/* Tables */
+.fi-table,
+.filament-tables-table {
+    background-color: #ffffff !important;
+}
+
+.fi-table tbody tr,
+.filament-tables-row {
+    background-color: #ffffff !important;
+}
+
+.fi-table tbody tr:hover,
+.filament-tables-row:hover {
+    background-color: #f9fafb !important;
+}
+
+/* Headers and titles */
+.fi-header-heading,
+.fi-page-header h1,
+h1, h2, h3, h4, h5, h6 {
+    color: #111827 !important;
+}
+
+/* Buttons - ensure readability */
+.fi-btn {
+    font-weight: 500 !important;
+}
+
+/* Navigation breadcrumbs */
+.fi-breadcrumbs-item a {
+    color: #3b82f6 !important;
+}
+
+/* Stats widgets */
+.fi-stats-card {
+    background-color: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+}
+
+.fi-stats-value {
+    color: #111827 !important;
+}
+
+/* Remove any gray overlays */
+.bg-gray-100,
+.bg-gray-200 {
+    background-color: #ffffff !important;
+}
+
+/* Dashboard specific fixes */
+.fi-dashboard-page {
+    background-color: #f9fafb !important;
+}
+
+.fi-dashboard-page > div {
+    background-color: transparent !important;
+}
+
+/* Modal backgrounds */
+.fi-modal-window {
+    background-color: #ffffff !important;
+}
+
+/* Notification contrast */
+.fi-notification {
+    background-color: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    color: #111827 !important;
+}

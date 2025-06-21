@@ -134,12 +134,15 @@ class TutorialService
     public function getTutorialsForCurrentPage(string $currentRoute, User $user): Collection
     {
         // Get all active tutorials that match the current route
+        // Sanitize currentRoute to prevent SQL injection in LIKE patterns
+        $sanitizedRoute = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $currentRoute);
+        
         $tutorials = DB::table('onboarding_tutorials')
             ->where('is_active', true)
-            ->where(function ($query) use ($currentRoute) {
+            ->where(function ($query) use ($currentRoute, $sanitizedRoute) {
                 $query->where('page_route', $currentRoute)
                     ->orWhere('page_route', 'LIKE', '%*%')
-                    ->whereRaw("? LIKE REPLACE(page_route, '*', '%')", [$currentRoute]);
+                    ->whereRaw("? LIKE REPLACE(page_route, '*', '%')", [$sanitizedRoute]);
             })
             ->orderBy('order_index')
             ->get();
@@ -242,13 +245,16 @@ class TutorialService
             ->where('is_viewed', true)
             ->pluck('tutorial_id');
 
+        // Sanitize currentRoute to prevent SQL injection in LIKE patterns
+        $sanitizedRoute = str_replace(['%', '_', '\\'], ['\\%', '\\_', '\\\\'], $currentRoute);
+        
         return DB::table('onboarding_tutorials')
             ->where('is_active', true)
             ->whereNotIn('id', $viewedTutorialIds)
-            ->where(function ($query) use ($currentRoute) {
+            ->where(function ($query) use ($currentRoute, $sanitizedRoute) {
                 $query->where('page_route', $currentRoute)
                     ->orWhere('page_route', 'LIKE', '%*%')
-                    ->whereRaw("? LIKE REPLACE(page_route, '*', '%')", [$currentRoute]);
+                    ->whereRaw("? LIKE REPLACE(page_route, '*', '%')", [$sanitizedRoute]);
             })
             ->orderBy('order_index')
             ->first();

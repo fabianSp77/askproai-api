@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
         if (!Schema::hasTable('staff_service_assignments')) {
-            Schema::create('staff_service_assignments', function (Blueprint $table) {
+            $this->createTableIfNotExists('staff_service_assignments', function (Blueprint $table) {
                 $table->id();
                 $table->char('staff_id', 36);
                 $table->bigInteger('calcom_event_type_id')->unsigned();
@@ -25,6 +25,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('staff_service_assignments');
+        $this->dropTableIfExists('staff_service_assignments');
     }
 };

@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::table('calls', function (Blueprint $table) {
             if (!Schema::hasColumn('calls', 'call_id')) {
-                $table->string('call_id')->nullable()->after('id')->index();
+                $table->string('call_id')->nullable()->index();
             }
         });
     }

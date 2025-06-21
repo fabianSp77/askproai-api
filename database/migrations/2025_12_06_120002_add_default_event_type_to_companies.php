@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('companies', function (Blueprint $table) {
             if (!Schema::hasColumn('companies', 'default_event_type_id')) {
-                $table->unsignedBigInteger('default_event_type_id')->nullable()->after('calcom_user_id');
+                $table->unsignedBigInteger('default_event_type_id')->nullable();
                 $table->foreign('default_event_type_id')->references('id')->on('calcom_event_types')->onDelete('set null');
             }
         });

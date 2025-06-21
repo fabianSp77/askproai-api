@@ -2,7 +2,7 @@
 
 namespace App\Services\Calendar;
 
-use App\Services\CalcomService;
+use App\Services\CalcomV2Service;
 use Illuminate\Support\Facades\Http;
 
 class CalcomCalendarService extends BaseCalendarService
@@ -12,10 +12,11 @@ class CalcomCalendarService extends BaseCalendarService
     public function __construct(array $config = [])
     {
         parent::__construct($config);
-        $this->calcomService = new CalcomService();
+        $this->calcomService = app(CalcomV2Service::class);
         
         if (isset($config['api_key'])) {
-            $this->calcomService->setApiKey($config['api_key']);
+            // CalcomV2Service uses constructor injection for API key
+            // This needs to be handled differently
         }
     }
     

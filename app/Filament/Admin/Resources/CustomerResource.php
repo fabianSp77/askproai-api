@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\CustomerResource\Pages;
 use App\Filament\Admin\Resources\Concerns\MultiTenantResource;
+use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Customer;
 use App\Models\Company;
 use App\Filament\Components\StatusBadge;
@@ -20,16 +21,21 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\HtmlString;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use App\Services\CustomerPortalService;
 
 class CustomerResource extends EnhancedResourceSimple
 {
-    use MultiTenantResource;
+
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    use MultiTenantResource, HasConsistentNavigation;
+    
     protected static ?string $model = Customer::class;
-    protected static ?string $navigationGroup = 'Geschäftsvorgänge';
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationLabel = 'Kunden';
-    protected static ?int $navigationSort = 30;
-    protected static bool $shouldRegisterNavigation = true;
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
@@ -279,7 +285,9 @@ class CustomerResource extends EnhancedResourceSimple
         $table = parent::enhanceTable($table);
         
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->withCount(['appointments']))
+            ->modifyQueryUsing(fn ($query) => $query
+                ->with(['company', 'appointments' => fn($q) => $q->latest()->limit(5)])
+                ->withCount(['appointments', 'calls']))
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
@@ -343,6 +351,15 @@ class CustomerResource extends EnhancedResourceSimple
                     ->color('info')
                     ->toggleable(),
                     
+                Tables\Columns\IconColumn::make('portal_enabled')
+                    ->label('Portal')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->tooltip(fn ($record) => $record->portal_enabled ? 'Portal aktiviert' : 'Portal deaktiviert'),
+                    
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime('d.m.Y H:i')
@@ -401,6 +418,57 @@ class CustomerResource extends EnhancedResourceSimple
                     ActionButton::sendEmail(),
                     ActionButton::sendSms(),
                     ActionButton::call(),
+                    
+                    // Portal Actions
+                    Tables\Actions\Action::make('enablePortal')
+                        ->label('Portal aktivieren')
+                        ->icon('heroicon-o-key')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Portal-Zugang aktivieren')
+                        ->modalDescription('Dem Kunden wird ein Login-Link per E-Mail gesendet.')
+                        ->visible(fn ($record) => !$record->portal_enabled && !empty($record->email))
+                        ->action(function ($record) {
+                            $portalService = app(CustomerPortalService::class);
+                            
+                            // Need to use CustomerAuth model for portal
+                            $customerAuth = \App\Models\CustomerAuth::find($record->id);
+                            
+                            if ($portalService->enablePortalAccess($customerAuth)) {
+                                Notification::make()
+                                    ->title('Portal-Zugang aktiviert')
+                                    ->body('Dem Kunden wurde eine E-Mail mit den Zugangsdaten gesendet.')
+                                    ->success()
+                                    ->send();
+                            } else {
+                                Notification::make()
+                                    ->title('Fehler')
+                                    ->body('Portal-Zugang konnte nicht aktiviert werden.')
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
+                        
+                    Tables\Actions\Action::make('disablePortal')
+                        ->label('Portal deaktivieren')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->visible(fn ($record) => $record->portal_enabled)
+                        ->action(function ($record) {
+                            $portalService = app(CustomerPortalService::class);
+                            
+                            // Need to use CustomerAuth model for portal
+                            $customerAuth = \App\Models\CustomerAuth::find($record->id);
+                            
+                            if ($portalService->disablePortalAccess($customerAuth)) {
+                                Notification::make()
+                                    ->title('Portal-Zugang deaktiviert')
+                                    ->body('Der Kunde kann sich nicht mehr im Portal anmelden.')
+                                    ->success()
+                                    ->send();
+                            }
+                        }),
                     
                     Tables\Actions\Action::make('merge')
                         ->label('Zusammenführen')

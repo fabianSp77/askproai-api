@@ -12,8 +12,13 @@ class DebugRedirects
     {
         $response = $next($request);
         
-        if ($response->getStatusCode() === 302 || $response->getStatusCode() === 301) {
-            $target = $response->headers->get('Location');
+        // Check if response has the methods we need
+        if (method_exists($response, 'getStatusCode') && ($response->getStatusCode() === 302 || $response->getStatusCode() === 301)) {
+            $target = 'unknown';
+            if (method_exists($response, 'headers')) {
+                $target = $response->headers->get('Location');
+            }
+            
             $from = $request->fullUrl();
             $method = $request->method();
             $user = auth()->user();

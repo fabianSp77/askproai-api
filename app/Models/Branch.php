@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,9 +12,13 @@ use App\Services\IntegrationTestService;
 use App\Models\Staff;
 use App\Models\WorkingHour;
 use App\Scopes\TenantScope;
+use App\Services\Validation\PhoneNumberValidator;
+use App\Services\Validation\InvalidPhoneNumberException;
 
 class Branch extends Model
 {
+    use BelongsToCompany;
+
     use HasFactory, SoftDeletes, HasUuids;
 
     /**
@@ -66,7 +72,8 @@ class Branch extends Model
         'calendar_mode',
         'active',
         'notify_on_booking',
-        'deleted_at'
+        'deleted_at',
+        'features'
     ];
 
     /**
@@ -94,9 +101,13 @@ class Branch extends Model
         'business_hours' => 'array',
         'services_override' => 'array',
         'settings' => 'array',
+        'features' => 'array',
         'retell_agent_data' => 'array',
         'retell_agent_created_at' => 'datetime',
         'retell_synced_at' => 'datetime',
+        'coordinates' => 'array',
+        'features' => 'array',
+        'transport_info' => 'array',
     ];
 
     /**
@@ -112,6 +123,35 @@ class Branch extends Model
     protected static function booted(): void
     {
         static::addGlobalScope(new TenantScope);
+        
+        // Validate and normalize phone number before saving
+        static::saving(function ($branch) {
+            if (!empty($branch->phone_number)) {
+                $validator = app(PhoneNumberValidator::class);
+                
+                try {
+                    $branch->phone_number = $validator->validateForStorage($branch->phone_number);
+                } catch (InvalidPhoneNumberException $e) {
+                    // For branches, phone number is critical - always throw
+                    throw new \InvalidArgumentException(
+                        "Invalid phone number for branch '{$branch->name}': " . $e->getMessage()
+                    );
+                }
+            }
+        });
+    }
+    
+    /**
+     * Set the phone number attribute with validation
+     */
+    public function setPhoneNumberAttribute($value)
+    {
+        if (!empty($value)) {
+            $validator = app(PhoneNumberValidator::class);
+            $this->attributes['phone_number'] = $validator->validateForStorage($value);
+        } else {
+            $this->attributes['phone_number'] = $value;
+        }
     }
 
     /**
@@ -163,6 +203,16 @@ class Branch extends Model
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * Get the phone numbers for the branch.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function phoneNumbers()
+    {
+        return $this->hasMany(PhoneNumber::class);
     }
 
     /**

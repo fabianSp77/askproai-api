@@ -8,6 +8,7 @@ use App\Models\Call;
 use App\Models\Company;
 use App\Models\Staff;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Cache;

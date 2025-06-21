@@ -2,21 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\CalcomService;      // V1 für Verfügbarkeit
-use App\Services\CalcomV2Service;    // V2 für Buchungen
+use App\Services\CalcomV2Service;    // V2 für alles
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class HybridBookingController extends Controller
 {
-    private $calcomV1;
     private $calcomV2;
 
-    public function __construct()
+    public function __construct(CalcomV2Service $calcomV2Service)
     {
-        $this->calcomV1 = new CalcomService();
-        $this->calcomV2 = new CalcomV2Service();
+        $this->calcomV2 = $calcomV2Service;
     }
 
     /**
@@ -28,12 +25,15 @@ class HybridBookingController extends Controller
         $date = $request->input('date', Carbon::tomorrow()->format('Y-m-d'));
         
         try {
-            $availability = $this->calcomV1->checkAvailability(
+            // Use V2 API for availability
+            $slots = $this->calcomV2->getAvailableSlots(
                 $eventTypeId,
-                $date,
-                $date,
+                Carbon::parse($date)->startOfDay(),
+                Carbon::parse($date)->endOfDay(),
                 'Europe/Berlin'
             );
+            
+            $availability = ['slots' => $slots];
 
             return response()->json([
                 'success' => true,
@@ -107,12 +107,15 @@ class HybridBookingController extends Controller
             // 1. Verfügbarkeit prüfen (V1)
             Log::info('Prüfe Verfügbarkeit via V1', ['date' => $date]);
             
-            $availability = $this->calcomV1->checkAvailability(
+            // Use V2 API for availability
+            $slots = $this->calcomV2->getAvailableSlots(
                 $eventTypeId,
-                $date,
-                $date,
+                Carbon::parse($date)->startOfDay(),
+                Carbon::parse($date)->endOfDay(),
                 'Europe/Berlin'
             );
+            
+            $availability = ['slots' => $slots];
 
             if (empty($availability['slots'])) {
                 return response()->json([

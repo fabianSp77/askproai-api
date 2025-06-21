@@ -9,7 +9,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('branches', function (Blueprint $table) {
-            $table->string('calcom_user_id')->nullable()->after('calcom_event_type_id');
+            $table->string('calcom_user_id')->nullable();
         });
     }
 

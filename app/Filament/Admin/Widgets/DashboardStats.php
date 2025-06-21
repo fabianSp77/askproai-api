@@ -62,35 +62,32 @@ class DashboardStats extends StatsOverviewWidget
             
             // Conversion rate
             $callsWithAppointment = Call::whereDate('created_at', $today)
-                ->where(function($query) {
-                    $query->whereNotNull('appointment_id')
-                          ->orWhereHas('appointmentViaCallId');
-                })
+                ->whereNotNull('appointment_id')
                 ->count();
             $conversionRate = $callsToday > 0 ? round(($callsWithAppointment / $callsToday) * 100, 1) : 0;
             
             return [
                 Stat::make('Gesamtkunden', number_format($totalCustomers, 0, ',', '.'))
                     ->description($newCustomersToday . ' neu heute')
-                    ->descriptionIcon($customersTrend > 0 ? 'heroicon-m-arrow-trending-up' : ($customersTrend < 0 ? 'heroicon-m-arrow-trending-down' : 'heroicon-m-minus'))
+                    ->descriptionIcon($customersTrend > 0 ? 'heroicon-o-arrow-trending-up' : ($customersTrend < 0 ? 'heroicon-o-arrow-trending-down' : 'heroicon-o-minus'))
                     ->chart($this->getCustomerChart())
                     ->color($customersTrend > 0 ? 'success' : ($customersTrend < 0 ? 'danger' : 'gray')),
                     
                 Stat::make('Termine heute', $appointmentsToday)
                     ->description($appointmentsTrend > 0 ? '+' . $appointmentsTrend . '%' : $appointmentsTrend . '%')
-                    ->descriptionIcon($appointmentsTrend > 0 ? 'heroicon-m-arrow-trending-up' : ($appointmentsTrend < 0 ? 'heroicon-m-arrow-trending-down' : 'heroicon-m-minus'))
+                    ->descriptionIcon($appointmentsTrend > 0 ? 'heroicon-o-arrow-trending-up' : ($appointmentsTrend < 0 ? 'heroicon-o-arrow-trending-down' : 'heroicon-o-minus'))
                     ->chart($this->getAppointmentChart())
                     ->color($appointmentsTrend > 0 ? 'success' : ($appointmentsTrend < 0 ? 'danger' : 'gray')),
                     
                 Stat::make('Anrufe heute', $callsToday)
                     ->description('Konversion: ' . $conversionRate . '%')
-                    ->descriptionIcon('heroicon-m-phone')
+                    ->descriptionIcon('heroicon-o-phone')
                     ->chart($this->getCallChart())
                     ->color($conversionRate > 50 ? 'success' : ($conversionRate > 25 ? 'warning' : 'danger')),
                     
                 Stat::make('Aktive Firmen', $activeCompanies)
                     ->description('In den letzten 30 Tagen')
-                    ->descriptionIcon('heroicon-m-building-office')
+                    ->descriptionIcon('heroicon-o-building-office')
                     ->color('primary'),
             ];
         // });

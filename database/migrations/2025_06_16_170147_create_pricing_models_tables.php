@@ -90,13 +90,13 @@ return new class extends Migration
         // Erweitere companies Tabelle
         Schema::table('companies', function (Blueprint $table) {
             if (!Schema::hasColumn('companies', 'billing_type')) {
-                $table->enum('billing_type', ['prepaid', 'postpaid'])->default('postpaid')->after('is_active');
+                $table->enum('billing_type', ['prepaid', 'postpaid'])->default('postpaid');
             }
             if (!Schema::hasColumn('companies', 'credit_balance')) {
-                $table->decimal('credit_balance', 10, 2)->default(0)->after('billing_type')->comment('Guthaben für Prepaid-Kunden');
+                $table->decimal('credit_balance', 10, 2)->default(0)->comment('Guthaben für Prepaid-Kunden');
             }
             if (!Schema::hasColumn('companies', 'low_credit_threshold')) {
-                $table->decimal('low_credit_threshold', 10, 2)->default(10.00)->after('credit_balance');
+                $table->decimal('low_credit_threshold', 10, 2)->default(10.00);
             }
         });
     }

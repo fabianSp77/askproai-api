@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('notification_logs', function (Blueprint $table) {
             $table->id();
-            $table->uuid('appointment_id')->index();
-            $table->uuid('customer_id')->index();
-            $table->uuid('company_id')->index();
+            $table->unsignedBigInteger('appointment_id')->index();
+            $table->unsignedBigInteger('customer_id')->index();
+            $table->unsignedBigInteger('company_id')->index();
             $table->string('type', 50); // confirmation, reminder, reschedule, cancellation
-            $table->json('channels'); // ['email', 'sms', 'whatsapp']
-            $table->json('successful_channels')->nullable();
-            $table->json('failed_channels')->nullable();
-            $table->json('errors')->nullable();
+            $this->addJsonColumn($table, 'channels', false); // ['email', 'sms', 'whatsapp']
+            $this->addJsonColumn($table, 'successful_channels', true);
+            $this->addJsonColumn($table, 'failed_channels', true);
+            $this->addJsonColumn($table, 'errors', true);
             $table->enum('status', ['sent', 'failed', 'partial'])->default('sent');
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();

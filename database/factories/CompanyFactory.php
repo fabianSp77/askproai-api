@@ -20,7 +20,10 @@ class CompanyFactory extends Factory
             'calcom_api_key' => null,
             'calcom_user_id' => null,
             'retell_api_key' => null,
-            'active' => true,
+            'is_active' => true,
+            'currency' => 'EUR',
+            'timezone' => 'Europe/Berlin',
+            'country' => 'DE',
         ];
     }
 }

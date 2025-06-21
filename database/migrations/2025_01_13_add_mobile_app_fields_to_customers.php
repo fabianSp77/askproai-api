@@ -14,22 +14,22 @@ return new class extends Migration
         if (Schema::hasTable('customers')) {
             Schema::table('customers', function (Blueprint $table) {
                 if (!Schema::hasColumn('customers', 'push_token')) {
-                    $table->string('push_token')->nullable()->after('phone');
+                    $table->string('push_token')->nullable();
                 }
                 if (!Schema::hasColumn('customers', 'device_platform')) {
-                    $table->string('device_platform')->nullable()->after('push_token');
+                    $table->string('device_platform')->nullable();
                 }
                 if (!Schema::hasColumn('customers', 'device_id')) {
-                    $table->string('device_id')->nullable()->after('device_platform');
+                    $table->string('device_id')->nullable();
                 }
                 if (!Schema::hasColumn('customers', 'sms_opt_in')) {
-                    $table->boolean('sms_opt_in')->default(false)->after('device_id');
+                    $table->boolean('sms_opt_in')->default(false);
                 }
                 if (!Schema::hasColumn('customers', 'whatsapp_opt_in')) {
-                    $table->boolean('whatsapp_opt_in')->default(false)->after('sms_opt_in');
+                    $table->boolean('whatsapp_opt_in')->default(false);
                 }
                 if (!Schema::hasColumn('customers', 'created_via')) {
-                    $table->string('created_via')->default('web')->after('whatsapp_opt_in');
+                    $table->string('created_via')->default('web');
                 }
             });
         }

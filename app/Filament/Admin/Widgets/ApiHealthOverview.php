@@ -38,7 +38,7 @@ class ApiHealthOverview extends BaseWidget
         
         $stats[] = Stat::make('System Health', $overallSuccessRate . '%')
             ->description($totalCalls . ' API calls in last hour')
-            ->descriptionIcon('heroicon-m-arrow-trending-up')
+            ->descriptionIcon('heroicon-o-arrow-trending-up')
             ->color($systemHealthColor)
             ->icon($systemHealthIcon);
         
@@ -54,7 +54,7 @@ class ApiHealthOverview extends BaseWidget
         
         $stats[] = Stat::make('Cal.com API', $calcomSuccessRate . '%')
             ->description($calcomCircuitState === 'open' ? 'Circuit OPEN' : round($calcomAvgDuration) . 'ms avg response')
-            ->descriptionIcon($calcomCircuitState === 'open' ? 'heroicon-m-exclamation-circle' : 'heroicon-m-clock')
+            ->descriptionIcon($calcomCircuitState === 'open' ? 'heroicon-o-exclamation-circle' : 'heroicon-o-clock')
             ->color($calcomColor)
             ->icon('heroicon-o-calendar');
         
@@ -70,7 +70,7 @@ class ApiHealthOverview extends BaseWidget
         
         $stats[] = Stat::make('Retell.ai API', $retellSuccessRate . '%')
             ->description($retellCircuitState === 'open' ? 'Circuit OPEN' : round($retellAvgDuration) . 'ms avg response')
-            ->descriptionIcon($retellCircuitState === 'open' ? 'heroicon-m-exclamation-circle' : 'heroicon-m-clock')
+            ->descriptionIcon($retellCircuitState === 'open' ? 'heroicon-o-exclamation-circle' : 'heroicon-o-clock')
             ->color($retellColor)
             ->icon('heroicon-o-phone');
         
@@ -83,7 +83,7 @@ class ApiHealthOverview extends BaseWidget
         
         $stats[] = Stat::make('Critical Errors', $criticalErrors)
             ->description('In last hour')
-            ->descriptionIcon('heroicon-m-clock')
+            ->descriptionIcon('heroicon-o-clock')
             ->color($errorColor)
             ->icon('heroicon-o-exclamation-triangle')
             ->url('/admin/api-health-monitor');

@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -17,48 +17,48 @@ return new class extends Migration
             
             // Timestamp fields
             if (!in_array('start_timestamp', $existingColumns)) {
-                $table->timestamp('start_timestamp')->nullable()->after('created_at');
+                $table->timestamp('start_timestamp')->nullable();
             }
             if (!in_array('end_timestamp', $existingColumns)) {
-                $table->timestamp('end_timestamp')->nullable()->after('start_timestamp');
+                $table->timestamp('end_timestamp')->nullable();
             }
             
             // Call details
             if (!in_array('call_type', $existingColumns)) {
-                $table->string('call_type', 20)->nullable()->after('call_status');
+                $table->string('call_type', 20)->nullable();
             }
             if (!in_array('direction', $existingColumns)) {
-                $table->string('direction', 20)->nullable()->after('call_type');
+                $table->string('direction', 20)->nullable();
             }
             // disconnection_reason already exists
             
             // Structured transcript
             if (!in_array('transcript_object', $existingColumns)) {
-                $table->json('transcript_object')->nullable()->after('transcript');
+                $this->addJsonColumn($table, 'transcript_object', true);
             }
             if (!in_array('transcript_with_tools', $existingColumns)) {
-                $table->json('transcript_with_tools')->nullable()->after('transcript_object');
+                $this->addJsonColumn($table, 'transcript_with_tools', true);
             }
             
             // Performance metrics
             if (!in_array('latency_metrics', $existingColumns)) {
-                $table->json('latency_metrics')->nullable()->after('analysis');
+                $this->addJsonColumn($table, 'latency_metrics', true);
             }
             if (!in_array('cost_breakdown', $existingColumns)) {
-                $table->json('cost_breakdown')->nullable()->after('cost_cents');
+                $this->addJsonColumn($table, 'cost_breakdown', true);
             }
             if (!in_array('llm_usage', $existingColumns)) {
-                $table->json('llm_usage')->nullable()->after('cost_breakdown');
+                $this->addJsonColumn($table, 'llm_usage', true);
             }
             
             // URLs
             if (!in_array('public_log_url', $existingColumns)) {
-                $table->string('public_log_url', 500)->nullable()->after('audio_url');
+                $table->string('public_log_url', 500)->nullable();
             }
             
             // Dynamic variables
             if (!in_array('retell_dynamic_variables', $existingColumns)) {
-                $table->json('retell_dynamic_variables')->nullable();
+                $this->addJsonColumn($table, 'retell_dynamic_variables', true);
             }
             
             // Privacy
@@ -68,7 +68,7 @@ return new class extends Migration
             
             // Metadata if not exists
             if (!in_array('metadata', $existingColumns)) {
-                $table->json('metadata')->nullable();
+                $this->addJsonColumn($table, 'metadata', true);
             }
             
             // Indexes for performance (check before adding)

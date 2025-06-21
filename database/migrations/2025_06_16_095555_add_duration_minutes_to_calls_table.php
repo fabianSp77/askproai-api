@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('calls', function (Blueprint $table) {
-            $table->decimal('duration_minutes', 10, 2)->nullable()->after('duration_sec');
+            $table->decimal('duration_minutes', 10, 2)->nullable();
         });
     }
 

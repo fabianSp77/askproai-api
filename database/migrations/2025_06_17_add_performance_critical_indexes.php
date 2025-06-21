@@ -1,10 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -140,8 +141,8 @@ return new class extends Migration
         
         // CUSTOMERS TABLE
         Schema::table('customers', function (Blueprint $table) {
-            // Tenant isolation
-            if (!$this->indexExists('customers', 'customers_company_id_index')) {
+            // Tenant isolation - only create if column exists
+            if (Schema::hasColumn('customers', 'company_id') && !$this->indexExists('customers', 'customers_company_id_index')) {
                 $table->index('company_id', 'customers_company_id_index');
             }
             
@@ -213,7 +214,7 @@ return new class extends Migration
         
         // COMPANIES TABLE
         Schema::table('companies', function (Blueprint $table) {
-            if (!$this->indexExists('companies', 'companies_is_active_index')) {
+            if (Schema::hasColumn('companies', 'is_active') && !$this->indexExists('companies', 'companies_is_active_index')) {
                 $table->index('is_active', 'companies_is_active_index');
             }
             if (!$this->indexExists('companies', 'companies_deleted_at_index')) {
@@ -225,13 +226,15 @@ return new class extends Migration
         // CALCOM_EVENT_TYPES TABLE
         if (Schema::hasTable('calcom_event_types')) {
             Schema::table('calcom_event_types', function (Blueprint $table) {
-                if (!$this->indexExists('calcom_event_types', 'calcom_event_types_company_id_index')) {
+                if (Schema::hasColumn('calcom_event_types', 'company_id') && !$this->indexExists('calcom_event_types', 'calcom_event_types_company_id_index')) {
                     $table->index('company_id', 'calcom_event_types_company_id_index');
                 }
-                if (!$this->indexExists('calcom_event_types', 'calcom_event_types_calcom_event_type_id_index')) {
+                if (Schema::hasColumn('calcom_event_types', 'calcom_event_type_id') && !$this->indexExists('calcom_event_types', 'calcom_event_types_calcom_event_type_id_index')) {
                     $table->index('calcom_event_type_id', 'calcom_event_types_calcom_event_type_id_index');
                 }
-                if (!$this->indexExists('calcom_event_types', 'calcom_event_types_company_calcom_index')) {
+                if (Schema::hasColumn('calcom_event_types', 'company_id') && 
+                    Schema::hasColumn('calcom_event_types', 'calcom_event_type_id') && 
+                    !$this->indexExists('calcom_event_types', 'calcom_event_types_company_calcom_index')) {
                     $table->unique(['company_id', 'calcom_event_type_id'], 'calcom_event_types_company_calcom_index');
                 }
             });
@@ -436,19 +439,5 @@ return new class extends Migration
                 }
             });
         }
-    }
-    
-    /**
-     * Check if an index exists
-     */
-    private function indexExists($table, $index): bool
-    {
-        $indexes = DB::select("SHOW INDEX FROM `{$table}`");
-        foreach ($indexes as $idx) {
-            if ($idx->Key_name === $index) {
-                return true;
-            }
-        }
-        return false;
     }
 };

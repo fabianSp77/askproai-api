@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('portal.layouts.app')
 @section('title', 'Premium Services - AskProAI')
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">

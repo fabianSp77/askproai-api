@@ -303,14 +303,4 @@ class Appointment extends Model
     //     return [];
     // }
     
-    /**
-     * Boot method to apply tenant scope
-     */
-    protected static function boot()
-    {
-        parent::boot();
-        
-        // Apply tenant scope
-        static::addGlobalScope(new TenantScope);
-    }
 }

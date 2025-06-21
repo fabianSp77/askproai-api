@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('tenants', function (Blueprint $table) {
             $table->string('calcom_team_slug')
                   ->nullable()
-                  ->after('api_key')
+                  
                   ->index()
                   ->comment('Der Team-Slug des Mandanten bei Cal.com');
         });

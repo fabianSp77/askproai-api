@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -16,8 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('company_id')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->string('current_step')->default('welcome');
-            $table->json('completed_steps')->nullable();
-            $table->json('step_data')->nullable();
+            $this->addJsonColumn($table, 'completed_steps', true);
+            $this->addJsonColumn($table, 'step_data', true);
             $table->integer('progress_percentage')->default(0);
             $table->boolean('is_completed')->default(false);
             $table->timestamps();

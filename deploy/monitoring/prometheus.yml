@@ -1,0 +1,56 @@
+# Prometheus configuration for AskProAI
+# Version: 1.0
+# Date: 2025-06-18
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'askproai-production'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - localhost:9093
+
+# Load rules
+rule_files:
+  - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # AskProAI Application Metrics
+  - job_name: 'askproai'
+    static_configs:
+      - targets: ['localhost:80']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    
+  # Node Exporter for system metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+      
+  # MySQL Exporter
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['localhost:9104']
+      
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['localhost:9121']
+      
+  # PHP-FPM Exporter
+  - job_name: 'php-fpm'
+    static_configs:
+      - targets: ['localhost:9253']
+      
+  # Nginx Exporter
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['localhost:9113']

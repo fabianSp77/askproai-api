@@ -34,6 +34,12 @@ class Kernel extends ConsoleKernel
             ->hourly()
             ->withoutOverlapping();
             
+        // Auto-sync Event Types every hour
+        $schedule->command('calcom:auto-sync --all')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground();
+            
         // Warm caches every 30 minutes for all active companies
         $schedule->command('cache:warm --async')
             ->everyThirtyMinutes()
@@ -73,6 +79,47 @@ class Kernel extends ConsoleKernel
             ->everyFiveMinutes()
             ->withoutOverlapping()
             ->runInBackground();
+            
+        // MCP Discovery & Evolution System schedules
+        
+        // Discover new MCPs daily
+        $schedule->command('mcp:discover')
+            ->daily()
+            ->at('09:00')
+            ->withoutOverlapping();
+            
+        // Analyze UI/UX weekly
+        $schedule->command('uiux:analyze --suggest')
+            ->weekly()
+            ->mondays()
+            ->at('10:00');
+            
+        // Run continuous improvement analysis hourly
+        $schedule->command('improvement:analyze')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground();
+            
+        // Generate improvement reports weekly
+        $schedule->command('improvement:analyze --report')
+            ->weekly()
+            ->sundays()
+            ->at('23:00');
+            
+        // Performance optimization tasks
+        $schedule->command('performance:optimize --cache')
+            ->everyThirtyMinutes()
+            ->withoutOverlapping()
+            ->runInBackground();
+            
+        $schedule->command('performance:optimize --pool')
+            ->hourly()
+            ->withoutOverlapping();
+            
+        // Analyze slow queries daily during low traffic
+        $schedule->command('performance:optimize --analyze')
+            ->daily()
+            ->at('04:00');
     }
 
     /**

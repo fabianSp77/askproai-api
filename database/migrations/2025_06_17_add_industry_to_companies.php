@@ -13,23 +13,23 @@ return new class extends Migration
     {
         Schema::table('companies', function (Blueprint $table) {
             if (!Schema::hasColumn('companies', 'industry')) {
-                $table->string('industry', 50)->nullable()->after('name');
+                $table->string('industry', 50)->nullable();
             }
             
             if (!Schema::hasColumn('companies', 'logo')) {
-                $table->string('logo')->nullable()->after('industry');
+                $table->string('logo')->nullable();
             }
             
             if (!Schema::hasColumn('companies', 'trial_ends_at')) {
-                $table->timestamp('trial_ends_at')->nullable()->after('is_active');
+                $table->timestamp('trial_ends_at')->nullable();
             }
             
             if (!Schema::hasColumn('companies', 'subscription_status')) {
-                $table->string('subscription_status', 50)->nullable()->after('trial_ends_at');
+                $table->string('subscription_status', 50)->nullable();
             }
             
             if (!Schema::hasColumn('companies', 'subscription_plan')) {
-                $table->string('subscription_plan', 50)->nullable()->after('subscription_status');
+                $table->string('subscription_plan', 50)->nullable();
             }
             
             // Index for faster queries

@@ -25,10 +25,15 @@ class DebugLivewire
         $response = $next($request);
         
         // Check if Livewire is redirecting
-        if ($request->header('X-Livewire') && $response->status() === 302) {
+        if ($request->header('X-Livewire') && method_exists($response, 'status') && $response->status() === 302) {
+            $location = 'unknown';
+            if ($response instanceof \Illuminate\Http\Response || $response instanceof \Symfony\Component\HttpFoundation\Response) {
+                $location = $response->headers->get('Location');
+            }
+            
             Log::warning('Livewire redirect detected', [
                 'from' => $request->fullUrl(),
-                'to' => $response->headers->get('Location'),
+                'to' => $location,
                 'component' => $request->input('components.0.fingerprint.name'),
             ]);
         }

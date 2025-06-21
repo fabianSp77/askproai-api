@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up()
     {
@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('error_code')->nullable();
             $table->string('file');
             $table->integer('line');
-            $table->json('context');
+            $this->addJsonColumn($table, 'context', false);
             $table->timestamp('created_at')->index();
             $table->timestamp('resolved_at')->nullable();
             $table->text('resolution_notes')->nullable();

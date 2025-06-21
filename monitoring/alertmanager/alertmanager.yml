@@ -1,55 +1,23 @@
 global:
   resolve_timeout: 5m
-  smtp_from: 'alerts@askproai.de'
-  smtp_smarthost: 'smtp.gmail.com:587'
-  smtp_auth_username: '{{ .Env.ALERT_EMAIL_USER }}'
-  smtp_auth_password: '{{ .Env.ALERT_EMAIL_PASSWORD }}'
 
 route:
   group_by: ['alertname', 'cluster', 'service']
   group_wait: 10s
   group_interval: 10s
   repeat_interval: 12h
-  receiver: 'team-leads'
+  receiver: 'default'
   routes:
     - match:
         severity: critical
       receiver: 'critical-alerts'
-      continue: true
-    - match:
-        team: security
-      receiver: 'security-team'
-    - match:
-        team: backend
-      receiver: 'backend-team'
 
 receivers:
-  - name: 'team-leads'
-    email_configs:
-      - to: 'team@askproai.de'
-        headers:
-          Subject: 'AskProAI Alert: {{ .GroupLabels.alertname }}'
-
+  - name: 'default'
+    # Placeholder - configure email or webhook as needed
+    
   - name: 'critical-alerts'
-    email_configs:
-      - to: 'critical@askproai.de'
-        headers:
-          Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
-    webhook_configs:
-      - url: '{{ .Env.SLACK_WEBHOOK_URL }}'
-        send_resolved: true
-
-  - name: 'security-team'
-    email_configs:
-      - to: 'security@askproai.de'
-        headers:
-          Subject: '🔒 Security Alert: {{ .GroupLabels.alertname }}'
-
-  - name: 'backend-team'
-    email_configs:
-      - to: 'backend@askproai.de'
-        headers:
-          Subject: '⚙️ Backend Alert: {{ .GroupLabels.alertname }}'
+    # Placeholder - configure email or webhook as needed
 
 inhibit_rules:
   - source_match:

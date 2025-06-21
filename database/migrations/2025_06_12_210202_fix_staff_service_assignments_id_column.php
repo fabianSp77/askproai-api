@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -47,7 +47,7 @@ return new class extends Migration
                 // Drop and recreate the table
                 Schema::drop('staff_service_assignments');
                 
-                Schema::create('staff_service_assignments', function (Blueprint $table) {
+                $this->createTableIfNotExists('staff_service_assignments', function (Blueprint $table) {
                     $table->id(); // This creates an auto-incrementing BIGINT UNSIGNED primary key
                     $table->char('staff_id', 36);
                     $table->unsignedBigInteger('calcom_event_type_id');
@@ -80,7 +80,7 @@ return new class extends Migration
         } catch (\Exception $e) {
             // If the table doesn't exist, create it
             if (!Schema::hasTable('staff_service_assignments')) {
-                Schema::create('staff_service_assignments', function (Blueprint $table) {
+                $this->createTableIfNotExists('staff_service_assignments', function (Blueprint $table) {
                     $table->id();
                     $table->char('staff_id', 36);
                     $table->unsignedBigInteger('calcom_event_type_id');

@@ -23,7 +23,17 @@ class CompanyPolicy
      */
     public function view(User $user, Company $company): bool
     {
-        return $user->can('view_company');
+        // Allow if user has the permission
+        if ($user->can('view_company')) {
+            return true;
+        }
+        
+        // Also allow if user belongs to this company
+        if ($user->company_id === $company->id) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -39,7 +49,17 @@ class CompanyPolicy
      */
     public function update(User $user, Company $company): bool
     {
-        return $user->can('update_company');
+        // Allow if user has the permission
+        if ($user->can('update_company')) {
+            return true;
+        }
+        
+        // Also allow if user belongs to this company
+        if ($user->company_id === $company->id) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**

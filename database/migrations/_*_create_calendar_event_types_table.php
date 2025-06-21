@@ -1,14 +1,13 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
-        Schema::create('calendar_event_types', function (Blueprint $table) {
+        $this->createTableIfNotExists('calendar_event_types', function (Blueprint $table) {
             $table->id();
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             $table->string('provider'); // calcom, google, outlook, internal
@@ -17,7 +16,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->integer('duration_minutes')->default(30);
             $table->decimal('price', 10, 2)->nullable();
-            $table->json('provider_data')->nullable(); // Provider-spezifische Daten
+            $this->addJsonColumn($table, 'provider_data', true); // Provider-spezifische Daten
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             
@@ -28,6 +27,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('calendar_event_types');
+        $this->dropTableIfExists('calendar_event_types');
     }
 };

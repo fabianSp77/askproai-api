@@ -149,8 +149,15 @@ return new class extends Migration
         Log::info("Database cleanup complete. Dropped {$droppedCount} tables.");
         
         // Log remaining tables
-        $remainingTables = DB::select('SHOW TABLES');
-        $tableCount = count($remainingTables);
+        if (config('database.default') === 'sqlite') {
+            // SQLite: Get table list from sqlite_master
+            $remainingTables = DB::select("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
+            $tableCount = count($remainingTables);
+        } else {
+            // MySQL/MariaDB
+            $remainingTables = DB::select('SHOW TABLES');
+            $tableCount = count($remainingTables);
+        }
         Log::info("Remaining tables: {$tableCount}");
     }
     

@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
@@ -15,7 +15,7 @@ return new class extends Migration
                 Schema::rename('staff_service', 'staff_services');
             } else {
                 // Erstelle staff_services neu
-                Schema::create('staff_services', function (Blueprint $table) {
+                $this->createTableIfNotExists('staff_services', function (Blueprint $table) {
                     $table->id();
                     $table->foreignId('staff_id')->constrained('staff')->onDelete('cascade');
                     $table->foreignId('service_id')->constrained('services')->onDelete('cascade');

@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
@@ -14,7 +14,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
-            $table->json('hours');
+            $this->addJsonColumn($table, 'hours', false);
             $table->boolean('is_default')->default(false);
             $table->timestamps();
         });

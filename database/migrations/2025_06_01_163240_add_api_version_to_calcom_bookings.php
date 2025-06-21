@@ -9,7 +9,7 @@ class AddApiVersionToCalcomBookings extends Migration
     public function up()
     {
         Schema::table('calcom_bookings', function (Blueprint $table) {
-            $table->enum('api_version', ['v1', 'v2'])->default('v1')->after('status');
+            $table->enum('api_version', ['v1', 'v2'])->default('v1');
         });
     }
 

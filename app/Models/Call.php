@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+
+use App\Helpers\SafeQueryHelper;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +15,8 @@ use App\Scopes\TenantScope;
 
 class Call extends Model
 {
+    use BelongsToCompany;
+
     use HasFactory;
 
     protected $fillable = [
@@ -161,9 +167,13 @@ class Call extends Model
         $normalizedPhone = $this->normalizePhoneNumber($phoneNumber);
         
         return $query->where(function ($q) use ($phoneNumber, $normalizedPhone) {
+            $lastTenDigits = substr($normalizedPhone, -10);
+            
             $q->where('from_number', $phoneNumber)
               ->orWhere('from_number', $normalizedPhone)
-              ->orWhere('from_number', 'LIKE', '%' . substr($normalizedPhone, -10) . '%');
+              ->orWhere(function($subQ) use ($lastTenDigits) {
+                  SafeQueryHelper::whereLike($subQ, 'from_number', $lastTenDigits, 'left');
+              });
         });
     }
 
@@ -278,7 +288,23 @@ class Call extends Model
     public function extractEntities(): array
     {
         $entities = [];
-        $transcript = $this->transcript ?? $this->webhook_data['transcript'] ?? '';
+        
+        // Get transcript from various sources
+        $transcript = '';
+        if (!empty($this->transcript)) {
+            $transcript = $this->transcript;
+        } elseif (!empty($this->webhook_data)) {
+            // Check if webhook_data is a JSON string or array
+            $webhookData = is_string($this->webhook_data) ? json_decode($this->webhook_data, true) : $this->webhook_data;
+            if (is_array($webhookData) && isset($webhookData['transcript'])) {
+                $transcript = $webhookData['transcript'];
+            }
+        }
+        
+        // If no transcript found, return empty entities
+        if (empty($transcript)) {
+            return $entities;
+        }
         
         // Extract email
         if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $transcript, $matches)) {
@@ -370,8 +396,20 @@ class Call extends Model
         
         static::saving(function ($call) {
             // Auto-analyze if we have a transcript
-            if (!empty($call->transcript) || !empty($call->webhook_data['transcript'])) {
-                $analysis = $call->analysis ?? [];
+            $hasTranscript = false;
+            
+            if (!empty($call->transcript)) {
+                $hasTranscript = true;
+            } elseif (!empty($call->webhook_data)) {
+                // Check if webhook_data contains a transcript
+                $webhookData = is_string($call->webhook_data) ? json_decode($call->webhook_data, true) : $call->webhook_data;
+                if (is_array($webhookData) && !empty($webhookData['transcript'])) {
+                    $hasTranscript = true;
+                }
+            }
+            
+            if ($hasTranscript) {
+                $analysis = is_array($call->analysis) ? $call->analysis : [];
                 
                 // Extract entities
                 $analysis['entities'] = $call->extractEntities();
@@ -418,12 +456,12 @@ class Call extends Model
     }
     
     /**
-     * Agent relationship
+     * Agent relationship - commented out as agents table doesn't exist
      */
-    public function agent(): BelongsTo
-    {
-        return $this->belongsTo(Agent::class);
-    }
+    // public function agent(): BelongsTo
+    // {
+    //     return $this->belongsTo(Agent::class);
+    // }
     
     /**
      * Company relationship

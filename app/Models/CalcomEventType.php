@@ -32,14 +32,37 @@ class CalcomEventType extends Model
         'sync_status',
         'sync_error',
         'last_synced_at',
-        'metadata'
+        'metadata',
+        // Neue Felder
+        'minimum_booking_notice',
+        'booking_future_limit',
+        'time_slot_interval',
+        'buffer_before',
+        'buffer_after',
+        'locations',
+        'custom_fields',
+        'max_bookings_per_day',
+        'seats_per_time_slot',
+        'schedule_id',
+        'recurring_config',
+        'setup_status',
+        'setup_checklist',
+        'webhook_settings',
+        'calcom_url'
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'price' => 'decimal:2',
         'last_synced_at' => 'datetime',
-        'metadata' => 'array'
+        'metadata' => 'array',
+        'locations' => 'array',
+        'custom_fields' => 'array',
+        'recurring_config' => 'array',
+        'setup_checklist' => 'array',
+        'webhook_settings' => 'array',
+        'is_team_event' => 'boolean',
+        'requires_confirmation' => 'boolean'
     ];
 
     /**
@@ -151,5 +174,133 @@ class CalcomEventType extends Model
     public function bookings(): HasMany
     {
         return $this->hasMany(CalcomBooking::class, 'event_type_id');
+    }
+    
+    /**
+     * Check if event type is fully configured
+     */
+    public function isFullyConfigured(): bool
+    {
+        return $this->setup_status === 'complete';
+    }
+    
+    /**
+     * Get setup progress percentage
+     */
+    public function getSetupProgress(): int
+    {
+        $checklist = $this->setup_checklist ?? [];
+        if (empty($checklist)) {
+            return 0;
+        }
+        
+        $completed = collect($checklist)->filter(fn($item) => $item['completed'] ?? false)->count();
+        $total = count($checklist);
+        
+        return $total > 0 ? round(($completed / $total) * 100) : 0;
+    }
+    
+    /**
+     * Update setup checklist item
+     */
+    public function updateChecklistItem(string $key, bool $completed, ?string $note = null): void
+    {
+        $checklist = $this->setup_checklist ?? [];
+        
+        $checklist[$key] = [
+            'completed' => $completed,
+            'updated_at' => now()->toIso8601String(),
+            'note' => $note
+        ];
+        
+        $this->setup_checklist = $checklist;
+        $this->updateSetupStatus();
+        $this->save();
+    }
+    
+    /**
+     * Update setup status based on checklist
+     */
+    protected function updateSetupStatus(): void
+    {
+        $progress = $this->getSetupProgress();
+        
+        if ($progress === 0) {
+            $this->setup_status = 'incomplete';
+        } elseif ($progress === 100) {
+            $this->setup_status = 'complete';
+        } else {
+            $this->setup_status = 'partial';
+        }
+    }
+    
+    /**
+     * Get Cal.com direct edit URL
+     */
+    public function getCalcomEditUrl(): ?string
+    {
+        if (!$this->calcom_numeric_event_type_id) {
+            return null;
+        }
+        
+        $baseUrl = config('services.calcom.app_url', 'https://app.cal.com');
+        return "{$baseUrl}/event-types/{$this->calcom_numeric_event_type_id}";
+    }
+    
+    /**
+     * Get setup checklist
+     */
+    public function getSetupChecklist(): array
+    {
+        if (empty($this->setup_checklist)) {
+            $this->initializeChecklist();
+        }
+        
+        return $this->setup_checklist ?? [];
+    }
+    
+    /**
+     * Initialize setup checklist
+     */
+    public function initializeChecklist(): void
+    {
+        $this->setup_checklist = [
+            'basic_info' => [
+                'label' => 'Basis-Informationen',
+                'completed' => !empty($this->name) && !empty($this->duration_minutes),
+                'syncable' => true
+            ],
+            'availability' => [
+                'label' => 'Verfügbarkeiten',
+                'completed' => !empty($this->schedule_id),
+                'syncable' => false,
+                'calcom_section' => 'availability'
+            ],
+            'booking_settings' => [
+                'label' => 'Buchungseinstellungen',
+                'completed' => $this->minimum_booking_notice !== null,
+                'syncable' => true
+            ],
+            'locations' => [
+                'label' => 'Standorte/Orte',
+                'completed' => !empty($this->locations),
+                'syncable' => true
+            ],
+            'custom_fields' => [
+                'label' => 'Benutzerdefinierte Felder',
+                'completed' => false,
+                'syncable' => false,
+                'calcom_section' => 'advanced'
+            ],
+            'notifications' => [
+                'label' => 'Benachrichtigungen',
+                'completed' => false,
+                'syncable' => false,
+                'calcom_section' => 'workflows'
+            ]
+        ];
+        
+        $this->updateSetupStatus();
+        $this->save();
     }
 }

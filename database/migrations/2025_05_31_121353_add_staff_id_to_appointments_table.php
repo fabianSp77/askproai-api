@@ -12,7 +12,7 @@ return new class extends Migration
             if (!Schema::hasColumn('appointments', 'staff_id')) {
                 $table->uuid('staff_id')
                     ->nullable()
-                    ->after('customer_id');
+                    ;
                 
                 $table->index('staff_id');
             }

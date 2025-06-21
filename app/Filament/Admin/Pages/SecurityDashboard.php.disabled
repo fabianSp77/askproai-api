@@ -1,0 +1,237 @@
+<?php
+
+namespace App\Filament\Admin\Pages;
+
+use Filament\Pages\Page;
+use App\Security\AskProAISecurityLayer;
+use App\Security\ThreatDetector;
+use Illuminate\Support\Facades\Cache;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\DB;
+
+class SecurityDashboard extends Page
+{
+    protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+    protected static ?string $navigationGroup = 'System & Überwachung';
+    protected static ?int $navigationSort = 20;
+    protected static string $view = 'filament.admin.pages.security-dashboard';
+    
+    public static function canAccess(): bool
+    {
+        return auth()->user()->can('view_security_dashboard');
+    }
+    
+    public function mount(): void
+    {
+        // Check permissions
+        abort_unless(auth()->user()->can('view_security_dashboard'), 403);
+    }
+
+    public function getTitle(): string
+    {
+        return '🛡️ Security Dashboard';
+    }
+
+    public function getSecurityStatus(): array
+    {
+        $securityLayer = app(AskProAISecurityLayer::class);
+        return $securityLayer->getStatus();
+    }
+
+    public function getThreatStatistics(): array
+    {
+        $today = Cache::get('threats:' . date('Y-m-d'), []);
+        $yesterday = Cache::get('threats:' . date('Y-m-d', strtotime('-1 day')), []);
+        
+        $threatTypes = [];
+        foreach ($today as $threat) {
+            foreach ($threat['threats'] ?? [] as $entry) {
+                foreach ($entry['threats'] ?? [] as $type) {
+                    $threatTypes[$type] = ($threatTypes[$type] ?? 0) + 1;
+                }
+            }
+        }
+
+        return [
+            'today_count' => count($today),
+            'yesterday_count' => count($yesterday),
+            'threat_types' => $threatTypes,
+            'trend' => count($today) > count($yesterday) ? 'up' : 'down'
+        ];
+    }
+
+    public function getRateLimitStatistics(): array
+    {
+        return [
+            'blocked_today' => Cache::get('rate_limit_blocks:' . date('Y-m-d'), 0),
+            'blocked_yesterday' => Cache::get('rate_limit_blocks:' . date('Y-m-d', strtotime('-1 day')), 0),
+            'top_offenders' => $this->getTopRateLimitOffenders()
+        ];
+    }
+
+    public function getBackupStatus(): array
+    {
+        $lastBackup = null;
+        $backupPath = storage_path('backups');
+        
+        if (is_dir($backupPath)) {
+            $files = glob($backupPath . '/*');
+            if (!empty($files)) {
+                $latest = max(array_map('filemtime', $files));
+                $lastBackup = date('Y-m-d H:i:s', $latest);
+            }
+        }
+
+        return [
+            'last_backup' => $lastBackup,
+            'next_scheduled' => $this->getNextScheduledBackup(),
+            'backup_size' => $this->getBackupSize(),
+            'retention_days' => config('backup.retention_days', 30)
+        ];
+    }
+
+    public function getAuditLogStatistics(): array
+    {
+        $stats = DB::table('activity_log')
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('COUNT(CASE WHEN created_at >= NOW() - INTERVAL 24 HOUR THEN 1 END) as last_24h')
+            ->selectRaw('COUNT(CASE WHEN created_at >= NOW() - INTERVAL 7 DAY THEN 1 END) as last_7d')
+            ->first();
+
+        return [
+            'total_entries' => $stats->total ?? 0,
+            'last_24h' => $stats->last_24h ?? 0,
+            'last_7d' => $stats->last_7d ?? 0,
+            'disk_usage' => $this->getAuditLogDiskUsage()
+        ];
+    }
+
+    public function getSystemVulnerabilities(): array
+    {
+        $vulnerabilities = [];
+
+        // Check for debug mode
+        if (config('app.debug')) {
+            $vulnerabilities[] = [
+                'severity' => 'high',
+                'issue' => 'Debug mode is enabled',
+                'recommendation' => 'Disable debug mode in production'
+            ];
+        }
+
+        // Check for default passwords
+        if (DB::table('users')->where('password', bcrypt('password'))->exists()) {
+            $vulnerabilities[] = [
+                'severity' => 'critical',
+                'issue' => 'Users with default passwords detected',
+                'recommendation' => 'Force password reset for affected users'
+            ];
+        }
+
+        // Check SSL certificate
+        if (!request()->secure() && app()->environment('production')) {
+            $vulnerabilities[] = [
+                'severity' => 'high',
+                'issue' => 'SSL not enforced',
+                'recommendation' => 'Enable HTTPS redirect'
+            ];
+        }
+
+        // Check for outdated packages
+        $outdatedPackages = $this->checkOutdatedPackages();
+        if (!empty($outdatedPackages)) {
+            $vulnerabilities[] = [
+                'severity' => 'medium',
+                'issue' => count($outdatedPackages) . ' outdated packages',
+                'recommendation' => 'Run composer update to update packages'
+            ];
+        }
+
+        return $vulnerabilities;
+    }
+
+    private function getTopRateLimitOffenders(): array
+    {
+        // This would typically come from a more sophisticated tracking system
+        return [];
+    }
+
+    private function getNextScheduledBackup(): ?string
+    {
+        // Check Laravel schedule for backup command
+        return 'Daily at 03:00';
+    }
+
+    private function getBackupSize(): string
+    {
+        $backupPath = storage_path('backups');
+        if (!is_dir($backupPath)) {
+            return '0 MB';
+        }
+
+        $size = 0;
+        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($backupPath)) as $file) {
+            $size += $file->getSize();
+        }
+
+        return number_format($size / 1048576, 2) . ' MB';
+    }
+
+    private function getAuditLogDiskUsage(): string
+    {
+        $result = DB::select("
+            SELECT 
+                ROUND(((data_length + index_length) / 1024 / 1024), 2) AS size_mb
+            FROM information_schema.TABLES 
+            WHERE table_schema = ? 
+            AND table_name = 'activity_log'
+        ", [config('database.connections.mysql.database')]);
+
+        return ($result[0]->size_mb ?? 0) . ' MB';
+    }
+
+    private function checkOutdatedPackages(): array
+    {
+        // This would typically run composer outdated command
+        // For now, return empty array to avoid command execution
+        return [];
+    }
+    
+    public function getRecentSecurityEvents(): array
+    {
+        // Get recent security-related activities from the activity log
+        $events = DB::table('activity_log')
+            ->whereIn('description', [
+                'logged in',
+                'logged out',
+                'failed login',
+                'password changed',
+                'permission changed',
+                'role changed',
+                'api key created',
+                'api key deleted',
+                'integration created',
+                'integration deleted',
+                'backup created',
+                'backup restored'
+            ])
+            ->orWhere('properties', 'LIKE', '%security%')
+            ->orWhere('properties', 'LIKE', '%threat%')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+        
+        return $events->map(function ($event) {
+            $properties = json_decode($event->properties, true);
+            
+            return [
+                'time' => $event->created_at,
+                'description' => $event->description,
+                'causer' => $event->causer_type ? 
+                    (DB::table('users')->where('id', $event->causer_id)->value('name') ?? 'System') : 
+                    'System',
+                'properties' => $properties
+            ];
+        })->toArray();
+    }
+}

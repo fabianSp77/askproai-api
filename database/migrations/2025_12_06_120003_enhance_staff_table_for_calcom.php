@@ -1,21 +1,21 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
         Schema::table('staff', function (Blueprint $table) {
             // Füge fehlende Spalten hinzu, falls sie noch nicht existieren
             if (!Schema::hasColumn('staff', 'calcom_username')) {
-                $table->string('calcom_username')->nullable()->after('calcom_user_id');
+                $table->string('calcom_username')->nullable();
             }
             
             if (!Schema::hasColumn('staff', 'working_hours')) {
-                $table->json('working_hours')->nullable()->after('calcom_username');
+                $this->addJsonColumn($table, 'working_hours', true);
             }
             
             // is_bookable existiert bereits laut Model

@@ -15,11 +15,16 @@ class RetellService
     private $baseUrl = 'https://api.retellai.com';
     private SensitiveDataMasker $masker;
 
-    public function __construct()
+    public function __construct($apiKey = null)
     {
-        // Try multiple config keys for compatibility
-        $this->apiKey = config('services.retell.api_key') 
-            ?? config('services.retell.token');
+        // Use provided API key or fall back to config
+        if ($apiKey) {
+            $this->apiKey = $apiKey;
+        } else {
+            // Try multiple config keys for compatibility
+            $this->apiKey = config('services.retell.api_key') 
+                ?? config('services.retell.token');
+        }
         
         // Use the base URL from config
         $baseUrl = config('services.retell.base', 'https://api.retellai.com');
@@ -40,7 +45,7 @@ class RetellService
             try {
                 $response = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $this->apiKey,
-                ])->post($this->baseUrl . '/v2/list-agents', []);
+                ])->get($this->baseUrl . '/list-agents');
 
                 if ($response->successful()) {
                     return $response->json();
@@ -68,7 +73,7 @@ class RetellService
             try {
                 $response = Http::withHeaders([
                     'Authorization' => 'Bearer ' . $this->apiKey,
-                ])->post($this->baseUrl . '/v2/get-agent', ['agent_id' => $agentId]);
+                ])->get($this->baseUrl . '/get-agent/' . $agentId);
 
                 if ($response->successful()) {
                     return $response->json();

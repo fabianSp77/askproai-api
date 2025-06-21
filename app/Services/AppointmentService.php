@@ -14,18 +14,19 @@ use Illuminate\Support\Facades\Log;
 use App\Events\AppointmentCreated;
 use App\Events\AppointmentCancelled;
 use App\Events\AppointmentRescheduled;
+use App\Services\CalcomV2Service;
 
 class AppointmentService
 {
     use TransactionalService;
     protected AppointmentRepository $appointmentRepository;
     protected CustomerRepository $customerRepository;
-    protected CalcomService $calcomService;
+    protected CalcomV2Service $calcomService;
 
     public function __construct(
         AppointmentRepository $appointmentRepository,
         CustomerRepository $customerRepository,
-        CalcomService $calcomService
+        CalcomV2Service $calcomService
     ) {
         $this->appointmentRepository = $appointmentRepository;
         $this->customerRepository = $customerRepository;

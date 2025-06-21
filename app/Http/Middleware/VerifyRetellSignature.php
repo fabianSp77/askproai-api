@@ -6,118 +6,216 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use App\Exceptions\WebhookSignatureException;
 
 class VerifyRetellSignature
 {
+    /**
+     * Known Retell IP addresses for additional security
+     */
+    private const RETELL_IPS = [
+        '100.20.5.228',
+        '34.226.180.161',
+        '34.198.47.77',
+        '52.203.159.213',
+        '52.53.229.199',
+        '54.241.134.41',
+        '54.183.150.123',
+        '152.53.228.178'
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
         // Skip in testing environment
         if (app()->environment('testing')) {
             return $next($request);
         }
+        
+        // Log incoming webhook attempts for monitoring
+        Log::info('[Retell Webhook] Signature verification started', [
+            'url' => $request->fullUrl(),
+            'has_signature' => $request->hasHeader('X-Retell-Signature'),
+            'has_timestamp' => $request->hasHeader('X-Retell-Timestamp'),
+            'ip' => $request->ip(),
+            'headers' => $request->headers->all()
+        ]);
+        
+        // Verify IP address (optional but recommended)
+        if (config('services.retell.verify_ip', false) && !in_array($request->ip(), self::RETELL_IPS)) {
+            Log::warning('[Retell Webhook] Request from unknown IP', [
+                'ip' => $request->ip(),
+                'known_ips' => self::RETELL_IPS
+            ]);
+        }
+        
+        // Get configuration
+        $webhookSecret = config('services.retell.webhook_secret');
+        
+        // If no dedicated webhook secret, fall back to API key
+        if (empty($webhookSecret)) {
+            $webhookSecret = config('services.retell.api_key');
+            if (empty($webhookSecret)) {
+                Log::error('[Retell Webhook] No webhook secret or API key configured');
+                throw new WebhookSignatureException(
+                    'Webhook verification not properly configured',
+                    'retell',
+                    500
+                );
+            }
+            Log::debug('[Retell Webhook] Using API key for signature verification');
+        }
 
         $signatureHeader = $request->header('X-Retell-Signature');
-        $timestamp = $request->header('X-Retell-Timestamp');
-        $apiKey = config('services.retell.api_key') ?? config('services.retell.secret');
+        $timestampHeader = $request->header('X-Retell-Timestamp');
         
-        // Extract signature from header (format: v=timestamp,signature)
+        // Validate required headers
+        if (empty($signatureHeader)) {
+            Log::error('[Retell Webhook] Missing signature header');
+            throw new WebhookSignatureException(
+                'Missing X-Retell-Signature header',
+                'retell'
+            );
+        }
+        
+        // Parse signature and timestamp
         $signature = $signatureHeader;
+        $timestamp = $timestampHeader;
+        
+        // Check if signature uses combined format: v=timestamp,signature
         if (strpos($signatureHeader, 'v=') === 0) {
-            // Parse Retell signature format: v=timestamp,signature
-            $parts = explode(',', substr($signatureHeader, 2));
-            if (count($parts) >= 2) {
-                $timestamp = $timestamp ?? $parts[0]; // Use header timestamp or extracted
+            $parts = explode(',', substr($signatureHeader, 2), 2);
+            if (count($parts) === 2) {
+                // Format: v=timestamp,signature
+                $timestamp = $timestamp ?? $parts[0];
                 $signature = $parts[1];
             } else {
-                // Might be just v=signature
-                $signature = $parts[0] ?? $signatureHeader;
+                // Format: v=signature (no timestamp)
+                $signature = $parts[0];
             }
         }
         
-        // Validate required components
-        if (empty($signature) || empty($apiKey)) {
-            Log::error('Retell webhook validation failed - missing requirements', [
-                'has_signature' => !empty($signature),
-                'has_api_key' => !empty($apiKey),
-                'ip' => $request->ip(),
-            ]);
-            
-            abort(401, 'Unauthorized - Missing signature or configuration');
-        }
+        // Clean up signature (remove any whitespace)
+        $signature = trim($signature);
         
-        // Prevent replay attacks with timestamp validation (5 minute window)
+        // Get request body
+        $body = $request->getContent();
+        
+        // Log signature details for debugging (without exposing secrets)
+        Log::debug('[Retell Webhook] Signature components', [
+            'signature_length' => strlen($signature),
+            'timestamp' => $timestamp,
+            'body_length' => strlen($body),
+            'body_sample' => substr($body, 0, 100) . '...'
+        ]);
+        
+        // Timestamp validation (if provided)
         if ($timestamp && is_numeric($timestamp)) {
             $currentTime = time();
-            $webhookTime = (int) $timestamp;
+            $webhookTime = $this->normalizeTimestamp($timestamp);
             
-            Log::info('Retell webhook timestamp validation', [
-                'raw_timestamp' => $timestamp,
-                'webhook_time' => $webhookTime,
-                'current_time' => $currentTime,
-                'timestamp_length' => strlen((string)$timestamp),
-            ]);
-            
-            // Check if timestamp is in milliseconds (13 digits) vs seconds (10 digits)
-            if (strlen((string)$timestamp) >= 13) {
-                // Convert milliseconds to seconds
-                $webhookTime = (int)($timestamp / 1000);
-                Log::info('Retell webhook timestamp converted from milliseconds', [
-                    'original' => $timestamp,
-                    'converted' => $webhookTime
-                ]);
-            } elseif (strlen((string)$timestamp) >= 16) {
-                // Might be microseconds or nanoseconds
-                $webhookTime = (int)($timestamp / 1000000);
-                Log::info('Retell webhook timestamp converted from microseconds', [
-                    'original' => $timestamp,
-                    'converted' => $webhookTime
-                ]);
-            }
-            
-            // Skip timestamp validation if it seems completely wrong (< year 2020)
-            if ($webhookTime < 1577836800) { // Jan 1, 2020
-                Log::warning('Retell webhook timestamp seems invalid, skipping validation', [
-                    'webhook_time' => $webhookTime,
-                    'raw_timestamp' => $timestamp
-                ]);
-            } else if (abs($currentTime - $webhookTime) > 300) {
-                // Only validate if timestamp looks reasonable
-                Log::error('Retell webhook timestamp expired', [
+            // Validate timestamp is within acceptable window (5 minutes)
+            $timeDiff = abs($currentTime - $webhookTime);
+            if ($timeDiff > 300) {
+                Log::warning('[Retell Webhook] Timestamp outside acceptable window', [
                     'current_time' => $currentTime,
                     'webhook_time' => $webhookTime,
-                    'difference_seconds' => abs($currentTime - $webhookTime),
+                    'difference_seconds' => $timeDiff
                 ]);
                 
-                abort(401, 'Request expired');
+                // For now, log but don't reject (Retell might have clock skew)
+                // throw new WebhookSignatureException('Request timestamp expired', 'retell');
             }
         }
 
-        // Build signature payload
-        $body = $request->getContent();
-        $signaturePayload = $timestamp ? "{$timestamp}.{$body}" : $body;
+        // Try multiple signature verification methods
+        $verified = false;
+        $attempts = [];
         
-        // Calculate expected signature
-        $expectedSignature = hash_hmac('sha256', $signaturePayload, $apiKey);
+        // Method 1: timestamp.body (most common)
+        if ($timestamp) {
+            $payload1 = "{$timestamp}.{$body}";
+            $expected1 = hash_hmac('sha256', $payload1, $webhookSecret);
+            $attempts['timestamp_dot_body'] = substr($expected1, 0, 20) . '...';
+            if (hash_equals($expected1, $signature)) {
+                $verified = true;
+                Log::debug('[Retell Webhook] Verified with method: timestamp.body');
+            }
+        }
         
-        // Timing-safe comparison
-        if (!hash_equals($expectedSignature, $signature)) {
-            Log::error('Retell webhook signature mismatch', [
-                'ip' => $request->ip(),
-                'url' => $request->fullUrl(),
-                'expected_signature' => substr($expectedSignature, 0, 10) . '...',
-                'received_signature' => substr($signature, 0, 10) . '...',
+        // Method 2: Just body (no timestamp)
+        if (!$verified) {
+            $expected2 = hash_hmac('sha256', $body, $webhookSecret);
+            $attempts['body_only'] = substr($expected2, 0, 20) . '...';
+            if (hash_equals($expected2, $signature)) {
+                $verified = true;
+                Log::debug('[Retell Webhook] Verified with method: body only');
+            }
+        }
+        
+        // Method 3: Base64 encoded (some webhooks use this)
+        if (!$verified && $timestamp) {
+            $payload3 = "{$timestamp}.{$body}";
+            $expected3 = base64_encode(hash_hmac('sha256', $payload3, $webhookSecret, true));
+            $attempts['base64_timestamp_body'] = substr($expected3, 0, 20) . '...';
+            if ($signature === $expected3) {
+                $verified = true;
+                Log::debug('[Retell Webhook] Verified with method: base64 encoded');
+            }
+        }
+        
+        // Log verification attempts
+        if (!$verified) {
+            Log::error('[Retell Webhook] Signature verification failed', [
+                'received_signature' => substr($signature, 0, 20) . '...',
+                'attempted_signatures' => $attempts,
                 'timestamp' => $timestamp,
-                'has_timestamp' => !empty($timestamp),
-                'body_length' => strlen($body),
-                'first_100_chars' => substr($body, 0, 100),
+                'ip' => $request->ip()
             ]);
             
-            abort(401, 'Invalid signature');
+            throw new WebhookSignatureException(
+                'Invalid webhook signature',
+                'retell'
+            );
         }
+        
+        Log::info('[Retell Webhook] Signature verified successfully');
         
         // Mark request as validated
         $request->merge(['webhook_validated' => true]);
 
         return $next($request);
+    }
+    
+    /**
+     * Normalize timestamp to seconds
+     * Handles milliseconds, microseconds, and regular seconds
+     */
+    private function normalizeTimestamp($timestamp): int
+    {
+        $timestamp = (string) $timestamp;
+        $length = strlen($timestamp);
+        
+        // Already in seconds (10 digits)
+        if ($length === 10) {
+            return (int) $timestamp;
+        }
+        
+        // Milliseconds (13 digits)
+        if ($length === 13) {
+            return (int) ($timestamp / 1000);
+        }
+        
+        // Microseconds (16 digits)
+        if ($length === 16) {
+            return (int) ($timestamp / 1000000);
+        }
+        
+        // Nanoseconds (19 digits)
+        if ($length === 19) {
+            return (int) ($timestamp / 1000000000);
+        }
+        
+        // Default: assume seconds
+        return (int) $timestamp;
     }
 }

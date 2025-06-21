@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
@@ -14,7 +14,7 @@ return new class extends Migration
             }
 
             if (! Schema::hasColumn('calls', 'details')) {
-                $table->json('details')->nullable();
+                $this->addJsonColumn($table, 'details', true);
             }
 
             // weitere Spalten hier in gleicher Weise …

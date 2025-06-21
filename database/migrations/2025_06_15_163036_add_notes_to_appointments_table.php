@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::table('appointments', function (Blueprint $table) {
             if (!Schema::hasColumn('appointments', 'notes')) {
-                $table->text('notes')->nullable()->after('status');
+                $table->text('notes')->nullable();
             }
             if (!Schema::hasColumn('appointments', 'price')) {
-                $table->integer('price')->nullable()->after('notes');
+                $table->integer('price')->nullable();
             }
             if (!Schema::hasColumn('appointments', 'calcom_booking_id')) {
-                $table->unsignedBigInteger('calcom_booking_id')->nullable()->after('calcom_event_type_id');
+                $table->unsignedBigInteger('calcom_booking_id')->nullable();
             }
         });
     }

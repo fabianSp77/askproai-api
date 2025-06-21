@@ -102,7 +102,7 @@
     <!-- Recommended Action Summary -->
     <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border-l-4 border-primary-500">
         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-            {!! $recommendedAction !!}
+            {{ $recommendedAction }}
         </p>
     </div>
 </div>

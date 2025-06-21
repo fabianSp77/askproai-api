@@ -2,9 +2,9 @@
 
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 
-class CreateActivityLogTable extends Migration
+class CreateActivityLogTable extends CompatibleMigration
 {
     public function up()
     {
@@ -14,7 +14,7 @@ class CreateActivityLogTable extends Migration
             $table->text('description');
             $table->nullableMorphs('subject', 'subject');
             $table->nullableMorphs('causer', 'causer');
-            $table->json('properties')->nullable();
+            $this->addJsonColumn($table, 'properties', true);
             $table->timestamps();
             $table->index('log_name');
         });

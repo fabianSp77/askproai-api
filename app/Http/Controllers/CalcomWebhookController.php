@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\WebhookProcessor;
 use App\Models\WebhookEvent;
+use App\Http\Requests\Webhook\CalcomWebhookRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -41,7 +42,7 @@ class CalcomWebhookController extends Controller
     /**
      * Handle incoming webhook from Cal.com using WebhookProcessor
      */
-    public function handle(Request $request)
+    public function handle(CalcomWebhookRequest $request)
     {
         $correlationId = $request->input('correlation_id') ?? app('correlation_id');
         $payload = $request->all();

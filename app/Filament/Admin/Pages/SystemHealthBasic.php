@@ -8,7 +8,7 @@ class SystemHealthBasic extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-heart';
     protected static ?string $navigationLabel = 'System Health Basic';
-    protected static ?string $navigationGroup = 'System & Monitoring';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static string $view = 'filament.admin.pages.system-health-basic';
     protected static ?int $navigationSort = 10;
     

@@ -6,16 +6,21 @@ use App\Models\Branch;
 use App\Models\Company;
 use App\Services\RetellV2Service;
 use App\Services\Logging\ProductionLogger;
+use App\Services\PromptTemplateService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
 class RetellAgentProvisioner
 {
     private ProductionLogger $logger;
+    private ProvisioningValidator $validator;
+    private PromptTemplateService $promptService;
     
     public function __construct()
     {
         $this->logger = new ProductionLogger();
+        $this->validator = new ProvisioningValidator();
+        $this->promptService = new PromptTemplateService();
     }
     
     /**
@@ -29,8 +34,35 @@ class RetellAgentProvisioner
         ], null, 0);
         
         try {
-            // Validate prerequisites
-            $this->validateBranch($branch);
+            // Comprehensive validation using ProvisioningValidator
+            $validationResult = $this->validator->validateBranch($branch);
+            
+            if (!$validationResult->isValid()) {
+                $errors = $validationResult->getErrors();
+                $errorMessages = array_map(fn($e) => $e['message'], $errors);
+                
+                $this->logger->logError(new \Exception('Branch validation failed'), [
+                    'branch_id' => $branch->id,
+                    'errors' => $errors,
+                    'warnings' => $validationResult->getWarnings(),
+                ]);
+                
+                return [
+                    'success' => false,
+                    'error' => 'Validation failed: ' . implode('; ', $errorMessages),
+                    'validation_errors' => $errors,
+                    'validation_warnings' => $validationResult->getWarnings(),
+                    'recommendations' => $validationResult->getRecommendations(),
+                ];
+            }
+            
+            // Log warnings if any
+            if ($validationResult->hasWarnings()) {
+                $this->logger->logApiCall('RetellProvisioner', 'validation_warnings', [
+                    'branch_id' => $branch->id,
+                    'warnings' => $validationResult->getWarnings(),
+                ], null, 0);
+            }
             
             // Get or create API key
             $apiKey = $this->getRetellApiKey($branch->company);
@@ -98,6 +130,21 @@ class RetellAgentProvisioner
         }
         
         try {
+            // Validate branch even for updates
+            $validationResult = $this->validator->validateBranch($branch);
+            
+            if (!$validationResult->isValid()) {
+                $errors = $validationResult->getErrors();
+                $errorMessages = array_map(fn($e) => $e['message'], $errors);
+                
+                return [
+                    'success' => false,
+                    'error' => 'Validation failed for update: ' . implode('; ', $errorMessages),
+                    'validation_errors' => $errors,
+                    'validation_warnings' => $validationResult->getWarnings(),
+                    'recommendations' => $validationResult->getRecommendations(),
+                ];
+            }
             // For existing agents that are just being activated,
             // we only update the status in our database without
             // making any changes to the Retell.ai configuration
@@ -151,7 +198,7 @@ class RetellAgentProvisioner
             'agent_name' => "{$company->name} - {$branch->name}",
             'response_engine' => [
                 'type' => 'retell-llm',
-                'llm_id' => 'gpt-4',
+                'llm_id' => 'claude-3.5-sonnet', // Using Claude instead of GPT-4
                 'system_prompt' => $this->generatePrompt($branch),
             ],
             'voice_id' => $branch->getSetting('voice_id', 'de-DE-FlorianNeural'),
@@ -183,66 +230,81 @@ class RetellAgentProvisioner
      */
     private function generatePrompt(Branch $branch): string
     {
-        $company = $branch->company;
-        $services = $branch->services->map(function($service) {
-            return "- {$service->name} ({$service->duration} Minuten): {$service->price}€";
-        })->join("\n");
+        // Check if branch has custom industry setting
+        $industry = $branch->getSetting('industry_type', null);
         
-        $staff = $branch->staff->map(function($staff) {
-            return "- {$staff->name} ({$staff->title})";
-        })->join("\n");
+        // If not set, try to detect from company or services
+        if (!$industry) {
+            $company = $branch->company;
+            $industry = $this->detectIndustry($company, $branch);
+        }
         
-        $businessHours = $this->formatBusinessHours($branch);
+        // Use template service to generate industry-specific prompt
+        $prompt = $this->promptService->renderPrompt($branch, $industry, [
+            'agent_name' => $branch->getSetting('agent_name', 'Sarah'),
+            'voice_id' => $branch->getSetting('voice_id', 'de-DE-FlorianNeural'),
+        ]);
         
-        $prompt = <<<EOT
-Du bist der KI-Assistent für {$company->name}, Filiale {$branch->name}.
-
-DEINE ROLLE:
-- Freundlicher und professioneller Empfang am Telefon
-- Terminvereinbarung für Kunden
-- Beantwortung von Fragen zu Services und Öffnungszeiten
-
-UNTERNEHMENSINFORMATIONEN:
-- Firma: {$company->name}
-- Filiale: {$branch->name}
-- Adresse: {$branch->address}, {$branch->postal_code} {$branch->city}
-- Telefon: {$branch->phone_number}
-
-VERFÜGBARE SERVICES:
-{$services}
-
-MITARBEITER:
-{$staff}
-
-ÖFFNUNGSZEITEN:
-{$businessHours}
-
-WICHTIGE REGELN:
-1. Sei immer höflich und zuvorkommend
-2. Verwende Siezen, außer der Kunde bietet das Du an
-3. Frage nach allen notwendigen Informationen für die Terminbuchung:
-   - Name des Kunden
-   - Telefonnummer
-   - Gewünschter Service
-   - Bevorzugter Mitarbeiter (optional)
-   - Terminwunsch (Datum und Uhrzeit)
-4. Bestätige alle Informationen bevor du den Termin buchst
-5. Informiere über die Stornierungsbedingungen
-6. Verabschiede dich freundlich
-
-SPEZIELLE ANWEISUNGEN:
-- Sprache: Deutsch
-- Dialekt: Hochdeutsch
-- Ton: Professionell aber herzlich
-EOT;
-
-        // Add custom instructions if available
+        // Add any custom instructions if available
         $customInstructions = $branch->getSetting('custom_prompt_instructions');
         if ($customInstructions) {
-            $prompt .= "\n\nZUSÄTZLICHE ANWEISUNGEN:\n" . $customInstructions;
+            $prompt .= "\n\n## ZUSÄTZLICHE ANWEISUNGEN\n" . $customInstructions;
         }
         
         return $prompt;
+    }
+    
+    /**
+     * Detect industry based on company and branch data
+     */
+    private function detectIndustry(Company $company, Branch $branch): string
+    {
+        // Check company industry field
+        if ($company->industry) {
+            return $this->mapIndustryToTemplate($company->industry);
+        }
+        
+        // Check service names for patterns
+        $serviceNames = $branch->services->pluck('name')->map(fn($name) => strtolower($name))->toArray();
+        $allServices = implode(' ', $serviceNames);
+        
+        // Medical patterns
+        if (preg_match('/(arzt|praxis|medizin|therapie|behandlung|untersuchung|sprechstunde)/i', $allServices)) {
+            return 'medical';
+        }
+        
+        // Salon/Beauty patterns
+        if (preg_match('/(haar|friseur|frisör|salon|beauty|kosmetik|nägel|maniküre|pediküre|wimpern)/i', $allServices)) {
+            return 'salon';
+        }
+        
+        // Fitness patterns
+        if (preg_match('/(fitness|training|sport|gym|workout|yoga|pilates|crossfit)/i', $allServices)) {
+            return 'fitness';
+        }
+        
+        // Default to generic
+        return 'generic';
+    }
+    
+    /**
+     * Map industry names to template names
+     */
+    private function mapIndustryToTemplate(string $industry): string
+    {
+        $mappings = [
+            'beauty' => 'salon',
+            'wellness' => 'salon',
+            'hairdresser' => 'salon',
+            'health' => 'medical',
+            'healthcare' => 'medical',
+            'doctor' => 'medical',
+            'sport' => 'fitness',
+            'gym' => 'fitness',
+        ];
+        
+        $industry = strtolower($industry);
+        return $mappings[$industry] ?? $industry;
     }
     
     /**
@@ -362,25 +424,6 @@ EOT;
         return array_unique($keywords);
     }
     
-    /**
-     * Validate branch has required information
-     */
-    private function validateBranch(Branch $branch): void
-    {
-        if (!$branch->company) {
-            throw new \Exception('Branch must belong to a company');
-        }
-        
-        if (!$branch->phone_number) {
-            Log::warning('Branch has no phone number configured', [
-                'branch_id' => $branch->id,
-            ]);
-        }
-        
-        if ($branch->services->isEmpty()) {
-            throw new \Exception('Branch must have at least one service');
-        }
-    }
     
     /**
      * Get Retell API key for company

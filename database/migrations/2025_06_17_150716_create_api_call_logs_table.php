@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -16,11 +16,11 @@ return new class extends Migration
             $table->string('service'); // retell, calcom, stripe, etc.
             $table->string('endpoint'); // API endpoint called
             $table->string('method'); // GET, POST, PUT, DELETE
-            $table->json('request_headers')->nullable();
-            $table->json('request_body')->nullable();
+            $this->addJsonColumn($table, 'request_headers', true);
+            $this->addJsonColumn($table, 'request_body', true);
             $table->integer('response_status')->nullable();
-            $table->json('response_headers')->nullable();
-            $table->json('response_body')->nullable();
+            $this->addJsonColumn($table, 'response_headers', true);
+            $this->addJsonColumn($table, 'response_body', true);
             $table->float('duration_ms')->nullable(); // Request duration in milliseconds
             $table->string('correlation_id')->nullable(); // To link related API calls
             $table->foreignId('company_id')->nullable()->constrained()->onDelete('cascade');

@@ -1,16 +1,16 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up()
     {
         if (!Schema::hasColumn('branches', 'business_hours')) {
             Schema::table('branches', function (Blueprint $table) {
-                $table->json('business_hours')->nullable()->after('email');
+                $this->addJsonColumn($table, 'business_hours', true);
             });
         }
     }

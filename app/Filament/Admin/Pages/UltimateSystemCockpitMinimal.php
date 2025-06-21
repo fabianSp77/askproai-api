@@ -9,7 +9,7 @@ class UltimateSystemCockpitMinimal extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-command-line';
     protected static ?string $navigationLabel = 'System Cockpit (Minimal)';
-    protected static ?string $navigationGroup = 'System & Monitoring';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static string $view = 'filament.admin.pages.ultimate-system-cockpit-minimal';
     protected static ?int $navigationSort = 6;
     

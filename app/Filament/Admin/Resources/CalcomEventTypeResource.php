@@ -3,6 +3,8 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\CalcomEventTypeResource\Pages;
+use App\Filament\Admin\Resources\CalcomEventTypeResource\RelationManagers;
+use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\CalcomEventType;
 use App\Models\Company;
 use App\Models\Branch;
@@ -18,15 +20,21 @@ use Illuminate\Support\Collection;
 
 class CalcomEventTypeResource extends Resource
 {
+    use HasConsistentNavigation;
     protected static ?string $model = CalcomEventType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     
-    protected static ?string $navigationGroup = 'Kalender & Events';
+    protected static ?string $navigationGroup = 'Personal & Services';
     
-    protected static ?string $navigationLabel = 'Event Types';
+    protected static ?string $navigationLabel = 'Event-Types';
     
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 220;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return true; // Now visible in navigation
+    }
 
     public static function form(Form $form): Form
     {
@@ -421,7 +429,7 @@ class CalcomEventTypeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\StaffRelationManager::class,
         ];
     }
 

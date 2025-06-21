@@ -1,0 +1,160 @@
+<?php
+
+namespace App\Filament\Admin\Pages;
+
+use App\Services\MCP\MCPMetricsCollector;
+use App\Services\MCP\MCPServiceRegistry;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Pages\Page;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\On;
+
+class MCPMonitoringDashboard extends Page implements HasForms, HasTable
+{
+    use InteractsWithForms;
+    use InteractsWithTable;
+
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+    protected static ?string $navigationGroup = 'System & Überwachung';
+    protected static ?int $navigationSort = 99;
+    protected static ?string $title = 'MCP Monitoring';
+    protected static ?string $navigationLabel = 'MCP Monitoring';
+    protected static ?string $slug = 'mcp-monitoring';
+
+    public ?string $selectedService = null;
+    public ?string $selectedTimeRange = '1h';
+    public array $metrics = [];
+    public array $alerts = [];
+    public array $serviceHealth = [];
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            \Filament\Actions\Action::make('refresh')
+                ->label('Refresh')
+                ->icon('heroicon-m-arrow-path')
+                ->action(fn () => $this->loadMetrics()),
+        ];
+    }
+
+    public function mount(): void
+    {
+        $this->loadMetrics();
+    }
+
+    #[On('refresh-metrics')]
+    public function loadMetrics(): void
+    {
+        $collector = app(MCPMetricsCollector::class);
+        $registry = app(MCPServiceRegistry::class);
+
+        // Get service health status
+        $this->serviceHealth = [];
+        foreach ($registry->getAllServices() as $serviceName => $service) {
+            $health = $collector->getServiceHealth($serviceName);
+            $this->serviceHealth[$serviceName] = [
+                'name' => $serviceName,
+                'status' => $health['status'] ?? 'unknown',
+                'uptime' => $health['uptime'] ?? 0,
+                'last_check' => $health['last_check'] ?? null,
+                'error_rate' => $health['error_rate'] ?? 0,
+                'avg_response_time' => $health['avg_response_time'] ?? 0,
+                'circuit_breaker' => $health['circuit_breaker'] ?? 'closed',
+            ];
+        }
+
+        // Get aggregated metrics
+        $this->metrics = [
+            'total_requests' => $collector->getTotalRequests($this->selectedTimeRange),
+            'success_rate' => $collector->getSuccessRate($this->selectedTimeRange),
+            'avg_response_time' => $collector->getAverageResponseTime($this->selectedTimeRange),
+            'cache_hit_rate' => $collector->getCacheHitRate($this->selectedTimeRange),
+            'active_circuits' => $collector->getActiveCircuitBreakers(),
+        ];
+
+        // Get alerts
+        $this->alerts = $collector->getActiveAlerts();
+    }
+
+    public function table(Table $table): Table
+    {
+        return $table
+            ->query(
+                \App\Models\MCPMetric::query()
+                    ->when($this->selectedService, fn ($query, $service) => 
+                        $query->where('service', $service)
+                    )
+                    ->when($this->selectedTimeRange, function ($query, $range) {
+                        $hours = match ($range) {
+                            '1h' => 1,
+                            '6h' => 6,
+                            '24h' => 24,
+                            '7d' => 168,
+                            default => 1,
+                        };
+                        return $query->where('created_at', '>=', now()->subHours($hours));
+                    })
+                    ->orderBy('created_at', 'desc')
+            )
+            ->columns([
+                TextColumn::make('service')
+                    ->label('Service')
+                    ->searchable(),
+                TextColumn::make('operation')
+                    ->label('Operation')
+                    ->searchable(),
+                BadgeColumn::make('status')
+                    ->label('Status')
+                    ->colors([
+                        'success' => 'success',
+                        'danger' => 'error',
+                        'warning' => 'warning',
+                    ]),
+                TextColumn::make('response_time')
+                    ->label('Response Time (ms)')
+                    ->formatStateUsing(fn ($state) => number_format($state, 2)),
+                TextColumn::make('error_message')
+                    ->label('Error')
+                    ->limit(50)
+                    ->tooltip(fn ($record) => $record->error_message),
+                TextColumn::make('created_at')
+                    ->label('Time')
+                    ->dateTime('Y-m-d H:i:s')
+                    ->sortable(),
+            ])
+            ->filters([])
+            ->actions([])
+            ->bulkActions([])
+            ->poll('10s');
+    }
+
+    public function getViewData(): array
+    {
+        return [
+            'metrics' => $this->metrics,
+            'alerts' => $this->alerts,
+            'serviceHealth' => $this->serviceHealth,
+            'selectedService' => $this->selectedService,
+            'selectedTimeRange' => $this->selectedTimeRange,
+        ];
+    }
+
+    public function getView(): string
+    {
+        return 'filament.admin.pages.mcp-monitoring-dashboard';
+    }
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->hasRole('super_admin') ?? false;
+    }
+}

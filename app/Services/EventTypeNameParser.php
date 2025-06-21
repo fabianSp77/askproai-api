@@ -127,7 +127,7 @@ class EventTypeNameParser
                     'warning' => 'Name entspricht nicht dem erwarteten Schema',
                     'suggested_name' => $this->generateEventTypeName(
                         $targetBranch, 
-                        $eventType['title'] ?? $eventType['name']
+                        $this->extractServiceName($eventType['title'] ?? $eventType['name'])
                     )
                 ];
             }
@@ -151,7 +151,7 @@ class EventTypeNameParser
     /**
      * Bereinige Namen für Schema-Verwendung
      */
-    private function cleanNameForSchema(string $name): string
+    protected function cleanNameForSchema(string $name): string
     {
         // Entferne Bindestriche da sie als Trenner verwendet werden
         $name = str_replace('-', ' ', $name);
@@ -167,13 +167,68 @@ class EventTypeNameParser
      */
     public function extractServiceName(string $eventTypeName): string
     {
-        $parsed = $this->parseEventTypeName($eventTypeName);
+        // Entferne Marketing-Phrasen und extrahiere den Kern-Service-Namen
+        $name = $eventTypeName;
         
-        if ($parsed['success']) {
-            return $parsed['service_name'];
+        // Entferne bekannte Marketing-Phrasen
+        $marketingPhrases = [
+            '/\d+%\s*mehr\s*Umsatz[^,]*/',
+            '/für Sie und.*/',
+            '/besten\s*Kundenservice\s*24\/7/',
+            '/24\/7/',
+            '/und besten.*/',
+            '/\+\s*aus\s*\w+/',  // Remove "+ aus Berlin" etc.
+        ];
+        
+        foreach ($marketingPhrases as $pattern) {
+            $name = preg_replace($pattern, '', $name);
         }
         
-        // Fallback: Verwende den ganzen Namen
-        return $eventTypeName;
+        // Wenn der Name ein + enthält, nimm nur den Teil nach dem letzten +
+        if (strpos($name, '+') !== false) {
+            $parts = explode('+', $name);
+            // Suche nach dem Teil, der am ehesten ein Service-Name ist
+            foreach (array_reverse($parts) as $part) {
+                $cleaned = trim($part);
+                if (strlen($cleaned) > 3 && !$this->isCompanyOrLocationName($cleaned)) {
+                    $name = $cleaned;
+                    break;
+                }
+            }
+        }
+        
+        // Bereinige den Namen
+        $name = $this->cleanNameForSchema($name);
+        
+        // Wenn der Name zu lang ist, kürze ihn
+        if (strlen($name) > 50) {
+            $words = explode(' ', $name);
+            $name = implode(' ', array_slice($words, 0, 5));
+        }
+        
+        return $name ?: 'Service';
+    }
+    
+    /**
+     * Prüfe ob ein String ein Firmen- oder Ortsname ist
+     */
+    private function isCompanyOrLocationName(string $name): bool
+    {
+        $normalized = $this->normalizeString($name);
+        
+        // Liste bekannter Firmen-/Ortsnamen
+        $knownNames = [
+            'askproai', 'berlin', 'münchen', 'hamburg', 'köln', 'frankfurt',
+            'stuttgart', 'deutschland', 'germany', 'gmbh', 'ag', 'ug', 'e.k.',
+            'salon', 'praxis', 'klinik', 'zentrum'
+        ];
+        
+        foreach ($knownNames as $known) {
+            if (strpos($normalized, $known) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

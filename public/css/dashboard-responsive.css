@@ -1,0 +1,124 @@
+/* Dashboard Responsive Styles */
+
+/* Prevent horizontal scrolling on smaller screens */
+.filament-dashboard {
+    overflow-x: hidden;
+}
+
+/* Ensure widgets don't overflow their containers */
+.filament-widget {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Tables in widgets should be scrollable */
+.filament-widget table {
+    min-width: 100%;
+}
+
+.filament-widget .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Compact padding on mobile */
+@media (max-width: 768px) {
+    .filament-widget-card {
+        padding: 1rem;
+    }
+    
+    .filament-widget h2 {
+        font-size: 1.125rem;
+    }
+    
+    /* Stack buttons vertically on mobile */
+    .filament-header-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .filament-header-actions > * {
+        width: 100%;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .filament-widget-card {
+        padding: 1.25rem;
+    }
+    
+    /* Ensure 2 columns layout on tablets */
+    .filament-widgets-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Laptop/Desktop optimizations */
+@media (min-width: 1024px) {
+    /* Prevent widgets from being too wide */
+    .filament-page-dashboard .mx-auto {
+        max-width: 1536px; /* 96rem */
+    }
+    
+    /* Ensure proper spacing between widgets */
+    .filament-widgets-container {
+        gap: 1.5rem;
+    }
+}
+
+/* Fix for financial charts */
+.apexcharts-canvas {
+    max-width: 100% !important;
+}
+
+/* Responsive tables in branch performance widget */
+.branch-performance-table {
+    font-size: 0.875rem;
+}
+
+@media (max-width: 1024px) {
+    .branch-performance-table {
+        font-size: 0.75rem;
+    }
+    
+    .branch-performance-table th,
+    .branch-performance-table td {
+        padding: 0.5rem 0.25rem;
+    }
+}
+
+/* Sticky headers for better navigation */
+@media (min-width: 768px) {
+    .filament-page-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+    }
+}
+
+/* Dark mode adjustments */
+.dark .filament-page-header {
+    background: #1f2937;
+    border-bottom-color: #374151;
+}
+
+/* Filter buttons responsive */
+.dashboard-filters {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+    .dashboard-filters {
+        width: 100%;
+    }
+    
+    .dashboard-filters > button {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.875rem;
+    }
+}

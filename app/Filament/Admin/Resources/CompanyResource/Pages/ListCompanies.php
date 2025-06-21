@@ -14,9 +14,16 @@ class ListCompanies extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('quickSetup')
+                ->label('🚀 Quick Setup (3 Min)')
+                ->icon('heroicon-o-sparkles')
+                ->color('success')
+                ->url(route('filament.admin.pages.quick-setup-wizard'))
+                ->size('lg'),
             Actions\CreateAction::make()
-                ->label('Neues Unternehmen')
-                ->icon('heroicon-o-plus-circle'),
+                ->label('Manuell anlegen')
+                ->icon('heroicon-o-plus-circle')
+                ->color('gray'),
             Actions\Action::make('sync_all')
                 ->label('Alle synchronisieren')
                 ->icon('heroicon-o-arrow-path')

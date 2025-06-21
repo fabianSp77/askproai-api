@@ -21,8 +21,8 @@ class SystemStatsOverview extends BaseWidget
         $thisMonth = Carbon::now()->startOfMonth();
         
         // Today's appointments
-        $todayAppointments = Appointment::whereDate('scheduled_at', $today)->count();
-        $yesterdayAppointments = Appointment::whereDate('scheduled_at', $today->copy()->subDay())->count();
+        $todayAppointments = Appointment::whereDate('starts_at', $today)->count();
+        $yesterdayAppointments = Appointment::whereDate('starts_at', $today->copy()->subDay())->count();
         $appointmentChange = $yesterdayAppointments > 0 
             ? round((($todayAppointments - $yesterdayAppointments) / $yesterdayAppointments) * 100)
             : 0;
@@ -42,18 +42,18 @@ class SystemStatsOverview extends BaseWidget
         // Total revenue this month (placeholder)
         $monthlyRevenue = DB::table('calls')
             ->where('created_at', '>=', $thisMonth)
-            ->sum('cost_in_euros');
+            ->sum('cost');
         
         return [
             Stat::make("Today's Appointments", $todayAppointments)
                 ->description($appointmentChange >= 0 ? "{$appointmentChange}% increase" : "{$appointmentChange}% decrease")
-                ->descriptionIcon($appointmentChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
+                ->descriptionIcon($appointmentChange >= 0 ? 'heroicon-o-arrow-trending-up' : 'heroicon-o-arrow-trending-down')
                 ->color($appointmentChange >= 0 ? 'success' : 'warning')
                 ->icon('heroicon-o-calendar-days'),
                 
             Stat::make("Today's Calls", $todayCalls)
                 ->description($callChange >= 0 ? "{$callChange}% increase" : "{$callChange}% decrease")
-                ->descriptionIcon($callChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
+                ->descriptionIcon($callChange >= 0 ? 'heroicon-o-arrow-trending-up' : 'heroicon-o-arrow-trending-down')
                 ->color($callChange >= 0 ? 'success' : 'warning')
                 ->icon('heroicon-o-phone'),
                 

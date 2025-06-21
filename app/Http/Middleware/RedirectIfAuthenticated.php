@@ -21,6 +21,11 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                // Handle customer guard separately
+                if ($guard === 'customer') {
+                    return redirect()->route('portal.dashboard');
+                }
+                
                 return redirect('/admin');
             }
         }

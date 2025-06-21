@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignUuid('staff_id')->constrained()->onDelete('cascade');
             $table->foreignId('event_type_id')->nullable()->constrained('calcom_event_types')->onDelete('cascade');
             $table->date('date');
-            $table->json('slots'); // Available time slots for the date
+            $this->addJsonColumn($table, 'slots', false); // Available time slots for the date
             $table->string('cache_key')->unique(); // Unique key for cache lookup
             $table->timestamp('cached_at');
             $table->timestamp('expires_at');

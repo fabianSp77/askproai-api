@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * NOTFALL-WIEDERHERSTELLUNG: Diese Tabellen wurden fälschlicherweise gelöscht
@@ -38,7 +38,7 @@ return new class extends Migration
                 $table->id();
                 $table->string('event_type');
                 $table->string('call_id')->nullable();
-                $table->json('payload');
+                $this->addJsonColumn($table, 'payload', true);
                 $table->string('status')->default('pending');
                 $table->text('error')->nullable();
                 $table->integer('attempts')->default(0);
@@ -63,7 +63,7 @@ return new class extends Migration
         
         // 5. Event Type Import Logs - Wichtig für Cal.com Sync
         if (!Schema::hasTable('event_type_import_logs')) {
-            Schema::create('event_type_import_logs', function (Blueprint $table) {
+            $this->createTableIfNotExists('event_type_import_logs', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('company_id');
                 $table->unsignedBigInteger('user_id')->nullable();
@@ -71,7 +71,7 @@ return new class extends Migration
                 $table->integer('total_event_types')->default(0);
                 $table->integer('imported_count')->default(0);
                 $table->integer('failed_count')->default(0);
-                $table->json('details')->nullable();
+                $this->addJsonColumn($table, 'details', true);
                 $table->text('error_message')->nullable();
                 $table->timestamps();
                 
@@ -102,7 +102,7 @@ return new class extends Migration
                 $table->unsignedBigInteger('company_id');
                 $table->string('agent_id')->unique();
                 $table->string('name');
-                $table->json('configuration')->nullable();
+                $this->addJsonColumn($table, 'configuration', true);
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
                 
@@ -118,7 +118,7 @@ return new class extends Migration
                 $table->text('description');
                 $table->nullableMorphs('subject');
                 $table->nullableMorphs('causer');
-                $table->json('properties')->nullable();
+                $this->addJsonColumn($table, 'properties', true);
                 $table->string('event')->nullable();
                 $table->uuid('batch_uuid')->nullable();
                 $table->timestamps();
@@ -136,7 +136,7 @@ return new class extends Migration
         Schema::dropIfExists('activity_log');
         Schema::dropIfExists('retell_agents');
         Schema::dropIfExists('staff_event_type_assignments');
-        Schema::dropIfExists('event_type_import_logs');
+        $this->dropTableIfExists('event_type_import_logs');
         Schema::dropIfExists('user_statuses');
         Schema::dropIfExists('retell_webhooks');
         Schema::dropIfExists('password_reset_tokens');

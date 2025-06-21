@@ -20,10 +20,10 @@ class StaffEventAssignmentModern extends Page implements HasForms
 {
     use InteractsWithForms;
     
-    protected static ?string $navigationIcon = 'heroicon-o-sparkles';
-    protected static ?string $navigationGroup = 'Kalender & Events';
-    protected static ?string $navigationLabel = 'Smart Zuordnung';
-    protected static ?int $navigationSort = 25;
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationGroup = 'Personal & Services';
+    protected static ?string $navigationLabel = 'Mitarbeiter-Zuordnung';
+    protected static ?int $navigationSort = 230;
     protected static string $view = 'filament.admin.pages.staff-event-assignment-modern';
     protected static ?string $title = 'Intelligente Mitarbeiter-Zuordnung';
     

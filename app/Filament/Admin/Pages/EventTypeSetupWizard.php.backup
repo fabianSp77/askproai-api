@@ -1,0 +1,585 @@
+<?php
+
+namespace App\Filament\Admin\Pages;
+
+use Filament\Pages\Page;
+use Filament\Forms\Form;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Wizard;
+use Filament\Forms\Components\Wizard\Step;
+use Filament\Notifications\Notification;
+use Filament\Tables\Table;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Actions\Action as TableAction;
+use App\Models\CalcomEventType;
+use App\Models\Company;
+use App\Models\Branch;
+use App\Services\MCP\CalcomMCPServer;
+use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Url;
+
+class EventTypeSetupWizard extends Page
+{
+    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static ?string $navigationLabel = 'Event-Type Konfiguration';
+    protected static ?string $navigationGroup = 'Setup & Onboarding';
+    protected static ?int $navigationSort = 15;
+    protected static ?string $title = 'Event-Type Konfiguration';
+    
+    public function getHeading(): string
+    {
+        return $this->eventType 
+            ? "Event-Type konfigurieren: {$this->eventType->name}"
+            : 'Event-Type Konfiguration';
+    }
+    
+    public function getSubheading(): ?string
+    {
+        return $this->eventType
+            ? 'Verwalten Sie die Einstellungen für diesen Event-Type. Einige Einstellungen werden direkt mit Cal.com synchronisiert.'
+            : 'Wählen Sie einen Event-Type aus, um die Konfiguration zu starten.';
+    }
+    
+    protected static string $view = 'filament.admin.pages.event-type-setup-wizard';
+    
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\Admin\Widgets\EventTypeSyncStatus::class,
+        ];
+    }
+    
+    #[Url]
+    public ?int $eventTypeId = null;
+    
+    public ?CalcomEventType $eventType = null;
+    public array $formData = [];
+    public array $checklist = [];
+    public array $calcomLinks = [];
+    
+    protected CalcomMCPServer $calcomMCP;
+    
+    public function boot()
+    {
+        $this->calcomMCP = app(CalcomMCPServer::class);
+    }
+    
+    public function mount(): void
+    {
+        if ($this->eventTypeId) {
+            $this->loadEventType();
+        }
+    }
+    
+    protected function loadEventType(): void
+    {
+        $this->eventType = CalcomEventType::with(['company', 'branch', 'assignedStaff'])
+            ->find($this->eventTypeId);
+            
+        if (!$this->eventType) {
+            Notification::make()
+                ->title('Event-Type nicht gefunden')
+                ->danger()
+                ->send();
+            return;
+        }
+        
+        // Initialize checklist if not exists
+        if (empty($this->eventType->setup_checklist)) {
+            $this->eventType->initializeChecklist();
+        }
+        
+        // Load form data
+        $this->formData = [
+            'basic' => [
+                'name' => $this->eventType->name,
+                'description' => $this->eventType->description,
+                'duration_minutes' => $this->eventType->duration_minutes,
+                'price' => $this->eventType->price,
+            ],
+            'booking' => [
+                'minimum_booking_notice' => $this->eventType->minimum_booking_notice ?? 60,
+                'booking_future_limit' => $this->eventType->booking_future_limit ?? 60,
+                'time_slot_interval' => $this->eventType->time_slot_interval ?? 30,
+                'buffer_before' => $this->eventType->buffer_before ?? 0,
+                'buffer_after' => $this->eventType->buffer_after ?? 0,
+                'max_bookings_per_day' => $this->eventType->max_bookings_per_day,
+                'requires_confirmation' => $this->eventType->requires_confirmation ?? false,
+            ],
+            'locations' => $this->eventType->locations ?? [],
+        ];
+        
+        $this->checklist = $this->eventType->setup_checklist ?? [];
+        
+        // Generate Cal.com links
+        $this->generateCalcomLinks();
+    }
+    
+    protected function generateCalcomLinks(): void
+    {
+        if (!$this->eventType || !$this->eventType->calcom_numeric_event_type_id) {
+            return;
+        }
+        
+        $sections = ['availability', 'advanced', 'workflows', 'webhooks'];
+        
+        foreach ($sections as $section) {
+            $result = $this->calcomMCP->generateCalcomDirectLink([
+                'event_type_id' => $this->eventType->calcom_numeric_event_type_id,
+                'section' => $section
+            ]);
+            
+            if ($result['success'] ?? false) {
+                $this->calcomLinks[$section] = $result;
+            }
+        }
+    }
+    
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Section::make('Event-Type auswählen')
+                    ->visible(!$this->eventTypeId)
+                    ->description('Wählen Sie den Event-Type aus, den Sie konfigurieren möchten.')
+                    ->collapsible(false)
+                    ->columnSpan('full')
+                    ->schema([
+                        Placeholder::make('data_flow_diagram')
+                            ->content(fn () => view('filament.components.data-flow-diagram'))
+                            ->columnSpan('full'),
+                            
+                        Grid::make()
+                            ->schema([
+                                Fieldset::make('Auswahl')
+                                    ->schema([
+                                        Select::make('formData.company_id')
+                                            ->label('Unternehmen')
+                                            ->options(Company::pluck('name', 'id'))
+                                            ->required()
+                                            ->reactive()
+                                            ->afterStateUpdated(function ($state) {
+                                                $this->loadCompanyEventTypes($state);
+                                                $this->formData['branch_id'] = null; // Reset branch selection
+                                            })
+                                            ->helperText('Wählen Sie das Unternehmen aus, für das Sie Event-Types konfigurieren möchten.')
+                                            ->searchable()
+                                            ->preload()
+                                            ->columnSpan('full'),
+                                            
+                                        Select::make('formData.branch_id')
+                                            ->label('Filiale (Optional)')
+                                            ->options(fn ($get) => $this->getBranchOptions($get('formData.company_id')))
+                                            ->visible(fn ($get) => !empty($get('formData.company_id')))
+                                            ->reactive()
+                                            ->afterStateUpdated(fn () => $this->formData['event_type_id'] = null)
+                                            ->helperText('Optional: Filtern Sie Event-Types nach Filiale.')
+                                            ->searchable()
+                                            ->placeholder('Alle Filialen')
+                                            ->columnSpan('full'),
+                                            
+                                        Select::make('formData.event_type_id')
+                                            ->label('Event-Type')
+                                            ->options(fn ($get) => $this->getEventTypeOptions($get('formData.company_id'), $get('formData.branch_id')))
+                                            ->required()
+                                            ->visible(fn ($get) => !empty($get('formData.company_id')))
+                                            ->disabled(fn ($get) => empty($get('formData.company_id')))
+                                            ->reactive()
+                                            ->afterStateUpdated(function ($state) {
+                                                if ($state) {
+                                                    $this->redirect(static::getUrl(['eventTypeId' => $state]));
+                                                }
+                                            })
+                                            ->helperText(fn ($get) => 
+                                                $get('formData.company_id') 
+                                                    ? 'Diese Event-Types sind in AskProAI gespeichert und mit Cal.com verknüpft.'
+                                                    : 'Wählen Sie zuerst ein Unternehmen aus.'
+                                            )
+                                            ->searchable()
+                                            ->placeholder('Bitte wählen...')
+                                            ->columnSpan('full'),
+                                    ])
+                                    ->columnSpan('full'),
+                                    
+                                Placeholder::make('no_event_types')
+                                    ->content(fn () => view('filament.components.info-box', [
+                                        'type' => 'warning',
+                                        'title' => 'Keine Event-Types gefunden',
+                                        'message' => 'Es wurden keine Event-Types für dieses Unternehmen gefunden.',
+                                        'items' => [
+                                            'Importieren Sie Event-Types aus Cal.com',
+                                            'Oder legen Sie neue Event-Types manuell an',
+                                            'Nutzen Sie den Import-Wizard für schnellen Import'
+                                        ]
+                                    ]))
+                                    ->visible(fn ($get) => 
+                                        !empty($get('formData.company_id')) && 
+                                        empty($this->getEventTypeOptions($get('formData.company_id')))
+                                    )
+                                    ->columnSpan('full')
+                            ])
+                            ->columns(1)
+                    ]),
+                    
+                Wizard::make([
+                    Step::make('Basis-Informationen')
+                        ->description('Grundlegende Event-Type Einstellungen')
+                        ->icon('heroicon-o-information-circle')
+                        ->visible($this->eventTypeId !== null)
+                        ->schema([
+                            Placeholder::make('sync_info_basic')
+                                ->content(fn () => view('filament.components.info-box', [
+                                    'type' => 'success',
+                                    'title' => 'Diese Einstellungen werden mit Cal.com synchronisiert',
+                                    'message' => 'Änderungen, die Sie hier vornehmen, werden automatisch an Cal.com übertragen, sobald Sie speichern.'
+                                ]))
+                                ->columnSpan('full'),
+                                
+                            Section::make()
+                                ->schema([
+                                    TextInput::make('formData.basic.name')
+                                        ->label('Event-Type Name')
+                                        ->required()
+                                        ->helperText('Dieser Name wird Kunden in Cal.com angezeigt. Wählen Sie einen aussagekräftigen Namen.')
+                                        ->placeholder('z.B. Erstberatung, Nachsorge-Termin, etc.')
+                                        ->maxLength(255)
+                                        ->columnSpan('full'),
+                                        
+                                    Textarea::make('formData.basic.description')
+                                        ->label('Beschreibung')
+                                        ->rows(3)
+                                        ->helperText('Erklären Sie Kunden, was sie in diesem Termin erwartet. Diese Beschreibung erscheint in der Buchungsansicht.')
+                                        ->placeholder('z.B. In diesem Termin besprechen wir Ihre individuellen Anforderungen...')
+                                        ->maxLength(500)
+                                        ->columnSpan('full'),
+                                        
+                                    Grid::make(['default' => 1, 'sm' => 2])
+                                        ->schema([
+                                            TextInput::make('formData.basic.duration_minutes')
+                                                ->label('Dauer')
+                                                ->numeric()
+                                                ->required()
+                                                ->minValue(5)
+                                                ->maxValue(480)
+                                                ->helperText('Wie lange dauert der Termin?')
+                                                ->suffix('Minuten')
+                                                ->default(30),
+                                                
+                                            TextInput::make('formData.basic.price')
+                                                ->label('Preis')
+                                                ->numeric()
+                                                ->prefix('€')
+                                                ->minValue(0)
+                                                ->step(0.01)
+                                                ->helperText('Optional: Service-Preis')
+                                                ->placeholder('0.00'),
+                                        ])
+                                ])
+                                ->columns(['default' => 1, 'lg' => 2])
+                        ]),
+                        
+                    Step::make('Buchungseinstellungen')
+                        ->description('Zeitliche Einschränkungen und Puffer')
+                        ->icon('heroicon-o-clock')
+                        ->visible($this->eventTypeId !== null)
+                        ->schema([
+                            Placeholder::make('sync_info_booking')
+                                ->content(fn () => view('filament.components.info-box', [
+                                    'type' => 'info',
+                                    'title' => 'Synchronisierung mit Cal.com',
+                                    'message' => 'Diese Einstellungen werden mit Cal.com synchronisiert. Änderungen wirken sich direkt auf die Buchbarkeit aus.'
+                                ]))
+                                ->columnSpan('full'),
+                                
+                            Section::make('Vorlaufzeiten')
+                                ->description('Steuern Sie, wann Termine buchbar sind')
+                                ->schema([
+                                    Grid::make(2)->schema([
+                                        TextInput::make('formData.booking.minimum_booking_notice')
+                                            ->label('Mindest-Vorlaufzeit')
+                                            ->numeric()
+                                            ->helperText('Beispiel: 60 = Termine können frühestens 60 Minuten im Voraus gebucht werden')
+                                            ->default(60)
+                                            ->suffix('Minuten')
+                                            ->placeholder('60'),
+                                            
+                                        TextInput::make('formData.booking.booking_future_limit')
+                                            ->label('Maximale Buchungsreichweite')
+                                            ->numeric()
+                                            ->helperText('Beispiel: 30 = Termine können maximal 30 Tage im Voraus gebucht werden')
+                                            ->default(60)
+                                            ->suffix('Tage')
+                                            ->placeholder('60'),
+                                    ]),
+                                ]),
+                            
+                            Section::make('Zeitplanung')
+                                ->description('Konfigurieren Sie Zeitslots und Pufferzeiten')
+                                ->schema([
+                                    Grid::make(3)->schema([
+                                        TextInput::make('formData.booking.time_slot_interval')
+                                            ->label('Zeitschritte')
+                                            ->numeric()
+                                            ->helperText('In welchen Abständen können Termine gebucht werden?')
+                                            ->default(30)
+                                            ->suffix('Minuten')
+                                            ->placeholder('30'),
+                                            
+                                        TextInput::make('formData.booking.buffer_before')
+                                            ->label('Puffer vorher')
+                                            ->numeric()
+                                            ->helperText('Vorbereitungszeit vor jedem Termin')
+                                            ->default(0)
+                                            ->suffix('Min')
+                                            ->placeholder('0'),
+                                            
+                                        TextInput::make('formData.booking.buffer_after')
+                                            ->label('Puffer nachher')
+                                            ->numeric()
+                                            ->helperText('Nachbereitungszeit nach jedem Termin')
+                                            ->default(0)
+                                            ->suffix('Min')
+                                            ->placeholder('0'),
+                                    ]),
+                                    
+                                    Placeholder::make('buffer_example')
+                                        ->content(fn () => view('filament.components.info-box', [
+                                            'type' => 'info',
+                                            'title' => 'Beispiel Pufferzeiten',
+                                            'message' => 'Bei einem 30-Min Termin mit 15 Min Puffer vorher und 10 Min nachher wird insgesamt 55 Minuten geblockt.'
+                                        ])),
+                                ]),
+                            
+                            Section::make('Kapazitätsgrenzen')
+                                ->schema([
+                                    Grid::make(2)->schema([
+                                        TextInput::make('formData.booking.max_bookings_per_day')
+                                            ->label('Max. Buchungen pro Tag')
+                                            ->numeric()
+                                            ->helperText('Begrenzen Sie die Anzahl der Termine pro Tag. Leer = unbegrenzt.')
+                                            ->placeholder('Unbegrenzt'),
+                                            
+                                        Toggle::make('formData.booking.requires_confirmation')
+                                            ->label('Manuelle Bestätigung erforderlich')
+                                            ->helperText('Wenn aktiviert, müssen Sie jeden Termin manuell in Cal.com bestätigen'),
+                                    ]),
+                                ]),
+                        ]),
+                        
+                    Step::make('Standorte')
+                        ->description('Wo findet der Termin statt?')
+                        ->visible($this->eventTypeId !== null)
+                        ->schema([
+                            Repeater::make('formData.locations')
+                                ->label('Verfügbare Standorte')
+                                ->schema([
+                                    Select::make('type')
+                                        ->label('Art')
+                                        ->options([
+                                            'inPerson' => 'Vor Ort',
+                                            'phone' => 'Telefon',
+                                            'link' => 'Video-Link',
+                                            'askInvitee' => 'Kunde wählt',
+                                        ])
+                                        ->required(),
+                                        
+                                    TextInput::make('address')
+                                        ->label('Adresse/Details')
+                                        ->visible(fn ($get) => $get('type') === 'inPerson'),
+                                        
+                                    TextInput::make('phone')
+                                        ->label('Telefonnummer')
+                                        ->visible(fn ($get) => $get('type') === 'phone'),
+                                        
+                                    TextInput::make('link')
+                                        ->label('Meeting-Link')
+                                        ->visible(fn ($get) => $get('type') === 'link'),
+                                ])
+                                ->defaultItems(1)
+                                ->addActionLabel('Standort hinzufügen'),
+                        ]),
+                        
+                    Step::make('Erweiterte Einstellungen')
+                        ->description('Einstellungen die in Cal.com vorgenommen werden müssen')
+                        ->visible($this->eventTypeId !== null)
+                        ->schema([
+                            Section::make('Verfügbarkeiten')
+                                ->description('Muss in Cal.com konfiguriert werden')
+                                ->schema([
+                                    $this->createCalcomLinkPlaceholder('availability'),
+                                ]),
+                                
+                            Section::make('Benutzerdefinierte Felder')
+                                ->description('Zusätzliche Informationen vom Kunden abfragen')
+                                ->schema([
+                                    $this->createCalcomLinkPlaceholder('advanced'),
+                                ]),
+                                
+                            Section::make('Benachrichtigungen & Workflows')
+                                ->description('E-Mail/SMS Benachrichtigungen einrichten')
+                                ->schema([
+                                    $this->createCalcomLinkPlaceholder('workflows'),
+                                ]),
+                        ]),
+                ])
+            ])
+            ->statePath('formData');
+    }
+    
+    protected function createCalcomLinkPlaceholder(string $section): Placeholder
+    {
+        $linkData = $this->calcomLinks[$section] ?? null;
+        
+        if (!$linkData || !($linkData['success'] ?? false)) {
+            return Placeholder::make("calcom_link_{$section}")
+                ->content('Link wird geladen...');
+        }
+        
+        $url = $linkData['url'] ?? '#';
+        $sectionName = $linkData['section_name'] ?? ucfirst($section);
+        $instructions = $linkData['instructions'] ?? '';
+        
+        return Placeholder::make("calcom_link_{$section}")
+            ->content(fn () => view('filament.components.calcom-link-button', [
+                'url' => $url,
+                'section' => $section,
+                'sectionName' => $sectionName,
+                'instructions' => $instructions
+            ]));
+    }
+    
+    protected function getFormActions(): array
+    {
+        if (!$this->eventTypeId) {
+            return [];
+        }
+        
+        return [
+            \Filament\Actions\Action::make('save')
+                ->label('Einstellungen speichern')
+                ->action('saveSettings')
+                ->color('primary')
+        ];
+    }
+    
+    public function saveSettings(): void
+    {
+        if (!$this->eventType) {
+            return;
+        }
+        
+        try {
+            // Prepare update data
+            $updateData = [
+                'company_id' => $this->eventType->company_id,
+                'event_type_id' => $this->eventType->calcom_numeric_event_type_id,
+                ...$this->formData['basic'],
+                ...$this->formData['booking'],
+                'locations' => $this->formData['locations'] ?? [],
+            ];
+            
+            // Update via MCP
+            $result = $this->calcomMCP->updateEventTypeSettings($updateData);
+            
+            if ($result['success'] ?? false) {
+                Notification::make()
+                    ->title('Einstellungen gespeichert')
+                    ->success()
+                    ->send();
+                    
+                // Reload event type
+                $this->loadEventType();
+            } else {
+                Notification::make()
+                    ->title('Fehler beim Speichern')
+                    ->body($result['error'] ?? 'Unbekannter Fehler')
+                    ->danger()
+                    ->send();
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('EventTypeSetupWizard save error', [
+                'error' => $e->getMessage(),
+                'event_type_id' => $this->eventTypeId
+            ]);
+            
+            Notification::make()
+                ->title('Fehler')
+                ->body('Ein Fehler ist aufgetreten: ' . $e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+    
+    protected function getEventTypeOptions(?int $companyId, ?int $branchId = null): array
+    {
+        if (!$companyId) {
+            return [];
+        }
+        
+        $query = CalcomEventType::where('company_id', $companyId)
+            ->with(['branch']);
+            
+        // Filter by branch if specified
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+        
+        $eventTypes = $query->get();
+        
+        $options = [];
+        foreach ($eventTypes as $eventType) {
+            $status = match($eventType->setup_status) {
+                'complete' => '✅',
+                'partial' => '⚠️',
+                default => '❌'
+            };
+            
+            $branchName = $eventType->branch ? " ({$eventType->branch->name})" : '';
+            $calcomId = $eventType->calcom_numeric_event_type_id ? " [Cal.com ID: {$eventType->calcom_numeric_event_type_id}]" : '';
+            
+            $options[$eventType->id] = "{$status} {$eventType->name}{$branchName}{$calcomId}";
+        }
+        
+        return $options;
+    }
+    
+    protected function getBranchOptions(?int $companyId): array
+    {
+        if (!$companyId) {
+            return [];
+        }
+        
+        return Branch::where('company_id', $companyId)
+            ->where('is_active', true)
+            ->pluck('name', 'id')
+            ->toArray();
+    }
+    
+    protected function loadCompanyEventTypes(?int $companyId): void
+    {
+        if (!$companyId) {
+            $this->formData['event_type_id'] = null;
+            return;
+        }
+        
+        // Reset the event type selection when company changes
+        $this->formData['event_type_id'] = null;
+    }
+    
+    public function selectEventType(): void
+    {
+        if ($this->formData['event_type_id'] ?? null) {
+            $this->redirect(static::getUrl(['eventTypeId' => $this->formData['event_type_id']]));
+        }
+    }
+}

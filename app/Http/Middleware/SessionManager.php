@@ -23,7 +23,9 @@ class SessionManager
         $response = $next($request);
         
         // Ensure proper session cookie settings
-        if ($response instanceof \Illuminate\Http\Response) {
+        // Check if response is a standard HTTP response with headers property
+        if ($response instanceof \Illuminate\Http\Response || 
+            (is_object($response) && method_exists($response, 'headers'))) {
             $this->ensureSessionCookieSettings($response);
         }
         

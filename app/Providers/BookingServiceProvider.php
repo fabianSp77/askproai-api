@@ -13,6 +13,13 @@ use App\Contracts\CalendarProviderInterface;
 use App\Services\CalendarProviders\CalcomProvider;
 use App\Services\CalendarProviders\GoogleCalendarProvider;
 use App\Repositories\AppointmentRepository;
+use App\Services\Booking\UniversalBookingOrchestrator;
+use App\Services\Booking\StaffServiceMatcher;
+use App\Services\Booking\UnifiedAvailabilityService;
+use App\Services\Booking\Strategies\BranchSelectionStrategyInterface;
+use App\Services\PhoneNumberResolver;
+use App\Services\CalcomV2Service;
+use App\Services\CacheService;
 
 class BookingServiceProvider extends ServiceProvider
 {
@@ -38,6 +45,54 @@ class BookingServiceProvider extends ServiceProvider
         $this->app->singleton(ConflictDetectionService::class);
         $this->app->singleton(NotificationService::class);
         $this->app->singleton(AppointmentRepository::class);
+        
+        // Register new booking services
+        $this->registerBookingServices();
+    }
+    
+    /**
+     * Register new universal booking services
+     */
+    protected function registerBookingServices(): void
+    {
+        // Register default branch selection strategy
+        $this->app->bind(BranchSelectionStrategyInterface::class, function ($app) {
+            // Default strategy can be configured in config
+            $strategy = config('booking.default_branch_strategy', 'nearest');
+            
+            return match ($strategy) {
+                'nearest' => new \App\Services\Booking\Strategies\NearestLocationStrategy(),
+                'first_available' => new \App\Services\Booking\Strategies\FirstAvailableStrategy(),
+                'load_balanced' => new \App\Services\Booking\Strategies\LoadBalancedStrategy(),
+                default => new \App\Services\Booking\Strategies\NearestLocationStrategy(),
+            };
+        });
+        
+        // Register UniversalBookingOrchestrator as singleton
+        $this->app->singleton(UniversalBookingOrchestrator::class, function ($app) {
+            return new UniversalBookingOrchestrator(
+                $app->make(PhoneNumberResolver::class),
+                $app->make(StaffServiceMatcher::class),
+                $app->make(UnifiedAvailabilityService::class),
+                $app->make(CalcomV2Service::class),
+                $app->make(NotificationService::class),
+                $app->make(BranchSelectionStrategyInterface::class)
+            );
+        });
+        
+        // Register StaffServiceMatcher as singleton
+        $this->app->singleton(StaffServiceMatcher::class);
+        
+        // Register UnifiedAvailabilityService
+        $this->app->singleton(UnifiedAvailabilityService::class, function ($app) {
+            return new UnifiedAvailabilityService(
+                $app->make(CalcomV2Service::class),
+                $app->make(CacheService::class)
+            );
+        });
+        
+        // Register PhoneNumberResolver as singleton
+        $this->app->singleton(PhoneNumberResolver::class);
     }
 
     /**

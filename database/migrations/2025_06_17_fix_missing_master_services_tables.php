@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
@@ -29,7 +29,7 @@ return new class extends Migration
 
         // Create branch_service_overrides table if it doesn't exist
         if (!Schema::hasTable('branch_service_overrides')) {
-            Schema::create('branch_service_overrides', function (Blueprint $table) {
+            $this->createTableIfNotExists('branch_service_overrides', function (Blueprint $table) {
                 $table->uuid('id')->primary();
                 $table->uuid('branch_id');
                 $table->uuid('master_service_id');
@@ -50,7 +50,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('branch_service_overrides');
+        $this->dropTableIfExists('branch_service_overrides');
         Schema::dropIfExists('master_services');
     }
 };

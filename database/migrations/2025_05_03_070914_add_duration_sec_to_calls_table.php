@@ -9,10 +9,10 @@ return new class extends Migration {
     {
         Schema::table('calls', function (Blueprint $table) {
             if (!Schema::hasColumn('calls', 'duration_sec')) {
-                $table->unsignedInteger('duration_sec')->nullable()->after('to_number');
+                $table->unsignedInteger('duration_sec')->nullable();
             }
             if (!Schema::hasColumn('calls', 'tmp_call_id')) {
-                $table->uuid('tmp_call_id')->nullable()->after('retell_call_id');
+                $table->uuid('tmp_call_id')->nullable();
             }
         });
     }

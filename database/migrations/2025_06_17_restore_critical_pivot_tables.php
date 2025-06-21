@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * KRITISCH: Diese Pivot-Tabellen wurden fälschlicherweise gelöscht
@@ -19,8 +19,8 @@ return new class extends Migration
                 $table->unsignedBigInteger('company_id');
                 $table->unsignedBigInteger('user_id');
                 $table->string('current_step');
-                $table->json('completed_steps')->nullable();
-                $table->json('step_data')->nullable();
+                $this->addJsonColumn($table, 'completed_steps', true);
+                $this->addJsonColumn($table, 'step_data', true);
                 $table->integer('progress_percentage')->default(0);
                 $table->boolean('is_completed')->default(false);
                 $table->timestamp('completed_at')->nullable();
@@ -50,7 +50,7 @@ return new class extends Migration
 
         // 3. branch_service - Pivot für Branch <-> Service Beziehung
         if (!Schema::hasTable('branch_service')) {
-            Schema::create('branch_service', function (Blueprint $table) {
+            $this->createTableIfNotExists('branch_service', function (Blueprint $table) {
                 // branches.id ist UUID, services.id ist BIGINT
                 $table->uuid('branch_id');
                 $table->unsignedBigInteger('service_id');
@@ -89,8 +89,8 @@ return new class extends Migration
                 $table->unsignedBigInteger('company_id');
                 $table->string('type'); // 'calcom', 'retell', etc.
                 $table->string('status')->default('pending');
-                $table->json('configuration')->nullable();
-                $table->json('credentials')->nullable();
+                $this->addJsonColumn($table, 'configuration', true);
+                $this->addJsonColumn($table, 'credentials', true);
                 $table->timestamp('last_sync_at')->nullable();
                 $table->text('last_error')->nullable();
                 $table->boolean('is_active')->default(true);
@@ -110,7 +110,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('integrations');
         Schema::dropIfExists('service_staff');
-        Schema::dropIfExists('branch_service');
+        $this->dropTableIfExists('branch_service');
         Schema::dropIfExists('staff_branches');
         Schema::dropIfExists('onboarding_progress');
     }

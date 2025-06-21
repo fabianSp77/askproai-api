@@ -23,7 +23,7 @@ class EventAnalyticsDashboard extends Page implements HasForms
     use InteractsWithForms;
     
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
-    protected static ?string $navigationGroup = 'Kalender & Events';
+    protected static ?string $navigationGroup = 'Dashboard';
     protected static ?string $navigationLabel = 'Analytics Dashboard';
     protected static ?int $navigationSort = 35;
     protected static string $view = 'filament.admin.pages.event-analytics-dashboard';

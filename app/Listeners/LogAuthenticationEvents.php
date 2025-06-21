@@ -30,7 +30,7 @@ class LogAuthenticationEvents
         Log::channel('single')->info('=== AUTH EVENT: AUTHENTICATED ===', [
             'guard' => $event->guard,
             'user' => $event->user->email,
-            'user_id' => $event->user->id,
+            'user_id' => $event->user->user_id ?? $event->user->id,
             'session_id' => session()->getId(),
         ]);
     }

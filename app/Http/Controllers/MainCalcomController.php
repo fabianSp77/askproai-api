@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\CalcomService;
+use App\Services\CalcomV2Service;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -11,7 +11,7 @@ class MainCalcomController extends Controller
 {
     protected $calcomService;
 
-    public function __construct(CalcomService $calcomService)
+    public function __construct(CalcomV2Service $calcomService)
     {
         $this->calcomService = $calcomService;
     }

@@ -45,7 +45,7 @@ class CustomerRepositoryTest extends TestCase
         $data = [
             'name' => 'John Doe',
             'email' => 'john@example.com',
-            'phone' => '+1234567890',
+            'phone' => '+49 30 12345678',
             'company_id' => $this->company->id,
             'birthdate' => '1990-01-01',
             'notes' => 'VIP customer'
@@ -56,7 +56,7 @@ class CustomerRepositoryTest extends TestCase
         $this->assertInstanceOf(Customer::class, $customer);
         $this->assertEquals('John Doe', $customer->name);
         $this->assertEquals('john@example.com', $customer->email);
-        $this->assertEquals('+1234567890', $customer->phone);
+        $this->assertEquals('+493012345678', $customer->phone); // Normalized format
         $this->assertEquals('VIP customer', $customer->notes);
     }
 
@@ -140,7 +140,7 @@ class CustomerRepositoryTest extends TestCase
     {
         $data = [
             'name' => 'New Customer',
-            'phone' => '+1234567890',
+            'phone' => '+49 30 12345678',
             'email' => 'new@example.com',
             'company_id' => $this->company->id
         ];
@@ -148,7 +148,7 @@ class CustomerRepositoryTest extends TestCase
         // First call creates new customer
         $customer = $this->repository->findOrCreate($data);
         $this->assertEquals('New Customer', $customer->name);
-        $this->assertEquals('+1234567890', $customer->phone);
+        $this->assertEquals('+493012345678', $customer->phone); // Normalized format
 
         // Second call finds existing customer and updates name
         $data['name'] = 'Updated Name';
@@ -311,7 +311,7 @@ class CustomerRepositoryTest extends TestCase
             'company_id' => $this->company->id,
             'name' => 'John Doe',
             'email' => 'john@example.com',
-            'phone' => '+1234567890'
+            'phone' => '+49 30 12345678'
         ]);
 
         $customer2 = Customer::factory()->create([
@@ -353,7 +353,7 @@ class CustomerRepositoryTest extends TestCase
         Customer::factory()->count(3)->create([
             'company_id' => $this->company->id,
             'email' => null,
-            'phone' => '+1234567890'
+            'phone' => '+49 30 12345678'
         ]);
 
         Customer::factory()->count(2)->create([

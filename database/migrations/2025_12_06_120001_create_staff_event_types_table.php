@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
@@ -17,7 +17,7 @@ return new class extends Migration
             $table->boolean('is_primary')->default(false);
             $table->integer('custom_duration')->nullable();
             $table->decimal('custom_price', 10, 2)->nullable();
-            $table->json('availability_override')->nullable();
+            $this->addJsonColumn($table, 'availability_override', true);
             $table->timestamps();
             
             // Foreign keys

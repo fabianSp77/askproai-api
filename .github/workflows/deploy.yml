@@ -1,0 +1,425 @@
+name: Manual Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      
+      ref:
+        description: 'Branch/Tag/Commit to deploy'
+        required: true
+        default: 'main'
+        type: string
+      
+      skip_tests:
+        description: 'Skip tests (emergency deployment)'
+        required: false
+        default: false
+        type: boolean
+      
+      reason:
+        description: 'Deployment reason/notes'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  deployments: write
+  actions: read
+
+jobs:
+  validate:
+    name: Validate Deployment Request
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    
+    steps:
+      - name: 🔍 Check deployment permissions
+        id: check
+        run: |
+          # Production deployments require specific actors
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            ALLOWED_DEPLOYERS="user1,user2,user3"  # Replace with actual GitHub usernames
+            
+            if [[ ! " ${ALLOWED_DEPLOYERS} " =~ " ${{ github.actor }} " ]]; then
+              echo "::error::User ${{ github.actor }} is not authorized to deploy to production"
+              echo "proceed=false" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
+          
+          echo "proceed=true" >> $GITHUB_OUTPUT
+
+      - name: 📝 Log deployment request
+        run: |
+          echo "Deployment requested by: ${{ github.actor }}"
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Ref: ${{ inputs.ref }}"
+          echo "Skip tests: ${{ inputs.skip_tests }}"
+          echo "Reason: ${{ inputs.reason }}"
+
+  test:
+    name: Run Tests
+    needs: validate
+    if: needs.validate.outputs.proceed == 'true' && inputs.skip_tests == false
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: askproai_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, redis
+          coverage: none
+
+      - name: 📦 Install dependencies
+        run: |
+          composer install --prefer-dist --no-interaction
+          npm ci
+
+      - name: 🧪 Run critical tests
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: askproai_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          REDIS_HOST: 127.0.0.1
+        run: |
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan migrate --force
+          php artisan test --testsuite=Unit --stop-on-failure
+          php artisan test --testsuite=E2E --filter="critical" --stop-on-failure
+
+  build:
+    name: Build Deployment Package
+    needs: [validate, test]
+    if: |
+      always() && 
+      needs.validate.outputs.proceed == 'true' && 
+      (needs.test.result == 'success' || inputs.skip_tests == true)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 📦 Install production dependencies
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction
+          npm ci --production
+
+      - name: 🏗️ Build assets
+        run: npm run build
+
+      - name: 🔖 Add deployment metadata
+        run: |
+          cat > deployment-info.json << EOF
+          {
+            "environment": "${{ inputs.environment }}",
+            "ref": "${{ inputs.ref }}",
+            "sha": "${{ github.sha }}",
+            "actor": "${{ github.actor }}",
+            "reason": "${{ inputs.reason }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "run_id": "${{ github.run_id }}",
+            "skip_tests": ${{ inputs.skip_tests }}
+          }
+          EOF
+
+      - name: 📦 Create deployment artifact
+        run: |
+          tar -czf askproai-deploy-${{ inputs.environment }}-${{ github.sha }}.tar.gz \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='tests' \
+            --exclude='.env*' \
+            --exclude='storage/app/*' \
+            --exclude='storage/logs/*' \
+            --exclude='storage/framework/cache/*' \
+            --exclude='storage/framework/sessions/*' \
+            --exclude='storage/framework/views/*' \
+            .
+          
+          sha256sum askproai-deploy-${{ inputs.environment }}-${{ github.sha }}.tar.gz > checksum.sha256
+
+      - name: 📤 Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-package
+          path: |
+            askproai-deploy-${{ inputs.environment }}-${{ github.sha }}.tar.gz
+            checksum.sha256
+            deployment-info.json
+          retention-days: 30
+
+  deploy:
+    name: Deploy to ${{ inputs.environment }}
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.environment == 'production' && 'https://api.askproai.de' || 'https://staging.askproai.de' }}
+    
+    steps:
+      - name: 📥 Download deployment package
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-package
+
+      - name: 🔍 Verify package integrity
+        run: sha256sum -c checksum.sha256
+
+      - name: 🔐 Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ inputs.environment == 'production' && secrets.PRODUCTION_SSH_KEY || secrets.STAGING_SSH_KEY }}
+
+      - name: 📝 Create deployment record
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: '${{ inputs.ref }}',
+              environment: '${{ inputs.environment }}',
+              description: '${{ inputs.reason }}',
+              auto_merge: false,
+              required_contexts: []
+            });
+            
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.data.id,
+              state: 'in_progress',
+              description: 'Deployment started'
+            });
+            
+            core.setOutput('deployment_id', deployment.data.id);
+
+      - name: 🚀 Deploy to server
+        id: deploy
+        run: |
+          # Set variables based on environment
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            SSH_HOST="${{ secrets.PRODUCTION_SSH_HOST }}"
+            SSH_USER="${{ secrets.PRODUCTION_SSH_USER }}"
+            DEPLOY_PATH="/var/www/api-gateway"
+          else
+            SSH_HOST="${{ secrets.STAGING_SSH_HOST }}"
+            SSH_USER="${{ secrets.STAGING_SSH_USER }}"
+            DEPLOY_PATH="/var/www/api-gateway-staging"
+          fi
+          
+          # Copy artifact
+          scp -o StrictHostKeyChecking=no \
+            askproai-deploy-${{ inputs.environment }}-${{ github.sha }}.tar.gz \
+            deployment-info.json \
+            ${SSH_USER}@${SSH_HOST}:/tmp/
+          
+          # Execute deployment
+          ssh -o StrictHostKeyChecking=no ${SSH_USER}@${SSH_HOST} << 'ENDSSH'
+            set -e
+            cd $DEPLOY_PATH
+            
+            # Run deployment script
+            if [ -f "./deploy/deploy-${{ inputs.environment }}.sh" ]; then
+              ./deploy/deploy-${{ inputs.environment }}.sh \
+                /tmp/askproai-deploy-${{ inputs.environment }}-${{ github.sha }}.tar.gz
+            else
+              echo "::error::Deployment script not found"
+              exit 1
+            fi
+          ENDSSH
+
+      - name: 🧪 Run post-deployment tests
+        id: verify
+        run: |
+          BASE_URL="${{ inputs.environment == 'production' && 'https://api.askproai.de' || 'https://staging.askproai.de' }}"
+          
+          # Wait for deployment to stabilize
+          echo "Waiting for deployment to stabilize..."
+          sleep 30
+          
+          # Health checks
+          echo "Running health checks..."
+          curl -f ${BASE_URL}/api/health || exit 1
+          curl -f ${BASE_URL}/api/health/database || exit 1
+          curl -f ${BASE_URL}/api/health/redis || exit 1
+          
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            curl -f ${BASE_URL}/api/health/calcom || exit 1
+            curl -f ${BASE_URL}/api/health/retell || exit 1
+          fi
+          
+          echo "All health checks passed!"
+
+      - name: 📊 Update deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const state = '${{ steps.verify.outcome }}' === 'success' ? 'success' : 'failure';
+            const description = state === 'success' 
+              ? 'Deployment completed successfully' 
+              : 'Deployment failed verification';
+            
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.deploy.outputs.deployment_id }},
+              state: state,
+              description: description,
+              environment_url: '${{ inputs.environment == 'production' && 'https://api.askproai.de' || 'https://staging.askproai.de' }}'
+            });
+
+  rollback:
+    name: Rollback Option
+    needs: deploy
+    if: failure()
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}-rollback
+    
+    steps:
+      - name: 🚨 Rollback notification
+        run: |
+          echo "::error::Deployment failed! Manual rollback may be required."
+          echo "To rollback, run: ./deploy/rollback-${{ inputs.environment }}.sh"
+
+      - name: 💬 Send failure notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "🚨 Deployment Failed!",
+              "attachments": [{
+                "color": "danger",
+                "fields": [
+                  {"title": "Environment", "value": "${{ inputs.environment }}", "short": true},
+                  {"title": "Ref", "value": "${{ inputs.ref }}", "short": true},
+                  {"title": "Actor", "value": "${{ github.actor }}", "short": true},
+                  {"title": "Reason", "value": "${{ inputs.reason }}", "short": false}
+                ],
+                "actions": [
+                  {
+                    "type": "button",
+                    "text": "View Run",
+                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                ]
+              }]
+            }' \
+            $SLACK_WEBHOOK_URL
+
+  notify-success:
+    name: Success Notification
+    needs: deploy
+    if: success()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 💬 Send success notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "✅ Deployment Successful!",
+              "attachments": [{
+                "color": "good",
+                "fields": [
+                  {"title": "Environment", "value": "${{ inputs.environment }}", "short": true},
+                  {"title": "Ref", "value": "${{ inputs.ref }}", "short": true},
+                  {"title": "Actor", "value": "${{ github.actor }}", "short": true},
+                  {"title": "Reason", "value": "${{ inputs.reason }}", "short": false}
+                ],
+                "actions": [
+                  {
+                    "type": "button",
+                    "text": "View Application",
+                    "url": "${{ inputs.environment == 'production' && 'https://api.askproai.de' || 'https://staging.askproai.de' }}"
+                  }
+                ]
+              }]
+            }' \
+            $SLACK_WEBHOOK_URL
+
+      - name: 📧 Send deployment summary
+        if: inputs.environment == 'production'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_HOST }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "✅ AskProAI Production Deployment Successful"
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: Deployment Pipeline <deploy@askproai.de>
+          body: |
+            Production deployment completed successfully!
+            
+            Environment: ${{ inputs.environment }}
+            Deployed ref: ${{ inputs.ref }}
+            Deployed by: ${{ github.actor }}
+            Reason: ${{ inputs.reason }}
+            
+            Application URL: https://api.askproai.de
+            
+            Deployment details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

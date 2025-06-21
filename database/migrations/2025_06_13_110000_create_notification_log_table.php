@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -16,10 +16,10 @@ return new class extends Migration
             $table->foreignId('appointment_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
             $table->string('type'); // confirmation, reminder_24h, reminder_2h, etc
-            $table->json('channels'); // ['email', 'sms', 'push', 'whatsapp']
+            $this->addJsonColumn($table, 'channels', false); // ['email', 'sms', 'push', 'whatsapp']
             $table->enum('status', ['sent', 'failed', 'queued']);
             $table->text('error')->nullable();
-            $table->json('metadata')->nullable();
+            $this->addJsonColumn($table, 'metadata', true);
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();
             

@@ -32,24 +32,66 @@ return [
     ],
 
     'calcom' => [
-        'api_key' => env('DEFAULT_CALCOM_API_KEY'),
-        'team_slug' => env('DEFAULT_CALCOM_TEAM_SLUG', 'askproai'),
+        'api_key' => env('CALCOM_API_KEY', env('DEFAULT_CALCOM_API_KEY')),
+        'team_slug' => env('CALCOM_TEAM_SLUG', env('DEFAULT_CALCOM_TEAM_SLUG', 'askproai')),
         'base_url' => env('CALCOM_BASE_URL', 'https://api.cal.com'),
+        'user_id' => env('CALCOM_USER_ID'),
+        'webhook_secret' => env('CALCOM_WEBHOOK_SECRET'),
+        
+        // V2 API Configuration
+        'api_version' => env('CALCOM_API_VERSION', 'v2'),
+        'v2_base_url' => env('CALCOM_V2_BASE_URL', 'https://api.cal.com/v2'),
+        'use_v2_api' => env('CALCOM_USE_V2_API', false),
+        
+        // Migration settings
+        'v2_enabled_methods' => explode(',', env('CALCOM_V2_ENABLED_METHODS', '')),
+        'v2_mandatory_methods' => explode(',', env('CALCOM_V2_MANDATORY_METHODS', '')),
+        
+        // Performance settings
+        'cache_ttl' => env('CALCOM_CACHE_TTL', 300), // 5 minutes
+        'circuit_breaker_enabled' => env('CALCOM_CIRCUIT_BREAKER_ENABLED', true),
+        'circuit_breaker_threshold' => env('CALCOM_CIRCUIT_BREAKER_THRESHOLD', 5),
+        'circuit_breaker_timeout' => env('CALCOM_CIRCUIT_BREAKER_TIMEOUT', 60),
+        
+        // Default event type for testing
+        'default_event_type_id' => env('CALCOM_DEFAULT_EVENT_TYPE_ID'),
     ],
 
     'retell' => [
         'api_key' => env('DEFAULT_RETELL_API_KEY', env('RETELL_TOKEN')),
-        'secret' => env('RETELL_WEBHOOK_SECRET', env('DEFAULT_RETELL_API_KEY', env('RETELL_TOKEN'))),
+        'webhook_secret' => env('RETELL_WEBHOOK_SECRET'),
+        'secret' => env('RETELL_WEBHOOK_SECRET', env('DEFAULT_RETELL_API_KEY', env('RETELL_TOKEN'))), // Deprecated, use webhook_secret
         'token' => env('RETELL_TOKEN'),
         'agent_id' => env('DEFAULT_RETELL_AGENT_ID'),
         'base_url' => env('RETELL_BASE_URL', env('RETELL_BASE', 'https://api.retellai.com')),
         'base' => env('RETELL_BASE', 'https://api.retellai.com'),
+        'verify_ip' => env('RETELL_VERIFY_IP', false),
     ],
 
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
-        'publishable' => env('STRIPE_PUBLISHABLE_KEY'),
+        'publishable' => env('STRIPE_PUBLISHABLE_KEY', env('STRIPE_KEY')),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
+    'webhook' => [
+        'async' => [
+            'retell' => env('WEBHOOK_ASYNC_RETELL', true),
+            'calcom' => env('WEBHOOK_ASYNC_CALCOM', true),
+            'stripe' => env('WEBHOOK_ASYNC_STRIPE', true),
+        ],
+        'retry' => [
+            'max_attempts' => env('WEBHOOK_RETRY_MAX_ATTEMPTS', 3),
+            'backoff' => env('WEBHOOK_RETRY_BACKOFF', '10,30,90'),
+        ],
+        'deduplication' => [
+            'ttl' => env('WEBHOOK_DEDUPLICATION_TTL', 300), // 5 minutes
+            'processing_ttl' => env('WEBHOOK_PROCESSING_TTL', 60), // 1 minute
+        ],
+        'monitoring' => [
+            'alert_threshold' => env('WEBHOOK_ALERT_THRESHOLD', 100), // ms
+            'log_slow_webhooks' => env('WEBHOOK_LOG_SLOW', true),
+        ],
     ],
 
 ];

@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::table('staff', function (Blueprint $table) {
             // Füge nur die fehlenden Spalten hinzu
             if (!Schema::hasColumn('staff', 'calcom_calendar_link')) {
-                $table->string('calcom_calendar_link')->nullable()->after('calcom_user_id');
+                $table->string('calcom_calendar_link')->nullable();
             }
             if (!Schema::hasColumn('staff', 'is_bookable')) {
-                $table->boolean('is_bookable')->default(true)->after('active');
+                $table->boolean('is_bookable')->default(true);
             }
         });
         

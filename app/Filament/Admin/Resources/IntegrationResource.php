@@ -17,7 +17,7 @@ use Filament\Notifications\Notification;
 class IntegrationResource extends Resource
 {
     protected static ?string $model = Integration::class;
-    protected static ?string $navigationGroup = 'Konfiguration';
+    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
     protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';
     protected static ?string $navigationLabel = 'Integrationen';
     protected static ?int $navigationSort = 20;

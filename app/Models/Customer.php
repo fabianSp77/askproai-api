@@ -2,15 +2,21 @@
 
 namespace App\Models;
 
+use App\Helpers\SafeQueryHelper;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use App\Scopes\TenantScope;
+use App\Services\Validation\PhoneNumberValidator;
+use App\Services\Validation\InvalidPhoneNumberException;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Customer extends Model
+class Customer extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'company_id',
@@ -19,12 +25,32 @@ class Customer extends Model
         'phone', 
         'birthdate',
         'tags',
-        'notes'
+        'notes',
+        'password',
+        'preferred_language',
+        'preferred_branch_id',
+        'preferred_staff_id',
+        'location_data',
+        'portal_enabled',
+        'portal_access_token',
+        'portal_token_expires_at',
+        'last_portal_login_at'
     ];
     
     protected $casts = [
         'birthdate' => 'date',
-        'tags' => 'array'
+        'tags' => 'array',
+        'location_data' => 'array',
+        'portal_enabled' => 'boolean',
+        'portal_token_expires_at' => 'datetime',
+        'last_portal_login_at' => 'datetime',
+        'email_verified_at' => 'datetime'
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'portal_access_token'
     ];
 
     /**
@@ -33,6 +59,29 @@ class Customer extends Model
     protected static function booted(): void
     {
         static::addGlobalScope(new TenantScope);
+        
+        // Validate and normalize phone number before saving
+        static::saving(function ($customer) {
+            if (!empty($customer->phone)) {
+                $validator = app(PhoneNumberValidator::class);
+                
+                try {
+                    $customer->phone = $validator->validateForStorage($customer->phone);
+                } catch (InvalidPhoneNumberException $e) {
+                    // Log the error but don't block saving for existing data
+                    \Log::warning('Invalid phone number for customer', [
+                        'customer_id' => $customer->id,
+                        'phone' => $customer->phone,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // For new customers, throw the exception
+                    if (!$customer->exists) {
+                        throw $e;
+                    }
+                }
+            }
+        });
     }
 
     public function branches(): HasMany
@@ -58,6 +107,41 @@ class Customer extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Get the customer's preferred branch
+     */
+    public function preferredBranch()
+    {
+        return $this->belongsTo(Branch::class, 'preferred_branch_id');
+    }
+
+    /**
+     * Get the customer's cookie consents
+     */
+    public function cookieConsents()
+    {
+        return $this->hasMany(CookieConsent::class);
+    }
+
+    /**
+     * Get the customer's GDPR requests
+     */
+    public function gdprRequests()
+    {
+        return $this->hasMany(GdprRequest::class);
+    }
+
+    /**
+     * Get the customer's invoices (if Invoice model exists)
+     */
+    public function invoices()
+    {
+        if (class_exists('App\Models\Invoice')) {
+            return $this->hasMany(Invoice::class);
+        }
+        return $this->hasMany(Appointment::class); // Fallback to appointments
     }
 
     /**
@@ -157,10 +241,16 @@ class Customer extends Model
         $normalizedPhone = $this->normalizePhoneNumber($search);
         
         return $query->where(function ($q) use ($search, $normalizedPhone) {
-            $q->where('name', 'LIKE', '%' . $search . '%')
-              ->orWhere('email', 'LIKE', '%' . $search . '%')
-              ->orWhere('phone', 'LIKE', '%' . $search . '%')
-              ->orWhere('phone', 'LIKE', '%' . $normalizedPhone . '%');
+            SafeQueryHelper::whereLike($q, 'name', $search);
+            $q->orWhere(function($subQ) use ($search) {
+                SafeQueryHelper::whereLike($subQ, 'email', $search);
+            })
+            ->orWhere(function($subQ) use ($search) {
+                SafeQueryHelper::whereLike($subQ, 'phone', $search);
+            })
+            ->orWhere(function($subQ) use ($normalizedPhone) {
+                SafeQueryHelper::whereLike($subQ, 'phone', $normalizedPhone);
+            });
         });
     }
 

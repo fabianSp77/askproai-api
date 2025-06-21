@@ -16,6 +16,8 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - monitoring
 
@@ -92,7 +94,9 @@ services:
     ports:
       - "9121:9121"
     environment:
-      REDIS_ADDR: "redis:6379"
+      REDIS_ADDR: "redis://host.docker.internal:6379"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - monitoring
 
@@ -103,7 +107,9 @@ services:
     ports:
       - "9104:9104"
     environment:
-      DATA_SOURCE_NAME: "${DB_USERNAME}:${DB_PASSWORD}@(${DB_HOST}:${DB_PORT})/${DB_DATABASE}"
+      DATA_SOURCE_NAME: "exporter:exporter@tcp(host.docker.internal:3306)/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - monitoring
 

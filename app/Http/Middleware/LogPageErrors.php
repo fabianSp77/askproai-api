@@ -14,13 +14,13 @@ class LogPageErrors
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next)
     {
         try {
             $response = $next($request);
             
             // Log 500 errors with full details
-            if ($response->getStatusCode() >= 500) {
+            if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 500) {
                 Log::error('HTTP 500 Error Detected', [
                     'url' => $request->fullUrl(),
                     'method' => $request->method(),
@@ -30,7 +30,7 @@ class LogPageErrors
                     'input' => $request->except(['password', 'password_confirmation']),
                     'headers' => $request->headers->all(),
                     'response_status' => $response->getStatusCode(),
-                    'response_content' => substr($response->getContent(), 0, 1000), // First 1000 chars
+                    'response_content' => method_exists($response, 'getContent') ? substr($response->getContent(), 0, 1000) : 'no content',
                 ]);
             }
             

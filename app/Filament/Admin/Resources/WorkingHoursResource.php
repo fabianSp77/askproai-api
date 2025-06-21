@@ -13,7 +13,7 @@ class WorkingHoursResource extends Resource
 {
     protected static ?string $model = WorkingHours::class;
 //     protected static ?string $navigationIcon = 'heroicon-o-clock';
-    protected static ?string $navigationGroup = 'Stammdaten';
+    protected static ?string $navigationGroup = 'Personal & Services';
     protected static ?string $navigationLabel = 'Arbeitszeiten';
     protected static bool $shouldRegisterNavigation = false; // Disabled - using WorkingHourResource instead
 

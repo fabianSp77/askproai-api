@@ -1,0 +1,77 @@
+{
+    "timestamp": "2025-06-20T13:07:08+02:00",
+    "summary": {
+        "total": 11,
+        "passed": 7,
+        "failed": 4,
+        "success_rate": "63.64%"
+    },
+    "results": [
+        {
+            "endpoint": "Help Center Home",
+            "url": "\/help",
+            "status": "FAIL",
+            "code": 500
+        },
+        {
+            "endpoint": "Help Center Category",
+            "url": "\/help\/category\/getting-started",
+            "status": "FAIL",
+            "code": 404
+        },
+        {
+            "endpoint": "Help Center Article",
+            "url": "\/help\/article\/how-to-book-appointment",
+            "status": "FAIL",
+            "code": 404
+        },
+        {
+            "endpoint": "Help Center Search",
+            "url": "\/help\/search?q=appointment",
+            "status": "FAIL",
+            "code": 500
+        },
+        {
+            "endpoint": "Portal Dashboard",
+            "url": "\/portal",
+            "status": "PASS",
+            "code": 200
+        },
+        {
+            "endpoint": "Portal Appointments",
+            "url": "\/portal\/appointments",
+            "status": "PASS",
+            "code": 200
+        },
+        {
+            "endpoint": "Portal Knowledge",
+            "url": "\/portal\/knowledge",
+            "status": "PASS",
+            "code": 200
+        },
+        {
+            "endpoint": "Portal Invoices",
+            "url": "\/portal\/invoices",
+            "status": "PASS",
+            "code": 200
+        },
+        {
+            "endpoint": "Portal Profile",
+            "url": "\/portal\/profile",
+            "status": "PASS",
+            "code": 200
+        },
+        {
+            "endpoint": "Admin Dashboard",
+            "url": "\/admin",
+            "status": "PASS",
+            "code": 200
+        },
+        {
+            "endpoint": "Admin Knowledge Base",
+            "url": "\/admin\/knowledge-base",
+            "status": "PASS",
+            "code": 200
+        }
+    ]
+}

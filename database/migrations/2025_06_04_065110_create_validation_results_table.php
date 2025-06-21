@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('entity_id', 36);
             $table->string('test_type', 50);
             $table->enum('status', ['pending', 'success', 'warning', 'error']);
-            $table->json('results');
+            $this->addJsonColumn($table, 'results', false);
             $table->timestamp('tested_at');
             $table->timestamp('expires_at');
             $table->timestamps();

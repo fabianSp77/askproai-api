@@ -20,7 +20,7 @@ class CompanyPricingResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-currency-euro';
     
-    protected static ?string $navigationGroup = 'Verwaltung';
+    protected static ?string $navigationGroup = 'Abrechnung';
     
     protected static ?string $modelLabel = 'Preismodell';
     

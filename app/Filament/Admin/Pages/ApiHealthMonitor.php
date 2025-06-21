@@ -3,22 +3,19 @@
 namespace App\Filament\Admin\Pages;
 
 use Filament\Pages\Page;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Services\CircuitBreaker\CircuitBreaker;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class ApiHealthMonitor extends Page implements HasTable
+class ApiHealthMonitor extends Page
 {
-    use InteractsWithTable;
     
     protected static ?string $navigationIcon = 'heroicon-o-heart';
     protected static ?string $navigationLabel = 'API Health Monitor';
     protected static ?string $title = '🩺 API Health Monitor';
-    protected static ?string $navigationGroup = 'System';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static ?int $navigationSort = 100;
     
     protected static string $view = 'filament.admin.pages.api-health-monitor';
@@ -39,19 +36,25 @@ class ApiHealthMonitor extends Page implements HasTable
     
     public function loadMetrics(): void
     {
-        // Get Circuit Breaker Status
-        $this->circuitBreakerStatus = CircuitBreaker::getStatus();
+        try {
+            // Get Circuit Breaker Status
+            $this->circuitBreakerStatus = CircuitBreaker::getStatus();
+        } catch (\Exception $e) {
+            $this->circuitBreakerStatus = [];
+            logger()->error('Failed to get circuit breaker status: ' . $e->getMessage());
+        }
         
         // Get Recent API Metrics (last hour)
         $hourAgo = now()->subHour();
         
-        $this->metrics = DB::table('circuit_breaker_metrics')
-            ->select('service', 'status', DB::raw('COUNT(*) as count'), DB::raw('AVG(duration_ms) as avg_duration'))
-            ->where('created_at', '>=', $hourAgo)
-            ->groupBy('service', 'status')
-            ->get()
-            ->groupBy('service')
-            ->map(function ($group) {
+        try {
+            $this->metrics = DB::table('circuit_breaker_metrics')
+                ->select('service', 'status', DB::raw('COUNT(*) as count'), DB::raw('AVG(duration_ms) as avg_duration'))
+                ->where('created_at', '>=', $hourAgo)
+                ->groupBy('service', 'status')
+                ->get()
+                ->groupBy('service')
+                ->map(function ($group) {
                 $stats = [
                     'total' => 0,
                     'success' => 0,
@@ -77,22 +80,36 @@ class ApiHealthMonitor extends Page implements HasTable
                 return $stats;
             })
             ->toArray();
+        } catch (\Exception $e) {
+            $this->metrics = [];
+            logger()->error('Failed to get circuit breaker metrics: ' . $e->getMessage());
+        }
         
         // Get Recent Errors
-        $this->recentErrors = DB::table('critical_errors')
-            ->select('service', 'error_type', 'message', 'created_at')
+        try {
+            $this->recentErrors = DB::table('critical_errors')
+            ->select('error_class', 'error_message', 'file', 'line', 'created_at')
             ->where('created_at', '>=', $hourAgo)
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function ($error) {
                 $error->time_ago = Carbon::parse($error->created_at)->diffForHumans();
+                // Map to expected properties for the view
+                $error->service = 'System'; // Default service name
+                $error->error_type = $error->error_class;
+                $error->message = $error->error_message;
                 return $error;
             })
             ->toArray();
+        } catch (\Exception $e) {
+            $this->recentErrors = [];
+            logger()->error('Failed to get recent errors: ' . $e->getMessage());
+        }
         
         // Get Performance Stats
-        $this->performanceStats = DB::table('circuit_breaker_metrics')
+        try {
+            $this->performanceStats = DB::table('circuit_breaker_metrics')
             ->select(
                 'service',
                 DB::raw('MIN(duration_ms) as min_duration'),
@@ -113,6 +130,10 @@ class ApiHealthMonitor extends Page implements HasTable
                 ]];
             })
             ->toArray();
+        } catch (\Exception $e) {
+            $this->performanceStats = [];
+            logger()->error('Failed to get performance stats: ' . $e->getMessage());
+        }
     }
     
     public function getHealthStatus(string $service): array

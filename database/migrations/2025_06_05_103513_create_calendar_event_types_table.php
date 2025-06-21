@@ -1,17 +1,16 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('calendar_event_types', function (Blueprint $table) {
+        $this->createTableIfNotExists('calendar_event_types', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
         });
@@ -22,6 +21,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('calendar_event_types');
+        $this->dropTableIfExists('calendar_event_types');
     }
 };

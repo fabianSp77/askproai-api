@@ -20,9 +20,14 @@ class CalcomApiTest extends Page implements HasForms, HasActions
     use InteractsWithActions;
     
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
-    protected static ?string $navigationGroup = 'System';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static ?string $navigationLabel = 'Cal.com API Test';
     protected static ?int $navigationSort = 10;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
     
     protected static string $view = 'filament.admin.pages.calcom-api-test';
     

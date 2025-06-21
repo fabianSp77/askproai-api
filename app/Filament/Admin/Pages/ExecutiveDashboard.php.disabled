@@ -1,0 +1,197 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Filament\Admin\Pages;
+
+use App\Models\Branch;
+use App\Models\Company;
+use App\Services\Dashboard\DashboardMetricsService;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Pages\Page;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
+
+class ExecutiveDashboard extends Page implements HasForms
+{
+    use InteractsWithForms;
+    
+    protected static ?string $navigationIcon = 'heroicon-o-chart-pie';
+    protected static ?string $navigationGroup = 'Dashboard';
+    protected static ?string $navigationLabel = 'Executive Dashboard';
+    protected static ?int $navigationSort = -99;
+    protected static string $view = 'filament.admin.pages.executive-dashboard';
+    
+    // Filters
+    public ?int $companyId = null;
+    public ?int $branchId = null;
+    public string $period = 'month';
+    
+    // Dashboard data
+    public array $operationalMetrics = [];
+    public array $financialMetrics = [];
+    public array $branchComparison = [];
+    public array $anomalies = [];
+    public bool $isLoading = true;
+    
+    protected DashboardMetricsService $metricsService;
+    
+    public function boot(DashboardMetricsService $metricsService): void
+    {
+        $this->metricsService = $metricsService;
+    }
+    
+    public function mount(): void
+    {
+        // Set default company based on user role
+        $user = Auth::user();
+        
+        if ($user->hasRole('super_admin')) {
+            // Super admin can see all companies
+            $this->companyId = Company::first()?->id;
+        } else {
+            // Regular users see their company
+            $this->companyId = $user->company_id;
+        }
+        
+        $this->loadDashboardData();
+    }
+    
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+        return $user->hasAnyRole(['super_admin', 'company_admin', 'branch_manager']);
+    }
+    
+    public function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    {
+        $user = Auth::user();
+        
+        return $form
+            ->schema([
+                Select::make('companyId')
+                    ->label('Company')
+                    ->options(function () use ($user) {
+                        if ($user->hasRole('super_admin')) {
+                            return Company::pluck('name', 'id');
+                        }
+                        return [$user->company_id => $user->company->name];
+                    })
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(function () {
+                        $this->branchId = null;
+                        $this->loadDashboardData();
+                    }),
+                    
+                Select::make('branchId')
+                    ->label('Branch')
+                    ->options(function () {
+                        if (!$this->companyId) {
+                            return [];
+                        }
+                        return Branch::where('company_id', $this->companyId)
+                            ->where('is_active', true)
+                            ->pluck('name', 'id');
+                    })
+                    ->placeholder('All Branches')
+                    ->reactive()
+                    ->afterStateUpdated(fn() => $this->loadDashboardData()),
+                    
+                Select::make('period')
+                    ->label('Period')
+                    ->options([
+                        'day' => 'Today',
+                        'week' => 'This Week',
+                        'month' => 'This Month',
+                        'quarter' => 'This Quarter',
+                        'year' => 'This Year',
+                    ])
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(fn() => $this->loadDashboardData()),
+            ])
+            ->columns(3);
+    }
+    
+    #[On('refresh-dashboard')]
+    public function loadDashboardData(): void
+    {
+        if (!$this->companyId) {
+            return;
+        }
+        
+        $this->isLoading = true;
+        
+        try {
+            $company = Company::find($this->companyId);
+            $branch = $this->branchId ? Branch::find($this->branchId) : null;
+            
+            // Load all metrics in parallel
+            $this->operationalMetrics = $this->metricsService->getOperationalMetrics($company, $branch);
+            $this->financialMetrics = $this->metricsService->getFinancialMetrics($company, $branch, $this->period);
+            $this->branchComparison = $this->metricsService->getBranchComparison($company, $this->period);
+            $this->anomalies = $this->metricsService->getAnomalies($company, $branch);
+            
+        } catch (\Exception $e) {
+            \Log::error('Failed to load dashboard data', [
+                'error' => $e->getMessage(),
+                'company_id' => $this->companyId,
+                'branch_id' => $this->branchId,
+            ]);
+            
+            // Set empty data on error
+            $this->operationalMetrics = [];
+            $this->financialMetrics = [];
+            $this->branchComparison = [];
+            $this->anomalies = ['count' => 0, 'alerts' => []];
+        }
+        
+        $this->isLoading = false;
+    }
+    
+    public function refreshData(): void
+    {
+        $this->dispatch('refresh-dashboard');
+    }
+    
+    protected function getViewData(): array
+    {
+        return [
+            'operationalMetrics' => $this->operationalMetrics,
+            'financialMetrics' => $this->financialMetrics,
+            'branchComparison' => $this->branchComparison,
+            'anomalies' => $this->anomalies,
+            'isLoading' => $this->isLoading,
+        ];
+    }
+    
+    public function getListeners(): array
+    {
+        return [
+            'refresh-dashboard' => 'loadDashboardData',
+            'metric-click' => 'handleMetricClick',
+        ];
+    }
+    
+    public function handleMetricClick(string $metric, mixed $value): void
+    {
+        // Handle drill-down when user clicks on a metric
+        match ($metric) {
+            'active_calls' => $this->redirect('/admin/calls?status=in_progress'),
+            'appointments_today' => $this->redirect('/admin/appointments?date=' . now()->format('Y-m-d')),
+            'conversion_rate' => $this->redirect('/admin/analytics/conversion'),
+            'revenue' => $this->redirect('/admin/analytics/revenue'),
+            default => null,
+        };
+    }
+    
+    public function getPollingInterval(): ?string
+    {
+        // Auto-refresh every 60 seconds for real-time data
+        return '60s';
+    }
+}

@@ -8,17 +8,22 @@ use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\Service;
+use App\Filament\Admin\Traits\HasConsistentNavigation;
 use Filament\Tables\Filters\SelectFilter;
 
 class ServiceResource extends Resource
 {
-    protected static ?string $model = Service::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cog';
-    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+
+    use HasConsistentNavigation;
+    
+    protected static ?string $model = Service::class;
+    protected static ?string $navigationIcon = 'heroicon-o-briefcase';
     protected static ?string $navigationLabel = 'Leistungen';
-    protected static ?int $navigationSort = 40;
-    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
     {

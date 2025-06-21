@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('branches', function (Blueprint $table) {
             if (!Schema::hasColumn('branches', 'calcom_event_type_id')) {
-                $table->string('calcom_event_type_id')->nullable()->after('calcom_team_slug');
+                $table->string('calcom_event_type_id')->nullable();
             }
         });
     }

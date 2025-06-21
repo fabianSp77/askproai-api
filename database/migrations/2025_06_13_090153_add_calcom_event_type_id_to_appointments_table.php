@@ -16,7 +16,7 @@ return new class extends Migration
             if (!Schema::hasColumn('appointments', 'calcom_event_type_id')) {
                 $table->unsignedBigInteger('calcom_event_type_id')
                     ->nullable()
-                    ->after('company_id');
+                    ;
                 
                 $table->index('calcom_event_type_id');
                 

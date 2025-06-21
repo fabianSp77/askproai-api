@@ -10,6 +10,10 @@ class LoginDebugger
 {
     public function handle(Request $request, Closure $next)
     {
+        // Temporarily disable this middleware to fix the error
+        return $next($request);
+        
+        /* Disabled due to Livewire Redirector error
         // Log all login attempts
         if ($request->is('*/login') || $request->is('livewire/update')) {
             $logFile = storage_path('logs/login-debug-' . date('Y-m-d') . '.log');
@@ -56,30 +60,44 @@ class LoginDebugger
             
             $responseData = [
                 'timestamp' => now()->toISOString(),
-                'status' => $response->getStatusCode(),
                 'auth_after' => auth()->check(),
                 'user_after' => auth()->user()?->email,
                 'session_id_after' => session()->getId(),
-                'redirect_url' => $response instanceof \Illuminate\Http\RedirectResponse ? $response->getTargetUrl() : null,
-                'is_redirect' => $response instanceof \Illuminate\Http\RedirectResponse,
-                'cookies_set' => [],
             ];
             
-            // Check for set cookies
-            foreach ($response->headers->getCookies() as $cookie) {
-                $responseData['cookies_set'][] = [
-                    'name' => $cookie->getName(),
-                    'domain' => $cookie->getDomain(),
-                    'path' => $cookie->getPath(),
-                    'secure' => $cookie->isSecure(),
-                    'httpOnly' => $cookie->isHttpOnly(),
-                    'sameSite' => $cookie->getSameSite(),
-                ];
+            // Handle different response types
+            if ($response instanceof \Illuminate\Http\Response || $response instanceof \Illuminate\Http\JsonResponse) {
+                $responseData['status'] = $response->getStatusCode();
+                $responseData['is_redirect'] = false;
+                
+                // Check for set cookies
+                if (property_exists($response, 'headers') && $response->headers) {
+                    $responseData['cookies_set'] = [];
+                    foreach ($response->headers->getCookies() as $cookie) {
+                        $responseData['cookies_set'][] = [
+                            'name' => $cookie->getName(),
+                            'domain' => $cookie->getDomain(),
+                            'path' => $cookie->getPath(),
+                            'secure' => $cookie->isSecure(),
+                            'httpOnly' => $cookie->isHttpOnly(),
+                            'sameSite' => $cookie->getSameSite(),
+                        ];
+                    }
+                }
+            } elseif ($response instanceof \Illuminate\Http\RedirectResponse) {
+                $responseData['status'] = $response->getStatusCode();
+                $responseData['is_redirect'] = true;
+                $responseData['redirect_url'] = $response->getTargetUrl();
+            } else {
+                // Handle Livewire redirects or other response types
+                $responseData['response_type'] = get_class($response);
+                $responseData['is_livewire_redirect'] = $response instanceof \Livewire\Features\SupportRedirects\Redirector;
             }
             
             file_put_contents($logFile, "=== LOGIN RESPONSE ===\n" . json_encode($responseData, JSON_PRETTY_PRINT) . "\n=== LOGIN REQUEST END ===\n\n", FILE_APPEND);
         }
         
         return $response;
+        */
     }
 }

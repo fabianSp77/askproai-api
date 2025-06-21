@@ -8,6 +8,8 @@ use App\Http\Controllers\MetricsController;
 use Illuminate\Http\Request;
 use App\Services\CalcomV2Service;
 use App\Http\Controllers\UnifiedWebhookController;
+use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\MCPHealthCheckController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,8 +17,100 @@ use App\Http\Controllers\UnifiedWebhookController;
 |--------------------------------------------------------------------------
 */
 
+// Load MCP Routes
+require __DIR__.'/api-mcp.php';
+
+// ---- Metrics Endpoint ----------------------------
+Route::get('/metrics', [App\Http\Controllers\Api\MetricsController::class, 'metrics'])
+    ->middleware(['api.metrics.auth'])
+    ->name('api.metrics');
+
+// ---- Health Check Endpoints ----------------------------
+// Simple ping endpoint for load balancers
+Route::get('/health', [HealthController::class, 'health'])
+    ->name('api.health');
+
+// Comprehensive health check
+Route::get('/health/comprehensive', [HealthController::class, 'comprehensive'])
+    ->name('api.health.comprehensive');
+
+// Individual service health checks
+Route::get('/health/service/{service}', [HealthController::class, 'service'])
+    ->name('api.health.service');
+    
+// Legacy Cal.com specific health check
+Route::get('/health/calcom', [HealthController::class, 'calcomHealth'])
+    ->name('api.health.calcom');
+
+// ---- MCP Orchestrator Routes ----------------------------
+Route::prefix('mcp')->middleware(['throttle:1000,1'])->group(function () {
+    // Orchestrator endpoints
+    Route::post('/execute', [\App\Http\Controllers\Api\MCPController::class, 'execute']);
+    Route::post('/batch', [\App\Http\Controllers\Api\MCPController::class, 'batch']);
+    Route::get('/health', [\App\Http\Controllers\Api\MCPController::class, 'orchestratorHealth']);
+    Route::get('/metrics', [\App\Http\Controllers\Api\MCPController::class, 'orchestratorMetrics']);
+    Route::get('/info', [\App\Http\Controllers\Api\MCPController::class, 'info']);
+    
+    // Service-specific endpoints (existing)
+    Route::prefix('database')->group(function () {
+        Route::get('/schema', [\App\Http\Controllers\Api\MCPController::class, 'databaseSchema']);
+        Route::post('/query', [\App\Http\Controllers\Api\MCPController::class, 'databaseQuery']);
+        Route::post('/search', [\App\Http\Controllers\Api\MCPController::class, 'databaseSearch']);
+        Route::get('/failed-appointments', [\App\Http\Controllers\Api\MCPController::class, 'databaseFailedAppointments']);
+        Route::get('/call-stats', [\App\Http\Controllers\Api\MCPController::class, 'databaseCallStats']);
+        Route::get('/tenant-stats', [\App\Http\Controllers\Api\MCPController::class, 'databaseTenantStats']);
+    });
+    
+    Route::prefix('calcom')->group(function () {
+        Route::get('/event-types', [\App\Http\Controllers\Api\MCPController::class, 'calcomEventTypes']);
+        Route::post('/availability', [\App\Http\Controllers\Api\MCPController::class, 'calcomAvailability']);
+        Route::get('/bookings', [\App\Http\Controllers\Api\MCPController::class, 'calcomBookings']);
+        Route::get('/assignments/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'calcomAssignments']);
+        Route::post('/sync', [\App\Http\Controllers\Api\MCPController::class, 'calcomSync']);
+        Route::get('/test/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'calcomTest']);
+    });
+    
+    Route::prefix('retell')->group(function () {
+        Route::get('/agent/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellAgent']);
+        Route::get('/agents/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellAgents']);
+        Route::post('/call-stats', [\App\Http\Controllers\Api\MCPController::class, 'retellCallStats']);
+        Route::post('/recent-calls', [\App\Http\Controllers\Api\MCPController::class, 'retellRecentCalls']);
+        Route::get('/call/{callId}', [\App\Http\Controllers\Api\MCPController::class, 'retellCallDetails']);
+        Route::post('/search-calls', [\App\Http\Controllers\Api\MCPController::class, 'retellSearchCalls']);
+        Route::get('/phone-numbers/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellPhoneNumbers']);
+        Route::get('/test/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellTest']);
+    });
+    
+    Route::prefix('queue')->group(function () {
+        Route::get('/overview', [\App\Http\Controllers\Api\MCPController::class, 'queueOverview']);
+        Route::get('/failed-jobs', [\App\Http\Controllers\Api\MCPController::class, 'queueFailedJobs']);
+        Route::get('/recent-jobs', [\App\Http\Controllers\Api\MCPController::class, 'queueRecentJobs']);
+        Route::get('/job/{jobId}', [\App\Http\Controllers\Api\MCPController::class, 'queueJobDetails']);
+        Route::post('/job/{jobId}/retry', [\App\Http\Controllers\Api\MCPController::class, 'queueRetryJob']);
+        Route::get('/metrics', [\App\Http\Controllers\Api\MCPController::class, 'queueMetrics']);
+        Route::get('/workers', [\App\Http\Controllers\Api\MCPController::class, 'queueWorkers']);
+        Route::post('/search', [\App\Http\Controllers\Api\MCPController::class, 'queueSearchJobs']);
+    });
+    
+    // Cache management
+    Route::delete('/cache/{service}', [\App\Http\Controllers\Api\MCPController::class, 'clearCache']);
+    
+    // Real-time streaming endpoint
+    Route::get('/stream', [\App\Http\Controllers\Api\MCPStreamController::class, 'stream'])
+        ->middleware(['auth:sanctum']);
+});
+
+// ---- Cookie Consent API ----------------------------
+Route::prefix('cookie-consent')->group(function () {
+    Route::get('/status', [\App\Http\Controllers\Api\CookieConsentController::class, 'status']);
+    Route::post('/save', [\App\Http\Controllers\Api\CookieConsentController::class, 'save']);
+    Route::post('/accept-all', [\App\Http\Controllers\Api\CookieConsentController::class, 'acceptAll']);
+    Route::post('/reject-all', [\App\Http\Controllers\Api\CookieConsentController::class, 'rejectAll']);
+    Route::post('/withdraw', [\App\Http\Controllers\Api\CookieConsentController::class, 'withdraw']);
+});
+
 // ---- Metrics Endpoint for Prometheus ----------------------------
-Route::get('/metrics', [\App\Http\Controllers\SimpleMetricsController::class, 'index'])
+Route::get('/metrics', [\App\Http\Controllers\Api\MetricsController::class, 'index'])
     ->middleware(['throttle:100,1']); // Allow 100 requests per minute
 
 // Test route to debug metrics
@@ -39,18 +133,88 @@ Route::get('/metrics-test', function() {
 // 1) Ping-Route (GET)  ➜ ohne Signaturprüfung
 Route::get('calcom/webhook', [CalcomWebhookController::class, 'ping']);
 
-// 2) Produktiver Webhook (POST) ➜ Signature verification now handled by WebhookProcessor
-Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle']);
+// 2) Cal.com Webhook - NOW USING MCP UnifiedWebhookController
+Route::post('calcom/webhook', function (Request $request) {
+    Log::info('[MCP Migration] Legacy /calcom/webhook route used, redirecting to UnifiedWebhookController');
+    return app(UnifiedWebhookController::class)->handle($request);
+})->middleware(['calcom.signature'])
+  ->name('calcom.webhook');
 
-// ---- Retell Webhook (POST) ➜ Signature verification now handled by WebhookProcessor
-Route::post('/retell/webhook', [RetellWebhookController::class, 'processWebhook']);
+// ---- Retell Webhook (POST) ➜ NOW USING MCP UnifiedWebhookController
+Route::post('/retell/webhook', function (Request $request) {
+    Log::info('[MCP Migration] Legacy /retell/webhook route used, redirecting to UnifiedWebhookController');
+    return app(UnifiedWebhookController::class)->handle($request);
+})->middleware(['verify.retell.signature'])
+  ->name('retell.webhook');
+
+// ---- OPTIMIZED: NOW USING MCP UnifiedWebhookController ----
+Route::post('/retell/optimized-webhook', function (Request $request) {
+    Log::info('[MCP Migration] Legacy /retell/optimized-webhook route used, redirecting to UnifiedWebhookController');
+    return app(UnifiedWebhookController::class)->handle($request);
+})->middleware(['verify.retell.signature'])
+  ->name('retell.optimized.webhook');
+
+// ---- DEBUG: NOW USING MCP UnifiedWebhookController with extra logging ----
+Route::post('/retell/debug-webhook', function (Request $request) {
+    Log::info('[MCP Migration] Debug webhook endpoint used', [
+        'headers' => $request->headers->all(),
+        'body' => $request->all(),
+        'ip' => $request->ip()
+    ]);
+    return app(UnifiedWebhookController::class)->handle($request);
+})->middleware(['ip.whitelist'])
+  ->name('retell.debug.webhook');
+
+// ---- TEST: Simple webhook endpoint for testing ----
+Route::post('/test/webhook', [App\Http\Controllers\TestWebhookController::class, 'test'])
+    ->name('test.webhook');
+
+// ---- MCP TEST: Direct MCP webhook for testing (NO SECURITY) ----
+Route::post('/test/mcp-webhook', function (\Illuminate\Http\Request $request) {
+    \Log::info('[MCP Test] Direct webhook test', [
+        'body' => $request->all()
+    ]);
+    
+    try {
+        $controller = app(\App\Http\Controllers\RetellWebhookMCPController::class);
+        return $controller->processWebhook($request);
+    } catch (\Exception $e) {
+        \Log::error('[MCP Test] Error', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json([
+            'error' => $e->getMessage()
+        ], 500);
+    }
+})
+    ->name('test.webhook');
+
+// ---- ENHANCED: NOW USING MCP UnifiedWebhookController ----
+Route::post('/retell/enhanced-webhook', function (Request $request) {
+    Log::info('[MCP Migration] Legacy /retell/enhanced-webhook route used, redirecting to UnifiedWebhookController');
+    return app(UnifiedWebhookController::class)->handle($request);
+})->middleware(['verify.retell.signature'])
+  ->name('retell.enhanced.webhook');
+
+// ---- [DUPLICATE REMOVED] This route was defined twice, now removed ----
+
+// ---- MCP-BASED: Retell Webhook using MCP services ----
+Route::post('/retell/mcp-webhook', [App\Http\Controllers\MCPWebhookController::class, 'handleRetellWebhook'])
+    ->name('retell.mcp.webhook');
+Route::get('/retell/mcp-webhook/stats', [App\Http\Controllers\MCPWebhookController::class, 'getWebhookStats'])
+    ->name('retell.mcp.stats');
+Route::get('/retell/mcp-webhook/health', [App\Http\Controllers\MCPWebhookController::class, 'health'])
+    ->name('retell.mcp.health');
 
 // ---- Retell Function Call Handler (for real-time during calls) ----
+// With signature verification middleware for security
 Route::post('/retell/function-call', [App\Http\Controllers\RetellRealtimeController::class, 'handleFunctionCall'])
     ->middleware('verify.retell.signature');
 
 // ---- Stripe Webhook (POST) --------------------------------------
 Route::post('/stripe/webhook', [App\Http\Controllers\Api\StripeWebhookController::class, 'handle'])
+    ->middleware(['verify.stripe.signature', 'webhook.replay.protection'])
     ->name('stripe.webhook');
 
 // ---- Billing Webhook (Stripe) - NO AUTH REQUIRED ----
@@ -65,15 +229,14 @@ Route::get('/webhook/health', [UnifiedWebhookController::class, 'health'])
     ->name('webhook.health');
 
 // ---- Cal.com V2 Health Check ------------------------------------
-Route::get('/health/calcom', [App\Http\Controllers\Api\CalcomHealthController::class, '__invoke'])
-    ->name('health.calcom');
+// Removed duplicate route - using the one defined above at line 23-24
 
 // ---- Frontend Error Logging -------------------------------------
 Route::post('/log-frontend-error', [\App\Http\Controllers\FrontendErrorController::class, 'log'])
     ->middleware(['throttle:10,1']); // Max 10 error reports per minute
 
 // ---- Hybrid Booking Routes (V1 für Verfügbarkeit, V2 für Buchung) ----
-Route::prefix('hybrid')->group(function () {
+Route::prefix('hybrid')->middleware(['input.validation'])->group(function () {
     Route::get('/slots', [HybridBookingController::class, 'getAvailableSlots']);
     Route::post('/book', [HybridBookingController::class, 'bookAppointment']);
     Route::post('/book-next', [HybridBookingController::class, 'bookNextAvailable']);
@@ -155,12 +318,28 @@ Route::prefix('test/calcom-v2')->group(function () {
         $calcom = new \App\Services\CalcomV2Service();
         $eventTypeId = $request->input('eventTypeId');
         $start = $request->input('start');
-        $attendee = [
+        
+        // Calculate end time (add 30 minutes by default)
+        $startTime = new \DateTime($start);
+        $endTime = clone $startTime;
+        $endTime->add(new \DateInterval('PT30M'));
+        
+        $customerData = [
             'name'     => $request->input('name', 'Max Mustermann'),
             'email'    => $request->input('email', 'test@example.com'),
+            'phone'    => $request->input('phone', '+49 123 456789'),
             'timeZone' => $request->input('tz', 'Europe/Berlin'),
         ];
-        return response()->json($calcom->bookAppointment($eventTypeId, $start, $attendee));
+        
+        $result = $calcom->bookAppointment(
+            $eventTypeId, 
+            $startTime->format('c'), 
+            $endTime->format('c'), 
+            $customerData,
+            $request->input('notes')
+        );
+        
+        return response()->json($result ?: ['error' => 'Booking failed']);
     });
 });
 
@@ -174,7 +353,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 // ---- Protected API Routes (require authentication) ----
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'input.validation'])->group(function () {
     // Customer API
     Route::apiResource('customers', App\Http\Controllers\API\CustomerController::class);
     
@@ -248,6 +427,37 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 });
 
+// Dashboard Metrics API Routes
+Route::prefix('dashboard')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/metrics/operational', [App\Http\Controllers\Api\DashboardMetricsController::class, 'operational']);
+    Route::get('/metrics/financial', [App\Http\Controllers\Api\DashboardMetricsController::class, 'financial']);
+    Route::get('/metrics/branch-comparison', [App\Http\Controllers\Api\DashboardMetricsController::class, 'branchComparison']);
+    Route::get('/metrics/anomalies', [App\Http\Controllers\Api\DashboardMetricsController::class, 'anomalies']);
+    Route::get('/metrics/all', [App\Http\Controllers\Api\DashboardMetricsController::class, 'all']);
+});
+
+// Monitoring Dashboard API Routes
+Route::prefix('monitoring')->middleware(['auth:sanctum', 'can:view-monitoring'])->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\MonitoringController::class, 'dashboard']);
+});
+
+// MCP Health Check & Monitoring Routes
+Route::prefix('health')->middleware(['api'])->group(function () {
+    Route::get('/', [MCPHealthCheckController::class, 'health']);
+    Route::get('/detailed', [MCPHealthCheckController::class, 'detailed']);
+    Route::get('/service/{service}', [MCPHealthCheckController::class, 'service']);
+    Route::get('/ready', [MCPHealthCheckController::class, 'ready']);
+    Route::get('/live', [MCPHealthCheckController::class, 'live']);
+});
+
+Route::get('/metrics', [MCPHealthCheckController::class, 'metrics'])
+    ->middleware(['api']);
+
+Route::prefix('monitoring')->middleware(['api', 'auth:sanctum'])->group(function () {
+    Route::get('/alerts', [MCPHealthCheckController::class, 'alerts']);
+    Route::get('/service/{service}/metrics', [MCPHealthCheckController::class, 'serviceMetrics']);
+});
+
 // Mobile App API Routes
 Route::prefix('mobile')->group(function () {
     // Public routes
@@ -274,5 +484,70 @@ Route::prefix('mobile')->group(function () {
         Route::post('/bookings', [App\Http\Controllers\API\MobileAppController::class, 'createBooking']);
         Route::get('/appointments', [App\Http\Controllers\API\MobileAppController::class, 'getAppointments']);
         Route::delete('/appointments/{id}', [App\Http\Controllers\API\MobileAppController::class, 'cancelAppointment']);
+        
+        // Dashboard metrics for mobile
+        Route::get('/dashboard', [App\Http\Controllers\Api\DashboardMetricsController::class, 'all']);
     });
+});
+
+// MCP (Model Context Protocol) Routes
+Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
+    // Server Info
+    Route::get('info', [App\Http\Controllers\Api\MCPController::class, 'info']);
+    
+    // Database MCP
+    Route::prefix('database')->group(function () {
+        Route::get('schema', [App\Http\Controllers\Api\MCPController::class, 'databaseSchema']);
+        Route::post('query', [App\Http\Controllers\Api\MCPController::class, 'databaseQuery']);
+        Route::post('search', [App\Http\Controllers\Api\MCPController::class, 'databaseSearch']);
+        Route::get('failed-appointments', [App\Http\Controllers\Api\MCPController::class, 'databaseFailedAppointments']);
+        Route::get('call-stats', [App\Http\Controllers\Api\MCPController::class, 'databaseCallStats']);
+        Route::get('tenant-stats', [App\Http\Controllers\Api\MCPController::class, 'databaseTenantStats']);
+    });
+    
+    // Cal.com MCP
+    Route::prefix('calcom')->group(function () {
+        Route::get('event-types', [App\Http\Controllers\Api\MCPController::class, 'calcomEventTypes']);
+        Route::post('availability', [App\Http\Controllers\Api\MCPController::class, 'calcomAvailability']);
+        Route::get('bookings', [App\Http\Controllers\Api\MCPController::class, 'calcomBookings']);
+        Route::get('assignments/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'calcomAssignments']);
+        Route::post('sync', [App\Http\Controllers\Api\MCPController::class, 'calcomSync']);
+        Route::get('test/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'calcomTest']);
+    });
+    
+    // Retell.ai MCP
+    Route::prefix('retell')->group(function () {
+        Route::get('agent/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellAgent']);
+        Route::get('agents/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellAgents']);
+        Route::get('call-stats', [App\Http\Controllers\Api\MCPController::class, 'retellCallStats']);
+        Route::get('recent-calls', [App\Http\Controllers\Api\MCPController::class, 'retellRecentCalls']);
+        Route::get('call/{callId}', [App\Http\Controllers\Api\MCPController::class, 'retellCallDetails']);
+        Route::post('search-calls', [App\Http\Controllers\Api\MCPController::class, 'retellSearchCalls']);
+        Route::get('phone-numbers/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellPhoneNumbers']);
+        Route::get('test/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellTest']);
+    });
+    
+    // Sentry MCP (existing)
+    Route::prefix('sentry')->group(function () {
+        Route::get('issues', [App\Http\Controllers\Api\MCPController::class, 'sentryIssues']);
+        Route::get('issues/{issueId}', [App\Http\Controllers\Api\MCPController::class, 'sentryIssueDetails']);
+        Route::get('issues/{issueId}/latest-event', [App\Http\Controllers\Api\MCPController::class, 'sentryLatestEvent']);
+        Route::post('issues/search', [App\Http\Controllers\Api\MCPController::class, 'sentrySearchIssues']);
+        Route::get('performance', [App\Http\Controllers\Api\MCPController::class, 'sentryPerformance']);
+    });
+    
+    // Queue MCP
+    Route::prefix('queue')->group(function () {
+        Route::get('overview', [App\Http\Controllers\Api\MCPController::class, 'queueOverview']);
+        Route::get('failed-jobs', [App\Http\Controllers\Api\MCPController::class, 'queueFailedJobs']);
+        Route::get('recent-jobs', [App\Http\Controllers\Api\MCPController::class, 'queueRecentJobs']);
+        Route::get('job/{jobId}', [App\Http\Controllers\Api\MCPController::class, 'queueJobDetails']);
+        Route::post('job/{jobId}/retry', [App\Http\Controllers\Api\MCPController::class, 'queueRetryJob']);
+        Route::get('metrics', [App\Http\Controllers\Api\MCPController::class, 'queueMetrics']);
+        Route::get('workers', [App\Http\Controllers\Api\MCPController::class, 'queueWorkers']);
+        Route::post('search', [App\Http\Controllers\Api\MCPController::class, 'queueSearchJobs']);
+    });
+    
+    // Cache Management
+    Route::post('{service}/cache/clear', [App\Http\Controllers\Api\MCPController::class, 'clearCache']);
 });

@@ -36,7 +36,7 @@ class RecentCallsWidget extends BaseWidget
                     ->label('Anrufer')
                     ->searchable()
                     ->copyable()
-                    ->icon('heroicon-m-phone'),
+                    ->icon('heroicon-o-phone'),
                     
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Kunde')
@@ -101,12 +101,12 @@ class RecentCallsWidget extends BaseWidget
             ->actions([
                 Tables\Actions\Action::make('view')
                     ->label('Details')
-                    ->icon('heroicon-m-eye')
+                    ->icon('heroicon-o-eye')
                     ->url(fn ($record) => CallResource::getUrl('view', ['record' => $record])),
                     
                 Tables\Actions\Action::make('play')
                     ->label('Anhören')
-                    ->icon('heroicon-m-play-circle')
+                    ->icon('heroicon-o-play-circle')
                     ->color('info')
                     ->visible(fn ($record) => !empty($record->audio_url))
                     ->modalContent(fn ($record) => view('filament.modals.audio-player', [

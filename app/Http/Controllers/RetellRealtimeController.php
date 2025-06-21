@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Services\CalcomV2Service;
 use App\Models\Company;
+use App\Services\Booking\UniversalBookingOrchestrator;
+use App\Services\PhoneNumberResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Services\WebhookProcessor;
 
 class RetellRealtimeController extends Controller
 {
@@ -16,6 +19,54 @@ class RetellRealtimeController extends Controller
      */
     public function handleFunctionCall(Request $request)
     {
+        // DEBUG: Log all incoming function calls
+        Log::warning('RETELL FUNCTION CALL RECEIVED', [
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'headers' => $request->headers->all(),
+            'body' => $request->all(),
+            'raw_body' => substr($request->getContent(), 0, 1000)
+        ]);
+        
+        // Verify signature for real-time calls
+        try {
+            $webhookProcessor = app(WebhookProcessor::class);
+            
+            // Create proper headers array for verification
+            $headers = [
+                'x-retell-signature' => [$request->header('x-retell-signature')],
+                'X-Retell-Signature' => [$request->header('X-Retell-Signature')],
+                'x-retell-timestamp' => [$request->header('x-retell-timestamp')],
+                'X-Retell-Timestamp' => [$request->header('X-Retell-Timestamp')],
+            ];
+            
+            // Use reflection to access the protected verifyRetellSignature method
+            $reflection = new \ReflectionClass($webhookProcessor);
+            $method = $reflection->getMethod('verifyRetellSignature');
+            $method->setAccessible(true);
+            
+            $isValid = $method->invoke($webhookProcessor, $request->all(), $headers);
+            
+            if (!$isValid) {
+                Log::warning('Invalid Retell signature for function call', [
+                    'headers' => $request->headers->all(),
+                    'ip' => $request->ip()
+                ]);
+                
+                return response()->json([
+                    'error' => 'Invalid signature'
+                ], 401);
+            }
+        } catch (\Exception $e) {
+            Log::error('Signature verification failed', [
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'error' => 'Signature verification failed'
+            ], 401);
+        }
+        
         try {
             $functionName = $request->input('function_name');
             $parameters = $request->input('parameters', []);
@@ -56,15 +107,28 @@ class RetellRealtimeController extends Controller
      */
     private function checkAvailabilityBeforeBooking(array $parameters, array $callData)
     {
-        // Get company from call data
-        $toNumber = $callData['to_number'] ?? null;
-        $company = Company::where('phone_number', $toNumber)->first() ?? Company::first();
+        // Resolve context using PhoneNumberResolver
+        $phoneResolver = app(PhoneNumberResolver::class);
+        $context = $phoneResolver->resolveFromWebhook([
+            'to' => $callData['to_number'] ?? null,
+            'from' => $callData['from_number'] ?? null,
+            'agent_id' => $callData['agent_id'] ?? null,
+            'metadata' => $callData['metadata'] ?? []
+        ]);
+        
+        if (!$context['company_id']) {
+            Log::error('Could not resolve company from call data', $callData);
+            return response()->json([
+                'success' => false,
+                'message' => 'Konnte Unternehmen nicht ermitteln'
+            ]);
+        }
         
         // Parse appointment data
         $datum = $parameters['datum'] ?? '';
         $uhrzeit = $parameters['uhrzeit'] ?? '';
+        $dienstleistung = $parameters['dienstleistung'] ?? '';
         $kundenpraeferenzen = $parameters['kundenpraeferenzen'] ?? '';
-        $eventTypeId = 1; // Default, could be determined from dienstleistung
         
         // Parse date and time
         try {
@@ -78,6 +142,7 @@ class RetellRealtimeController extends Controller
             $timeStr = str_replace(' Uhr', '', $uhrzeit);
             list($hour, $minute) = explode(':', $timeStr . ':00');
             $requestedTime = sprintf('%02d:%02d', $hour, $minute);
+            $requestedDateTime = $date->copy()->setTime((int)$hour, (int)$minute);
             
         } catch (\Exception $e) {
             Log::warning('Failed to parse date/time in realtime check', [
@@ -91,36 +156,38 @@ class RetellRealtimeController extends Controller
             ]);
         }
         
-        // Check availability
-        $calcomService = new CalcomV2Service($company->calcom_api_key);
-        $availability = $calcomService->checkAvailability($eventTypeId, $date->format('Y-m-d'));
+        // Use UniversalBookingOrchestrator to check availability
+        $orchestrator = app(UniversalBookingOrchestrator::class);
         
-        // Check if requested time is available
-        $isAvailable = false;
-        if ($availability['success'] && !empty($availability['data']['slots'])) {
-            foreach ($availability['data']['slots'] as $slot) {
-                $slotTime = Carbon::parse($slot);
-                if ($slotTime->format('H:i') === $requestedTime) {
-                    $isAvailable = true;
-                    break;
-                }
-            }
-        }
+        // Build booking request for availability check
+        $bookingRequest = [
+            'company_id' => $context['company_id'],
+            'branch_id' => $context['branch_id'],
+            'service_name' => $dienstleistung,
+            'date' => $date->format('Y-m-d'),
+            'time' => $requestedDateTime->format('H:i'),
+            'customer_preferences' => $kundenpraeferenzen,
+            'check_only' => true // Just checking, not booking yet
+        ];
+        
+        // Get availability options
+        $availabilityResult = $this->checkAvailabilityAcrossBranches($bookingRequest, $context);
         
         $response = [
             'success' => true,
-            'verfuegbar' => $isAvailable,
+            'verfuegbar' => $availabilityResult['available'],
             'datum_geprueft' => $date->format('d.m.Y'),
             'uhrzeit_geprueft' => $requestedTime
         ];
         
-        // If not available and alternatives requested, find them
-        if (!$isAvailable && isset($parameters['alternative_termine_gewuenscht']) && $parameters['alternative_termine_gewuenscht']) {
-            $alternatives = $this->findAlternatives($calcomService, $eventTypeId, $date, $kundenpraeferenzen, $requestedTime);
+        // If not available at requested time/branch, provide alternatives
+        if (!$availabilityResult['available'] && 
+            isset($parameters['alternative_termine_gewuenscht']) && 
+            $parameters['alternative_termine_gewuenscht']) {
             
-            if (!empty($alternatives)) {
-                $response['alternative_termine'] = $alternatives['formatted'];
-                $response['alternative_anzahl'] = count($alternatives['slots']);
+            if (!empty($availabilityResult['alternatives'])) {
+                $response['alternative_termine'] = $this->formatAlternativesForVoice($availabilityResult['alternatives']);
+                $response['alternative_anzahl'] = count($availabilityResult['alternatives']);
             } else {
                 $response['alternative_termine'] = 'Keine passenden Alternativen gefunden';
                 $response['alternative_anzahl'] = 0;
@@ -128,8 +195,11 @@ class RetellRealtimeController extends Controller
         }
         
         // Add a message for the agent to use
-        if ($isAvailable) {
+        if ($availabilityResult['available']) {
             $response['nachricht'] = "Der Termin am {$date->format('d.m.Y')} um {$requestedTime} Uhr ist verfügbar.";
+            if (!empty($availabilityResult['branch_name'])) {
+                $response['nachricht'] .= " in unserer Filiale {$availabilityResult['branch_name']}.";
+            }
         } else {
             if (isset($response['alternative_termine']) && $response['alternative_anzahl'] > 0) {
                 $response['nachricht'] = "Der gewünschte Termin ist leider nicht verfügbar. Ich hätte folgende Alternativen: {$response['alternative_termine']}";
@@ -184,6 +254,135 @@ class RetellRealtimeController extends Controller
         }
         
         return [];
+    }
+    
+    /**
+     * Check availability across branches
+     */
+    private function checkAvailabilityAcrossBranches(array $bookingRequest, array $context): array
+    {
+        try {
+            // Get unified availability service
+            $availabilityService = app(\App\Services\Booking\UnifiedAvailabilityService::class);
+            
+            // If specific branch is requested, check only that branch
+            if (!empty($context['branch_id'])) {
+                $branch = \App\Models\Branch::find($context['branch_id']);
+                if (!$branch || !$branch->active) {
+                    return [
+                        'available' => false,
+                        'alternatives' => []
+                    ];
+                }
+                
+                // Find eligible staff
+                $staffMatcher = app(\App\Services\Booking\StaffServiceMatcher::class);
+                $eligibleStaff = $staffMatcher->findEligibleStaff($branch, [
+                    'service_name' => $bookingRequest['service_name']
+                ]);
+                
+                // Check each staff member
+                foreach ($eligibleStaff as $staff) {
+                    $slots = $availabilityService->getStaffAvailability(
+                        $staff,
+                        [
+                            'start' => Carbon::parse($bookingRequest['date'] . ' ' . $bookingRequest['time']),
+                            'end' => Carbon::parse($bookingRequest['date'] . ' ' . $bookingRequest['time'])->addHour()
+                        ],
+                        30 // Default duration
+                    );
+                    
+                    if (!empty($slots)) {
+                        return [
+                            'available' => true,
+                            'branch_name' => $branch->name,
+                            'staff_name' => $staff->name,
+                            'alternatives' => []
+                        ];
+                    }
+                }
+            } else {
+                // Check all branches
+                $branches = \App\Models\Branch::where('company_id', $context['company_id'])
+                    ->where('active', true)
+                    ->get();
+                    
+                $multibranchSlots = $availabilityService->getMultiBranchAvailability(
+                    $branches->all(),
+                    ['service_name' => $bookingRequest['service_name']],
+                    [
+                        'start' => Carbon::parse($bookingRequest['date'])->startOfDay(),
+                        'end' => Carbon::parse($bookingRequest['date'])->endOfDay()
+                    ]
+                );
+                
+                // Check if requested time is available
+                $requestedTime = Carbon::parse($bookingRequest['date'] . ' ' . $bookingRequest['time']);
+                foreach ($multibranchSlots as $slot) {
+                    $slotTime = Carbon::parse($slot['start']);
+                    if ($slotTime->format('Y-m-d H:i') === $requestedTime->format('Y-m-d H:i')) {
+                        return [
+                            'available' => true,
+                            'branch_name' => $slot['branch_name'] ?? null,
+                            'staff_name' => $slot['staff_name'] ?? null,
+                            'alternatives' => []
+                        ];
+                    }
+                }
+            }
+            
+            // Not available at requested time - find alternatives
+            $alternatives = $availabilityService->getMultiBranchAvailability(
+                $branches ?? [\App\Models\Branch::find($context['branch_id'])],
+                ['service_name' => $bookingRequest['service_name']],
+                [
+                    'start' => Carbon::parse($bookingRequest['date'])->startOfDay(),
+                    'end' => Carbon::parse($bookingRequest['date'])->addDays(3)->endOfDay()
+                ],
+                5 // Max 5 alternatives
+            );
+            
+            return [
+                'available' => false,
+                'alternatives' => $alternatives
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Error checking availability', [
+                'error' => $e->getMessage(),
+                'booking_request' => $bookingRequest
+            ]);
+            
+            return [
+                'available' => false,
+                'alternatives' => []
+            ];
+        }
+    }
+    
+    /**
+     * Format alternatives for voice response
+     */
+    private function formatAlternativesForVoice(array $alternatives): string
+    {
+        if (empty($alternatives)) {
+            return 'keine verfügbaren Termine';
+        }
+        
+        $formatted = [];
+        
+        foreach (array_slice($alternatives, 0, 3) as $alt) {
+            $time = Carbon::parse($alt['start']);
+            $formattedTime = $this->formatDateTimeGerman($time);
+            
+            if (!empty($alt['branch_name'])) {
+                $formattedTime .= " in " . $alt['branch_name'];
+            }
+            
+            $formatted[] = $formattedTime;
+        }
+        
+        return implode(', oder ', $formatted);
     }
     
     /**

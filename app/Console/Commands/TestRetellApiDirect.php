@@ -66,8 +66,8 @@ class TestRetellApiDirect extends Command
             'voice_id' => '11labs-Adrian',
             'response_engine' => [
                 'type' => 'retell-llm',
-                'llm_id' => 'gpt-3.5-turbo',
-                'system_prompt' => 'You are a helpful assistant.',
+                'llm_id' => 'claude-3.5-sonnet',
+                'system_prompt' => 'Du bist ein hilfreicher Assistent. Du sprichst Deutsch.',
             ],
         ];
         

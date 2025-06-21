@@ -1,0 +1,631 @@
+name: Comprehensive CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, staging ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * *'  # Daily security scan at 2 AM
+
+env:
+  PHP_VERSION: '8.2'
+  NODE_VERSION: '18'
+  MYSQL_VERSION: '8.0'
+  REDIS_VERSION: '7'
+
+jobs:
+  # Phase 1: Code Quality & Security
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          tools: phpcs, phpstan, phpmd, psalm
+          coverage: none
+
+      - name: 📦 Get Composer cache
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: 💾 Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: 📦 Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: 🔍 PHP Code Sniffer
+        run: vendor/bin/phpcs --standard=PSR12 --report=checkstyle --report-file=phpcs-report.xml app/ || true
+
+      - name: 📊 PHPStan Analysis
+        run: vendor/bin/phpstan analyse --error-format=github --no-progress
+
+      - name: 🧹 PHP Mess Detector
+        continue-on-error: true
+        run: phpmd app/ github cleancode,codesize,controversial,design,naming,unusedcode
+
+      - name: ⛪ Psalm Static Analysis
+        continue-on-error: true
+        run: vendor/bin/psalm --output-format=github --no-progress
+
+      - name: 📤 Upload analysis reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-reports
+          path: |
+            phpcs-report.xml
+            phpstan-report.json
+
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🔐 Check PHP dependencies
+        run: |
+          composer install --no-scripts
+          composer audit --no-dev
+
+      - name: 🔐 Check NPM dependencies
+        run: |
+          npm ci
+          npm audit --production
+
+      - name: 🕵️ Secret scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+      - name: 🛡️ OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'AskProAI'
+          path: '.'
+          format: 'HTML'
+          args: >
+            --enableRetired
+            --enableExperimental
+
+      - name: 📤 Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: reports/
+
+  # Phase 2: Testing
+  unit-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:${{ env.MYSQL_VERSION }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: askproai_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      
+      redis:
+        image: redis:${{ env.REDIS_VERSION }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP with extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, redis
+          coverage: pcov
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install PHP dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: 📦 Install Node dependencies
+        run: npm ci
+
+      - name: 🔧 Setup test environment
+        run: |
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan config:cache
+
+      - name: 🗄️ Run migrations
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: askproai_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+        run: php artisan migrate --force
+
+      - name: 🏗️ Build frontend assets
+        run: npm run build
+
+      - name: 🧪 Run Unit tests
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: askproai_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          REDIS_HOST: 127.0.0.1
+        run: |
+          php artisan test --testsuite=Unit --parallel --coverage-clover coverage.xml
+
+      - name: 🧪 Run Integration tests
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: askproai_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          REDIS_HOST: 127.0.0.1
+        run: |
+          php artisan test --testsuite=Integration --parallel
+
+      - name: 📊 Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    services:
+      mysql:
+        image: mysql:${{ env.MYSQL_VERSION }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: askproai_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      
+      redis:
+        image: redis:${{ env.REDIS_VERSION }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, redis
+
+      - name: 📦 Install dependencies
+        run: |
+          composer install --prefer-dist --no-interaction
+          npm ci
+
+      - name: 🔧 Setup environment
+        run: |
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan migrate --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: askproai_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+
+      - name: 🧪 Run E2E tests
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: askproai_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          REDIS_HOST: 127.0.0.1
+        run: |
+          php artisan test --testsuite=E2E --stop-on-failure
+
+      - name: 📸 Upload test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: tests/screenshots/
+
+  performance-tests:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    services:
+      mysql:
+        image: mysql:${{ env.MYSQL_VERSION }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: askproai_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      
+      redis:
+        image: redis:${{ env.REDIS_VERSION }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, redis
+
+      - name: 📦 Install dependencies
+        run: composer install --prefer-dist --no-interaction
+
+      - name: 🔧 Setup environment
+        run: |
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan migrate --force
+          php artisan db:seed --class=PerformanceSeeder
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: askproai_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+
+      - name: 🚀 Run performance tests
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_DATABASE: askproai_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          REDIS_HOST: 127.0.0.1
+        run: |
+          php artisan askproai:performance-monitor --json > performance-report.json
+          php artisan test tests/E2E/ConcurrentBookingStressTest.php
+
+      - name: 📊 Analyze performance results
+        run: |
+          AVG_QUERY_TIME=$(jq '.metrics.average_query_time' performance-report.json)
+          echo "Average Query Time: ${AVG_QUERY_TIME}ms"
+          
+          if (( $(echo "$AVG_QUERY_TIME > 50" | bc -l) )); then
+            echo "::warning::Performance degradation detected! Average query time is ${AVG_QUERY_TIME}ms"
+          fi
+
+      - name: 📤 Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: performance-report.json
+
+  # Phase 3: Build & Package
+  build:
+    name: Build Production Artifact
+    runs-on: ubuntu-latest
+    needs: [code-quality, security-scan, unit-tests, e2e-tests]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install production dependencies
+        run: |
+          composer install --no-dev --optimize-autoloader --no-interaction
+          npm ci --production
+
+      - name: 🏗️ Build production assets
+        run: npm run build
+
+      - name: 📦 Create deployment package
+        run: |
+          # Create artifact
+          tar -czf askproai-${{ github.sha }}.tar.gz \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='tests' \
+            --exclude='*.test' \
+            --exclude='*.spec' \
+            --exclude='.env*' \
+            --exclude='phpunit.xml' \
+            --exclude='storage/app/*' \
+            --exclude='storage/logs/*' \
+            --exclude='storage/framework/cache/*' \
+            --exclude='storage/framework/sessions/*' \
+            --exclude='storage/framework/testing/*' \
+            --exclude='storage/framework/views/*' \
+            .
+          
+          # Create checksum
+          sha256sum askproai-${{ github.sha }}.tar.gz > askproai-${{ github.sha }}.tar.gz.sha256
+
+      - name: 📤 Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: askproai-build-${{ github.sha }}
+          path: |
+            askproai-${{ github.sha }}.tar.gz
+            askproai-${{ github.sha }}.tar.gz.sha256
+          retention-days: 30
+
+  # Phase 4: Deployment
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/staging'
+    environment:
+      name: staging
+      url: https://staging.askproai.de
+    
+    steps:
+      - name: 📥 Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: askproai-build-${{ github.sha }}
+
+      - name: 🔐 Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+
+      - name: 🚀 Deploy to staging
+        run: |
+          # Verify checksum
+          sha256sum -c askproai-${{ github.sha }}.tar.gz.sha256
+          
+          # Copy artifact to server
+          scp -o StrictHostKeyChecking=no \
+            askproai-${{ github.sha }}.tar.gz \
+            ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SSH_HOST }}:/tmp/
+          
+          # Deploy via SSH
+          ssh -o StrictHostKeyChecking=no \
+            ${{ secrets.STAGING_SSH_USER }}@${{ secrets.STAGING_SSH_HOST }} \
+            "cd /var/www/api-gateway-staging && ./deploy/deploy-staging.sh /tmp/askproai-${{ github.sha }}.tar.gz"
+
+      - name: 🧪 Run smoke tests
+        run: |
+          # Wait for deployment to stabilize
+          sleep 30
+          
+          # Run health checks
+          curl -f https://staging.askproai.de/api/health || exit 1
+          curl -f https://staging.askproai.de/api/health/database || exit 1
+          curl -f https://staging.askproai.de/api/health/redis || exit 1
+
+      - name: 📢 Notify deployment success
+        if: success()
+        run: |
+          echo "::notice::Successfully deployed to staging environment"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://api.askproai.de
+    
+    steps:
+      - name: 📥 Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: askproai-build-${{ github.sha }}
+
+      - name: 🔐 Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+      - name: 🔔 Create deployment notification
+        run: |
+          echo "Starting production deployment of commit ${{ github.sha }}"
+
+      - name: 🚀 Deploy to production
+        run: |
+          # Verify checksum
+          sha256sum -c askproai-${{ github.sha }}.tar.gz.sha256
+          
+          # Copy artifact to server
+          scp -o StrictHostKeyChecking=no \
+            askproai-${{ github.sha }}.tar.gz \
+            ${{ secrets.PRODUCTION_SSH_USER }}@${{ secrets.PRODUCTION_SSH_HOST }}:/tmp/
+          
+          # Deploy via SSH with zero-downtime
+          ssh -o StrictHostKeyChecking=no \
+            ${{ secrets.PRODUCTION_SSH_USER }}@${{ secrets.PRODUCTION_SSH_HOST }} \
+            "cd /var/www/api-gateway && ./deploy/deploy-production.sh /tmp/askproai-${{ github.sha }}.tar.gz"
+
+      - name: 🧪 Run production smoke tests
+        run: |
+          # Wait for deployment
+          sleep 60
+          
+          # Health checks
+          curl -f https://api.askproai.de/api/health || exit 1
+          curl -f https://api.askproai.de/api/health/database || exit 1
+          curl -f https://api.askproai.de/api/health/redis || exit 1
+          curl -f https://api.askproai.de/api/health/calcom || exit 1
+
+      - name: 📊 Create release
+        if: success()
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            Production deployment successful!
+            
+            **Commit:** ${{ github.sha }}
+            **Deployed at:** ${{ github.event.head_commit.timestamp }}
+            **Deployed by:** ${{ github.actor }}
+          draft: false
+          prerelease: false
+
+  # Phase 5: Notifications
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [code-quality, security-scan, unit-tests, e2e-tests, build]
+    if: always()
+    
+    steps:
+      - name: 📊 Determine build status
+        id: status
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          elif [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "status=cancelled" >> $GITHUB_OUTPUT
+            echo "emoji=⚠️" >> $GITHUB_OUTPUT
+            echo "color=warning" >> $GITHUB_OUTPUT
+          else
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+            echo "color=good" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 💬 Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "${{ steps.status.outputs.emoji }} CI/CD Pipeline ${{ steps.status.outputs.status }}",
+              "attachments": [{
+                "color": "${{ steps.status.outputs.color }}",
+                "fields": [
+                  {"title": "Repository", "value": "${{ github.repository }}", "short": true},
+                  {"title": "Branch", "value": "${{ github.ref_name }}", "short": true},
+                  {"title": "Commit", "value": "`${{ github.sha }}`", "short": true},
+                  {"title": "Author", "value": "${{ github.actor }}", "short": true},
+                  {"title": "Workflow", "value": "${{ github.workflow }}", "short": true},
+                  {"title": "Run", "value": "#${{ github.run_number }}", "short": true}
+                ],
+                "actions": [
+                  {
+                    "type": "button",
+                    "text": "View Run",
+                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                ]
+              }]
+            }' \
+            $SLACK_WEBHOOK_URL
+
+      - name: 📧 Send email notification
+        if: failure() && github.ref == 'refs/heads/main'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_HOST }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "❌ AskProAI CI/CD Pipeline Failed"
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: CI/CD Pipeline <ci@askproai.de>
+          body: |
+            The CI/CD pipeline has failed for the main branch.
+            
+            Repository: ${{ github.repository }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+            
+            View details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

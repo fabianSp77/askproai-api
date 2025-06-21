@@ -26,18 +26,7 @@ class LoggingServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Add correlation ID to all requests
-        $this->app['router']->matched(function ($event) {
-            $logger = $this->app->make(StructuredLogger::class);
-            
-            // Set correlation ID in response headers
-            $correlationId = $logger->getCorrelationId();
-            $event->response->header('X-Correlation-ID', $correlationId);
-            
-            // Add to log context
-            \Log::shareContext([
-                'correlation_id' => $correlationId
-            ]);
-        });
+        // The CorrelationIdMiddleware handles correlation IDs
+        // No need for additional logic here since it's registered as global middleware
     }
 }

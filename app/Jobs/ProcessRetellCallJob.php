@@ -2,7 +2,7 @@
 namespace App\Jobs;
 
 use App\Models\{Appointment,Call,Integration};
-use App\Services\CalcomService;
+use App\Services\CalcomV2Service;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,7 +15,7 @@ class ProcessRetellCallJob implements ShouldQueue
     use Dispatchable, Queueable, SerializesModels;
     public function __construct(private array $payload){}
 
-    public function handle(CalcomService $cal): void
+    public function handle(CalcomV2Service $cal): void
     {
         $call = Call::create([
             'external_id'=>$this->payload['call_id']??null,

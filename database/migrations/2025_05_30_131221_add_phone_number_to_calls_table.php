@@ -1,17 +1,17 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up()
     {
         Schema::table('calls', function (Blueprint $table) {
             // Felder die der Controller erwartet, aber möglicherweise fehlen
             if (!Schema::hasColumn('calls', 'phone_number')) {
-                $table->string('phone_number')->nullable()->after('call_id');
+                $table->string('phone_number')->nullable();
             }
             if (!Schema::hasColumn('calls', 'call_time')) {
                 $table->timestamp('call_time')->nullable();
@@ -41,7 +41,7 @@ return new class extends Migration
                 $table->text('transcript')->nullable();
             }
             if (!Schema::hasColumn('calls', 'raw_data')) {
-                $table->json('raw_data')->nullable();
+                $this->addJsonColumn($table, 'raw_data', true);
             }
             
             // Kundenbezogene Felder

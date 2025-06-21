@@ -47,7 +47,7 @@ class RecentAppointments extends TableWidget
                         Carbon::parse($record->starts_at)->diffForHumans()
                     )
                     ->sortable()
-                    ->icon('heroicon-m-clock')
+                    ->icon('heroicon-o-clock')
                     ->iconColor(fn (Appointment $record): string => 
                         Carbon::parse($record->starts_at)->isToday() ? 'warning' : 'gray'
                     ),
@@ -97,7 +97,7 @@ class RecentAppointments extends TableWidget
             ->actions([
                 Tables\Actions\Action::make('confirm')
                     ->label('Bestätigen')
-                    ->icon('heroicon-m-check')
+                    ->icon('heroicon-o-check')
                     ->color('success')
                     ->visible(fn (Appointment $record): bool => 
                         $record->status === 'scheduled'
@@ -109,14 +109,14 @@ class RecentAppointments extends TableWidget
                     
                 Tables\Actions\ViewAction::make()
                     ->label('Details')
-                    ->icon('heroicon-m-eye')
+                    ->icon('heroicon-o-eye')
                     ->iconButton()
                     ->tooltip('Details anzeigen'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkAction::make('confirm_selected')
                     ->label('Ausgewählte bestätigen')
-                    ->icon('heroicon-m-check')
+                    ->icon('heroicon-o-check')
                     ->color('success')
                     ->requiresConfirmation()
                     ->action(fn ($records) => $records->each->update(['status' => 'confirmed'])),

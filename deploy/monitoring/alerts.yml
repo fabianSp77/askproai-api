@@ -1,0 +1,150 @@
+# Prometheus Alert Rules for AskProAI
+# Version: 1.0
+# Date: 2025-06-18
+
+groups:
+  - name: askproai_alerts
+    interval: 30s
+    rules:
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: |
+          (sum(rate(askproai_http_requests_total{status=~"5.."}[5m])) 
+          / sum(rate(askproai_http_requests_total[5m]))) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: askproai
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+          
+      # Slow Response Time
+      - alert: SlowResponseTime
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(askproai_http_request_duration_seconds_bucket[5m])) 
+            by (le, method, endpoint)) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: askproai
+        annotations:
+          summary: "Slow response time detected"
+          description: "95th percentile response time is {{ $value }}s for {{ $labels.method }} {{ $labels.endpoint }}"
+          
+      # High Queue Size
+      - alert: HighQueueSize
+        expr: askproai_queue_size > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: askproai
+        annotations:
+          summary: "Queue backlog detected"
+          description: "Queue {{ $labels.queue }} has {{ $value }} pending jobs"
+          
+      # Database Connection Pool Exhausted
+      - alert: DatabaseConnectionPoolExhausted
+        expr: askproai_database_connections / 100 > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          service: askproai
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "{{ $value | humanizePercentage }} of database connections are in use"
+          
+      # Webhook Processing Failures
+      - alert: WebhookProcessingFailures
+        expr: |
+          sum(rate(askproai_webhooks_total{status="failed"}[5m])) 
+          / sum(rate(askproai_webhooks_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: askproai
+        annotations:
+          summary: "High webhook failure rate"
+          description: "{{ $value | humanizePercentage }} of webhooks are failing for provider {{ $labels.provider }}"
+          
+      # Cal.com API Down
+      - alert: CalcomAPIDown
+        expr: up{job="askproai", endpoint="/api/health/calcom"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: calcom
+        annotations:
+          summary: "Cal.com API is unreachable"
+          description: "Cal.com health check has been failing for 5 minutes"
+          
+      # No Bookings
+      - alert: NoBookingsCreated
+        expr: sum(rate(askproai_bookings_total[1h])) == 0
+        for: 1h
+        labels:
+          severity: warning
+          service: askproai
+        annotations:
+          summary: "No bookings created in the last hour"
+          description: "The system hasn't created any bookings for 1 hour"
+          
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: |
+          (node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes) 
+          / node_memory_MemTotal_bytes > 0.9
+        for: 10m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+          
+      # Disk Space Low
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"}) 
+          / node_filesystem_size_bytes{mountpoint="/"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "Disk space running low"
+          description: "Disk usage is {{ $value | humanizePercentage }} on root partition"
+          
+      # MySQL Down
+      - alert: MySQLDown
+        expr: up{job="mysql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: mysql
+        annotations:
+          summary: "MySQL is down"
+          description: "MySQL has been unreachable for 1 minute"
+          
+      # Redis Down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis has been unreachable for 1 minute"
+          
+      # SSL Certificate Expiry
+      - alert: SSLCertificateExpiringSoon
+        expr: probe_ssl_earliest_cert_expiry - time() < 86400 * 7
+        for: 1h
+        labels:
+          severity: warning
+          service: ssl
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}"

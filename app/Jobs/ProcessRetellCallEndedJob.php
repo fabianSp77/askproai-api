@@ -23,14 +23,14 @@ class ProcessRetellCallEndedJob implements ShouldQueue
     public $backoff = [10, 30, 60];
     
     protected array $data;
-    protected ?int $webhookEventId;
-    protected ?string $correlationId;
+    protected ?int $webhookEventId = null;
+    protected ?string $correlationId = null;
     
     public function __construct(array $data, ?int $webhookEventId = null, ?string $correlationId = null)
     {
         $this->data = $data;
         $this->webhookEventId = $webhookEventId;
-        $this->correlationId = $correlationId;
+        $this->correlationId = $correlationId ?? \Illuminate\Support\Str::uuid()->toString();
         $this->queue = 'webhooks';
     }
 
@@ -50,6 +50,24 @@ class ProcessRetellCallEndedJob implements ShouldQueue
         }
 
         try {
+            // Resolve company context first to set tenant scope
+            $callData = $this->data['call'] ?? $this->data;
+            $resolver = new PhoneNumberResolver();
+            $resolved = $resolver->resolveFromWebhook($callData);
+            
+            if ($resolved['company_id']) {
+                // Set the company context for this job
+                app()->instance('current_company_id', $resolved['company_id']);
+                Log::info('Set company context for webhook processing', [
+                    'company_id' => $resolved['company_id'],
+                    'resolution_method' => $resolved['resolution_method'] ?? 'unknown'
+                ]);
+            } else {
+                Log::warning('Could not resolve company context from webhook', [
+                    'call_id' => $callData['call_id'] ?? 'unknown'
+                ]);
+            }
+            
             // Store raw webhook data
             $this->storeWebhookRecord();
             
@@ -205,6 +223,7 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             $attributes['details'] = $details;
         }
         
+        // Create or update call (tenant context already set in handle method)
         return Call::updateOrCreate(
             ['retell_call_id' => $callId],
             $attributes

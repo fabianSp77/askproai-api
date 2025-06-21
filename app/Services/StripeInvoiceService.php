@@ -10,16 +10,22 @@ use App\Models\BillingPeriod;
 use Illuminate\Support\Facades\Log;
 use Stripe\StripeClient;
 use Stripe\Exception\ApiErrorException;
+use App\Services\TaxService;
+use App\Services\InvoiceComplianceService;
 
 class StripeInvoiceService
 {
     protected StripeClient $stripe;
     protected PricingService $pricingService;
+    protected TaxService $taxService;
+    protected InvoiceComplianceService $complianceService;
 
     public function __construct()
     {
         $this->stripe = new StripeClient(config('services.stripe.secret'));
         $this->pricingService = new PricingService();
+        $this->taxService = new TaxService();
+        $this->complianceService = new InvoiceComplianceService();
     }
 
     /**
@@ -99,11 +105,11 @@ class StripeInvoiceService
                 throw new \Exception('Could not create/update Stripe customer');
             }
 
-            // Create local invoice first
+            // Create local invoice first with compliant invoice number
             $invoice = Invoice::create([
                 'company_id' => $company->id,
                 'branch_id' => $billingPeriod->branch_id,
-                'invoice_number' => Invoice::generateInvoiceNumber($company),
+                'invoice_number' => $this->complianceService->generateCompliantInvoiceNumber($company),
                 'status' => Invoice::STATUS_DRAFT,
                 'subtotal' => 0,
                 'tax_amount' => 0,
@@ -113,6 +119,11 @@ class StripeInvoiceService
                 'due_date' => $this->calculateDueDate($company),
                 'billing_reason' => Invoice::REASON_SUBSCRIPTION_CYCLE,
                 'auto_advance' => true,
+                'tax_configuration' => [
+                    'is_small_business' => $company->is_small_business,
+                    'tax_number' => $company->tax_number,
+                    'vat_id' => $company->vat_id,
+                ],
             ]);
 
             // Create Stripe invoice
@@ -316,17 +327,11 @@ class StripeInvoiceService
                 ]);
         }
 
-        // Calculate tax (19% German VAT)
-        $taxRate = 19; // TODO: Make this configurable
-        $taxAmount = $subtotal * ($taxRate / 100);
-        $total = $subtotal + $taxAmount;
-
-        // Update invoice totals
-        $invoice->update([
-            'subtotal' => $subtotal,
-            'tax_amount' => $taxAmount,
-            'total' => $total,
-        ]);
+        // Calculate taxes using TaxService
+        $taxCalculation = $this->taxService->calculateInvoiceTaxes($invoice);
+        
+        // The calculateInvoiceTaxes method already updates the invoice
+        // with correct totals and tax note
     }
 
     /**
@@ -345,8 +350,17 @@ class StripeInvoiceService
     ): InvoiceItem {
         $amount = $quantity * $unitPrice;
         
-        // Create Stripe invoice item
+        // Get tax rate for this item
+        $taxInfo = $this->taxService->getDeterminedTaxRate($invoice->company);
+        
+        // Create Stripe invoice item with dynamic tax rate
         try {
+            // Create or get Stripe tax rate
+            $stripeTaxRateId = null;
+            if (!$invoice->company->is_small_business && !$invoice->is_reverse_charge) {
+                $stripeTaxRateId = $this->getOrCreateStripeTaxRate($invoice->company, $taxInfo['rate'], $taxInfo['name']);
+            }
+            
             $stripeItem = $this->stripe->invoiceItems->create([
                 'customer' => $invoice->company->stripe_customer_id,
                 'invoice' => $stripeInvoiceId,
@@ -354,6 +368,7 @@ class StripeInvoiceService
                 'quantity' => $quantity,
                 'unit_amount_decimal' => $unitPrice * 100, // Convert to cents
                 'currency' => 'eur',
+                'tax_rates' => $stripeTaxRateId ? [$stripeTaxRateId] : [],
                 'metadata' => [
                     'type' => $type,
                     'unit' => $unit,
@@ -379,7 +394,8 @@ class StripeInvoiceService
             'unit' => $unit,
             'unit_price' => $unitPrice,
             'amount' => $amount,
-            'tax_rate' => 19, // TODO: Make configurable
+            'tax_rate' => $taxInfo['rate'],
+            'tax_rate_id' => $taxInfo['rate_id'] ?? null,
             'period_start' => $periodStart,
             'period_end' => $periodEnd,
         ]);
@@ -598,12 +614,8 @@ class StripeInvoiceService
             }
 
             // Update totals
-            $taxAmount = $subtotal * 0.19; // 19% VAT
-            $invoice->update([
-                'subtotal' => $subtotal,
-                'tax_amount' => $taxAmount,
-                'total' => $subtotal + $taxAmount,
-            ]);
+            // Calculate taxes
+            $this->taxService->calculateInvoiceTaxes($invoice);
 
             return $invoice;
 
@@ -617,6 +629,45 @@ class StripeInvoiceService
                 $invoice->delete();
             }
             
+            return null;
+        }
+    }
+
+    /**
+     * Get or create Stripe tax rate
+     */
+    protected function getOrCreateStripeTaxRate(Company $company, float $rate, string $name): ?string
+    {
+        try {
+            // Check if we already have a Stripe tax rate ID stored
+            $taxRateRecord = \DB::table('tax_rates')
+                ->where('company_id', $company->id)
+                ->where('rate', $rate)
+                ->first();
+
+            if ($taxRateRecord && $taxRateRecord->stripe_tax_rate_id) {
+                return $taxRateRecord->stripe_tax_rate_id;
+            }
+
+            // Create new Stripe tax rate
+            $stripeTaxRateId = $this->taxService->syncStripeEUtaxRate($company, $rate, $name);
+
+            // Update local record
+            if ($stripeTaxRateId && $taxRateRecord) {
+                \DB::table('tax_rates')
+                    ->where('id', $taxRateRecord->id)
+                    ->update(['stripe_tax_rate_id' => $stripeTaxRateId]);
+            }
+
+            return $stripeTaxRateId;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get/create Stripe tax rate', [
+                'company_id' => $company->id,
+                'rate' => $rate,
+                'error' => $e->getMessage(),
+            ]);
+
             return null;
         }
     }

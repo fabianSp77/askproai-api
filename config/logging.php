@@ -36,7 +36,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['daily'],
+            'channels' => ['daily', 'sentry'],
             'ignore_exceptions' => false,
         ],
 
@@ -178,6 +178,54 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        // Sentry integration
+        'sentry' => [
+            'driver' => 'sentry',
+            'level' => env('LOG_LEVEL', 'error'),
+            'bubble' => true,
+        ],
+
+        // Production monitoring channels
+        'monitoring' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/monitoring.log'),
+            'level' => env('LOG_LEVEL_MONITORING', 'debug'),
+            'days' => 14,
+            'permission' => 0664,
+        ],
+
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => env('LOG_LEVEL_SECURITY', 'warning'),
+            'days' => 30,
+            'permission' => 0664,
+        ],
+
+        'performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/performance.log'),
+            'level' => env('LOG_LEVEL_PERFORMANCE', 'info'),
+            'days' => 7,
+            'permission' => 0664,
+        ],
+
+        'stripe' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/stripe.log'),
+            'level' => env('LOG_LEVEL_STRIPE', 'info'),
+            'days' => 30,
+            'permission' => 0664,
+        ],
+
+        'portal' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/portal.log'),
+            'level' => env('LOG_LEVEL_PORTAL', 'info'),
+            'days' => 14,
+            'permission' => 0664,
         ],
     ],
 

@@ -27,7 +27,7 @@ class OnboardingWizard extends Page
     protected static ?string $title = 'AskProAI Einrichtungsassistent';
     protected static ?string $slug = 'onboarding';
     protected static ?int $navigationSort = 0;
-    protected static ?string $navigationGroup = 'System & Monitoring';
+    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
     
     protected static string $view = 'filament.admin.pages.onboarding-wizard';
 
@@ -662,7 +662,7 @@ class OnboardingWizard extends Page
                                     Forms\Components\Actions::make([
                                         Forms\Components\Actions\Action::make('go_to_dashboard')
                                             ->label('Zum Dashboard')
-                                            ->action(fn () => redirect()->route('filament.admin.pages.simple-dashboard'))
+                                            ->action(fn () => redirect('/admin'))
                                             ->color('primary'),
                                     ])
                                     ->fullWidth(),
@@ -785,7 +785,7 @@ class OnboardingWizard extends Page
         if ($this->currentStep < count($this->getSteps())) {
             $this->currentStep++;
         } else {
-            redirect()->route('filament.admin.pages.simple-dashboard');
+            redirect('/admin');
         }
     }
 

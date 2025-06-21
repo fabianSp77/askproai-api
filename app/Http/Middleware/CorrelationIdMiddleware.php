@@ -38,8 +38,10 @@ class CorrelationIdMiddleware
         // Process the request
         $response = $next($request);
 
-        // Add correlation ID to response headers
-        $response->headers->set('X-Correlation-ID', $correlationId);
+        // Add correlation ID to response headers if response supports it
+        if ($response instanceof \Illuminate\Http\Response || $response instanceof \Symfony\Component\HttpFoundation\Response) {
+            $response->headers->set('X-Correlation-ID', $correlationId);
+        }
 
         return $response;
     }

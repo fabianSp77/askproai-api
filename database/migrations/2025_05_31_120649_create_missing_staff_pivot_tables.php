@@ -1,16 +1,16 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
         // Erstelle staff_branches falls nicht vorhanden
         if (!Schema::hasTable('staff_branches')) {
-            Schema::create('staff_branches', function (Blueprint $table) {
+            $this->createTableIfNotExists('staff_branches', function (Blueprint $table) {
                 $table->id();
                 $table->uuid('staff_id');
                 $table->uuid('branch_id');
@@ -39,7 +39,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('staff_branches');
+        $this->dropTableIfExists('staff_branches');
         Schema::dropIfExists('staff_services');
     }
 };

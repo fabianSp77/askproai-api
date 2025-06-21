@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('unified_event_types', function (Blueprint $table) {
-            $table->enum('assignment_status', ['assigned', 'unassigned'])->default('unassigned')->after('is_active');
+            $table->enum('assignment_status', ['assigned', 'unassigned'])->default('unassigned');
             $table->index('assignment_status');
         });
 

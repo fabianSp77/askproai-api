@@ -12,7 +12,7 @@ Route::get('/test-manual-login', function () {
         return response()->json([
             'logged_in' => true,
             'user' => $user->email,
-            'redirect' => route('filament.admin.pages.simple-dashboard')
+            'redirect' => '/admin'
         ]);
     }
     

@@ -89,6 +89,9 @@ class OnboardingProgressWidget extends Widget
 
     public static function canView(): bool
     {
+        // Temporarily disable widget to fix 500 error
+        return false;
+        
         $company = Auth::user()->company ?? null;
         if (!$company) {
             return false;

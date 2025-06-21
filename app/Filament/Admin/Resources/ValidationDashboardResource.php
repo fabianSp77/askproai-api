@@ -12,7 +12,7 @@ class ValidationDashboardResource extends Resource
 {
     protected static ?string $model = ValidationResult::class;
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
-    protected static ?string $navigationGroup = 'System & Monitoring';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static ?string $navigationLabel = 'Validation Dashboard';
     protected static ?string $slug = 'validation-dashboard';
     protected static ?int $navigationSort = 40;

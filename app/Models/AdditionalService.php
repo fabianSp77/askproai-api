@@ -23,7 +23,7 @@ class AdditionalService extends TenantModel
         'metadata',
     ];
 
-    protected $casts = {
+    protected $casts = [
         'metadata' => 'array',
         'price' => 'decimal:2',
         'is_active' => 'boolean',

@@ -25,7 +25,12 @@ class UnifiedEventTypeResource extends Resource
     protected static ?string $modelLabel = 'Event Type';
     protected static ?string $pluralModelLabel = 'Event Types';
     protected static ?int $navigationSort = 15;
-    protected static ?string $navigationGroup = 'Kalender & Events';
+    protected static ?string $navigationGroup = 'Personal & Services';
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Hide from navigation as we use wizards now
+    }
 
     public static function form(Form $form): Form
     {

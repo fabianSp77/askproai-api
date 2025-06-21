@@ -14,7 +14,7 @@ return new class extends Migration
         if (Schema::hasTable('staff')) {
             Schema::table('staff', function (Blueprint $table) {
                 if (!Schema::hasColumn('staff', 'max_daily_appointments')) {
-                    $table->integer('max_daily_appointments')->default(8)->after('active');
+                    $table->integer('max_daily_appointments')->default(8);
                 }
             });
         }

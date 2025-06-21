@@ -13,9 +13,14 @@ class SystemCockpitSimple extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?string $navigationLabel = 'System Overview';
-    protected static ?string $navigationGroup = 'System & Monitoring';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static string $view = 'filament.admin.pages.system-cockpit-simple';
     protected static ?int $navigationSort = 1;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - redundante Monitoring-Seite
+    }
     
     public $callsToday = 0;
     public $appointmentsToday = 0;

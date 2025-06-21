@@ -9,11 +9,11 @@ class AddRetellColumnsToCallsTable extends Migration
     public function up()
     {
         Schema::table('calls', function (Blueprint $table) {
-            $table->string('audio_url')->nullable()->after('transcript');
-            $table->string('disconnection_reason')->nullable()->after('audio_url');
-            $table->text('summary')->nullable()->after('disconnection_reason');
-            $table->string('sentiment')->nullable()->after('summary');
-            $table->string('public_log_url')->nullable()->after('sentiment');
+            $table->string('audio_url')->nullable();
+            $table->string('disconnection_reason')->nullable();
+            $table->text('summary')->nullable();
+            $table->string('sentiment')->nullable();
+            $table->string('public_log_url')->nullable();
         });
     }
 

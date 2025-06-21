@@ -3,65 +3,135 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | Booking Configuration
+    | Default Branch Selection Strategy
     |--------------------------------------------------------------------------
+    |
+    | This option controls the default strategy used to select branches
+    | when processing bookings. Available options:
+    | - 'nearest': Select branches based on geographic proximity
+    | - 'first_available': Select branch with earliest available slot
+    | - 'load_balanced': Distribute bookings evenly across branches
+    |
     */
-
-    'slot_duration' => env('BOOKING_SLOT_DURATION', 15), // minutes
-    'buffer_time' => env('BOOKING_BUFFER_TIME', 5), // minutes between appointments
-    'min_advance_booking' => env('BOOKING_MIN_ADVANCE', 120), // minutes
-    'max_advance_booking' => env('BOOKING_MAX_ADVANCE', 90), // days
+    'default_branch_strategy' => env('BOOKING_BRANCH_STRATEGY', 'nearest'),
     
-    'business_hours' => [
-        'start' => env('BUSINESS_HOURS_START', '08:00'),
-        'end' => env('BUSINESS_HOURS_END', '20:00'),
+    /*
+    |--------------------------------------------------------------------------
+    | Booking Time Constraints
+    |--------------------------------------------------------------------------
+    |
+    | Configure various time-related constraints for bookings
+    |
+    */
+    'time_constraints' => [
+        // Minimum advance booking time (in minutes)
+        'min_advance_booking' => env('BOOKING_MIN_ADVANCE', 60),
+        
+        // Maximum advance booking time (in days)
+        'max_advance_booking' => env('BOOKING_MAX_ADVANCE', 90),
+        
+        // Default appointment duration (in minutes)
+        'default_duration' => env('BOOKING_DEFAULT_DURATION', 30),
+        
+        // Buffer time between appointments (in minutes)
+        'buffer_time' => env('BOOKING_BUFFER_TIME', 15),
+        
+        // Time slot interval (in minutes)
+        'slot_interval' => env('BOOKING_SLOT_INTERVAL', 15),
     ],
     
-    'notification' => [
-        'reminders' => [
-            '24h' => env('REMINDER_24H_ENABLED', true),
-            '2h' => env('REMINDER_2H_ENABLED', true),
-            '30m' => env('REMINDER_30M_ENABLED', true),
-        ],
-        'channels' => [
-            'email' => env('NOTIFICATION_EMAIL_ENABLED', true),
-            'sms' => env('NOTIFICATION_SMS_ENABLED', true),
-            'push' => env('NOTIFICATION_PUSH_ENABLED', true),
-            'whatsapp' => env('NOTIFICATION_WHATSAPP_ENABLED', false),
-        ],
-        'sms_quiet_hours' => [
-            'start' => env('SMS_QUIET_START', '21:00'),
-            'end' => env('SMS_QUIET_END', '09:00'),
-        ],
-        'daily_limits' => [
-            'sms' => env('DAILY_SMS_LIMIT', 3),
-            'email' => env('DAILY_EMAIL_LIMIT', 10),
-        ],
+    /*
+    |--------------------------------------------------------------------------
+    | Availability Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configure how availability is calculated and cached
+    |
+    */
+    'availability' => [
+        // Cache TTL for availability data (in seconds)
+        'cache_ttl' => env('BOOKING_AVAILABILITY_CACHE_TTL', 300),
+        
+        // Number of alternative slots to suggest
+        'max_alternatives' => env('BOOKING_MAX_ALTERNATIVES', 5),
+        
+        // Days to search for alternatives
+        'alternative_search_days' => env('BOOKING_ALTERNATIVE_DAYS', 7),
     ],
     
-    'capacity' => [
-        'slots_per_day' => env('CAPACITY_SLOTS_PER_DAY', 8),
-        'max_concurrent' => env('CAPACITY_MAX_CONCURRENT', 1),
+    /*
+    |--------------------------------------------------------------------------
+    | Multi-Location Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configure multi-location booking behavior
+    |
+    */
+    'multi_location' => [
+        // Enable cross-branch booking
+        'enable_cross_branch' => env('BOOKING_CROSS_BRANCH', true),
+        
+        // Maximum distance for branch suggestions (in km)
+        'max_distance_km' => env('BOOKING_MAX_DISTANCE', 50),
+        
+        // Consider staff who can work at multiple branches
+        'enable_mobile_staff' => env('BOOKING_MOBILE_STAFF', true),
     ],
     
-    'rate_limits' => [
-        'event_types' => [
-            'attempts' => env('RATE_LIMIT_EVENT_TYPES', 60),
-            'decay' => env('RATE_LIMIT_EVENT_TYPES_DECAY', 60), // seconds
-        ],
-        'availability' => [
-            'attempts' => env('RATE_LIMIT_AVAILABILITY', 30),
-            'decay' => env('RATE_LIMIT_AVAILABILITY_DECAY', 60),
-        ],
-        'booking' => [
-            'attempts' => env('RATE_LIMIT_BOOKING', 5),
-            'decay' => env('RATE_LIMIT_BOOKING_DECAY', 300),
-        ],
+    /*
+    |--------------------------------------------------------------------------
+    | Customer Preferences
+    |--------------------------------------------------------------------------
+    |
+    | Configure how customer preferences are handled
+    |
+    */
+    'customer_preferences' => [
+        // Remember customer's preferred branch
+        'remember_branch' => env('BOOKING_REMEMBER_BRANCH', true),
+        
+        // Remember customer's preferred staff
+        'remember_staff' => env('BOOKING_REMEMBER_STAFF', true),
+        
+        // Weight for preference matching (0-1)
+        'preference_weight' => env('BOOKING_PREFERENCE_WEIGHT', 0.7),
     ],
     
-    'cache' => [
-        'availability_ttl' => env('CACHE_AVAILABILITY_TTL', 300), // seconds
-        'event_types_ttl' => env('CACHE_EVENT_TYPES_TTL', 3600),
-        'working_hours_ttl' => env('CACHE_WORKING_HOURS_TTL', 86400),
+    /*
+    |--------------------------------------------------------------------------
+    | Notification Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configure booking notification behavior
+    |
+    */
+    'notifications' => [
+        // Send confirmation to customer
+        'send_customer_confirmation' => env('BOOKING_NOTIFY_CUSTOMER', true),
+        
+        // Send notification to staff
+        'send_staff_notification' => env('BOOKING_NOTIFY_STAFF', true),
+        
+        // Send notification to branch manager
+        'send_manager_notification' => env('BOOKING_NOTIFY_MANAGER', false),
+    ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Debug Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configure debug and logging behavior
+    |
+    */
+    'debug' => [
+        // Enable detailed booking flow logging
+        'enable_detailed_logging' => env('BOOKING_DEBUG', false),
+        
+        // Log availability calculations
+        'log_availability' => env('BOOKING_LOG_AVAILABILITY', false),
+        
+        // Log branch selection process
+        'log_branch_selection' => env('BOOKING_LOG_BRANCHES', false),
     ],
 ];

@@ -15,17 +15,17 @@ class StatsOverviewWidget extends BaseWidget
         return [
             Stat::make('Kunden', Customer::count())
                 ->description('Gesamt-Anzahl der Kunden')
-                ->descriptionIcon('heroicon-m-users')
+                ->descriptionIcon('heroicon-o-users')
                 ->color('success'),
             
             Stat::make('Neue Kunden', Customer::whereMonth('created_at', now()->month)->count())
                 ->description('In diesem Monat')
-                ->descriptionIcon('heroicon-m-user-plus')
+                ->descriptionIcon('heroicon-o-user-plus')
                 ->color('primary'),
                 
             Stat::make('Unternehmen', Company::count())
                 ->description('Registrierte Firmen')
-                ->descriptionIcon('heroicon-m-building-office')
+                ->descriptionIcon('heroicon-o-building-office')
                 ->color('warning'),
         ];
     }

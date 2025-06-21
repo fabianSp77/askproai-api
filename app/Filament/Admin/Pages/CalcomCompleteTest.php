@@ -30,9 +30,14 @@ class CalcomCompleteTest extends Page implements HasForms
     use InteractsWithForms;
     
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
-    protected static ?string $navigationGroup = 'System';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static ?string $navigationLabel = 'Cal.com Complete Test';
     protected static ?int $navigationSort = 12;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
     
     protected static string $view = 'filament.admin.pages.calcom-complete-test';
     

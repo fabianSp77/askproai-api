@@ -11,7 +11,7 @@ class WebhookAnalysis extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?string $navigationLabel = 'Webhook Analyse';
-    protected static ?string $navigationGroup = 'System & Monitoring';
+    protected static ?string $navigationGroup = 'System & Überwachung';
     protected static string $view = 'filament.admin.pages.webhook-analysis';
     
     public function mount(): void
@@ -76,7 +76,7 @@ class WebhookAnalysis extends Page
                 if (empty($call->duration_sec)) $missing[] = 'duration_sec';
                 if (empty($call->transcript)) $missing[] = 'transcript';
                 if (empty($call->branch_id)) $missing[] = 'branch_id';
-                if (empty($call->analysis) || count($call->analysis) === 0) $missing[] = 'analysis';
+                if (empty($call->analysis) || (is_array($call->analysis) && count($call->analysis) === 0)) $missing[] = 'analysis';
                 
                 return [
                     'id' => $call->id,

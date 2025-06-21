@@ -19,7 +19,7 @@ class ThreatDetectionMiddleware
     /**
      * Handle an incoming request.
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next)
     {
         // Analyze request for threats
         $threats = $this->detector->analyze($request);
@@ -78,18 +78,21 @@ class ThreatDetectionMiddleware
     /**
      * Add security headers to response
      */
-    private function addSecurityHeaders(Response $response): Response
+    private function addSecurityHeaders($response)
     {
-        $headers = [
-            'X-Content-Type-Options' => 'nosniff',
-            'X-Frame-Options' => 'DENY',
-            'X-XSS-Protection' => '1; mode=block',
-            'Referrer-Policy' => 'strict-origin-when-cross-origin',
-            'Content-Security-Policy' => "default-src 'self' http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http: https:; style-src 'self' 'unsafe-inline' http: https:; connect-src 'self' http: https: ws: wss:;",
-        ];
+        // Only add headers if response supports it
+        if ($response instanceof \Illuminate\Http\Response || $response instanceof \Symfony\Component\HttpFoundation\Response) {
+            $headers = [
+                'X-Content-Type-Options' => 'nosniff',
+                'X-Frame-Options' => 'DENY',
+                'X-XSS-Protection' => '1; mode=block',
+                'Referrer-Policy' => 'strict-origin-when-cross-origin',
+                'Content-Security-Policy' => "default-src 'self' http: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' http: https:; style-src 'self' 'unsafe-inline' http: https:; connect-src 'self' http: https: ws: wss:;",
+            ];
 
-        foreach ($headers as $key => $value) {
-            $response->headers->set($key, $value);
+            foreach ($headers as $key => $value) {
+                $response->headers->set($key, $value);
+            }
         }
 
         return $response;

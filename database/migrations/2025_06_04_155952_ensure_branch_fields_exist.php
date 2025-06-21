@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::table('branches', function (Blueprint $table) {
             // Prüfe und füge fehlende Felder hinzu
             if (!Schema::hasColumn('branches', 'website')) {
-                $table->string('website')->nullable()->after('notification_email');
+                $table->string('website')->nullable();
             }
             
             if (!Schema::hasColumn('branches', 'country')) {
-                $table->string('country')->default('Deutschland')->after('postal_code');
+                $table->string('country')->default('Deutschland');
             }
         });
     }

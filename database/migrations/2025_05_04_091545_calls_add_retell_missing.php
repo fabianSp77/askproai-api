@@ -1,28 +1,28 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends CompatibleMigration {
     public function up(): void
     {
         Schema::table('calls', function (Blueprint $table) {
             // nur anlegen, wenn Spalte noch fehlt
             if (!Schema::hasColumn('calls', 'call_status')) {
-                $table->string('call_status')->nullable()->after('external_id');
+                $table->string('call_status')->nullable();
             }
             if (!Schema::hasColumn('calls', 'call_successful')) {
-                $table->boolean('call_successful')->nullable()->after('call_status');
+                $table->boolean('call_successful')->nullable();
             }
             if (!Schema::hasColumn('calls', 'duration_sec')) {
-                $table->unsignedInteger('duration_sec')->nullable()->after('call_successful');
+                $table->unsignedInteger('duration_sec')->nullable();
             }
             if (!Schema::hasColumn('calls', 'analysis')) {
-                $table->json('analysis')->nullable()->after('duration_sec');
+                $this->addJsonColumn($table, 'analysis', true);
             }
             if (!Schema::hasColumn('calls', 'transcript')) {
-                $table->longText('transcript')->nullable()->after('analysis');
+                $table->longText('transcript')->nullable();
             }
         });
     }

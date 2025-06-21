@@ -2,7 +2,7 @@
     <div class="space-y-6">
         <!-- Progress Steps -->
         <div class="flex items-center justify-center space-x-4">
-            @for ($i = 1; $i <= 4; $i++)
+            @for ($i = 1; $i <= $totalSteps; $i++)
                 <div class="flex items-center">
                     <div @class([
                         'w-10 h-10 rounded-full flex items-center justify-center font-semibold',
@@ -11,7 +11,7 @@
                     ])>
                         {{ $i }}
                     </div>
-                    @if ($i < 4)
+                    @if ($i < $totalSteps)
                         <div @class([
                             'w-20 h-0.5 mx-2',
                             'bg-primary-600' => $i < $currentStep,
@@ -165,7 +165,62 @@
                 </div>
                 
             @elseif ($currentStep === 4)
-                <!-- Step 4: Import Confirmation -->
+                <!-- Step 4: Staff Mapping -->
+                <div class="space-y-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Ordnen Sie Cal.com Benutzer zu Ihren Mitarbeitern zu. Sie können existierende Mitarbeiter auswählen oder neue erstellen.
+                    </p>
+                    
+                    @if(count($staffMappings) > 0)
+                        <div class="space-y-3">
+                            @foreach($staffMappings as $index => $mapping)
+                                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Cal.com Benutzer</label>
+                                            <p class="text-sm text-gray-900 dark:text-gray-100">{{ $mapping['calcom_user_name'] }}</p>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Mitarbeiter zuordnen</label>
+                                            <select wire:model="staffMappings.{{ $index }}.staff_id"
+                                                    :disabled="$mapping['create_new'] ?? false"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 shadow-sm">
+                                                <option value="">-- Keine Zuordnung --</option>
+                                                @foreach(\App\Models\Staff::where('company_id', $company_id)->where('active', true)->orderBy('name')->get() as $staff)
+                                                    <option value="{{ $staff->id }}">{{ $staff->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" 
+                                                       wire:model="staffMappings.{{ $index }}.create_new"
+                                                       class="rounded mr-2">
+                                                <span class="text-sm text-gray-700 dark:text-gray-300">Neuen Mitarbeiter erstellen</span>
+                                            </label>
+                                            @if($mapping['create_new'] ?? false)
+                                                <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+                                                    Wird als neuer Mitarbeiter angelegt
+                                                </p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                                Keine Cal.com Benutzer in den ausgewählten Event-Types gefunden. Sie können mit dem Import fortfahren.
+                            </p>
+                        </div>
+                    @endif
+                </div>
+                
+            @elseif ($currentStep === 5)
+                <!-- Step 5: Import Confirmation -->
                 <div class="space-y-4">
                     <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                         <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">Import-Zusammenfassung</h3>
@@ -205,14 +260,51 @@
                         </ul>
                     </div>
                     
+                    @if(count($staffMappings) > 0)
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mitarbeiter-Zuordnungen:</h4>
+                            <ul class="space-y-1">
+                                @foreach($staffMappings as $mapping)
+                                    @if($mapping['staff_id'] || $mapping['create_new'])
+                                        <li class="text-sm text-gray-600 dark:text-gray-400">
+                                            • {{ explode(' (', $mapping['calcom_user_name'])[0] }} → 
+                                            @if($mapping['create_new'])
+                                                <span class="text-green-600 dark:text-green-400">Neuer Mitarbeiter wird erstellt</span>
+                                            @else
+                                                {{ \App\Models\Staff::find($mapping['staff_id'])?->name ?? 'Unbekannt' }}
+                                            @endif
+                                        </li>
+                                    @endif
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    
                     <div class="bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
                         <p class="text-sm text-amber-800 dark:text-amber-200">
                             <strong>Hinweis:</strong> Nach dem Import werden die Event-Types der ausgewählten Filiale zugeordnet. 
-                            Mitarbeiter-Zuordnungen können Sie anschließend über die Mitarbeiter-Zuordnungsseite vornehmen.
+                            @if(count($staffMappings) > 0)
+                                Die Mitarbeiter-Zuordnungen werden automatisch erstellt.
+                            @else
+                                Mitarbeiter-Zuordnungen können Sie anschließend über die Mitarbeiter-Zuordnungsseite vornehmen.
+                            @endif
                         </p>
                     </div>
                 </div>
             @endif
+        </div>
+        
+        <!-- Loading Indicator -->
+        <div wire:loading wire:target="nextStep,previousStep,executeImport" class="fixed top-0 left-0 right-0 z-50">
+            <div class="bg-primary-500 text-white text-center py-2">
+                <div class="flex items-center justify-center space-x-2">
+                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Verarbeitung läuft...</span>
+                </div>
+            </div>
         </div>
         
         <!-- Navigation Buttons -->
@@ -240,7 +332,7 @@
             </div>
             
             <div>
-                @if($currentStep < 4)
+                @if($currentStep < $totalSteps)
                     <x-filament::button
                         wire:click="nextStep"
                         :disabled="!$this->canProceed"

@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -14,11 +14,11 @@ return new class extends Migration
     {
         // First check if table already exists
         if (!Schema::hasTable('business_hours_templates')) {
-            Schema::create('business_hours_templates', function (Blueprint $table) {
+            $this->createTableIfNotExists('business_hours_templates', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
                 $table->string('description')->nullable();
-                $table->json('hours');
+                $this->addJsonColumn($table, 'hours', true);
                 $table->boolean('is_default')->default(false);
                 $table->timestamps();
             });
@@ -82,6 +82,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('business_hours_templates');
+        $this->dropTableIfExists('business_hours_templates');
     }
 };

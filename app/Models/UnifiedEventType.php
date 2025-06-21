@@ -14,6 +14,7 @@ class UnifiedEventType extends Model
     protected $fillable = [
         'branch_id',
         'company_id',
+        'service_id',
         'provider',
         'external_id',
         'name',
@@ -27,7 +28,11 @@ class UnifiedEventType extends Model
         'assignment_status',
         'import_status',
         'imported_at',
-        'assigned_at'
+        'assigned_at',
+        'calcom_event_type_id',
+        'duration',
+        'raw_data',
+        'last_imported_at'
     ];
 
     /**
@@ -44,7 +49,12 @@ class UnifiedEventType extends Model
         'conflict_data' => 'array',
         'imported_at' => 'datetime',
         'assigned_at' => 'datetime',
+        'last_imported_at' => 'datetime',
         'price' => 'decimal:2',
+        'raw_data' => 'array',
+        'duration' => 'integer',
+        'duration_minutes' => 'integer',
+        'calcom_event_type_id' => 'integer'
     ];
 
     // Boot method to auto-generate slug
@@ -68,6 +78,18 @@ class UnifiedEventType extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+    
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
+    }
+    
+    public function staff()
+    {
+        return $this->belongsToMany(Staff::class, 'staff_event_types', 'event_type_id', 'staff_id')
+            ->withTimestamps()
+            ->withPivot(['is_primary', 'custom_duration', 'custom_price']);
     }
 
     // Scopes

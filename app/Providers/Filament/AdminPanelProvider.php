@@ -2,8 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Http\Middleware\Authenticate as FilamentAuthenticate;
-// use Illuminate\Session\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
@@ -17,8 +17,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Http\Responses\LoginResponse;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
+use App\Overrides\CustomStartSession;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -29,47 +28,45 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->authGuard('web')
-            ->passwordReset()
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
+            ->pages([
+                \App\Filament\Admin\Pages\Dashboard::class,
+            ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
+            ->widgets([
+                // Core Widgets
+                \App\Filament\Admin\Widgets\SystemStatsOverview::class,
+                \App\Filament\Admin\Widgets\RecentAppointments::class,
+                \App\Filament\Admin\Widgets\RecentCalls::class,
+                \App\Filament\Admin\Widgets\QuickActionsWidget::class,
+                \App\Filament\Admin\Widgets\CustomerMetricsWidget::class,
+                \App\Filament\Admin\Widgets\BranchComparisonWidget::class,
+                \App\Filament\Admin\Widgets\LiveAppointmentBoard::class,
+                \App\Filament\Admin\Widgets\RecentActivityWidget::class,
+                // Default Filament Widgets
+                Widgets\AccountWidget::class,
+                Widgets\FilamentInfoWidget::class,
+            ])
             ->middleware([
+                \App\Http\Middleware\ResponseWrapper::class, // Fix Livewire Redirector issues
+                \App\Http\Middleware\EnsureProperResponseFormat::class, // Ensure proper response format
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
-                StartSession::class,
+                CustomStartSession::class, // Use our custom StartSession that handles Livewire
+                AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                \App\Http\Middleware\DebugSession::class,
             ])
             ->authMiddleware([
-                FilamentAuthenticate::class,
+                Authenticate::class,
             ])
-            ->brandName('AskProAI Admin')
-            ->brandLogo(null)
-            ->darkMode(false)
-            ->spa(false)
-            ->maxContentWidth('full')
-            ->sidebarCollapsibleOnDesktop()
-            ->navigationGroups([
-                'Geschäftsvorgänge',
-                'Analytics',
-                'Unternehmensstruktur',
-                'Kalender & Events',
-                'Konfiguration',
-                'System & Monitoring',
-                'Entwicklung'
-            ])
-            ->renderHook(
-                'panels::scripts.after',
-                fn (): string => '<script type="module" src="' . \Illuminate\Support\Facades\Vite::asset('resources/js/column-editor-modern.js') . '"></script>'
-            )
-            ;
+            ->login();
     }
 }

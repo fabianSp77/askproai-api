@@ -16,20 +16,20 @@ return new class extends Migration
         if (!Schema::hasColumn('appointment_locks', 'branch_id')) {
             Schema::table('appointment_locks', function (Blueprint $table) {
                 // Add branch_id column after id
-                $table->uuid('branch_id')->after('id')->nullable();
+                $table->uuid('branch_id')->nullable();
             });
         }
         
-        // Check if indexes exist before adding them
-        $existingIndexes = collect(DB::select("SHOW INDEXES FROM appointment_locks"))
-            ->pluck('Key_name')
-            ->unique()
-            ->toArray();
+        // Database-agnostic index checking
+        $existingIndexes = $this->getExistingIndexes('appointment_locks');
         
         Schema::table('appointment_locks', function (Blueprint $table) use ($existingIndexes) {
             // Check if foreign key already exists
             if (!in_array('appointment_locks_branch_id_foreign', $existingIndexes)) {
-                $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
+                // Skip foreign keys in SQLite tests
+                if (config('database.default') !== 'sqlite') {
+                    $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
+                }
             }
             
             // Add new composite unique index to prevent duplicate locks
@@ -51,10 +51,7 @@ return new class extends Migration
     {
         Schema::table('appointment_locks', function (Blueprint $table) {
             // Drop the new indexes
-            $existingIndexes = collect(DB::select("SHOW INDEXES FROM appointment_locks"))
-                ->pluck('Key_name')
-                ->unique()
-                ->toArray();
+            $existingIndexes = $this->getExistingIndexes('appointment_locks');
                 
             if (in_array('unique_slot', $existingIndexes)) {
                 $table->dropUnique('unique_slot');
@@ -66,11 +63,36 @@ return new class extends Migration
             
             // Drop the branch_id column if it exists
             if (Schema::hasColumn('appointment_locks', 'branch_id')) {
-                if (in_array('appointment_locks_branch_id_foreign', $existingIndexes)) {
+                if (config('database.default') !== 'sqlite' && in_array('appointment_locks_branch_id_foreign', $existingIndexes)) {
                     $table->dropForeign(['branch_id']);
                 }
                 $table->dropColumn('branch_id');
             }
         });
+    }
+    
+    /**
+     * Get existing indexes in a database-agnostic way
+     */
+    private function getExistingIndexes($table): array
+    {
+        // SQLite doesn't support SHOW INDEXES
+        if (config('database.default') === 'sqlite') {
+            try {
+                // For SQLite, use pragma to get indexes
+                $indexes = DB::select("PRAGMA index_list('{$table}')");
+                return collect($indexes)->pluck('name')->toArray();
+            } catch (\Exception $e) {
+                return [];
+            }
+        }
+        
+        // For MySQL/MariaDB
+        try {
+            $indexes = DB::select("SHOW INDEXES FROM {$table}");
+            return collect($indexes)->pluck('Key_name')->unique()->toArray();
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 };

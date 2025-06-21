@@ -20,7 +20,7 @@ return [
 
     'store' => env('SESSION_STORE'),
 
-    'lottery' => [2, 100],
+    'lottery' => [0, 100], // Disable automatic session cleanup on requests
 
     'cookie' => env(
         'SESSION_COOKIE',

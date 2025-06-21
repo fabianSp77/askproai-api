@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,6 +12,8 @@ use App\Scopes\TenantScope;
 
 class Staff extends Model
 {
+    use BelongsToCompany;
+
     use HasUuids, SoftDeletes, HasFactory;
 
     protected $table = 'staff';

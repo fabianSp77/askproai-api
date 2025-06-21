@@ -1,13 +1,17 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
+        if (Schema::hasTable('event_type_import_logs')) {
+            return;
+        }
+        
         Schema::create('event_type_import_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
@@ -18,8 +22,8 @@ return new class extends Migration
             $table->integer('total_imported')->default(0);
             $table->integer('total_skipped')->default(0);
             $table->integer('total_errors')->default(0);
-            $table->json('import_details')->nullable();
-            $table->json('error_details')->nullable();
+            $this->addJsonColumn($table, 'import_details', true);
+            $this->addJsonColumn($table, 'error_details', true);
             $table->enum('status', ['pending', 'processing', 'completed', 'failed']);
             $table->timestamp('started_at')->nullable();
             $table->timestamp('completed_at')->nullable();

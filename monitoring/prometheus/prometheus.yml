@@ -18,8 +18,9 @@ scrape_configs:
   # Laravel Metrics
   - job_name: 'laravel'
     static_configs:
-      - targets: ['host.docker.internal:8000']
-    metrics_path: '/metrics'
+      - targets: ['host.docker.internal:80']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
     
   # Node Exporter
   - job_name: 'node'
@@ -31,10 +32,10 @@ scrape_configs:
     static_configs:
       - targets: ['redis-exporter:9121']
       
-  # MySQL Exporter
-  - job_name: 'mysql'
-    static_configs:
-      - targets: ['mysql-exporter:9104']
+  # MySQL Exporter (disabled for now)
+  # - job_name: 'mysql'
+  #   static_configs:
+  #     - targets: ['mysql-exporter:9104']
       
   # Prometheus self-monitoring
   - job_name: 'prometheus'

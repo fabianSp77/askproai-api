@@ -57,7 +57,7 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
         return $this->circuitBreaker->call('retell', function() use ($config) {
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->post($this->url . '/v2/create-agent', $config);
+                ->post($this->url . '/create-agent', $config);
             
             if ($response->successful()) {
                 $data = $response->json();
@@ -75,15 +75,16 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     public function updateAgent(string $agentId, array $config): array
     {
         return $this->circuitBreaker->call('retell', function() use ($agentId, $config) {
-            $payload = array_merge(['agent_id' => $agentId], $config);
+            // Remove agent_id from payload if present as it goes in the URL
+            unset($config['agent_id']);
             
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->post($this->url . '/v2/update-agent', $payload);
+                ->patch($this->url . '/update-agent/' . $agentId, $config);
             
             if ($response->successful()) {
                 $data = $response->json();
-                $this->logger->logApiCall('RetellV2', 'updateAgent', $this->masker->mask($payload), $data, 0);
+                $this->logger->logApiCall('RetellV2', 'updateAgent', $this->masker->mask($config), $data, 0);
                 return $data;
             }
             
@@ -97,26 +98,17 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     public function getAgent(string $agentId): ?array
     {
         return $this->circuitBreaker->call('retell', function() use ($agentId) {
-            $url = $this->url . '/v2/list-agents';
+            $url = $this->url . '/get-agent/' . $agentId;
             
             // Log the API call with masked data
             $this->logger->logApiCall('RetellV2', 'getAgent', ['agent_id' => $agentId], null, 0);
             
-            // First try to get from list of agents
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->post($url, []);
+                ->get($url);
             
             if ($response->successful()) {
-                $data = $response->json();
-                $agents = $data['agents'] ?? [];
-                
-                // Find the specific agent
-                foreach ($agents as $agent) {
-                    if ($agent['agent_id'] === $agentId) {
-                        return $agent;
-                    }
-                }
+                return $response->json();
             }
             
             $this->logger->logError(new \Exception('Failed to get agent'), [
@@ -137,10 +129,15 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
         return $this->circuitBreaker->call('retell', function() {
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->post($this->url . '/v2/list-agents', []);
+                ->get($this->url . '/list-agents');
             
             if ($response->successful()) {
-                return $response->json();
+                $agents = $response->json();
+                // Wrap in agents key if it's a direct array
+                if (is_array($agents) && !isset($agents['agents'])) {
+                    return ['agents' => $agents];
+                }
+                return $agents;
             }
             
             return ['agents' => []];
@@ -155,7 +152,7 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
         return $this->circuitBreaker->call('retell', function() use ($agentId) {
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->post($this->url . '/v2/delete-agent', ['agent_id' => $agentId]);
+                ->delete($this->url . '/delete-agent/' . $agentId);
             
             return $response->successful();
         });
@@ -167,11 +164,12 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     public function updatePhoneNumber(string $phoneNumber, array $config): array
     {
         return $this->circuitBreaker->call('retell', function() use ($phoneNumber, $config) {
-            $payload = array_merge(['phone_number' => $phoneNumber], $config);
+            // Remove phone_number from payload if present as it goes in the URL
+            unset($config['phone_number']);
             
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->post($this->url . '/v2/update-phone-number', $payload);
+                ->patch($this->url . '/update-phone-number/' . urlencode($phoneNumber), $config);
             
             if ($response->successful()) {
                 return $response->json();
@@ -218,5 +216,56 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
             
             return ['calls' => []];
         });
+    }
+    
+    /**
+     * List all phone numbers
+     */
+    public function listPhoneNumbers(): array
+    {
+        return $this->circuitBreaker->call('retell', function() {
+            $response = $this->httpWithRetry()
+                ->withToken($this->token)
+                ->get($this->url . '/list-phone-numbers');
+            
+            if ($response->successful()) {
+                $phoneNumbers = $response->json();
+                // Wrap in phone_numbers key if it's a direct array
+                if (is_array($phoneNumbers) && !isset($phoneNumbers['phone_numbers'])) {
+                    return ['phone_numbers' => $phoneNumbers];
+                }
+                return $phoneNumbers;
+            }
+            
+            return ['phone_numbers' => []];
+        });
+    }
+    
+    /**
+     * Get phone number details
+     */
+    public function getPhoneNumber(string $phoneNumberId): ?array
+    {
+        return $this->circuitBreaker->call('retell', function() use ($phoneNumberId) {
+            $response = $this->httpWithRetry()
+                ->withToken($this->token)
+                ->get($this->url . '/v2/get-phone-number/' . $phoneNumberId);
+            
+            if ($response->successful()) {
+                return $response->json();
+            }
+            
+            return null;
+        });
+    }
+    
+    
+    /**
+     * Get agent prompt only
+     */
+    public function getAgentPrompt(string $agentId): ?string
+    {
+        $agent = $this->getAgent($agentId);
+        return $agent['prompt'] ?? null;
     }
 }

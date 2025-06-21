@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "askproai-laravel-loop": {
+      "command": "php",
+      "args": ["/var/www/api-gateway/artisan", "loop:mcp:start"],
+      "description": "Laravel Loop MCP for direct Laravel access"
+    },
+    "askproai-http": {
+      "url": "https://api.askproai.de/api/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_MCP_TOKEN_HERE",
+        "Accept": "application/json"
+      },
+      "description": "Custom MCP endpoints for database, Cal.com, Retell.ai"
+    }
+  }
+}

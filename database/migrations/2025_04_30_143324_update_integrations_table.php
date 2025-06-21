@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
@@ -15,11 +15,11 @@ return new class extends Migration
             }
             /* 2  JSON-Spalte anlegen */
             if (! Schema::hasColumn('integrations', 'credentials')) {
-                $table->json('credentials')->nullable()->after('system');
+                $this->addJsonColumn($table, 'credentials', true);
             }
             /* 3  Aktiv-Flag */
             if (! Schema::hasColumn('integrations', 'active')) {
-                $table->boolean('active')->default(true)->after('credentials');
+                $table->boolean('active')->default(true);
             }
             /* 4  Alte Longtext-Spalte entfernen */
             if (Schema::hasColumn('integrations', 'zugangsdaten')) {

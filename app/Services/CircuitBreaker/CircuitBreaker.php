@@ -214,6 +214,14 @@ class CircuitBreaker
     }
     
     /**
+     * Check if circuit is open for a service
+     */
+    public function isOpen(string $service): bool
+    {
+        return $this->getState($service) === CircuitState::OPEN;
+    }
+    
+    /**
      * Record metrics for monitoring
      */
     private function recordMetrics(string $service, bool $success, float $duration): void

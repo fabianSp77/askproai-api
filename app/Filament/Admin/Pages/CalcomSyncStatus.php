@@ -20,7 +20,7 @@ class CalcomSyncStatus extends Page implements HasTable
     use InteractsWithTable;
     
     protected static ?string $navigationIcon = 'heroicon-o-arrow-path';
-    protected static ?string $navigationGroup = 'Analytics';
+    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
     protected static ?string $navigationLabel = 'Cal.com Sync Status';
     protected static ?int $navigationSort = 5;
     

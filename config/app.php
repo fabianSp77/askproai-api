@@ -54,6 +54,8 @@ return [
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         App\Providers\EventServiceProvider::class,
+        App\Providers\DatabaseServiceProvider::class,
+        App\Providers\ValidationServiceProvider::class,
 
         /* Filament Panel */
         App\Providers\Filament\AdminPanelProvider::class,

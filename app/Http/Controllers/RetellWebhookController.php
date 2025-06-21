@@ -4,27 +4,49 @@ namespace App\Http\Controllers;
 
 use App\Services\WebhookProcessor;
 use App\Services\CalcomV2Service;
+use App\Services\Calcom\CalcomAvailabilityService;
+use App\Services\RateLimiter\ApiRateLimiter;
 use App\Models\Company;
 use App\Models\WebhookEvent;
+use App\Http\Requests\Webhook\RetellWebhookRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class RetellWebhookController extends Controller
 {
     protected WebhookProcessor $webhookProcessor;
+    protected ApiRateLimiter $rateLimiter;
     
-    public function __construct(WebhookProcessor $webhookProcessor)
+    public function __construct(WebhookProcessor $webhookProcessor, ApiRateLimiter $rateLimiter)
     {
         $this->webhookProcessor = $webhookProcessor;
+        $this->rateLimiter = $rateLimiter;
     }
     
     /**
      * Process Retell webhook using the new WebhookProcessor service
      */
-    public function processWebhook(Request $request)
+    public function processWebhook(RetellWebhookRequest $request)
     {
-        $correlationId = $request->input('correlation_id') ?? app('correlation_id');
+        // Check rate limit
+        if (!$this->rateLimiter->checkWebhook('retell', $request->ip())) {
+            return response()->json([
+                'error' => 'Rate limit exceeded',
+                'message' => 'Too many requests. Please slow down.'
+            ], 429);
+        }
+        
+        // DEBUG: Log all incoming webhooks
+        Log::warning('RETELL WEBHOOK RECEIVED', [
+            'url' => $request->fullUrl(),
+            'event' => $request->input('event'),
+            'has_call_data' => $request->has('call'),
+            'headers' => $request->headers->all()
+        ]);
+        
+        $correlationId = $request->input('correlation_id') ?? Str::uuid()->toString();
         $payload = $request->all();
         $headers = $request->headers->all();
         
@@ -128,46 +150,68 @@ class RetellWebhookController extends Controller
                 $requestedTime = $callData['dynamic_variables']['requested_time'] ?? null;
                 
                 if ($requestedDate && $eventTypeId) {
-                    // Get available slots from Cal.com
+                    // Use the new availability service
                     $calcomService = new CalcomV2Service($company->calcom_api_key);
-                    $availability = $calcomService->checkAvailability($eventTypeId, $requestedDate);
+                    $availabilityService = new CalcomAvailabilityService($calcomService);
                     
                     // Check if requested time is available
-                    $requestedSlotAvailable = false;
-                    if ($requestedTime && $availability['success']) {
-                        foreach ($availability['data']['slots'] as $slot) {
-                            $slotTime = Carbon::parse($slot);
-                            if ($slotTime->format('H:i') === $requestedTime) {
-                                $requestedSlotAvailable = true;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if ($requestedSlotAvailable) {
-                        $response['response']['dynamic_variables']['requested_slot_available'] = true;
-                        $response['response']['dynamic_variables']['available_slots'] = $requestedTime . ' Uhr';
-                        $response['response']['dynamic_variables']['slots_count'] = 1;
-                    } else {
-                        // Find alternative slots based on customer preferences
-                        $alternatives = $this->findAlternativeSlots(
-                            $calcomService, 
-                            $eventTypeId, 
-                            $requestedDate, 
-                            $customerPreferences,
+                    if ($requestedTime) {
+                        $isAvailable = $availabilityService->isTimeSlotAvailable(
+                            $eventTypeId,
+                            $requestedDate,
                             $requestedTime
                         );
                         
-                        if (!empty($alternatives)) {
-                            $response['response']['dynamic_variables']['requested_slot_available'] = false;
-                            $response['response']['dynamic_variables']['alternative_slots'] = $alternatives['formatted'];
-                            $response['response']['dynamic_variables']['alternative_dates'] = $alternatives['dates'];
-                            $response['response']['dynamic_variables']['slots_count'] = count($alternatives['slots']);
-                            $response['response']['dynamic_variables']['preference_matched'] = $alternatives['preference_matched'];
+                        if ($isAvailable) {
+                            $response['response']['dynamic_variables']['requested_slot_available'] = true;
+                            $response['response']['dynamic_variables']['available_slots'] = $requestedTime . ' Uhr';
+                            $response['response']['dynamic_variables']['slots_count'] = 1;
                         } else {
-                            $response['response']['dynamic_variables']['requested_slot_available'] = false;
-                            $response['response']['dynamic_variables']['alternative_slots'] = 'keine passenden Termine gefunden';
+                            // Find alternative slots based on customer preferences
+                            $preferences = $this->parseCustomerPreferences($customerPreferences);
+                            
+                            $alternatives = $availabilityService->findAlternativeSlots(
+                                $eventTypeId,
+                                $requestedDate,
+                                $requestedTime,
+                                array_merge($preferences, [
+                                    'max_alternatives' => 3,
+                                    'search_radius_days' => 7,
+                                    'prefer_same_day' => true,
+                                    'prefer_same_time' => true,
+                                ])
+                            );
+                            
+                            if ($alternatives['total_alternatives'] > 0) {
+                                $formatted = $this->formatAlternativesForVoice($alternatives['alternatives']);
+                                $response['response']['dynamic_variables']['requested_slot_available'] = false;
+                                $response['response']['dynamic_variables']['alternative_slots'] = $formatted;
+                                $response['response']['dynamic_variables']['alternative_dates'] = array_unique(
+                                    array_column($alternatives['alternatives'], 'date')
+                                );
+                                $response['response']['dynamic_variables']['slots_count'] = $alternatives['total_alternatives'];
+                                $response['response']['dynamic_variables']['preference_matched'] = true;
+                            } else {
+                                $response['response']['dynamic_variables']['requested_slot_available'] = false;
+                                $response['response']['dynamic_variables']['alternative_slots'] = 'keine passenden Termine gefunden';
+                                $response['response']['dynamic_variables']['slots_count'] = 0;
+                            }
+                        }
+                    } else {
+                        // No specific time requested, show available slots for the day
+                        $dayAvailability = $availabilityService->checkAvailability($eventTypeId, $requestedDate);
+                        
+                        if ($dayAvailability['available']) {
+                            $slots = array_slice($dayAvailability['slots'], 0, 5); // First 5 slots
+                            $formatted = implode(', ', array_map(fn($s) => $s['formatted'], $slots));
+                            
+                            $response['response']['dynamic_variables']['available_slots'] = $formatted;
+                            $response['response']['dynamic_variables']['slots_count'] = $dayAvailability['total_slots'];
+                            $response['response']['dynamic_variables']['day_has_availability'] = true;
+                        } else {
+                            $response['response']['dynamic_variables']['available_slots'] = 'keine Termine verfügbar';
                             $response['response']['dynamic_variables']['slots_count'] = 0;
+                            $response['response']['dynamic_variables']['day_has_availability'] = false;
                         }
                     }
                     
@@ -408,6 +452,32 @@ class RetellWebhookController extends Controller
         }
         
         return $matchingSlots;
+    }
+    
+    /**
+     * Format alternatives for voice response
+     */
+    private function formatAlternativesForVoice(array $alternatives): string
+    {
+        if (empty($alternatives)) {
+            return 'keine Alternativen gefunden';
+        }
+        
+        $formatted = [];
+        foreach ($alternatives as $alt) {
+            $datetime = Carbon::parse($alt['datetime'] ?? $alt['date'] . ' ' . $alt['time']);
+            $formatted[] = $this->formatDateTimeForVoice($datetime);
+        }
+        
+        // Join with "oder" for natural speech
+        if (count($formatted) === 1) {
+            return $formatted[0];
+        } elseif (count($formatted) === 2) {
+            return $formatted[0] . ' oder ' . $formatted[1];
+        } else {
+            $last = array_pop($formatted);
+            return implode(', ', $formatted) . ' oder ' . $last;
+        }
     }
     
     /**

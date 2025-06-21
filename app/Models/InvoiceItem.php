@@ -20,6 +20,9 @@ class InvoiceItem extends Model
         'unit_price',
         'amount',
         'tax_rate',
+        'tax_rate_id',
+        'tax_code',
+        'tax_amount',
         'metadata',
         'pricing_model_id',
         'period_start',
@@ -32,6 +35,7 @@ class InvoiceItem extends Model
         'unit_price' => 'decimal:4',
         'amount' => 'decimal:2',
         'tax_rate' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
         'period_start' => 'date',
         'period_end' => 'date',
     ];

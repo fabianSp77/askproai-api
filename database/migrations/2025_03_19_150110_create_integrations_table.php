@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up()
     {
@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('kunde_id')->constrained('kunden')->onDelete('cascade');
             $table->string('system');
-            $table->json('zugangsdaten');
+            $this->addJsonColumn($table, 'zugangsdaten', false);
             $table->timestamps();
         });
     }

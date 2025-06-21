@@ -3,6 +3,10 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +25,24 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health:   '/up',
         then: function ($router) {
+            // Configure rate limiters
+            RateLimiter::for('api', function (Request $request) {
+                return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            });
+
+            RateLimiter::for('webhook', function (Request $request) {
+                return Limit::perMinute(100)->by($request->ip());
+            });
+
+            RateLimiter::for('global', function (Request $request) {
+                return Limit::perMinute(500);
+            });
+
+            // Load webhook routes
+            Route::prefix('api')
+                ->middleware('api')
+                ->group(base_path('routes/webhooks.php'));
+                
             // Load API v2 routes - temporarily disabled due to missing controllers
             // Route::prefix('api')
             //     ->middleware('api')
@@ -32,11 +54,19 @@ return Application::configure(basePath: dirname(__DIR__))
         /* ---------------------------------------------------------
          |  Global Middleware (runs on every request)
          * -------------------------------------------------------- */
-        $middleware->prepend(\App\Http\Middleware\DebugUltimateSystemCockpit::class);
-        $middleware->prepend(\App\Http\Middleware\ComprehensiveErrorLogger::class);
+        // Replace Laravel's StartSession with our fixed version
+        $middleware->replace(
+            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\FixStartSession::class
+        );
+        
+        // Add middleware in reverse order since prepend adds to the beginning
         $middleware->prepend(\App\Http\Middleware\TrustProxies::class);
-        $middleware->append(\App\Http\Middleware\SessionManager::class);
-        $middleware->append(\App\Http\Middleware\LoginDebugger::class);
+        $middleware->prepend(\App\Http\Middleware\EnsureProperResponseFormat::class);
+        // CRITICAL: ResponseWrapper MUST be first to catch all Livewire errors
+        $middleware->prepend(\App\Http\Middleware\ResponseWrapper::class);
+        // $middleware->append(\App\Http\Middleware\SessionManager::class);
+        // $middleware->append(\App\Http\Middleware\LoginDebugger::class);
         
         /* ---------------------------------------------------------
          |  Web Middleware Group
@@ -97,6 +127,15 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Handle Livewire headers error globally
+        $exceptions->render(function (\ErrorException $e, $request) {
+            if (str_contains($e->getMessage(), 'Undefined property') && 
+                str_contains($e->getMessage(), 'Livewire') && 
+                str_contains($e->getMessage(), 'headers')) {
+                // This is the Livewire headers error, just redirect to login
+                return redirect('/admin/login');
+            }
+        });
         // Handle custom booking exceptions
         $exceptions->render(function (\App\Exceptions\BookingException $e, $request) {
             if ($request->expectsJson()) {
@@ -124,14 +163,97 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Log all exceptions for debugging
         $exceptions->report(function (Throwable $e) {
-            if (request()->is('admin/*')) {
-                \Illuminate\Support\Facades\Log::error('Admin Panel Error', [
-                    'url' => request()->fullUrl(),
+            if (app()->runningInConsole()) {
+                return;
+            }
+            
+            try {
+                $request = app('request');
+                if ($request && ($request->is('admin/*') || $request->is('livewire/*'))) {
+                    \Illuminate\Support\Facades\Log::error('Admin Panel Error', [
+                        'url' => $request->fullUrl(),
+                        'method' => $request->method(),
+                        'exception' => get_class($e),
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+            } catch (\Exception $logException) {
+                // Ignore logging errors during bootstrap
+            }
+        });
+        
+        // Handle MissingTenantException
+        $exceptions->render(function (\App\Exceptions\MissingTenantException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Missing tenant context'
+                ], 403);
+            }
+            
+            // For admin routes, don't redirect, just log
+            if ($request->is('admin/*')) {
+                \Illuminate\Support\Facades\Log::error('Missing tenant in admin', [
+                    'user_id' => auth()->id(),
+                    'url' => $request->fullUrl()
+                ]);
+                
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Internal Server Error'
+                ], 500);
+            }
+        });
+        
+        // Handle missing dashboard routes
+        $exceptions->render(function (\Symfony\Component\Routing\Exception\RouteNotFoundException $e, $request) {
+            $message = $e->getMessage();
+            
+            // Check if this is a missing dashboard route
+            if (str_contains($message, 'filament.admin.pages.') && 
+                str_contains($message, 'dashboard')) {
+                
+                // Extract the route name from the error message
+                preg_match('/\[([^\]]+)\]/', $message, $matches);
+                $routeName = $matches[1] ?? null;
+                
+                if ($routeName && str_starts_with($routeName, 'filament.admin.pages.')) {
+                    // Log the missing route
+                    \Illuminate\Support\Facades\Log::warning("Missing dashboard route detected: {$routeName}", [
+                        'requested_route' => $routeName,
+                        'user_id' => auth()->id(),
+                        'url' => $request->fullUrl()
+                    ]);
+                    
+                    // Redirect to admin home
+                    return redirect('/admin');
+                }
+            }
+            
+            // Re-throw if not a dashboard route issue
+            throw $e;
+        });
+        
+        // Add a general exception handler for Livewire requests
+        $exceptions->render(function (Throwable $e, $request) {
+            if ($request->is('livewire/*') && $request->expectsJson()) {
+                \Illuminate\Support\Facades\Log::error('Livewire Error', [
                     'exception' => get_class($e),
                     'message' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
+                    'url' => $request->fullUrl(),
+                    'user_id' => auth()->id(),
                 ]);
+                
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Internal Server Error',
+                    'debug' => app()->environment('local') ? $e->getMessage() : null
+                ], 500);
             }
         });
     })

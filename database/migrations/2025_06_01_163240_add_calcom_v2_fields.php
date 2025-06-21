@@ -9,7 +9,7 @@ class AddCalcomV2Fields extends Migration
     public function up()
     {
         Schema::table('appointments', function (Blueprint $table) {
-            $table->string('calcom_v2_booking_id')->nullable()->after('external_id');
+            $table->string('calcom_v2_booking_id')->nullable();
         });
     }
 

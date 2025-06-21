@@ -1,0 +1,541 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Filament\Admin\Pages;
+
+use Filament\Pages\Page;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Call;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Facades\Excel;
+
+class RoiDashboard extends Page implements HasForms
+{
+    use InteractsWithForms;
+    
+    protected static ?string $navigationIcon = 'heroicon-o-currency-euro';
+    protected static ?string $navigationGroup = 'Dashboard';
+    protected static ?string $navigationLabel = 'ROI Dashboard';
+    protected static ?int $navigationSort = 10;
+    protected static string $view = 'filament.admin.pages.roi-dashboard';
+    
+    // Filters
+    public ?string $dateFrom = null;
+    public ?string $dateTo = null;
+    public ?int $companyId = null;
+    public ?int $branchId = null;
+    public bool $liveUpdate = false;
+    public string $timeRange = 'month'; // today, week, month, quarter, year, custom
+    
+    // ROI Data
+    public array $companyRoi = [];
+    public array $branchComparison = [];
+    public array $hourlyBreakdown = [];
+    public array $businessHoursComparison = [];
+    public array $roiTrends = [];
+    public array $benchmarks = [];
+    
+    // Real-time indicators
+    public ?string $lastUpdated = null;
+    public int $updateInterval = 60; // seconds
+    
+    public function mount(): void
+    {
+        $this->initializeDateRange();
+        $this->autoSelectCompany();
+        $this->loadRoiData();
+        $this->lastUpdated = now()->format('H:i:s');
+    }
+    
+    protected function initializeDateRange(): void
+    {
+        switch ($this->timeRange) {
+            case 'today':
+                $this->dateFrom = now()->startOfDay()->format('Y-m-d');
+                $this->dateTo = now()->endOfDay()->format('Y-m-d');
+                break;
+            case 'week':
+                $this->dateFrom = now()->startOfWeek()->format('Y-m-d');
+                $this->dateTo = now()->endOfWeek()->format('Y-m-d');
+                break;
+            case 'month':
+                $this->dateFrom = now()->startOfMonth()->format('Y-m-d');
+                $this->dateTo = now()->endOfMonth()->format('Y-m-d');
+                break;
+            case 'quarter':
+                $this->dateFrom = now()->firstOfQuarter()->format('Y-m-d');
+                $this->dateTo = now()->lastOfQuarter()->format('Y-m-d');
+                break;
+            case 'year':
+                $this->dateFrom = now()->startOfYear()->format('Y-m-d');
+                $this->dateTo = now()->endOfYear()->format('Y-m-d');
+                break;
+        }
+    }
+    
+    protected function autoSelectCompany(): void
+    {
+        $companies = Company::all();
+        if ($companies->count() === 1) {
+            $this->companyId = $companies->first()->id;
+        }
+    }
+    
+    public function form(\Filament\Forms\Form $form): \Filament\Forms\Form
+    {
+        return $form
+            ->schema([
+                Select::make('timeRange')
+                    ->label('Zeitraum')
+                    ->options([
+                        'today' => 'Heute',
+                        'week' => 'Diese Woche',
+                        'month' => 'Dieser Monat',
+                        'quarter' => 'Dieses Quartal',
+                        'year' => 'Dieses Jahr',
+                        'custom' => 'Benutzerdefiniert',
+                    ])
+                    ->reactive()
+                    ->afterStateUpdated(function ($state) {
+                        if ($state !== 'custom') {
+                            $this->initializeDateRange();
+                            $this->loadRoiData();
+                        }
+                    }),
+                    
+                DatePicker::make('dateFrom')
+                    ->label('Von')
+                    ->required()
+                    ->visible(fn() => $this->timeRange === 'custom')
+                    ->reactive()
+                    ->afterStateUpdated(fn() => $this->loadRoiData()),
+                    
+                DatePicker::make('dateTo')
+                    ->label('Bis')
+                    ->required()
+                    ->visible(fn() => $this->timeRange === 'custom')
+                    ->reactive()
+                    ->afterStateUpdated(fn() => $this->loadRoiData()),
+                    
+                Select::make('companyId')
+                    ->label('Unternehmen')
+                    ->options(Company::pluck('name', 'id'))
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(function () {
+                        $this->branchId = null;
+                        $this->loadRoiData();
+                    }),
+                    
+                Select::make('branchId')
+                    ->label('Filiale')
+                    ->options(fn() => $this->companyId 
+                        ? Branch::where('company_id', $this->companyId)->pluck('name', 'id')
+                        : []
+                    )
+                    ->placeholder('Alle Filialen')
+                    ->reactive()
+                    ->afterStateUpdated(fn() => $this->loadRoiData()),
+                    
+                Toggle::make('liveUpdate')
+                    ->label('Live-Updates')
+                    ->helperText('Daten alle 60 Sekunden aktualisieren')
+                    ->reactive(),
+            ])
+            ->columns([
+                'sm' => 2,
+                'md' => 3,
+                'lg' => 6,
+            ]);
+    }
+    
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('refresh')
+                ->label('Aktualisieren')
+                ->icon('heroicon-o-arrow-path')
+                ->action(function () {
+                    $this->loadRoiData();
+                    $this->lastUpdated = now()->format('H:i:s');
+                    Notification::make()
+                        ->title('Daten aktualisiert')
+                        ->success()
+                        ->send();
+                }),
+                
+            Action::make('export')
+                ->label('Exportieren')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->action(fn() => $this->exportRoiData())
+                ->color('gray'),
+        ];
+    }
+    
+    public function loadRoiData(): void
+    {
+        // Initialize with default values
+        $this->companyRoi = [
+            'roi' => 0,
+            'roi_status' => 'neutral',
+            'revenue' => 0,
+            'cost' => 0,
+            'profit' => 0,
+            'total_appointments' => 0,
+            'completed_appointments' => 0,
+            'conversion_rate' => 0,
+            'avg_appointment_value' => 0,
+        ];
+        
+        $this->branchComparison = [];
+        $this->hourlyBreakdown = [];
+        $this->businessHoursComparison = [
+            'business_hours' => [
+                'revenue' => 0,
+                'percentage' => 0,
+                'appointments' => 0
+            ],
+            'after_hours' => [
+                'revenue' => 0,
+                'percentage' => 0,
+                'appointments' => 0
+            ]
+        ];
+        $this->roiTrends = [];
+        $this->benchmarks = [
+            'industry_avg_roi' => 150,
+            'your_percentile' => 50,
+            'top_performer_roi' => 300,
+            'industry_name' => 'Allgemein'
+        ];
+        
+        if (!$this->companyId || !$this->dateFrom || !$this->dateTo) {
+            return;
+        }
+        
+        $this->calculateCompanyRoi();
+        $this->calculateBranchComparison();
+        $this->calculateHourlyBreakdown();
+        $this->calculateBusinessHoursComparison();
+        $this->calculateRoiTrends();
+        $this->loadBenchmarks();
+    }
+    
+    protected function calculateCompanyRoi(): void
+    {
+        $cacheKey = "roi_company_{$this->companyId}_{$this->branchId}_{$this->dateFrom}_{$this->dateTo}";
+        
+        $this->companyRoi = Cache::remember($cacheKey, 300, function () {
+            // Revenue from completed appointments
+            $revenueQuery = Appointment::query()
+                ->join('calcom_event_types', 'appointments.calcom_event_type_id', '=', 'calcom_event_types.id')
+                ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                ->where('staff.company_id', $this->companyId)
+                ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+                ->where('appointments.status', 'completed')
+                ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId));
+                
+            $totalRevenue = $revenueQuery->sum('calcom_event_types.price');
+            
+            // Costs calculation (simplified - you would have real cost data)
+            $company = Company::find($this->companyId);
+            $baseCost = $company->subscription_cost ?? 299; // Monthly base cost
+            $callCost = Call::query()
+                ->where('company_id', $this->companyId)
+                ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+                ->when($this->branchId, fn($q) => $q->where('branch_id', $this->branchId))
+                ->count() * 0.10; // 10 cents per call
+                
+            $totalCost = $baseCost + $callCost;
+            
+            // ROI Calculation
+            $roi = $totalCost > 0 ? (($totalRevenue - $totalCost) / $totalCost) * 100 : 0;
+            $profit = $totalRevenue - $totalCost;
+            
+            // Additional metrics
+            $totalAppointments = Appointment::query()
+                ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                ->where('staff.company_id', $this->companyId)
+                ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+                ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId))
+                ->count();
+                
+            $completedAppointments = Appointment::query()
+                ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                ->where('staff.company_id', $this->companyId)
+                ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+                ->where('appointments.status', 'completed')
+                ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId))
+                ->count();
+                
+            $conversionRate = $totalAppointments > 0 
+                ? ($completedAppointments / $totalAppointments) * 100 
+                : 0;
+            
+            return [
+                'roi' => round($roi, 2),
+                'roi_status' => $this->getRoiStatus($roi),
+                'revenue' => round($totalRevenue, 2),
+                'cost' => round($totalCost, 2),
+                'profit' => round($profit, 2),
+                'total_appointments' => $totalAppointments,
+                'completed_appointments' => $completedAppointments,
+                'conversion_rate' => round($conversionRate, 2),
+                'avg_appointment_value' => $completedAppointments > 0 
+                    ? round($totalRevenue / $completedAppointments, 2) 
+                    : 0,
+            ];
+        });
+    }
+    
+    protected function calculateBranchComparison(): void
+    {
+        if (!$this->companyId) {
+            return;
+        }
+        
+        $branches = Branch::where('company_id', $this->companyId)
+            ->where('is_active', true)
+            ->get();
+            
+        $this->branchComparison = [];
+        
+        foreach ($branches as $branch) {
+            // Revenue
+            $revenue = Appointment::query()
+                ->join('calcom_event_types', 'appointments.calcom_event_type_id', '=', 'calcom_event_types.id')
+                ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                ->where('staff.branch_id', $branch->id)
+                ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+                ->where('appointments.status', 'completed')
+                ->sum('calcom_event_types.price');
+                
+            // Simplified cost calculation
+            $baseCost = 99; // Branch base cost
+            $callCost = Call::where('branch_id', $branch->id)
+                ->whereBetween('created_at', [$this->dateFrom, $this->dateTo])
+                ->count() * 0.10;
+                
+            $totalCost = $baseCost + $callCost;
+            $roi = $totalCost > 0 ? (($revenue - $totalCost) / $totalCost) * 100 : 0;
+            
+            // Additional metrics
+            $appointments = Appointment::query()
+                ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                ->where('staff.branch_id', $branch->id)
+                ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+                ->where('appointments.status', 'completed')
+                ->count();
+                
+            $this->branchComparison[] = [
+                'id' => $branch->id,
+                'name' => $branch->name,
+                'roi' => round($roi, 2),
+                'roi_status' => $this->getRoiStatus($roi),
+                'revenue' => round($revenue, 2),
+                'cost' => round($totalCost, 2),
+                'profit' => round($revenue - $totalCost, 2),
+                'appointments' => $appointments,
+                'avg_value' => $appointments > 0 ? round($revenue / $appointments, 2) : 0,
+            ];
+        }
+        
+        // Sort by ROI descending
+        usort($this->branchComparison, fn($a, $b) => $b['roi'] <=> $a['roi']);
+    }
+    
+    protected function calculateHourlyBreakdown(): void
+    {
+        $hourlyData = [];
+        
+        for ($hour = 0; $hour < 24; $hour++) {
+            $revenue = Appointment::query()
+                ->join('calcom_event_types', 'appointments.calcom_event_type_id', '=', 'calcom_event_types.id')
+                ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                ->where('staff.company_id', $this->companyId)
+                ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+                ->where('appointments.status', 'completed')
+                ->whereRaw('HOUR(appointments.starts_at) = ?', [$hour])
+                ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId))
+                ->sum('calcom_event_types.price');
+                
+            $appointments = Appointment::query()
+                ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                ->where('staff.company_id', $this->companyId)
+                ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+                ->whereRaw('HOUR(appointments.starts_at) = ?', [$hour])
+                ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId))
+                ->count();
+                
+            // Simplified hourly cost
+            $hourlyCost = 10; // Base hourly operational cost
+            $roi = $hourlyCost > 0 ? (($revenue - $hourlyCost) / $hourlyCost) * 100 : 0;
+            
+            $hourlyData[] = [
+                'hour' => $hour,
+                'hour_label' => sprintf('%02d:00', $hour),
+                'revenue' => round($revenue, 2),
+                'appointments' => $appointments,
+                'roi' => round($roi, 2),
+                'roi_status' => $this->getRoiStatus($roi),
+                'is_business_hour' => $hour >= 8 && $hour < 18,
+            ];
+        }
+        
+        $this->hourlyBreakdown = $hourlyData;
+    }
+    
+    protected function calculateBusinessHoursComparison(): void
+    {
+        // Business hours (8-18)
+        $businessHoursRevenue = Appointment::query()
+            ->join('calcom_event_types', 'appointments.calcom_event_type_id', '=', 'calcom_event_types.id')
+            ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+            ->where('staff.company_id', $this->companyId)
+            ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+            ->where('appointments.status', 'completed')
+            ->whereRaw('HOUR(appointments.starts_at) >= 8 AND HOUR(appointments.starts_at) < 18')
+            ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId))
+            ->sum('calcom_event_types.price');
+            
+        // After hours
+        $afterHoursRevenue = Appointment::query()
+            ->join('calcom_event_types', 'appointments.calcom_event_type_id', '=', 'calcom_event_types.id')
+            ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+            ->where('staff.company_id', $this->companyId)
+            ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+            ->where('appointments.status', 'completed')
+            ->whereRaw('(HOUR(appointments.starts_at) < 8 OR HOUR(appointments.starts_at) >= 18)')
+            ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId))
+            ->sum('calcom_event_types.price');
+            
+        $totalRevenue = $businessHoursRevenue + $afterHoursRevenue;
+        
+        $this->businessHoursComparison = [
+            'business_hours' => [
+                'revenue' => round($businessHoursRevenue, 2),
+                'percentage' => $totalRevenue > 0 ? round(($businessHoursRevenue / $totalRevenue) * 100, 2) : 0,
+                'appointments' => Appointment::query()
+                    ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                    ->where('staff.company_id', $this->companyId)
+                    ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+                    ->whereRaw('HOUR(appointments.starts_at) >= 8 AND HOUR(appointments.starts_at) < 18')
+                    ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId))
+                    ->count(),
+            ],
+            'after_hours' => [
+                'revenue' => round($afterHoursRevenue, 2),
+                'percentage' => $totalRevenue > 0 ? round(($afterHoursRevenue / $totalRevenue) * 100, 2) : 0,
+                'appointments' => Appointment::query()
+                    ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                    ->where('staff.company_id', $this->companyId)
+                    ->whereBetween('appointments.starts_at', [$this->dateFrom, $this->dateTo])
+                    ->whereRaw('(HOUR(appointments.starts_at) < 8 OR HOUR(appointments.starts_at) >= 18)')
+                    ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId))
+                    ->count(),
+            ],
+        ];
+    }
+    
+    protected function calculateRoiTrends(): void
+    {
+        // Get daily ROI for the period
+        $dailyRoi = [];
+        $currentDate = Carbon::parse($this->dateFrom);
+        $endDate = Carbon::parse($this->dateTo);
+        
+        while ($currentDate <= $endDate) {
+            $dayRevenue = Appointment::query()
+                ->join('calcom_event_types', 'appointments.calcom_event_type_id', '=', 'calcom_event_types.id')
+                ->join('staff', 'appointments.staff_id', '=', 'staff.id')
+                ->where('staff.company_id', $this->companyId)
+                ->whereDate('appointments.starts_at', $currentDate)
+                ->where('appointments.status', 'completed')
+                ->when($this->branchId, fn($q) => $q->where('staff.branch_id', $this->branchId))
+                ->sum('calcom_event_types.price');
+                
+            // Simplified daily cost
+            $dailyCost = 50;
+            $roi = $dailyCost > 0 ? (($dayRevenue - $dailyCost) / $dailyCost) * 100 : 0;
+            
+            $dailyRoi[] = [
+                'date' => $currentDate->format('Y-m-d'),
+                'label' => $currentDate->format('d.m'),
+                'roi' => round($roi, 2),
+                'revenue' => round($dayRevenue, 2),
+            ];
+            
+            $currentDate->addDay();
+        }
+        
+        $this->roiTrends = $dailyRoi;
+    }
+    
+    protected function loadBenchmarks(): void
+    {
+        // Industry benchmarks (these would come from a database or config)
+        $this->benchmarks = [
+            'industry_avg_roi' => 150, // 150% industry average
+            'top_performer_roi' => 300, // Top 10% achieve 300%+
+            'break_even' => 0,
+            'your_percentile' => $this->calculatePercentile($this->companyRoi['roi'] ?? 0),
+        ];
+    }
+    
+    protected function getRoiStatus(float $roi): string
+    {
+        if ($roi >= 100) {
+            return 'excellent';
+        } elseif ($roi >= 50) {
+            return 'good';
+        } elseif ($roi >= 0) {
+            return 'break-even';
+        } else {
+            return 'negative';
+        }
+    }
+    
+    protected function calculatePercentile(float $roi): int
+    {
+        // Simplified percentile calculation
+        if ($roi >= 300) return 90;
+        if ($roi >= 200) return 75;
+        if ($roi >= 150) return 50;
+        if ($roi >= 100) return 25;
+        return 10;
+    }
+    
+    protected function exportRoiData(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        return Excel::download(new RoiExport(
+            $this->companyRoi,
+            $this->branchComparison,
+            $this->hourlyBreakdown,
+            $this->businessHoursComparison,
+            $this->dateFrom,
+            $this->dateTo
+        ), 'roi-report-' . now()->format('Y-m-d') . '.xlsx');
+    }
+    
+    // Polling method for live updates
+    public function refreshData(): void
+    {
+        if ($this->liveUpdate) {
+            $this->loadRoiData();
+            $this->lastUpdated = now()->format('H:i:s');
+        }
+    }
+}

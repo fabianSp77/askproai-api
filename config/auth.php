@@ -43,6 +43,18 @@ return [
             'provider' => 'users',
             'hash'     => false,
         ],
+        
+        /*  ────────── Customer Portal Guard ─────── */
+        'customer' => [
+            'driver'   => 'session',
+            'provider' => 'customers',
+        ],
+        
+        /*  ────────── Customer API Guard ─────── */
+        'customer-api' => [
+            'driver'   => 'sanctum',
+            'provider' => 'customers',
+        ],
     ],
 
     /*
@@ -60,6 +72,11 @@ return [
             'driver' => 'eloquent',
             'model'  => App\Models\User::class,
         ],
+        
+        'customers' => [
+            'driver' => 'eloquent',
+            'model'  => App\Models\CustomerAuth::class,
+        ],
     ],
 
     /*
@@ -75,6 +92,13 @@ return [
         'users' => [
             'provider' => 'users',
             'table'    => 'password_reset_tokens',
+            'expire'   => 60,   // Minuten
+            'throttle' => 60,
+        ],
+        
+        'customers' => [
+            'provider' => 'customers',
+            'table'    => 'customer_password_resets',
             'expire'   => 60,   // Minuten
             'throttle' => 60,
         ],

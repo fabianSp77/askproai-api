@@ -20,11 +20,16 @@ class StaffEventAssignment extends Page implements HasForms
     
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     
-    protected static ?string $navigationGroup = 'Kalender & Events';
+    protected static ?string $navigationGroup = 'Personal & Services';
     
     protected static ?string $navigationLabel = 'Mitarbeiter-Zuordnung';
     
     protected static ?int $navigationSort = 20;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
     
     protected static string $view = 'filament.admin.pages.staff-event-assignment';
     

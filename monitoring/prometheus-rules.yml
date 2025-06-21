@@ -1,0 +1,190 @@
+groups:
+  - name: askproai_system
+    interval: 30s
+    rules:
+      # System availability
+      - alert: AskProAIDown
+        expr: up{job="askproai"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "AskProAI API is down"
+          description: "AskProAI API has been down for more than 2 minutes."
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(askproai_http_requests_errors_total[5m]) / rate(askproai_http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      # Slow response time
+      - alert: SlowResponseTime
+        expr: askproai_http_request_duration_ms > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "Slow API response time"
+          description: "API response time is {{ $value }}ms, exceeding 1000ms threshold."
+
+      # Queue backlog
+      - alert: QueueBacklog
+        expr: askproai_queue_size > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: queue
+        annotations:
+          summary: "Queue backlog detected"
+          description: "Queue {{ $labels.queue }} has {{ $value }} pending jobs."
+
+      - alert: CriticalQueueBacklog
+        expr: askproai_queue_size > 5000
+        for: 5m
+        labels:
+          severity: critical
+          service: queue
+        annotations:
+          summary: "Critical queue backlog"
+          description: "Queue {{ $labels.queue }} has {{ $value }} pending jobs - immediate action required."
+
+  - name: askproai_stripe
+    interval: 30s
+    rules:
+      # Stripe API failures
+      - alert: StripeAPIFailures
+        expr: rate(askproai_external_api_errors_total{service="stripe"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: stripe
+        annotations:
+          summary: "High Stripe API failure rate"
+          description: "Stripe API error rate is {{ $value | humanizePercentage }}."
+
+      # Stripe webhook failures
+      - alert: StripeWebhookFailures
+        expr: rate(askproai_stripe_webhook_failures_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: stripe
+        annotations:
+          summary: "Stripe webhook processing failures"
+          description: "Stripe webhook failure rate is {{ $value | humanizePercentage }}."
+
+      # Payment failures
+      - alert: HighPaymentFailureRate
+        expr: rate(askproai_payment_failures_total[15m]) / rate(askproai_payment_attempts_total[15m]) > 0.1
+        for: 15m
+        labels:
+          severity: critical
+          service: stripe
+        annotations:
+          summary: "High payment failure rate"
+          description: "Payment failure rate is {{ $value | humanizePercentage }} over the last 15 minutes."
+
+  - name: askproai_security
+    interval: 30s
+    rules:
+      # Failed login attempts
+      - alert: ExcessiveFailedLogins
+        expr: rate(askproai_failed_logins_total[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Excessive failed login attempts"
+          description: "Failed login rate is {{ $value }} per second."
+
+      # Security breach attempts
+      - alert: SecurityBreachAttempt
+        expr: rate(askproai_security_breach_attempts_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: security
+        annotations:
+          summary: "Security breach attempt detected"
+          description: "Security breach attempts detected: {{ $value }} per second."
+
+      # Blocked IPs
+      - alert: HighBlockedIPCount
+        expr: askproai_blocked_ips_total > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "High number of blocked IPs"
+          description: "{{ $value }} IPs are currently blocked."
+
+  - name: askproai_business
+    interval: 60s
+    rules:
+      # Revenue monitoring
+      - alert: NoRevenueProcessed
+        expr: increase(askproai_revenue_processed_cents[1h]) == 0
+        for: 2h
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "No revenue processed"
+          description: "No revenue has been processed in the last 2 hours during business hours."
+
+      # Subscription churn
+      - alert: HighSubscriptionChurn
+        expr: rate(askproai_subscriptions_cancelled_total[24h]) / rate(askproai_subscriptions_created_total[24h]) > 0.1
+        for: 1h
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "High subscription churn rate"
+          description: "Churn rate is {{ $value | humanizePercentage }} over the last 24 hours."
+
+  - name: askproai_infrastructure
+    interval: 30s
+    rules:
+      # Database connection pool
+      - alert: DatabaseConnectionPoolExhausted
+        expr: askproai_database_connections_active / askproai_database_connections_max > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "{{ $value | humanizePercentage }} of database connections are in use."
+
+      # Memory usage
+      - alert: HighMemoryUsage
+        expr: (askproai_php_memory_usage_bytes / askproai_php_memory_limit_bytes) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is at {{ $value | humanizePercentage }}."
+
+      # Disk space
+      - alert: LowDiskSpace
+        expr: askproai_disk_free_percentage < 10
+        for: 5m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Low disk space"
+          description: "Only {{ $value }}% disk space remaining."

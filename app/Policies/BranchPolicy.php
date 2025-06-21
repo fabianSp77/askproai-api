@@ -15,7 +15,17 @@ class BranchPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_branch');
+        // Allow if user has the permission
+        if ($user->can('view_any_branch')) {
+            return true;
+        }
+        
+        // Also allow if user has a company (can view their company's branches)
+        if ($user->company_id) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -23,7 +33,17 @@ class BranchPolicy
      */
     public function view(User $user, Branch $branch): bool
     {
-        return $user->can('view_branch');
+        // Allow if user has the permission
+        if ($user->can('view_branch')) {
+            return true;
+        }
+        
+        // Also allow if branch belongs to user's company
+        if ($user->company_id === $branch->company_id) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -31,7 +51,17 @@ class BranchPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_branch');
+        // Allow if user has the permission
+        if ($user->can('create_branch')) {
+            return true;
+        }
+        
+        // Also allow if user has a company (can create branches for their company)
+        if ($user->company_id) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -39,7 +69,17 @@ class BranchPolicy
      */
     public function update(User $user, Branch $branch): bool
     {
-        return $user->can('update_branch');
+        // Allow if user has the permission
+        if ($user->can('update_branch')) {
+            return true;
+        }
+        
+        // Also allow if branch belongs to user's company
+        if ($user->company_id === $branch->company_id) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**

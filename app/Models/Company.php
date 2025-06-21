@@ -41,14 +41,43 @@ class Company extends Model
         'google_calendar_credentials',
         'stripe_customer_id',
         'stripe_subscription_id',
+        // Tax fields
+        'tax_number',
+        'vat_id',
+        'is_small_business',
+        'small_business_threshold_date',
+        'tax_configuration',
+        'invoice_prefix',
+        'next_invoice_number',
+        'payment_terms',
+        'auto_invoice',
+        'invoice_day_of_month',
+        'credit_limit',
+        // Revenue tracking
+        'revenue_ytd',
+        'revenue_previous_year',
+        // Subscription dates
+        'subscription_started_at',
+        'subscription_current_period_end',
     ];
 
     protected $casts = [
         'settings' => 'array',
         'metadata' => 'array',
+        'tax_configuration' => 'array',
         'google_calendar_credentials' => 'encrypted:array',
         'is_active' => 'boolean',
+        'is_small_business' => 'boolean',
+        'auto_invoice' => 'boolean',
         'trial_ends_at' => 'datetime',
+        'small_business_threshold_date' => 'date',
+        'next_invoice_number' => 'integer',
+        'invoice_day_of_month' => 'integer',
+        'credit_limit' => 'decimal:2',
+        'revenue_ytd' => 'decimal:2',
+        'revenue_previous_year' => 'decimal:2',
+        'subscription_started_at' => 'datetime',
+        'subscription_current_period_end' => 'datetime',
     ];
 
     protected $hidden = [
@@ -59,10 +88,8 @@ class Company extends Model
     ];
 
     protected $attributes = [
-        'is_active' => true,
-        'currency' => 'EUR',
-        'timezone' => 'Europe/Berlin',
-        'country' => 'DE',
+        // Removed default values to prevent test issues with SQLite
+        // These will be set by factory or creation logic
     ];
 
     /**
@@ -138,11 +165,35 @@ class Company extends Model
     }
 
     /**
+     * Get the tax rates for the company.
+     */
+    public function taxRates(): HasMany
+    {
+        return $this->hasMany(TaxRate::class);
+    }
+
+    /**
+     * Get the payments for the company.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
      * Get the event types for the company.
      */
     public function eventTypes(): HasMany
     {
         return $this->hasMany(CalcomEventType::class);
+    }
+
+    /**
+     * Get the phone numbers for the company.
+     */
+    public function phoneNumbers(): HasMany
+    {
+        return $this->hasMany(PhoneNumber::class);
     }
 
     /**
@@ -187,6 +238,7 @@ class Company extends Model
     {
         return 'id';
     }
+    
 
     /**
      * Boot method

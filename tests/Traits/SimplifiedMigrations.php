@@ -38,7 +38,13 @@ trait SimplifiedMigrations
                 $table->string('calcom_api_key')->nullable();
                 $table->string('calcom_user_id')->nullable();
                 $table->string('retell_api_key')->nullable();
-                $table->boolean('active')->default(true);
+                $table->boolean('is_active')->default(true);
+                $table->string('currency', 3)->default('EUR');
+                $table->string('timezone', 50)->default('Europe/Berlin');
+                $table->string('country', 2)->default('DE');
+                $table->datetime('trial_ends_at')->nullable();
+                $table->string('subscription_status')->nullable();
+                $table->string('subscription_plan')->nullable();
                 $table->timestamps();
             });
         }
@@ -53,7 +59,7 @@ trait SimplifiedMigrations
                 $table->string('slug')->nullable();
                 $table->string('city')->nullable();
                 $table->string('phone_number')->nullable();
-                $table->boolean('active')->default(true);
+                $table->boolean('is_active')->default(true);
                 $table->timestamps();
                 $table->softDeletes();
             });
@@ -84,7 +90,7 @@ trait SimplifiedMigrations
                 $table->string('name');
                 $table->string('email')->nullable();
                 $table->string('phone')->nullable();
-                $table->boolean('active')->default(true);
+                $table->boolean('is_active')->default(true);
                 $table->timestamps();
                 $table->softDeletes();
             });
@@ -100,7 +106,7 @@ trait SimplifiedMigrations
                 $table->text('description')->nullable();
                 $table->decimal('price', 10, 2)->nullable();
                 $table->integer('default_duration_minutes')->default(60);
-                $table->boolean('active')->default(true);
+                $table->boolean('is_active')->default(true);
                 $table->string('category')->nullable();
                 $table->integer('sort_order')->default(0);
                 $table->integer('min_staff_required')->default(1);
@@ -128,6 +134,8 @@ trait SimplifiedMigrations
                 $table->json('metadata')->nullable();
                 $table->decimal('price', 10, 2)->nullable();
                 $table->unsignedBigInteger('call_id')->nullable();
+                $table->string('external_id')->nullable();
+                $table->json('payload')->nullable();
                 $table->timestamps();
             });
         }
@@ -162,7 +170,7 @@ trait SimplifiedMigrations
                 $table->string('agent_id')->unique();
                 $table->string('type')->default('retell');
                 $table->json('config')->nullable();
-                $table->boolean('active')->default(true);
+                $table->boolean('is_active')->default(true);
                 $table->timestamps();
             });
         }

@@ -3,20 +3,20 @@
 namespace App\Services\CalendarProviders;
 
 use App\Contracts\CalendarProviderInterface;
-use App\Services\CalcomService;
+use App\Services\CalcomV2Service;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
 class CalcomProvider implements CalendarProviderInterface
 {
-    protected CalcomService $calcomService;
+    protected CalcomV2Service $calcomService;
     protected array $config;
     
     public function __construct(array $config)
     {
         $this->config = $config;
-        $this->calcomService = new CalcomService();
+        $this->calcomService = app(CalcomV2Service::class);
     }
     
     public function getName(): string

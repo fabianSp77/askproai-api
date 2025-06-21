@@ -10,7 +10,7 @@ return new class extends Migration
     {
         if (!Schema::hasColumn('calls', 'calcom_booking_id')) {
             Schema::table('calls', function (Blueprint $table) {
-                $table->string('calcom_booking_id')->nullable()->after('raw_data');
+                $table->string('calcom_booking_id')->nullable();
             });
         }
     }
