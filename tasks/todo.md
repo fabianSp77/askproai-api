@@ -908,3 +908,104 @@ $numberProto = $phoneUtil->parse($phoneNumber, 'DE');
 **Geschätzte Zeit bis Production-Ready**: 5 Tage bei fokussierter Arbeit
 
 **Nächster Schritt**: Mit kritischen Blockern beginnen (Tag 1 Plan)
+
+---
+
+# MCP-First Technical Specification 🚀
+
+## Status: DRAFT
+## Datum: 2025-06-23
+## Priorität: HOCH 🔴
+
+## Übersicht
+Vollständige technische Spezifikation für AskProAI mit **MCP-First Ansatz**. Alle externen Integrationen werden ausschließlich über MCP Server abstrahiert.
+
+## Kernprinzipien
+1. **MCP-Only Communication**: Keine direkten API Calls zu externen Services
+2. **Unified Protocol**: JSON-RPC 2.0 für alle MCP Server
+3. **Service Discovery**: Automatische Registrierung und Health Checks
+4. **Complete Abstraction**: UI kennt keine externen API Details
+
+## Neue MCP Server zu implementieren
+
+### 1. RetellConfigurationMCPServer
+- **Zweck**: Verwaltung aller Retell.ai Einstellungen über UI
+- **Methoden**:
+  - `retell.config.getWebhookConfiguration`
+  - `retell.config.updateWebhookSettings`
+  - `retell.config.getCustomFunctions`
+  - `retell.config.updateCustomFunction`
+  - `retell.config.testWebhook`
+
+### 2. RetellCustomFunctionMCPServer
+- **Zweck**: Custom Function Execution während Retell Calls
+- **Gateway Endpoint**: POST /api/mcp/retell/custom-function
+- **Built-in Functions**:
+  - `collect_appointment_data`
+  - `check_availability`
+  - `find_next_slot`
+  - `calculate_duration`
+
+### 3. AppointmentManagementMCPServer
+- **Zweck**: Terminänderungen und Stornierungen per Telefon
+- **Methoden**:
+  - `appointments.find` - Termine per Telefonnummer finden
+  - `appointments.change` - Termin verschieben
+  - `appointments.cancel` - Termin stornieren
+
+## UI Components
+
+### Retell Configuration Page
+- Webhook Settings (read-only URL, Event Selection)
+- Custom Functions Editor
+- Testing Tools
+- Agent Version Manager
+
+### Features
+- Kein direkter API Call zu Retell
+- Alles über MCP abstrahiert
+- Live Testing von Webhooks
+- Version Management für Agents
+
+## Datenbank Schema
+
+```sql
+-- retell_configurations
+CREATE TABLE retell_configurations (
+    company_id BIGINT PRIMARY KEY,
+    webhook_url VARCHAR(255),
+    webhook_secret VARCHAR(255),
+    webhook_events JSON,
+    custom_functions JSON,
+    test_status ENUM('success', 'failed', 'pending')
+);
+
+-- retell_custom_functions
+CREATE TABLE retell_custom_functions (
+    id BIGINT PRIMARY KEY,
+    name VARCHAR(100),
+    type ENUM('external_api', 'data_collection'),
+    parameter_schema JSON,
+    is_enabled BOOLEAN DEFAULT TRUE
+);
+```
+
+## Migration Plan
+- **Woche 1**: Infrastructure (MCP Gateway, Service Discovery)
+- **Woche 2**: RetellConfigurationMCPServer
+- **Woche 3**: Custom Functions Implementation
+- **Woche 4**: AppointmentManagementMCPServer
+- **Woche 5**: Testing & Documentation
+
+## Vorteile
+1. **Complete Abstraction**: UI weiß nichts über externe APIs
+2. **Unified Protocol**: Alle Kommunikation via JSON-RPC 2.0
+3. **Enhanced Reliability**: Circuit Breakers, Retries, Caching
+4. **Better Testing**: Mock MCP Server für Tests
+5. **Easier Maintenance**: Zentrale Fehlerbehandlung
+
+## Dokumentation
+Vollständige Spezifikation erstellt in:
+`/var/www/api-gateway/ASKPROAI_MCP_FIRST_TECHNICAL_SPECIFICATION_2025-06-23.md`
+
+**Nächster Schritt**: Review der Spezifikation und Start mit Phase 1 (Infrastructure)
