@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Portal Styles Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/build/assets/theme-Beg54Ore.css">
+    <style>
+        body { padding: 2rem; }
+        .test-section { margin-bottom: 2rem; border: 2px solid #e5e7eb; padding: 1rem; }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .test-card { padding: 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background: #f9fafb; }
+    </style>
+</head>
+<body>
+    <h1>Company Integration Portal - Style Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Grid Layout Test</h2>
+        <div class="test-grid">
+            <div class="test-card">Card 1 - This should be at least 300px wide</div>
+            <div class="test-card">Card 2 - This should be at least 300px wide</div>
+            <div class="test-card">Card 3 - This should be at least 300px wide</div>
+            <div class="test-card">Card 4 - This should be at least 300px wide</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Button Test</h2>
+        <button class="fi-btn fi-btn-color-primary">This should look like a button</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. CSS Files Loaded</h2>
+        <ul id="css-status"></ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. JavaScript Test</h2>
+        <div id="js-test">JavaScript not loaded</div>
+    </div>
+    
+    <script>
+        // Check CSS files
+        const cssFiles = document.querySelectorAll('link[rel="stylesheet"]');
+        const cssList = document.getElementById('css-status');
+        cssFiles.forEach(css => {
+            const li = document.createElement('li');
+            li.textContent = css.href + ' - ' + (css.sheet ? 'Loaded' : 'Failed');
+            cssList.appendChild(li);
+        });
+        
+        // Test JavaScript
+        document.getElementById('js-test').textContent = 'JavaScript is working!';
+        
+        // Test grid
+        const cards = document.querySelectorAll('.test-card');
+        cards.forEach(card => {
+            const width = card.offsetWidth;
+            if (width < 300 && window.innerWidth > 768) {
+                card.style.border = '2px solid red';
+                card.innerHTML += '<br><strong style="color:red">ERROR: Card is only ' + width + 'px wide!</strong>';
+            }
+        });
+    </script>
+</body>
+</html>

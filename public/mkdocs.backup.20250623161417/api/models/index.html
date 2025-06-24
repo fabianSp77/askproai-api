@@ -1,0 +1,4840 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="Complete documentation for AskProAI platform" name="description"/>
+<link href="https://api.askproai.de/mkdocs/api/models/" rel="canonical"/>
+<link href="../../architecture/mcp-architecture/" rel="prev"/>
+<link href="../routes/" rel="next"/>
+<link href="../../assets/images/favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.6.14" name="generator"/>
+<title>Models - AskProAI Complete Documentation</title>
+<link href="../../assets/stylesheets/main.342714a4.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.06af60db.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="purple" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#model-reference">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="Header" class="md-header__inner md-grid">
+<a aria-label="AskProAI Complete Documentation" class="md-header__button md-logo" data-md-component="logo" href="../.." title="AskProAI Complete Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            AskProAI Complete Documentation
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              Models
+            
+          </span>
+</div>
+</div>
+</div>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="Search" class="md-search__options">
+<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" title="Clear" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+<div class="md-search__suggest" data-md-component="search-suggest"></div>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            Initializing search
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../..">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../quickstart/">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../status/">
+        
+  
+  
+    
+  
+  System Status
+
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../changelog/">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../architecture/overview/">
+          
+  
+  
+  Architecture
+
+        </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="./">
+          
+  
+  
+  API Documentation
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../MCP_COMPLETE_OVERVIEW/">
+          
+  
+  
+  MCP System
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../SERVICE_ARCHITECTURE/">
+          
+  
+  
+  Service Documentation
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../DEPLOYMENT_GUIDE/">
+          
+  
+  
+  Operations
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../configuration/reference/">
+          
+  
+  
+  Configuration
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../TESTING_STRATEGY/">
+          
+  
+  
+  Testing
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../database_cleanup_plan/">
+          
+  
+  
+  Planning
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../DASHBOARD_REDESIGN_README/">
+          
+  
+  
+  UI/UX
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../STRUCTURED_LOGGER_GUIDE/">
+          
+  
+  
+  Developer Tools
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../statistics/">
+        
+  
+  
+    
+  
+  Statistics
+
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="AskProAI Complete Documentation" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="AskProAI Complete Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+</a>
+    AskProAI Complete Documentation
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../..">
+<span class="md-ellipsis">
+    Home
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../quickstart/">
+<span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../status/">
+<span class="md-ellipsis">
+    System Status
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../changelog/">
+<span class="md-ellipsis">
+    Changelog
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+<span class="md-ellipsis">
+    Architecture
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../architecture/overview/">
+<span class="md-ellipsis">
+    Overview
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../architecture/database-schema/">
+<span class="md-ellipsis">
+    Database Schema
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../architecture/services/">
+<span class="md-ellipsis">
+    Services
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../architecture/mcp-architecture/">
+<span class="md-ellipsis">
+    MCP Architecture
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+<span class="md-ellipsis">
+    API Documentation
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="true" aria-labelledby="__nav_6_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_6">
+<span class="md-nav__icon md-icon"></span>
+            API Documentation
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    Models
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    Models
+    
+  </span>
+</a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#model-hierarchy">
+<span class="md-ellipsis">
+      Model Hierarchy
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#additionalservice">
+<span class="md-ellipsis">
+      AdditionalService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#agent">
+<span class="md-ellipsis">
+      Agent
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#apicalllog">
+<span class="md-ellipsis">
+      ApiCallLog
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#apicredential">
+<span class="md-ellipsis">
+      ApiCredential
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#appointment">
+<span class="md-ellipsis">
+      Appointment
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#appointmentlock">
+<span class="md-ellipsis">
+      AppointmentLock
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#availabilitycache">
+<span class="md-ellipsis">
+      AvailabilityCache
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#billingperiod">
+<span class="md-ellipsis">
+      BillingPeriod
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#booking">
+<span class="md-ellipsis">
+      Booking
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#branch">
+<span class="md-ellipsis">
+      Branch
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#brancheventtype">
+<span class="md-ellipsis">
+      BranchEventType
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#branchpricingoverride">
+<span class="md-ellipsis">
+      BranchPricingOverride
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#branchserviceoverride">
+<span class="md-ellipsis">
+      BranchServiceOverride
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#business">
+<span class="md-ellipsis">
+      Business
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#businesshourstemplate">
+<span class="md-ellipsis">
+      BusinessHoursTemplate
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calcombooking">
+<span class="md-ellipsis">
+      CalcomBooking
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calcomeventtype">
+<span class="md-ellipsis">
+      CalcomEventType
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calendar">
+<span class="md-ellipsis">
+      Calendar
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calendarmapping">
+<span class="md-ellipsis">
+      CalendarMapping
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#call">
+<span class="md-ellipsis">
+      Call
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calllog">
+<span class="md-ellipsis">
+      CallLog
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#callbackrequest">
+<span class="md-ellipsis">
+      CallbackRequest
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#company">
+<span class="md-ellipsis">
+      Company
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#companypricing">
+<span class="md-ellipsis">
+      CompanyPricing
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#cookieconsent">
+<span class="md-ellipsis">
+      CookieConsent
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#customer">
+<span class="md-ellipsis">
+      Customer
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#customerauth">
+<span class="md-ellipsis">
+      CustomerAuth
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#customerservice">
+<span class="md-ellipsis">
+      CustomerService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dashboardconfiguration">
+<span class="md-ellipsis">
+      DashboardConfiguration
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dienstleistung">
+<span class="md-ellipsis">
+      Dienstleistung
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dummycompany">
+<span class="md-ellipsis">
+      DummyCompany
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#eventtypeimportlog">
+<span class="md-ellipsis">
+      EventTypeImportLog
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#faq">
+<span class="md-ellipsis">
+      FAQ
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#faq_1">
+<span class="md-ellipsis">
+      Faq
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gdprrequest">
+<span class="md-ellipsis">
+      GdprRequest
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#integration">
+<span class="md-ellipsis">
+      Integration
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#invoice">
+<span class="md-ellipsis">
+      Invoice
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#invoiceitem">
+<span class="md-ellipsis">
+      InvoiceItem
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#invoiceitemflexible">
+<span class="md-ellipsis">
+      InvoiceItemFlexible
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgeanalytic">
+<span class="md-ellipsis">
+      KnowledgeAnalytic
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgecategory">
+<span class="md-ellipsis">
+      KnowledgeCategory
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgecodesnippet">
+<span class="md-ellipsis">
+      KnowledgeCodeSnippet
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgecomment">
+<span class="md-ellipsis">
+      KnowledgeComment
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgedocument">
+<span class="md-ellipsis">
+      KnowledgeDocument
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgefeedback">
+<span class="md-ellipsis">
+      KnowledgeFeedback
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgenotebook">
+<span class="md-ellipsis">
+      KnowledgeNotebook
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgenotebookentry">
+<span class="md-ellipsis">
+      KnowledgeNotebookEntry
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgerelateddocument">
+<span class="md-ellipsis">
+      KnowledgeRelatedDocument
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgerelationship">
+<span class="md-ellipsis">
+      KnowledgeRelationship
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgesearchindex">
+<span class="md-ellipsis">
+      KnowledgeSearchIndex
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgetag">
+<span class="md-ellipsis">
+      KnowledgeTag
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgeversion">
+<span class="md-ellipsis">
+      KnowledgeVersion
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#kunde">
+<span class="md-ellipsis">
+      Kunde
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#legacyuser">
+<span class="md-ellipsis">
+      LegacyUser
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mcpmetric">
+<span class="md-ellipsis">
+      MCPMetric
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#masterservice">
+<span class="md-ellipsis">
+      MasterService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mitarbeiter">
+<span class="md-ellipsis">
+      Mitarbeiter
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#note">
+<span class="md-ellipsis">
+      Note
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#payment">
+<span class="md-ellipsis">
+      Payment
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#phonenumber">
+<span class="md-ellipsis">
+      PhoneNumber
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#premiumservice">
+<span class="md-ellipsis">
+      PremiumService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#retellagent">
+<span class="md-ellipsis">
+      RetellAgent
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#retellwebhook">
+<span class="md-ellipsis">
+      RetellWebhook
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#securitylog">
+<span class="md-ellipsis">
+      SecurityLog
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#service">
+<span class="md-ellipsis">
+      Service
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#staff">
+<span class="md-ellipsis">
+      Staff
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#staffeventtype">
+<span class="md-ellipsis">
+      StaffEventType
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#staffservice">
+<span class="md-ellipsis">
+      StaffService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#staffserviceassignment">
+<span class="md-ellipsis">
+      StaffServiceAssignment
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#taxrate">
+<span class="md-ellipsis">
+      TaxRate
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#telefonnummer">
+<span class="md-ellipsis">
+      Telefonnummer
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#tenant">
+<span class="md-ellipsis">
+      Tenant
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#termin">
+<span class="md-ellipsis">
+      Termin
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#unifiedeventtype">
+<span class="md-ellipsis">
+      UnifiedEventType
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#user">
+<span class="md-ellipsis">
+      User
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#validationresult">
+<span class="md-ellipsis">
+      ValidationResult
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#webhookevent">
+<span class="md-ellipsis">
+      WebhookEvent
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#workinghour">
+<span class="md-ellipsis">
+      WorkingHour
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#workinghours">
+<span class="md-ellipsis">
+      WorkingHours
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../routes/">
+<span class="md-ellipsis">
+    Routes
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../reference/">
+<span class="md-ellipsis">
+    Reference
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_7" type="checkbox"/>
+<label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+<span class="md-ellipsis">
+    MCP System
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_7_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_7">
+<span class="md-nav__icon md-icon"></span>
+            MCP System
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MCP_COMPLETE_OVERVIEW/">
+<span class="md-ellipsis">
+    Complete Overview
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MCP_INTEGRATION_GUIDE/">
+<span class="md-ellipsis">
+    Integration Guide
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MCP_SETUP_COMPLETE_GUIDE/">
+<span class="md-ellipsis">
+    Setup Guide
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MCP_EVOLUTION_SYSTEM/">
+<span class="md-ellipsis">
+    Evolution System
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../CALCOM_MCP_SERVER_API/">
+<span class="md-ellipsis">
+    Cal.com MCP Server
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../KNOWLEDGE_MCP_SERVER/">
+<span class="md-ellipsis">
+    Knowledge MCP
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../QUEUE_MCP_IMPLEMENTATION_COMPLETE/">
+<span class="md-ellipsis">
+    Queue MCP
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../SENTRY_MCP_INTEGRATION/">
+<span class="md-ellipsis">
+    Sentry MCP
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_8" type="checkbox"/>
+<label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+<span class="md-ellipsis">
+    Service Documentation
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_8_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_8">
+<span class="md-nav__icon md-icon"></span>
+            Service Documentation
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../SERVICE_ARCHITECTURE/">
+<span class="md-ellipsis">
+    Service Architecture
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../ENHANCED_BOOKING_SERVICE/">
+<span class="md-ellipsis">
+    Enhanced Booking
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../UNIVERSAL_BOOKING_SYSTEM/">
+<span class="md-ellipsis">
+    Universal Booking
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../CALCOM_V2_API_DOCUMENTATION/">
+<span class="md-ellipsis">
+    Cal.com V2 API
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_9" type="checkbox"/>
+<label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+<span class="md-ellipsis">
+    Operations
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_9_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_9">
+<span class="md-nav__icon md-icon"></span>
+            Operations
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DEPLOYMENT_GUIDE/">
+<span class="md-ellipsis">
+    Deployment Guide
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MONITORING_AND_ALERTING_GUIDE/">
+<span class="md-ellipsis">
+    Monitoring Guide
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../TROUBLESHOOTING_GUIDE/">
+<span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../operations/security-audit/">
+<span class="md-ellipsis">
+    Security Audit
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../PERFORMANCE_INDEXES_MIGRATION/">
+<span class="md-ellipsis">
+    Performance Indexes
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_10" type="checkbox"/>
+<label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+<span class="md-ellipsis">
+    Configuration
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_10_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_10">
+<span class="md-nav__icon md-icon"></span>
+            Configuration
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../configuration/reference/">
+<span class="md-ellipsis">
+    Reference
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DATABASE_SAFETY_GUIDELINES/">
+<span class="md-ellipsis">
+    Database Safety
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_11" type="checkbox"/>
+<label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+<span class="md-ellipsis">
+    Testing
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_11_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_11">
+<span class="md-nav__icon md-icon"></span>
+            Testing
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../TESTING_STRATEGY/">
+<span class="md-ellipsis">
+    Testing Strategy
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../UNIVERSAL_BOOKING_TEST_GUIDE/">
+<span class="md-ellipsis">
+    Universal Booking Tests
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_12" type="checkbox"/>
+<label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="0">
+<span class="md-ellipsis">
+    Planning
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_12_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_12">
+<span class="md-nav__icon md-icon"></span>
+            Planning
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../database_cleanup_plan/">
+<span class="md-ellipsis">
+    Database Cleanup
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../service_consolidation_plan/">
+<span class="md-ellipsis">
+    Service Consolidation
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_13" type="checkbox"/>
+<label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+<span class="md-ellipsis">
+    UI/UX
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_13_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_13">
+<span class="md-nav__icon md-icon"></span>
+            UI/UX
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DASHBOARD_REDESIGN_README/">
+<span class="md-ellipsis">
+    Dashboard Redesign
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_14" type="checkbox"/>
+<label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+<span class="md-ellipsis">
+    Developer Tools
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_14_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_14">
+<span class="md-nav__icon md-icon"></span>
+            Developer Tools
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../STRUCTURED_LOGGER_GUIDE/">
+<span class="md-ellipsis">
+    Structured Logger
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../RETELL_WEBHOOK_MCP_MIGRATION_GUIDE/">
+<span class="md-ellipsis">
+    Retell Webhook Migration
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../statistics/">
+<span class="md-ellipsis">
+    Statistics
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#model-hierarchy">
+<span class="md-ellipsis">
+      Model Hierarchy
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#additionalservice">
+<span class="md-ellipsis">
+      AdditionalService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#agent">
+<span class="md-ellipsis">
+      Agent
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#apicalllog">
+<span class="md-ellipsis">
+      ApiCallLog
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#apicredential">
+<span class="md-ellipsis">
+      ApiCredential
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#appointment">
+<span class="md-ellipsis">
+      Appointment
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#appointmentlock">
+<span class="md-ellipsis">
+      AppointmentLock
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#availabilitycache">
+<span class="md-ellipsis">
+      AvailabilityCache
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#billingperiod">
+<span class="md-ellipsis">
+      BillingPeriod
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#booking">
+<span class="md-ellipsis">
+      Booking
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#branch">
+<span class="md-ellipsis">
+      Branch
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#brancheventtype">
+<span class="md-ellipsis">
+      BranchEventType
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#branchpricingoverride">
+<span class="md-ellipsis">
+      BranchPricingOverride
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#branchserviceoverride">
+<span class="md-ellipsis">
+      BranchServiceOverride
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#business">
+<span class="md-ellipsis">
+      Business
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#businesshourstemplate">
+<span class="md-ellipsis">
+      BusinessHoursTemplate
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calcombooking">
+<span class="md-ellipsis">
+      CalcomBooking
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calcomeventtype">
+<span class="md-ellipsis">
+      CalcomEventType
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calendar">
+<span class="md-ellipsis">
+      Calendar
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calendarmapping">
+<span class="md-ellipsis">
+      CalendarMapping
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#call">
+<span class="md-ellipsis">
+      Call
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calllog">
+<span class="md-ellipsis">
+      CallLog
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#callbackrequest">
+<span class="md-ellipsis">
+      CallbackRequest
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#company">
+<span class="md-ellipsis">
+      Company
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#companypricing">
+<span class="md-ellipsis">
+      CompanyPricing
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#cookieconsent">
+<span class="md-ellipsis">
+      CookieConsent
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#customer">
+<span class="md-ellipsis">
+      Customer
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#customerauth">
+<span class="md-ellipsis">
+      CustomerAuth
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#customerservice">
+<span class="md-ellipsis">
+      CustomerService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dashboardconfiguration">
+<span class="md-ellipsis">
+      DashboardConfiguration
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dienstleistung">
+<span class="md-ellipsis">
+      Dienstleistung
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#dummycompany">
+<span class="md-ellipsis">
+      DummyCompany
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#eventtypeimportlog">
+<span class="md-ellipsis">
+      EventTypeImportLog
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#faq">
+<span class="md-ellipsis">
+      FAQ
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#faq_1">
+<span class="md-ellipsis">
+      Faq
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gdprrequest">
+<span class="md-ellipsis">
+      GdprRequest
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#integration">
+<span class="md-ellipsis">
+      Integration
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#invoice">
+<span class="md-ellipsis">
+      Invoice
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#invoiceitem">
+<span class="md-ellipsis">
+      InvoiceItem
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#invoiceitemflexible">
+<span class="md-ellipsis">
+      InvoiceItemFlexible
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgeanalytic">
+<span class="md-ellipsis">
+      KnowledgeAnalytic
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgecategory">
+<span class="md-ellipsis">
+      KnowledgeCategory
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgecodesnippet">
+<span class="md-ellipsis">
+      KnowledgeCodeSnippet
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgecomment">
+<span class="md-ellipsis">
+      KnowledgeComment
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgedocument">
+<span class="md-ellipsis">
+      KnowledgeDocument
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgefeedback">
+<span class="md-ellipsis">
+      KnowledgeFeedback
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgenotebook">
+<span class="md-ellipsis">
+      KnowledgeNotebook
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgenotebookentry">
+<span class="md-ellipsis">
+      KnowledgeNotebookEntry
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgerelateddocument">
+<span class="md-ellipsis">
+      KnowledgeRelatedDocument
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgerelationship">
+<span class="md-ellipsis">
+      KnowledgeRelationship
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgesearchindex">
+<span class="md-ellipsis">
+      KnowledgeSearchIndex
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgetag">
+<span class="md-ellipsis">
+      KnowledgeTag
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#knowledgeversion">
+<span class="md-ellipsis">
+      KnowledgeVersion
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#kunde">
+<span class="md-ellipsis">
+      Kunde
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#legacyuser">
+<span class="md-ellipsis">
+      LegacyUser
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mcpmetric">
+<span class="md-ellipsis">
+      MCPMetric
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#masterservice">
+<span class="md-ellipsis">
+      MasterService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mitarbeiter">
+<span class="md-ellipsis">
+      Mitarbeiter
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#note">
+<span class="md-ellipsis">
+      Note
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#payment">
+<span class="md-ellipsis">
+      Payment
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#phonenumber">
+<span class="md-ellipsis">
+      PhoneNumber
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#premiumservice">
+<span class="md-ellipsis">
+      PremiumService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#retellagent">
+<span class="md-ellipsis">
+      RetellAgent
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#retellwebhook">
+<span class="md-ellipsis">
+      RetellWebhook
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#securitylog">
+<span class="md-ellipsis">
+      SecurityLog
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#service">
+<span class="md-ellipsis">
+      Service
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#staff">
+<span class="md-ellipsis">
+      Staff
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#staffeventtype">
+<span class="md-ellipsis">
+      StaffEventType
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#staffservice">
+<span class="md-ellipsis">
+      StaffService
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#staffserviceassignment">
+<span class="md-ellipsis">
+      StaffServiceAssignment
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#taxrate">
+<span class="md-ellipsis">
+      TaxRate
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#telefonnummer">
+<span class="md-ellipsis">
+      Telefonnummer
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#tenant">
+<span class="md-ellipsis">
+      Tenant
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#termin">
+<span class="md-ellipsis">
+      Termin
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#unifiedeventtype">
+<span class="md-ellipsis">
+      UnifiedEventType
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#user">
+<span class="md-ellipsis">
+      User
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#validationresult">
+<span class="md-ellipsis">
+      ValidationResult
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#webhookevent">
+<span class="md-ellipsis">
+      WebhookEvent
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#workinghour">
+<span class="md-ellipsis">
+      WorkingHour
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#workinghours">
+<span class="md-ellipsis">
+      WorkingHours
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="model-reference">Model Reference<a class="headerlink" href="#model-reference" title="Permanent link">¶</a></h1>
+<p>Generated on: 2025-06-22 23:28:53</p>
+<h2 id="model-hierarchy">Model Hierarchy<a class="headerlink" href="#model-hierarchy" title="Permanent link">¶</a></h2>
+<pre class="mermaid"><code>graph TB
+    AdditionalService --&gt; HasOne
+    AdditionalService --&gt; HasOneThrough
+    AdditionalService --&gt; BelongsTo
+    AdditionalService --&gt; Model
+    AdditionalService --&gt; HasMany
+    AdditionalService --&gt; HasManyThrough
+    AdditionalService --&gt; MorphMany
+    AdditionalService --&gt; BelongsToMany
+    AdditionalService --&gt; MorphToMany
+    Agent --&gt; HasOne
+    Agent --&gt; HasOneThrough
+    Agent --&gt; BelongsTo
+    Agent --&gt; Model
+    Agent --&gt; HasMany
+    Agent --&gt; HasManyThrough
+    Agent --&gt; MorphMany
+    Agent --&gt; BelongsToMany
+    Agent --&gt; MorphToMany
+    ApiCallLog --&gt; HasOne
+    ApiCallLog --&gt; HasOneThrough
+    ApiCallLog --&gt; BelongsTo
+    ApiCallLog --&gt; Model
+    ApiCallLog --&gt; HasMany
+    ApiCallLog --&gt; HasManyThrough
+    ApiCallLog --&gt; MorphMany
+    ApiCallLog --&gt; BelongsToMany
+    ApiCallLog --&gt; MorphToMany
+    ApiCredential --&gt; HasOne
+    ApiCredential --&gt; HasOneThrough
+    ApiCredential --&gt; BelongsTo
+    ApiCredential --&gt; Model
+    ApiCredential --&gt; HasMany
+    ApiCredential --&gt; HasManyThrough
+    ApiCredential --&gt; MorphMany
+    ApiCredential --&gt; BelongsToMany
+    ApiCredential --&gt; MorphToMany
+    Appointment --&gt; HasOne
+    Appointment --&gt; HasOneThrough
+    Appointment --&gt; BelongsTo
+    Appointment --&gt; Model
+    Appointment --&gt; HasMany
+    Appointment --&gt; HasManyThrough
+    Appointment --&gt; MorphMany
+    Appointment --&gt; BelongsToMany
+    Appointment --&gt; MorphToMany
+    AppointmentLock --&gt; HasOne
+    AppointmentLock --&gt; HasOneThrough
+    AppointmentLock --&gt; BelongsTo
+    AppointmentLock --&gt; Model
+    AppointmentLock --&gt; HasMany
+    AppointmentLock --&gt; HasManyThrough
+    AppointmentLock --&gt; MorphMany
+    AppointmentLock --&gt; BelongsToMany
+    AppointmentLock --&gt; MorphToMany
+    AvailabilityCache --&gt; HasOne
+    AvailabilityCache --&gt; HasOneThrough
+    AvailabilityCache --&gt; BelongsTo
+    AvailabilityCache --&gt; Model
+    AvailabilityCache --&gt; HasMany
+    AvailabilityCache --&gt; HasManyThrough
+    AvailabilityCache --&gt; MorphMany
+    AvailabilityCache --&gt; BelongsToMany
+    AvailabilityCache --&gt; MorphToMany
+    BillingPeriod --&gt; HasOne
+    BillingPeriod --&gt; HasOneThrough
+    BillingPeriod --&gt; BelongsTo
+    BillingPeriod --&gt; Model
+    BillingPeriod --&gt; HasMany
+    BillingPeriod --&gt; HasManyThrough
+    BillingPeriod --&gt; MorphMany
+    BillingPeriod --&gt; BelongsToMany
+    BillingPeriod --&gt; MorphToMany
+    Booking --&gt; HasOne
+    Booking --&gt; HasOneThrough
+    Booking --&gt; BelongsTo
+    Booking --&gt; Model
+    Booking --&gt; HasMany
+    Booking --&gt; HasManyThrough
+    Booking --&gt; MorphMany
+    Booking --&gt; BelongsToMany
+    Booking --&gt; MorphToMany
+    Branch --&gt; HasOne
+    Branch --&gt; HasOneThrough
+    Branch --&gt; BelongsTo
+    Branch --&gt; Model
+    Branch --&gt; HasMany
+    Branch --&gt; HasManyThrough
+    Branch --&gt; MorphMany
+    Branch --&gt; BelongsToMany
+    Branch --&gt; MorphToMany
+    BranchEventType --&gt; HasOne
+    BranchEventType --&gt; HasOneThrough
+    BranchEventType --&gt; BelongsTo
+    BranchEventType --&gt; Model
+    BranchEventType --&gt; HasMany
+    BranchEventType --&gt; HasManyThrough
+    BranchEventType --&gt; MorphMany
+    BranchEventType --&gt; BelongsToMany
+    BranchEventType --&gt; MorphToMany
+    BranchPricingOverride --&gt; HasOne
+    BranchPricingOverride --&gt; HasOneThrough
+    BranchPricingOverride --&gt; BelongsTo
+    BranchPricingOverride --&gt; Model
+    BranchPricingOverride --&gt; HasMany
+    BranchPricingOverride --&gt; HasManyThrough
+    BranchPricingOverride --&gt; MorphMany
+    BranchPricingOverride --&gt; BelongsToMany
+    BranchPricingOverride --&gt; MorphToMany
+    BranchServiceOverride --&gt; HasOne
+    BranchServiceOverride --&gt; HasOneThrough
+    BranchServiceOverride --&gt; BelongsTo
+    BranchServiceOverride --&gt; Model
+    BranchServiceOverride --&gt; HasMany
+    BranchServiceOverride --&gt; HasManyThrough
+    BranchServiceOverride --&gt; MorphMany
+    BranchServiceOverride --&gt; BelongsToMany
+    BranchServiceOverride --&gt; MorphToMany
+    Business --&gt; HasOne
+    Business --&gt; HasOneThrough
+    Business --&gt; BelongsTo
+    Business --&gt; Model
+    Business --&gt; HasMany
+    Business --&gt; HasManyThrough
+    Business --&gt; MorphMany
+    Business --&gt; BelongsToMany
+    Business --&gt; MorphToMany
+    BusinessHoursTemplate --&gt; HasOne
+    BusinessHoursTemplate --&gt; HasOneThrough
+    BusinessHoursTemplate --&gt; BelongsTo
+    BusinessHoursTemplate --&gt; Model
+    BusinessHoursTemplate --&gt; HasMany
+    BusinessHoursTemplate --&gt; HasManyThrough
+    BusinessHoursTemplate --&gt; MorphMany
+    BusinessHoursTemplate --&gt; BelongsToMany
+    BusinessHoursTemplate --&gt; MorphToMany
+    CalcomBooking --&gt; HasOne
+    CalcomBooking --&gt; HasOneThrough
+    CalcomBooking --&gt; BelongsTo
+    CalcomBooking --&gt; Model
+    CalcomBooking --&gt; HasMany
+    CalcomBooking --&gt; HasManyThrough
+    CalcomBooking --&gt; MorphMany
+    CalcomBooking --&gt; BelongsToMany
+    CalcomBooking --&gt; MorphToMany
+    CalcomEventType --&gt; HasOne
+    CalcomEventType --&gt; HasOneThrough
+    CalcomEventType --&gt; BelongsTo
+    CalcomEventType --&gt; Model
+    CalcomEventType --&gt; HasMany
+    CalcomEventType --&gt; HasManyThrough
+    CalcomEventType --&gt; MorphMany
+    CalcomEventType --&gt; BelongsToMany
+    CalcomEventType --&gt; MorphToMany
+    Calendar --&gt; HasOne
+    Calendar --&gt; HasOneThrough
+    Calendar --&gt; BelongsTo
+    Calendar --&gt; Model
+    Calendar --&gt; HasMany
+    Calendar --&gt; HasManyThrough
+    Calendar --&gt; MorphMany
+    Calendar --&gt; BelongsToMany
+    Calendar --&gt; MorphToMany
+    CalendarMapping --&gt; HasOne
+    CalendarMapping --&gt; HasOneThrough
+    CalendarMapping --&gt; BelongsTo
+    CalendarMapping --&gt; Model
+    CalendarMapping --&gt; HasMany
+    CalendarMapping --&gt; HasManyThrough
+    CalendarMapping --&gt; MorphMany
+    CalendarMapping --&gt; BelongsToMany
+    CalendarMapping --&gt; MorphToMany
+    Call --&gt; HasOne
+    Call --&gt; HasOneThrough
+    Call --&gt; BelongsTo
+    Call --&gt; Model
+    Call --&gt; HasMany
+    Call --&gt; HasManyThrough
+    Call --&gt; MorphMany
+    Call --&gt; BelongsToMany
+    Call --&gt; MorphToMany
+    CallLog --&gt; HasOne
+    CallLog --&gt; HasOneThrough
+    CallLog --&gt; BelongsTo
+    CallLog --&gt; Model
+    CallLog --&gt; HasMany
+    CallLog --&gt; HasManyThrough
+    CallLog --&gt; MorphMany
+    CallLog --&gt; BelongsToMany
+    CallLog --&gt; MorphToMany
+    CallbackRequest --&gt; HasOne
+    CallbackRequest --&gt; HasOneThrough
+    CallbackRequest --&gt; BelongsTo
+    CallbackRequest --&gt; Model
+    CallbackRequest --&gt; HasMany
+    CallbackRequest --&gt; HasManyThrough
+    CallbackRequest --&gt; MorphMany
+    CallbackRequest --&gt; BelongsToMany
+    CallbackRequest --&gt; MorphToMany
+    Company --&gt; HasOne
+    Company --&gt; HasOneThrough
+    Company --&gt; BelongsTo
+    Company --&gt; Model
+    Company --&gt; HasMany
+    Company --&gt; HasManyThrough
+    Company --&gt; MorphMany
+    Company --&gt; BelongsToMany
+    Company --&gt; MorphToMany
+    CompanyPricing --&gt; HasOne
+    CompanyPricing --&gt; HasOneThrough
+    CompanyPricing --&gt; BelongsTo
+    CompanyPricing --&gt; Model
+    CompanyPricing --&gt; HasMany
+    CompanyPricing --&gt; HasManyThrough
+    CompanyPricing --&gt; MorphMany
+    CompanyPricing --&gt; BelongsToMany
+    CompanyPricing --&gt; MorphToMany
+    CookieConsent --&gt; HasOne
+    CookieConsent --&gt; HasOneThrough
+    CookieConsent --&gt; BelongsTo
+    CookieConsent --&gt; Model
+    CookieConsent --&gt; HasMany
+    CookieConsent --&gt; HasManyThrough
+    CookieConsent --&gt; MorphMany
+    CookieConsent --&gt; BelongsToMany
+    CookieConsent --&gt; MorphToMany
+    Customer --&gt; HasOne
+    Customer --&gt; HasOneThrough
+    Customer --&gt; BelongsTo
+    Customer --&gt; Model
+    Customer --&gt; HasMany
+    Customer --&gt; HasManyThrough
+    Customer --&gt; MorphMany
+    Customer --&gt; BelongsToMany
+    Customer --&gt; MorphToMany
+    CustomerAuth --&gt; HasOne
+    CustomerAuth --&gt; HasOneThrough
+    CustomerAuth --&gt; BelongsTo
+    CustomerAuth --&gt; Model
+    CustomerAuth --&gt; HasMany
+    CustomerAuth --&gt; HasManyThrough
+    CustomerAuth --&gt; MorphMany
+    CustomerAuth --&gt; BelongsToMany
+    CustomerAuth --&gt; MorphToMany
+    CustomerService --&gt; HasOne
+    CustomerService --&gt; HasOneThrough
+    CustomerService --&gt; BelongsTo
+    CustomerService --&gt; Model
+    CustomerService --&gt; HasMany
+    CustomerService --&gt; HasManyThrough
+    CustomerService --&gt; MorphMany
+    CustomerService --&gt; BelongsToMany
+    CustomerService --&gt; MorphToMany
+    DashboardConfiguration --&gt; HasOne
+    DashboardConfiguration --&gt; HasOneThrough
+    DashboardConfiguration --&gt; BelongsTo
+    DashboardConfiguration --&gt; Model
+    DashboardConfiguration --&gt; HasMany
+    DashboardConfiguration --&gt; HasManyThrough
+    DashboardConfiguration --&gt; MorphMany
+    DashboardConfiguration --&gt; BelongsToMany
+    DashboardConfiguration --&gt; MorphToMany
+    Dienstleistung --&gt; HasOne
+    Dienstleistung --&gt; HasOneThrough
+    Dienstleistung --&gt; BelongsTo
+    Dienstleistung --&gt; Model
+    Dienstleistung --&gt; HasMany
+    Dienstleistung --&gt; HasManyThrough
+    Dienstleistung --&gt; MorphMany
+    Dienstleistung --&gt; BelongsToMany
+    Dienstleistung --&gt; MorphToMany
+    DummyCompany --&gt; HasOne
+    DummyCompany --&gt; HasOneThrough
+    DummyCompany --&gt; BelongsTo
+    DummyCompany --&gt; Model
+    DummyCompany --&gt; HasMany
+    DummyCompany --&gt; HasManyThrough
+    DummyCompany --&gt; MorphMany
+    DummyCompany --&gt; BelongsToMany
+    DummyCompany --&gt; MorphToMany
+    EventTypeImportLog --&gt; HasOne
+    EventTypeImportLog --&gt; HasOneThrough
+    EventTypeImportLog --&gt; BelongsTo
+    EventTypeImportLog --&gt; Model
+    EventTypeImportLog --&gt; HasMany
+    EventTypeImportLog --&gt; HasManyThrough
+    EventTypeImportLog --&gt; MorphMany
+    EventTypeImportLog --&gt; BelongsToMany
+    EventTypeImportLog --&gt; MorphToMany
+    FAQ --&gt; HasOne
+    FAQ --&gt; HasOneThrough
+    FAQ --&gt; BelongsTo
+    FAQ --&gt; Model
+    FAQ --&gt; HasMany
+    FAQ --&gt; HasManyThrough
+    FAQ --&gt; MorphMany
+    FAQ --&gt; BelongsToMany
+    FAQ --&gt; MorphToMany
+    Faq --&gt; HasOne
+    Faq --&gt; HasOneThrough
+    Faq --&gt; BelongsTo
+    Faq --&gt; Model
+    Faq --&gt; HasMany
+    Faq --&gt; HasManyThrough
+    Faq --&gt; MorphMany
+    Faq --&gt; BelongsToMany
+    Faq --&gt; MorphToMany
+    GdprRequest --&gt; HasOne
+    GdprRequest --&gt; HasOneThrough
+    GdprRequest --&gt; BelongsTo
+    GdprRequest --&gt; Model
+    GdprRequest --&gt; HasMany
+    GdprRequest --&gt; HasManyThrough
+    GdprRequest --&gt; MorphMany
+    GdprRequest --&gt; BelongsToMany
+    GdprRequest --&gt; MorphToMany
+    Integration --&gt; HasOne
+    Integration --&gt; HasOneThrough
+    Integration --&gt; BelongsTo
+    Integration --&gt; Model
+    Integration --&gt; HasMany
+    Integration --&gt; HasManyThrough
+    Integration --&gt; MorphMany
+    Integration --&gt; BelongsToMany
+    Integration --&gt; MorphToMany
+    Invoice --&gt; HasOne
+    Invoice --&gt; HasOneThrough
+    Invoice --&gt; BelongsTo
+    Invoice --&gt; Model
+    Invoice --&gt; HasMany
+    Invoice --&gt; HasManyThrough
+    Invoice --&gt; MorphMany
+    Invoice --&gt; BelongsToMany
+    Invoice --&gt; MorphToMany
+    InvoiceItem --&gt; HasOne
+    InvoiceItem --&gt; HasOneThrough
+    InvoiceItem --&gt; BelongsTo
+    InvoiceItem --&gt; Model
+    InvoiceItem --&gt; HasMany
+    InvoiceItem --&gt; HasManyThrough
+    InvoiceItem --&gt; MorphMany
+    InvoiceItem --&gt; BelongsToMany
+    InvoiceItem --&gt; MorphToMany
+    InvoiceItemFlexible --&gt; HasOne
+    InvoiceItemFlexible --&gt; HasOneThrough
+    InvoiceItemFlexible --&gt; BelongsTo
+    InvoiceItemFlexible --&gt; Model
+    InvoiceItemFlexible --&gt; HasMany
+    InvoiceItemFlexible --&gt; HasManyThrough
+    InvoiceItemFlexible --&gt; MorphMany
+    InvoiceItemFlexible --&gt; BelongsToMany
+    InvoiceItemFlexible --&gt; MorphToMany
+    KnowledgeAnalytic --&gt; HasOne
+    KnowledgeAnalytic --&gt; HasOneThrough
+    KnowledgeAnalytic --&gt; BelongsTo
+    KnowledgeAnalytic --&gt; Model
+    KnowledgeAnalytic --&gt; HasMany
+    KnowledgeAnalytic --&gt; HasManyThrough
+    KnowledgeAnalytic --&gt; MorphMany
+    KnowledgeAnalytic --&gt; BelongsToMany
+    KnowledgeAnalytic --&gt; MorphToMany
+    KnowledgeCategory --&gt; HasOne
+    KnowledgeCategory --&gt; HasOneThrough
+    KnowledgeCategory --&gt; BelongsTo
+    KnowledgeCategory --&gt; Model
+    KnowledgeCategory --&gt; HasMany
+    KnowledgeCategory --&gt; HasManyThrough
+    KnowledgeCategory --&gt; MorphMany
+    KnowledgeCategory --&gt; BelongsToMany
+    KnowledgeCategory --&gt; MorphToMany
+    KnowledgeCodeSnippet --&gt; HasOne
+    KnowledgeCodeSnippet --&gt; HasOneThrough
+    KnowledgeCodeSnippet --&gt; BelongsTo
+    KnowledgeCodeSnippet --&gt; Model
+    KnowledgeCodeSnippet --&gt; HasMany
+    KnowledgeCodeSnippet --&gt; HasManyThrough
+    KnowledgeCodeSnippet --&gt; MorphMany
+    KnowledgeCodeSnippet --&gt; BelongsToMany
+    KnowledgeCodeSnippet --&gt; MorphToMany
+    KnowledgeComment --&gt; HasOne
+    KnowledgeComment --&gt; HasOneThrough
+    KnowledgeComment --&gt; BelongsTo
+    KnowledgeComment --&gt; Model
+    KnowledgeComment --&gt; HasMany
+    KnowledgeComment --&gt; HasManyThrough
+    KnowledgeComment --&gt; MorphMany
+    KnowledgeComment --&gt; BelongsToMany
+    KnowledgeComment --&gt; MorphToMany
+    KnowledgeDocument --&gt; HasOne
+    KnowledgeDocument --&gt; HasOneThrough
+    KnowledgeDocument --&gt; BelongsTo
+    KnowledgeDocument --&gt; Model
+    KnowledgeDocument --&gt; HasMany
+    KnowledgeDocument --&gt; HasManyThrough
+    KnowledgeDocument --&gt; MorphMany
+    KnowledgeDocument --&gt; BelongsToMany
+    KnowledgeDocument --&gt; MorphToMany
+    KnowledgeFeedback --&gt; HasOne
+    KnowledgeFeedback --&gt; HasOneThrough
+    KnowledgeFeedback --&gt; BelongsTo
+    KnowledgeFeedback --&gt; Model
+    KnowledgeFeedback --&gt; HasMany
+    KnowledgeFeedback --&gt; HasManyThrough
+    KnowledgeFeedback --&gt; MorphMany
+    KnowledgeFeedback --&gt; BelongsToMany
+    KnowledgeFeedback --&gt; MorphToMany
+    KnowledgeNotebook --&gt; HasOne
+    KnowledgeNotebook --&gt; HasOneThrough
+    KnowledgeNotebook --&gt; BelongsTo
+    KnowledgeNotebook --&gt; Model
+    KnowledgeNotebook --&gt; HasMany
+    KnowledgeNotebook --&gt; HasManyThrough
+    KnowledgeNotebook --&gt; MorphMany
+    KnowledgeNotebook --&gt; BelongsToMany
+    KnowledgeNotebook --&gt; MorphToMany
+    KnowledgeNotebookEntry --&gt; HasOne
+    KnowledgeNotebookEntry --&gt; HasOneThrough
+    KnowledgeNotebookEntry --&gt; BelongsTo
+    KnowledgeNotebookEntry --&gt; Model
+    KnowledgeNotebookEntry --&gt; HasMany
+    KnowledgeNotebookEntry --&gt; HasManyThrough
+    KnowledgeNotebookEntry --&gt; MorphMany
+    KnowledgeNotebookEntry --&gt; BelongsToMany
+    KnowledgeNotebookEntry --&gt; MorphToMany
+    KnowledgeRelatedDocument --&gt; HasOne
+    KnowledgeRelatedDocument --&gt; HasOneThrough
+    KnowledgeRelatedDocument --&gt; BelongsTo
+    KnowledgeRelatedDocument --&gt; Model
+    KnowledgeRelatedDocument --&gt; HasMany
+    KnowledgeRelatedDocument --&gt; HasManyThrough
+    KnowledgeRelatedDocument --&gt; MorphMany
+    KnowledgeRelatedDocument --&gt; BelongsToMany
+    KnowledgeRelatedDocument --&gt; MorphToMany
+    KnowledgeRelationship --&gt; HasOne
+    KnowledgeRelationship --&gt; HasOneThrough
+    KnowledgeRelationship --&gt; BelongsTo
+    KnowledgeRelationship --&gt; Model
+    KnowledgeRelationship --&gt; HasMany
+    KnowledgeRelationship --&gt; HasManyThrough
+    KnowledgeRelationship --&gt; MorphMany
+    KnowledgeRelationship --&gt; BelongsToMany
+    KnowledgeRelationship --&gt; MorphToMany
+    KnowledgeSearchIndex --&gt; HasOne
+    KnowledgeSearchIndex --&gt; HasOneThrough
+    KnowledgeSearchIndex --&gt; BelongsTo
+    KnowledgeSearchIndex --&gt; Model
+    KnowledgeSearchIndex --&gt; HasMany
+    KnowledgeSearchIndex --&gt; HasManyThrough
+    KnowledgeSearchIndex --&gt; MorphMany
+    KnowledgeSearchIndex --&gt; BelongsToMany
+    KnowledgeSearchIndex --&gt; MorphToMany
+    KnowledgeTag --&gt; HasOne
+    KnowledgeTag --&gt; HasOneThrough
+    KnowledgeTag --&gt; BelongsTo
+    KnowledgeTag --&gt; Model
+    KnowledgeTag --&gt; HasMany
+    KnowledgeTag --&gt; HasManyThrough
+    KnowledgeTag --&gt; MorphMany
+    KnowledgeTag --&gt; BelongsToMany
+    KnowledgeTag --&gt; MorphToMany
+    KnowledgeVersion --&gt; HasOne
+    KnowledgeVersion --&gt; HasOneThrough
+    KnowledgeVersion --&gt; BelongsTo
+    KnowledgeVersion --&gt; Model
+    KnowledgeVersion --&gt; HasMany
+    KnowledgeVersion --&gt; HasManyThrough
+    KnowledgeVersion --&gt; MorphMany
+    KnowledgeVersion --&gt; BelongsToMany
+    KnowledgeVersion --&gt; MorphToMany
+    Kunde --&gt; HasOne
+    Kunde --&gt; HasOneThrough
+    Kunde --&gt; BelongsTo
+    Kunde --&gt; Model
+    Kunde --&gt; HasMany
+    Kunde --&gt; HasManyThrough
+    Kunde --&gt; MorphMany
+    Kunde --&gt; BelongsToMany
+    Kunde --&gt; MorphToMany
+    LegacyUser --&gt; HasOne
+    LegacyUser --&gt; HasOneThrough
+    LegacyUser --&gt; BelongsTo
+    LegacyUser --&gt; Model
+    LegacyUser --&gt; HasMany
+    LegacyUser --&gt; HasManyThrough
+    LegacyUser --&gt; MorphMany
+    LegacyUser --&gt; BelongsToMany
+    LegacyUser --&gt; MorphToMany
+    MCPMetric --&gt; HasOne
+    MCPMetric --&gt; HasOneThrough
+    MCPMetric --&gt; BelongsTo
+    MCPMetric --&gt; Model
+    MCPMetric --&gt; HasMany
+    MCPMetric --&gt; HasManyThrough
+    MCPMetric --&gt; MorphMany
+    MCPMetric --&gt; BelongsToMany
+    MCPMetric --&gt; MorphToMany
+    MasterService --&gt; HasOne
+    MasterService --&gt; HasOneThrough
+    MasterService --&gt; BelongsTo
+    MasterService --&gt; Model
+    MasterService --&gt; HasMany
+    MasterService --&gt; HasManyThrough
+    MasterService --&gt; MorphMany
+    MasterService --&gt; BelongsToMany
+    MasterService --&gt; MorphToMany
+    Mitarbeiter --&gt; HasOne
+    Mitarbeiter --&gt; HasOneThrough
+    Mitarbeiter --&gt; BelongsTo
+    Mitarbeiter --&gt; Model
+    Mitarbeiter --&gt; HasMany
+    Mitarbeiter --&gt; HasManyThrough
+    Mitarbeiter --&gt; MorphMany
+    Mitarbeiter --&gt; BelongsToMany
+    Mitarbeiter --&gt; MorphToMany
+    Note --&gt; HasOne
+    Note --&gt; HasOneThrough
+    Note --&gt; BelongsTo
+    Note --&gt; Model
+    Note --&gt; HasMany
+    Note --&gt; HasManyThrough
+    Note --&gt; MorphMany
+    Note --&gt; BelongsToMany
+    Note --&gt; MorphToMany
+    Payment --&gt; HasOne
+    Payment --&gt; HasOneThrough
+    Payment --&gt; BelongsTo
+    Payment --&gt; Model
+    Payment --&gt; HasMany
+    Payment --&gt; HasManyThrough
+    Payment --&gt; MorphMany
+    Payment --&gt; BelongsToMany
+    Payment --&gt; MorphToMany
+    PhoneNumber --&gt; HasOne
+    PhoneNumber --&gt; HasOneThrough
+    PhoneNumber --&gt; BelongsTo
+    PhoneNumber --&gt; Model
+    PhoneNumber --&gt; HasMany
+    PhoneNumber --&gt; HasManyThrough
+    PhoneNumber --&gt; MorphMany
+    PhoneNumber --&gt; BelongsToMany
+    PhoneNumber --&gt; MorphToMany
+    PremiumService --&gt; HasOne
+    PremiumService --&gt; HasOneThrough
+    PremiumService --&gt; BelongsTo
+    PremiumService --&gt; Model
+    PremiumService --&gt; HasMany
+    PremiumService --&gt; HasManyThrough
+    PremiumService --&gt; MorphMany
+    PremiumService --&gt; BelongsToMany
+    PremiumService --&gt; MorphToMany
+    RetellAgent --&gt; HasOne
+    RetellAgent --&gt; HasOneThrough
+    RetellAgent --&gt; BelongsTo
+    RetellAgent --&gt; Model
+    RetellAgent --&gt; HasMany
+    RetellAgent --&gt; HasManyThrough
+    RetellAgent --&gt; MorphMany
+    RetellAgent --&gt; BelongsToMany
+    RetellAgent --&gt; MorphToMany
+    RetellWebhook --&gt; HasOne
+    RetellWebhook --&gt; HasOneThrough
+    RetellWebhook --&gt; BelongsTo
+    RetellWebhook --&gt; Model
+    RetellWebhook --&gt; HasMany
+    RetellWebhook --&gt; HasManyThrough
+    RetellWebhook --&gt; MorphMany
+    RetellWebhook --&gt; BelongsToMany
+    RetellWebhook --&gt; MorphToMany
+    SecurityLog --&gt; HasOne
+    SecurityLog --&gt; HasOneThrough
+    SecurityLog --&gt; BelongsTo
+    SecurityLog --&gt; Model
+    SecurityLog --&gt; HasMany
+    SecurityLog --&gt; HasManyThrough
+    SecurityLog --&gt; MorphMany
+    SecurityLog --&gt; BelongsToMany
+    SecurityLog --&gt; MorphToMany
+    Service --&gt; HasOne
+    Service --&gt; HasOneThrough
+    Service --&gt; BelongsTo
+    Service --&gt; Model
+    Service --&gt; HasMany
+    Service --&gt; HasManyThrough
+    Service --&gt; MorphMany
+    Service --&gt; BelongsToMany
+    Service --&gt; MorphToMany
+    Staff --&gt; HasOne
+    Staff --&gt; HasOneThrough
+    Staff --&gt; BelongsTo
+    Staff --&gt; Model
+    Staff --&gt; HasMany
+    Staff --&gt; HasManyThrough
+    Staff --&gt; MorphMany
+    Staff --&gt; BelongsToMany
+    Staff --&gt; MorphToMany
+    StaffEventType --&gt; HasOne
+    StaffEventType --&gt; HasOneThrough
+    StaffEventType --&gt; BelongsTo
+    StaffEventType --&gt; Model
+    StaffEventType --&gt; HasMany
+    StaffEventType --&gt; HasManyThrough
+    StaffEventType --&gt; MorphMany
+    StaffEventType --&gt; BelongsToMany
+    StaffEventType --&gt; MorphToMany
+    StaffService --&gt; HasOne
+    StaffService --&gt; HasOneThrough
+    StaffService --&gt; BelongsTo
+    StaffService --&gt; Model
+    StaffService --&gt; HasMany
+    StaffService --&gt; HasManyThrough
+    StaffService --&gt; MorphMany
+    StaffService --&gt; BelongsToMany
+    StaffService --&gt; MorphToMany
+    StaffServiceAssignment --&gt; HasOne
+    StaffServiceAssignment --&gt; HasOneThrough
+    StaffServiceAssignment --&gt; BelongsTo
+    StaffServiceAssignment --&gt; Model
+    StaffServiceAssignment --&gt; HasMany
+    StaffServiceAssignment --&gt; HasManyThrough
+    StaffServiceAssignment --&gt; MorphMany
+    StaffServiceAssignment --&gt; BelongsToMany
+    StaffServiceAssignment --&gt; MorphToMany
+    TaxRate --&gt; HasOne
+    TaxRate --&gt; HasOneThrough
+    TaxRate --&gt; BelongsTo
+    TaxRate --&gt; Model
+    TaxRate --&gt; HasMany
+    TaxRate --&gt; HasManyThrough
+    TaxRate --&gt; MorphMany
+    TaxRate --&gt; BelongsToMany
+    TaxRate --&gt; MorphToMany
+    Telefonnummer --&gt; HasOne
+    Telefonnummer --&gt; HasOneThrough
+    Telefonnummer --&gt; BelongsTo
+    Telefonnummer --&gt; Model
+    Telefonnummer --&gt; HasMany
+    Telefonnummer --&gt; HasManyThrough
+    Telefonnummer --&gt; MorphMany
+    Telefonnummer --&gt; BelongsToMany
+    Telefonnummer --&gt; MorphToMany
+    Tenant --&gt; HasOne
+    Tenant --&gt; HasOneThrough
+    Tenant --&gt; BelongsTo
+    Tenant --&gt; Model
+    Tenant --&gt; HasMany
+    Tenant --&gt; HasManyThrough
+    Tenant --&gt; MorphMany
+    Tenant --&gt; BelongsToMany
+    Tenant --&gt; MorphToMany
+    Termin --&gt; HasOne
+    Termin --&gt; HasOneThrough
+    Termin --&gt; BelongsTo
+    Termin --&gt; Model
+    Termin --&gt; HasMany
+    Termin --&gt; HasManyThrough
+    Termin --&gt; MorphMany
+    Termin --&gt; BelongsToMany
+    Termin --&gt; MorphToMany
+    UnifiedEventType --&gt; HasOne
+    UnifiedEventType --&gt; HasOneThrough
+    UnifiedEventType --&gt; BelongsTo
+    UnifiedEventType --&gt; Model
+    UnifiedEventType --&gt; HasMany
+    UnifiedEventType --&gt; HasManyThrough
+    UnifiedEventType --&gt; MorphMany
+    UnifiedEventType --&gt; BelongsToMany
+    UnifiedEventType --&gt; MorphToMany
+    User --&gt; HasOne
+    User --&gt; HasOneThrough
+    User --&gt; BelongsTo
+    User --&gt; Model
+    User --&gt; HasMany
+    User --&gt; HasManyThrough
+    User --&gt; MorphMany
+    User --&gt; BelongsToMany
+    User --&gt; MorphToMany
+    ValidationResult --&gt; HasOne
+    ValidationResult --&gt; HasOneThrough
+    ValidationResult --&gt; BelongsTo
+    ValidationResult --&gt; Model
+    ValidationResult --&gt; HasMany
+    ValidationResult --&gt; HasManyThrough
+    ValidationResult --&gt; MorphMany
+    ValidationResult --&gt; BelongsToMany
+    ValidationResult --&gt; MorphToMany
+    WebhookEvent --&gt; HasOne
+    WebhookEvent --&gt; HasOneThrough
+    WebhookEvent --&gt; BelongsTo
+    WebhookEvent --&gt; Model
+    WebhookEvent --&gt; HasMany
+    WebhookEvent --&gt; HasManyThrough
+    WebhookEvent --&gt; MorphMany
+    WebhookEvent --&gt; BelongsToMany
+    WebhookEvent --&gt; MorphToMany
+    WorkingHour --&gt; HasOne
+    WorkingHour --&gt; HasOneThrough
+    WorkingHour --&gt; BelongsTo
+    WorkingHour --&gt; Model
+    WorkingHour --&gt; HasMany
+    WorkingHour --&gt; HasManyThrough
+    WorkingHour --&gt; MorphMany
+    WorkingHour --&gt; BelongsToMany
+    WorkingHour --&gt; MorphToMany
+    WorkingHours --&gt; HasOne
+    WorkingHours --&gt; HasOneThrough
+    WorkingHours --&gt; BelongsTo
+    WorkingHours --&gt; Model
+    WorkingHours --&gt; HasMany
+    WorkingHours --&gt; HasManyThrough
+    WorkingHours --&gt; MorphMany
+    WorkingHours --&gt; BelongsToMany
+    WorkingHours --&gt; MorphToMany</code></pre>
+<h2 id="additionalservice">AdditionalService<a class="headerlink" href="#additionalservice" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>additional_services</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>name</code>
+- <code>description</code>
+- <code>type</code>
+- <code>price</code>
+- <code>unit</code>
+- <code>is_active</code>
+- <code>stripe_price_id</code>
+- <code>metadata</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>metadata</code>: array
+- <code>price</code>: decimal:2
+- <code>is_active</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>customerServices()</code>: HasMany</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code>
+- <code>oneTime()</code>
+- <code>recurring()</code>
+- <code>allTenants()</code>
+- <code>forTenant()</code></p>
+<hr/>
+<h2 id="agent">Agent<a class="headerlink" href="#agent" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>agents</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>name</code>
+- <code>agent_id</code>
+- <code>type</code>
+- <code>config</code>
+- <code>active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>config</code>: array
+- <code>active</code>: boolean</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="apicalllog">ApiCallLog<a class="headerlink" href="#apicalllog" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>api_call_logs</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>service</code>
+- <code>endpoint</code>
+- <code>method</code>
+- <code>request_headers</code>
+- <code>request_body</code>
+- <code>response_status</code>
+- <code>response_headers</code>
+- <code>response_body</code>
+- <code>duration_ms</code>
+- <code>correlation_id</code>
+- <code>company_id</code>
+- <code>user_id</code>
+- <code>ip_address</code>
+- <code>user_agent</code>
+- <code>error_message</code>
+- <code>requested_at</code>
+- <code>responded_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>request_headers</code>: array
+- <code>request_body</code>: array
+- <code>response_headers</code>: array
+- <code>response_body</code>: array
+- <code>duration_ms</code>: float
+- <code>requested_at</code>: datetime
+- <code>responded_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>forService()</code>
+- <code>forEndpoint()</code>
+- <code>successful()</code>
+- <code>failed()</code>
+- <code>correlated()</code>
+- <code>dateRange()</code></p>
+<hr/>
+<h2 id="apicredential">ApiCredential<a class="headerlink" href="#apicredential" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>api_credentials</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>credentialable_id</code>
+- <code>credentialable_type</code>
+- <code>service</code>
+- <code>key_type</code>
+- <code>value</code>
+- <code>is_inherited</code>
+- <code>inherited_from_id</code>
+- <code>inherited_from_type</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>is_inherited</code>: boolean</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:
+- <code>forService()</code>
+- <code>ofType()</code></p>
+<hr/>
+<h2 id="appointment">Appointment<a class="headerlink" href="#appointment" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>appointments</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>customer_id</code>
+- <code>branch_id</code>
+- <code>staff_id</code>
+- <code>service_id</code>
+- <code>calcom_event_type_id</code>
+- <code>calcom_booking_id</code>
+- <code>starts_at</code>
+- <code>ends_at</code>
+- <code>status</code>
+- <code>notes</code>
+- <code>metadata</code>
+- <code>price</code>
+- <code>call_id</code>
+- <code>tenant_id</code>
+- <code>company_id</code>
+- <code>external_id</code>
+- <code>calcom_v2_booking_id</code>
+- <code>reminder_24h_sent_at</code>
+- <code>reminder_2h_sent_at</code>
+- <code>reminder_30m_sent_at</code>
+- <code>payload</code>
+- <code>version</code>
+- <code>lock_expires_at</code>
+- <code>lock_token</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>starts_at</code>: datetime
+- <code>ends_at</code>: datetime
+- <code>metadata</code>: array
+- <code>payload</code>: array
+- <code>reminder_24h_sent_at</code>: datetime
+- <code>reminder_2h_sent_at</code>: datetime
+- <code>reminder_30m_sent_at</code>: datetime
+- <code>lock_expires_at</code>: datetime
+- <code>version</code>: integer</p>
+<p><strong>Relationships</strong>:
+- <code>customer()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo
+- <code>staff()</code>: BelongsTo
+- <code>company()</code>: BelongsTo
+- <code>service()</code>: BelongsTo
+- <code>calcomBooking()</code>: BelongsTo
+- <code>calcomEventType()</code>: BelongsTo
+- <code>call()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>upcoming()</code>
+- <code>today()</code>
+- <code>dateRange()</code>
+- <code>byStatus()</code>
+- <code>scheduled()</code>
+- <code>completed()</code>
+- <code>forCompany()</code>
+- <code>forBranch()</code>
+- <code>forStaff()</code>
+- <code>forCustomer()</code>
+- <code>withRelations()</code>
+- <code>needingReminders()</code>
+- <code>overdue()</code></p>
+<hr/>
+<h2 id="appointmentlock">AppointmentLock<a class="headerlink" href="#appointmentlock" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>appointment_locks</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: No</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>branch_id</code>
+- <code>staff_id</code>
+- <code>starts_at</code>
+- <code>ends_at</code>
+- <code>lock_token</code>
+- <code>lock_expires_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>starts_at</code>: datetime
+- <code>ends_at</code>: datetime
+- <code>lock_expires_at</code>: datetime
+- <code>created_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>branch()</code>: BelongsTo
+- <code>staff()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code>
+- <code>expired()</code>
+- <code>forTimeRange()</code></p>
+<hr/>
+<h2 id="availabilitycache">AvailabilityCache<a class="headerlink" href="#availabilitycache" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>availability_cache</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>staff_id</code>
+- <code>event_type_id</code>
+- <code>date</code>
+- <code>slots</code>
+- <code>cache_key</code>
+- <code>cached_at</code>
+- <code>expires_at</code>
+- <code>is_valid</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>date</code>: date
+- <code>slots</code>: array
+- <code>cached_at</code>: datetime
+- <code>expires_at</code>: datetime
+- <code>is_valid</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>staff()</code>: BelongsTo
+- <code>eventType()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>valid()</code>
+- <code>expired()</code>
+- <code>invalid()</code></p>
+<hr/>
+<h2 id="billingperiod">BillingPeriod<a class="headerlink" href="#billingperiod" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>billing_periods</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>period_start</code>
+- <code>period_end</code>
+- <code>total_minutes</code>
+- <code>included_minutes</code>
+- <code>overage_minutes</code>
+- <code>total_cost</code>
+- <code>total_revenue</code>
+- <code>margin</code>
+- <code>margin_percentage</code>
+- <code>is_invoiced</code>
+- <code>invoiced_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>period_start</code>: date
+- <code>period_end</code>: date
+- <code>total_minutes</code>: integer
+- <code>included_minutes</code>: integer
+- <code>overage_minutes</code>: integer
+- <code>total_cost</code>: decimal:2
+- <code>total_revenue</code>: decimal:2
+- <code>margin</code>: decimal:2
+- <code>margin_percentage</code>: decimal:2
+- <code>is_invoiced</code>: boolean
+- <code>invoiced_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo
+- <code>invoice()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>uninvoiced()</code>
+- <code>currentMonth()</code></p>
+<hr/>
+<h2 id="booking">Booking<a class="headerlink" href="#booking" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>bookings</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="branch">Branch<a class="headerlink" href="#branch" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>branches</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>customer_id</code>
+- <code>name</code>
+- <code>slug</code>
+- <code>phone_number</code>
+- <code>notification_email</code>
+- <code>address</code>
+- <code>city</code>
+- <code>postal_code</code>
+- <code>country</code>
+- <code>website</code>
+- <code>business_hours</code>
+- <code>retell_agent_id</code>
+- <code>retell_agent_data</code>
+- <code>retell_synced_at</code>
+- <code>retell_agent_status</code>
+- <code>retell_agent_created_at</code>
+- <code>settings</code>
+- <code>calcom_api_key</code>
+- <code>calcom_event_type_id</code>
+- <code>calcom_team_slug</code>
+- <code>calendar_mode</code>
+- <code>active</code>
+- <code>notify_on_booking</code>
+- <code>deleted_at</code>
+- <code>features</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>is_main</code>: boolean
+- <code>active</code>: boolean
+- <code>invoice_recipient</code>: boolean
+- <code>notify_on_booking</code>: boolean
+- <code>calendar_mapping</code>: array
+- <code>integration_status</code>: array
+- <code>opening_hours</code>: array
+- <code>created_at</code>: datetime
+- <code>updated_at</code>: datetime
+- <code>deleted_at</code>: datetime
+- <code>integrations_tested_at</code>: datetime
+- <code>retell_agent_cache</code>: array
+- <code>retell_last_sync</code>: datetime
+- <code>configuration_status</code>: array
+- <code>parent_settings</code>: array
+- <code>business_hours</code>: array
+- <code>services_override</code>: array
+- <code>settings</code>: array
+- <code>features</code>: array
+- <code>retell_agent_data</code>: array
+- <code>retell_agent_created_at</code>: datetime
+- <code>retell_synced_at</code>: datetime
+- <code>coordinates</code>: array
+- <code>transport_info</code>: array</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code>
+- <code>main()</code>
+- <code>forCompany()</code>
+- <code>currentCompany()</code></p>
+<hr/>
+<h2 id="brancheventtype">BranchEventType<a class="headerlink" href="#brancheventtype" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>branch_event_types</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>branch_id</code>
+- <code>event_type_id</code>
+- <code>is_primary</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>is_primary</code>: boolean</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="branchpricingoverride">BranchPricingOverride<a class="headerlink" href="#branchpricingoverride" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>branch_pricing_overrides</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_pricing_id</code>
+- <code>branch_id</code>
+- <code>price_per_minute</code>
+- <code>included_minutes</code>
+- <code>overage_price_per_minute</code>
+- <code>is_active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>price_per_minute</code>: decimal:4
+- <code>included_minutes</code>: integer
+- <code>overage_price_per_minute</code>: decimal:4
+- <code>is_active</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>pricing()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code></p>
+<hr/>
+<h2 id="branchserviceoverride">BranchServiceOverride<a class="headerlink" href="#branchserviceoverride" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>branch_service_overrides</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>branch_id</code>
+- <code>master_service_id</code>
+- <code>custom_duration</code>
+- <code>custom_price</code>
+- <code>custom_calcom_event_type_id</code>
+- <code>active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>custom_duration</code>: integer
+- <code>custom_price</code>: decimal:2
+- <code>active</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>branch()</code>: BelongsTo
+- <code>masterService()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="business">Business<a class="headerlink" href="#business" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>businesses</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>name</code>
+- <code>adresse</code>
+- <code>telefon</code>
+- <code>email</code>
+- <code>website</code>
+- <code>oeffnungszeiten</code>
+- <code>api_key</code>
+- <code>cal_com_user_id</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>oeffnungszeiten</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>staff()</code>: HasMany
+- <code>services()</code>: HasMany
+- <code>appointments()</code>: HasMany
+- <code>calls()</code>: HasMany
+- <code>faqs()</code>: HasMany</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="businesshourstemplate">BusinessHoursTemplate<a class="headerlink" href="#businesshourstemplate" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>business_hours_templates</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>name</code>
+- <code>description</code>
+- <code>hours</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>hours</code>: array</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="calcombooking">CalcomBooking<a class="headerlink" href="#calcombooking" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>calcom_bookings</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>calcom_uid</code>
+- <code>appointment_id</code>
+- <code>status</code>
+- <code>raw_payload</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>raw_payload</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>appointment()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="calcomeventtype">CalcomEventType<a class="headerlink" href="#calcomeventtype" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>calcom_event_types</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>staff_id</code>
+- <code>service_id</code>
+- <code>calcom_event_type_id</code>
+- <code>duration</code>
+- <code>calendar</code>
+- <code>tenant_id</code>
+- <code>name</code>
+- <code>slug</code>
+- <code>calcom_numeric_event_type_id</code>
+- <code>duration_minutes</code>
+- <code>description</code>
+- <code>price</code>
+- <code>is_active</code>
+- <code>is_team_event</code>
+- <code>requires_confirmation</code>
+- <code>booking_limits</code>
+- <code>sync_status</code>
+- <code>sync_error</code>
+- <code>last_synced_at</code>
+- <code>metadata</code>
+- <code>minimum_booking_notice</code>
+- <code>booking_future_limit</code>
+- <code>time_slot_interval</code>
+- <code>buffer_before</code>
+- <code>buffer_after</code>
+- <code>locations</code>
+- <code>custom_fields</code>
+- <code>max_bookings_per_day</code>
+- <code>seats_per_time_slot</code>
+- <code>schedule_id</code>
+- <code>recurring_config</code>
+- <code>setup_status</code>
+- <code>setup_checklist</code>
+- <code>webhook_settings</code>
+- <code>calcom_url</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>is_active</code>: boolean
+- <code>price</code>: decimal:2
+- <code>last_synced_at</code>: datetime
+- <code>metadata</code>: array
+- <code>locations</code>: array
+- <code>custom_fields</code>: array
+- <code>recurring_config</code>: array
+- <code>setup_checklist</code>: array
+- <code>webhook_settings</code>: array
+- <code>is_team_event</code>: boolean
+- <code>requires_confirmation</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>assignedStaff()</code>: BelongsToMany
+- <code>staff()</code>: BelongsToMany
+- <code>company()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo
+- <code>branches()</code>: BelongsToMany
+- <code>primaryBranches()</code>: BelongsToMany
+- <code>bookings()</code>: HasMany</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code>
+- <code>synced()</code></p>
+<hr/>
+<h2 id="calendar">Calendar<a class="headerlink" href="#calendar" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>calendars</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>staff_id</code>
+- <code>provider</code>
+- <code>api_key</code>
+- <code>event_type_id</code>
+- <code>external_user_id</code>
+- <code>validated_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>validated_at</code>: datetime
+- <code>deleted_at</code>: datetime</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="calendarmapping">CalendarMapping<a class="headerlink" href="#calendarmapping" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>calendar_mappings</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>branch_id</code>
+- <code>staff_id</code>
+- <code>calendar_type</code>
+- <code>calendar_details</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>calendar_details</code>: array</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="call">Call<a class="headerlink" href="#call" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>calls</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>call_id</code>
+- <code>caller</code>
+- <code>from_number</code>
+- <code>to_number</code>
+- <code>retell_call_id</code>
+- <code>retell_agent_id</code>
+- <code>call_status</code>
+- <code>transcript</code>
+- <code>transcription_id</code>
+- <code>recording_url</code>
+- <code>call_type</code>
+- <code>audio_url</code>
+- <code>video_url</code>
+- <code>duration_sec</code>
+- <code>duration_minutes</code>
+- <code>cost</code>
+- <code>cost_cents</code>
+- <code>customer_id</code>
+- <code>appointment_id</code>
+- <code>agent_id</code>
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>staff_id</code>
+- <code>analysis</code>
+- <code>webhook_data</code>
+- <code>raw</code>
+- <code>raw_data</code>
+- <code>notes</code>
+- <code>metadata</code>
+- <code>tags</code>
+- <code>sentiment</code>
+- <code>start_timestamp</code>
+- <code>end_timestamp</code>
+- <code>direction</code>
+- <code>disconnection_reason</code>
+- <code>transcript_object</code>
+- <code>transcript_with_tools</code>
+- <code>latency_metrics</code>
+- <code>cost_breakdown</code>
+- <code>llm_usage</code>
+- <code>public_log_url</code>
+- <code>retell_dynamic_variables</code>
+- <code>opt_out_sensitive_data</code>
+- <code>details</code>
+- <code>external_id</code>
+- <code>phone_number</code>
+- <code>conversation_id</code>
+- <code>call_successful</code>
+- <code>tmp_call_id</code>
+- <code>agent_version</code>
+- <code>retell_cost</code>
+- <code>custom_sip_headers</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>analysis</code>: array
+- <code>webhook_data</code>: array
+- <code>raw</code>: array
+- <code>raw_data</code>: array
+- <code>metadata</code>: array
+- <code>tags</code>: array
+- <code>cost</code>: decimal:2
+- <code>duration_minutes</code>: decimal:2
+- <code>details</code>: array
+- <code>transcript_object</code>: array
+- <code>transcript_with_tools</code>: array
+- <code>latency_metrics</code>: array
+- <code>cost_breakdown</code>: array
+- <code>llm_usage</code>: array
+- <code>retell_dynamic_variables</code>: array
+- <code>retell_llm_dynamic_variables</code>: array
+- <code>custom_sip_headers</code>: array
+- <code>start_timestamp</code>: datetime
+- <code>end_timestamp</code>: datetime
+- <code>opt_out_sensitive_data</code>: boolean
+- <code>call_successful</code>: boolean
+- <code>agent_version</code>: integer
+- <code>retell_cost</code>: decimal:4</p>
+<p><strong>Relationships</strong>:
+- <code>customer()</code>: BelongsTo
+- <code>appointment()</code>: BelongsTo
+- <code>company()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo
+- <code>staff()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>recent()</code>
+- <code>today()</code>
+- <code>dateRange()</code>
+- <code>byStatus()</code>
+- <code>successful()</code>
+- <code>failed()</code>
+- <code>fromNumber()</code>
+- <code>forCompany()</code>
+- <code>withCustomer()</code>
+- <code>withoutCustomer()</code>
+- <code>withAppointment()</code>
+- <code>withRelations()</code>
+- <code>longDuration()</code>
+- <code>highCost()</code>
+- <code>currentCompany()</code></p>
+<hr/>
+<h2 id="calllog">CallLog<a class="headerlink" href="#calllog" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>call_logs</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>call_id</code>
+- <code>caller_number</code>
+- <code>start_time</code>
+- <code>end_time</code>
+- <code>duration</code>
+- <code>transcript</code>
+- <code>intent</code>
+- <code>extracted_data</code>
+- <code>appointment_id</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>extracted_data</code>: array
+- <code>start_time</code>: datetime
+- <code>end_time</code>: datetime</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="callbackrequest">CallbackRequest<a class="headerlink" href="#callbackrequest" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>callback_requests</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>call_id</code>
+- <code>customer_phone</code>
+- <code>customer_name</code>
+- <code>requested_service</code>
+- <code>requested_date</code>
+- <code>requested_time</code>
+- <code>reason</code>
+- <code>error_details</code>
+- <code>call_summary</code>
+- <code>priority</code>
+- <code>status</code>
+- <code>assigned_to</code>
+- <code>completed_by</code>
+- <code>completion_notes</code>
+- <code>auto_close_after_hours</code>
+- <code>processed_at</code>
+- <code>auto_closed_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>error_details</code>: array
+- <code>requested_date</code>: date
+- <code>requested_time</code>: time
+- <code>processed_at</code>: datetime
+- <code>auto_closed_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>call()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo
+- <code>assignedUser()</code>: BelongsTo
+- <code>completedByUser()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>pending()</code>
+- <code>overdue()</code>
+- <code>today()</code>
+- <code>priority()</code>
+- <code>forCompany()</code>
+- <code>currentCompany()</code></p>
+<hr/>
+<h2 id="company">Company<a class="headerlink" href="#company" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>companies</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>name</code>
+- <code>slug</code>
+- <code>industry</code>
+- <code>website</code>
+- <code>email</code>
+- <code>phone</code>
+- <code>address</code>
+- <code>city</code>
+- <code>state</code>
+- <code>postal_code</code>
+- <code>country</code>
+- <code>timezone</code>
+- <code>currency</code>
+- <code>logo</code>
+- <code>settings</code>
+- <code>metadata</code>
+- <code>is_active</code>
+- <code>trial_ends_at</code>
+- <code>subscription_status</code>
+- <code>subscription_plan</code>
+- <code>retell_api_key</code>
+- <code>retell_agent_id</code>
+- <code>calcom_api_key</code>
+- <code>calcom_team_slug</code>
+- <code>calcom_user_id</code>
+- <code>google_calendar_credentials</code>
+- <code>stripe_customer_id</code>
+- <code>stripe_subscription_id</code>
+- <code>tax_number</code>
+- <code>vat_id</code>
+- <code>is_small_business</code>
+- <code>small_business_threshold_date</code>
+- <code>tax_configuration</code>
+- <code>invoice_prefix</code>
+- <code>next_invoice_number</code>
+- <code>payment_terms</code>
+- <code>auto_invoice</code>
+- <code>invoice_day_of_month</code>
+- <code>credit_limit</code>
+- <code>revenue_ytd</code>
+- <code>revenue_previous_year</code>
+- <code>subscription_started_at</code>
+- <code>subscription_current_period_end</code></p>
+<p><strong>Hidden Attributes</strong>:
+- <code>retell_api_key</code>
+- <code>calcom_api_key</code>
+- <code>google_calendar_credentials</code>
+- <code>stripe_customer_id</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>settings</code>: array
+- <code>metadata</code>: array
+- <code>tax_configuration</code>: array
+- <code>google_calendar_credentials</code>: encrypted:array
+- <code>is_active</code>: boolean
+- <code>is_small_business</code>: boolean
+- <code>auto_invoice</code>: boolean
+- <code>trial_ends_at</code>: datetime
+- <code>small_business_threshold_date</code>: date
+- <code>next_invoice_number</code>: integer
+- <code>invoice_day_of_month</code>: integer
+- <code>credit_limit</code>: decimal:2
+- <code>revenue_ytd</code>: decimal:2
+- <code>revenue_previous_year</code>: decimal:2
+- <code>subscription_started_at</code>: datetime
+- <code>subscription_current_period_end</code>: datetime
+- <code>deleted_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>branches()</code>: HasMany
+- <code>staff()</code>: HasMany
+- <code>customers()</code>: HasMany
+- <code>appointments()</code>: HasMany
+- <code>calls()</code>: HasMany
+- <code>services()</code>: HasMany
+- <code>users()</code>: HasMany
+- <code>invoices()</code>: HasMany
+- <code>taxRates()</code>: HasMany
+- <code>payments()</code>: HasMany
+- <code>eventTypes()</code>: HasMany
+- <code>phoneNumbers()</code>: HasMany</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="companypricing">CompanyPricing<a class="headerlink" href="#companypricing" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>company_pricing</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>price_per_minute</code>
+- <code>setup_fee</code>
+- <code>monthly_base_fee</code>
+- <code>included_minutes</code>
+- <code>overage_price_per_minute</code>
+- <code>is_active</code>
+- <code>valid_from</code>
+- <code>valid_until</code>
+- <code>notes</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>price_per_minute</code>: decimal:4
+- <code>setup_fee</code>: decimal:2
+- <code>monthly_base_fee</code>: decimal:2
+- <code>overage_price_per_minute</code>: decimal:4
+- <code>included_minutes</code>: integer
+- <code>is_active</code>: boolean
+- <code>valid_from</code>: date
+- <code>valid_until</code>: date</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo
+- <code>branchOverrides()</code>: HasMany</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code></p>
+<hr/>
+<h2 id="cookieconsent">CookieConsent<a class="headerlink" href="#cookieconsent" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>cookie_consents</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>customer_id</code>
+- <code>session_id</code>
+- <code>ip_address</code>
+- <code>user_agent</code>
+- <code>necessary_cookies</code>
+- <code>functional_cookies</code>
+- <code>analytics_cookies</code>
+- <code>marketing_cookies</code>
+- <code>consent_details</code>
+- <code>consented_at</code>
+- <code>withdrawn_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>necessary_cookies</code>: boolean
+- <code>functional_cookies</code>: boolean
+- <code>analytics_cookies</code>: boolean
+- <code>marketing_cookies</code>: boolean
+- <code>consent_details</code>: array
+- <code>consented_at</code>: datetime
+- <code>withdrawn_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>customer()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="customer">Customer<a class="headerlink" href="#customer" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>customers</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>name</code>
+- <code>email</code>
+- <code>phone</code>
+- <code>birthdate</code>
+- <code>tags</code>
+- <code>notes</code>
+- <code>password</code>
+- <code>preferred_language</code>
+- <code>preferred_branch_id</code>
+- <code>preferred_staff_id</code>
+- <code>location_data</code>
+- <code>portal_enabled</code>
+- <code>portal_access_token</code>
+- <code>portal_token_expires_at</code>
+- <code>last_portal_login_at</code></p>
+<p><strong>Hidden Attributes</strong>:
+- <code>password</code>
+- <code>remember_token</code>
+- <code>portal_access_token</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>birthdate</code>: date
+- <code>tags</code>: array
+- <code>location_data</code>: array
+- <code>portal_enabled</code>: boolean
+- <code>portal_token_expires_at</code>: datetime
+- <code>last_portal_login_at</code>: datetime
+- <code>email_verified_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>branches()</code>: HasMany
+- <code>appointments()</code>: HasMany
+- <code>calls()</code>: HasMany
+- <code>notes()</code>: HasMany</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code>
+- <code>withAppointments()</code>
+- <code>byPhone()</code>
+- <code>byEmail()</code>
+- <code>forCompany()</code>
+- <code>withAppointmentCount()</code>
+- <code>recentlyActive()</code>
+- <code>withNoShows()</code>
+- <code>withNoShowCount()</code>
+- <code>search()</code></p>
+<hr/>
+<h2 id="customerauth">CustomerAuth<a class="headerlink" href="#customerauth" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>customers</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>first_name</code>
+- <code>last_name</code>
+- <code>email</code>
+- <code>phone</code>
+- <code>password</code>
+- <code>portal_enabled</code>
+- <code>portal_access_token</code>
+- <code>portal_token_expires_at</code>
+- <code>last_portal_login_at</code>
+- <code>preferred_language</code>
+- <code>email_verified_at</code></p>
+<p><strong>Hidden Attributes</strong>:
+- <code>password</code>
+- <code>remember_token</code>
+- <code>portal_access_token</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>email_verified_at</code>: datetime
+- <code>portal_token_expires_at</code>: datetime
+- <code>last_portal_login_at</code>: datetime
+- <code>portal_enabled</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo
+- <code>appointments()</code>: HasMany
+- <code>calls()</code>: HasMany</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="customerservice">CustomerService<a class="headerlink" href="#customerservice" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>customer_services</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>service_id</code>
+- <code>invoice_id</code>
+- <code>quantity</code>
+- <code>unit_price</code>
+- <code>total_price</code>
+- <code>service_date</code>
+- <code>status</code>
+- <code>notes</code>
+- <code>created_by</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>quantity</code>: decimal:2
+- <code>unit_price</code>: decimal:2
+- <code>total_price</code>: decimal:2
+- <code>service_date</code>: date</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo
+- <code>service()</code>: BelongsTo
+- <code>invoice()</code>: BelongsTo
+- <code>creator()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>pending()</code>
+- <code>invoiced()</code>
+- <code>inDateRange()</code></p>
+<hr/>
+<h2 id="dashboardconfiguration">DashboardConfiguration<a class="headerlink" href="#dashboardconfiguration" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>dashboard_configurations</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>user_id</code>
+- <code>widget_settings</code>
+- <code>layout_settings</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>widget_settings</code>: array
+- <code>layout_settings</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>user()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="dienstleistung">Dienstleistung<a class="headerlink" href="#dienstleistung" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>dienstleistungen</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>kunde_id</code>
+- <code>name</code>
+- <code>dauer_minuten</code>
+- <code>preis</code>
+- <code>cal_com_event_type_id</code>
+- <code>beschreibung</code>
+- <code>aktiv</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>preis</code>: decimal:2
+- <code>aktiv</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>kunde()</code>: BelongsTo
+- <code>mitarbeiter()</code>: BelongsToMany</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="dummycompany">DummyCompany<a class="headerlink" href="#dummycompany" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>dummy_companies</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="eventtypeimportlog">EventTypeImportLog<a class="headerlink" href="#eventtypeimportlog" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>event_type_import_logs</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>user_id</code>
+- <code>import_type</code>
+- <code>total_found</code>
+- <code>total_imported</code>
+- <code>total_skipped</code>
+- <code>total_errors</code>
+- <code>import_details</code>
+- <code>error_details</code>
+- <code>status</code>
+- <code>started_at</code>
+- <code>completed_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>import_details</code>: array
+- <code>error_details</code>: array
+- <code>started_at</code>: datetime
+- <code>completed_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo
+- <code>user()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>successful()</code>
+- <code>failed()</code></p>
+<hr/>
+<h2 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>faqs</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>question</code>
+- <code>answer</code>
+- <code>active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>active</code>: boolean</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="faq_1">Faq<a class="headerlink" href="#faq_1" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>faqs</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>question</code>
+- <code>answer</code>
+- <code>active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>active</code>: boolean</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="gdprrequest">GdprRequest<a class="headerlink" href="#gdprrequest" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>gdpr_requests</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>customer_id</code>
+- <code>company_id</code>
+- <code>type</code>
+- <code>status</code>
+- <code>reason</code>
+- <code>admin_notes</code>
+- <code>exported_data</code>
+- <code>export_file_path</code>
+- <code>requested_at</code>
+- <code>processed_at</code>
+- <code>completed_at</code>
+- <code>processed_by</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>exported_data</code>: array
+- <code>requested_at</code>: datetime
+- <code>processed_at</code>: datetime
+- <code>completed_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>customer()</code>: BelongsTo
+- <code>company()</code>: BelongsTo
+- <code>processedBy()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="integration">Integration<a class="headerlink" href="#integration" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>integrations</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>customer_id</code>
+- <code>system</code>
+- <code>credentials</code>
+- <code>active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>credentials</code>: array
+- <code>active</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>customer()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="invoice">Invoice<a class="headerlink" href="#invoice" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>invoices</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>stripe_invoice_id</code>
+- <code>invoice_number</code>
+- <code>status</code>
+- <code>creation_mode</code>
+- <code>subtotal</code>
+- <code>tax_amount</code>
+- <code>total</code>
+- <code>currency</code>
+- <code>invoice_date</code>
+- <code>due_date</code>
+- <code>paid_date</code>
+- <code>payment_method</code>
+- <code>payment_terms</code>
+- <code>stripe_payment_intent_id</code>
+- <code>pdf_url</code>
+- <code>metadata</code>
+- <code>notes</code>
+- <code>billing_reason</code>
+- <code>auto_advance</code>
+- <code>tax_configuration</code>
+- <code>is_reverse_charge</code>
+- <code>customer_vat_id</code>
+- <code>invoice_type</code>
+- <code>original_invoice_id</code>
+- <code>finalized_at</code>
+- <code>tax_note</code>
+- <code>is_tax_exempt</code>
+- <code>period_start</code>
+- <code>period_end</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>metadata</code>: array
+- <code>tax_configuration</code>: array
+- <code>invoice_date</code>: date
+- <code>due_date</code>: date
+- <code>paid_date</code>: date
+- <code>period_start</code>: date
+- <code>period_end</code>: date
+- <code>finalized_at</code>: datetime
+- <code>auto_advance</code>: boolean
+- <code>is_reverse_charge</code>: boolean
+- <code>is_tax_exempt</code>: boolean
+- <code>subtotal</code>: decimal:2
+- <code>tax_amount</code>: decimal:2
+- <code>total</code>: decimal:2</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo
+- <code>items()</code>: HasMany
+- <code>flexibleItems()</code>: HasMany
+- <code>payments()</code>: HasMany
+- <code>billingPeriod()</code>: HasOne
+- <code>usageItems()</code>: HasMany
+- <code>serviceItems()</code>: HasMany</p>
+<p><strong>Scopes</strong>:
+- <code>open()</code>
+- <code>paid()</code>
+- <code>overdue()</code></p>
+<hr/>
+<h2 id="invoiceitem">InvoiceItem<a class="headerlink" href="#invoiceitem" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>invoice_items</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>invoice_id</code>
+- <code>stripe_invoice_item_id</code>
+- <code>type</code>
+- <code>description</code>
+- <code>quantity</code>
+- <code>unit</code>
+- <code>unit_price</code>
+- <code>amount</code>
+- <code>tax_rate</code>
+- <code>tax_rate_id</code>
+- <code>tax_code</code>
+- <code>tax_amount</code>
+- <code>metadata</code>
+- <code>pricing_model_id</code>
+- <code>period_start</code>
+- <code>period_end</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>metadata</code>: array
+- <code>quantity</code>: decimal:2
+- <code>unit_price</code>: decimal:4
+- <code>amount</code>: decimal:2
+- <code>tax_rate</code>: decimal:2
+- <code>tax_amount</code>: decimal:2
+- <code>period_start</code>: date
+- <code>period_end</code>: date</p>
+<p><strong>Relationships</strong>:
+- <code>invoice()</code>: BelongsTo
+- <code>pricingModel()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>usage()</code>
+- <code>service()</code></p>
+<hr/>
+<h2 id="invoiceitemflexible">InvoiceItemFlexible<a class="headerlink" href="#invoiceitemflexible" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>invoice_items_flexible</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>invoice_id</code>
+- <code>stripe_invoice_item_id</code>
+- <code>type</code>
+- <code>description</code>
+- <code>quantity</code>
+- <code>unit</code>
+- <code>unit_price</code>
+- <code>amount</code>
+- <code>tax_rate</code>
+- <code>tax_rate_id</code>
+- <code>period_start</code>
+- <code>period_end</code>
+- <code>metadata</code>
+- <code>sort_order</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>quantity</code>: decimal:2
+- <code>unit_price</code>: decimal:2
+- <code>amount</code>: decimal:2
+- <code>tax_rate</code>: decimal:2
+- <code>period_start</code>: date
+- <code>period_end</code>: date
+- <code>metadata</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>invoice()</code>: BelongsTo
+- <code>taxRate()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>ordered()</code></p>
+<hr/>
+<h2 id="knowledgeanalytic">KnowledgeAnalytic<a class="headerlink" href="#knowledgeanalytic" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_analytics</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>document_id</code>
+- <code>user_id</code>
+- <code>event_type</code>
+- <code>event_data</code>
+- <code>session_id</code>
+- <code>referrer</code>
+- <code>ip_address</code>
+- <code>user_agent</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>event_data</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>document()</code>: BelongsTo
+- <code>user()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>ofType()</code>
+- <code>inDateRange()</code>
+- <code>byUser()</code>
+- <code>inSession()</code></p>
+<hr/>
+<h2 id="knowledgecategory">KnowledgeCategory<a class="headerlink" href="#knowledgecategory" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_categories</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>name</code>
+- <code>slug</code>
+- <code>icon</code>
+- <code>color</code>
+- <code>description</code>
+- <code>parent_id</code>
+- <code>order</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>order</code>: integer</p>
+<p><strong>Relationships</strong>:
+- <code>parent()</code>: BelongsTo
+- <code>children()</code>: HasMany
+- <code>documents()</code>: HasMany</p>
+<p><strong>Scopes</strong>:
+- <code>ordered()</code>
+- <code>root()</code></p>
+<hr/>
+<h2 id="knowledgecodesnippet">KnowledgeCodeSnippet<a class="headerlink" href="#knowledgecodesnippet" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_code_snippets</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>document_id</code>
+- <code>language</code>
+- <code>title</code>
+- <code>code</code>
+- <code>description</code>
+- <code>is_executable</code>
+- <code>execution_config</code>
+- <code>usage_count</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>is_executable</code>: boolean
+- <code>execution_config</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>document()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>executable()</code>
+- <code>ofLanguage()</code>
+- <code>popular()</code></p>
+<hr/>
+<h2 id="knowledgecomment">KnowledgeComment<a class="headerlink" href="#knowledgecomment" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_comments</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>document_id</code>
+- <code>parent_id</code>
+- <code>user_id</code>
+- <code>content</code>
+- <code>status</code>
+- <code>position</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>position</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>document()</code>: BelongsTo
+- <code>parent()</code>: BelongsTo
+- <code>replies()</code>: HasMany
+- <code>user()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code>
+- <code>resolved()</code>
+- <code>root()</code></p>
+<hr/>
+<h2 id="knowledgedocument">KnowledgeDocument<a class="headerlink" href="#knowledgedocument" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_documents</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>title</code>
+- <code>slug</code>
+- <code>excerpt</code>
+- <code>content</code>
+- <code>raw_content</code>
+- <code>file_path</code>
+- <code>file_type</code>
+- <code>category_id</code>
+- <code>metadata</code>
+- <code>status</code>
+- <code>order</code>
+- <code>view_count</code>
+- <code>helpful_count</code>
+- <code>not_helpful_count</code>
+- <code>last_indexed_at</code>
+- <code>file_modified_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>metadata</code>: array
+- <code>last_indexed_at</code>: datetime
+- <code>file_modified_at</code>: datetime
+- <code>view_count</code>: integer
+- <code>helpful_count</code>: integer
+- <code>not_helpful_count</code>: integer
+- <code>order</code>: integer
+- <code>company_id</code>: integer</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo
+- <code>category()</code>: BelongsTo
+- <code>tags()</code>: BelongsToMany
+- <code>versions()</code>: HasMany
+- <code>searchIndexes()</code>: HasMany
+- <code>codeSnippets()</code>: HasMany
+- <code>sourceRelationships()</code>: HasMany
+- <code>targetRelationships()</code>: HasMany
+- <code>feedback()</code>: HasMany
+- <code>comments()</code>: HasMany
+- <code>analytics()</code>: HasMany
+- <code>creator()</code>: BelongsTo
+- <code>updater()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>published()</code>
+- <code>ofType()</code></p>
+<hr/>
+<h2 id="knowledgefeedback">KnowledgeFeedback<a class="headerlink" href="#knowledgefeedback" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_feedback</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>document_id</code>
+- <code>user_id</code>
+- <code>session_id</code>
+- <code>is_helpful</code>
+- <code>comment</code>
+- <code>ip_address</code>
+- <code>user_agent</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>is_helpful</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>document()</code>: BelongsTo
+- <code>user()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>helpful()</code>
+- <code>notHelpful()</code>
+- <code>withComments()</code></p>
+<hr/>
+<h2 id="knowledgenotebook">KnowledgeNotebook<a class="headerlink" href="#knowledgenotebook" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_notebooks</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>user_id</code>
+- <code>title</code>
+- <code>slug</code>
+- <code>description</code>
+- <code>is_public</code>
+- <code>metadata</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>is_public</code>: boolean
+- <code>metadata</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>user()</code>: BelongsTo
+- <code>entries()</code>: HasMany</p>
+<p><strong>Scopes</strong>:
+- <code>public()</code>
+- <code>ownedBy()</code></p>
+<hr/>
+<h2 id="knowledgenotebookentry">KnowledgeNotebookEntry<a class="headerlink" href="#knowledgenotebookentry" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_notebook_entries</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>notebook_id</code>
+- <code>title</code>
+- <code>content</code>
+- <code>tags</code>
+- <code>order</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>tags</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>notebook()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>withTag()</code>
+- <code>withAnyTag()</code></p>
+<hr/>
+<h2 id="knowledgerelateddocument">KnowledgeRelatedDocument<a class="headerlink" href="#knowledgerelateddocument" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_related_documents</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>document_id</code>
+- <code>related_document_id</code>
+- <code>relevance_score</code>
+- <code>relation_type</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>relevance_score</code>: float</p>
+<p><strong>Relationships</strong>:
+- <code>document()</code>: BelongsTo
+- <code>relatedDocument()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>ofType()</code>
+- <code>highRelevance()</code></p>
+<hr/>
+<h2 id="knowledgerelationship">KnowledgeRelationship<a class="headerlink" href="#knowledgerelationship" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_relationships</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>source_document_id</code>
+- <code>target_document_id</code>
+- <code>relationship_type</code>
+- <code>strength</code>
+- <code>is_auto_detected</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>strength</code>: float
+- <code>is_auto_detected</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>sourceDocument()</code>: BelongsTo
+- <code>targetDocument()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>strong()</code>
+- <code>manual()</code>
+- <code>autoDetected()</code></p>
+<hr/>
+<h2 id="knowledgesearchindex">KnowledgeSearchIndex<a class="headerlink" href="#knowledgesearchindex" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_search_index</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>document_id</code>
+- <code>section_title</code>
+- <code>content_chunk</code>
+- <code>embedding</code>
+- <code>keywords</code>
+- <code>relevance_score</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>embedding</code>: array
+- <code>keywords</code>: array
+- <code>relevance_score</code>: float</p>
+<p><strong>Relationships</strong>:
+- <code>document()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>withKeywords()</code>
+- <code>search()</code></p>
+<hr/>
+<h2 id="knowledgetag">KnowledgeTag<a class="headerlink" href="#knowledgetag" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_tags</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>name</code>
+- <code>slug</code>
+- <code>color</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int</p>
+<p><strong>Relationships</strong>:
+- <code>documents()</code>: BelongsToMany</p>
+<p><strong>Scopes</strong>:
+- <code>popular()</code></p>
+<hr/>
+<h2 id="knowledgeversion">KnowledgeVersion<a class="headerlink" href="#knowledgeversion" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>knowledge_versions</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>document_id</code>
+- <code>version_number</code>
+- <code>title</code>
+- <code>content</code>
+- <code>metadata</code>
+- <code>diff</code>
+- <code>commit_message</code>
+- <code>change_summary</code>
+- <code>created_by</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>metadata</code>: array
+- <code>version_number</code>: integer
+- <code>created_by</code>: integer</p>
+<p><strong>Relationships</strong>:
+- <code>document()</code>: BelongsTo
+- <code>creator()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="kunde">Kunde<a class="headerlink" href="#kunde" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>kunden</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>name</code>
+- <code>email</code>
+- <code>telefonnummer</code>
+- <code>notizen</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int</p>
+<p><strong>Relationships</strong>:
+- <code>calls()</code>: HasMany
+- <code>appointments()</code>: HasMany</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="legacyuser">LegacyUser<a class="headerlink" href="#legacyuser" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>users</code></p>
+<p><strong>Primary Key</strong>: <code>user_id</code></p>
+<p><strong>Timestamps</strong>: No</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>fname</code>
+- <code>lname</code>
+- <code>name</code>
+- <code>email</code>
+- <code>password</code>
+- <code>username</code>
+- <code>organization</code>
+- <code>position</code>
+- <code>phone</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>user_id</code>: int</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="mcpmetric">MCPMetric<a class="headerlink" href="#mcpmetric" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>mcp_metrics</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>service</code>
+- <code>operation</code>
+- <code>status</code>
+- <code>response_time</code>
+- <code>error_message</code>
+- <code>metadata</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>metadata</code>: array
+- <code>response_time</code>: float
+- <code>created_at</code>: datetime
+- <code>updated_at</code>: datetime</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:
+- <code>forService()</code>
+- <code>inTimeRange()</code>
+- <code>successful()</code>
+- <code>failed()</code></p>
+<hr/>
+<h2 id="masterservice">MasterService<a class="headerlink" href="#masterservice" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>master_services</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>name</code>
+- <code>description</code>
+- <code>base_duration</code>
+- <code>base_price</code>
+- <code>calcom_event_type_id</code>
+- <code>retell_service_identifier</code>
+- <code>active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>base_duration</code>: integer
+- <code>base_price</code>: decimal:2
+- <code>active</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo
+- <code>branchOverrides()</code>: HasMany
+- <code>staffAssignments()</code>: HasMany</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="mitarbeiter">Mitarbeiter<a class="headerlink" href="#mitarbeiter" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>mitarbeiters</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>kunden_id</code>
+- <code>vorname</code>
+- <code>nachname</code>
+- <code>email</code>
+- <code>telefonnummer</code>
+- <code>kalender_verfuegbarkeit</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>kalender_verfuegbarkeit</code>: array</p>
+<p><strong>Relationships</strong>:
+- <code>kunde()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="note">Note<a class="headerlink" href="#note" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>notes</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>customer_id</code>
+- <code>user_id</code>
+- <code>title</code>
+- <code>content</code>
+- <code>type</code>
+- <code>is_pinned</code>
+- <code>sort_order</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>is_pinned</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>customer()</code>: BelongsTo
+- <code>user()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="payment">Payment<a class="headerlink" href="#payment" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>payments</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>invoice_id</code>
+- <code>stripe_payment_id</code>
+- <code>payment_method</code>
+- <code>amount</code>
+- <code>currency</code>
+- <code>status</code>
+- <code>payment_date</code>
+- <code>reference_number</code>
+- <code>metadata</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>metadata</code>: array
+- <code>amount</code>: decimal:2
+- <code>payment_date</code>: date</p>
+<p><strong>Relationships</strong>:
+- <code>invoice()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>successful()</code>
+- <code>pending()</code>
+- <code>failed()</code></p>
+<hr/>
+<h2 id="phonenumber">PhoneNumber<a class="headerlink" href="#phonenumber" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>phone_numbers</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>id</code>
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>number</code>
+- <code>type</code>
+- <code>routing_config</code>
+- <code>agent_id</code>
+- <code>is_active</code>
+- <code>description</code>
+- <code>is_primary</code>
+- <code>sms_enabled</code>
+- <code>whatsapp_enabled</code>
+- <code>retell_phone_id</code>
+- <code>retell_agent_id</code>
+- <code>retell_agent_version</code>
+- <code>capabilities</code>
+- <code>metadata</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>routing_config</code>: array
+- <code>is_active</code>: boolean
+- <code>is_primary</code>: boolean
+- <code>sms_enabled</code>: boolean
+- <code>whatsapp_enabled</code>: boolean
+- <code>capabilities</code>: array
+- <code>metadata</code>: array</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code>
+- <code>hotlines()</code>
+- <code>direct()</code></p>
+<hr/>
+<h2 id="premiumservice">PremiumService<a class="headerlink" href="#premiumservice" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>premium_services</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>name</code>
+- <code>description</code>
+- <code>price</code>
+- <code>duration</code>
+- <code>active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>price</code>: decimal:2
+- <code>active</code>: boolean</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="retellagent">RetellAgent<a class="headerlink" href="#retellagent" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>retell_agents</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>phone_number_id</code>
+- <code>agent_id</code>
+- <code>name</code>
+- <code>settings</code>
+- <code>active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>settings</code>: array
+- <code>active</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo
+- <code>phoneNumber()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="retellwebhook">RetellWebhook<a class="headerlink" href="#retellwebhook" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>retell_webhooks</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>event_type</code>
+- <code>call_id</code>
+- <code>payload</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>payload</code>: array</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="securitylog">SecurityLog<a class="headerlink" href="#securitylog" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>security_logs</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>type</code>
+- <code>ip_address</code>
+- <code>user_agent</code>
+- <code>user_id</code>
+- <code>company_id</code>
+- <code>url</code>
+- <code>method</code>
+- <code>data</code>
+- <code>created_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>data</code>: array
+- <code>created_at</code>: datetime</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:
+- <code>ofType()</code>
+- <code>fromIp()</code>
+- <code>inLastHours()</code></p>
+<hr/>
+<h2 id="service">Service<a class="headerlink" href="#service" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>services</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>tenant_id</code>
+- <code>name</code>
+- <code>description</code>
+- <code>price</code>
+- <code>default_duration_minutes</code>
+- <code>active</code>
+- <code>category</code>
+- <code>sort_order</code>
+- <code>min_staff_required</code>
+- <code>max_bookings_per_day</code>
+- <code>buffer_time_minutes</code>
+- <code>is_online_bookable</code>
+- <code>calcom_event_type_id</code>
+- <code>duration</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>price</code>: decimal:2
+- <code>active</code>: boolean
+- <code>is_online_bookable</code>: boolean
+- <code>default_duration_minutes</code>: integer
+- <code>min_staff_required</code>: integer
+- <code>max_bookings_per_day</code>: integer
+- <code>buffer_time_minutes</code>: integer
+- <code>sort_order</code>: integer
+- <code>duration</code>: integer
+- <code>deleted_at</code>: datetime</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:
+- <code>forCompany()</code>
+- <code>currentCompany()</code></p>
+<hr/>
+<h2 id="staff">Staff<a class="headerlink" href="#staff" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>staff</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>branch_id</code>
+- <code>home_branch_id</code>
+- <code>name</code>
+- <code>email</code>
+- <code>phone</code>
+- <code>external_id</code>
+- <code>active</code>
+- <code>is_bookable</code>
+- <code>calendar_mode</code>
+- <code>calcom_user_id</code>
+- <code>calcom_event_type_id</code>
+- <code>calcom_calendar_link</code>
+- <code>availability_mode</code>
+- <code>workable_branches</code>
+- <code>notes</code>
+- <code>external_calendar_id</code>
+- <code>calendar_provider</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>active</code>: boolean
+- <code>is_bookable</code>: boolean
+- <code>workable_branches</code>: array
+- <code>deleted_at</code>: datetime</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code>
+- <code>bookable()</code>
+- <code>forCompany()</code>
+- <code>available()</code>
+- <code>forBranch()</code>
+- <code>withServices()</code>
+- <code>withAppointmentsInRange()</code>
+- <code>withCalendarConfig()</code>
+- <code>withoutCalendarConfig()</code>
+- <code>withAppointmentCount()</code>
+- <code>withRelations()</code>
+- <code>currentCompany()</code></p>
+<hr/>
+<h2 id="staffeventtype">StaffEventType<a class="headerlink" href="#staffeventtype" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>staff_event_types</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>staff_id</code>
+- <code>event_type_id</code>
+- <code>calcom_user_id</code>
+- <code>is_primary</code>
+- <code>custom_duration</code>
+- <code>custom_price</code>
+- <code>availability_override</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>is_primary</code>: boolean
+- <code>custom_duration</code>: integer
+- <code>custom_price</code>: decimal:2
+- <code>availability_override</code>: array</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="staffservice">StaffService<a class="headerlink" href="#staffservice" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>staff_service</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="staffserviceassignment">StaffServiceAssignment<a class="headerlink" href="#staffserviceassignment" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>staff_service_assignments</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>staff_id</code>
+- <code>master_service_id</code>
+- <code>branch_id</code>
+- <code>calcom_user_id</code>
+- <code>availability_rules</code>
+- <code>active</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>availability_rules</code>: array
+- <code>active</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>staff()</code>: BelongsTo
+- <code>masterService()</code>: BelongsTo
+- <code>branch()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="taxrate">TaxRate<a class="headerlink" href="#taxrate" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>tax_rates</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>company_id</code>
+- <code>name</code>
+- <code>rate</code>
+- <code>is_default</code>
+- <code>is_system</code>
+- <code>description</code>
+- <code>valid_from</code>
+- <code>valid_until</code>
+- <code>stripe_tax_rate_id</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>rate</code>: decimal:2
+- <code>is_default</code>: boolean
+- <code>is_system</code>: boolean
+- <code>valid_from</code>: date
+- <code>valid_until</code>: date</p>
+<p><strong>Relationships</strong>:
+- <code>company()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:
+- <code>active()</code>
+- <code>system()</code>
+- <code>forCompany()</code></p>
+<hr/>
+<h2 id="telefonnummer">Telefonnummer<a class="headerlink" href="#telefonnummer" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>telefonnummern</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>kunde_id</code>
+- <code>nummer</code>
+- <code>beschreibung</code>
+- <code>aktiv</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>aktiv</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>kunde()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="tenant">Tenant<a class="headerlink" href="#tenant" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>tenants</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>name</code>
+- <code>slug</code>
+- <code>api_key</code></p>
+<p><strong>Relationships</strong>:
+- <code>users()</code>: HasMany</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="termin">Termin<a class="headerlink" href="#termin" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>termine</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>kunde_id</code>
+- <code>mitarbeiter_id</code>
+- <code>call_id</code>
+- <code>anrufer_name</code>
+- <code>anrufer_telefon</code>
+- <code>anrufer_email</code>
+- <code>datum</code>
+- <code>uhrzeit</code>
+- <code>dauer_minuten</code>
+- <code>dienstleistung</code>
+- <code>notizen</code>
+- <code>cal_com_event_id</code>
+- <code>status</code>
+- <code>erinnerung_gesendet</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>datum</code>: date
+- <code>uhrzeit</code>: datetime
+- <code>erinnerung_gesendet</code>: boolean</p>
+<p><strong>Relationships</strong>:
+- <code>kunde()</code>: BelongsTo
+- <code>mitarbeiter()</code>: BelongsTo
+- <code>call()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="unifiedeventtype">UnifiedEventType<a class="headerlink" href="#unifiedeventtype" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>unified_event_types</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>branch_id</code>
+- <code>company_id</code>
+- <code>service_id</code>
+- <code>provider</code>
+- <code>external_id</code>
+- <code>name</code>
+- <code>slug</code>
+- <code>description</code>
+- <code>duration_minutes</code>
+- <code>price</code>
+- <code>provider_data</code>
+- <code>conflict_data</code>
+- <code>is_active</code>
+- <code>assignment_status</code>
+- <code>import_status</code>
+- <code>imported_at</code>
+- <code>assigned_at</code>
+- <code>calcom_event_type_id</code>
+- <code>duration</code>
+- <code>raw_data</code>
+- <code>last_imported_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>is_active</code>: boolean
+- <code>provider_data</code>: array
+- <code>conflict_data</code>: array
+- <code>imported_at</code>: datetime
+- <code>assigned_at</code>: datetime
+- <code>last_imported_at</code>: datetime
+- <code>price</code>: decimal:2
+- <code>raw_data</code>: array
+- <code>duration</code>: integer
+- <code>duration_minutes</code>: integer
+- <code>calcom_event_type_id</code>: integer</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:
+- <code>assigned()</code>
+- <code>unassigned()</code>
+- <code>duplicates()</code>
+- <code>pendingReview()</code>
+- <code>active()</code></p>
+<hr/>
+<h2 id="user">User<a class="headerlink" href="#user" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>users</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>fname</code>
+- <code>lname</code>
+- <code>name</code>
+- <code>email</code>
+- <code>password</code>
+- <code>username</code>
+- <code>tenant_id</code>
+- <code>company_id</code>
+- <code>date_created</code>
+- <code>date_updated</code>
+- <code>email_verified_at</code></p>
+<p><strong>Hidden Attributes</strong>:
+- <code>password</code>
+- <code>remember_token</code>
+- <code>salt</code>
+- <code>legacypassword</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>email_verified_at</code>: datetime</p>
+<p><strong>Relationships</strong>:
+- <code>tenant()</code>: BelongsTo
+- <code>roles()</code>: BelongsToMany
+- <code>permissions()</code>: BelongsToMany</p>
+<p><strong>Scopes</strong>:
+- <code>role()</code>
+- <code>withoutRole()</code>
+- <code>permission()</code>
+- <code>withoutPermission()</code></p>
+<hr/>
+<h2 id="validationresult">ValidationResult<a class="headerlink" href="#validationresult" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>validation_results</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>entity_type</code>
+- <code>entity_id</code>
+- <code>test_type</code>
+- <code>status</code>
+- <code>results</code>
+- <code>tested_at</code>
+- <code>expires_at</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>results</code>: array
+- <code>tested_at</code>: datetime
+- <code>expires_at</code>: datetime</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="webhookevent">WebhookEvent<a class="headerlink" href="#webhookevent" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>webhook_events</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>provider</code>
+- <code>event_type</code>
+- <code>event_id</code>
+- <code>idempotency_key</code>
+- <code>payload</code>
+- <code>status</code>
+- <code>processed_at</code>
+- <code>error_message</code>
+- <code>retry_count</code>
+- <code>correlation_id</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int
+- <code>payload</code>: array
+- <code>processed_at</code>: datetime</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="workinghour">WorkingHour<a class="headerlink" href="#workinghour" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>working_hours</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int</p>
+<p><strong>Relationships</strong>:
+- <code>staff()</code>: BelongsTo</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+<h2 id="workinghours">WorkingHours<a class="headerlink" href="#workinghours" title="Permanent link">¶</a></h2>
+<p><strong>Table</strong>: <code>working_hours</code></p>
+<p><strong>Primary Key</strong>: <code>id</code></p>
+<p><strong>Timestamps</strong>: Yes</p>
+<p><strong>Fillable Attributes</strong>:
+- <code>staff_id</code>
+- <code>weekday</code>
+- <code>start</code>
+- <code>end</code></p>
+<p><strong>Attribute Casts</strong>:
+- <code>id</code>: int</p>
+<p><strong>Relationships</strong>:</p>
+<p><strong>Scopes</strong>:</p>
+<hr/>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+<script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+</body>
+</html>

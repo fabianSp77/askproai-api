@@ -1,0 +1,18 @@
+# AskProAI Documentation Auto-Update Cron Jobs
+# 
+# This file should be linked to /etc/cron.d/askproai-docs-update
+# sudo ln -s /var/www/api-gateway/config/cron/documentation-update /etc/cron.d/askproai-docs-update
+
+# Environment variables
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=admin@askproai.de
+
+# Run documentation update every hour
+0 * * * * www-data cd /var/www/api-gateway && /var/www/api-gateway/scripts/auto-update-docs.sh >> /var/log/askproai/docs-cron.log 2>&1
+
+# Run a more comprehensive update daily at 3 AM
+0 3 * * * www-data cd /var/www/api-gateway && /var/www/api-gateway/scripts/auto-update-docs.sh --full >> /var/log/askproai/docs-cron.log 2>&1
+
+# Clean up old documentation backups weekly on Sunday at 4 AM
+0 4 * * 0 www-data find /var/www/api-gateway/public/mkdocs.backup.* -mtime +7 -exec rm -rf {} \; 2>/dev/null || true

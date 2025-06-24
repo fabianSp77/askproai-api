@@ -30,7 +30,8 @@ class DatabaseMCPServer
         $this->allowedTables = [
             'appointments', 'calls', 'customers', 'companies', 'branches',
             'staff', 'services', 'calcom_event_types', 'staff_event_types',
-            'phone_numbers', 'webhook_events', 'api_call_logs'
+            'phone_numbers', 'webhook_events', 'mcp_metrics', 'branch_event_types',
+            'service_event_type_mappings', 'working_hours'
         ];
     }
     

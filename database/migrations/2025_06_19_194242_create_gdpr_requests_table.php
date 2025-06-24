@@ -24,8 +24,8 @@ return new class extends CompatibleMigration
             $table->timestamp('requested_at');
             $table->timestamp('processed_at')->nullable();
             $table->timestamp('completed_at')->nullable();
-            $table->unsignedMediumInteger('processed_by')->nullable();
-            $table->foreign('processed_by')->references('user_id')->on('users')->nullOnDelete();
+            $table->unsignedBigInteger('processed_by')->nullable();
+            $table->foreign('processed_by')->references('id')->on('users')->nullOnDelete();
             $table->timestamps();
             
             $table->index(['customer_id', 'type', 'status']);

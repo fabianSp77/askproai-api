@@ -10,6 +10,8 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -31,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([
@@ -52,11 +55,11 @@ class AdminPanelProvider extends PanelProvider
                 Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
-                \App\Http\Middleware\ResponseWrapper::class, // Fix Livewire Redirector issues
-                \App\Http\Middleware\EnsureProperResponseFormat::class, // Ensure proper response format
+                // \App\Http\Middleware\ResponseWrapper::class, // Fix Livewire Redirector issues
+                // \App\Http\Middleware\EnsureProperResponseFormat::class, // Ensure proper response format
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
-                CustomStartSession::class, // Use our custom StartSession that handles Livewire
+                StartSession::class, // Use standard StartSession temporarily
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,

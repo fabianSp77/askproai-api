@@ -55,6 +55,14 @@ return [
             'permission' => 0664,
         ],
 
+        'mcp-external' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/mcp-external.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 7,
+            'permission' => 0664,
+        ],
+
         'mail' => [
             'driver' => 'daily',
             'path' => storage_path('logs/mail.log'),

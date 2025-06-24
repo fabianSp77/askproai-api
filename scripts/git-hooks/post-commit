@@ -1,0 +1,36 @@
+#!/bin/bash
+
+#################################################################
+# Git Post-Commit Hook for Documentation Auto-Update
+# 
+# This hook automatically updates documentation after commits
+# that modify PHP or Markdown files
+#################################################################
+
+# Only run on main/master branch
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$BRANCH" != "main" && "$BRANCH" != "master" ]]; then
+    exit 0
+fi
+
+# Check if any relevant files were changed
+CHANGED_FILES=$(git diff --name-only HEAD~1)
+RELEVANT_CHANGES=false
+
+# Check for changes in files that affect documentation
+while IFS= read -r file; do
+    if [[ "$file" =~ \.(php|md)$ ]] || [[ "$file" =~ ^docs/ ]] || [[ "$file" =~ ^app/ ]]; then
+        RELEVANT_CHANGES=true
+        break
+    fi
+done <<< "$CHANGED_FILES"
+
+if [ "$RELEVANT_CHANGES" = true ]; then
+    echo "📚 Documentation-relevant files changed. Updating documentation..."
+    
+    # Run documentation update in background
+    nohup /var/www/api-gateway/scripts/auto-update-docs.sh > /dev/null 2>&1 &
+    
+    echo "📝 Documentation update started in background (PID: $!)"
+    echo "   Check progress: tail -f /var/log/askproai/docs-update.log"
+fi

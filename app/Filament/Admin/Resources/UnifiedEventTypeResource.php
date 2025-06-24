@@ -118,7 +118,8 @@ class UnifiedEventTypeResource extends Resource
                     ->sortable()
                     ->badge()
                     ->color('info')
-                    ->default('Nicht zugeordnet'),
+                    ->default('Nicht zugeordnet')
+                    ->getStateUsing(fn ($record) => $record?->branch?->company?->name ?? '-'),
 
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
@@ -126,7 +127,8 @@ class UnifiedEventTypeResource extends Resource
                     ->sortable()
                     ->badge()
                     ->color('success')
-                    ->default('Nicht zugeordnet'),
+                    ->default('Nicht zugeordnet')
+                    ->getStateUsing(fn ($record) => $record?->branch?->name ?? '-'),
 
                 Tables\Columns\BadgeColumn::make('assignment_status')
                     ->label('Status')

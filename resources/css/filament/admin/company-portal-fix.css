@@ -1,0 +1,328 @@
+/* Company Integration Portal Layout Fixes */
+
+/* Fix the main container spacing */
+.fi-company-integration-portal {
+    max-width: 100%;
+    padding: 1.5rem !important;
+}
+
+.fi-company-integration-portal > .space-y-6 {
+    space-y: 1.5rem !important;
+}
+
+/* Fix the header section */
+.fi-company-integration-portal .bg-gradient-to-r {
+    margin: 0 0 2rem 0;
+    padding: 2rem;
+}
+
+/* Fix integration cards grid */
+.grid.grid-cols-1.lg\:grid-cols-3 {
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
+    gap: 1.5rem !important;
+}
+
+/* Fix card styling */
+.fi-company-integration-portal .bg-white,
+.branch-card {
+    padding: 1.5rem !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Fix button spacing */
+.fi-company-integration-portal button {
+    white-space: nowrap;
+}
+
+/* Fix the branches section */
+.branch-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Fix dropdown positioning */
+.dropdown-wrapper {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 0.5rem;
+    z-index: 50;
+    min-width: 200px;
+}
+
+/* Fix responsive layout */
+@media (max-width: 1024px) {
+    .grid.grid-cols-1.lg\:grid-cols-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    .branch-cards-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Fix section headers */
+.fi-section-header {
+    margin-bottom: 1rem;
+}
+
+/* Fix table layouts */
+.fi-ta-table {
+    margin-top: 1rem;
+}
+
+/* Fix inline elements alignment */
+.inline-flex.items-center {
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Fix the test section styling */
+.border.border-gray-300 {
+    border-color: rgb(209, 213, 219);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Fix statistics display */
+.text-2xl.font-bold {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+}
+
+/* Alpine.js dropdown fix */
+[x-data] {
+    position: relative;
+}
+
+/* Fix button hover states */
+button:hover {
+    opacity: 0.9;
+}
+
+/* Fix z-index hierarchy */
+.fi-page-wrapper {
+    position: relative;
+    z-index: 1;
+}
+
+.fi-topbar {
+    z-index: 40;
+}
+
+.fi-sidebar {
+    z-index: 30;
+}
+
+/* Ensure modals are on top */
+.fi-modal {
+    z-index: 50;
+}
+
+/* Fix small input fields and boxes */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+textarea,
+select {
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    line-height: 20px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Fix inline edit fields being too small */
+.inline-edit-field input {
+    min-width: 200px;
+    width: 100%;
+}
+
+/* Fix select dropdowns being too narrow */
+select.flex-1 {
+    min-width: 250px;
+}
+
+/* Fix modal positioning - center vertically */
+.fixed.inset-0.z-50 {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 1rem;
+}
+
+/* Modal should not go off screen */
+[x-data*="showBranchEventTypeModal"] .relative {
+    max-height: calc(100vh - 2rem);
+    margin: auto;
+}
+
+/* Fix text being cut off */
+.truncate {
+    overflow: visible !important;
+    text-overflow: initial !important;
+    white-space: normal !important;
+}
+
+/* Fix very small boxes on full lines */
+.w-full .p-3,
+.bg-gray-50.dark\:bg-gray-800.rounded-lg {
+    min-height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px 16px !important;
+}
+
+/* Fix buttons in flex containers */
+.flex.gap-2 button {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Better spacing for grid items */
+.branch-info-grid > div {
+    min-width: 0;
+    padding: 0.75rem;
+}
+
+/* Fix dropdown cutoff issues */
+[x-show*="open"][x-transition] {
+    z-index: 9999 !important;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+/* Ensure buttons are clickable */
+button[wire\:click] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Fix modal backdrop */
+.fixed.inset-0.bg-gray-500 {
+    z-index: 49;
+}
+
+/* Fix modal panel */
+.fixed.inset-0 .relative {
+    z-index: 50;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    /* Prevent zoom on input focus (iOS) */
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+    
+    /* Stack buttons on mobile */
+    .flex.gap-2 {
+        flex-wrap: wrap;
+    }
+    
+    .flex.gap-2 > button {
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
+}
+
+/* CRITICAL FIXES FOR BROKEN UI */
+
+/* Fix cramped layout */
+.fi-page-content {
+    padding: 2rem !important;
+}
+
+.space-y-6 > * + * {
+    margin-top: 2rem !important;
+}
+
+/* Fix branch cards being too small */
+.branch-card {
+    min-height: 400px !important;
+    padding: 1.5rem !important;
+}
+
+.branch-header {
+    margin-bottom: 1.5rem !important;
+}
+
+/* Fix tiny event type boxes */
+.event-types-section {
+    padding: 1.5rem !important;
+    min-height: 150px !important;
+}
+
+/* Fix button sizes */
+button {
+    min-height: 36px !important;
+    padding: 8px 16px !important;
+}
+
+/* Fix grid layout */
+.branch-cards-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)) !important;
+    gap: 2rem !important;
+}
+
+/* Fix inline edit buttons */
+.inline-edit-button {
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Fix modal not showing */
+.fixed.inset-0.z-50 {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 99999 !important;
+}
+
+/* Fix dropdown menus */
+[x-show="open"] {
+    display: block !important;
+}
+
+[x-show="open"][style*="display: none"] {
+    display: block !important;
+}
+
+/* Fix text labels */
+label {
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+}
+
+/* Fix responsive layout on mobile */
+@media (max-width: 768px) {
+    .branch-cards-container {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .branch-card {
+        min-height: auto !important;
+    }
+}

@@ -29,14 +29,12 @@ class AnalyzeRetellWebhooks extends Command
             $this->analyzeCallsData($calls);
         }
         
-        // Method 2: Check retell_webhooks table if exists
-        if (Schema::hasTable('retell_webhooks')) {
-            $webhooks = RetellWebhook::latest()->limit($limit)->get();
-            
-            if ($webhooks->isNotEmpty()) {
-                $this->info("\n=== RETELL_WEBHOOKS TABLE ANALYSIS ===");
-                $this->analyzeWebhooksData($webhooks);
-            }
+        // Method 2: Check webhook_events table for Retell webhooks
+        $webhooks = RetellWebhook::retell()->latest()->limit($limit)->get();
+        
+        if ($webhooks->isNotEmpty()) {
+            $this->info("\n=== RETELL WEBHOOKS ANALYSIS ===");
+            $this->analyzeWebhooksData($webhooks);
         }
         
         // Summary of critical fields

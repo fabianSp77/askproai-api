@@ -1,0 +1,47 @@
+site_name: AskProAI Documentation
+site_description: Complete documentation for AskProAI platform
+site_url: https://api.askproai.de/documentation
+
+theme:
+  name: material
+  palette:
+    primary: indigo
+    accent: purple
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mermaid2:
+      version: 10.6.1
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+docs_dir: docs_mkdocs
+site_dir: public/mkdocs
+
+nav:
+  - Home: README.md
+  - MCP Architecture: MCP_TECHNICAL_ARCHITECTURE.md
+  - Data Flow: MCP_DATA_FLOW_COMPLETE.md
+  - Implementation: MCP_IMPLEMENTATION_COMPLETE.md
+  - Cal.com API: CALCOM_V2_API_DOCUMENTATION.md
+  - Deployment: DEPLOYMENT_GUIDE.md
+  - Monitoring: MONITORING_AND_ALERTING_GUIDE.md
+  - Troubleshooting: TROUBLESHOOTING_GUIDE.md

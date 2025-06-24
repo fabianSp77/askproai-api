@@ -1,0 +1,98 @@
+site_name: AskProAI Complete Documentation
+site_description: Complete documentation for AskProAI platform
+site_url: https://api.askproai.de/mkdocs
+
+theme:
+  name: material
+  palette:
+    primary: indigo
+    accent: purple
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mermaid2:
+      version: 10.6.1
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+docs_dir: docs_mkdocs
+site_dir: public/mkdocs
+
+nav:
+  - Home: index.md
+  - Quick Start: quickstart.md
+  - System Status: status.md
+  - Changelog: changelog.md
+  
+  - Architecture:
+    - Overview: architecture/overview.md
+    - Database Schema: architecture/database-schema.md
+    - Services: architecture/services.md
+    - MCP Architecture: architecture/mcp-architecture.md
+  
+  - API Documentation:
+    - Models: api/models.md
+    - Routes: api/routes.md
+    - Reference: api/reference.md
+  
+  - MCP System:
+    - Complete Overview: MCP_COMPLETE_OVERVIEW.md
+    - Integration Guide: MCP_INTEGRATION_GUIDE.md
+    - Setup Guide: MCP_SETUP_COMPLETE_GUIDE.md
+    - Evolution System: MCP_EVOLUTION_SYSTEM.md
+    - Cal.com MCP Server: CALCOM_MCP_SERVER_API.md
+    - Knowledge MCP: KNOWLEDGE_MCP_SERVER.md
+    - Queue MCP: QUEUE_MCP_IMPLEMENTATION_COMPLETE.md
+    - Sentry MCP: SENTRY_MCP_INTEGRATION.md
+  
+  - Service Documentation:
+    - Service Architecture: SERVICE_ARCHITECTURE.md
+    - Enhanced Booking: ENHANCED_BOOKING_SERVICE.md
+    - Universal Booking: UNIVERSAL_BOOKING_SYSTEM.md
+    - Cal.com V2 API: CALCOM_V2_API_DOCUMENTATION.md
+  
+  - Operations:
+    - Deployment Guide: DEPLOYMENT_GUIDE.md
+    - Monitoring Guide: MONITORING_AND_ALERTING_GUIDE.md
+    - Troubleshooting: TROUBLESHOOTING_GUIDE.md
+    - Security Audit: operations/security-audit.md
+    - Performance Indexes: PERFORMANCE_INDEXES_MIGRATION.md
+  
+  - Configuration:
+    - Reference: configuration/reference.md
+    - Database Safety: DATABASE_SAFETY_GUIDELINES.md
+  
+  - Testing:
+    - Testing Strategy: TESTING_STRATEGY.md
+    - Universal Booking Tests: UNIVERSAL_BOOKING_TEST_GUIDE.md
+  
+  - Planning:
+    - Database Cleanup: database_cleanup_plan.md
+    - Service Consolidation: service_consolidation_plan.md
+  
+  - UI/UX:
+    - Dashboard Redesign: DASHBOARD_REDESIGN_README.md
+  
+  - Developer Tools:
+    - Structured Logger: STRUCTURED_LOGGER_GUIDE.md
+    - Retell Webhook Migration: RETELL_WEBHOOK_MCP_MIGRATION_GUIDE.md
+  
+  - Statistics: statistics.md

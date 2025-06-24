@@ -20,6 +20,8 @@ class PhoneNumberResolver
      */
     public function resolve(string $phoneNumber): array
     {
+        // Validate phone number format
+        $phoneNumber = $this->validatePhoneNumber($phoneNumber);
         // Check if phone_numbers table has 'number' column
         if (!Schema::hasColumn('phone_numbers', 'number')) {
             Log::error('PhoneNumberResolver: phone_numbers table missing number column');
@@ -27,32 +29,53 @@ class PhoneNumberResolver
         }
         
         // Try to find phone number in database
-        $phoneRecord = PhoneNumber::where('number', $phoneNumber)
-            ->where('active', true)
+        $phoneRecord = PhoneNumber::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('number', $phoneNumber)
+            ->where('is_active', true)
             ->first();
             
         if (!$phoneRecord) {
             // Try without + prefix
             if (strpos($phoneNumber, '+') === 0) {
                 $phoneWithoutPlus = substr($phoneNumber, 1);
-                $phoneRecord = PhoneNumber::where('number', $phoneWithoutPlus)
-                    ->where('active', true)
+                $phoneRecord = PhoneNumber::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                    ->where('number', $phoneWithoutPlus)
+                    ->where('is_active', true)
                     ->first();
             }
         }
         
         if ($phoneRecord) {
+            // Get branch and company names without loading relationships
+            $branchName = null;
+            $companyName = null;
+            
+            if ($phoneRecord->branch_id) {
+                $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                    ->find($phoneRecord->branch_id);
+                $branchName = $branch ? $branch->name : null;
+            }
+            
+            if ($phoneRecord->company_id) {
+                $company = Company::find($phoneRecord->company_id);
+                $companyName = $company ? $company->name : null;
+            }
+            
             return [
                 'found' => true,
+                'phone_id' => $phoneRecord->id,
                 'branch_id' => $phoneRecord->branch_id,
+                'branch_name' => $branchName,
                 'company_id' => $phoneRecord->company_id,
-                'agent_id' => $phoneRecord->agent_id,
+                'company_name' => $companyName,
+                'agent_id' => $phoneRecord->retell_agent_id,
                 'normalized_number' => $phoneRecord->number
             ];
         }
         
         // Fallback: Check branches table
-        $branch = Branch::where('phone_number', $phoneNumber)
+        $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('phone_number', $phoneNumber)
             ->where('is_active', true)
             ->first();
             
@@ -86,7 +109,25 @@ class PhoneNumberResolver
         // 1. Try to get from Retell metadata (if agent has branch_id stored)
         if (isset($webhookData['metadata']['askproai_branch_id'])) {
             $branchId = $webhookData['metadata']['askproai_branch_id'];
-            $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)->find($branchId);
+            // Security: Don't bypass tenant scope - verify branch belongs to a valid company
+            $branch = Branch::find($branchId);
+            
+            // If not found in current scope, check without scope but verify company
+            if (!$branch) {
+                $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                    ->where('id', $branchId)
+                    ->where('is_active', true)
+                    ->first();
+                    
+                // Verify branch has valid company
+                if ($branch && (!$branch->company_id || !Company::find($branch->company_id))) {
+                    Log::warning('Branch found but company invalid', [
+                        'branch_id' => $branchId,
+                        'company_id' => $branch->company_id
+                    ]);
+                    $branch = null;
+                }
+            }
             
             if ($branch && $branch->is_active) {
                 Log::info('Branch resolved from metadata', [
@@ -161,34 +202,36 @@ class PhoneNumberResolver
         $cacheKey = "phone_resolver:{$normalized}";
         
         return Cache::remember($cacheKey, 300, function() use ($normalized, $phoneNumber) {
-            // 1. Check phone_numbers table (only with active branches)
+            // 1. Check phone_numbers table (with proper tenant context)
+            // We need to search across all companies since incoming calls don't have company context
             $phoneRecord = PhoneNumber::withoutGlobalScope(\App\Scopes\TenantScope::class)
                 ->where(function($query) use ($normalized, $phoneNumber) {
                     $query->where('number', $normalized)
                           ->orWhere('number', $phoneNumber);
                 })
-                ->where('active', true)
-                ->whereHas('branch', function($query) {
-                    $query->withoutGlobalScope(\App\Scopes\TenantScope::class)
-                          ->where('is_active', true);
-                })
-                ->with(['branch' => function($query) {
-                    $query->withoutGlobalScope(\App\Scopes\TenantScope::class);
-                }])
+                ->where('is_active', true)
                 ->first();
                 
-            if ($phoneRecord && $phoneRecord->branch) {
-                Log::info('Branch resolved from phone_numbers table', [
-                    'number' => $phoneNumber,
-                    'branch_id' => $phoneRecord->branch_id,
-                    'branch_active' => true
-                ]);
-                
-                return [
-                    'branch_id' => $phoneRecord->branch_id,
-                    'company_id' => $phoneRecord->branch->company_id,
-                    'agent_id' => $phoneRecord->agent_id
-                ];
+            if ($phoneRecord && $phoneRecord->branch_id) {
+                // Manually check if branch is active
+                $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                    ->where('id', $phoneRecord->branch_id)
+                    ->where('is_active', true)
+                    ->first();
+                    
+                if ($branch) {
+                    Log::info('Branch resolved from phone_numbers table', [
+                        'number' => $phoneNumber,
+                        'branch_id' => $phoneRecord->branch_id,
+                        'branch_active' => true
+                    ]);
+                    
+                    return [
+                        'branch_id' => $phoneRecord->branch_id,
+                        'company_id' => $branch->company_id,
+                        'agent_id' => $phoneRecord->retell_agent_id ?? $phoneRecord->agent_id
+                    ];
+                }
             }
             
             // 2. Check branch main phone number (only active branches)
@@ -432,5 +475,49 @@ class PhoneNumberResolver
     public function normalize(string $phoneNumber): string
     {
         return $this->normalizePhoneNumber($phoneNumber);
+    }
+    
+    /**
+     * Resolve context from phone number (alias for resolveFromPhoneNumber)
+     * Used by MCP servers
+     */
+    public function resolveFromPhone(string $phoneNumber): array
+    {
+        $result = $this->resolveFromPhoneNumber($phoneNumber);
+        
+        if ($result) {
+            return array_merge($result, ['found' => true]);
+        }
+        
+        // Fallback
+        return [
+            'found' => false,
+            'company_id' => Company::first()->id ?? null,
+            'branch_id' => null,
+            'company' => Company::first(),
+            'branch' => null,
+        ];
+    }
+    
+    /**
+     * Validate phone number format
+     * @throws \InvalidArgumentException
+     */
+    protected function validatePhoneNumber(string $phoneNumber): string
+    {
+        // Remove all whitespace and special characters except + and digits
+        $cleaned = preg_replace('/[^0-9+]/', '', trim($phoneNumber));
+        
+        // Check if empty
+        if (empty($cleaned)) {
+            throw new \InvalidArgumentException('Phone number cannot be empty');
+        }
+        
+        // Validate E.164 format (+ followed by 1-15 digits)
+        if (!preg_match('/^\+?[1-9]\d{1,14}$/', $cleaned)) {
+            throw new \InvalidArgumentException('Invalid phone number format. Must be in E.164 format.');
+        }
+        
+        return $cleaned;
     }
 }

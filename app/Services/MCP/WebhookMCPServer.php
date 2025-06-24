@@ -6,10 +6,13 @@ use App\Models\Call;
 use App\Models\Customer;
 use App\Models\Appointment;
 use App\Models\Branch;
+use App\Models\Company;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Services\MCP\DistributedTransactionManager;
+use App\Services\Webhook\WebhookDeduplicationService;
 
 class WebhookMCPServer
 {
@@ -17,17 +20,20 @@ class WebhookMCPServer
     protected RetellMCPServer $retellMCP;
     protected DatabaseMCPServer $databaseMCP;
     protected QueueMCPServer $queueMCP;
+    protected WebhookDeduplicationService $deduplication;
     
     public function __construct(
         CalcomMCPServer $calcomMCP,
         RetellMCPServer $retellMCP,
         DatabaseMCPServer $databaseMCP,
-        QueueMCPServer $queueMCP
+        QueueMCPServer $queueMCP,
+        WebhookDeduplicationService $deduplication
     ) {
         $this->calcomMCP = $calcomMCP;
         $this->retellMCP = $retellMCP;
         $this->databaseMCP = $databaseMCP;
         $this->queueMCP = $queueMCP;
+        $this->deduplication = $deduplication;
     }
     
     /**
@@ -36,19 +42,89 @@ class WebhookMCPServer
     public function processRetellWebhook(array $webhookData): array
     {
         try {
-            $event = $webhookData['event'] ?? null;
-            $callData = $webhookData['call'] ?? [];
+            // Handle the webhook data structure properly
+            $payload = $webhookData['payload'] ?? $webhookData;
+            $event = $payload['event'] ?? $webhookData['event'] ?? null;
+            $callData = $payload['call'] ?? $payload;
             
-            // Merge root-level dynamic variables into call data if present
-            if (isset($webhookData['retell_llm_dynamic_variables']) && !isset($callData['retell_llm_dynamic_variables'])) {
-                $callData['retell_llm_dynamic_variables'] = $webhookData['retell_llm_dynamic_variables'];
+            // Extract webhook ID for deduplication
+            $webhookId = $callData['call_id'] ?? null;
+            if (!$webhookId) {
+                return [
+                    'success' => false,
+                    'message' => 'No call_id found in webhook data',
+                    'processed' => false
+                ];
             }
             
-            if ($event !== 'call_ended' || empty($callData['call_id'])) {
+            // Check for duplicate using Redis-based deduplication
+            $deduplicationResult = $this->deduplication->processWithDeduplication(
+                $webhookId,
+                'retell',
+                function() use ($payload, $event, $callData) {
+                    return $this->processWebhookInternal($payload, $event, $callData);
+                }
+            );
+            
+            return $deduplicationResult;
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Webhook processing failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Processing failed: ' . $e->getMessage(),
+                'processed' => false
+            ];
+        }
+    }
+    
+    /**
+     * Internal webhook processing logic (called by deduplication service)
+     */
+    protected function processWebhookInternal(array $payload, ?string $event, array $callData): array
+    {
+        try {
+            // Create webhook event record
+            $webhookEvent = new \App\Models\WebhookEvent();
+            $webhookEvent->provider = 'retell';
+            $webhookEvent->type = 'webhook';
+            $webhookEvent->source = 'mcp';
+            $webhookEvent->event = $event;
+            $webhookEvent->payload = $payload;
+            $webhookEvent->correlation_id = $callData['call_id'] ?? Str::uuid()->toString();
+            $webhookEvent->status = 'processing';
+            $webhookEvent->save();
+            
+            Log::info('[MCP WebhookServer] Processing webhook', [
+                'event' => $event,
+                'call_id' => $callData['call_id'] ?? null,
+                'webhook_event_id' => $webhookEvent->id
+            ]);
+            
+            // Merge root-level dynamic variables into call data if present
+            if (isset($payload['retell_llm_dynamic_variables']) && !isset($callData['retell_llm_dynamic_variables'])) {
+                $callData['retell_llm_dynamic_variables'] = $payload['retell_llm_dynamic_variables'];
+            }
+            
+            // Process both call_ended and call_analyzed events
+            if (!in_array($event, ['call_ended', 'call_analyzed']) || empty($callData['call_id'])) {
+                // Mark as processed (but skipped)
+                if (isset($webhookEvent)) {
+                    $webhookEvent->processed_at = now();
+                    $webhookEvent->status = 'skipped';
+                    $webhookEvent->notes = 'Event not relevant for processing';
+                    $webhookEvent->save();
+                }
+                
                 return [
                     'success' => true,
                     'message' => 'Event not relevant for processing',
-                    'processed' => false
+                    'processed' => false,
+                    'webhook_event_id' => $webhookEvent->id ?? null
                 ];
             }
             
@@ -59,11 +135,65 @@ class WebhookMCPServer
             ]);
             
             if (!empty($existingCall['data'])) {
+                // For call_analyzed events, we still need to check if appointment should be created
+                if ($event === 'call_analyzed') {
+                    $call = Call::withoutGlobalScopes()->find($existingCall['data'][0]->id);
+                    
+                    // Resolve phone number for branch info
+                    $phoneResolution = $this->resolvePhoneNumber($callData['to_number'] ?? $callData['to'] ?? null);
+                    
+                    // Check if appointment should be created
+                    $appointmentData = null;
+                    $shouldCreate = $this->shouldCreateAppointment($callData);
+                    
+                    Log::info('MCP: Appointment creation check for existing call', [
+                        'should_create' => $shouldCreate,
+                        'call_id' => $call->id,
+                        'event' => $event
+                    ]);
+                    
+                    if ($shouldCreate && $phoneResolution['success']) {
+                        Log::info('MCP creating appointment for analyzed call');
+                        $appointmentData = $this->createAppointmentViaMCP(
+                            $call,
+                            $callData,
+                            $phoneResolution
+                        );
+                    }
+                    
+                    // Mark webhook event as processed
+                    if (isset($webhookEvent)) {
+                        $webhookEvent->processed_at = now();
+                        $webhookEvent->status = 'completed';
+                        $webhookEvent->notes = $appointmentData ? 'Appointment created' : 'Call analyzed without appointment';
+                        $webhookEvent->save();
+                    }
+                    
+                    return [
+                        'success' => true,
+                        'message' => 'Call analyzed and processed',
+                        'call_id' => $call->id,
+                        'appointment_created' => !is_null($appointmentData),
+                        'appointment_data' => $appointmentData,
+                        'processed' => true,
+                        'webhook_event_id' => $webhookEvent->id ?? null
+                    ];
+                }
+                
+                // For other events, mark as already processed
+                if (isset($webhookEvent)) {
+                    $webhookEvent->processed_at = now();
+                    $webhookEvent->status = 'duplicate';
+                    $webhookEvent->notes = 'Call already processed';
+                    $webhookEvent->save();
+                }
+                
                 return [
                     'success' => true,
                     'message' => 'Call already processed',
                     'call_id' => $existingCall['data'][0]->id,
-                    'processed' => false
+                    'processed' => false,
+                    'webhook_event_id' => $webhookEvent->id ?? null
                 ];
             }
             
@@ -103,7 +233,6 @@ class WebhookMCPServer
                 ]);
                 
                 if ($shouldCreate) {
-                    error_log('MCP: Should create appointment = YES');
                     Log::info('MCP creating appointment via Cal.com');
                     $appointmentData = $this->createAppointmentViaMCP(
                         $call,
@@ -111,10 +240,20 @@ class WebhookMCPServer
                         $phoneResolution
                     );
                 } else {
-                    error_log('MCP: Should create appointment = NO');
+                    Log::debug('MCP: Should not create appointment', [
+                        'call_id' => $call->id
+                    ]);
                 }
                 
                 // DB::commit();
+                
+                // Mark webhook event as processed
+                if (isset($webhookEvent)) {
+                    $webhookEvent->processed_at = now();
+                    $webhookEvent->status = 'completed';
+                    $webhookEvent->notes = $appointmentData ? 'New call with appointment created' : 'New call processed without appointment';
+                    $webhookEvent->save();
+                }
                 
                 return [
                     'success' => true,
@@ -123,25 +262,26 @@ class WebhookMCPServer
                     'customer_id' => $customer->id,
                     'appointment_created' => !is_null($appointmentData),
                     'appointment_data' => $appointmentData,
-                    'processed' => true
+                    'processed' => true,
+                    'webhook_event_id' => $webhookEvent->id ?? null
                 ];
-                
             } catch (\Exception $e) {
+                // Rollback if needed
                 // DB::rollback();
-                throw $e;
+                throw $e; // Re-throw to outer catch
+            }
+                
+        } catch (\Exception $e) {
+            // Mark webhook event as failed
+            if (isset($webhookEvent)) {
+                $webhookEvent->status = 'failed';
+                $webhookEvent->error = $e->getMessage();
+                $webhookEvent->notes = 'Processing failed: ' . $e->getMessage();
+                $webhookEvent->save();
             }
             
-        } catch (\Exception $e) {
-            Log::error('MCP Webhook processing failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return [
-                'success' => false,
-                'message' => 'Processing failed: ' . $e->getMessage(),
-                'processed' => false
-            ];
+            // Re-throw to let deduplication service handle it
+            throw $e;
         }
     }
     
@@ -328,6 +468,41 @@ class WebhookMCPServer
     {
         $dynamicVars = $callData['retell_llm_dynamic_variables'] ?? [];
         
+        // Check if call was analyzed (for call_analyzed events)
+        // Note: event is at the root level, not in callData
+        if (isset($callData['call_analysis']) && 
+            isset($callData['call_analysis']['call_successful']) && 
+            $callData['call_analysis']['call_successful'] === true) {
+            $analysisData = $callData['call_analysis']['custom_analysis_data'] ?? [];
+            
+            // Check if we have appointment data in custom analysis
+            $hasAppointmentData = isset($analysisData['_datum__termin']) && 
+                                  isset($analysisData['_uhrzeit__termin']);
+            
+            // Also check for tool calls that indicate appointment creation
+            $hasToolCall = false;
+            if (isset($callData['transcript_with_tool_calls'])) {
+                foreach ($callData['transcript_with_tool_calls'] as $entry) {
+                    if (isset($entry['name']) && $entry['name'] === 'collect_appointment_data') {
+                        $hasToolCall = true;
+                        break;
+                    }
+                }
+            }
+            
+            Log::info('MCP shouldCreateAppointment check (call_analyzed)', [
+                'has_appointment_data' => $hasAppointmentData,
+                'has_tool_call' => $hasToolCall,
+                'datum_termin' => $analysisData['_datum__termin'] ?? 'not set',
+                'uhrzeit_termin' => $analysisData['_uhrzeit__termin'] ?? 'not set',
+                'call_successful' => $callData['call_analysis']['call_successful'] ?? false
+            ]);
+            
+            return ($hasAppointmentData || $hasToolCall) && 
+                   ($callData['call_analysis']['call_successful'] ?? false);
+        }
+        
+        // Original check for dynamic variables (for backward compatibility)
         // Check booking_confirmed with more flexible type handling
         $bookingConfirmed = false;
         if (isset($dynamicVars['booking_confirmed'])) {
@@ -362,7 +537,6 @@ class WebhookMCPServer
     protected function createAppointmentViaMCP(Call $call, array $callData, array $phoneResolution): ?array
     {
         try {
-            error_log('MCP: Starting createAppointmentViaMCP');
             Log::info('MCP: createAppointmentViaMCP called', [
                 'call_id' => $call->id,
                 'phone_resolution' => $phoneResolution
@@ -375,13 +549,89 @@ class WebhookMCPServer
                 Log::error('MCP: No Cal.com event type configured for branch', [
                     'branch_id' => $phoneResolution['branch_id']
                 ]);
-                error_log('MCP: ERROR - No Cal.com event type for branch ' . $phoneResolution['branch_id']);
                 return null;
             }
             
+            // Extract appointment data from either dynamic vars or custom analysis
+            $appointmentDate = null;
+            $appointmentTime = null;
+            $customerName = null;
+            $serviceDescription = null;
+            
+            // First check if this is from a call with analysis data
+            if (isset($callData['call_analysis'])) {
+                $analysisData = $callData['call_analysis']['custom_analysis_data'] ?? [];
+                
+                // Extract date from _datum__termin (format: 23062023)
+                if (isset($analysisData['_datum__termin'])) {
+                    $dateStr = (string)$analysisData['_datum__termin'];
+                    if (strlen($dateStr) === 8) {
+                        $day = substr($dateStr, 0, 2);
+                        $month = substr($dateStr, 2, 2);
+                        $year = substr($dateStr, 4, 4);
+                        $appointmentDate = "$year-$month-$day";
+                    }
+                }
+                
+                // Extract time from _uhrzeit__termin (format: 14 for 14:00)
+                if (isset($analysisData['_uhrzeit__termin'])) {
+                    $appointmentTime = sprintf('%02d:00', $analysisData['_uhrzeit__termin']);
+                }
+                
+                // Extract customer name
+                $customerName = $analysisData['_name'] ?? null;
+                
+                // Extract tool call data if available
+                if (isset($callData['transcript_with_tool_calls'])) {
+                    foreach ($callData['transcript_with_tool_calls'] as $entry) {
+                        if (isset($entry['name']) && $entry['name'] === 'collect_appointment_data' && isset($entry['arguments'])) {
+                            $args = is_string($entry['arguments']) ? json_decode($entry['arguments'], true) : $entry['arguments'];
+                            if ($args) {
+                                // Use tool call data as primary source if available
+                                if (!empty($args['datum'])) {
+                                    // Parse German date format (e.g., "23.06.")
+                                    $dateParts = explode('.', $args['datum']);
+                                    if (count($dateParts) >= 2) {
+                                        $day = str_pad($dateParts[0], 2, '0', STR_PAD_LEFT);
+                                        $month = str_pad($dateParts[1], 2, '0', STR_PAD_LEFT);
+                                        $year = date('Y');
+                                        $appointmentDate = "$year-$month-$day";
+                                    }
+                                }
+                                if (!empty($args['uhrzeit'])) {
+                                    $appointmentTime = $args['uhrzeit'];
+                                }
+                                if (!empty($args['name'])) {
+                                    $customerName = $args['name'];
+                                }
+                                if (!empty($args['dienstleistung'])) {
+                                    $serviceDescription = $args['dienstleistung'];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Fallback to dynamic vars if not found
+            if (!$appointmentDate && !empty($dynamicVars['datum'])) {
+                $appointmentDate = $dynamicVars['datum'];
+            }
+            if (!$appointmentTime && !empty($dynamicVars['uhrzeit'])) {
+                $appointmentTime = $dynamicVars['uhrzeit'];
+            }
+            
             // Parse date and time
-            $date = Carbon::parse($dynamicVars['datum']);
-            $time = $dynamicVars['uhrzeit'];
+            if (!$appointmentDate || !$appointmentTime) {
+                Log::error('MCP: Missing appointment date or time', [
+                    'date' => $appointmentDate,
+                    'time' => $appointmentTime
+                ]);
+                return null;
+            }
+            
+            $date = Carbon::parse($appointmentDate);
+            $time = $appointmentTime;
             
             if (strpos($time, ':') !== false) {
                 [$hours, $minutes] = explode(':', $time);
@@ -402,36 +652,52 @@ class WebhookMCPServer
                 'event_type_id' => $phoneResolution['calcom_event_type_id']
             ]);
             
+            // Update customer name if we have it from the call
+            if ($customerName && $customer) {
+                $customer->first_name = $customerName;
+                $customer->save();
+            }
+            
             // Prepare booking data for Cal.com MCP
             $bookingData = [
                 'company_id' => $phoneResolution['company_id'],
                 'event_type_id' => $phoneResolution['calcom_event_type_id'],
                 'start' => $startTime->toIso8601String(),
                 'end' => $endTime->toIso8601String(),
-                'name' => $customer->name ?: 'Kunde',
+                'name' => $customerName ?: $customer->name ?: 'Kunde',
                 'email' => $customer->email ?: 'kunde@example.com',
                 'phone' => $customer->phone ?: '+491234567890',
-                'notes' => "Gebucht über Telefon-KI (MCP)\nService: " . ($dynamicVars['dienstleistung'] ?? 'Nicht angegeben'),
+                'notes' => "Gebucht über Telefon-KI (MCP)\nService: " . ($serviceDescription ?: $dynamicVars['dienstleistung'] ?? 'Nicht angegeben'),
                 'metadata' => [
                     'call_id' => $call->id,
                     'source' => 'mcp_webhook'
                 ]
             ];
             
+            // Set company context for tenant scope
+            app()->instance('current_company_id', $phoneResolution['company_id']);
+            
             // Use Cal.com MCP to create booking
-            error_log('MCP: Calling Cal.com MCP with data: ' . json_encode($bookingData));
             Log::info('MCP: Calling Cal.com MCP createBooking', $bookingData);
             
-            $calcomResult = $this->calcomMCP->createBooking($bookingData);
-            
-            error_log('MCP: Cal.com result: ' . json_encode($calcomResult));
-            Log::info('MCP: Cal.com createBooking result', $calcomResult);
+            try {
+                $calcomResult = $this->calcomMCP->createBooking($bookingData);
+                
+                Log::info('MCP: Cal.com createBooking result', $calcomResult);
+            } finally {
+                // Always remove company context after use
+                app()->forgetInstance('current_company_id');
+            }
             
             if (!$calcomResult['success']) {
                 Log::error('Cal.com MCP booking failed', [
                     'error' => $calcomResult['error'] ?? 'Unknown error',
                     'call_id' => $call->id
                 ]);
+                
+                // Handle error based on company settings
+                $this->handleBookingError($call, $phoneResolution, $bookingData, $calcomResult['error'] ?? 'Unknown error');
+                
                 return null;
             }
             
@@ -471,14 +737,145 @@ class WebhookMCPServer
             ];
             
         } catch (\Exception $e) {
-            error_log('MCP: Exception in createAppointmentViaMCP: ' . $e->getMessage());
-            error_log('MCP: Exception trace: ' . $e->getTraceAsString());
             Log::error('MCP Appointment creation failed', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'call_id' => $call->id
             ]);
             return null;
         }
+    }
+    
+    /**
+     * Handle booking error based on company settings
+     */
+    protected function handleBookingError(Call $call, array $phoneResolution, array $bookingData, string $error): void
+    {
+        $company = Company::find($phoneResolution['company_id']);
+        if (!$company) {
+            return;
+        }
+        
+        $errorMode = $company->settings['error_handling']['mode'] ?? 'callback';
+        
+        switch ($errorMode) {
+            case 'callback':
+                // Create callback request
+                $callbackService = app(\App\Services\CallbackService::class);
+                $callback = $callbackService->createFromFailedBooking(
+                    $call,
+                    'calcom_error',
+                    $bookingData,
+                    $error
+                );
+                
+                // Update Retell conversation if still active
+                $this->updateRetellConversation($call->retell_call_id, [
+                    'message' => $company->settings['error_handling']['callback_message'] ?? 
+                        'Ich verstehe Ihren Wunsch. Ein Mitarbeiter wird sich schnellstmöglich bei Ihnen melden, um einen passenden Termin zu finden.',
+                    'action' => 'promise_callback'
+                ]);
+                break;
+                
+            case 'forward':
+                // Check if during business hours
+                $forwardNumber = $company->settings['error_handling']['forward_number'] ?? null;
+                if ($forwardNumber && $this->isDuringBusinessHours($company)) {
+                    $this->initiateCallTransfer($call->retell_call_id, $forwardNumber);
+                } else {
+                    // Fall back to callback
+                    $this->handleBookingError($call, $phoneResolution, $bookingData, $error);
+                }
+                break;
+                
+            case 'inform_only':
+                $this->updateRetellConversation($call->retell_call_id, [
+                    'message' => $company->settings['error_handling']['inform_message'] ?? 
+                        'Es tut mir leid, momentan kann ich keinen Termin buchen. Bitte versuchen Sie es später erneut oder rufen Sie während unserer Geschäftszeiten an.',
+                    'action' => 'end_call_politely'
+                ]);
+                break;
+        }
+    }
+    
+    /**
+     * Update Retell conversation (placeholder - needs Retell API implementation)
+     */
+    protected function updateRetellConversation(string $callId, array $data): void
+    {
+        // TODO: Implement Retell API call to update conversation
+        Log::info('Would update Retell conversation', [
+            'call_id' => $callId,
+            'data' => $data
+        ]);
+    }
+    
+    /**
+     * Initiate call transfer (placeholder - needs Retell API implementation)
+     */
+    protected function initiateCallTransfer(string $callId, string $transferNumber): void
+    {
+        // TODO: Implement Retell API call to transfer call
+        Log::info('Would initiate call transfer', [
+            'call_id' => $callId,
+            'transfer_to' => $transferNumber
+        ]);
+    }
+    
+    /**
+     * Check if current time is during business hours
+     */
+    protected function isDuringBusinessHours(Company $company): bool
+    {
+        $now = now();
+        $dayOfWeek = strtolower($now->format('l'));
+        
+        $workingHours = $company->settings['callback_handling']['working_hours'] ?? [
+            'monday' => ['start' => '09:00', 'end' => '18:00'],
+            'tuesday' => ['start' => '09:00', 'end' => '18:00'],
+            'wednesday' => ['start' => '09:00', 'end' => '18:00'],
+            'thursday' => ['start' => '09:00', 'end' => '18:00'],
+            'friday' => ['start' => '09:00', 'end' => '17:00'],
+            'saturday' => null,
+            'sunday' => null
+        ];
+        
+        $todayHours = $workingHours[$dayOfWeek] ?? null;
+        
+        if (!$todayHours) {
+            return false;
+        }
+        
+        $start = Carbon::createFromTimeString($todayHours['start']);
+        $end = Carbon::createFromTimeString($todayHours['end']);
+        
+        return $now->between($start, $end);
+    }
+    
+    /**
+     * Generate fallback email for customer
+     */
+    protected function generateFallbackEmail(Customer $customer, Company $company): string
+    {
+        $pattern = $company->settings['fallback_values']['email_template'] ?? 'noreply@{domain}';
+        
+        // Extract domain from company website or email
+        $domain = 'example.com';
+        if ($company->website) {
+            $parsed = parse_url($company->website);
+            $domain = $parsed['host'] ?? $domain;
+            $domain = str_replace('www.', '', $domain);
+        } elseif ($company->email) {
+            $parts = explode('@', $company->email);
+            $domain = $parts[1] ?? $domain;
+        }
+        
+        // Replace placeholders
+        $email = str_replace('{domain}', $domain, $pattern);
+        $email = str_replace('{name}', Str::slug($customer->first_name ?? 'kunde'), $email);
+        $email = str_replace('{id}', $customer->id, $email);
+        
+        return $email;
     }
     
     /**

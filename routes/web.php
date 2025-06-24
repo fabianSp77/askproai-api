@@ -28,6 +28,15 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
+// Documentation redirects to consolidate multiple locations
+Route::get('/documentation/{any?}', [App\Http\Controllers\DocumentationRedirectController::class, 'redirect'])
+    ->where('any', '.*');
+Route::get('/docs/{any?}', [App\Http\Controllers\DocumentationRedirectController::class, 'redirect'])
+    ->where('any', '.*');
+
+// Main documentation landing page
+Route::get('/documentation', [App\Http\Controllers\DocumentationRedirectController::class, 'index']);
+
 // Filament dashboard routes fix removed - pages now use default route generation
 
 // Include help center routes
@@ -91,6 +100,10 @@ Route::get('/test-debug', function () {
 // Livewire debug routes
 Route::get('/livewire-debug', function () {
     return view('livewire-debug');
+});
+
+Route::get('/livewire-test', function () {
+    return view('livewire-test');
 });
 
 Route::get('/test-livewire-check', function () {
@@ -175,6 +188,11 @@ Route::post('/debug/clear-logs', function () {
 Route::get('/debug-login', [\App\Http\Controllers\DebugLoginController::class, 'showForm']);
 Route::post('/debug-login/attempt', [\App\Http\Controllers\DebugLoginController::class, 'attemptLogin']);
 
+// Livewire test page
+Route::get('/livewire-test-page', function() {
+    return view('livewire-test-page');
+})->middleware(['web', 'auth']);
+
 // Call sharing routes (requires auth)
 Route::middleware(['auth'])->group(function () {
     Route::post('/admin/calls/{call}/send-email', [\App\Http\Controllers\CallShareController::class, 'sendCallEmail'])
@@ -187,3 +205,14 @@ require __DIR__.'/test-errors.php';
 Route::prefix('portal')->group(function () {
     require __DIR__.'/portal.php';
 });
+require __DIR__.'/test-livewire.php';
+require __DIR__.'/livewire-test.php';
+
+// Remove temporary debug route - let Livewire handle its own routes
+
+// Removed - let Livewire handle its own routes
+
+// Simple Livewire test
+Route::get('/test-livewire-simple', function() {
+    return view('test-livewire-simple');
+})->middleware(['web']);

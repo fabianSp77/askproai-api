@@ -42,6 +42,9 @@ class SmartBookingServiceTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_processes_incoming_call_and_creates_appointment()
     {
         // Create test data
@@ -116,6 +119,9 @@ class SmartBookingServiceTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_missing_appointment_request()
     {
         // Webhook data without appointment request

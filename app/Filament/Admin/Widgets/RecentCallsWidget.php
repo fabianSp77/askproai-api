@@ -1,123 +1,159 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Admin\Widgets;
 
 use App\Models\Call;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Widgets\TableWidget as BaseWidget;
-use App\Filament\Admin\Resources\CallResource;
-use App\Filament\Admin\Resources\CustomerResource;
-use App\Filament\Admin\Resources\AppointmentResource;
+use Carbon\Carbon;
+use Filament\Widgets\Widget;
+use Illuminate\Support\Facades\Cache;
 
-class RecentCallsWidget extends BaseWidget
+class RecentCallsWidget extends Widget
 {
-    protected static ?int $sort = 2;
+    protected static string $view = 'filament.admin.widgets.recent-calls';
+    protected static ?int $sort = 3;
     protected int | string | array $columnSpan = 'full';
-    protected static ?string $pollingInterval = '10s';
     
-    public function table(Table $table): Table
+    public array $recentCalls = [];
+    public array $callStats = [];
+    
+    public function mount(): void
     {
-        return $table
-            ->query(
-                Call::query()
-                    ->with(['customer', 'appointment'])
-                    ->latest()
-                    ->limit(10)
-            )
-            ->columns([
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Zeit')
-                    ->dateTime('H:i')
-                    ->sortable()
-                    ->description(fn ($record) => $record->created_at->diffForHumans()),
+        $this->loadRecentCalls();
+    }
+    
+    public function loadRecentCalls(): void
+    {
+        // Get recent completed calls
+        $this->recentCalls = Cache::remember('recent_calls_widget', 60, function () {
+            return Call::where('created_at', '>=', Carbon::now()->subHours(24))
+                ->whereNotIn('status', ['in_progress', 'active'])
+                ->with(['branch', 'customer', 'appointment'])
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get()
+                ->map(function ($call) {
+                    // Calculate duration from various fields
+                    $duration = 0;
                     
-                Tables\Columns\TextColumn::make('from_number')
-                    ->label('Anrufer')
-                    ->searchable()
-                    ->copyable()
-                    ->icon('heroicon-o-phone'),
+                    // Check different duration fields
+                    if (isset($call->duration_sec) && $call->duration_sec > 0) {
+                        $duration = $call->duration_sec;
+                    } elseif (isset($call->duration_seconds) && $call->duration_seconds > 0) {
+                        $duration = $call->duration_seconds;
+                    } elseif (isset($call->duration) && $call->duration > 0) {
+                        $duration = $call->duration;
+                    } elseif ($call->started_at && $call->ended_at) {
+                        $duration = Carbon::parse($call->started_at)->diffInSeconds(Carbon::parse($call->ended_at));
+                    } elseif ($call->start_timestamp && $call->end_timestamp) {
+                        $duration = Carbon::parse($call->start_timestamp)->diffInSeconds(Carbon::parse($call->end_timestamp));
+                    }
                     
-                Tables\Columns\TextColumn::make('customer.name')
-                    ->label('Kunde')
-                    ->placeholder('Unbekannt')
-                    ->url(fn ($record) => $record->customer ? CustomerResource::getUrl('view', ['record' => $record->customer]) : null),
+                    return [
+                        'id' => $call->id,
+                        'time' => Carbon::parse($call->created_at)->format('H:i'),
+                        'phone' => $this->maskPhoneNumber($call->from_number ?? $call->caller ?? 'Unknown'),
+                        'branch' => $call->branch?->name ?? 'Nicht zugeordnet',
+                        'duration' => $this->formatDuration((int)$duration),
+                        'status' => $this->getCallStatus($call),
+                        'appointment_booked' => !is_null($call->appointment_id),
+                        'sentiment' => $call->sentiment ?? 'neutral',
+                    ];
+                })
+                ->toArray();
+        });
+        
+        // Calculate stats
+        $this->calculateCallStats();
+    }
+    
+    private function calculateCallStats(): void
+    {
+        $stats = Cache::remember('call_stats_24h', 300, function () {
+            $calls24h = Call::where('created_at', '>=', Carbon::now()->subHours(24));
+            
+            // Try different duration columns
+            $avgDuration = 0;
+            try {
+                // First try duration_sec
+                $avgDuration = $calls24h->clone()->avg('duration_sec') ?? 0;
+            } catch (\Exception $e) {
+                try {
+                    // Then try duration_seconds
+                    $avgDuration = $calls24h->clone()->avg('duration_seconds') ?? 0;
+                } catch (\Exception $e2) {
+                    // Calculate from timestamps
+                    $callsWithDuration = $calls24h->clone()
+                        ->whereNotNull('started_at')
+                        ->whereNotNull('ended_at')
+                        ->get();
                     
-                Tables\Columns\TextColumn::make('sentiment')
-                    ->label('Stimmung')
-                    ->getStateUsing(function ($record) {
-                        // Try different ways to get sentiment
-                        $sentiment = $record->sentiment ?? 
-                                   $record->user_sentiment ?? 
-                                   (is_array($record->analysis) ? ($record->analysis['sentiment'] ?? null) : null);
-                        
-                        return match($sentiment) {
-                            'positive' => 'Positiv',
-                            'negative' => 'Negativ',
-                            'neutral' => 'Neutral',
-                            default => '-'
-                        };
-                    })
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'Positiv' => 'success',
-                        'Negativ' => 'danger',
-                        'Neutral' => 'gray',
-                        default => 'gray',
-                    }),
-                    
-                Tables\Columns\TextColumn::make('duration_sec')
-                    ->label('Dauer')
-                    ->formatStateUsing(fn ($state) => gmdate('i:s', $state)),
-                    
-                Tables\Columns\IconColumn::make('appointment_id')
-                    ->label('Termin')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-calendar-days')
-                    ->falseIcon('heroicon-o-x-circle')
-                    ->trueColor('success')
-                    ->falseColor('gray'),
-                    
-                Tables\Columns\TextColumn::make('analysis')
-                    ->label('Absicht')
-                    ->placeholder('-')
-                    ->getStateUsing(function ($record) {
-                        $intent = null;
-                        if (is_array($record->analysis) && isset($record->analysis['intent'])) {
-                            $intent = $record->analysis['intent'];
+                    if ($callsWithDuration->count() > 0) {
+                        $totalDuration = 0;
+                        foreach ($callsWithDuration as $call) {
+                            $totalDuration += Carbon::parse($call->started_at)->diffInSeconds(Carbon::parse($call->ended_at));
                         }
-                        
-                        return match($intent) {
-                            'appointment_booking' => 'Terminbuchung',
-                            'cancellation' => 'Stornierung',
-                            'inquiry' => 'Anfrage',
-                            null => '-',
-                            default => ucfirst(str_replace('_', ' ', $intent))
-                        };
-                    })
-                    ->badge()
-                    ->color('info'),
-            ])
-            ->actions([
-                Tables\Actions\Action::make('view')
-                    ->label('Details')
-                    ->icon('heroicon-o-eye')
-                    ->url(fn ($record) => CallResource::getUrl('view', ['record' => $record])),
-                    
-                Tables\Actions\Action::make('play')
-                    ->label('Anhören')
-                    ->icon('heroicon-o-play-circle')
-                    ->color('info')
-                    ->visible(fn ($record) => !empty($record->audio_url))
-                    ->modalContent(fn ($record) => view('filament.modals.audio-player', [
-                        'url' => $record->audio_url,
-                        'duration' => $record->duration_sec,
-                    ]))
-                    ->modalHeading('Anrufaufzeichnung')
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Schließen'),
-            ])
-            ->bulkActions([])
-            ->paginated(false);
+                        $avgDuration = $totalDuration / $callsWithDuration->count();
+                    }
+                }
+            }
+            
+            return [
+                'total_calls' => $calls24h->clone()->count(),
+                'appointments_booked' => $calls24h->clone()->whereNotNull('appointment_id')->count(),
+                'avg_duration' => $avgDuration,
+                'missed_calls' => $calls24h->clone()->where('status', 'missed')->count(),
+            ];
+        });
+        
+        $this->callStats = [
+            'total_calls' => $stats['total_calls'],
+            'appointments_booked' => $stats['appointments_booked'],
+            'conversion_rate' => $stats['total_calls'] > 0 
+                ? round(($stats['appointments_booked'] / $stats['total_calls']) * 100, 1) 
+                : 0,
+            'avg_duration' => $this->formatDuration((int)$stats['avg_duration']),
+            'missed_calls' => $stats['missed_calls'],
+        ];
+    }
+    
+    private function maskPhoneNumber(string $phone): string
+    {
+        if (strlen($phone) < 8) {
+            return $phone;
+        }
+        
+        return substr($phone, 0, 4) . '****' . substr($phone, -3);
+    }
+    
+    private function formatDuration(int $seconds): string
+    {
+        if ($seconds === 0) {
+            return '0:00';
+        }
+        
+        $minutes = floor($seconds / 60);
+        $remainingSeconds = $seconds % 60;
+        
+        return sprintf('%d:%02d', $minutes, $remainingSeconds);
+    }
+    
+    private function getCallStatus($call): string
+    {
+        $status = $call->status ?? $call->call_status ?? 'completed';
+        
+        return match($status) {
+            'completed' => 'Abgeschlossen',
+            'missed' => 'Verpasst',
+            'failed' => 'Fehlgeschlagen',
+            'cancelled' => 'Abgebrochen',
+            default => ucfirst($status)
+        };
+    }
+    
+    public function getPollingInterval(): ?string
+    {
+        return '30s';
     }
 }

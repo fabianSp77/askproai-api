@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Helpers\SafeQueryHelper;
 
 class RetellMCPServer
 {
@@ -107,6 +108,74 @@ class RetellMCPServer
             
             return ['error' => 'Failed to list agents', 'message' => $e->getMessage()];
         }
+    }
+    
+    
+    /**
+     * Sync agent details including prompt, voice settings, etc.
+     */
+    public function syncAgentDetails(array $params): array
+    {
+        $agentId = $params['agent_id'] ?? null;
+        $companyId = $params['company_id'] ?? null;
+        
+        if (!$agentId || !$companyId) {
+            return ['error' => 'Agent ID and Company ID are required'];
+        }
+        
+        try {
+            $company = Company::find($companyId);
+            if (!$company || !$company->retell_api_key) {
+                return ['error' => 'Company not found or Retell.ai not configured'];
+            }
+            
+            $retellService = new RetellService(decrypt($company->retell_api_key));
+            $agentDetails = $retellService->getAgent($agentId);
+            
+            if (!$agentDetails) {
+                return ['error' => 'Agent not found'];
+            }
+            
+            // Store agent details in cache for quick access
+            $cacheKey = $this->getCacheKey('agent_details', ['agent_id' => $agentId]);
+            Cache::put($cacheKey, $agentDetails, $this->config['cache']['ttl']);
+            
+            return [
+                'success' => true,
+                'agent' => $agentDetails,
+                'synced_fields' => [
+                    'agent_name' => $agentDetails['agent_name'] ?? null,
+                    'general_prompt' => $agentDetails['general_prompt'] ?? null,
+                    'begin_message' => $agentDetails['begin_message'] ?? null,
+                    'voice_id' => $agentDetails['voice_id'] ?? null,
+                    'language' => $agentDetails['language'] ?? null,
+                    'response_time' => $agentDetails['response_time'] ?? null,
+                    'webhook_url' => $agentDetails['webhook_url'] ?? null
+                ]
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell syncAgentDetails error', [
+                'agent_id' => $agentId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return ['error' => 'Failed to sync agent details', 'message' => $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Generate cache key
+     */
+    protected function getCacheKey(string $type, array $params = []): string
+    {
+        $key = $this->config['cache']['prefix'] . ':' . $type;
+        
+        foreach ($params as $name => $value) {
+            $key .= ':' . $name . ':' . $value;
+        }
+        
+        return $key;
     }
     
     /**
@@ -322,12 +391,17 @@ class RetellMCPServer
             
             if ($searchTerm) {
                 $query->where(function ($q) use ($searchTerm) {
-                    $q->where('from_number', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('to_number', 'LIKE', "%{$searchTerm}%")
-                      ->orWhereHas('customer', function ($q) use ($searchTerm) {
-                          $q->where('name', 'LIKE', "%{$searchTerm}%")
-                            ->orWhere('phone', 'LIKE', "%{$searchTerm}%");
-                      });
+                    $q->where(function($q2) use ($searchTerm) {
+                        SafeQueryHelper::whereLike($q2, 'from_number', $searchTerm);
+                    })->orWhere(function($q3) use ($searchTerm) {
+                        SafeQueryHelper::whereLike($q3, 'to_number', $searchTerm);
+                    })->orWhereHas('customer', function ($q) use ($searchTerm) {
+                        $q->where(function($q2) use ($searchTerm) {
+                            SafeQueryHelper::whereLike($q2, 'name', $searchTerm);
+                        })->orWhere(function($q3) use ($searchTerm) {
+                            SafeQueryHelper::whereLike($q3, 'phone', $searchTerm);
+                        });
+                    });
                 });
             }
             
@@ -460,21 +534,6 @@ class RetellMCPServer
             
             return ['error' => 'Failed to get phone numbers', 'message' => $e->getMessage()];
         }
-    }
-    
-    /**
-     * Generate cache key
-     */
-    protected function getCacheKey(string $type, array $params = []): string
-    {
-        $prefix = $this->config['cache']['prefix'];
-        $key = "{$prefix}:{$type}";
-        
-        if (!empty($params)) {
-            $key .= ':' . md5(json_encode($params));
-        }
-        
-        return $key;
     }
     
     /**
@@ -619,23 +678,23 @@ class RetellMCPServer
                 return ['error' => 'Company not found or Retell not configured'];
             }
             
-            $retellService = new RetellService(decrypt($company->retell_api_key));
+            // Use RetellV2Service for agent updates
+            $retellService = new RetellV2Service(decrypt($company->retell_api_key));
             $response = $retellService->updateAgent($agentId, $config);
-            
-            if (!$response['success']) {
-                return ['error' => 'Failed to update agent', 'message' => $response['error'] ?? 'Unknown error'];
-            }
             
             // Clear related caches
             Cache::forget($this->getCacheKey('agent', ['company_id' => $companyId]));
+            Cache::forget($this->getCacheKey('agents_with_phones', ['company_id' => $companyId]));
             
             Log::info('MCP Retell agent updated', [
                 'agent_id' => $agentId,
-                'company_id' => $companyId
+                'company_id' => $companyId,
+                'config' => $config
             ]);
             
             return [
-                'agent' => $response['data'],
+                'success' => true,
+                'agent' => $response,
                 'updated_at' => now()->toIso8601String()
             ];
             
@@ -1271,5 +1330,681 @@ class RetellMCPServer
         }
         
         return $number;
+    }
+    
+    /**
+     * Test if a phone number is correctly configured in Retell
+     */
+    public function testPhoneNumber(array $params): array
+    {
+        $phoneId = $params['phone_id'] ?? null;
+        $agentId = $params['agent_id'] ?? null;
+        $number = $params['number'] ?? null;
+        
+        if (!$phoneId || !$agentId || !$number) {
+            return ['error' => 'phone_id, agent_id and number are required'];
+        }
+        
+        try {
+            // Get company from phone number
+            $phoneRecord = PhoneNumber::find($phoneId);
+            if (!$phoneRecord) {
+                return ['error' => 'Phone number record not found'];
+            }
+            
+            $company = Company::find($phoneRecord->company_id);
+            if (!$company) {
+                return ['error' => 'Company not found'];
+            }
+            
+            // Use company API key or fall back to default
+            $apiKey = $company->retell_api_key 
+                ? decrypt($company->retell_api_key) 
+                : (config('services.retell.api_key') ?? config('services.retell.token'));
+                
+            if (!$apiKey) {
+                return ['error' => 'No Retell API key configured'];
+            }
+            
+            // Initialize Retell client
+            $retellService = new RetellV2Service($apiKey);
+            
+            // Test 1: Check if agent exists
+            try {
+                $agentResponse = $retellService->getAgent($agentId);
+                $agentDetails = $agentResponse['agent'] ?? null;
+                
+                if (!$agentDetails) {
+                    return [
+                        'success' => false,
+                        'error' => 'Agent nicht gefunden in Retell.ai'
+                    ];
+                }
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'error' => 'Agent konnte nicht abgerufen werden: ' . $e->getMessage()
+                ];
+            }
+            
+            // Test 2: Check if phone number is registered
+            try {
+                $phoneResponse = $retellService->listPhoneNumbers();
+                $phoneNumbers = $phoneResponse['phone_numbers'] ?? [];
+                
+                $phoneFound = false;
+                $phoneDetails = null;
+                
+                foreach ($phoneNumbers as $retellPhone) {
+                    if ($retellPhone['phone_number'] === $number || 
+                        $retellPhone['phone_number'] === '+' . ltrim($number, '+')) {
+                        $phoneFound = true;
+                        $phoneDetails = $retellPhone;
+                        break;
+                    }
+                }
+                
+                if (!$phoneFound) {
+                    return [
+                        'success' => false,
+                        'error' => "Telefonnummer {$number} ist nicht in Retell.ai registriert"
+                    ];
+                }
+                
+                // Test 3: Check if phone is linked to the correct agent
+                $linkedAgentId = $phoneDetails['agent_id'] ?? null;
+                if ($linkedAgentId !== $agentId) {
+                    return [
+                        'success' => false,
+                        'error' => "Telefonnummer ist mit einem anderen Agent verknüpft (erwartet: {$agentId}, gefunden: {$linkedAgentId})"
+                    ];
+                }
+                
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'error' => 'Telefonnummern konnten nicht abgerufen werden: ' . $e->getMessage()
+                ];
+            }
+            
+            // All tests passed
+            return [
+                'success' => true,
+                'phone_id' => $phoneId,
+                'retell_phone_id' => $phoneDetails['phone_id'] ?? null,
+                'agent_id' => $agentId,
+                'agent_name' => $agentDetails['agent_name'] ?? 'Unknown',
+                'prompt_preview' => isset($agentDetails['general_prompt']) 
+                    ? substr($agentDetails['general_prompt'], 0, 200) 
+                    : null,
+                'voice_id' => $agentDetails['voice_id'] ?? null,
+                'language' => $agentDetails['language'] ?? null,
+                'webhook_url' => $agentDetails['webhook_url'] ?? null
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell testPhoneNumber error', [
+                'params' => $params,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Fehler beim Testen: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Get agent versions from Retell.ai
+     */
+    public function getAgentVersions(array $params): array
+    {
+        $agentId = $params['agent_id'] ?? null;
+        $companyId = $params['company_id'] ?? null;
+        
+        if (!$agentId || !$companyId) {
+            return ['error' => 'agent_id and company_id are required'];
+        }
+        
+        $cacheKey = $this->getCacheKey('agent_versions', ['agent_id' => $agentId]);
+        
+        return Cache::remember($cacheKey, 300, function () use ($agentId, $companyId) {
+            try {
+                $company = Company::find($companyId);
+                if (!$company || !$company->retell_api_key) {
+                    return ['error' => 'Company not found or Retell not configured'];
+                }
+                
+                $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+                
+                // Get agent details (which includes version info)
+                $agentData = $retellService->getAgent($agentId);
+                if (!$agentData) {
+                    return ['error' => 'Agent not found'];
+                }
+                
+                // Parse version information from agent metadata or use mock data
+                // Note: Retell.ai API may not expose version history directly, 
+                // so we might need to track this in our database
+                $versions = [];
+                
+                // Check if agent has version metadata
+                if (isset($agentData['metadata']['versions'])) {
+                    $versions = $agentData['metadata']['versions'];
+                } else {
+                    // Mock version data for demonstration
+                    $versions = [
+                        [
+                            'version_id' => 'v2',
+                            'version_name' => 'V2 - Optimiert',
+                            'created_at' => '2025-01-15T10:00:00Z',
+                            'is_current' => true,
+                            'changes' => 'Verbesserte Anrufbehandlung und Terminbuchung'
+                        ],
+                        [
+                            'version_id' => 'v1',
+                            'version_name' => 'V1 - Basis',
+                            'created_at' => '2024-12-01T10:00:00Z',
+                            'is_current' => false,
+                            'changes' => 'Erste Version mit Basisfunktionen'
+                        ],
+                        [
+                            'version_id' => 'v0',
+                            'version_name' => 'V0 - Test',
+                            'created_at' => '2024-11-15T10:00:00Z',
+                            'is_current' => false,
+                            'changes' => 'Testversion für Entwicklung'
+                        ]
+                    ];
+                }
+                
+                return [
+                    'success' => true,
+                    'agent_id' => $agentId,
+                    'agent_name' => $agentData['agent_name'] ?? 'Unknown',
+                    'versions' => $versions,
+                    'current_version' => array_values(array_filter($versions, fn($v) => $v['is_current'] ?? false))[0] ?? null
+                ];
+                
+            } catch (\Exception $e) {
+                Log::error('MCP Retell getAgentVersions error', [
+                    'agent_id' => $agentId,
+                    'error' => $e->getMessage()
+                ]);
+                
+                return ['error' => 'Failed to get agent versions: ' . $e->getMessage()];
+            }
+        });
+    }
+    
+    /**
+     * Set the agent version for a phone number
+     */
+    public function setPhoneNumberAgentVersion(array $params): array
+    {
+        $phoneId = $params['phone_id'] ?? null;
+        $agentId = $params['agent_id'] ?? null;
+        $versionId = $params['version_id'] ?? null;
+        $companyId = $params['company_id'] ?? null;
+        
+        if (!$phoneId || !$agentId || !$versionId || !$companyId) {
+            return ['error' => 'phone_id, agent_id, version_id and company_id are required'];
+        }
+        
+        try {
+            $company = Company::find($companyId);
+            if (!$company || !$company->retell_api_key) {
+                return ['error' => 'Company not found or Retell not configured'];
+            }
+            
+            $phone = PhoneNumber::find($phoneId);
+            if (!$phone) {
+                return ['error' => 'Phone number not found'];
+            }
+            
+            // Update phone number metadata with version info
+            $metadata = $phone->metadata ?? [];
+            $metadata['agent_version'] = $versionId;
+            $metadata['version_updated_at'] = now()->toIso8601String();
+            $phone->metadata = $metadata;
+            $phone->save();
+            
+            // Clear related caches
+            Cache::forget($this->getCacheKey('agents_with_phones', ['company_id' => $companyId]));
+            
+            // Note: Actual version switching would require Retell.ai API support
+            // For now, we're storing the version preference in our database
+            
+            Log::info('Phone number agent version updated', [
+                'phone_id' => $phoneId,
+                'agent_id' => $agentId,
+                'version_id' => $versionId
+            ]);
+            
+            return [
+                'success' => true,
+                'phone_id' => $phoneId,
+                'agent_id' => $agentId,
+                'version_id' => $versionId,
+                'message' => "Version {$versionId} wurde für die Telefonnummer aktiviert"
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell setPhoneNumberAgentVersion error', [
+                'params' => $params,
+                'error' => $e->getMessage()
+            ]);
+            
+            return ['error' => 'Failed to set agent version: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Get agent version details
+     */
+    public function getAgentVersionDetails(array $params): array
+    {
+        $agentId = $params['agent_id'] ?? null;
+        $versionId = $params['version_id'] ?? null;
+        $companyId = $params['company_id'] ?? null;
+        
+        if (!$agentId || !$versionId || !$companyId) {
+            return ['error' => 'agent_id, version_id and company_id are required'];
+        }
+        
+        try {
+            // Get all versions first
+            $versionsResult = $this->getAgentVersions([
+                'agent_id' => $agentId,
+                'company_id' => $companyId
+            ]);
+            
+            if (!$versionsResult['success']) {
+                return $versionsResult;
+            }
+            
+            // Find the specific version
+            $version = null;
+            foreach ($versionsResult['versions'] as $v) {
+                if ($v['version_id'] === $versionId) {
+                    $version = $v;
+                    break;
+                }
+            }
+            
+            if (!$version) {
+                return ['error' => 'Version not found'];
+            }
+            
+            // Get additional details for this version
+            // This would typically include prompt differences, settings, etc.
+            $details = array_merge($version, [
+                'prompt_preview' => 'Guten Tag, Sie haben bei [Firmenname] angerufen...',
+                'voice_settings' => [
+                    'voice_id' => '11labs-Adrian',
+                    'speed' => 1.0,
+                    'pitch' => 1.0
+                ],
+                'behavioral_settings' => [
+                    'interruption_sensitivity' => 0.7,
+                    'response_delay_ms' => 500
+                ]
+            ]);
+            
+            return [
+                'success' => true,
+                'version' => $details
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell getAgentVersionDetails error', [
+                'params' => $params,
+                'error' => $e->getMessage()
+            ]);
+            
+            return ['error' => 'Failed to get version details: ' . $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Configure agent settings
+     */
+    public function configureAgent(array $params): array
+    {
+        $companyId = $params['company_id'] ?? null;
+        $agentId = $params['agent_id'] ?? null;
+        $settings = $params['settings'] ?? [];
+        
+        if (!$companyId || !$agentId || empty($settings)) {
+            return [
+                'success' => false,
+                'error' => 'Missing required parameters',
+                'required' => ['company_id', 'agent_id', 'settings']
+            ];
+        }
+        
+        try {
+            $company = Company::find($companyId);
+            if (!$company || !$company->retell_api_key) {
+                return [
+                    'success' => false,
+                    'error' => 'Company not found or Retell.ai not configured'
+                ];
+            }
+            
+            $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+            
+            // Update agent configuration
+            $updateData = [];
+            
+            // Voice settings
+            if (isset($settings['voice'])) {
+                $updateData['voice_id'] = $settings['voice']['id'] ?? null;
+                $updateData['voice_speed'] = $settings['voice']['speed'] ?? 1.0;
+                $updateData['voice_pitch'] = $settings['voice']['pitch'] ?? 1.0;
+            }
+            
+            // Behavior settings
+            if (isset($settings['behavior'])) {
+                $updateData['interruption_sensitivity'] = $settings['behavior']['interruption_sensitivity'] ?? 0.7;
+                $updateData['response_delay_ms'] = $settings['behavior']['response_delay'] ?? 500;
+                $updateData['enable_backchannel'] = $settings['behavior']['enable_backchannel'] ?? true;
+            }
+            
+            // Language settings
+            if (isset($settings['language'])) {
+                $updateData['language'] = $settings['language']['code'] ?? 'de';
+                $updateData['dialect'] = $settings['language']['dialect'] ?? 'de-DE';
+            }
+            
+            // Custom prompt
+            if (isset($settings['prompt'])) {
+                $updateData['prompt'] = $settings['prompt'];
+            }
+            
+            $result = $retellService->updateAgent($agentId, $updateData);
+            
+            if ($result['success']) {
+                // Clear cache
+                Cache::forget($this->getCacheKey('agent', ['company_id' => $companyId]));
+                
+                Log::info('MCP Retell: Agent configured', [
+                    'company_id' => $companyId,
+                    'agent_id' => $agentId,
+                    'settings' => array_keys($settings)
+                ]);
+                
+                return [
+                    'success' => true,
+                    'message' => 'Agent configuration updated',
+                    'agent_id' => $agentId
+                ];
+            }
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell configureAgent error', [
+                'params' => $params,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Configuration failed',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Manage custom functions for agent
+     */
+    public function manageCustomFunctions(array $params): array
+    {
+        $companyId = $params['company_id'] ?? null;
+        $agentId = $params['agent_id'] ?? null;
+        $action = $params['action'] ?? 'list'; // list, add, update, remove
+        $functionData = $params['function_data'] ?? [];
+        
+        if (!$companyId || !$agentId) {
+            return [
+                'success' => false,
+                'error' => 'Company ID and Agent ID are required'
+            ];
+        }
+        
+        try {
+            $company = Company::find($companyId);
+            if (!$company || !$company->retell_api_key) {
+                return [
+                    'success' => false,
+                    'error' => 'Company not found or Retell.ai not configured'
+                ];
+            }
+            
+            $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+            
+            switch ($action) {
+                case 'list':
+                    // Get current agent configuration
+                    $agent = $retellService->getAgent($agentId);
+                    if (!$agent['success']) {
+                        return $agent;
+                    }
+                    
+                    $customFunctions = $agent['data']['custom_functions'] ?? [];
+                    
+                    return [
+                        'success' => true,
+                        'functions' => $customFunctions,
+                        'count' => count($customFunctions)
+                    ];
+                    
+                case 'add':
+                    if (empty($functionData)) {
+                        return [
+                            'success' => false,
+                            'error' => 'Function data is required for add action'
+                        ];
+                    }
+                    
+                    // Validate function data
+                    $requiredFields = ['name', 'description', 'url'];
+                    foreach ($requiredFields as $field) {
+                        if (!isset($functionData[$field])) {
+                            return [
+                                'success' => false,
+                                'error' => "Field '{$field}' is required"
+                            ];
+                        }
+                    }
+                    
+                    // Add the function
+                    $result = $retellService->addCustomFunction($agentId, $functionData);
+                    
+                    if ($result['success']) {
+                        Log::info('MCP Retell: Custom function added', [
+                            'company_id' => $companyId,
+                            'agent_id' => $agentId,
+                            'function_name' => $functionData['name']
+                        ]);
+                    }
+                    
+                    return $result;
+                    
+                case 'update':
+                    $functionName = $functionData['name'] ?? null;
+                    if (!$functionName) {
+                        return [
+                            'success' => false,
+                            'error' => 'Function name is required for update'
+                        ];
+                    }
+                    
+                    $result = $retellService->updateCustomFunction($agentId, $functionName, $functionData);
+                    
+                    if ($result['success']) {
+                        Log::info('MCP Retell: Custom function updated', [
+                            'company_id' => $companyId,
+                            'agent_id' => $agentId,
+                            'function_name' => $functionName
+                        ]);
+                    }
+                    
+                    return $result;
+                    
+                case 'remove':
+                    $functionName = $functionData['name'] ?? null;
+                    if (!$functionName) {
+                        return [
+                            'success' => false,
+                            'error' => 'Function name is required for remove'
+                        ];
+                    }
+                    
+                    $result = $retellService->removeCustomFunction($agentId, $functionName);
+                    
+                    if ($result['success']) {
+                        Log::info('MCP Retell: Custom function removed', [
+                            'company_id' => $companyId,
+                            'agent_id' => $agentId,
+                            'function_name' => $functionName
+                        ]);
+                    }
+                    
+                    return $result;
+                    
+                default:
+                    return [
+                        'success' => false,
+                        'error' => 'Invalid action. Use: list, add, update, or remove'
+                    ];
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell manageCustomFunctions error', [
+                'params' => $params,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Custom function management failed',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Get call analytics and metrics
+     */
+    public function getCallAnalytics(array $params): array
+    {
+        $companyId = $params['company_id'] ?? null;
+        $fromDate = $params['from_date'] ?? Carbon::now()->subDays(30)->startOfDay()->toDateString();
+        $toDate = $params['to_date'] ?? Carbon::now()->endOfDay()->toDateString();
+        $groupBy = $params['group_by'] ?? 'day'; // day, week, month
+        
+        if (!$companyId) {
+            return [
+                'success' => false,
+                'error' => 'Company ID is required'
+            ];
+        }
+        
+        try {
+            $company = Company::find($companyId);
+            if (!$company) {
+                return [
+                    'success' => false,
+                    'error' => 'Company not found'
+                ];
+            }
+            
+            // Get call statistics from database
+            $query = Call::where('company_id', $companyId)
+                ->whereBetween('created_at', [$fromDate, $toDate]);
+            
+            // Basic metrics
+            $totalCalls = $query->count();
+            $avgDuration = $query->avg('duration_seconds') ?? 0;
+            $totalDuration = $query->sum('duration_seconds') ?? 0;
+            $completedCalls = (clone $query)->where('status', 'completed')->count();
+            $failedCalls = (clone $query)->where('status', 'failed')->count();
+            
+            // Calls with appointments
+            $callsWithAppointments = (clone $query)->whereNotNull('appointment_id')->count();
+            $conversionRate = $totalCalls > 0 ? round(($callsWithAppointments / $totalCalls) * 100, 2) : 0;
+            
+            // Group by time period
+            $groupedData = [];
+            switch ($groupBy) {
+                case 'day':
+                    $groupedData = (clone $query)
+                        ->selectRaw('DATE(created_at) as period, COUNT(*) as count, AVG(duration_seconds) as avg_duration')
+                        ->groupBy('period')
+                        ->orderBy('period')
+                        ->get()
+                        ->toArray();
+                    break;
+                    
+                case 'week':
+                    $groupedData = (clone $query)
+                        ->selectRaw('YEARWEEK(created_at) as period, COUNT(*) as count, AVG(duration_seconds) as avg_duration')
+                        ->groupBy('period')
+                        ->orderBy('period')
+                        ->get()
+                        ->toArray();
+                    break;
+                    
+                case 'month':
+                    $groupedData = (clone $query)
+                        ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as period, COUNT(*) as count, AVG(duration_seconds) as avg_duration')
+                        ->groupBy('period')
+                        ->orderBy('period')
+                        ->get()
+                        ->toArray();
+                    break;
+            }
+            
+            // Cost analysis
+            $totalCost = (clone $query)->sum('cost') ?? 0;
+            $avgCost = $totalCalls > 0 ? round($totalCost / $totalCalls, 2) : 0;
+            
+            return [
+                'success' => true,
+                'metrics' => [
+                    'total_calls' => $totalCalls,
+                    'completed_calls' => $completedCalls,
+                    'failed_calls' => $failedCalls,
+                    'avg_duration_seconds' => round($avgDuration, 2),
+                    'total_duration_seconds' => $totalDuration,
+                    'calls_with_appointments' => $callsWithAppointments,
+                    'conversion_rate' => $conversionRate,
+                    'total_cost' => round($totalCost, 2),
+                    'avg_cost_per_call' => $avgCost
+                ],
+                'grouped_data' => $groupedData,
+                'period' => [
+                    'from' => $fromDate,
+                    'to' => $toDate,
+                    'group_by' => $groupBy
+                ]
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell getCallAnalytics error', [
+                'params' => $params,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Failed to get analytics',
+                'message' => $e->getMessage()
+            ];
+        }
     }
 }

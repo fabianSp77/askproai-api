@@ -2,99 +2,91 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Filament\Admin\Traits\HasGlobalFilters;
-use App\Services\Dashboard\DashboardMetricsService;
+use App\Models\Appointment;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Facades\Cache;
-use Livewire\Attributes\On;
+use Illuminate\Support\Carbon;
 
-/**
- * Trend-Chart-Widget für Termine
- * 
- * Zeigt Umsatz-Trend der letzten 30 Tage
- * Mit interaktiver Zoom- und Filter-Funktion
- */
 class AppointmentTrendWidget extends ChartWidget
 {
-    use HasGlobalFilters;
-    protected static ?string $heading = 'Umsatz-Trend';
+    protected static ?string $heading = 'Termintrend (Letzte 30 Tage)';
     
     protected static ?int $sort = 2;
     
-    protected int | string | array $columnSpan = 'full';
-    
-    protected static ?string $pollingInterval = '300s'; // 5 Minuten
-    
-    protected static ?string $maxHeight = '300px';
-    
-    public ?string $filter = '30d';
-    
-    protected ?DashboardMetricsService $metricsService = null;
-    
-    public function mount(): void
-    {
-        parent::mount();
-        $this->mountHasGlobalFilters();
-    }
-    
-    protected function getMetricsService(): DashboardMetricsService
-    {
-        if (!$this->metricsService) {
-            $this->metricsService = app(DashboardMetricsService::class);
-        }
-        return $this->metricsService;
-    }
-    
-    #[On('refreshWidget')]
-    public function refresh(): void
-    {
-        $this->updateChartData();
-    }
+    protected static ?string $pollingInterval = '60s';
     
     protected function getData(): array
     {
-        // Ensure globalFilters is initialized
-        if (!isset($this->globalFilters['company_id']) || !$this->globalFilters['company_id']) {
+        $company = auth()->user()->company;
+        
+        if (!$company) {
             return [
-                'datasets' => [
-                    [
-                        'label' => 'Umsatz',
-                        'data' => [],
-                        'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                        'borderColor' => 'rgb(59, 130, 246)',
-                        'borderWidth' => 2,
-                    ],
-                ],
+                'datasets' => [],
                 'labels' => [],
             ];
         }
+
+        $data = Appointment::where('company_id', $company->id)
+            ->where('starts_at', '>=', now()->subDays(30))
+            ->selectRaw('DATE(starts_at) as date')
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed')
+            ->selectRaw('SUM(CASE WHEN status = "cancelled" THEN 1 ELSE 0 END) as cancelled')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        $labels = [];
+        $totals = [];
+        $completed = [];
+        $cancelled = [];
+
+        // Fill in missing dates
+        $period = now()->subDays(30)->toPeriod(now(), '1 day');
         
-        // Use global filters
-        $trendData = $this->getMetricsService()->getTrendData('revenue', $this->filter, $this->globalFilters);
-        
+        foreach ($period as $date) {
+            $dateStr = $date->format('Y-m-d');
+            $dayData = $data->firstWhere('date', $dateStr);
+            
+            $labels[] = $date->format('d.m');
+            $totals[] = $dayData ? $dayData->total : 0;
+            $completed[] = $dayData ? $dayData->completed : 0;
+            $cancelled[] = $dayData ? $dayData->cancelled : 0;
+        }
+
         return [
             'datasets' => [
                 [
-                    'label' => 'Umsatz',
-                    'data' => collect($trendData)->pluck('value')->toArray(),
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                    'borderColor' => 'rgb(59, 130, 246)',
+                    'label' => 'Gesamt',
+                    'data' => $totals,
+                    'backgroundColor' => 'rgba(168, 85, 247, 0.1)',
+                    'borderColor' => 'rgb(168, 85, 247)',
                     'borderWidth' => 2,
                     'tension' => 0.3,
                     'fill' => true,
-                    'pointRadius' => 4,
-                    'pointHoverRadius' => 6,
-                    'pointBackgroundColor' => 'rgb(59, 130, 246)',
-                    'pointBorderColor' => '#fff',
-                    'pointBorderWidth' => 2,
+                ],
+                [
+                    'label' => 'Abgeschlossen',
+                    'data' => $completed,
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
+                    'borderColor' => 'rgb(16, 185, 129)',
+                    'borderWidth' => 2,
+                    'tension' => 0.3,
+                    'fill' => true,
+                ],
+                [
+                    'label' => 'Abgesagt',
+                    'data' => $cancelled,
+                    'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
+                    'borderColor' => 'rgb(239, 68, 68)',
+                    'borderWidth' => 2,
+                    'tension' => 0.3,
+                    'fill' => true,
                 ],
             ],
-            'labels' => collect($trendData)->map(function($item) {
-                return \Carbon\Carbon::parse($item['date'])->format('d.m');
-            })->toArray(),
+            'labels' => $labels,
         ];
     }
-    
+
     protected function getType(): string
     {
         return 'line';
@@ -103,100 +95,30 @@ class AppointmentTrendWidget extends ChartWidget
     protected function getOptions(): array
     {
         return [
-            'responsive' => true,
-            'maintainAspectRatio' => false,
             'plugins' => [
                 'legend' => [
-                    'display' => false,
-                ],
-                'tooltip' => [
-                    'mode' => 'index',
-                    'intersect' => false,
-                    'backgroundColor' => 'rgba(0, 0, 0, 0.8)',
-                    'titleFont' => [
-                        'size' => 14,
-                    ],
-                    'bodyFont' => [
-                        'size' => 13,
-                    ],
-                    'padding' => 10,
-                    'displayColors' => false,
-                    'callbacks' => [
-                        'label' => "function(context) {
-                            return 'Umsatz: ' + new Intl.NumberFormat('de-DE', { 
-                                style: 'currency', 
-                                currency: 'EUR',
-                                minimumFractionDigits: 0,
-                                maximumFractionDigits: 0
-                            }).format(context.parsed.y);
-                        }",
-                    ],
+                    'display' => true,
+                    'position' => 'bottom',
                 ],
             ],
             'scales' => [
-                'x' => [
-                    'grid' => [
-                        'display' => false,
-                    ],
-                    'ticks' => [
-                        'font' => [
-                            'size' => 11,
-                        ],
-                    ],
-                ],
                 'y' => [
                     'beginAtZero' => true,
-                    'grid' => [
-                        'color' => 'rgba(0, 0, 0, 0.05)',
-                    ],
                     'ticks' => [
-                        'font' => [
-                            'size' => 11,
-                        ],
-                        'callback' => "function(value) {
-                            return new Intl.NumberFormat('de-DE', { 
-                                style: 'currency', 
-                                currency: 'EUR',
-                                minimumFractionDigits: 0,
-                                maximumFractionDigits: 0,
-                                notation: 'compact'
-                            }).format(value);
-                        }",
+                        'stepSize' => 1,
                     ],
                 ],
             ],
-            'interaction' => [
-                'mode' => 'nearest',
-                'axis' => 'x',
-                'intersect' => false,
-            ],
+            'maintainAspectRatio' => false,
         ];
     }
     
-    protected function getFilters(): ?array
+    public function getColumnSpan(): int|string|array
     {
-        return [
-            '7d' => '7 Tage',
-            '30d' => '30 Tage',
-            '90d' => '90 Tage',
-        ];
+        return 'full';
     }
     
-    public function getHeading(): ?string
-    {
-        $cacheKey = 'appointment_revenue_total_' . $this->filter . '_' . md5(serialize($this->globalFilters));
-        
-        $total = Cache::remember($cacheKey, 300, function() {
-            $trendData = $this->getMetricsService()->getTrendData('revenue', $this->filter, $this->globalFilters);
-            return collect($trendData)->sum('value');
-        });
-        
-        $formatted = number_format($total, 0, ',', '.') . '€';
-        
-        return "📈 Umsatz-Trend ({$formatted} gesamt)";
-    }
-    
-    protected function getContentHeight(): ?int
+    protected function getHeight(): int
     {
         return 300;
     }

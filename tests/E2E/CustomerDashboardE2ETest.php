@@ -87,6 +87,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_sees_personalized_dashboard()
     {
         Event::fake();
@@ -179,6 +182,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_shows_loyalty_program_status()
     {
         // Update customer with loyalty status
@@ -211,6 +217,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_shows_personalized_recommendations()
     {
         // Create appointment patterns
@@ -248,6 +257,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_handles_new_customer_experience()
     {
         // Create new customer with no history
@@ -288,6 +300,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_shows_important_notifications()
     {
         // Create appointment tomorrow (reminder needed)
@@ -325,6 +340,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_respects_portal_feature_settings()
     {
         // Disable certain features
@@ -357,6 +375,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_shows_multi_branch_information()
     {
         // Create additional branch
@@ -390,6 +411,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_tracks_page_performance_metrics()
     {
         $startTime = microtime(true);
@@ -413,6 +437,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_handles_real_time_updates()
     {
         $response = $this->get('/customer');
@@ -432,6 +459,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_shows_weather_aware_recommendations()
     {
         // Mock weather API response
@@ -452,6 +482,9 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function dashboard_handles_multiple_customer_sessions()
     {
         // Create family member linked to same account
@@ -483,8 +516,14 @@ class CustomerDashboardE2ETest extends TestCase
     {
         $this->app->bind('WeatherService', function () use ($data) {
             return new class($data) {
-                public function __construct(private array $data) {}
-                public function getCurrentWeather($location) { return $this->data; }
+                use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
+    public function __construct(private array $data) {}
+                use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
+    public function getCurrentWeather($location) { return $this->data; }
             };
         });
     }

@@ -1,0 +1,470 @@
+<?php
+
+namespace App\Filament\Admin\Resources;
+
+use App\Filament\Admin\Resources\CustomerResource\Pages;
+use App\Filament\Admin\Resources\CustomerResource\RelationManagers;
+use App\Filament\Admin\Resources\Concerns\MultiTenantResource;
+use App\Filament\Admin\Resources\Concerns\UltimateResourceUI;
+use App\Models\Customer;
+use App\Models\Company;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Support\Enums\FontWeight;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
+use Illuminate\Database\Eloquent\Collection;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\ViewField;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
+
+class UltimateCustomerResourceFixed extends Resource
+{
+    use MultiTenantResource, UltimateResourceUI;
+    
+    protected static ?string $model = Customer::class;
+    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationLabel = 'Kunden (Fixed)';
+    protected static ?int $navigationSort = 3;
+    protected static ?string $slug = 'ultimate-customers-fixed';
+    
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+    
+    public static function canView($record): bool
+    {
+        return true;
+    }
+
+    public static function table(Table $table): Table
+    {
+        return parent::table(
+            $table
+                ->columns(self::getSafeTableColumns())
+                ->filters(self::getTableFilters())
+                ->actions(self::getTableActions())
+                ->bulkActions(self::getTableBulkActions())
+                ->defaultSort('created_at', 'desc')
+                ->poll('30s')
+                ->striped()
+                ->searchDebounce('500ms')
+                ->persistColumnSearchesInSession()
+                ->persistFiltersInSession()
+                ->persistSortInSession()
+                ->extremePaginationLinks()
+                ->paginated([10, 25, 50, 100])
+                ->recordClasses(function (?Model $record): string {
+                    if (!$record instanceof Customer) {
+                        return '';
+                    }
+                    return match(true) {
+                        $record->is_vip => 'border-l-4 border-yellow-500',
+                        $record->no_show_count > 2 => 'border-l-4 border-red-500',
+                        $record->appointment_count > 10 => 'border-l-4 border-green-500',
+                        default => '',
+                    };
+                })
+                ->contentGrid(fn () => self::getContentGrid())
+                ->modifyQueryUsing(function (Builder $query) {
+                    return $query
+                        ->whereNotNull('customers.id')
+                        ->withCount(['appointments', 'calls'])
+                        ->with(['company']);
+                })
+                ->filtersLayout(FiltersLayout::Dropdown)
+                ->filtersFormColumns(3)
+                ->filtersTriggerAction(
+                    fn (Action $action) => $action
+                        ->button()
+                        ->label('Smart Filters')
+                        ->icon('heroicon-m-funnel')
+                        ->badge(fn () => self::getActiveFiltersCount())
+                        ->badgeColor('primary')
+                )
+        );
+    }
+    
+    protected static function getSafeTableColumns(): array
+    {
+        return [
+            Tables\Columns\Layout\Stack::make([
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('name')
+                            ->label('Name')
+                            ->searchable()
+                            ->weight(FontWeight::Bold)
+                            ->size('lg')
+                            ->icon('heroicon-m-user')
+                            ->iconColor('primary')
+                            ->extraAttributes([
+                                'class' => 'inline-editable',
+                                'data-field' => 'name',
+                            ]),
+                            
+                        Tables\Columns\Layout\Split::make([
+                            Tables\Columns\TextColumn::make('email')
+                                ->label('E-Mail')
+                                ->searchable()
+                                ->icon('heroicon-m-envelope')
+                                ->iconColor('gray')
+                                ->size('sm')
+                                ->color('gray')
+                                ->copyable()
+                                ->copyMessage('E-Mail kopiert!')
+                                ->placeholder('Keine E-Mail')
+                                ->extraAttributes([
+                                    'class' => 'inline-editable',
+                                    'data-field' => 'email',
+                                ]),
+                                
+                            Tables\Columns\TextColumn::make('phone')
+                                ->label('Telefon')
+                                ->searchable()
+                                ->icon('heroicon-m-phone')
+                                ->iconColor('gray')
+                                ->size('sm')
+                                ->color('gray')
+                                ->copyable()
+                                ->copyMessage('Nummer kopiert!')
+                                ->placeholder('Keine Nummer')
+                                ->extraAttributes([
+                                    'class' => 'inline-editable',
+                                    'data-field' => 'phone',
+                                ]),
+                        ])->from('md'),
+                    ]),
+                    
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('customer_type')
+                            ->label('Typ')
+                            ->badge()
+                            ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                'private' => 'Privat',
+                                'business' => 'Geschäft',
+                                'vip' => 'VIP',
+                                default => ucfirst($state ?? 'Unbekannt'),
+                            })
+                            ->color(fn (?string $state): string => match ($state) {
+                                'vip' => 'warning',
+                                'business' => 'info',
+                                default => 'gray',
+                            })
+                            ->alignEnd(),
+                            
+                        Tables\Columns\Layout\Split::make([
+                            Tables\Columns\TextColumn::make('appointments_count')
+                                ->label('Termine')
+                                ->counts('appointments')
+                                ->badge()
+                                ->color('success')
+                                ->icon('heroicon-m-calendar'),
+                                
+                            Tables\Columns\TextColumn::make('calls_count')
+                                ->label('Anrufe')
+                                ->counts('calls')
+                                ->badge()
+                                ->color('primary')
+                                ->icon('heroicon-m-phone'),
+                        ]),
+                        
+                        Tables\Columns\TextColumn::make('no_show_count')
+                            ->label('No-Shows')
+                            ->badge()
+                            ->color(fn (?int $state): string => match(true) {
+                                $state === null || $state === 0 => 'success',
+                                $state > 2 => 'danger',
+                                $state > 0 => 'warning',
+                                default => 'success',
+                            })
+                            ->icon('heroicon-m-exclamation-triangle')
+                            ->formatStateUsing(fn (?int $state): string => ($state ?? 0) . ' No-Shows')
+                            ->visible(fn (?int $state): bool => ($state ?? 0) > 0),
+                    ])->from('md'),
+                ])->from('md'),
+                
+                Tables\Columns\Layout\Panel::make([
+                    Tables\Columns\Layout\Split::make([
+                        Tables\Columns\TextColumn::make('last_appointment_date')
+                            ->label('Letzter Termin')
+                            ->getStateUsing(function (?Model $record): ?string {
+                                if (!$record instanceof Customer) {
+                                    return null;
+                                }
+                                $lastAppointment = $record->appointments()
+                                    ->where('status', 'completed')
+                                    ->latest('starts_at')
+                                    ->first();
+                                return $lastAppointment?->starts_at;
+                            })
+                            ->date('d.m.Y')
+                            ->placeholder('Noch kein Termin')
+                            ->icon('heroicon-m-calendar')
+                            ->iconColor('gray')
+                            ->size('sm'),
+                            
+                        Tables\Columns\TextColumn::make('next_appointment_date')
+                            ->label('Nächster Termin')
+                            ->getStateUsing(function (?Model $record): ?string {
+                                if (!$record instanceof Customer) {
+                                    return null;
+                                }
+                                $nextAppointment = $record->appointments()
+                                    ->whereIn('status', ['scheduled', 'confirmed'])
+                                    ->where('starts_at', '>', now())
+                                    ->oldest('starts_at')
+                                    ->first();
+                                return $nextAppointment?->starts_at;
+                            })
+                            ->dateTime('d.m.Y H:i')
+                            ->placeholder('Kein Termin geplant')
+                            ->icon('heroicon-m-calendar-days')
+                            ->iconColor('primary')
+                            ->size('sm')
+                            ->weight(FontWeight::SemiBold)
+                            ->color('primary'),
+                    ]),
+                ])->collapsed(),
+                
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('created_at')
+                        ->label('Kunde seit')
+                        ->date('d.m.Y')
+                        ->sortable()
+                        ->icon('heroicon-m-clock')
+                        ->iconColor('gray')
+                        ->size('sm')
+                        ->color('gray'),
+                        
+                    Tables\Columns\TextColumn::make('lifetime_value')
+                        ->label('Umsatz')
+                        ->getStateUsing(function (?Model $record): float {
+                            if (!$record instanceof Customer) {
+                                return 0;
+                            }
+                            return $record->appointments()
+                                ->where('status', 'completed')
+                                ->join('services', 'appointments.service_id', '=', 'services.id')
+                                ->sum('services.price') ?? 0;
+                        })
+                        ->money('EUR')
+                        ->badge()
+                        ->color('success')
+                        ->alignEnd(),
+                ])->from('md'),
+            ])->space(2),
+            
+            // Sichere versteckte Columns für Suche und Filterung
+            Tables\Columns\TextColumn::make('company_name_safe')
+                ->label('Firma')
+                ->searchable(query: function (Builder $query, string $search): Builder {
+                    return $query->whereHas('company', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+                })
+                ->toggleable(isToggledHiddenByDefault: true)
+                ->getStateUsing(function (?Model $record): string {
+                    if (!$record instanceof Customer) {
+                        return '-';
+                    }
+                    return $record->company?->name ?? '-';
+                }),
+                
+            Tables\Columns\TextColumn::make('address')
+                ->label('Adresse')
+                ->searchable()
+                ->toggleable(isToggledHiddenByDefault: true),
+                
+            Tables\Columns\TextColumn::make('notes')
+                ->label('Notizen')
+                ->searchable()
+                ->toggleable(isToggledHiddenByDefault: true),
+        ];
+    }
+    
+    protected static function getTableFilters(): array
+    {
+        return array_merge(
+            static::getMultiTenantFilters(),
+            [
+                Tables\Filters\SelectFilter::make('customer_type')
+                    ->label('Kundentyp')
+                    ->multiple()
+                    ->options([
+                        'private' => 'Privat',
+                        'business' => 'Geschäft',
+                        'vip' => 'VIP',
+                    ]),
+                    
+                Tables\Filters\Filter::make('has_appointments')
+                    ->label('Mit Terminen')
+                    ->query(fn (Builder $query): Builder => $query->has('appointments')),
+                    
+                Tables\Filters\Filter::make('no_appointments')
+                    ->label('Ohne Termine')
+                    ->query(fn (Builder $query): Builder => $query->doesntHave('appointments')),
+                    
+                Tables\Filters\Filter::make('no_shows')
+                    ->label('Mit No-Shows')
+                    ->query(fn (Builder $query): Builder => $query->where('no_show_count', '>', 0)),
+                    
+                Tables\Filters\Filter::make('vip')
+                    ->label('VIP Kunden')
+                    ->query(fn (Builder $query): Builder => $query->where('is_vip', true)),
+                    
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Erstellt ab'),
+                        Forms\Components\DatePicker::make('created_until')
+                            ->label('Erstellt bis'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    }),
+            ]
+        );
+    }
+    
+    protected static function getTableActions(): array
+    {
+        return [
+            Tables\Actions\ActionGroup::make([
+                Tables\Actions\ViewAction::make()
+                    ->modalWidth('7xl'),
+                    
+                Tables\Actions\EditAction::make()
+                    ->modalWidth('5xl'),
+                    
+                Tables\Actions\Action::make('create_appointment')
+                    ->label('Termin erstellen')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('success')
+                    ->url(fn (?Model $record): ?string => 
+                        $record instanceof Customer 
+                            ? route('filament.admin.resources.appointments.create', ['customer_id' => $record->id])
+                            : null
+                    ),
+                    
+                Tables\Actions\Action::make('view_appointments')
+                    ->label('Termine anzeigen')
+                    ->icon('heroicon-o-calendar')
+                    ->color('info')
+                    ->url(fn (?Model $record): ?string => 
+                        $record instanceof Customer
+                            ? "/admin/appointments?tableFilters[customer][value]={$record->id}"
+                            : null
+                    ),
+                    
+                Tables\Actions\Action::make('toggle_vip')
+                    ->label(fn (?Model $record): string => 
+                        $record instanceof Customer && $record->is_vip ? 'VIP entfernen' : 'Als VIP markieren'
+                    )
+                    ->icon('heroicon-o-star')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->action(function (?Model $record): void {
+                        if ($record instanceof Customer) {
+                            $record->update(['is_vip' => !$record->is_vip]);
+                            Notification::make()
+                                ->title($record->is_vip ? 'Als VIP markiert' : 'VIP Status entfernt')
+                                ->success()
+                                ->send();
+                        }
+                    }),
+            ]),
+            
+            Tables\Actions\DeleteAction::make()
+                ->requiresConfirmation(),
+        ];
+    }
+    
+    protected static function getTableBulkActions(): array
+    {
+        return [
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make()
+                    ->requiresConfirmation(),
+                    
+                BulkAction::make('mark_as_vip')
+                    ->label('Als VIP markieren')
+                    ->icon('heroicon-o-star')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->action(function (Collection $records): void {
+                        $records->each(function ($record) {
+                            if ($record instanceof Customer) {
+                                $record->update(['is_vip' => true]);
+                            }
+                        });
+                        Notification::make()
+                            ->title('Kunden als VIP markiert')
+                            ->success()
+                            ->send();
+                    }),
+                    
+                BulkAction::make('remove_vip')
+                    ->label('VIP Status entfernen')
+                    ->icon('heroicon-o-star')
+                    ->color('gray')
+                    ->requiresConfirmation()
+                    ->action(function (Collection $records): void {
+                        $records->each(function ($record) {
+                            if ($record instanceof Customer) {
+                                $record->update(['is_vip' => false]);
+                            }
+                        });
+                        Notification::make()
+                            ->title('VIP Status entfernt')
+                            ->success()
+                            ->send();
+                    }),
+            ]),
+        ];
+    }
+    
+    public static function getRelations(): array
+    {
+        return [
+            RelationManagers\AppointmentsRelationManager::class,
+            RelationManagers\CallsRelationManager::class,
+        ];
+    }
+    
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\UltimateListCustomers::route('/'),
+        ];
+    }
+    
+    protected static function getContentGrid(): array
+    {
+        return [
+            'md' => 2,
+            'xl' => 3,
+        ];
+    }
+    
+    protected static function getActiveFiltersCount(): int
+    {
+        return 0; // Implementierung je nach Bedarf
+    }
+}

@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use App\Helpers\SafeQueryHelper;
 
 class EventTypeImportWizard extends Page implements HasForms
 {
@@ -618,7 +619,9 @@ class EventTypeImportWizard extends Page implements HasForms
                 
                 if (!$existingStaff && $user['name']) {
                     $existingStaff = Staff::where('company_id', $this->company_id)
-                        ->where('name', 'LIKE', '%' . $user['name'] . '%')
+                        ->where(function($q) use ($user) {
+                            SafeQueryHelper::whereLike($q, 'name', $user['name']);
+                        })
                         ->first();
                 }
                 
@@ -724,7 +727,7 @@ class EventTypeImportWizard extends Page implements HasForms
                     $eventType = CalcomEventType::updateOrCreate(
                         [
                             'branch_id' => $this->branch_id,
-                            'calcom_event_type_id' => $originalEventType['id']
+                            'calcom_numeric_event_type_id' => $originalEventType['id']
                         ],
                         [
                             'company_id' => $this->company_id,

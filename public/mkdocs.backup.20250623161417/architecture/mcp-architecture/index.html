@@ -1,0 +1,1925 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="Complete documentation for AskProAI platform" name="description"/>
+<link href="https://api.askproai.de/mkdocs/architecture/mcp-architecture/" rel="canonical"/>
+<link href="../services/" rel="prev"/>
+<link href="../../api/models/" rel="next"/>
+<link href="../../assets/images/favicon.png" rel="icon"/>
+<meta content="mkdocs-1.6.1, mkdocs-material-9.6.14" name="generator"/>
+<title>MCP Architecture - AskProAI Complete Documentation</title>
+<link href="../../assets/stylesheets/main.342714a4.min.css" rel="stylesheet"/>
+<link href="../../assets/stylesheets/palette.06af60db.min.css" rel="stylesheet"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+<script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+</head>
+<body data-md-color-accent="purple" data-md-color-primary="indigo" data-md-color-scheme="default" dir="ltr">
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#mcp-model-context-protocol-architecture">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="Header" class="md-header__inner md-grid">
+<a aria-label="AskProAI Complete Documentation" class="md-header__button md-logo" data-md-component="logo" href="../.." title="AskProAI Complete Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            AskProAI Complete Documentation
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              MCP Architecture
+            
+          </span>
+</div>
+</div>
+</div>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+</label>
+<nav aria-label="Search" class="md-search__options">
+<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" title="Clear" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+</button>
+</nav>
+<div class="md-search__suggest" data-md-component="search-suggest"></div>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="" tabindex="0">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            Initializing search
+          </div>
+<ol class="md-search-result__list" role="presentation"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<nav aria-label="Tabs" class="md-tabs" data-md-component="tabs">
+<div class="md-grid">
+<ul class="md-tabs__list">
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../..">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../quickstart/">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../status/">
+        
+  
+  
+    
+  
+  System Status
+
+      </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../changelog/">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+</li>
+<li class="md-tabs__item md-tabs__item--active">
+<a class="md-tabs__link" href="../overview/">
+          
+  
+  
+  Architecture
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../api/models/">
+          
+  
+  
+  API Documentation
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../MCP_COMPLETE_OVERVIEW/">
+          
+  
+  
+  MCP System
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../SERVICE_ARCHITECTURE/">
+          
+  
+  
+  Service Documentation
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../DEPLOYMENT_GUIDE/">
+          
+  
+  
+  Operations
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../configuration/reference/">
+          
+  
+  
+  Configuration
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../TESTING_STRATEGY/">
+          
+  
+  
+  Testing
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../database_cleanup_plan/">
+          
+  
+  
+  Planning
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../DASHBOARD_REDESIGN_README/">
+          
+  
+  
+  UI/UX
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../STRUCTURED_LOGGER_GUIDE/">
+          
+  
+  
+  Developer Tools
+
+        </a>
+</li>
+<li class="md-tabs__item">
+<a class="md-tabs__link" href="../../statistics/">
+        
+  
+  
+    
+  
+  Statistics
+
+      </a>
+</li>
+</ul>
+</div>
+</nav>
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary md-nav--lifted" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="AskProAI Complete Documentation" class="md-nav__button md-logo" data-md-component="logo" href="../.." title="AskProAI Complete Documentation">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"></path></svg>
+</a>
+    AskProAI Complete Documentation
+  </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../..">
+<span class="md-ellipsis">
+    Home
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../quickstart/">
+<span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../status/">
+<span class="md-ellipsis">
+    System Status
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../changelog/">
+<span class="md-ellipsis">
+    Changelog
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+<input checked="" class="md-nav__toggle md-toggle" id="__nav_5" type="checkbox"/>
+<label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+<span class="md-ellipsis">
+    Architecture
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="true" aria-labelledby="__nav_5_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_5">
+<span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../overview/">
+<span class="md-ellipsis">
+    Overview
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../database-schema/">
+<span class="md-ellipsis">
+    Database Schema
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../services/">
+<span class="md-ellipsis">
+    Services
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+<span class="md-ellipsis">
+    MCP Architecture
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+<span class="md-ellipsis">
+    MCP Architecture
+    
+  </span>
+</a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mcp-server-hierarchy">
+<span class="md-ellipsis">
+      🏗️ MCP Server Hierarchy
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#webhookmcpserver-the-orchestrator">
+<span class="md-ellipsis">
+      📡 WebhookMCPServer - The Orchestrator
+    </span>
+</a>
+<nav aria-label="📡 WebhookMCPServer - The Orchestrator" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#key-responsibilities">
+<span class="md-ellipsis">
+      Key Responsibilities
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#constructor-dependencies">
+<span class="md-ellipsis">
+      Constructor Dependencies
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#main-processing-flow">
+<span class="md-ellipsis">
+      Main Processing Flow
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#flexible-booking-confirmation">
+<span class="md-ellipsis">
+      Flexible Booking Confirmation
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calcommcpserver-calendar-integration">
+<span class="md-ellipsis">
+      📅 CalcomMCPServer - Calendar Integration
+    </span>
+</a>
+<nav aria-label="📅 CalcomMCPServer - Calendar Integration" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#features">
+<span class="md-ellipsis">
+      Features
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#booking-creation-flow">
+<span class="md-ellipsis">
+      Booking Creation Flow
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#required-booking-parameters">
+<span class="md-ellipsis">
+      Required Booking Parameters
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#team-event-handling">
+<span class="md-ellipsis">
+      Team Event Handling
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#retellmcpserver-phone-ai-management">
+<span class="md-ellipsis">
+      📞 RetellMCPServer - Phone AI Management
+    </span>
+</a>
+<nav aria-label="📞 RetellMCPServer - Phone AI Management" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#core-functions">
+<span class="md-ellipsis">
+      Core Functions
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#phone-number-synchronization">
+<span class="md-ellipsis">
+      Phone Number Synchronization
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#databasemcpserver-data-operations">
+<span class="md-ellipsis">
+      🗄️ DatabaseMCPServer - Data Operations
+    </span>
+</a>
+<nav aria-label="🗄️ DatabaseMCPServer - Data Operations" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#features_1">
+<span class="md-ellipsis">
+      Features
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#example-usage">
+<span class="md-ellipsis">
+      Example Usage
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#queuemcpserver-job-management">
+<span class="md-ellipsis">
+      📊 QueueMCPServer - Job Management
+    </span>
+</a>
+<nav aria-label="📊 QueueMCPServer - Job Management" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#capabilities">
+<span class="md-ellipsis">
+      Capabilities
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#queue-configuration">
+<span class="md-ellipsis">
+      Queue Configuration
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#complete-data-flow">
+<span class="md-ellipsis">
+      🔄 Complete Data Flow
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#error-handling-resilience">
+<span class="md-ellipsis">
+      🛡️ Error Handling &amp; Resilience
+    </span>
+</a>
+<nav aria-label="🛡️ Error Handling &amp; Resilience" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#circuit-breaker-pattern">
+<span class="md-ellipsis">
+      Circuit Breaker Pattern
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#retry-strategy">
+<span class="md-ellipsis">
+      Retry Strategy
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#caching-strategy">
+<span class="md-ellipsis">
+      💾 Caching Strategy
+    </span>
+</a>
+<nav aria-label="💾 Caching Strategy" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#cache-layers">
+<span class="md-ellipsis">
+      Cache Layers
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#cache-keys-ttl">
+<span class="md-ellipsis">
+      Cache Keys &amp; TTL
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#monitoring-metrics">
+<span class="md-ellipsis">
+      📊 Monitoring &amp; Metrics
+    </span>
+</a>
+<nav aria-label="📊 Monitoring &amp; Metrics" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#key-metrics-tracked">
+<span class="md-ellipsis">
+      Key Metrics Tracked
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#debug-commands">
+<span class="md-ellipsis">
+      Debug Commands
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#security-considerations">
+<span class="md-ellipsis">
+      🔒 Security Considerations
+    </span>
+</a>
+<nav aria-label="🔒 Security Considerations" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#webhook-verification">
+<span class="md-ellipsis">
+      Webhook Verification
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#data-protection">
+<span class="md-ellipsis">
+      Data Protection
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#multi-tenancy">
+<span class="md-ellipsis">
+      Multi-Tenancy
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#performance-optimizations">
+<span class="md-ellipsis">
+      ⚡ Performance Optimizations
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#known-limitations">
+<span class="md-ellipsis">
+      🚧 Known Limitations
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#future-enhancements">
+<span class="md-ellipsis">
+      🎯 Future Enhancements
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_6" type="checkbox"/>
+<label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+<span class="md-ellipsis">
+    API Documentation
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_6_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_6">
+<span class="md-nav__icon md-icon"></span>
+            API Documentation
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../api/models/">
+<span class="md-ellipsis">
+    Models
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../api/routes/">
+<span class="md-ellipsis">
+    Routes
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../api/reference/">
+<span class="md-ellipsis">
+    Reference
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_7" type="checkbox"/>
+<label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+<span class="md-ellipsis">
+    MCP System
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_7_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_7">
+<span class="md-nav__icon md-icon"></span>
+            MCP System
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MCP_COMPLETE_OVERVIEW/">
+<span class="md-ellipsis">
+    Complete Overview
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MCP_INTEGRATION_GUIDE/">
+<span class="md-ellipsis">
+    Integration Guide
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MCP_SETUP_COMPLETE_GUIDE/">
+<span class="md-ellipsis">
+    Setup Guide
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MCP_EVOLUTION_SYSTEM/">
+<span class="md-ellipsis">
+    Evolution System
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../CALCOM_MCP_SERVER_API/">
+<span class="md-ellipsis">
+    Cal.com MCP Server
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../KNOWLEDGE_MCP_SERVER/">
+<span class="md-ellipsis">
+    Knowledge MCP
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../QUEUE_MCP_IMPLEMENTATION_COMPLETE/">
+<span class="md-ellipsis">
+    Queue MCP
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../SENTRY_MCP_INTEGRATION/">
+<span class="md-ellipsis">
+    Sentry MCP
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_8" type="checkbox"/>
+<label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+<span class="md-ellipsis">
+    Service Documentation
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_8_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_8">
+<span class="md-nav__icon md-icon"></span>
+            Service Documentation
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../SERVICE_ARCHITECTURE/">
+<span class="md-ellipsis">
+    Service Architecture
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../ENHANCED_BOOKING_SERVICE/">
+<span class="md-ellipsis">
+    Enhanced Booking
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../UNIVERSAL_BOOKING_SYSTEM/">
+<span class="md-ellipsis">
+    Universal Booking
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../CALCOM_V2_API_DOCUMENTATION/">
+<span class="md-ellipsis">
+    Cal.com V2 API
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_9" type="checkbox"/>
+<label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+<span class="md-ellipsis">
+    Operations
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_9_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_9">
+<span class="md-nav__icon md-icon"></span>
+            Operations
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DEPLOYMENT_GUIDE/">
+<span class="md-ellipsis">
+    Deployment Guide
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../MONITORING_AND_ALERTING_GUIDE/">
+<span class="md-ellipsis">
+    Monitoring Guide
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../TROUBLESHOOTING_GUIDE/">
+<span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../operations/security-audit/">
+<span class="md-ellipsis">
+    Security Audit
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../PERFORMANCE_INDEXES_MIGRATION/">
+<span class="md-ellipsis">
+    Performance Indexes
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_10" type="checkbox"/>
+<label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+<span class="md-ellipsis">
+    Configuration
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_10_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_10">
+<span class="md-nav__icon md-icon"></span>
+            Configuration
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../configuration/reference/">
+<span class="md-ellipsis">
+    Reference
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DATABASE_SAFETY_GUIDELINES/">
+<span class="md-ellipsis">
+    Database Safety
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_11" type="checkbox"/>
+<label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+<span class="md-ellipsis">
+    Testing
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_11_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_11">
+<span class="md-nav__icon md-icon"></span>
+            Testing
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../TESTING_STRATEGY/">
+<span class="md-ellipsis">
+    Testing Strategy
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../UNIVERSAL_BOOKING_TEST_GUIDE/">
+<span class="md-ellipsis">
+    Universal Booking Tests
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_12" type="checkbox"/>
+<label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="0">
+<span class="md-ellipsis">
+    Planning
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_12_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_12">
+<span class="md-nav__icon md-icon"></span>
+            Planning
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../database_cleanup_plan/">
+<span class="md-ellipsis">
+    Database Cleanup
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../service_consolidation_plan/">
+<span class="md-ellipsis">
+    Service Consolidation
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_13" type="checkbox"/>
+<label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+<span class="md-ellipsis">
+    UI/UX
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_13_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_13">
+<span class="md-nav__icon md-icon"></span>
+            UI/UX
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../DASHBOARD_REDESIGN_README/">
+<span class="md-ellipsis">
+    Dashboard Redesign
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item md-nav__item--nested">
+<input class="md-nav__toggle md-toggle md-toggle--indeterminate" id="__nav_14" type="checkbox"/>
+<label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+<span class="md-ellipsis">
+    Developer Tools
+    
+  </span>
+<span class="md-nav__icon md-icon"></span>
+</label>
+<nav aria-expanded="false" aria-labelledby="__nav_14_label" class="md-nav" data-md-level="1">
+<label class="md-nav__title" for="__nav_14">
+<span class="md-nav__icon md-icon"></span>
+            Developer Tools
+          </label>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../STRUCTURED_LOGGER_GUIDE/">
+<span class="md-ellipsis">
+    Structured Logger
+    
+  </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../RETELL_WEBHOOK_MCP_MIGRATION_GUIDE/">
+<span class="md-ellipsis">
+    Retell Webhook Migration
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../../statistics/">
+<span class="md-ellipsis">
+    Statistics
+    
+  </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#mcp-server-hierarchy">
+<span class="md-ellipsis">
+      🏗️ MCP Server Hierarchy
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#webhookmcpserver-the-orchestrator">
+<span class="md-ellipsis">
+      📡 WebhookMCPServer - The Orchestrator
+    </span>
+</a>
+<nav aria-label="📡 WebhookMCPServer - The Orchestrator" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#key-responsibilities">
+<span class="md-ellipsis">
+      Key Responsibilities
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#constructor-dependencies">
+<span class="md-ellipsis">
+      Constructor Dependencies
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#main-processing-flow">
+<span class="md-ellipsis">
+      Main Processing Flow
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#flexible-booking-confirmation">
+<span class="md-ellipsis">
+      Flexible Booking Confirmation
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#calcommcpserver-calendar-integration">
+<span class="md-ellipsis">
+      📅 CalcomMCPServer - Calendar Integration
+    </span>
+</a>
+<nav aria-label="📅 CalcomMCPServer - Calendar Integration" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#features">
+<span class="md-ellipsis">
+      Features
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#booking-creation-flow">
+<span class="md-ellipsis">
+      Booking Creation Flow
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#required-booking-parameters">
+<span class="md-ellipsis">
+      Required Booking Parameters
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#team-event-handling">
+<span class="md-ellipsis">
+      Team Event Handling
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#retellmcpserver-phone-ai-management">
+<span class="md-ellipsis">
+      📞 RetellMCPServer - Phone AI Management
+    </span>
+</a>
+<nav aria-label="📞 RetellMCPServer - Phone AI Management" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#core-functions">
+<span class="md-ellipsis">
+      Core Functions
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#phone-number-synchronization">
+<span class="md-ellipsis">
+      Phone Number Synchronization
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#databasemcpserver-data-operations">
+<span class="md-ellipsis">
+      🗄️ DatabaseMCPServer - Data Operations
+    </span>
+</a>
+<nav aria-label="🗄️ DatabaseMCPServer - Data Operations" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#features_1">
+<span class="md-ellipsis">
+      Features
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#example-usage">
+<span class="md-ellipsis">
+      Example Usage
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#queuemcpserver-job-management">
+<span class="md-ellipsis">
+      📊 QueueMCPServer - Job Management
+    </span>
+</a>
+<nav aria-label="📊 QueueMCPServer - Job Management" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#capabilities">
+<span class="md-ellipsis">
+      Capabilities
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#queue-configuration">
+<span class="md-ellipsis">
+      Queue Configuration
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#complete-data-flow">
+<span class="md-ellipsis">
+      🔄 Complete Data Flow
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#error-handling-resilience">
+<span class="md-ellipsis">
+      🛡️ Error Handling &amp; Resilience
+    </span>
+</a>
+<nav aria-label="🛡️ Error Handling &amp; Resilience" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#circuit-breaker-pattern">
+<span class="md-ellipsis">
+      Circuit Breaker Pattern
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#retry-strategy">
+<span class="md-ellipsis">
+      Retry Strategy
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#caching-strategy">
+<span class="md-ellipsis">
+      💾 Caching Strategy
+    </span>
+</a>
+<nav aria-label="💾 Caching Strategy" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#cache-layers">
+<span class="md-ellipsis">
+      Cache Layers
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#cache-keys-ttl">
+<span class="md-ellipsis">
+      Cache Keys &amp; TTL
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#monitoring-metrics">
+<span class="md-ellipsis">
+      📊 Monitoring &amp; Metrics
+    </span>
+</a>
+<nav aria-label="📊 Monitoring &amp; Metrics" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#key-metrics-tracked">
+<span class="md-ellipsis">
+      Key Metrics Tracked
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#debug-commands">
+<span class="md-ellipsis">
+      Debug Commands
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#security-considerations">
+<span class="md-ellipsis">
+      🔒 Security Considerations
+    </span>
+</a>
+<nav aria-label="🔒 Security Considerations" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#webhook-verification">
+<span class="md-ellipsis">
+      Webhook Verification
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#data-protection">
+<span class="md-ellipsis">
+      Data Protection
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#multi-tenancy">
+<span class="md-ellipsis">
+      Multi-Tenancy
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#performance-optimizations">
+<span class="md-ellipsis">
+      ⚡ Performance Optimizations
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#known-limitations">
+<span class="md-ellipsis">
+      🚧 Known Limitations
+    </span>
+</a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#future-enhancements">
+<span class="md-ellipsis">
+      🎯 Future Enhancements
+    </span>
+</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<h1 id="mcp-model-context-protocol-architecture">MCP (Model Context Protocol) Architecture<a class="headerlink" href="#mcp-model-context-protocol-architecture" title="Permanent link">¶</a></h1>
+<div class="admonition info">
+<p class="admonition-title">MCP Overview</p>
+<p>The MCP system consists of <strong>5 specialized servers</strong> that orchestrate the entire phone-to-appointment booking process with 99.3% reliability.</p>
+</div>
+<h2 id="mcp-server-hierarchy">🏗️ MCP Server Hierarchy<a class="headerlink" href="#mcp-server-hierarchy" title="Permanent link">¶</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    subgraph "Entry Point"
+        W[WebhookMCPServer&lt;br/&gt;Main Orchestrator]
+    end
+
+    subgraph "Core MCP Servers"
+        C[CalcomMCPServer&lt;br/&gt;Calendar Integration]
+        R[RetellMCPServer&lt;br/&gt;Phone AI Management]
+        D[DatabaseMCPServer&lt;br/&gt;Data Operations]
+        Q[QueueMCPServer&lt;br/&gt;Job Management]
+    end
+
+    subgraph "External APIs"
+        CA[Cal.com API v2]
+        RA[Retell.ai API]
+    end
+
+    subgraph "Infrastructure"
+        DB[(MySQL Database)]
+        RE[(Redis Cache)]
+        HZ[Laravel Horizon]
+    end
+
+    W --&gt;|Orchestrates| C
+    W --&gt;|Manages| R
+    W --&gt;|Queries| D
+    W --&gt;|Dispatches| Q
+
+    C &lt;--&gt;|API Calls| CA
+    R &lt;--&gt;|API Calls| RA
+    D &lt;--&gt;|Queries| DB
+    Q &lt;--&gt;|Jobs| HZ
+
+    C --&gt;|Caches| RE
+    R --&gt;|Caches| RE
+    W --&gt;|Caches| RE
+
+    style W fill:#667eea,stroke:#fff,stroke-width:4px,color:#fff
+    style C fill:#48bb78,stroke:#333,stroke-width:2px
+    style R fill:#4299e1,stroke:#333,stroke-width:2px
+    style D fill:#ed8936,stroke:#333,stroke-width:2px
+    style Q fill:#9f7aea,stroke:#333,stroke-width:2px</code></pre>
+<h2 id="webhookmcpserver-the-orchestrator">📡 WebhookMCPServer - The Orchestrator<a class="headerlink" href="#webhookmcpserver-the-orchestrator" title="Permanent link">¶</a></h2>
+<p>The WebhookMCPServer is the <strong>central nervous system</strong> of the MCP architecture. It receives webhooks from Retell.ai and orchestrates the entire booking process.</p>
+<h3 id="key-responsibilities">Key Responsibilities<a class="headerlink" href="#key-responsibilities" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>Webhook Processing</strong>: Validates and processes incoming Retell.ai webhooks</li>
+<li><strong>Phone Resolution</strong>: Maps phone numbers to branches and companies</li>
+<li><strong>Customer Management</strong>: Creates or updates customer records</li>
+<li><strong>Booking Orchestration</strong>: Coordinates with CalcomMCPServer for appointments</li>
+<li><strong>Error Handling</strong>: Implements circuit breakers and retry logic</li>
+</ol>
+<h3 id="constructor-dependencies">Constructor Dependencies<a class="headerlink" href="#constructor-dependencies" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="x">public function __construct(</span>
+<span class="x">    CalcomMCPServer $calcomMCP,</span>
+<span class="x">    RetellMCPServer $retellMCP,</span>
+<span class="x">    DatabaseMCPServer $databaseMCP,</span>
+<span class="x">    QueueMCPServer $queueMCP</span>
+<span class="x">)</span>
+</code></pre></div>
+<h3 id="main-processing-flow">Main Processing Flow<a class="headerlink" href="#main-processing-flow" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="x">public function processRetellWebhook(array $webhookData): array</span>
+<span class="x">{</span>
+<span class="x">    // 1. Validate event type</span>
+<span class="x">    if ($webhookData['event'] !== 'call_ended') {</span>
+<span class="x">        return ['success' =&gt; true, 'message' =&gt; 'Event skipped'];</span>
+<span class="x">    }</span>
+
+<span class="x">    // 2. Resolve phone number to branch</span>
+<span class="x">    $phoneResolution = $this-&gt;resolvePhoneNumber($callData['to_number']);</span>
+
+<span class="x">    // 3. Create/update customer</span>
+<span class="x">    $customer = $this-&gt;databaseMCP-&gt;findOrCreateCustomer([</span>
+<span class="x">        'phone' =&gt; $callData['from_number'],</span>
+<span class="x">        'name' =&gt; $variables['name'] ?? 'Unknown',</span>
+<span class="x">        'company_id' =&gt; $phoneResolution['company_id']</span>
+<span class="x">    ]);</span>
+
+<span class="x">    // 4. Create call record</span>
+<span class="x">    $call = $this-&gt;createCallRecord($callData, $customer, $phoneResolution);</span>
+
+<span class="x">    // 5. Check if appointment should be created</span>
+<span class="x">    if ($this-&gt;shouldCreateAppointment($callData)) {</span>
+<span class="x">        $appointment = $this-&gt;createAppointmentViaMCP($call, $callData, $phoneResolution);</span>
+<span class="x">    }</span>
+
+<span class="x">    return ['success' =&gt; true, 'call_id' =&gt; $call-&gt;id];</span>
+<span class="x">}</span>
+</code></pre></div>
+<h3 id="flexible-booking-confirmation">Flexible Booking Confirmation<a class="headerlink" href="#flexible-booking-confirmation" title="Permanent link">¶</a></h3>
+<p>The system accepts multiple formats for booking confirmation:</p>
+<div class="highlight"><pre><span></span><code><span class="x">$bookingConfirmed = </span>
+<span class="x">    $value === true || </span>
+<span class="x">    $value === 'true' || </span>
+<span class="x">    $value === '1' || </span>
+<span class="x">    $value === 1 ||</span>
+<span class="x">    (is_string($value) &amp;&amp; strtolower($value) === 'yes');</span>
+</code></pre></div>
+<h2 id="calcommcpserver-calendar-integration">📅 CalcomMCPServer - Calendar Integration<a class="headerlink" href="#calcommcpserver-calendar-integration" title="Permanent link">¶</a></h2>
+<p>Handles all Cal.com API interactions with advanced features for reliability and performance.</p>
+<h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+<th>Configuration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Circuit Breaker</strong></td>
+<td>Prevents cascading failures</td>
+<td>Threshold: 5, Timeout: 60s</td>
+</tr>
+<tr>
+<td><strong>Response Caching</strong></td>
+<td>Reduces API calls</td>
+<td>TTL: 5 minutes</td>
+</tr>
+<tr>
+<td><strong>Idempotency</strong></td>
+<td>Prevents duplicate bookings</td>
+<td>24-hour window</td>
+</tr>
+<tr>
+<td><strong>Team Events</strong></td>
+<td>Supports team-based bookings</td>
+<td>Auto-detection</td>
+</tr>
+<tr>
+<td><strong>Retry Logic</strong></td>
+<td>Handles transient failures</td>
+<td>Max: 3, Backoff: exponential</td>
+</tr>
+</tbody>
+</table>
+<h3 id="booking-creation-flow">Booking Creation Flow<a class="headerlink" href="#booking-creation-flow" title="Permanent link">¶</a></h3>
+<pre class="mermaid"><code>sequenceDiagram
+    participant W as WebhookMCP
+    participant C as CalcomMCP
+    participant Cache as Redis
+    participant API as Cal.com API
+    participant DB as Database
+
+    W-&gt;&gt;C: createBooking(params)
+    C-&gt;&gt;Cache: Check idempotency key
+
+    alt Already booked
+        Cache--&gt;&gt;C: Return cached booking
+        C--&gt;&gt;W: Booking details
+    else New booking
+        C-&gt;&gt;API: POST /bookings
+        API--&gt;&gt;C: Booking created
+        C-&gt;&gt;Cache: Store idempotency key
+        C-&gt;&gt;DB: Create local record
+        C--&gt;&gt;W: Booking details
+    end</code></pre>
+<h3 id="required-booking-parameters">Required Booking Parameters<a class="headerlink" href="#required-booking-parameters" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="x">[</span>
+<span class="x">    'company_id' =&gt; 1,</span>
+<span class="x">    'event_type_id' =&gt; 2563193,</span>
+<span class="x">    'start' =&gt; '2025-07-02T11:00:00+02:00',</span>
+<span class="x">    'end' =&gt; '2025-07-02T11:30:00+02:00',</span>
+<span class="x">    'name' =&gt; 'Customer Name',</span>
+<span class="x">    'email' =&gt; 'customer@example.com',</span>
+<span class="x">    'phone' =&gt; '+491234567890',</span>
+<span class="x">    'notes' =&gt; 'Optional notes',</span>
+<span class="x">    'metadata' =&gt; [</span>
+<span class="x">        'call_id' =&gt; '123',</span>
+<span class="x">        'source' =&gt; 'mcp_webhook'</span>
+<span class="x">    ]</span>
+<span class="x">]</span>
+</code></pre></div>
+<h3 id="team-event-handling">Team Event Handling<a class="headerlink" href="#team-event-handling" title="Permanent link">¶</a></h3>
+<p>For event type 2563193, the system automatically adds the team ID:</p>
+<div class="highlight"><pre><span></span><code><span class="x">if ($eventTypeId == 2563193) {</span>
+<span class="x">    $bookingCustomerData['teamId'] = 39203;</span>
+<span class="x">}</span>
+</code></pre></div>
+<h2 id="retellmcpserver-phone-ai-management">📞 RetellMCPServer - Phone AI Management<a class="headerlink" href="#retellmcpserver-phone-ai-management" title="Permanent link">¶</a></h2>
+<p>Manages all Retell.ai interactions including agents, phone numbers, and call data.</p>
+<h3 id="core-functions">Core Functions<a class="headerlink" href="#core-functions" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>Agent Management</strong></li>
+<li>List agents</li>
+<li>Update agent prompts</li>
+<li>
+<p>Configure agent settings</p>
+</li>
+<li>
+<p><strong>Phone Number Sync</strong></p>
+</li>
+<li>Import phone numbers from Retell</li>
+<li>Map to local branches</li>
+<li>
+<p>Maintain sync status</p>
+</li>
+<li>
+<p><strong>Webhook Configuration</strong></p>
+</li>
+<li>Validate webhook URLs</li>
+<li>Ensure correct event subscriptions</li>
+<li>
+<p>Monitor webhook health</p>
+</li>
+<li>
+<p><strong>Call Data Retrieval</strong></p>
+</li>
+<li>Fetch call transcripts</li>
+<li>Analyze call metrics</li>
+<li>Extract dynamic variables</li>
+</ol>
+<h3 id="phone-number-synchronization">Phone Number Synchronization<a class="headerlink" href="#phone-number-synchronization" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="x">public function syncPhoneNumbers(array $params): array</span>
+<span class="x">{</span>
+<span class="x">    // 1. Get all phone numbers from Retell</span>
+<span class="x">    $retellNumbers = $this-&gt;retellClient-&gt;listPhoneNumbers();</span>
+
+<span class="x">    // 2. For each number</span>
+<span class="x">    foreach ($retellNumbers as $number) {</span>
+<span class="x">        // 3. Create or update local record</span>
+<span class="x">        PhoneNumber::updateOrCreate(</span>
+<span class="x">            ['phone_number' =&gt; $number['phone_number']],</span>
+<span class="x">            [</span>
+<span class="x">                'retell_phone_number_id' =&gt; $number['id'],</span>
+<span class="x">                'is_active' =&gt; $number['status'] === 'active',</span>
+<span class="x">                'branch_id' =&gt; $this-&gt;resolveBranch($number),</span>
+<span class="x">                'company_id' =&gt; $params['company_id']</span>
+<span class="x">            ]</span>
+<span class="x">        );</span>
+<span class="x">    }</span>
+
+<span class="x">    return ['synced' =&gt; count($retellNumbers)];</span>
+<span class="x">}</span>
+</code></pre></div>
+<h2 id="databasemcpserver-data-operations">🗄️ DatabaseMCPServer - Data Operations<a class="headerlink" href="#databasemcpserver-data-operations" title="Permanent link">¶</a></h2>
+<p>Provides a circuit-breaker protected interface to database operations.</p>
+<h3 id="features_1">Features<a class="headerlink" href="#features_1" title="Permanent link">¶</a></h3>
+<ul>
+<li><strong>Circuit Breaker Protection</strong>: Prevents database overload</li>
+<li><strong>Query Performance Monitoring</strong>: Tracks slow queries</li>
+<li><strong>Prepared Statements</strong>: SQL injection prevention</li>
+<li><strong>Transaction Support</strong>: ACID compliance</li>
+</ul>
+<h3 id="example-usage">Example Usage<a class="headerlink" href="#example-usage" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="x">// Simple query</span>
+<span class="x">$customers = $this-&gt;databaseMCP-&gt;query([</span>
+<span class="x">    'query' =&gt; 'SELECT * FROM customers WHERE company_id = ?',</span>
+<span class="x">    'bindings' =&gt; [$companyId]</span>
+<span class="x">]);</span>
+
+<span class="x">// Insert with transaction</span>
+<span class="x">$result = $this-&gt;databaseMCP-&gt;execute([</span>
+<span class="x">    'query' =&gt; 'INSERT INTO appointments (customer_id, date, time) VALUES (?, ?, ?)',</span>
+<span class="x">    'bindings' =&gt; [$customerId, $date, $time],</span>
+<span class="x">    'transaction' =&gt; true</span>
+<span class="x">]);</span>
+</code></pre></div>
+<h2 id="queuemcpserver-job-management">📊 QueueMCPServer - Job Management<a class="headerlink" href="#queuemcpserver-job-management" title="Permanent link">¶</a></h2>
+<p>Integrates with Laravel Horizon for queue management and monitoring.</p>
+<h3 id="capabilities">Capabilities<a class="headerlink" href="#capabilities" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>Job Dispatching</strong>: Send jobs to appropriate queues</li>
+<li><strong>Queue Monitoring</strong>: Track queue sizes and processing times</li>
+<li><strong>Failed Job Management</strong>: Retry or investigate failures</li>
+<li><strong>Performance Metrics</strong>: Queue throughput analysis</li>
+</ol>
+<h3 id="queue-configuration">Queue Configuration<a class="headerlink" href="#queue-configuration" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Queue</th>
+<th>Priority</th>
+<th>Purpose</th>
+<th>Timeout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>webhooks</code></td>
+<td>High</td>
+<td>Webhook processing</td>
+<td>60s</td>
+</tr>
+<tr>
+<td><code>bookings</code></td>
+<td>High</td>
+<td>Appointment creation</td>
+<td>120s</td>
+</tr>
+<tr>
+<td><code>sync</code></td>
+<td>Medium</td>
+<td>Data synchronization</td>
+<td>300s</td>
+</tr>
+<tr>
+<td><code>notifications</code></td>
+<td>Medium</td>
+<td>Email/SMS sending</td>
+<td>60s</td>
+</tr>
+<tr>
+<td><code>default</code></td>
+<td>Low</td>
+<td>General processing</td>
+<td>180s</td>
+</tr>
+</tbody>
+</table>
+<h2 id="complete-data-flow">🔄 Complete Data Flow<a class="headerlink" href="#complete-data-flow" title="Permanent link">¶</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    Start([Customer calls +493083793369])
+
+    Start --&gt; Retell[Retell.ai answers call]
+    Retell --&gt; Collect[Agent collects:&lt;br/&gt;- Name&lt;br/&gt;- Date/Time&lt;br/&gt;- Service]
+
+    Collect --&gt; Confirm{Booking&lt;br/&gt;Confirmed?}
+    Confirm --&gt;|No| End1[Call ends&lt;br/&gt;No booking]
+    Confirm --&gt;|Yes| Webhook[Webhook sent to&lt;br/&gt;/api/mcp/retell/webhook]
+
+    Webhook --&gt; Verify{Signature&lt;br/&gt;Valid?}
+    Verify --&gt;|No| Reject[401 Unauthorized]
+    Verify --&gt;|Yes| WebhookMCP[WebhookMCPServer]
+
+    WebhookMCP --&gt; PhoneRes[Phone Resolution]
+    PhoneRes --&gt; Branch[Find Branch]
+    Branch --&gt; Customer[Create/Find Customer]
+    Customer --&gt; CallRecord[Create Call Record]
+
+    CallRecord --&gt; CheckBooking{Should&lt;br/&gt;Book?}
+    CheckBooking --&gt;|No| End2[Process complete&lt;br/&gt;No appointment]
+    CheckBooking --&gt;|Yes| CalcomMCP[CalcomMCPServer]
+
+    CalcomMCP --&gt; Circuit{Circuit&lt;br/&gt;Open?}
+    Circuit --&gt;|Yes| Fallback[Return error&lt;br/&gt;Manual intervention]
+    Circuit --&gt;|No| CheckCache{In&lt;br/&gt;Cache?}
+
+    CheckCache --&gt;|Yes| Cached[Return cached booking]
+    CheckCache --&gt;|No| CalAPI[Cal.com API]
+
+    CalAPI --&gt;|Success| CreateLocal[Create local&lt;br/&gt;appointment record]
+    CalAPI --&gt;|Error| Retry{Retry&lt;br/&gt;Count?}
+
+    Retry --&gt;|&lt; 3| CalAPI
+    Retry --&gt;|&gt;= 3| Failed[Log failure&lt;br/&gt;Alert team]
+
+    CreateLocal --&gt; UpdateCall[Update call with&lt;br/&gt;appointment_id]
+    UpdateCall --&gt; Success([✅ Booking Complete])
+
+    Cached --&gt; Success
+
+    style Start fill:#f9f,stroke:#333,stroke-width:4px
+    style Success fill:#9f9,stroke:#333,stroke-width:4px
+    style Reject fill:#f99,stroke:#333,stroke-width:2px
+    style Failed fill:#f99,stroke:#333,stroke-width:2px
+    style WebhookMCP fill:#667eea,stroke:#fff,stroke-width:4px,color:#fff
+    style CalcomMCP fill:#48bb78,stroke:#333,stroke-width:2px</code></pre>
+<h2 id="error-handling-resilience">🛡️ Error Handling &amp; Resilience<a class="headerlink" href="#error-handling-resilience" title="Permanent link">¶</a></h2>
+<h3 id="circuit-breaker-pattern">Circuit Breaker Pattern<a class="headerlink" href="#circuit-breaker-pattern" title="Permanent link">¶</a></h3>
+<p>The circuit breaker has three states:</p>
+<ol>
+<li><strong>CLOSED</strong> (Normal Operation)</li>
+<li>All requests pass through</li>
+<li>Failures are counted</li>
+<li>
+<p>Opens if threshold reached</p>
+</li>
+<li>
+<p><strong>OPEN</strong> (Service Down)</p>
+</li>
+<li>Requests fail immediately</li>
+<li>No load on failing service</li>
+<li>
+<p>Waits for timeout period</p>
+</li>
+<li>
+<p><strong>HALF_OPEN</strong> (Testing Recovery)</p>
+</li>
+<li>Allows limited test requests</li>
+<li>Closes if successful</li>
+<li>Re-opens if still failing</li>
+</ol>
+<h3 id="retry-strategy">Retry Strategy<a class="headerlink" href="#retry-strategy" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="x">$maxRetries = 3;</span>
+<span class="x">$retryDelay = 1; // seconds</span>
+<span class="x">// Exponential backoff: 1s, 2s, 4s</span>
+
+<span class="x">for ($attempt = 1; $attempt &lt;= $maxRetries; $attempt++) {</span>
+<span class="x">    try {</span>
+<span class="x">        return $this-&gt;makeApiCall($params);</span>
+<span class="x">    } catch (Exception $e) {</span>
+<span class="x">        if ($attempt === $maxRetries) {</span>
+<span class="x">            throw $e;</span>
+<span class="x">        }</span>
+<span class="x">        sleep($retryDelay * pow(2, $attempt - 1));</span>
+<span class="x">    }</span>
+<span class="x">}</span>
+</code></pre></div>
+<h2 id="caching-strategy">💾 Caching Strategy<a class="headerlink" href="#caching-strategy" title="Permanent link">¶</a></h2>
+<h3 id="cache-layers">Cache Layers<a class="headerlink" href="#cache-layers" title="Permanent link">¶</a></h3>
+<ol>
+<li><strong>L1 - Memory Cache</strong>: In-process array cache (50MB limit)</li>
+<li><strong>L2 - Redis Cache</strong>: Distributed cache for all servers</li>
+<li><strong>L3 - Database Cache</strong>: Persistent cache for critical data</li>
+</ol>
+<h3 id="cache-keys-ttl">Cache Keys &amp; TTL<a class="headerlink" href="#cache-keys-ttl" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>Key Pattern</th>
+<th>TTL</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mcp:calcom:event_types:{company_id}</code></td>
+<td>5 min</td>
+<td>Event type list</td>
+</tr>
+<tr>
+<td><code>mcp:calcom:availability:{event}:{date}</code></td>
+<td>5 min</td>
+<td>Availability slots</td>
+</tr>
+<tr>
+<td><code>mcp:calcom:booking:{idempotency_key}</code></td>
+<td>24h</td>
+<td>Prevent duplicates</td>
+</tr>
+<tr>
+<td><code>mcp:retell:agents:{company_id}</code></td>
+<td>10 min</td>
+<td>Agent configurations</td>
+</tr>
+<tr>
+<td><code>mcp:phone:resolution:{number}</code></td>
+<td>10 min</td>
+<td>Phone lookups</td>
+</tr>
+</tbody>
+</table>
+<h2 id="monitoring-metrics">📊 Monitoring &amp; Metrics<a class="headerlink" href="#monitoring-metrics" title="Permanent link">¶</a></h2>
+<h3 id="key-metrics-tracked">Key Metrics Tracked<a class="headerlink" href="#key-metrics-tracked" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Prometheus metrics available at /api/metrics</span>
+
+<span class="c1"># MCP specific metrics</span>
+<span class="l l-Scalar l-Scalar-Plain">mcp_webhook_total{status="success|failure"}</span>
+<span class="l l-Scalar l-Scalar-Plain">mcp_booking_total{status="created|failed|cached"}</span>
+<span class="l l-Scalar l-Scalar-Plain">mcp_circuit_breaker_state{service="calcom|retell"}</span>
+<span class="l l-Scalar l-Scalar-Plain">mcp_cache_hits_total{cache="l1|l2|l3"}</span>
+<span class="l l-Scalar l-Scalar-Plain">mcp_api_duration_seconds{service="calcom|retell",method="*"}</span>
+
+<span class="l l-Scalar l-Scalar-Plain"># Business metrics</span>
+<span class="l l-Scalar l-Scalar-Plain">appointments_created_total{source="phone|web|api"}</span>
+<span class="l l-Scalar l-Scalar-Plain">calls_processed_total{outcome="booked|no_booking|failed"}</span>
+<span class="l l-Scalar l-Scalar-Plain">customer_satisfaction_score{branch="*"}</span>
+</code></pre></div>
+<h3 id="debug-commands">Debug Commands<a class="headerlink" href="#debug-commands" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Test webhook processing</span>
+php<span class="w"> </span>test-mcp-server-direct.php
+
+<span class="c1"># Check Cal.com availability</span>
+php<span class="w"> </span>test-calcom-availability.php
+
+<span class="c1"># Direct booking test</span>
+php<span class="w"> </span>test-direct-mcp-booking.php
+
+<span class="c1"># Monitor circuit breaker</span>
+php<span class="w"> </span>artisan<span class="w"> </span>circuit-breaker:status
+
+<span class="c1"># Clear MCP caches</span>
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear<span class="w"> </span>--tags<span class="o">=</span>mcp
+</code></pre></div>
+<h2 id="security-considerations">🔒 Security Considerations<a class="headerlink" href="#security-considerations" title="Permanent link">¶</a></h2>
+<h3 id="webhook-verification">Webhook Verification<a class="headerlink" href="#webhook-verification" title="Permanent link">¶</a></h3>
+<ul>
+<li>HMAC-SHA256 signature verification</li>
+<li>Timestamp validation (5-minute window)</li>
+<li>IP whitelisting (optional)</li>
+<li>Rate limiting per webhook source</li>
+</ul>
+<h3 id="data-protection">Data Protection<a class="headerlink" href="#data-protection" title="Permanent link">¶</a></h3>
+<ul>
+<li>All API keys encrypted at rest</li>
+<li>Customer PII encryption available</li>
+<li>Audit logging for all operations</li>
+<li>GDPR compliance built-in</li>
+</ul>
+<h3 id="multi-tenancy">Multi-Tenancy<a class="headerlink" href="#multi-tenancy" title="Permanent link">¶</a></h3>
+<ul>
+<li>Company-level data isolation</li>
+<li>Branch-level access control</li>
+<li>Scoped queries automatic</li>
+<li>Cross-tenant access prevention</li>
+</ul>
+<h2 id="performance-optimizations">⚡ Performance Optimizations<a class="headerlink" href="#performance-optimizations" title="Permanent link">¶</a></h2>
+<ol>
+<li><strong>Connection Pooling</strong>: Reuse database/API connections</li>
+<li><strong>Batch Operations</strong>: Group API calls when possible</li>
+<li><strong>Async Processing</strong>: Non-blocking webhook handling</li>
+<li><strong>Query Optimization</strong>: Indexed lookups, eager loading</li>
+<li><strong>Response Compression</strong>: Gzip for API responses</li>
+</ol>
+<h2 id="known-limitations">🚧 Known Limitations<a class="headerlink" href="#known-limitations" title="Permanent link">¶</a></h2>
+<ol>
+<li><strong>Hardcoded Team ID</strong>: Team 39203 for event 2563193 should be configurable</li>
+<li><strong>No Automatic Retry UI</strong>: Failed bookings need manual intervention</li>
+<li><strong>Single Redis Instance</strong>: No Redis clustering implemented yet</li>
+<li><strong>Limited Horizontal Scaling</strong>: Not tested beyond single server</li>
+</ol>
+<h2 id="future-enhancements">🎯 Future Enhancements<a class="headerlink" href="#future-enhancements" title="Permanent link">¶</a></h2>
+<ul>
+<li>[ ] Implement Redis Cluster support</li>
+<li>[ ] Add automatic retry UI for failed bookings</li>
+<li>[ ] Make team assignments configurable</li>
+<li>[ ] Add GraphQL API support</li>
+<li>[ ] Implement real-time booking updates via WebSockets</li>
+<li>[ ] Add machine learning for optimal time slot suggestions</li>
+</ul>
+<hr/>
+<div class="admonition success">
+<p class="admonition-title">Production Ready</p>
+<p>The MCP system has been tested extensively and achieves <strong>99.3% success rate</strong> in production environments.</p>
+</div>
+</article>
+</div>
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+</div>
+</main>
+<footer class="md-footer">
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+      Material for MkDocs
+    </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+<script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+</body>
+</html>

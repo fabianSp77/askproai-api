@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Call;
 use App\Models\Staff;
 use Illuminate\Http\Request;
+use App\Helpers\SafeQueryHelper;
 
 class OptimizedDashboardController extends Controller
 {
@@ -118,7 +119,9 @@ class OptimizedDashboardController extends Controller
             
         // Search staff with optimized query
         $staff = Staff::forCompany($companyId)
-            ->where('name', 'LIKE', "%{$search}%")
+            ->where(function($q) use ($search) {
+                SafeQueryHelper::whereLike($q, 'name', $search);
+            })
             ->active()
             ->limit(10)
             ->get(['id', 'name', 'email']);

@@ -264,11 +264,25 @@ class Branch extends Model
     /**
      * Get the event types for the branch.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function eventTypes()
     {
-        return $this->hasMany(CalcomEventType::class);
+        return $this->belongsToMany(CalcomEventType::class, 'branch_event_types', 'branch_id', 'event_type_id')
+            ->using(BranchEventType::class)
+            ->withPivot(['is_primary'])
+            ->withTimestamps()
+            ->orderByPivot('is_primary', 'desc');
+    }
+    
+    /**
+     * Get the primary event type for the branch.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function primaryEventType()
+    {
+        return $this->eventTypes()->wherePivot('is_primary', true);
     }
 
     /**
@@ -431,16 +445,32 @@ class Branch extends Model
 
     /**
      * Get the effective Cal.com Event Type ID (own or inherited from company)
+     * Now uses the new relationship table
      */
     public function getEffectiveCalcomEventTypeId()
     {
-        // Wenn eigener Wert gesetzt ist und calendar_mode auf 'override' steht
+        // First check if we have a primary event type in the new structure
+        $primaryEventType = $this->primaryEventType()->first();
+        if ($primaryEventType) {
+            return $primaryEventType->calcom_numeric_event_type_id;
+        }
+        
+        // Fallback to old field for backward compatibility (will be removed later)
         if ($this->calendar_mode === 'override' && $this->calcom_event_type_id) {
             return $this->calcom_event_type_id;
         }
 
         // Ansonsten vom Unternehmen erben
         return $this->company ? $this->company->calcom_event_type_id : null;
+    }
+    
+    /**
+     * Get the primary Cal.com Event Type ID
+     */
+    public function getPrimaryCalcomEventTypeId()
+    {
+        $primaryEventType = $this->primaryEventType()->first();
+        return $primaryEventType ? $primaryEventType->calcom_numeric_event_type_id : null;
     }
 
     /**

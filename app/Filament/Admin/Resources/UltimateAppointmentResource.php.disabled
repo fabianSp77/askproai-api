@@ -1,0 +1,827 @@
+<?php
+
+namespace App\Filament\Admin\Resources;
+
+use App\Filament\Admin\Resources\UltimateAppointmentResource\Pages;
+use App\Filament\Admin\Resources\UltimateAppointmentResource\Widgets;
+use App\Filament\Admin\Resources\Concerns\MultiTenantResource;
+use App\Filament\Admin\Resources\Concerns\UltimateResourceUI;
+use App\Models\Appointment;
+use App\Models\Customer;
+use App\Models\Staff;
+use App\Models\Service;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Support\Enums\FontWeight;
+use Carbon\Carbon;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
+use Illuminate\Database\Eloquent\Collection;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\ViewField;
+use Illuminate\Database\Eloquent\Builder;
+
+class UltimateAppointmentResource extends Resource
+{
+    use MultiTenantResource, UltimateResourceUI;
+    
+    protected static ?string $model = Appointment::class;
+    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    protected static ?string $navigationLabel = 'Termine';
+    protected static ?int $navigationSort = 1;
+    protected static ?string $slug = 'ultimate-appointments';
+    
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Temporarily disable from navigation
+    }
+    
+    public static function canView($record): bool
+    {
+        return true;
+    }
+
+    public static function table(Table $table): Table
+    {
+        return parent::table(
+            $table
+                ->columns(self::getTableColumns())
+                ->filters(self::getTableFilters())
+                ->actions(self::getTableActions())
+                ->bulkActions(self::getTableBulkActions())
+                ->defaultSort('starts_at', 'desc')
+                ->poll('10s')
+                ->striped()
+                ->searchDebounce('500ms')
+                ->persistColumnSearchesInSession()
+                ->persistFiltersInSession()
+                ->persistSortInSession()
+                ->extremePaginationLinks()
+                ->paginated([10, 25, 50, 100])
+                ->recordClasses(fn ($record) => $record ? match($record->status) {
+                    'scheduled' => 'border-l-4 border-blue-500',
+                    'confirmed' => 'border-l-4 border-green-500',
+                    'cancelled' => 'border-l-4 border-red-500',
+                    'no_show' => 'border-l-4 border-orange-500',
+                    'completed' => 'border-l-4 border-gray-500',
+                    default => '',
+                } : '')
+                ->contentGrid(fn () => self::getContentGrid())
+                ->modifyQueryUsing(fn ($query) => $query->with(['customer', 'staff', 'service', 'branch', 'call']))
+                ->filtersLayout(FiltersLayout::Dropdown)
+                ->filtersFormColumns(3)
+                ->filtersTriggerAction(
+                    fn (Action $action) => $action
+                        ->button()
+                        ->label('Smart Filters')
+                        ->icon('heroicon-m-funnel')
+                        ->badge(fn () => self::getActiveFiltersCount())
+                        ->badgeColor('primary')
+                )
+        );
+    }
+    
+    protected static function getTableColumns(): array
+    {
+        return [
+            Tables\Columns\Layout\Stack::make([
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('customer.name')
+                            ->label('Kunde')
+                            ->searchable()
+                            ->weight(FontWeight::Bold)
+                            ->size('lg')
+                            ->icon('heroicon-m-user')
+                            ->iconColor('primary')
+                            ->url(fn ($record) => $record?->customer ? 
+                                route('filament.admin.resources.customers.edit', ['record' => $record->customer]) : null)
+                            ->getStateUsing(fn ($record) => $record?->customer?->name ?? '-')
+                            ->extraAttributes([
+                                'class' => 'inline-editable',
+                                'data-field' => 'customer_name',
+                            ]),
+                            
+                        Tables\Columns\TextColumn::make('service.name')
+                            ->label('Leistung')
+                            ->searchable()
+                            ->icon('heroicon-m-briefcase')
+                            ->iconColor('gray')
+                            ->size('sm')
+                            ->color('gray')
+                    ->getStateUsing(fn ($record) => $record?->service?->name ?? '-'),
+                    ]),
+                    
+                    Tables\Columns\TextColumn::make('status')
+                        ->label('Status')
+                        ->badge()
+                        ->alignEnd()
+                        ->formatStateUsing(fn (string $state): string => match ($state) {
+                            'scheduled' => 'Geplant',
+                            'confirmed' => 'Bestätigt',
+                            'completed' => 'Abgeschlossen',
+                            'cancelled' => 'Abgesagt',
+                            'no_show' => 'Nicht erschienen',
+                            default => ucfirst($state),
+                        })
+                        ->color(fn (string $state): string => match ($state) {
+                            'scheduled' => 'info',
+                            'confirmed' => 'success',
+                            'completed' => 'gray',
+                            'cancelled' => 'danger',
+                            'no_show' => 'warning',
+                            default => 'gray',
+                        })
+                        ->icon(fn (string $state): string => match ($state) {
+                            'scheduled' => 'heroicon-o-clock',
+                            'confirmed' => 'heroicon-o-check-circle',
+                            'completed' => 'heroicon-o-check-badge',
+                            'cancelled' => 'heroicon-o-x-circle',
+                            'no_show' => 'heroicon-o-exclamation-circle',
+                            default => 'heroicon-o-question-mark-circle',
+                        }),
+                ])->from('md'),
+                
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('starts_at')
+                        ->label('Termin')
+                        ->dateTime('d.m.Y H:i')
+                        ->sortable()
+                        ->icon('heroicon-m-calendar-days')
+                        ->iconColor('primary')
+                        ->weight(FontWeight::SemiBold)
+                        ->formatStateUsing(function ($state) {
+                            $date = Carbon::parse($state);
+                            $isToday = $date->isToday();
+                            $isTomorrow = $date->isTomorrow();
+                            $isPast = $date->isPast();
+                            
+                            $formatted = $date->format('d.m.Y H:i');
+                            
+                            if ($isToday) {
+                                return "Heute, {$date->format('H:i')}";
+                            } elseif ($isTomorrow) {
+                                return "Morgen, {$date->format('H:i')}";
+                            }
+                            
+                            return $formatted;
+                        })
+                        ->color(fn ($state) => Carbon::parse($state)->isPast() ? 'gray' : 'primary'),
+                        
+                    Tables\Columns\TextColumn::make('duration')
+                        ->label('Dauer')
+                        ->getStateUsing(fn ($record) => 
+                            $record && $record->ends_at && $record->starts_at ?
+                            Carbon::parse($record->ends_at)->diffInMinutes(Carbon::parse($record->starts_at)) . ' Min.' :
+                            '60 Min.'
+                        )
+                        ->badge()
+                        ->color('gray')
+                        ->alignEnd(),
+                ])->from('md'),
+                
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('staff.name')
+                        ->label('Mitarbeiter')
+                        ->searchable()
+                        ->placeholder('Nicht zugewiesen')
+                        ->icon('heroicon-m-user-circle')
+                        ->iconColor('gray')
+                        ->size('sm')
+                    ->getStateUsing(fn ($record) => $record?->staff?->name ?? '-'),
+                        
+                    Tables\Columns\TextColumn::make('branch.name')
+                        ->label('Filiale')
+                        ->searchable()
+                        ->icon('heroicon-m-building-office')
+                        ->iconColor('gray')
+                        ->size('sm')
+                        ->alignEnd()
+                    ->getStateUsing(fn ($record) => $record?->branch?->name ?? '-'),
+                ])->from('md'),
+                
+                Tables\Columns\Layout\Panel::make([
+                    Tables\Columns\TextColumn::make('notes')
+                        ->label('Notizen')
+                        ->limit(100)
+                        ->placeholder('Keine Notizen')
+                        ->extraAttributes([
+                            'class' => 'text-sm text-gray-600 dark:text-gray-400 mt-2',
+                        ]),
+                ])->collapsed(),
+                
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('source')
+                        ->label('Quelle')
+                        ->badge()
+                        ->formatStateUsing(fn (string $state): string => match ($state) {
+                            'phone' => 'Telefon',
+                            'online' => 'Online',
+                            'walk_in' => 'Walk-in',
+                            'app' => 'App',
+                            default => ucfirst($state),
+                        })
+                        ->color(fn (string $state): string => match ($state) {
+                            'phone' => 'info',
+                            'online' => 'success',
+                            'walk_in' => 'warning',
+                            'app' => 'primary',
+                            default => 'gray',
+                        })
+                        ->icon(fn (string $state): string => match ($state) {
+                            'phone' => 'heroicon-o-phone',
+                            'online' => 'heroicon-o-globe-alt',
+                            'walk_in' => 'heroicon-o-user',
+                            'app' => 'heroicon-o-device-phone-mobile',
+                            default => 'heroicon-o-question-mark-circle',
+                        }),
+                        
+                    Tables\Columns\IconColumn::make('call_id')
+                        ->label('Anruf')
+                        ->boolean()
+                        ->trueIcon('heroicon-o-phone-arrow-down-left')
+                        ->falseIcon('heroicon-o-x-mark')
+                        ->trueColor('success')
+                        ->falseColor('gray')
+                        ->tooltip(fn ($record) => $record->call ? 
+                            'Aus Anruf vom ' . $record->call->created_at->format('d.m.Y H:i') : 
+                            'Kein verknüpfter Anruf'
+                        ),
+                        
+                    Tables\Columns\IconColumn::make('reminder_sent')
+                        ->label('Erinnerung')
+                        ->boolean()
+                        ->trueIcon('heroicon-o-bell')
+                        ->falseIcon('heroicon-o-bell-slash')
+                        ->trueColor('success')
+                        ->falseColor('gray')
+                        ->tooltip(fn ($state) => $state ? 'Erinnerung gesendet' : 'Keine Erinnerung'),
+                ])->from('md'),
+            ])->space(2),
+            
+            // Hidden columns for search and filtering
+            Tables\Columns\TextColumn::make('customer_phone')
+                ->label('Telefon')
+                ->searchable(query: function ($query, string $search) {
+                    return $query->whereHas('customer', function ($q) use ($search) {
+                        $q->where('phone', 'like', "%{$search}%");
+                    });
+                })
+                ->getStateUsing(fn ($record) => $record?->customer?->phone ?? '-')
+                ->toggleable(isToggledHiddenByDefault: true),
+                
+            Tables\Columns\TextColumn::make('customer_email')
+                ->label('E-Mail')
+                ->searchable(query: function ($query, string $search) {
+                    return $query->whereHas('customer', function ($q) use ($search) {
+                        $q->where('email', 'like', "%{$search}%");
+                    });
+                })
+                ->getStateUsing(fn ($record) => $record?->customer?->email ?? '-')
+                ->toggleable(isToggledHiddenByDefault: true),
+        ];
+    }
+    
+    protected static function getTableFilters(): array
+    {
+        return array_merge(
+            static::getMultiTenantFilters(),
+            [
+                // Smart date filter
+                Tables\Filters\Filter::make('smart_date')
+                    ->form([
+                        Forms\Components\Select::make('preset')
+                            ->label('Zeitraum')
+                            ->options([
+                                'today' => 'Heute',
+                                'tomorrow' => 'Morgen',
+                                'this_week' => 'Diese Woche',
+                                'next_week' => 'Nächste Woche',
+                                'this_month' => 'Diesen Monat',
+                                'next_month' => 'Nächsten Monat',
+                                'past' => 'Vergangene',
+                                'upcoming' => 'Zukünftige',
+                                'custom' => 'Benutzerdefiniert',
+                            ])
+                            ->default('upcoming')
+                            ->reactive(),
+                            
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\DatePicker::make('from')
+                                    ->label('Von')
+                                    ->visible(fn ($get) => $get('preset') === 'custom'),
+                                    
+                                Forms\Components\DatePicker::make('to')
+                                    ->label('Bis')
+                                    ->visible(fn ($get) => $get('preset') === 'custom'),
+                            ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $preset = $data['preset'] ?? 'upcoming';
+                        
+                        return match ($preset) {
+                            'today' => $query->whereDate('starts_at', today()),
+                            'tomorrow' => $query->whereDate('starts_at', today()->addDay()),
+                            'this_week' => $query->whereBetween('starts_at', [now()->startOfWeek(), now()->endOfWeek()]),
+                            'next_week' => $query->whereBetween('starts_at', [now()->addWeek()->startOfWeek(), now()->addWeek()->endOfWeek()]),
+                            'this_month' => $query->whereMonth('starts_at', now()->month),
+                            'next_month' => $query->whereMonth('starts_at', now()->addMonth()->month),
+                            'past' => $query->where('starts_at', '<', now()),
+                            'upcoming' => $query->where('starts_at', '>=', now()),
+                            'custom' => $query
+                                ->when($data['from'] ?? null, fn($q, $v) => $q->whereDate('starts_at', '>=', $v))
+                                ->when($data['to'] ?? null, fn($q, $v) => $q->whereDate('starts_at', '<=', $v)),
+                            default => $query,
+                        };
+                    }),
+                    
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->multiple()
+                    ->options([
+                        'scheduled' => 'Geplant',
+                        'confirmed' => 'Bestätigt',
+                        'completed' => 'Abgeschlossen',
+                        'cancelled' => 'Abgesagt',
+                        'no_show' => 'Nicht erschienen',
+                    ]),
+                    
+                Tables\Filters\SelectFilter::make('staff_id')
+                    ->label('Mitarbeiter')
+                    ->relationship('staff', 'name')
+                    ->searchable()
+                    ->preload(),
+                    
+                Tables\Filters\SelectFilter::make('service_id')
+                    ->label('Leistung')
+                    ->relationship('service', 'name')
+                    ->searchable()
+                    ->preload(),
+                    
+                Tables\Filters\SelectFilter::make('source')
+                    ->label('Quelle')
+                    ->multiple()
+                    ->options([
+                        'phone' => 'Telefon',
+                        'online' => 'Online',
+                        'walk_in' => 'Walk-in',
+                        'app' => 'App',
+                    ]),
+                    
+                Tables\Filters\TernaryFilter::make('has_call')
+                    ->label('Mit Anruf')
+                    ->placeholder('Alle')
+                    ->trueLabel('Mit Anruf')
+                    ->falseLabel('Ohne Anruf')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('call_id'),
+                        false: fn (Builder $query) => $query->whereNull('call_id'),
+                    ),
+                    
+                Tables\Filters\TernaryFilter::make('reminder_sent')
+                    ->label('Erinnerung')
+                    ->placeholder('Alle')
+                    ->trueLabel('Gesendet')
+                    ->falseLabel('Nicht gesendet')
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('reminder_sent', true),
+                        false: fn (Builder $query) => $query->where('reminder_sent', false),
+                    ),
+            ]
+        );
+    }
+    
+    protected static function getTableActions(): array
+    {
+        return [
+            Tables\Actions\ActionGroup::make([
+                Tables\Actions\ViewAction::make()
+                    ->modalWidth('7xl'),
+                    
+                Tables\Actions\EditAction::make(),
+                    
+                Tables\Actions\Action::make('confirm')
+                    ->label('Bestätigen')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->status === 'scheduled')
+                    ->requiresConfirmation()
+                    ->modalHeading('Termin bestätigen')
+                    ->modalDescription('Möchten Sie diesen Termin bestätigen?')
+                    ->modalSubmitActionLabel('Bestätigen')
+                    ->action(function (Appointment $record) {
+                        $record->update(['status' => 'confirmed']);
+                        
+                        // Send confirmation email/SMS
+                        // dispatch(new SendAppointmentConfirmation($record));
+                        
+                        Notification::make()
+                            ->title('Termin bestätigt')
+                            ->success()
+                            ->send();
+                    }),
+                    
+                Tables\Actions\Action::make('cancel')
+                    ->label('Absagen')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn ($record) => in_array($record->status, ['scheduled', 'confirmed']))
+                    ->requiresConfirmation()
+                    ->modalHeading('Termin absagen')
+                    ->form([
+                        Forms\Components\Textarea::make('cancellation_reason')
+                            ->label('Grund der Absage')
+                            ->rows(3)
+                            ->placeholder('Optional: Grund für die Absage'),
+                    ])
+                    ->action(function (array $data, Appointment $record) {
+                        $record->update([
+                            'status' => 'cancelled',
+                            'cancellation_reason' => $data['cancellation_reason'] ?? null,
+                            'cancelled_at' => now(),
+                        ]);
+                        
+                        Notification::make()
+                            ->title('Termin abgesagt')
+                            ->warning()
+                            ->send();
+                    }),
+                    
+                Tables\Actions\Action::make('reschedule')
+                    ->label('Verschieben')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->visible(fn ($record) => in_array($record->status, ['scheduled', 'confirmed']))
+                    ->form([
+                        Forms\Components\DateTimePicker::make('new_starts_at')
+                            ->label('Neuer Termin')
+                            ->required()
+                            ->native(false)
+                            ->displayFormat('d.m.Y H:i')
+                            ->minutesStep(15)
+                            ->minDate(now()),
+                            
+                        Forms\Components\Textarea::make('reschedule_reason')
+                            ->label('Grund')
+                            ->rows(2)
+                            ->placeholder('Optional: Grund für die Verschiebung'),
+                    ])
+                    ->action(function (array $data, Appointment $record) {
+                        $oldDate = $record->starts_at;
+                        $duration = $record->ends_at ? 
+                            Carbon::parse($record->ends_at)->diffInMinutes(Carbon::parse($record->starts_at)) : 
+                            60;
+                        
+                        $record->update([
+                            'starts_at' => $data['new_starts_at'],
+                            'ends_at' => Carbon::parse($data['new_starts_at'])->addMinutes($duration),
+                            'reschedule_reason' => $data['reschedule_reason'] ?? null,
+                            'rescheduled_from' => $oldDate,
+                            'rescheduled_at' => now(),
+                        ]);
+                        
+                        Notification::make()
+                            ->title('Termin verschoben')
+                            ->success()
+                            ->body('Der Termin wurde erfolgreich verschoben.')
+                            ->send();
+                    }),
+                    
+                Tables\Actions\Action::make('mark_no_show')
+                    ->label('Nicht erschienen')
+                    ->icon('heroicon-o-exclamation-circle')
+                    ->color('warning')
+                    ->visible(fn ($record) => 
+                        $record->status === 'confirmed' && 
+                        Carbon::parse($record->starts_at)->isPast()
+                    )
+                    ->requiresConfirmation()
+                    ->modalHeading('Als nicht erschienen markieren')
+                    ->modalDescription('Der Kunde wird als nicht erschienen markiert.')
+                    ->action(function (Appointment $record) {
+                        $record->update([
+                            'status' => 'no_show',
+                            'no_show_at' => now(),
+                        ]);
+                        
+                        // Update customer no-show count
+                        $record->customer->increment('no_show_count');
+                        
+                        Notification::make()
+                            ->title('Als nicht erschienen markiert')
+                            ->warning()
+                            ->send();
+                    }),
+                    
+                Tables\Actions\Action::make('complete')
+                    ->label('Abschließen')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn ($record) => 
+                        in_array($record->status, ['confirmed', 'scheduled']) && 
+                        Carbon::parse($record->starts_at)->isPast()
+                    )
+                    ->form([
+                        Forms\Components\Textarea::make('completion_notes')
+                            ->label('Abschlussnotizen')
+                            ->rows(3)
+                            ->placeholder('Optional: Notizen zum Termin'),
+                            
+                        Forms\Components\Toggle::make('follow_up_required')
+                            ->label('Folgetermin erforderlich')
+                            ->reactive(),
+                            
+                        Forms\Components\DateTimePicker::make('follow_up_date')
+                            ->label('Folgetermin')
+                            ->visible(fn ($get) => $get('follow_up_required'))
+                            ->native(false)
+                            ->displayFormat('d.m.Y H:i')
+                            ->minutesStep(15)
+                            ->minDate(now()->addDay()),
+                    ])
+                    ->action(function (array $data, Appointment $record) {
+                        $record->update([
+                            'status' => 'completed',
+                            'completed_at' => now(),
+                            'completion_notes' => $data['completion_notes'] ?? null,
+                        ]);
+                        
+                        if ($data['follow_up_required'] ?? false) {
+                            // Create follow-up appointment
+                            $followUp = $record->replicate();
+                            $followUp->starts_at = $data['follow_up_date'];
+                            $followUp->ends_at = Carbon::parse($data['follow_up_date'])->addMinutes(60);
+                            $followUp->status = 'scheduled';
+                            $followUp->parent_appointment_id = $record->id;
+                            $followUp->save();
+                        }
+                        
+                        Notification::make()
+                            ->title('Termin abgeschlossen')
+                            ->success()
+                            ->send();
+                    }),
+                    
+                Tables\Actions\Action::make('send_reminder')
+                    ->label('Erinnerung senden')
+                    ->icon('heroicon-o-bell')
+                    ->color('info')
+                    ->visible(fn ($record) => 
+                        in_array($record->status, ['scheduled', 'confirmed']) && 
+                        !$record->reminder_sent &&
+                        Carbon::parse($record->starts_at)->isAfter(now())
+                    )
+                    ->requiresConfirmation()
+                    ->modalHeading('Erinnerung senden')
+                    ->modalDescription('Eine Erinnerung wird an den Kunden gesendet.')
+                    ->action(function (Appointment $record) {
+                        // Send reminder
+                        // dispatch(new SendAppointmentReminder($record));
+                        
+                        $record->update(['reminder_sent' => true]);
+                        
+                        Notification::make()
+                            ->title('Erinnerung gesendet')
+                            ->success()
+                            ->send();
+                    }),
+            ])->tooltip('Aktionen'),
+            
+            // Quick status update
+            Tables\Actions\Action::make('quick_status')
+                ->label('')
+                ->icon(fn ($record) => match($record->status) {
+                    'scheduled' => 'heroicon-o-clock',
+                    'confirmed' => 'heroicon-o-check-circle',
+                    'completed' => 'heroicon-o-check-badge',
+                    'cancelled' => 'heroicon-o-x-circle',
+                    'no_show' => 'heroicon-o-exclamation-circle',
+                    default => 'heroicon-o-question-mark-circle',
+                })
+                ->color(fn ($record) => match($record->status) {
+                    'scheduled' => 'info',
+                    'confirmed' => 'success',
+                    'completed' => 'gray',
+                    'cancelled' => 'danger',
+                    'no_show' => 'warning',
+                    default => 'gray',
+                })
+                ->tooltip('Status ändern')
+                ->form([
+                    Forms\Components\Select::make('status')
+                        ->label('Status')
+                        ->options([
+                            'scheduled' => 'Geplant',
+                            'confirmed' => 'Bestätigt',
+                            'completed' => 'Abgeschlossen',
+                            'cancelled' => 'Abgesagt',
+                            'no_show' => 'Nicht erschienen',
+                        ])
+                        ->default(fn ($record) => $record->status)
+                        ->required(),
+                ])
+                ->action(function (array $data, Appointment $record) {
+                    $record->update(['status' => $data['status']]);
+                    
+                    Notification::make()
+                        ->title('Status aktualisiert')
+                        ->success()
+                        ->send();
+                })
+                ->iconButton(),
+        ];
+    }
+    
+    protected static function getTableBulkActions(): array
+    {
+        return [
+            BulkAction::make('confirm_bulk')
+                ->label('Bestätigen')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->requiresConfirmation()
+                ->modalHeading('Termine bestätigen')
+                ->modalDescription('Alle ausgewählten Termine werden bestätigt.')
+                ->action(function (Collection $records) {
+                    $records->each->update(['status' => 'confirmed']);
+                    
+                    Notification::make()
+                        ->title('Termine bestätigt')
+                        ->success()
+                        ->body(count($records) . ' Termine wurden bestätigt.')
+                        ->send();
+                }),
+                
+            BulkAction::make('send_reminders')
+                ->label('Erinnerungen senden')
+                ->icon('heroicon-o-bell')
+                ->color('info')
+                ->requiresConfirmation()
+                ->modalHeading('Erinnerungen senden')
+                ->modalDescription('Erinnerungen werden an alle ausgewählten Termine gesendet.')
+                ->action(function (Collection $records) {
+                    $sent = 0;
+                    foreach ($records as $record) {
+                        if (!$record->reminder_sent && Carbon::parse($record->starts_at)->isAfter(now())) {
+                            // dispatch(new SendAppointmentReminder($record));
+                            $record->update(['reminder_sent' => true]);
+                            $sent++;
+                        }
+                    }
+                    
+                    Notification::make()
+                        ->title('Erinnerungen gesendet')
+                        ->success()
+                        ->body($sent . ' Erinnerungen wurden gesendet.')
+                        ->send();
+                }),
+                
+            BulkAction::make('reschedule_bulk')
+                ->label('Verschieben')
+                ->icon('heroicon-o-arrow-path')
+                ->color('warning')
+                ->form([
+                    Forms\Components\DateTimePicker::make('new_date')
+                        ->label('Neues Datum')
+                        ->required()
+                        ->native(false)
+                        ->displayFormat('d.m.Y')
+                        ->minDate(now()),
+                        
+                    Forms\Components\Radio::make('reschedule_type')
+                        ->label('Verschiebungsart')
+                        ->options([
+                            'same_time' => 'Gleiche Uhrzeit beibehalten',
+                            'specific_time' => 'Neue Uhrzeit festlegen',
+                        ])
+                        ->default('same_time')
+                        ->reactive(),
+                        
+                    Forms\Components\TimePicker::make('new_time')
+                        ->label('Neue Uhrzeit')
+                        ->visible(fn ($get) => $get('reschedule_type') === 'specific_time')
+                        ->native(false),
+                ])
+                ->action(function (Collection $records, array $data) {
+                    foreach ($records as $record) {
+                        $newDate = Carbon::parse($data['new_date']);
+                        
+                        if ($data['reschedule_type'] === 'same_time') {
+                            $time = Carbon::parse($record->starts_at);
+                            $newDate->setTime($time->hour, $time->minute);
+                        } else {
+                            $time = Carbon::parse($data['new_time']);
+                            $newDate->setTime($time->hour, $time->minute);
+                        }
+                        
+                        $duration = $record->ends_at ? 
+                            Carbon::parse($record->ends_at)->diffInMinutes(Carbon::parse($record->starts_at)) : 
+                            60;
+                        
+                        $record->update([
+                            'starts_at' => $newDate,
+                            'ends_at' => $newDate->copy()->addMinutes($duration),
+                            'rescheduled_at' => now(),
+                        ]);
+                    }
+                    
+                    Notification::make()
+                        ->title('Termine verschoben')
+                        ->success()
+                        ->body(count($records) . ' Termine wurden verschoben.')
+                        ->send();
+                }),
+                
+            BulkAction::make('export')
+                ->label('Exportieren')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->form([
+                    Forms\Components\Select::make('format')
+                        ->label('Format')
+                        ->options([
+                            'csv' => 'CSV',
+                            'xlsx' => 'Excel',
+                            'pdf' => 'PDF',
+                            'ics' => 'iCalendar (.ics)',
+                        ])
+                        ->default('csv')
+                        ->required(),
+                        
+                    Forms\Components\CheckboxList::make('columns')
+                        ->label('Spalten')
+                        ->options([
+                            'customer' => 'Kunde',
+                            'phone' => 'Telefon',
+                            'email' => 'E-Mail',
+                            'service' => 'Leistung',
+                            'staff' => 'Mitarbeiter',
+                            'date' => 'Datum',
+                            'time' => 'Uhrzeit',
+                            'duration' => 'Dauer',
+                            'status' => 'Status',
+                            'notes' => 'Notizen',
+                        ])
+                        ->default(['customer', 'service', 'date', 'time', 'status'])
+                        ->columns(2),
+                ])
+                ->action(function (Collection $records, array $data) {
+                    // Export logic here
+                    return response()->streamDownload(function () use ($records, $data) {
+                        // Generate export file
+                    }, 'appointments-export.' . $data['format']);
+                }),
+                
+            Tables\Actions\DeleteBulkAction::make()
+                ->requiresConfirmation()
+                ->modalHeading('Termine löschen')
+                ->modalDescription('Sind Sie sicher, dass Sie die ausgewählten Termine löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.'),
+        ];
+    }
+    
+    protected static function getActiveFiltersCount(): ?string
+    {
+        // Count active filters
+        $count = 0;
+        // Implementation here
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\UltimateListAppointments::route('/'),
+            'create' => Pages\CreateAppointment::route('/create'),
+            'edit' => Pages\EditAppointment::route('/{record}/edit'),
+            'view' => Pages\ViewAppointment::route('/{record}'),
+        ];
+    }
+    
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::whereDate('starts_at', today())->where('status', 'confirmed')->count();
+    }
+    
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::whereDate('starts_at', today())->where('status', 'confirmed')->count() > 0 ? 'primary' : 'gray';
+    }
+    
+    public static function getWidgets(): array
+    {
+        return [
+            // Widgets\AppointmentCalendar::class,
+            // Widgets\AppointmentStatsWidget::class,
+        ];
+    }
+}

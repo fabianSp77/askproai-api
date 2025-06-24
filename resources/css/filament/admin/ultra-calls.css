@@ -1,0 +1,321 @@
+/* Ultra Modern Calls UI - Next Generation Design */
+
+:root {
+    --ultra-primary: #3B82F6;
+    --ultra-success: #10B981;
+    --ultra-warning: #F59E0B;
+    --ultra-danger: #EF4444;
+    --ultra-info: #6366F1;
+    --ultra-dark: #1F2937;
+    --ultra-light: #F9FAFB;
+    --ultra-border: #E5E7EB;
+    --ultra-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --ultra-glow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+/* Call Stats Cards */
+.ultra-call-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.ultra-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.ultra-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--ultra-gradient);
+}
+
+.ultra-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--ultra-glow);
+}
+
+.ultra-stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--ultra-dark);
+    margin: 0.5rem 0;
+}
+
+.ultra-stat-label {
+    color: #6B7280;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ultra-stat-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    margin-top: 0.5rem;
+}
+
+.ultra-stat-trend.positive {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--ultra-success);
+}
+
+.ultra-stat-trend.negative {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--ultra-danger);
+}
+
+/* Call Cards - Rich Information Display */
+.ultra-call-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.ultra-call-card:hover {
+    border-color: var(--ultra-primary);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.ultra-call-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.ultra-call-customer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.ultra-call-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--ultra-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.ultra-call-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    color: #6B7280;
+    font-size: 0.875rem;
+}
+
+.ultra-call-sentiment {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #F3F4F6;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.ultra-sentiment-emoji {
+    font-size: 1.5rem;
+}
+
+.ultra-sentiment-score {
+    font-weight: 600;
+}
+
+.ultra-call-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+
+.ultra-tag {
+    padding: 0.25rem 0.75rem;
+    background: #EBF5FF;
+    color: var(--ultra-primary);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Audio Player */
+.ultra-audio-player {
+    background: #F9FAFB;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.ultra-waveform {
+    height: 60px;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(to right, var(--ultra-primary) 0%, var(--ultra-info) 100%);
+    opacity: 0.2;
+    border-radius: 4px;
+}
+
+.ultra-playback-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ultra-play-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--ultra-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.ultra-play-button:hover {
+    background: #2563EB;
+    transform: scale(1.1);
+}
+
+.ultra-timeline {
+    flex: 1;
+    height: 4px;
+    background: #E5E7EB;
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+}
+
+.ultra-timeline-progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: var(--ultra-primary);
+    border-radius: 2px;
+    width: 30%;
+}
+
+/* Live Call Indicator */
+.ultra-live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--ultra-danger);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.ultra-live-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--ultra-danger);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .ultra-call-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .ultra-call-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .ultra-call-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .ultra-stat-card,
+    .ultra-call-card {
+        background: #374151;
+        color: white;
+    }
+    
+    .ultra-stat-label,
+    .ultra-call-meta {
+        color: #9CA3AF;
+    }
+    
+    .ultra-audio-player {
+        background: #1F2937;
+    }
+    
+    .ultra-tag {
+        background: rgba(59, 130, 246, 0.2);
+    }
+}
+
+/* Smooth Transitions */
+* {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Loading States */
+.ultra-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}

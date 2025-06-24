@@ -34,7 +34,9 @@ class CleanupOldNotifications extends Command
         
         $this->info("Cleaning up notifications older than {$days} days...");
         
-        $deleted = DB::table('notification_log')
+        // notification_log table has been removed - use webhook_events instead
+        $deleted = DB::table('webhook_events')
+            ->where('provider', 'notification')
             ->where('created_at', '<', $cutoffDate)
             ->delete();
             

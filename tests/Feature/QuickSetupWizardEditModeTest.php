@@ -66,6 +66,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_loads_existing_company_data_in_edit_mode()
     {
         Livewire::test(QuickSetupWizard::class, [
@@ -85,6 +88,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_shows_mode_selection_when_companies_exist()
     {
         Livewire::test(QuickSetupWizard::class)
@@ -95,6 +101,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_update_existing_company()
     {
         $livewire = Livewire::test(QuickSetupWizard::class, [
@@ -128,6 +137,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_does_not_duplicate_services_when_updating()
     {
         $serviceCount = $this->existingCompany->services()->count();
@@ -148,6 +160,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_updates_phone_numbers_correctly()
     {
         Livewire::test(QuickSetupWizard::class, [
@@ -178,6 +193,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_does_not_overwrite_api_key_when_placeholder_shown()
     {
         $originalKey = $this->existingCompany->calcom_api_key;
@@ -198,6 +216,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_switch_from_new_to_edit_mode()
     {
         $livewire = Livewire::test(QuickSetupWizard::class)
@@ -211,6 +232,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_validates_required_fields_in_edit_mode()
     {
         Livewire::test(QuickSetupWizard::class, [
@@ -225,6 +249,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_staff_updates_in_edit_mode()
     {
         // Create existing staff
@@ -245,6 +272,9 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_shows_correct_submit_button_label()
     {
         // New mode

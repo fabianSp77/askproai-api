@@ -39,6 +39,9 @@ class QuickSetupWizardE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function complete_wizard_flow_creates_all_required_entities()
     {
         $this->actingAs($this->admin);
@@ -182,6 +185,9 @@ class QuickSetupWizardE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function wizard_validates_required_fields_at_each_step()
     {
         $this->actingAs($this->admin);
@@ -208,6 +214,9 @@ class QuickSetupWizardE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function wizard_integration_check_shows_live_api_status()
     {
         $this->actingAs($this->admin);
@@ -254,6 +263,9 @@ class QuickSetupWizardE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function wizard_creates_industry_specific_prompt_template()
     {
         $this->actingAs($this->admin);
@@ -284,6 +296,9 @@ class QuickSetupWizardE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function wizard_review_step_shows_health_check_status()
     {
         $this->actingAs($this->admin);

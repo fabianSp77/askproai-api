@@ -10,19 +10,19 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
-        \App\Http\Middleware\ResponseWrapper::class, // Absolute first - wraps entire pipeline
-        \App\Http\Middleware\EnsureProperResponseFormat::class, // Second layer of response formatting
+        // \App\Http\Middleware\ResponseWrapper::class, // Disabled - interferes with Livewire
+        // \App\Http\Middleware\EnsureProperResponseFormat::class, // Disabled - interferes with Livewire
         \App\Http\Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        \App\Http\Middleware\FixLivewireHeadersIssue::class, // Fix Livewire headers issue - must be early
-        \App\Http\Middleware\CorrelationIdMiddleware::class, // Add correlation ID to all requests
-        \App\Http\Middleware\EnsureTenantContext::class, // Add tenant context globally
-        \App\Http\Middleware\ThreatDetectionMiddleware::class, // Add threat detection
-        \App\Http\Middleware\MonitoringMiddleware::class, // Performance and security monitoring
+        // \App\Http\Middleware\FixLivewireHeadersIssue::class, // Fix Livewire headers issue - must be early
+        // \App\Http\Middleware\CorrelationIdMiddleware::class, // Add correlation ID to all requests
+        // \App\Http\Middleware\EnsureTenantContext::class, // Add tenant context globally
+        // \App\Http\Middleware\ThreatDetectionMiddleware::class, // Add threat detection
+        // \App\Http\Middleware\MonitoringMiddleware::class, // Performance and security monitoring
     ];
     /* -------------------------------------------------------------------- *
      | 1) Web & API Gruppen (unverändert)                                   |
@@ -36,6 +36,7 @@ class Kernel extends HttpKernel
             \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\CheckCookieConsent::class,
+            \App\Http\Middleware\LivewireErrorHandler::class,
             \App\Http\Middleware\ResponseCompressionMiddleware::class,
         ],
         'api' => [

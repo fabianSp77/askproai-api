@@ -367,7 +367,8 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                     ->label('Unternehmen')
                     ->searchable()
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->getStateUsing(fn ($record) => $record?->company?->name ?? '-'),
                 
                 Tables\Columns\TextColumn::make('city')
                     ->label('Stadt')

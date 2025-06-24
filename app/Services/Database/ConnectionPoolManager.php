@@ -65,6 +65,22 @@ class ConnectionPoolManager
     }
     
     /**
+     * Set configuration
+     */
+    public function setConfig(array $config): void
+    {
+        self::$config = array_merge(self::$config, $config);
+    }
+    
+    /**
+     * Get configuration
+     */
+    public function getConfig(): array
+    {
+        return self::$config;
+    }
+    
+    /**
      * Initialize connection pools
      */
     public static function initialize()
@@ -160,7 +176,15 @@ class ConnectionPoolManager
         
         while ($attempts < self::$config['retry_attempts']) {
             try {
-                $config = config('database.connections.' . ($type === 'read' ? 'mysql_read' : 'mysql'));
+                // Default to 'mysql' if 'mysql_read' doesn't exist
+                $configKey = ($type === 'read' && config('database.connections.mysql_read')) 
+                    ? 'mysql_read' 
+                    : 'mysql';
+                $config = config('database.connections.' . $configKey);
+                
+                if (!$config) {
+                    throw new \Exception("Database configuration not found for: " . $configKey);
+                }
                 
                 // Create PDO with connection pooling options
                 $pdo = new PDO(
@@ -324,6 +348,33 @@ class ConnectionPoolManager
                 }
             }
         }
+    }
+    
+    /**
+     * Clean up all connections
+     */
+    public function cleanup(): void
+    {
+        foreach (['write', 'read'] as $type) {
+            foreach (self::$pools[$type] as $conn) {
+                try {
+                    $conn['connection']->disconnect();
+                } catch (\Exception $e) {
+                    // Ignore errors during cleanup
+                }
+            }
+            self::$pools[$type] = [];
+        }
+        
+        self::$stats = [
+            'total_connections' => 0,
+            'active_connections' => 0,
+            'idle_connections' => 0,
+            'failed_connections' => 0,
+            'recycled_connections' => 0
+        ];
+        
+        Log::info('Database connection pool cleaned up');
     }
     
     /**

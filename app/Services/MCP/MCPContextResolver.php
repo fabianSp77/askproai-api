@@ -8,6 +8,7 @@ use App\Models\PhoneNumber;
 use App\Services\PhoneNumberResolver;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\SafeQueryHelper;
 
 class MCPContextResolver
 {
@@ -294,8 +295,10 @@ class MCPContextResolver
         $prefix = substr($phoneNumber, 0, 6);
         
         // Find branches with similar phone numbers
-        $similarPhones = PhoneNumber::where('phone_number', 'LIKE', $prefix . '%')
-            ->where('is_active', true)
+        $similarPhones = PhoneNumber::where('is_active', true)
+            ->where(function($q) use ($prefix) {
+                SafeQueryHelper::whereLike($q, 'phone_number', $prefix, 'right');
+            })
             ->with('branch.company')
             ->limit(3)
             ->get();

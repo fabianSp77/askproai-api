@@ -15,7 +15,7 @@ return new class extends Migration
         // Phone number lookups - most critical path
         if (!$this->indexExists('phone_numbers', 'idx_phone_branch_lookup')) {
             Schema::table('phone_numbers', function (Blueprint $table) {
-                $table->index(['number', 'branch_id', 'active'], 'idx_phone_branch_lookup');
+                $table->index(['number', 'branch_id', 'is_active'], 'idx_phone_branch_lookup');
             });
         }
 

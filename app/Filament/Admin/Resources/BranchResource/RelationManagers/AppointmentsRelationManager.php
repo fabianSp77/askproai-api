@@ -45,7 +45,8 @@ class AppointmentsRelationManager extends RelationManager
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('service.name')
-                    ->searchable(),
+                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record?->service?->name ?? '-'),
                 Tables\Columns\TextColumn::make('staff.first_name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('customer_name')

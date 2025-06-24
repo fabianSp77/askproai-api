@@ -1,0 +1,3228 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Complete documentation for AskProAI platform">
+      
+      
+      
+        <link rel="canonical" href="https://api.askproai.de/mkdocs/MCP_EVOLUTION_SYSTEM/">
+      
+      
+        <link rel="prev" href="../MCP_SETUP_COMPLETE_GUIDE/">
+      
+      
+        <link rel="next" href="../CALCOM_MCP_SERVER_API/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Evolution System - AskProAI Complete Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mcp-discovery-evolution-system" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AskProAI Complete Documentation" class="md-header__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AskProAI Complete Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Evolution System
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../status/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  System Status
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../architecture/overview/" class="md-tabs__link">
+          
+  
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/models/" class="md-tabs__link">
+          
+  
+  
+  API Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../MCP_COMPLETE_OVERVIEW/" class="md-tabs__link">
+          
+  
+  
+  MCP System
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../SERVICE_ARCHITECTURE/" class="md-tabs__link">
+          
+  
+  
+  Service Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../DEPLOYMENT_GUIDE/" class="md-tabs__link">
+          
+  
+  
+  Operations
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../configuration/reference/" class="md-tabs__link">
+          
+  
+  
+  Configuration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../TESTING_STRATEGY/" class="md-tabs__link">
+          
+  
+  
+  Testing
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../database_cleanup_plan/" class="md-tabs__link">
+          
+  
+  
+  Planning
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../DASHBOARD_REDESIGN_README/" class="md-tabs__link">
+          
+  
+  
+  UI/UX
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../STRUCTURED_LOGGER_GUIDE/" class="md-tabs__link">
+          
+  
+  
+  Developer Tools
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../statistics/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Statistics
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AskProAI Complete Documentation" class="md-nav__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AskProAI Complete Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    System Status
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/database-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database Schema
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/services/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Services
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/mcp-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MCP Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            API Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/routes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Routes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    MCP System
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            MCP System
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MCP_COMPLETE_OVERVIEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Complete Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MCP_INTEGRATION_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Integration Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MCP_SETUP_COMPLETE_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Setup Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Evolution System
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Evolution System
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-mcp-discovery-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. MCP Discovery Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-uiux-best-practices-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. UI/UX Best Practices MCP
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-safe-deployment-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Safe Deployment System
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-continuous-improvement-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Continuous Improvement Engine
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#command-line-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      Command Line Interface
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Line Interface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-discover-new-mcps" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Discover New MCPs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-analyze-uiux" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Analyze UI/UX
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-safe-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Safe Deployment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-continuous-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Continuous Improvement
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-relevance-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Relevance Scoring
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MCP Relevance Scoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#priority-categories-40-weight" class="md-nav__link">
+    <span class="md-ellipsis">
+      Priority Categories (40% weight)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-categories-30-weight" class="md-nav__link">
+    <span class="md-ellipsis">
+      Secondary Categories (30% weight)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keywords-20-weight" class="md-nav__link">
+    <span class="md-ellipsis">
+      Keywords (20% weight)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#popularity-maintenance-10-weight" class="md-nav__link">
+    <span class="md-ellipsis">
+      Popularity &amp; Maintenance (10% weight)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment-safety-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment Safety Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment Safety Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pre-deployment-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pre-Deployment Checks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zero-downtime-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Zero-Downtime Strategy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rollback-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rollback Mechanism
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#continuous-improvement-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Continuous Improvement Metrics
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Continuous Improvement Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#performance-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Tracking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bottleneck-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bottleneck Detection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimization-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimization Types
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-askproai" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration with AskProAI
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration with AskProAI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Automatic Scheduling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dashboard-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dashboard Integration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notification-channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notification Channels
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best Practices
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mcp-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Discovery
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uiux-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      UI/UX Improvements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deployments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployments
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#continuous-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      Continuous Improvement
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mcp-discovery-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Discovery Issues
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deployment-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment Failures
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Issues
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Considerations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future Enhancements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Support
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CALCOM_MCP_SERVER_API/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cal.com MCP Server
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../KNOWLEDGE_MCP_SERVER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Knowledge MCP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QUEUE_MCP_IMPLEMENTATION_COMPLETE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Queue MCP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SENTRY_MCP_INTEGRATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sentry MCP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Service Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Service Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SERVICE_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Service Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ENHANCED_BOOKING_SERVICE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Enhanced Booking
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../UNIVERSAL_BOOKING_SYSTEM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Universal Booking
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CALCOM_V2_API_DOCUMENTATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cal.com V2 API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Operations
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Operations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEPLOYMENT_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deployment Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MONITORING_AND_ALERTING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Monitoring Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TROUBLESHOOTING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operations/security-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Audit
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PERFORMANCE_INDEXES_MIGRATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Performance Indexes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            Configuration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DATABASE_SAFETY_GUIDELINES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database Safety
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            Testing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TESTING_STRATEGY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing Strategy
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../UNIVERSAL_BOOKING_TEST_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Universal Booking Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Planning
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            Planning
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database_cleanup_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database Cleanup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../service_consolidation_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Service Consolidation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    UI/UX
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            UI/UX
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DASHBOARD_REDESIGN_README/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dashboard Redesign
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Developer Tools
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            Developer Tools
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../STRUCTURED_LOGGER_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Structured Logger
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RETELL_WEBHOOK_MCP_MIGRATION_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Retell Webhook Migration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../statistics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Statistics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-mcp-discovery-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. MCP Discovery Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-uiux-best-practices-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. UI/UX Best Practices MCP
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-safe-deployment-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Safe Deployment System
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-continuous-improvement-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Continuous Improvement Engine
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#command-line-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      Command Line Interface
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Command Line Interface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-discover-new-mcps" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Discover New MCPs
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-analyze-uiux" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Analyze UI/UX
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-safe-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Safe Deployment
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-continuous-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Continuous Improvement
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mcp-relevance-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Relevance Scoring
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MCP Relevance Scoring">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#priority-categories-40-weight" class="md-nav__link">
+    <span class="md-ellipsis">
+      Priority Categories (40% weight)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#secondary-categories-30-weight" class="md-nav__link">
+    <span class="md-ellipsis">
+      Secondary Categories (30% weight)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keywords-20-weight" class="md-nav__link">
+    <span class="md-ellipsis">
+      Keywords (20% weight)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#popularity-maintenance-10-weight" class="md-nav__link">
+    <span class="md-ellipsis">
+      Popularity &amp; Maintenance (10% weight)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deployment-safety-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment Safety Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deployment Safety Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pre-deployment-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pre-Deployment Checks
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zero-downtime-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Zero-Downtime Strategy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rollback-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      Rollback Mechanism
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#continuous-improvement-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Continuous Improvement Metrics
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Continuous Improvement Metrics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#performance-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Tracking
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bottleneck-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bottleneck Detection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimization-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimization Types
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-askproai" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration with AskProAI
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration with AskProAI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-scheduling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Automatic Scheduling
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dashboard-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dashboard Integration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notification-channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notification Channels
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best Practices
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mcp-discovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Discovery
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uiux-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      UI/UX Improvements
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deployments" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployments
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#continuous-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      Continuous Improvement
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mcp-discovery-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      MCP Discovery Issues
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deployment-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deployment Failures
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Issues
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#security-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Considerations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future Enhancements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Support
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="mcp-discovery-evolution-system">MCP Discovery &amp; Evolution System<a class="headerlink" href="#mcp-discovery-evolution-system" title="Permanent link">&para;</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The MCP Discovery &amp; Evolution System is a comprehensive framework for AskProAI that automatically discovers, evaluates, and integrates new Model Context Protocol (MCP) capabilities. This system ensures AskProAI stays at the forefront of AI-assisted development by continuously monitoring and adopting relevant MCPs.</p>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
+<h3 id="1-mcp-discovery-service">1. MCP Discovery Service<a class="headerlink" href="#1-mcp-discovery-service" title="Permanent link">&para;</a></h3>
+<p>Located at: <code>app/Services/MCP/Discovery/MCPDiscoveryService.php</code></p>
+<p><strong>Key Features:</strong>
+- Multi-source discovery (Anthropic Registry, GitHub, NPM, Community)
+- Relevance scoring based on AskProAI's needs
+- Automatic catalog maintenance
+- Smart filtering for German market focus</p>
+<p><strong>Configuration:</strong> <code>config/mcp-discovery.php</code></p>
+<h3 id="2-uiux-best-practices-mcp">2. UI/UX Best Practices MCP<a class="headerlink" href="#2-uiux-best-practices-mcp" title="Permanent link">&para;</a></h3>
+<p>Located at: <code>app/Services/MCP/UIUXBestPracticesMCP.php</code></p>
+<p><strong>Capabilities:</strong>
+- Laravel/Filament best practices monitoring
+- Performance analysis
+- Accessibility scoring
+- Responsive design checking
+- Trend monitoring</p>
+<p><strong>Configuration:</strong> <code>config/mcp-uiux.php</code></p>
+<h3 id="3-safe-deployment-system">3. Safe Deployment System<a class="headerlink" href="#3-safe-deployment-system" title="Permanent link">&para;</a></h3>
+<p>Located at: <code>app/Services/Deployment/SafeDeploymentService.php</code></p>
+<p><strong>Features:</strong>
+- Zero-downtime deployments
+- Automatic rollback on failure
+- Comprehensive pre/post checks
+- Blue-green deployment support
+- Health monitoring</p>
+<p><strong>Configuration:</strong> <code>config/deployment.php</code></p>
+<h3 id="4-continuous-improvement-engine">4. Continuous Improvement Engine<a class="headerlink" href="#4-continuous-improvement-engine" title="Permanent link">&para;</a></h3>
+<p>Located at: <code>app/Services/ContinuousImprovement/ImprovementEngine.php</code></p>
+<p><strong>Capabilities:</strong>
+- Performance bottleneck detection
+- Pattern recognition
+- Predictive analysis
+- Automatic optimization suggestions
+- Real-time monitoring</p>
+<p><strong>Configuration:</strong> <code>config/improvement-engine.php</code></p>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<h3 id="command-line-interface">Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permanent link">&para;</a></h3>
+<h4 id="1-discover-new-mcps">1. Discover New MCPs<a class="headerlink" href="#1-discover-new-mcps" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Discover MCPs from all sources</span>
+php<span class="w"> </span>artisan<span class="w"> </span>mcp:discover
+
+<span class="c1"># Discover from specific source</span>
+php<span class="w"> </span>artisan<span class="w"> </span>mcp:discover<span class="w"> </span>--source<span class="o">=</span>github
+
+<span class="c1"># Auto-install highly relevant MCPs</span>
+php<span class="w"> </span>artisan<span class="w"> </span>mcp:discover<span class="w"> </span>--install
+
+<span class="c1"># Dry run to see what would be discovered</span>
+php<span class="w"> </span>artisan<span class="w"> </span>mcp:discover<span class="w"> </span>--dry-run
+</code></pre></div>
+<h4 id="2-analyze-uiux">2. Analyze UI/UX<a class="headerlink" href="#2-analyze-uiux" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Full UI/UX analysis</span>
+php<span class="w"> </span>artisan<span class="w"> </span>uiux:analyze
+
+<span class="c1"># Analyze specific component</span>
+php<span class="w"> </span>artisan<span class="w"> </span>uiux:analyze<span class="w"> </span>--component<span class="o">=</span>AppointmentResource
+
+<span class="c1"># Generate improvement suggestions</span>
+php<span class="w"> </span>artisan<span class="w"> </span>uiux:analyze<span class="w"> </span>--suggest
+
+<span class="c1"># Monitor UI/UX trends</span>
+php<span class="w"> </span>artisan<span class="w"> </span>uiux:analyze<span class="w"> </span>--monitor
+</code></pre></div>
+<h4 id="3-safe-deployment">3. Safe Deployment<a class="headerlink" href="#3-safe-deployment" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Deploy with all safety checks</span>
+php<span class="w"> </span>artisan<span class="w"> </span>deploy:safe
+
+<span class="c1"># Deploy specific branch</span>
+php<span class="w"> </span>artisan<span class="w"> </span>deploy:safe<span class="w"> </span>--branch<span class="o">=</span>feature/new-feature
+
+<span class="c1"># Skip tests (not recommended)</span>
+php<span class="w"> </span>artisan<span class="w"> </span>deploy:safe<span class="w"> </span>--skip-tests
+
+<span class="c1"># Disable automatic rollback</span>
+php<span class="w"> </span>artisan<span class="w"> </span>deploy:safe<span class="w"> </span>--no-rollback
+</code></pre></div>
+<h4 id="4-continuous-improvement">4. Continuous Improvement<a class="headerlink" href="#4-continuous-improvement" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run system analysis</span>
+php<span class="w"> </span>artisan<span class="w"> </span>improvement:analyze
+
+<span class="c1"># Apply specific optimization</span>
+php<span class="w"> </span>artisan<span class="w"> </span>improvement:analyze<span class="w"> </span>--apply<span class="o">=</span>query_optimization_123
+
+<span class="c1"># Start continuous monitoring</span>
+php<span class="w"> </span>artisan<span class="w"> </span>improvement:analyze<span class="w"> </span>--monitor
+
+<span class="c1"># Generate detailed report</span>
+php<span class="w"> </span>artisan<span class="w"> </span>improvement:analyze<span class="w"> </span>--report
+</code></pre></div>
+<h2 id="mcp-relevance-scoring">MCP Relevance Scoring<a class="headerlink" href="#mcp-relevance-scoring" title="Permanent link">&para;</a></h2>
+<p>The system evaluates MCPs based on:</p>
+<h3 id="priority-categories-40-weight">Priority Categories (40% weight)<a class="headerlink" href="#priority-categories-40-weight" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Calendar/Scheduling</li>
+<li>Appointment/Booking</li>
+<li>Telephony/Voice</li>
+<li>AI/Conversation</li>
+</ul>
+<h3 id="secondary-categories-30-weight">Secondary Categories (30% weight)<a class="headerlink" href="#secondary-categories-30-weight" title="Permanent link">&para;</a></h3>
+<ul>
+<li>CRM/Customer</li>
+<li>Business/Automation</li>
+<li>Monitoring/Analytics</li>
+<li>Performance</li>
+</ul>
+<h3 id="keywords-20-weight">Keywords (20% weight)<a class="headerlink" href="#keywords-20-weight" title="Permanent link">&para;</a></h3>
+<ul>
+<li>High Priority: laravel, filament, calcom, retell, german, gdpr</li>
+<li>Medium Priority: php, mysql, webhook, multi-tenant, saas</li>
+</ul>
+<h3 id="popularity-maintenance-10-weight">Popularity &amp; Maintenance (10% weight)<a class="headerlink" href="#popularity-maintenance-10-weight" title="Permanent link">&para;</a></h3>
+<ul>
+<li>GitHub stars</li>
+<li>NPM downloads</li>
+<li>Last update date</li>
+</ul>
+<h2 id="deployment-safety-features">Deployment Safety Features<a class="headerlink" href="#deployment-safety-features" title="Permanent link">&para;</a></h2>
+<h3 id="pre-deployment-checks">Pre-Deployment Checks<a class="headerlink" href="#pre-deployment-checks" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Database Connectivity</strong> - Ensures database is accessible</li>
+<li><strong>Pending Migrations</strong> - Identifies migrations to run</li>
+<li><strong>Test Suite</strong> - Runs all tests</li>
+<li><strong>Disk Space</strong> - Verifies sufficient space</li>
+<li><strong>External Services</strong> - Checks Cal.com, Retell.ai availability</li>
+</ol>
+<h3 id="zero-downtime-strategy">Zero-Downtime Strategy<a class="headerlink" href="#zero-downtime-strategy" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Blue-Green Deployment</strong></li>
+<li>Deploy to inactive environment</li>
+<li>Run health checks</li>
+<li>
+<p>Switch traffic atomically</p>
+</li>
+<li>
+<p><strong>Rolling Deployment</strong></p>
+</li>
+<li>Update instances gradually</li>
+<li>Monitor each instance</li>
+<li>Automatic rollback on failure</li>
+</ol>
+<h3 id="rollback-mechanism">Rollback Mechanism<a class="headerlink" href="#rollback-mechanism" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Automatic database backup before deployment</li>
+<li>Code snapshot creation</li>
+<li>Configuration preservation</li>
+<li>One-command rollback: <code>php artisan deploy:rollback</code></li>
+</ul>
+<h2 id="continuous-improvement-metrics">Continuous Improvement Metrics<a class="headerlink" href="#continuous-improvement-metrics" title="Permanent link">&para;</a></h2>
+<h3 id="performance-tracking">Performance Tracking<a class="headerlink" href="#performance-tracking" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Response times (API, Web, Database)</li>
+<li>Throughput (requests/second)</li>
+<li>Error rates</li>
+<li>Resource utilization</li>
+</ul>
+<h3 id="bottleneck-detection">Bottleneck Detection<a class="headerlink" href="#bottleneck-detection" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Database</strong>: Slow queries, lock waits, connection exhaustion</li>
+<li><strong>API</strong>: High latency, timeouts, error spikes</li>
+<li><strong>Queue</strong>: Processing delays, growing backlogs</li>
+<li><strong>Resources</strong>: CPU/Memory/Disk constraints</li>
+</ul>
+<h3 id="optimization-types">Optimization Types<a class="headerlink" href="#optimization-types" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Query Optimization</strong></li>
+<li>Missing index detection</li>
+<li>N+1 query identification</li>
+<li>
+<p>Query rewriting suggestions</p>
+</li>
+<li>
+<p><strong>Cache Optimization</strong></p>
+</li>
+<li>Hit rate improvement</li>
+<li>Cache warming strategies</li>
+<li>
+<p>TTL optimization</p>
+</li>
+<li>
+<p><strong>Architecture Optimization</strong></p>
+</li>
+<li>Horizontal scaling recommendations</li>
+<li>Service decomposition</li>
+<li>Load balancing improvements</li>
+</ol>
+<h2 id="integration-with-askproai">Integration with AskProAI<a class="headerlink" href="#integration-with-askproai" title="Permanent link">&para;</a></h2>
+<h3 id="automatic-scheduling">Automatic Scheduling<a class="headerlink" href="#automatic-scheduling" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># config/schedule.php</span>
+<span class="l l-Scalar l-Scalar-Plain">$schedule-&gt;command(&#39;mcp:discover&#39;)-&gt;daily();</span>
+<span class="l l-Scalar l-Scalar-Plain">$schedule-&gt;command(&#39;uiux:analyze&#39;)-&gt;weekly();</span>
+<span class="l l-Scalar l-Scalar-Plain">$schedule-&gt;command(&#39;improvement:analyze&#39;)-&gt;hourly();</span>
+</code></pre></div>
+<h3 id="dashboard-integration">Dashboard Integration<a class="headerlink" href="#dashboard-integration" title="Permanent link">&para;</a></h3>
+<p>Access real-time metrics at: <code>/admin/system-improvements</code></p>
+<h3 id="notification-channels">Notification Channels<a class="headerlink" href="#notification-channels" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Slack webhooks for critical alerts</li>
+<li>Email summaries for weekly reports</li>
+<li>Dashboard notifications for new discoveries</li>
+</ul>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<h3 id="mcp-discovery">MCP Discovery<a class="headerlink" href="#mcp-discovery" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Review discovered MCPs weekly</li>
+<li>Test in staging before production</li>
+<li>Document integration decisions</li>
+<li>Monitor MCP performance impact</li>
+</ol>
+<h3 id="uiux-improvements">UI/UX Improvements<a class="headerlink" href="#uiux-improvements" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Implement high-priority suggestions first</li>
+<li>A/B test major UI changes</li>
+<li>Monitor user feedback</li>
+<li>Maintain accessibility standards</li>
+</ol>
+<h3 id="deployments">Deployments<a class="headerlink" href="#deployments" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Always deploy during low-traffic periods</li>
+<li>Monitor for 15 minutes post-deployment</li>
+<li>Keep rollback scripts updated</li>
+<li>Document deployment decisions</li>
+</ol>
+<h3 id="continuous-improvement">Continuous Improvement<a class="headerlink" href="#continuous-improvement" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Review recommendations weekly</li>
+<li>Prioritize based on impact vs effort</li>
+<li>Test optimizations in staging</li>
+<li>Monitor optimization results</li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="mcp-discovery-issues">MCP Discovery Issues<a class="headerlink" href="#mcp-discovery-issues" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Clear discovery cache</span>
+php<span class="w"> </span>artisan<span class="w"> </span>cache:clear<span class="w"> </span>--tags<span class="o">=</span>mcp-discovery
+
+<span class="c1"># Re-scan all sources</span>
+php<span class="w"> </span>artisan<span class="w"> </span>mcp:discover<span class="w"> </span>--force
+
+<span class="c1"># Check discovery logs</span>
+tail<span class="w"> </span>-f<span class="w"> </span>storage/logs/mcp-discovery.log
+</code></pre></div>
+<h3 id="deployment-failures">Deployment Failures<a class="headerlink" href="#deployment-failures" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check deployment status</span>
+php<span class="w"> </span>artisan<span class="w"> </span>deploy:status
+
+<span class="c1"># View deployment logs</span>
+tail<span class="w"> </span>-f<span class="w"> </span>storage/logs/deployment.log
+
+<span class="c1"># Manual rollback</span>
+php<span class="w"> </span>artisan<span class="w"> </span>deploy:rollback<span class="w"> </span>--deployment-id<span class="o">=</span>xxx
+</code></pre></div>
+<h3 id="performance-issues">Performance Issues<a class="headerlink" href="#performance-issues" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Run immediate analysis</span>
+php<span class="w"> </span>artisan<span class="w"> </span>improvement:analyze<span class="w"> </span>--module<span class="o">=</span>performance
+
+<span class="c1"># Check bottleneck details</span>
+php<span class="w"> </span>artisan<span class="w"> </span>improvement:bottlenecks<span class="w"> </span>--verbose
+
+<span class="c1"># Export metrics for analysis</span>
+php<span class="w"> </span>artisan<span class="w"> </span>improvement:export<span class="w"> </span>--format<span class="o">=</span>csv
+</code></pre></div>
+<h2 id="security-considerations">Security Considerations<a class="headerlink" href="#security-considerations" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>MCP Verification</strong></li>
+<li>All MCPs are scanned for security issues</li>
+<li>Code review required for auto-installations</li>
+<li>
+<p>Sandboxed testing environment</p>
+</li>
+<li>
+<p><strong>Deployment Security</strong></p>
+</li>
+<li>Encrypted backups</li>
+<li>Secure credential handling</li>
+<li>
+<p>Audit trail for all deployments</p>
+</li>
+<li>
+<p><strong>Data Protection</strong></p>
+</li>
+<li>GDPR compliance maintained</li>
+<li>No customer data in improvement metrics</li>
+<li>Anonymized performance tracking</li>
+</ol>
+<h2 id="future-enhancements">Future Enhancements<a class="headerlink" href="#future-enhancements" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>AI-Powered Optimization</strong></li>
+<li>Machine learning for pattern detection</li>
+<li>Predictive optimization timing</li>
+<li>
+<p>Automated A/B testing</p>
+</li>
+<li>
+<p><strong>Advanced MCP Integration</strong></p>
+</li>
+<li>Custom MCP development</li>
+<li>MCP marketplace integration</li>
+<li>
+<p>Community MCP sharing</p>
+</li>
+<li>
+<p><strong>Enhanced Monitoring</strong></p>
+</li>
+<li>Real-time performance dashboards</li>
+<li>Mobile app for monitoring</li>
+<li>Custom alert rules</li>
+</ol>
+<h2 id="support">Support<a class="headerlink" href="#support" title="Permanent link">&para;</a></h2>
+<p>For issues or questions:
+1. Check the troubleshooting guide above
+2. Review logs in <code>storage/logs/</code>
+3. Contact the development team
+4. Create an issue in the repository</p>
+<h2 id="conclusion">Conclusion<a class="headerlink" href="#conclusion" title="Permanent link">&para;</a></h2>
+<p>The MCP Discovery &amp; Evolution System ensures AskProAI remains cutting-edge by:
+- Automatically discovering new capabilities
+- Maintaining UI/UX excellence
+- Ensuring safe, reliable deployments
+- Continuously improving performance</p>
+<p>This system is designed to evolve with the platform, adapting to new technologies and requirements as they emerge.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "search.suggest", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+    
+  </body>
+</html>

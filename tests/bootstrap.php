@@ -1,50 +1,24 @@
-<?php // tests/bootstrap.php
+<?php
 
-use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
+// Increase memory limit for tests
+ini_set("memory_limit", "512M");
 
-// Funktion zum einmaligen Migrieren der Test-DB
-function bootstrap_run_migrations_once() {
-    // Verwende eine statische Variable oder eine temporäre Datei, um zu prüfen, ob schon migriert wurde
-    $migrationMarker = __DIR__ . '/../bootstrap/cache/.phpunit_migrated'; // Marker-Datei
+// Set longer execution time
+set_time_limit(300);
 
-    if (!file_exists($migrationMarker)) {
-        // Laden der Laravel-Anwendung NUR für die Migration
-        // Wichtig: Relative Pfade verwenden!
-        $app = require __DIR__.'/../bootstrap/app.php';
-        $app->make(Kernel::class)->bootstrap();
-
-        // Stelle sicher, dass die Test-DB-Konfiguration geladen wird
-        // (aus phpunit.xml oder .env.testing, falls vorhanden)
-        // Wir setzen sie hier nochmal explizit zur Sicherheit
-        config(['database.default' => 'sqlite']);
-        config(['database.connections.sqlite.database' => ':memory:']);
-
-        echo "BOOTSTRAP: Running migrate:fresh for testing database...\n";
-        try {
-            Artisan::call('migrate:fresh', ['--force' => true]);
-            echo "BOOTSTRAP: Migrations completed.\n";
-            // Erstelle die Marker-Datei, damit dies nicht nochmal passiert
-            file_put_contents($migrationMarker, 'done');
-        } catch (\Throwable $e) {
-            echo "BOOTSTRAP: FATAL ERROR DURING MIGRATION: " . $e->getMessage() . "\n";
-            // Lösche die Marker-Datei im Fehlerfall, um es beim nächsten Mal erneut zu versuchen
-            @unlink($migrationMarker);
-            exit(1); // Beende den Testlauf sofort
-        }
-        // Laravel Instanz für Migration hier beenden/vergessen (optional)
-        // $app->flush();
-        // unset($app);
-    } else {
-         // echo "BOOTSTRAP: Migrations already run for this test session.\n";
-    }
+// Disable Xdebug for faster tests
+if (function_exists("xdebug_disable")) {
+    xdebug_disable();
 }
 
-// Funktion direkt beim Laden dieser Datei aufrufen
-bootstrap_run_migrations_once();
+// Ensure we're in testing environment
+putenv("APP_ENV=testing");
+putenv("CACHE_DRIVER=array");
+putenv("SESSION_DRIVER=array");
+putenv("QUEUE_CONNECTION=sync");
+putenv("MAIL_MAILER=array");
+putenv("BROADCAST_DRIVER=log");
 
-// Lade den Composer Autoloader (wird von phpunit.xml's bootstrap auch gemacht, aber schadet nicht)
-require __DIR__.'/../vendor/autoload.php';
-
-?>
+// Disable MCP services during testing
+putenv("MCP_ENABLED=false");
+putenv("DB_CONNECTION_POOLING=false");

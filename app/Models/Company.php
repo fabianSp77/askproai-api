@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\Security\ApiKeyEncryptionService;
 
 class Company extends Model
 {
@@ -98,6 +99,60 @@ class Company extends Model
     public function branches(): HasMany
     {
         return $this->hasMany(Branch::class);
+    }
+    
+    /**
+     * Get decrypted Retell API key
+     */
+    public function getRetellApiKeyAttribute($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+        
+        $encryptionService = app(ApiKeyEncryptionService::class);
+        return $encryptionService->decrypt($value);
+    }
+    
+    /**
+     * Set encrypted Retell API key
+     */
+    public function setRetellApiKeyAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['retell_api_key'] = null;
+            return;
+        }
+        
+        $encryptionService = app(ApiKeyEncryptionService::class);
+        $this->attributes['retell_api_key'] = $encryptionService->encrypt($value);
+    }
+    
+    /**
+     * Get decrypted Cal.com API key
+     */
+    public function getCalcomApiKeyAttribute($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+        
+        $encryptionService = app(ApiKeyEncryptionService::class);
+        return $encryptionService->decrypt($value);
+    }
+    
+    /**
+     * Set encrypted Cal.com API key
+     */
+    public function setCalcomApiKeyAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['calcom_api_key'] = null;
+            return;
+        }
+        
+        $encryptionService = app(ApiKeyEncryptionService::class);
+        $this->attributes['calcom_api_key'] = $encryptionService->encrypt($value);
     }
 
     /**

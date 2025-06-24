@@ -31,11 +31,12 @@ class CustomerResource extends EnhancedResourceSimple
         return true;
     }
 
-    use MultiTenantResource, HasConsistentNavigation;
+    use MultiTenantResource;
     
     protected static ?string $model = Customer::class;
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationLabel = 'Kunden';
+    protected static ?int $navigationSort = 3;
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
@@ -288,6 +289,19 @@ class CustomerResource extends EnhancedResourceSimple
             ->modifyQueryUsing(fn ($query) => $query
                 ->with(['company', 'appointments' => fn($q) => $q->latest()->limit(5)])
                 ->withCount(['appointments', 'calls']))
+            ->striped()
+            ->contentGrid([
+                'md' => 1,
+                'xl' => 1,
+            ])
+            ->extremePaginationLinks()
+            ->paginated([10, 25, 50, 100])
+            ->paginationPageOptions([10, 25, 50, 100])
+            ->recordClasses(fn ($record) => match(true) {
+                $record->tags && in_array('VIP', $record->tags) => 'border-l-4 border-yellow-500',
+                $record->tags && in_array('Problemkunde', $record->tags) => 'border-l-4 border-red-500',
+                default => '',
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')

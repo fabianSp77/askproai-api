@@ -45,9 +45,12 @@ class WorkingHoursResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('staff.branch.company.name')->label('Unternehmen')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('staff.branch.name')->label('Filiale')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('staff.name')->label('Mitarbeiter')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('staff.branch.company.name')->label('Unternehmen')->sortable()->searchable()
+                    ->getStateUsing(fn ($record) => $record?->staff?->branch?->company?->name ?? '-'),
+                Tables\Columns\TextColumn::make('staff.branch.name')->label('Filiale')->sortable()->searchable()
+                    ->getStateUsing(fn ($record) => $record?->staff?->branch?->name ?? '-'),
+                Tables\Columns\TextColumn::make('staff.name')->label('Mitarbeiter')->sortable()->searchable()
+                    ->getStateUsing(fn ($record) => $record?->staff?->name ?? '-'),
                 Tables\Columns\TextColumn::make('weekday')->label('Wochentag')->formatStateUsing(function ($state) {
                     $map = [
                         1 => 'Montag',

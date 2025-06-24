@@ -82,7 +82,8 @@ class StaffResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
-                    ->searchable(),
+                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record?->branch?->name ?? '-'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Aktiv')
                     ->boolean(),

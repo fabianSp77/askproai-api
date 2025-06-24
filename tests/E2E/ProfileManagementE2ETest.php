@@ -79,6 +79,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_view_and_update_profile_information()
     {
         Event::fake();
@@ -144,6 +147,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_upload_and_manage_avatar()
     {
         // Upload avatar
@@ -191,6 +197,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_change_email_with_verification()
     {
         Mail::fake();
@@ -249,6 +258,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_change_password()
     {
         Mail::fake();
@@ -312,6 +324,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_manage_communication_preferences()
     {
         Event::fake();
@@ -371,6 +386,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_setup_two_factor_authentication()
     {
         // Visit 2FA setup
@@ -438,6 +456,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_manage_privacy_settings()
     {
         // View privacy settings
@@ -519,6 +540,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_manage_connected_accounts()
     {
         // View connected accounts
@@ -568,6 +592,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_view_and_download_activity_log()
     {
         // Create some activity
@@ -615,6 +642,9 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function profile_updates_sync_with_third_party_services()
     {
         Event::fake();

@@ -59,7 +59,8 @@ class ServicesRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('masterService.name')
                     ->label('Service')
-                    ->searchable(),
+                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record?->masterService?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('effectiveDuration')
                     ->label('Dauer (Min)')

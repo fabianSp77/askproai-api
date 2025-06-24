@@ -1,0 +1,54 @@
+/* Company Integration Portal - Clean CSS without conflicts */
+
+/* Only add styles that enhance, not override Filament defaults */
+
+/* Ensure proper spacing for sections */
+.fi-company-integration-portal .fi-section {
+    margin-bottom: 1.5rem;
+}
+
+/* Enhance card hover states */
+.fi-company-integration-portal button[wire\:click*="selectCompany"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Loading states */
+.fi-company-integration-portal [wire\:loading] {
+    opacity: 0.6;
+}
+
+/* Ensure buttons in action groups don't break */
+.fi-company-integration-portal .fi-ac {
+    width: 100%;
+}
+
+/* Status badges alignment */
+.fi-company-integration-portal .fi-badge {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Responsive adjustments that don't break Filament */
+@media (max-width: 640px) {
+    .fi-company-integration-portal .grid {
+        gap: 0.75rem;
+    }
+}
+
+/* Fix any z-index issues with dropdowns */
+.fi-company-integration-portal .fi-dropdown {
+    z-index: 50;
+}
+
+/* Ensure modals appear above everything */
+.fi-modal-window {
+    z-index: 9999;
+}
+
+/* Print styles */
+@media print {
+    .fi-company-integration-portal button {
+        display: none;
+    }
+}

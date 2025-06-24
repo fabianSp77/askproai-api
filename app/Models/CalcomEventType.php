@@ -148,11 +148,30 @@ class CalcomEventType extends Model
     }
     
     /**
-     * Beziehung zu Branch
+     * Beziehung zu Branch (direkte Zuordnung)
      */
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+    
+    /**
+     * Beziehung zu Branches (many-to-many)
+     */
+    public function branches(): BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class, 'branch_event_types', 'event_type_id', 'branch_id')
+            ->using(\App\Models\BranchEventType::class)
+            ->withPivot(['is_primary'])
+            ->withTimestamps();
+    }
+    
+    /**
+     * Get branches where this is the primary event type
+     */
+    public function primaryBranches(): BelongsToMany
+    {
+        return $this->branches()->wherePivot('is_primary', true);
     }
     
     /**

@@ -30,7 +30,7 @@ class PhoneNumberResource extends Resource
             Forms\Components\TextInput::make('number')
                 ->label('Telefonnummer')
                 ->required(),
-            Forms\Components\Toggle::make('active')
+            Forms\Components\Toggle::make('is_active')
                 ->label('Aktiv')
                 ->default(true),
         ]);
@@ -41,7 +41,7 @@ class PhoneNumberResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('number')->label('Telefonnummer'),
-                Tables\Columns\IconColumn::make('active')->boolean()->label('Aktiv'),
+                Tables\Columns\IconColumn::make('is_active')->boolean()->label('Aktiv'),
             ])
             ->filters([])
             ->actions([

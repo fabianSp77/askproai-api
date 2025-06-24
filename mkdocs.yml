@@ -1,0 +1,203 @@
+site_name: AskProAI Complete Documentation
+site_description: Comprehensive documentation for the AskProAI AI-powered appointment booking platform
+site_url: https://docs.askproai.de
+repo_url: https://github.com/askproai/api-gateway
+repo_name: askproai/api-gateway
+
+# Directory configuration
+docs_dir: docs_mkdocs
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.prune
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  language: de
+  icon:
+    logo: material/phone-in-talk
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      lang: de
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav:
+  - Home:
+    - Welcome: index.md
+    - Quick Start: quickstart.md
+    - System Status: status.md
+    - What's New: changelog.md
+    - Documentation Status: documentation-status-report.md
+  
+  - Architecture:
+    - Overview: architecture/overview.md
+    - System Design: architecture/system-design.md
+    - Complete System Architecture: architecture/system-architecture.md
+    - Complete Service Layer: architecture/complete-service-layer.md
+    - Complete Models: architecture/complete-model-documentation.md
+    - Complete Controllers: architecture/complete-controller-documentation.md
+    - MCP Architecture: architecture/mcp-architecture.md
+    - MCP Gateway Implementation: architecture/mcp-gateway-architecture.md
+    - Data Flow: architecture/data-flow.md
+    - Database Schema: architecture/database-schema.md
+    - Queue Jobs: architecture/queue-jobs.md
+    - Event System: architecture/event-system.md
+    - Security Architecture: architecture/security.md
+    - Performance Design: architecture/performance.md
+  
+  - Core Features:
+    - Phone System: features/phone-system.md
+    - Appointment Booking: features/appointment-booking.md
+    - Retell Webhook Configuration: features/retell-webhook-configuration.md
+    - Multi-Tenancy: features/multi-tenancy.md
+    - Knowledge Base: features/knowledge-base.md
+    - Customer Portal: features/customer-portal.md
+    - Analytics & ROI: features/analytics.md
+    - GDPR Compliance: features/gdpr.md
+  
+  - Integrations:
+    - Overview: integrations/overview.md
+    - Cal.com: integrations/calcom.md
+    - Retell.ai: integrations/retell.md
+    - Stripe: integrations/stripe.md
+    - WhatsApp: integrations/whatsapp.md
+    - SMS Services: integrations/sms.md
+    - Email Services: integrations/email.md
+    - Monitoring (Sentry): integrations/sentry.md
+  
+  - API Reference:
+    - Complete Endpoint Reference: api/complete-endpoint-reference.md
+    - REST API v2: api/rest-v2.md
+    - Webhooks: api/webhooks.md
+    - Webhook Schemas: api/webhook-schemas.md
+    - MCP Endpoints: api/mcp.md
+    - MCP Gateway API: api/mcp-endpoints.md
+    - Authentication: api/authentication.md
+    - Rate Limiting: api/rate-limiting.md
+    - Error Codes: api/error-codes.md
+  
+  - Configuration:
+    - Environment Setup: configuration/environment.md
+    - Service Configuration: configuration/services.md
+    - Security Settings: configuration/security.md
+    - Cache Configuration: configuration/cache.md
+    - Queue Configuration: configuration/queues.md
+    - Database Settings: configuration/database.md
+  
+  - Deployment:
+    - Requirements: deployment/requirements.md
+    - Installation: deployment/installation.md
+    - Production Setup: deployment/production.md
+    - Scaling: deployment/scaling.md
+    - Backup & Recovery: deployment/backup.md
+    - Monitoring: deployment/monitoring.md
+  
+  - Development:
+    - Setup Guide: development/setup.md
+    - Code Standards: development/standards.md
+    - Testing Guide: development/testing.md
+    - Debug Tools: development/debugging.md
+    - Contributing: development/contributing.md
+  
+  - Operations:
+    - Monitoring: operations/monitoring.md
+    - Troubleshooting: operations/troubleshooting.md
+    - Performance Tuning: operations/performance.md
+    - Security Audit: operations/security-audit.md
+    - Maintenance: operations/maintenance.md
+  
+  - Migration Guides:
+    - Complete Migration History: migration/complete-migration-history.md
+    - Database Consolidation: migration/database-consolidation.md
+    - Service Unification: migration/service-unification.md
+    - Cal.com v1 to v2: migration/calcom-v2.md
+    - Legacy Cleanup: migration/legacy-cleanup.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/askproai
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/askproai
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+  version:
+    provider: mike
+  status:
+    success_rate: 99.3%
+    avg_response: 187ms
+    production_ready: 85%
+    mcp_servers: 5
+
+copyright: |
+  &copy; 2024-2025 <a href="https://askproai.de" target="_blank" rel="noopener">AskProAI</a> - AI-Powered Appointment Booking Platform

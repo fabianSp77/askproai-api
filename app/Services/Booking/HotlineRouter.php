@@ -24,7 +24,7 @@ class HotlineRouter
         // Check if this is a hotline number
         $phoneRecord = PhoneNumber::where('number', $phoneNumber)
             ->where('type', 'hotline')
-            ->where('active', true)
+            ->where('is_active', true)
             ->first();
             
         if (!$phoneRecord) {

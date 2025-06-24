@@ -61,9 +61,11 @@ class AppointmentsRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Kunde')
-                    ->searchable(),
+                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record?->customer?->name ?? '-'),
                 Tables\Columns\TextColumn::make('service.name')
-                    ->label('Dienstleistung'),
+                    ->label('Dienstleistung')
+                    ->getStateUsing(fn ($record) => $record?->service?->name ?? '-'),
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->colors([

@@ -16,6 +16,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\CalcomEventType::class => \App\Policies\CalcomEventTypePolicy::class,
         \App\Models\Company::class => \App\Policies\CompanyPolicy::class,
         \App\Models\Branch::class => \App\Policies\BranchPolicy::class,
+        \App\Models\Staff::class => \App\Policies\StaffPolicy::class,
     ];
 
     /**
@@ -27,9 +28,12 @@ class AuthServiceProvider extends ServiceProvider
 
         /**
          * -----------------------------------------------------------------
-         *  Gate::before() ENTFERNT - Permissions funktionieren jetzt normal
+         *  Gate::before() für Super Admin - erlaubt alle Aktionen
          * -----------------------------------------------------------------
          */
+        Gate::before(function ($user, $ability) {
+            return $user->hasRole('super_admin') ? true : null;
+        });
 
         /*
          |--------------------------------------------------------------

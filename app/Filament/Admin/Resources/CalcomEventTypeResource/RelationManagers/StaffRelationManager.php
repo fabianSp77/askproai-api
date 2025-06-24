@@ -71,7 +71,8 @@ class StaffRelationManager extends RelationManager
                     ->searchable()
                     ->sortable()
                     ->badge()
-                    ->color('info'),
+                    ->color('info')
+                    ->getStateUsing(fn ($record) => $record?->homeBranch?->name ?? '-'),
                     
                 Tables\Columns\IconColumn::make('has_calcom')
                     ->label('Cal.com')

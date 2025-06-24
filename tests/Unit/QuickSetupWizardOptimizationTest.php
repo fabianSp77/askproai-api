@@ -28,6 +28,9 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_loads_companies_efficiently_with_only_needed_fields()
     {
         // Create test companies
@@ -56,6 +59,9 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_creates_multiple_branches_efficiently_with_bulk_insert()
     {
         $company = Company::factory()->create();
@@ -107,6 +113,9 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_validates_phone_numbers_correctly()
     {
         $livewire = Livewire::test(QuickSetupWizard::class)
@@ -131,6 +140,9 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_database_errors_gracefully()
     {
         // Force a database error by setting invalid data
@@ -151,6 +163,9 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_loads_all_branches_in_edit_mode()
     {
         // Create company with multiple branches
@@ -177,6 +192,9 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_performs_within_acceptable_time_limits()
     {
         // Create test data
@@ -210,6 +228,9 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_prevents_duplicate_company_creation()
     {
         // Create existing company
@@ -231,6 +252,9 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_uses_transactions_for_data_integrity()
     {
         // Mock an exception during branch creation

@@ -93,6 +93,9 @@ class CustomerLifecycleFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function complete_customer_lifecycle_from_creation_to_loyalty()
     {
         Event::fake();
@@ -383,6 +386,9 @@ class CustomerLifecycleFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_customer_reactivation_after_long_absence()
     {
         Event::fake();
@@ -456,6 +462,9 @@ class CustomerLifecycleFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function tracks_customer_communication_preferences()
     {
         $customer = Customer::factory()->create([
@@ -506,6 +515,9 @@ class CustomerLifecycleFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_customer_data_export_request()
     {
         $customer = Customer::factory()->create([

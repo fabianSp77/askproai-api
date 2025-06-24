@@ -1,0 +1,492 @@
+/* Company Integration Portal - Professional Responsive Design v2 */
+
+/* Container Query Support for Modern Responsive Design */
+@container (min-width: 640px) {
+    .company-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container (min-width: 1024px) {
+    .company-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@container (min-width: 1280px) {
+    .company-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+/* Base Container Setup */
+.fi-company-integration-portal {
+    container-type: inline-size;
+    container-name: integration-portal;
+}
+
+/* Company Selector Grid - Fixed Layout */
+.company-selector-wrapper {
+    container-type: inline-size;
+}
+
+.company-grid {
+    display: grid !important;
+    gap: 1rem !important;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+/* Fix for buttons inside grid */
+.company-grid > button {
+    display: flex !important;
+    width: 100% !important;
+}
+
+/* Company Card Design */
+.company-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 140px;
+    padding: 1.25rem;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    transition: all 200ms ease;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+
+/* Fix button styling when company-card is applied to button element */
+button.company-card {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.dark .company-card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.company-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-color: #fbbf24;
+}
+
+.company-card.selected {
+    border-color: #f59e0b;
+    background: #fef3c7;
+}
+
+.dark .company-card.selected {
+    background: #451a03;
+    border-color: #f59e0b;
+}
+
+/* Text Handling - Prevent Overflow */
+.company-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dark .company-card h3 {
+    color: #f9fafb;
+}
+
+.company-card p {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dark .company-card p {
+    color: #9ca3af;
+}
+
+/* Stats Row */
+.company-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f3f4f6;
+}
+
+.dark .company-stats {
+    border-top-color: #374151;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.dark .stat-item {
+    color: #9ca3af;
+}
+
+.stat-item svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Integration Status Grid */
+.integration-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Integration Cards */
+.integration-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dark .integration-card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.integration-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.integration-status {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.integration-status.active {
+    background-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.integration-status.inactive {
+    background-color: #6b7280;
+}
+
+/* Progress Bar */
+.progress-container {
+    background: #f3f4f6;
+    border-radius: 9999px;
+    height: 0.5rem;
+    overflow: hidden;
+    margin: 1.5rem 0;
+}
+
+.dark .progress-container {
+    background: #374151;
+}
+
+.progress-bar {
+    height: 100%;
+    transition: width 500ms ease;
+    background: linear-gradient(to right, #f59e0b, #f97316);
+}
+
+/* Branches Grid */
+.branches-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+}
+
+/* Branch Cards */
+.branch-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: all 200ms ease;
+}
+
+.dark .branch-card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.branch-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Phone Numbers Section */
+.phone-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.phone-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.dark .phone-card {
+    background: #374151;
+    border-color: #4b5563;
+}
+
+.phone-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.phone-number {
+    font-family: monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #111827;
+}
+
+.dark .phone-number {
+    color: #f9fafb;
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 9999px;
+}
+
+.badge-primary {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.dark .badge-primary {
+    background: #451a03;
+    color: #fbbf24;
+}
+
+.badge-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.dark .badge-success {
+    background: #064e3b;
+    color: #6ee7b7;
+}
+
+/* Buttons */
+.action-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 150ms ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.action-button:hover {
+    transform: translateY(-1px);
+}
+
+/* Event Type Button */
+.event-type-button {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 200ms ease;
+}
+
+.event-type-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(217, 119, 6, 0.4);
+}
+
+/* Loading States */
+.loading-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+    .company-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .integration-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .branches-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .phone-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .company-card {
+        min-height: 120px;
+    }
+    
+    .company-stats {
+        flex-wrap: wrap;
+    }
+}
+
+/* Tablet Optimizations */
+@media (min-width: 641px) and (max-width: 1023px) {
+    .company-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .integration-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Desktop Optimizations */
+@media (min-width: 1024px) {
+    .company-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .integration-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Large Desktop */
+@media (min-width: 1280px) {
+    .company-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .integration-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+}
+
+/* Ensure no horizontal scroll */
+body {
+    overflow-x: hidden;
+}
+
+.fi-page-wrapper {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Fix Filament container width issues */
+.fi-main-ctn {
+    max-width: 100%;
+}
+
+/* Improve focus states */
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid #f59e0b;
+    outline-offset: 2px;
+}
+
+/* Fix Alpine.js x-show conflicts */
+[x-show] {
+    display: none;
+}
+
+[x-show="true"] {
+    display: block !important;
+}
+
+/* Fix button disabled states */
+button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+button[wire\:loading\.attr="disabled"][wire\:loading] {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+/* Ensure clickable areas have proper z-index */
+.company-card,
+.integration-card button,
+.action-button {
+    position: relative;
+    z-index: 1;
+}
+
+/* Fix potential overlay issues */
+.fi-company-integration-portal {
+    position: relative;
+    z-index: 0;
+}
+
+/* Ensure dropdowns are above other content */
+[x-data*="dropdown"] {
+    position: relative;
+    z-index: 10;
+}
+
+/* Fix wire:click button interactions */
+button[wire\:click] {
+    pointer-events: auto !important;
+}
+
+/* Print friendly */
+@media print {
+    .company-card {
+        break-inside: avoid;
+    }
+    
+    button {
+        display: none;
+    }
+}

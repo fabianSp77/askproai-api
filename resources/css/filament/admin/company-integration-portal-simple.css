@@ -1,0 +1,78 @@
+/* Company Integration Portal - Simplified Performance-Optimized Version */
+
+/* Base Variables */
+:root {
+    --portal-primary: rgb(234 179 8);
+    --portal-success: rgb(34 197 94);
+    --portal-gray-border: rgb(229 231 235);
+    --portal-transition: 150ms ease;
+}
+
+/* Performance: Use transform instead of box-shadow for hover */
+.company-selector-btn {
+    transform: translateZ(0);
+    will-change: transform;
+    transition: transform var(--portal-transition), border-color var(--portal-transition);
+}
+
+.company-selector-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Simple card styling */
+.integration-card {
+    background: white;
+    border: 1px solid var(--portal-gray-border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: border-color var(--portal-transition);
+}
+
+.dark .integration-card {
+    background: rgb(31 41 55);
+    border-color: rgb(55 65 81);
+}
+
+/* Status indicators */
+.status-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dot.active {
+    background-color: var(--portal-success);
+}
+
+.status-dot.inactive {
+    background-color: rgb(156 163 175);
+}
+
+/* Responsive text */
+.responsive-text {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    .integration-card {
+        padding: 1rem;
+    }
+    
+    .company-selector-btn {
+        padding: 0.75rem;
+    }
+}
+
+/* Focus states for accessibility */
+button:focus-visible {
+    outline: 2px solid var(--portal-primary);
+    outline-offset: 2px;
+}
+
+/* Simple loading state */
+[wire\:loading] {
+    opacity: 0.6;
+    pointer-events: none;
+}

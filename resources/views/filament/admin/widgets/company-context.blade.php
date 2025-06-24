@@ -17,12 +17,12 @@
                             </x-slot>
                             
                             @foreach(Auth::user()->companies as $company)
-                                <x-filament::dropdown.item
+                                <x-filament::dropdown.list.item
                                     wire:click="switchCompany({{ $company->id }})"
                                     :icon="$company->id === $this->getCompany()->id ? 'heroicon-o-check' : null"
                                 >
                                     {{ $company->name }}
-                                </x-filament::dropdown.item>
+                                </x-filament::dropdown.list.item>
                             @endforeach
                         </x-filament::dropdown>
                     @endif
@@ -45,12 +45,12 @@
                             </x-slot>
                             
                             @foreach($this->getCompany()->branches as $branch)
-                                <x-filament::dropdown.item
+                                <x-filament::dropdown.list.item
                                     wire:click="switchBranch({{ $branch->id }})"
                                     :icon="$branch->id === $this->getBranch()->id ? 'heroicon-o-check' : null"
                                 >
                                     {{ $branch->name }}
-                                </x-filament::dropdown.item>
+                                </x-filament::dropdown.list.item>
                             @endforeach
                         </x-filament::dropdown>
                     @endif
@@ -84,26 +84,26 @@
                         </x-filament::button>
                     </x-slot>
                     
-                    <x-filament::dropdown.item
+                    <x-filament::dropdown.list.item
                         href="{{ route('filament.admin.resources.customers.create') }}"
                         icon="heroicon-o-user-plus"
                     >
                         Neuer Kunde
-                    </x-filament::dropdown.item>
+                    </x-filament::dropdown.list.item>
                     
-                    <x-filament::dropdown.item
+                    <x-filament::dropdown.list.item
                         href="{{ route('filament.admin.resources.calls.index') }}"
                         icon="heroicon-o-phone"
                     >
                         Letzte Anrufe
-                    </x-filament::dropdown.item>
+                    </x-filament::dropdown.list.item>
                     
-                    <x-filament::dropdown.item
+                    <x-filament::dropdown.list.item
                         href="{{ route('filament.admin.pages.quick-setup-wizard') }}"
                         icon="heroicon-o-cog-6-tooth"
                     >
                         Schnelleinrichtung
-                    </x-filament::dropdown.item>
+                    </x-filament::dropdown.list.item>
                 </x-filament::dropdown>
             </div>
         </div>

@@ -11,6 +11,14 @@ use Filament\Notifications\Notification;
 class ListCustomers extends ListRecords
 {
     protected static string $resource = CustomerResource::class;
+    
+    protected function getViewData(): array
+    {
+        return [
+            ...parent::getViewData(),
+            'contentContainerClasses' => 'fi-resource-customers',
+        ];
+    }
 
     protected function getHeaderActions(): array
     {

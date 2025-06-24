@@ -10,6 +10,9 @@ use App\Services\CalcomV2Service;
 use App\Http\Controllers\UnifiedWebhookController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\MCPHealthCheckController;
+use App\Http\Controllers\Api\DocumentationDataController;
+use App\Http\Controllers\MCPGatewayController;
+use App\Http\Controllers\RetellCustomFunctionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,10 +23,70 @@ use App\Http\Controllers\Api\MCPHealthCheckController;
 // Load MCP Routes
 require __DIR__.'/api-mcp.php';
 
+// Load Test Webhook Routes (REMOVE IN PRODUCTION!)
+if (app()->environment('local', 'development', 'production')) {
+    require __DIR__.'/test-webhook.php';
+}
+
 // ---- Metrics Endpoint ----------------------------
 Route::get('/metrics', [App\Http\Controllers\Api\MetricsController::class, 'metrics'])
     ->middleware(['api.metrics.auth'])
     ->name('api.metrics');
+
+// ---- Zeitinfo Endpoint for Retell.ai ----------------------------
+Route::get('/zeitinfo', [App\Http\Controllers\ZeitinfoController::class, 'jetzt'])
+    ->name('api.zeitinfo');
+
+// ---- Test Webhook Endpoints ----------------------------
+Route::prefix('test')->group(function () {
+    Route::match(['GET', 'POST'], '/webhook', [App\Http\Controllers\Api\TestWebhookController::class, 'test'])
+        ->name('api.test.webhook');
+    Route::post('/webhook/simulate-retell', [App\Http\Controllers\Api\TestWebhookController::class, 'simulateRetellWebhook'])
+        ->name('api.test.webhook.simulate-retell');
+});
+
+// ---- Retell.ai Custom Function Endpoints ----------------------------
+Route::prefix('retell')->group(function () {
+    // Appointment data collection endpoint for Retell custom function
+    Route::post('/collect-appointment', [App\Http\Controllers\Api\RetellAppointmentCollectorController::class, 'collect'])
+        ->name('api.retell.collect-appointment');
+    Route::get('/collect-appointment/test', [App\Http\Controllers\Api\RetellAppointmentCollectorController::class, 'test'])
+        ->name('api.retell.collect-appointment.test');
+});
+
+// ---- Documentation Data API ----------------------------
+Route::prefix('docs-data')->group(function () {
+    Route::get('/metrics', [DocumentationDataController::class, 'metrics'])
+        ->name('api.docs.metrics');
+    Route::get('/performance', [DocumentationDataController::class, 'performance'])
+        ->name('api.docs.performance');
+    Route::get('/workflows', [DocumentationDataController::class, 'workflows'])
+        ->name('api.docs.workflows');
+    Route::get('/health', [DocumentationDataController::class, 'health'])
+        ->name('api.docs.health');
+});
+
+// ---- TEMPORARY FIX: MCP Retell Webhook Route ----------------------------
+Route::prefix('mcp')->group(function () {
+    // Redirect MCP webhook to standard webhook handler (WITHOUT signature verification for now)
+    Route::post('/retell/webhook', function (Request $request) {
+        Log::warning('MCP Retell Webhook received - redirecting to standard handler', [
+            'url' => $request->fullUrl(),
+            'headers' => $request->headers->all()
+        ]);
+        
+        // Temporarily process without signature verification
+        return app(RetellWebhookController::class)->processWebhook($request);
+    })->name('mcp.retell.webhook.temp');
+});
+
+// ---- TEMPORARY DEBUG: Retell Webhook without signature verification ----------------------------
+Route::post('/retell/webhook-debug', [App\Http\Controllers\Api\RetellWebhookDebugController::class, 'handle'])
+    ->name('retell.webhook.debug');
+    
+// Also create debug route for standard path
+Route::post('/retell/webhook-nosig', [App\Http\Controllers\Api\RetellWebhookDebugController::class, 'handle'])
+    ->name('retell.webhook.nosig');
 
 // ---- Health Check Endpoints ----------------------------
 // Simple ping endpoint for load balancers
@@ -44,12 +107,26 @@ Route::get('/health/calcom', [HealthController::class, 'calcomHealth'])
 
 // ---- MCP Orchestrator Routes ----------------------------
 Route::prefix('mcp')->middleware(['throttle:1000,1'])->group(function () {
-    // Orchestrator endpoints
+    // MCPGateway endpoints (proper JSON-RPC 2.0)
+    Route::post('/gateway', [\App\Http\Controllers\MCPGatewayController::class, 'handle'])
+        ->name('mcp.gateway');
+    Route::get('/gateway/health', [\App\Http\Controllers\MCPGatewayController::class, 'health'])
+        ->name('mcp.gateway.health');
+    Route::get('/gateway/methods', [\App\Http\Controllers\MCPGatewayController::class, 'methods'])
+        ->name('mcp.gateway.methods');
+    
+    // Legacy orchestrator endpoints (kept for backward compatibility)
     Route::post('/execute', [\App\Http\Controllers\Api\MCPController::class, 'execute']);
     Route::post('/batch', [\App\Http\Controllers\Api\MCPController::class, 'batch']);
     Route::get('/health', [\App\Http\Controllers\Api\MCPController::class, 'orchestratorHealth']);
     Route::get('/metrics', [\App\Http\Controllers\Api\MCPController::class, 'orchestratorMetrics']);
     Route::get('/info', [\App\Http\Controllers\Api\MCPController::class, 'info']);
+    
+    // MCP Webhook handler (bypasses signature verification)
+    Route::post('/webhook/retell', [\App\Http\Controllers\Api\MCPWebhookController::class, 'handleRetell'])
+        ->name('mcp.webhook.retell');
+    Route::get('/webhook/test', [\App\Http\Controllers\Api\MCPWebhookController::class, 'test'])
+        ->name('mcp.webhook.test');
     
     // Service-specific endpoints (existing)
     Route::prefix('database')->group(function () {
@@ -188,7 +265,7 @@ Route::post('/test/mcp-webhook', function (\Illuminate\Http\Request $request) {
         ], 500);
     }
 })
-    ->name('test.webhook');
+    ->name('test.mcp.webhook');
 
 // ---- ENHANCED: NOW USING MCP UnifiedWebhookController ----
 Route::post('/retell/enhanced-webhook', function (Request $request) {
@@ -488,6 +565,23 @@ Route::prefix('mobile')->group(function () {
         // Dashboard metrics for mobile
         Route::get('/dashboard', [App\Http\Controllers\Api\DashboardMetricsController::class, 'all']);
     });
+});
+
+// ---- MCP Gateway Routes (NEW) ----------------------------
+Route::prefix('mcp/gateway')->group(function () {
+    // Main gateway endpoint
+    Route::post('/', [MCPGatewayController::class, 'handle'])
+        ->name('mcp.gateway');
+    
+    // Gateway health and discovery
+    Route::get('/health', [MCPGatewayController::class, 'health'])
+        ->name('mcp.gateway.health');
+    Route::get('/methods', [MCPGatewayController::class, 'methods'])
+        ->name('mcp.gateway.methods');
+    
+    // Retell custom function gateway
+    Route::post('/retell/functions/{function}', [RetellCustomFunctionController::class, 'handle'])
+        ->name('mcp.gateway.retell.functions');
 });
 
 // MCP (Model Context Protocol) Routes

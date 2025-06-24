@@ -14,7 +14,7 @@ return new class extends CompatibleMigration
         // Add fields to customers table for preferences
         Schema::table('customers', function (Blueprint $table) {
             if (!Schema::hasColumn('customers', 'preferred_branch_id')) {
-                $table->uuid('preferred_branch_id')->nullable()->after('branch_id');
+                $table->uuid('preferred_branch_id')->nullable();
                 $table->foreign('preferred_branch_id')->references('id')->on('branches')->nullOnDelete();
             }
             

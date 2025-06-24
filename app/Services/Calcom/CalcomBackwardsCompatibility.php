@@ -281,11 +281,16 @@ class CalcomBackwardsCompatibility
         ]);
         
         // Increment metrics for monitoring
-        if (class_exists('\App\Services\Monitoring\MetricsCollector')) {
-            app(\App\Services\Monitoring\MetricsCollector::class)->increment(
-                'calcom_v1_usage',
-                ['method' => $method]
-            );
+        try {
+            if (class_exists('\App\Services\Monitoring\MetricsCollector')) {
+                $collector = app(\App\Services\Monitoring\MetricsCollector::class);
+                // Use incrementCounter if available, otherwise skip
+                if (method_exists($collector, 'incrementCounter')) {
+                    $collector->incrementCounter('calcom_v1_usage', ['method' => $method]);
+                }
+            }
+        } catch (\Exception $e) {
+            // Silently fail - metrics are not critical
         }
     }
     

@@ -30,16 +30,23 @@ return new class extends CompatibleMigration
             }
             
             if (!Schema::hasColumn('phone_numbers', 'description')) {
-                $table->string('description')->nullable()->after('active');
+                $table->string('description')->nullable()->after('is_active');
             }
             
             if (!Schema::hasColumn('phone_numbers', 'created_at')) {
                 $table->timestamps();
             }
             
-            // Add indexes
-            $table->index('company_id');
-            $table->index('type');
+            // Add indexes if they don't exist
+            $existingIndexes = Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('phone_numbers');
+            
+            if (!isset($existingIndexes['phone_numbers_company_id_index'])) {
+                $table->index('company_id');
+            }
+            
+            if (!isset($existingIndexes['phone_numbers_type_index'])) {
+                $table->index('type');
+            }
         });
     }
 

@@ -160,7 +160,8 @@ class IntegrationResource extends Resource
                     ->label('Unternehmen')
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-m-building-office'),
+                    ->icon('heroicon-m-building-office')
+                    ->getStateUsing(fn ($record) => $record?->company?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('service')
                     ->label('Service')

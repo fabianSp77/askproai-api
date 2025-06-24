@@ -6,6 +6,7 @@ return [
     App\Providers\CalcomMigrationServiceProvider::class,
     App\Providers\CircuitBreakerServiceProvider::class,
     App\Providers\DatabaseServiceProvider::class,
+    App\Providers\DatabasePoolServiceProvider::class,
     App\Providers\EventServiceProvider::class,
     App\Providers\FilamentBadgeServiceProvider::class,
     App\Providers\FilamentColumnToggleServiceProvider::class,
@@ -19,5 +20,6 @@ return [
     App\Providers\MonitoringServiceProvider::class,
     App\Providers\PerformanceServiceProvider::class,
     App\Providers\RouteServiceProvider::class,
+    App\Providers\ServiceTrackingProvider::class,
     App\Providers\ValidationServiceProvider::class,
 ];

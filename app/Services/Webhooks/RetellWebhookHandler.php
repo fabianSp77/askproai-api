@@ -10,6 +10,7 @@ use App\Services\RetellService;
 use App\Services\CalcomV2Service;
 use App\Services\AppointmentBookingService;
 use App\Services\PhoneNumberResolver;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class RetellWebhookHandler extends BaseWebhookHandler
@@ -267,11 +268,9 @@ class RetellWebhookHandler extends BaseWebhookHandler
             
             // Book appointment
             $bookingService = app(AppointmentBookingService::class);
-            $result = $bookingService->bookFromCallData(
-                $call->company,
-                $customer,
+            $result = $bookingService->bookFromPhoneCall(
                 $appointmentData,
-                $call->correlation_id
+                $call
             );
             
             // Update call with appointment reference
@@ -306,7 +305,86 @@ class RetellWebhookHandler extends BaseWebhookHandler
      */
     protected function extractAppointmentData(array $callData): ?array
     {
-        // Check custom analysis data first
+        // Enhanced logging for debugging
+        $this->logInfo('Extracting appointment data from call', [
+            'call_id' => $callData['call_id'] ?? null,
+            'has_retell_llm_dynamic_variables' => isset($callData['retell_llm_dynamic_variables']),
+            'has_custom_analysis_data' => isset($callData['call_analysis']['custom_analysis_data']),
+            'custom_fields' => array_filter(array_keys($callData), fn($k) => strpos($k, '_') === 0)
+        ]);
+        
+        // First check if we have cached appointment data from collect_appointment_data function
+        $callId = $callData['call_id'] ?? null;
+        if ($callId) {
+            $cacheKey = "retell:appointment:{$callId}";
+            $cachedData = Cache::get($cacheKey);
+            
+            if ($cachedData) {
+                $this->logInfo('Using cached appointment data from collect_appointment_data', [
+                    'call_id' => $callId,
+                    'reference_id' => $cachedData['reference_id'] ?? null
+                ]);
+                
+                // Map cached data to expected format
+                return [
+                    'date' => $cachedData['datum'] ?? null,
+                    'time' => $cachedData['uhrzeit'] ?? null,
+                    'service' => $cachedData['dienstleistung'] ?? null,
+                    'customer_name' => $cachedData['name'] ?? null,
+                    'customer_phone' => $cachedData['telefonnummer'] ?? null,
+                    'customer_email' => $cachedData['email'] ?? null,
+                    'staff_preference' => $cachedData['mitarbeiter_wunsch'] ?? null,
+                    'notes' => $cachedData['kundenpraeferenzen'] ?? null,
+                    'reference_id' => $cachedData['reference_id'] ?? null,
+                    'appointment_id' => $cachedData['appointment_id'] ?? null
+                ];
+            }
+        }
+        
+        // Check retell_llm_dynamic_variables for appointment_data
+        $dynamicVars = $callData['retell_llm_dynamic_variables'] ?? null;
+        if ($dynamicVars) {
+            $this->logInfo('Found retell_llm_dynamic_variables', [
+                'keys' => array_keys($dynamicVars)
+            ]);
+            
+            // Check if appointment data is nested
+            if (isset($dynamicVars['appointment_data'])) {
+                $this->logInfo('Found nested appointment_data');
+                $appointmentData = $dynamicVars['appointment_data'];
+            } else {
+                // Check if the fields are directly in dynamic variables
+                $appointmentFields = ['datum', 'uhrzeit', 'name', 'telefonnummer', 'dienstleistung'];
+                $hasDirectFields = false;
+                
+                foreach ($appointmentFields as $field) {
+                    if (isset($dynamicVars[$field])) {
+                        $hasDirectFields = true;
+                        break;
+                    }
+                }
+                
+                if ($hasDirectFields) {
+                    $this->logInfo('Found appointment fields directly in dynamic variables');
+                    $appointmentData = $dynamicVars;
+                }
+            }
+            
+            if (isset($appointmentData)) {
+                return [
+                    'date' => $appointmentData['datum'] ?? null,
+                    'time' => $appointmentData['uhrzeit'] ?? null,
+                    'service' => $appointmentData['dienstleistung'] ?? null,
+                    'customer_name' => $appointmentData['name'] ?? null,
+                    'customer_phone' => $appointmentData['telefonnummer'] ?? null,
+                    'customer_email' => $appointmentData['email'] ?? null,
+                    'staff_preference' => $appointmentData['mitarbeiter_wunsch'] ?? null,
+                    'notes' => $appointmentData['kundenpraeferenzen'] ?? null
+                ];
+            }
+        }
+        
+        // Check custom analysis data
         $customData = $callData['call_analysis']['custom_analysis_data'] ?? null;
         
         if ($customData && isset($customData['appointment_details'])) {
@@ -334,6 +412,18 @@ class RetellWebhookHandler extends BaseWebhookHandler
                 ];
             }
         }
+        
+        // Log what we tried and failed to find
+        $this->logWarning('No appointment data found in any expected location', [
+            'call_id' => $callId,
+            'checked_locations' => [
+                'cache' => 'not found',
+                'retell_llm_dynamic_variables' => $dynamicVars ? 'exists but no appointment data' : 'not set',
+                'custom_analysis_data' => isset($callData['call_analysis']['custom_analysis_data']) ? 'exists' : 'not set',
+                'transcript_object' => isset($callData['transcript_object']) ? 'exists' : 'not set',
+                'custom_fields' => !empty($callData['custom_fields']) ? 'exists' : 'not set'
+            ]
+        ]);
         
         return null;
     }

@@ -133,13 +133,15 @@ class CalcomEventTypeResource extends Resource
                 Tables\Columns\TextColumn::make('company.name')
                     ->label('Unternehmen')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(fn ($record) => $record?->company?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
                     ->searchable()
                     ->sortable()
-                    ->placeholder('Alle Filialen'),
+                    ->placeholder('Alle Filialen')
+                    ->getStateUsing(fn ($record) => $record?->branch?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')

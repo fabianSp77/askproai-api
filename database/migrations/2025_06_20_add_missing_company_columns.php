@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::table('companies', function (Blueprint $table) {
             if (!Schema::hasColumn('companies', 'payment_terms')) {
-                $table->string('payment_terms', 20)->default('net30')->after('invoice_prefix');
+                $table->string('payment_terms', 20)->default('net30');
             }
             
             if (!Schema::hasColumn('companies', 'small_business_threshold_date')) {
-                $table->date('small_business_threshold_date')->nullable()->after('is_small_business');
+                $table->date('small_business_threshold_date')->nullable();
             }
         });
     }

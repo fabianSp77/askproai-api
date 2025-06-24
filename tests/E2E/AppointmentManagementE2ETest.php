@@ -88,6 +88,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_view_appointment_list_with_filters()
     {
         // Create various appointments
@@ -179,6 +182,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_view_appointment_details()
     {
         $appointment = Appointment::factory()->create([
@@ -237,6 +243,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_cancel_appointment_with_confirmation()
     {
         Mail::fake();
@@ -318,6 +327,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_cannot_cancel_appointment_within_policy_window()
     {
         $appointment = Appointment::factory()->create([
@@ -355,6 +367,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_cancel_recurring_appointments()
     {
         Mail::fake();
@@ -425,6 +440,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_request_appointment_reschedule()
     {
         Event::fake();
@@ -486,6 +504,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_download_appointment_calendar_file()
     {
         $appointment = Appointment::factory()->create([
@@ -531,6 +552,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_view_appointment_history_with_pagination()
     {
         // Create 25 appointments for pagination testing
@@ -559,6 +583,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_print_appointment_details()
     {
         $appointment = Appointment::factory()->create([
@@ -589,6 +616,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_receives_appointment_reminders()
     {
         Notification::fake();
@@ -624,6 +654,9 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function appointment_access_is_restricted_to_owner()
     {
         // Create appointment for different customer

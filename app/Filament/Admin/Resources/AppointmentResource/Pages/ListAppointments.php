@@ -24,6 +24,9 @@ class ListAppointments extends ListRecords
                 ->modalHeading('Termine von Cal.com abrufen')
                 ->modalDescription('Möchten Sie alle Termine von Cal.com synchronisieren? Dies kann einen Moment dauern.')
                 ->modalSubmitActionLabel('Ja, synchronisieren')
+                ->extraAttributes([
+                    'class' => 'fi-btn-premium',
+                ])
                 ->action(function () {
                     $company = auth()->user()->company;
                     
@@ -75,12 +78,18 @@ class ListAppointments extends ListRecords
                 
             Actions\CreateAction::make()
                 ->label('Neuer Termin')
-                ->icon('heroicon-o-plus'),
+                ->icon('heroicon-o-plus')
+                ->extraAttributes([
+                    'class' => 'fi-btn-premium-primary',
+                ]),
                 
             Actions\Action::make('export')
                 ->label('Exportieren')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('gray')
+                ->extraAttributes([
+                    'class' => 'fi-btn-premium-secondary',
+                ])
                 ->form([
                     \Filament\Forms\Components\Select::make('format')
                         ->label('Format')
@@ -125,21 +134,13 @@ class ListAppointments extends ListRecords
             'all' => Tab::make('Alle Termine')
                 ->icon('heroicon-m-calendar-days')
                 ->badge($model::count())
-                ->badgeColor('gray')
-                ->extraAttributes([
-                    'title' => 'Zeigt alle Termine unabhängig vom Status oder Datum. Nutzen Sie diese Ansicht für eine vollständige Übersicht aller Buchungen.',
-                    'class' => 'tab-with-tooltip'
-                ]),
+                ->badgeColor('gray'),
                 
             'today' => Tab::make('Heute')
                 ->icon('heroicon-m-calendar')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereDate('starts_at', today()))
                 ->badge($model::whereDate('starts_at', today())->count())
-                ->badgeColor('primary')
-                ->extraAttributes([
-                    'title' => 'Zeigt nur die heutigen Termine. Ideal für die tägliche Planung und Vorbereitung.',
-                    'class' => 'tab-with-tooltip'
-                ]),
+                ->badgeColor('primary'),
                 
             'upcoming' => Tab::make('Kommend')
                 ->icon('heroicon-m-arrow-trending-up')
@@ -150,11 +151,7 @@ class ListAppointments extends ListRecords
                 ->badge($model::where('starts_at', '>', now())
                     ->where('status', '!=', 'cancelled')
                     ->count())
-                ->badgeColor('info')
-                ->extraAttributes([
-                    'title' => 'Alle zukünftigen Termine (außer abgesagte). Sortiert nach Datum für optimale Übersicht.',
-                    'class' => 'tab-with-tooltip'
-                ]),
+                ->badgeColor('info'),
                 
             'needs_confirmation' => Tab::make('Zu bestätigen')
                 ->icon('heroicon-m-exclamation-triangle')
@@ -166,11 +163,7 @@ class ListAppointments extends ListRecords
                     ->where('starts_at', '>', now())
                     ->where('starts_at', '<', now()->addDays(7))
                     ->count())
-                ->badgeColor('warning')
-                ->extraAttributes([
-                    'title' => 'Termine der nächsten 7 Tage, die noch bestätigt werden müssen. Diese benötigen Ihre Aufmerksamkeit!',
-                    'class' => 'tab-with-tooltip'
-                ]),
+                ->badgeColor('warning'),
                 
             'no_shows' => Tab::make('Nicht erschienen')
                 ->icon('heroicon-m-user-minus')
@@ -181,21 +174,13 @@ class ListAppointments extends ListRecords
                           ->where('ends_at', '<', now()->subHours(2));
                     }))
                 ->badge($model::where('status', 'no_show')->count())
-                ->badgeColor('danger')
-                ->extraAttributes([
-                    'title' => 'Kunden, die nicht zum Termin erschienen sind. Wichtig für Nachverfolgung und ggf. No-Show-Gebühren.',
-                    'class' => 'tab-with-tooltip'
-                ]),
+                ->badgeColor('danger'),
                 
             'completed' => Tab::make('Abgeschlossen')
                 ->icon('heroicon-m-check-circle')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'completed'))
                 ->badge($model::where('status', 'completed')->count())
-                ->badgeColor('success')
-                ->extraAttributes([
-                    'title' => 'Erfolgreich durchgeführte Termine. Zeigt Ihre abgeschlossenen Leistungen.',
-                    'class' => 'tab-with-tooltip'
-                ]),
+                ->badgeColor('success'),
                 
             'synced' => Tab::make('Cal.com')
                 ->icon('heroicon-m-cloud-arrow-down')
@@ -207,11 +192,7 @@ class ListAppointments extends ListRecords
                     $q->whereNotNull('calcom_booking_id')
                       ->orWhereNotNull('calcom_v2_booking_id');
                 })->count())
-                ->badgeColor('success')
-                ->extraAttributes([
-                    'title' => 'Termine, die mit Cal.com synchronisiert sind. Zeigt die Integration mit Ihrem Kalendersystem.',
-                    'class' => 'tab-with-tooltip'
-                ]),
+                ->badgeColor('success'),
                 
             'manual' => Tab::make('Manuell')
                 ->icon('heroicon-m-pencil-square')
@@ -223,11 +204,7 @@ class ListAppointments extends ListRecords
                     ->whereNull('calcom_v2_booking_id')
                     ->whereNull('call_id')
                     ->count())
-                ->badgeColor('gray')
-                ->extraAttributes([
-                    'title' => 'Manuell erstellte Termine ohne Cal.com oder Anruf-Verbindung.',
-                    'class' => 'tab-with-tooltip'
-                ]),
+                ->badgeColor('gray'),
         ];
     }
     

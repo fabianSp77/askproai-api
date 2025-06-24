@@ -6,11 +6,11 @@ use Livewire\Component;
 
 class TestComponent extends Component
 {
-    public $count = 0;
+    public $counter = 0;
     
     public function increment()
     {
-        $this->count++;
+        $this->counter++;
     }
     
     public function render()

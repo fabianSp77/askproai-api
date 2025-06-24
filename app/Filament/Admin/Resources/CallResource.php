@@ -33,13 +33,14 @@ use Filament\Tables\Enums\FiltersLayout;
 
 class CallResource extends Resource
 {
-    use MultiTenantResource, HasManyColumns, HasConsistentNavigation;
+    use MultiTenantResource, HasManyColumns;
     
     protected static ?string $model = Call::class;
     protected static ?string $navigationIcon = 'heroicon-o-phone-arrow-down-left';
     protected static ?string $navigationLabel = 'Anrufe';
     protected static bool $shouldRegisterNavigation = true;
     protected static ?string $recordTitleAttribute = 'call_id';
+    protected static ?int $navigationSort = 2;
     
     public static function canViewAny(): bool
     {
@@ -60,6 +61,18 @@ class CallResource extends Resource
             ->poll('30s')
             ->striped()
             ->defaultSort('start_timestamp', 'desc')
+            ->contentGrid([
+                'md' => 1,
+                'xl' => 1,
+            ])
+            ->extremePaginationLinks()
+            ->paginated([10, 25, 50, 100])
+            ->paginationPageOptions([10, 25, 50, 100])
+            ->recordClasses(fn ($record) => match($record->sentiment) {
+                'positive' => 'border-l-4 border-green-500',
+                'negative' => 'border-l-4 border-red-500',
+                default => '',
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('start_timestamp')
                     ->label('Anrufstart')
@@ -87,7 +100,9 @@ class CallResource extends Resource
                     ->placeholder('Unbekannt')
                     ->icon('heroicon-m-identification')
                     ->iconColor('success')
-                    ->url(fn ($record) => $record->customer ? CustomerResource::getUrl('view', ['record' => $record->customer]) : null)
+                    ->url(fn ($record) => $record?->customer ? 
+                        route('filament.admin.resources.customers.edit', ['record' => $record->customer]) : null)
+                    ->getStateUsing(fn ($record) => $record?->customer?->name ?? '-')
                     ->toggleable(),
                     
                 static::getCompanyColumn(),

@@ -3,12 +3,12 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\Cache\CacheManager;
-use App\Services\Cache\CompanyCacheService;
-use App\Services\Monitoring\MetricsCollectorService;
-use App\Services\Webhook\WebhookDeduplication;
-use App\Services\RateLimiter\EnhancedRateLimiter;
-use App\Repositories\OptimizedAppointmentRepository;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Foundation\Http\Events\RequestHandled;
 
 class PerformanceServiceProvider extends ServiceProvider
 {
@@ -17,36 +17,7 @@ class PerformanceServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Cache Services
-        $this->app->singleton(CacheManager::class, function ($app) {
-            return new CacheManager();
-        });
-        
-        $this->app->singleton(CompanyCacheService::class, function ($app) {
-            return new CompanyCacheService($app->make(CacheManager::class));
-        });
-        
-        // Repository
-        $this->app->singleton(OptimizedAppointmentRepository::class, function ($app) {
-            return new OptimizedAppointmentRepository();
-        });
-        
-        // Webhook Services
-        $this->app->singleton(WebhookDeduplication::class, function ($app) {
-            return new WebhookDeduplication();
-        });
-        
-        $this->app->singleton(EnhancedRateLimiter::class, function ($app) {
-            return new EnhancedRateLimiter();
-        });
-        
-        // Monitoring
-        $this->app->singleton(MetricsCollectorService::class, function ($app) {
-            return new MetricsCollectorService();
-        });
-        
-        // Alias for backward compatibility
-        $this->app->alias(MetricsCollectorService::class, 'App\Services\Monitoring\MetricsCollector');
+        //
     }
 
     /**
@@ -54,11 +25,72 @@ class PerformanceServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Register console commands
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                \App\Console\Commands\PerformanceBaseline::class,
-            ]);
+        // Disable lazy loading in production to catch N+1 queries
+        if ($this->app->isProduction()) {
+            Model::preventLazyLoading();
+        }
+
+        // Monitor memory usage in debug mode
+        if (config('app.debug')) {
+            Event::listen(RequestHandled::class, function ($event) {
+                if ($event->request->is('admin/*') || $event->request->is('api/*')) {
+                    $memory = round(memory_get_peak_usage() / 1024 / 1024, 2);
+                    $time = round(microtime(true) - LARAVEL_START, 2);
+                    
+                    // Log if memory usage is high or response is slow
+                    if ($memory > 256 || $time > 2) {
+                        Log::warning('Performance Alert', [
+                            'url' => $event->request->url(),
+                            'method' => $event->request->method(),
+                            'memory_mb' => $memory,
+                            'time_seconds' => $time,
+                            'user_id' => auth()->id(),
+                        ]);
+                    }
+                    
+                    // Add headers for debugging
+                    $event->response->headers->set('X-Memory-Usage', $memory . 'MB');
+                    $event->response->headers->set('X-Response-Time', $time . 's');
+                }
+            });
+        }
+
+        // Database query monitoring
+        if (config('app.debug') && config('database.log_queries', false)) {
+            DB::listen(function ($query) {
+                if ($query->time > 1000) { // Log slow queries (>1s)
+                    Log::warning('Slow Query Detected', [
+                        'sql' => $query->sql,
+                        'bindings' => $query->bindings,
+                        'time_ms' => $query->time,
+                        'connection' => $query->connectionName,
+                    ]);
+                }
+            });
+        }
+
+        // Set statement timeout for MariaDB/MySQL to prevent long-running queries
+        if (config('database.default') === 'mysql') {
+            try {
+                // Check if we're using MariaDB
+                $version = DB::selectOne("SELECT VERSION() as version");
+                $isMariaDB = str_contains(strtolower($version->version), 'mariadb');
+                
+                if ($isMariaDB) {
+                    // MariaDB uses max_statement_time (in seconds)
+                    DB::statement("SET SESSION max_statement_time = 30"); // 30 seconds
+                    Log::debug('MariaDB statement timeout set to 30 seconds');
+                } else {
+                    // MySQL 5.7.8+ uses MAX_EXECUTION_TIME (in milliseconds)
+                    DB::statement("SET SESSION MAX_EXECUTION_TIME = 30000"); // 30 seconds
+                    Log::debug('MySQL execution timeout set to 30 seconds');
+                }
+            } catch (\Exception $e) {
+                // Log but don't fail - some environments might not support this
+                Log::debug('Could not set query timeout', [
+                    'error' => $e->getMessage()
+                ]);
+            }
         }
     }
 }

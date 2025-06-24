@@ -2,115 +2,96 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Services\Dashboard\DashboardMetricsService;
+use App\Models\Appointment;
+use Carbon\Carbon;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Number;
 
-/**
- * KPI-Widget für Termine-Seite
- * 
- * Zeigt die 6 wichtigsten Termine-KPIs:
- * - Umsatz (mit Trend)
- * - Auslastung (Kapazität)  
- * - Conversion Rate (Phone → Appointment)
- * - No-Show Rate
- * - Durchschnittliche Dauer
- * - Umsatz pro Termin
- */
-class AppointmentKpiWidget extends UniversalKpiWidget
+class AppointmentKpiWidget extends BaseWidget
 {
-    protected static ?int $sort = 1;
+    protected static ?string $pollingInterval = '30s';
     
-    protected array $widgetConfig = [
-        'layout' => 'grid',
-        'columns' => 3, // 2 Zeilen à 3 KPIs
-        'show_trends' => true,
-        'auto_refresh' => true,
-    ];
-
-    protected function getKpis(array $filters): array
+    protected function getStats(): array
     {
-        return $this->getMetricsService()->getAppointmentKpis($filters);
-    }
-
-    protected function getWidgetTitle(): string
-    {
-        return 'Termine KPIs';
-    }
-
-    protected function getWidgetIcon(): string
-    {
-        return 'heroicon-o-calendar-days';
-    }
-    
-    /**
-     * Spezifische Tooltip-Erweiterungen für Termine
-     */
-    protected function getKpiTooltip(string $key, array $kpi): string
-    {
-        $baseTooltip = parent::getKpiTooltip($key, $kpi);
+        $company = auth()->user()->company;
         
-        $additionalInfo = match($key) {
-            'revenue' => "\n\n💡 Tipp: Vergleichen Sie mit Vormonat um saisonale Trends zu erkennen.",
-            'occupancy' => "\n\n💡 Optimaler Bereich: 70-85%. Über 90% kann zu Stress führen.",
-            'conversion' => "\n\n💡 Benchmark: Gute Praxen erreichen 60-80% Conversion Rate.",
-            'no_show_rate' => "\n\n💡 Maßnahmen: SMS-Erinnerungen können No-Shows um 30% reduzieren.",
-            'avg_duration' => "\n\n💡 Achten Sie auf Balance zwischen Qualität und Effizienz.",
-            'revenue_per_appointment' => "\n\n💡 Kann durch Service-Mix-Optimierung gesteigert werden.",
-            default => '',
-        };
-        
-        return $baseTooltip . $additionalInfo;
-    }
-    
-    /**
-     * Farb-Override für bessere Termine-Darstellung
-     */
-    protected function getKpiColor(string $key, string $trend): string
-    {
-        // Spezielle Logik für Auslastung
-        if ($key === 'occupancy') {
-            $value = $this->getKpiValue($key);
-            if ($value < 50) return 'danger';      // Zu niedrig
-            if ($value < 70) return 'warning';     // Ausbaufähig  
-            if ($value < 90) return 'success';     // Optimal
-            return 'warning';                      // Zu hoch
+        if (!$company) {
+            return [];
         }
-        
-        // Spezielle Logik für No-Show Rate
-        if ($key === 'no_show_rate') {
-            $value = $this->getKpiValue($key);
-            if ($value < 5) return 'success';      // Sehr gut
-            if ($value < 10) return 'warning';     // Akzeptabel
-            return 'danger';                       // Kritisch
-        }
-        
-        return parent::getKpiColor($key, $trend);
+
+        // Today's appointments
+        $todayCount = Appointment::where('company_id', $company->id)
+            ->whereDate('starts_at', today())
+            ->count();
+            
+        // This week's appointments
+        $weekCount = Appointment::where('company_id', $company->id)
+            ->whereBetween('starts_at', [
+                now()->startOfWeek(),
+                now()->endOfWeek()
+            ])
+            ->count();
+            
+        // Pending confirmations
+        $pendingCount = Appointment::where('company_id', $company->id)
+            ->where('status', 'pending')
+            ->where('starts_at', '>', now())
+            ->count();
+            
+        // Completion rate this month
+        $monthStart = now()->startOfMonth();
+        $completedThisMonth = Appointment::where('company_id', $company->id)
+            ->where('status', 'completed')
+            ->where('starts_at', '>=', $monthStart)
+            ->count();
+            
+        $totalThisMonth = Appointment::where('company_id', $company->id)
+            ->where('starts_at', '>=', $monthStart)
+            ->where('starts_at', '<', now())
+            ->count();
+            
+        $completionRate = $totalThisMonth > 0 
+            ? round(($completedThisMonth / $totalThisMonth) * 100) 
+            : 0;
+
+        return [
+            Stat::make('Heute', $todayCount)
+                ->description($todayCount === 1 ? 'Termin' : 'Termine')
+                ->descriptionIcon('heroicon-m-calendar')
+                ->color('primary')
+                ->extraAttributes([
+                    'class' => 'stat-card-gradient-primary'
+                ]),
+                
+            Stat::make('Diese Woche', $weekCount)
+                ->description($weekCount === 1 ? 'Termin geplant' : 'Termine geplant')
+                ->descriptionIcon('heroicon-m-calendar-days')
+                ->color('info')
+                ->extraAttributes([
+                    'class' => 'stat-card-gradient-info'
+                ]),
+                
+            Stat::make('Zu bestätigen', $pendingCount)
+                ->description($pendingCount === 1 ? 'Termin offen' : 'Termine offen')
+                ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->color($pendingCount > 0 ? 'warning' : 'success')
+                ->extraAttributes([
+                    'class' => $pendingCount > 0 ? 'stat-card-gradient-warning' : 'stat-card-gradient-success'
+                ]),
+                
+            Stat::make('Erfolgsquote', $completionRate . '%')
+                ->description('Diesen Monat')
+                ->descriptionIcon('heroicon-m-chart-bar')
+                ->color($completionRate >= 80 ? 'success' : ($completionRate >= 60 ? 'warning' : 'danger'))
+                ->extraAttributes([
+                    'class' => $completionRate >= 80 ? 'stat-card-gradient-success' : ($completionRate >= 60 ? 'stat-card-gradient-warning' : 'stat-card-gradient-danger')
+                ]),
+        ];
     }
     
-    /**
-     * Hilfsmethode um aktuellen KPI-Wert zu bekommen
-     */
-    private function getKpiValue(string $key): float
+    protected function getColumns(): int
     {
-        // Ensure metricsService is initialized
-        
-        
-        $kpis = $this->getMetricsService()->getAppointmentKpis($this->globalFilters ?? []);
-        return $kpis[$key]['value'] ?? 0;
-    }
-    
-    /**
-     * Erweiterte Prioritäten für Termine
-     */
-    protected function getKpiPriority(string $key): int
-    {
-        return match($key) {
-            'revenue' => 1,                    // Umsatz ist König
-            'occupancy' => 2,                  // Auslastung kritisch für Planung
-            'conversion' => 3,                 // Conversion zeigt Marketing-Erfolg
-            'revenue_per_appointment' => 4,    // Effizienz-Indikator
-            'no_show_rate' => 5,              // Operationales Problem
-            'avg_duration' => 6,              // Service-Qualität
-            default => 99,
-        };
+        return 4;
     }
 }

@@ -38,12 +38,19 @@ class RetellWebhookController extends Controller
             ], 429);
         }
         
-        // DEBUG: Log all incoming webhooks
+        // DEBUG: Enhanced logging for webhook debugging
         Log::warning('RETELL WEBHOOK RECEIVED', [
             'url' => $request->fullUrl(),
             'event' => $request->input('event'),
             'has_call_data' => $request->has('call'),
-            'headers' => $request->headers->all()
+            'call_id' => $request->input('call.call_id') ?? $request->input('call_id') ?? 'NO_CALL_ID',
+            'from_number' => $request->input('call.from_number') ?? null,
+            'to_number' => $request->input('call.to_number') ?? null,
+            'agent_id' => $request->input('call.agent_id') ?? null,
+            'signature' => $request->header('X-Retell-Signature') ?? 'NO_SIGNATURE',
+            'timestamp' => now()->toISOString(),
+            'headers' => $request->headers->all(),
+            'full_payload' => $request->all()
         ]);
         
         $correlationId = $request->input('correlation_id') ?? Str::uuid()->toString();

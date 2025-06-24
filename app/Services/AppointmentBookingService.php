@@ -14,24 +14,80 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\CalcomV2Service;
 use App\Services\NotificationService;
+use App\Services\EventTypeMatchingService;
 use App\Exceptions\BookingException;
 use App\Exceptions\AvailabilityException;
 use App\Services\Locking\TimeSlotLockManager;
 use Illuminate\Support\Str;
+use App\Helpers\SafeQueryHelper;
+use App\Services\MCP\MCPGateway;
+use App\Jobs\SendAppointmentEmailJob;
 
+/**
+ * Central service for managing appointment bookings across all channels
+ * 
+ * This service orchestrates the complete appointment booking flow, including:
+ * - Customer management (find/create)
+ * - Service and staff validation
+ * - Availability checking with time slot locking
+ * - Calendar integration (Cal.com)
+ * - Notification sending
+ * - Transaction management
+ * 
+ * @package App\Services
+ * @author AskProAI Development Team
+ * @since 1.0.0
+ */
 class AppointmentBookingService
 {
     use TransactionalService;
+    
+    /**
+     * @var CalcomV2Service Calendar integration service
+     */
     private $calcomService;
+    
+    /**
+     * @var NotificationService Handles all appointment notifications
+     */
     private $notificationService;
+    
+    /**
+     * @var AvailabilityService Checks and manages availability
+     */
     private $availabilityService;
+    
+    /**
+     * @var TimeSlotLockManager Prevents double-booking with locks
+     */
     private $lockManager;
     
+    /**
+     * @var EventTypeMatchingService Intelligently matches services to event types
+     */
+    private $eventTypeMatchingService;
+    
+    /**
+     * @var MCPGateway MCP Gateway for all external service calls
+     */
+    private $mcpGateway;
+    
+    /**
+     * Initialize the appointment booking service with required dependencies
+     * 
+     * @param CalcomV2Service|null $calcomService Calendar integration service
+     * @param NotificationService|null $notificationService Notification handler
+     * @param AvailabilityService|null $availabilityService Availability checker
+     * @param TimeSlotLockManager|null $lockManager Time slot lock manager
+     * @param EventTypeMatchingService|null $eventTypeMatchingService Event type matcher
+     */
     public function __construct(
         ?CalcomV2Service $calcomService = null,
         ?NotificationService $notificationService = null,
         ?AvailabilityService $availabilityService = null,
-        ?TimeSlotLockManager $lockManager = null
+        ?TimeSlotLockManager $lockManager = null,
+        ?EventTypeMatchingService $eventTypeMatchingService = null,
+        ?MCPGateway $mcpGateway = null
     ) {
         $this->calcomService = $calcomService ?? new CalcomV2Service();
         $this->notificationService = $notificationService ?? new NotificationService();
@@ -43,11 +99,29 @@ class AppointmentBookingService
             $this->availabilityService = $availabilityService;
         }
         $this->lockManager = $lockManager ?? new TimeSlotLockManager();
+        $this->eventTypeMatchingService = $eventTypeMatchingService ?? new EventTypeMatchingService();
+        $this->mcpGateway = $mcpGateway ?? app(MCPGateway::class);
     }
     
     /**
-     * Complete phone-to-appointment booking flow
-     * Supports both old format and new collect_appointment_data format
+     * Book an appointment from a phone call with AI-extracted data
+     * 
+     * Handles the complete phone-to-appointment flow, supporting both legacy
+     * format and the new collect_appointment_data format from Retell.ai
+     * 
+     * @param Call|array $callOrData Either a Call model or appointment data array
+     * @param array|null $appointmentData Additional appointment data (for legacy format)
+     * 
+     * @return array{
+     *   success: bool,
+     *   appointment: Appointment|null,
+     *   message: string,
+     *   confirmation_number?: string,
+     *   errors?: array
+     * }
+     * 
+     * @throws BookingException When booking constraints are violated
+     * @throws \Exception For unexpected errors
      */
     public function bookFromPhoneCall($callOrData, ?array $appointmentData = null): array
     {
@@ -71,7 +145,7 @@ class AppointmentBookingService
                 'has_appointment_data' => !empty($data),
             ];
             
-            return $this->executeInTransaction(function () use ($call, $data, &$lockToken) {
+            return $this->executeInTransaction(function () use ($call, $data, &$lockToken, $startTime) {
                 // 1. Prepare booking data from new format
                 $bookingData = $this->prepareBookingDataFromCollectFunction($data, $call);
                 
@@ -100,6 +174,66 @@ class AppointmentBookingService
                     $branch = Branch::where('company_id', $call?->company_id ?? $customer->company_id)->first();
                 }
                 
+                // Use EventTypeMatchingService to find appropriate event type
+                if ($branch && !empty($bookingData['service_name'])) {
+                    Log::info('Using EventTypeMatchingService for intelligent matching', [
+                        'service_request' => $bookingData['service_name'],
+                        'staff_preference' => $bookingData['staff_name'],
+                        'branch_id' => $branch->id
+                    ]);
+                    
+                    $matchResult = $this->eventTypeMatchingService->findMatchingEventType(
+                        $bookingData['service_name'],
+                        $branch,
+                        $bookingData['staff_name'],
+                        null // Time preference could be added here if available
+                    );
+                    
+                    if ($matchResult) {
+                        // Use the matched service and event type
+                        $service = $matchResult['service'];
+                        $eventType = $matchResult['event_type'];
+                        $serviceDuration = $matchResult['duration_minutes'] ?? $service->duration ?? 30;
+                        
+                        Log::info('Event type match found', [
+                            'service_id' => $service->id,
+                            'service_name' => $service->name,
+                            'event_type_id' => $eventType->id,
+                            'duration' => $serviceDuration
+                        ]);
+                        
+                        // Update bookingData with matched service
+                        $bookingData['service_id'] = $service->id;
+                        
+                        // If we found staff through the matching, use it
+                        if (!$staff && !empty($bookingData['staff_name'])) {
+                            $staffId = $this->findStaffIdByName($bookingData['staff_name'], $branch->company_id);
+                            if ($staffId) {
+                                try {
+                                    $staff = $this->validateStaff($staffId, $service);
+                                } catch (\Exception $e) {
+                                    Log::warning('Staff validation failed after name lookup', [
+                                        'staff_name' => $bookingData['staff_name'],
+                                        'staff_id' => $staffId,
+                                        'error' => $e->getMessage()
+                                    ]);
+                                    // Continue without staff assignment
+                                }
+                            }
+                        }
+                    } else {
+                        Log::warning('No event type match found', [
+                            'service_request' => $bookingData['service_name'],
+                            'branch_id' => $branch->id
+                        ]);
+                        
+                        // Fall back to the original service lookup
+                        if (!empty($bookingData['service_id'])) {
+                            $service = $this->validateService($bookingData['service_id']);
+                        }
+                    }
+                }
+                
                 // 4. Check availability (skip for now if no staff)
                 if ($staff) {
                     $timeSlot = $this->checkAndReserveTimeSlot(
@@ -118,7 +252,7 @@ class AppointmentBookingService
                 }
                 
                 // 5. Create appointment
-                $appointment = $this->createAppointment([
+                $appointmentData = [
                     'customer_id' => $customer->id,
                     'service_id' => $service?->id,
                     'staff_id' => $staff?->id,
@@ -137,7 +271,19 @@ class AppointmentBookingService
                         'raw_booking_data' => $data,
                         'lock_token' => $lockToken // Store lock token for reference
                     ]
-                ]);
+                ];
+                
+                // Add event type information if available from matching
+                if (isset($eventType) && !empty($eventType->id)) {
+                    $appointmentData['calcom_event_type_id'] = $eventType->id; // Use the local ID, not the Cal.com numeric ID
+                    $appointmentData['metadata']['event_type_match'] = [
+                        'matched_by' => 'EventTypeMatchingService',
+                        'original_request' => $bookingData['service_name'],
+                        'matched_service' => $service->name ?? null
+                    ];
+                }
+                
+                $appointment = $this->createAppointment($appointmentData);
                 
                 // 6. Sync with calendar system (if we have the necessary data)
                 if ($service && $staff) {
@@ -226,7 +372,25 @@ class AppointmentBookingService
     }
     
     /**
-     * Prepare booking data from collect_appointment_data format
+     * Prepare booking data from Retell.ai collect_appointment_data function format
+     * 
+     * Converts the German-formatted data from the AI phone agent into
+     * the internal booking format used by the system.
+     * 
+     * @param array $data Raw data from collect_appointment_data function
+     * @param Call|null $call Associated phone call record
+     * 
+     * @return array Normalized booking data with keys:
+     *   - starts_at: Carbon datetime for appointment start
+     *   - ends_at: Carbon datetime for appointment end (null if unknown)
+     *   - customer: Customer data array
+     *   - service_name: Requested service name
+     *   - service_id: Matched service ID
+     *   - staff_name: Preferred staff name
+     *   - staff_id: Matched staff ID
+     *   - branch_id: Branch ID from call
+     *   - notes: Generated notes from conversation
+     *   - customer_preferences: Any stated preferences
      */
     private function prepareBookingDataFromCollectFunction(array $data, ?Call $call = null): array
     {
@@ -278,7 +442,15 @@ class AppointmentBookingService
     }
     
     /**
-     * Find service ID by name
+     * Find service ID by matching service name
+     * 
+     * Uses fuzzy matching to find the best matching service
+     * based on the service name provided by the customer.
+     * 
+     * @param string $serviceName Service name to search for
+     * @param int|null $companyId Company scope for search
+     * 
+     * @return int|null Service ID if found, null otherwise
      */
     private function findServiceIdByName(string $serviceName, ?int $companyId = null): ?int
     {
@@ -286,7 +458,8 @@ class AppointmentBookingService
             return null;
         }
         
-        $query = Service::where('name', 'LIKE', '%' . $serviceName . '%');
+        $query = Service::query();
+        SafeQueryHelper::whereLike($query, 'name', $serviceName);
         
         if ($companyId) {
             $query->where('company_id', $companyId);
@@ -332,9 +505,12 @@ class AppointmentBookingService
         }
         
         $query = Staff::where(function($q) use ($staffName) {
-            $q->where('name', 'LIKE', '%' . $staffName . '%')
-              ->orWhere('first_name', 'LIKE', '%' . $staffName . '%')
-              ->orWhere('last_name', 'LIKE', '%' . $staffName . '%');
+            SafeQueryHelper::whereLike($q, 'name', $staffName);
+            $q->orWhere(function($q2) use ($staffName) {
+                SafeQueryHelper::whereLike($q2, 'first_name', $staffName);
+            })->orWhere(function($q3) use ($staffName) {
+                SafeQueryHelper::whereLike($q3, 'last_name', $staffName);
+            });
         });
         
         if ($companyId) {
@@ -493,31 +669,77 @@ class AppointmentBookingService
     private function syncWithCalendar(Appointment $appointment): void
     {
         try {
-            $calcomBooking = $this->calcomService->createBooking([
-                'eventTypeId' => $appointment->service->calcom_event_type_id,
-                'start' => $appointment->starts_at->toIso8601String(),
-                'responses' => [
-                    'name' => $appointment->customer->name,
-                    'email' => $appointment->customer->email ?? 'noreply@askproai.de',
-                    'phone' => $appointment->customer->phone,
-                    'notes' => $appointment->notes,
-                ],
-                'metadata' => [
+            // Use event type from appointment if available, otherwise fall back to service
+            $eventTypeId = $appointment->calcom_event_type_id 
+                ?? $appointment->service->calcom_event_type_id
+                ?? null;
+                
+            if (!$eventTypeId) {
+                Log::warning('No event type ID available for calendar sync', [
                     'appointment_id' => $appointment->id,
-                    'source' => 'phone_ai'
-                ],
-                'timeZone' => 'Europe/Berlin',
-            ]);
+                    'service_id' => $appointment->service_id
+                ]);
+                return;
+            }
             
-            $appointment->update([
-                'calcom_booking_id' => $calcomBooking['id'] ?? null,
-                'external_id' => $calcomBooking['uid'] ?? null,
-            ]);
+            // Use MCP Gateway for Cal.com booking
+            $mcpRequest = [
+                'jsonrpc' => '2.0',
+                'method' => 'calcom.createBooking',
+                'params' => [
+                    'eventTypeId' => $eventTypeId,
+                    'start' => $appointment->starts_at->toIso8601String(),
+                    'responses' => [
+                        'name' => $appointment->customer->name,
+                        'email' => $appointment->customer->email ?? 'noreply@askproai.de',
+                        'phone' => $appointment->customer->phone,
+                        'notes' => $appointment->notes,
+                    ],
+                    'metadata' => [
+                        'appointment_id' => $appointment->id,
+                        'source' => 'phone_ai',
+                        'event_type_id' => $eventTypeId,
+                        'branch_id' => $appointment->branch_id,
+                        'company_id' => $appointment->company_id
+                    ],
+                    'timeZone' => 'Europe/Berlin',
+                ],
+                'id' => Str::uuid()->toString()
+            ];
+            
+            $response = $this->mcpGateway->process($mcpRequest);
+            
+            if (isset($response['error'])) {
+                throw new \Exception($response['error']['message'] ?? 'MCP booking failed');
+            }
+            
+            $calcomBooking = $response['result'] ?? [];
+            
+            if (isset($calcomBooking['booking'])) {
+                $appointment->update([
+                    'calcom_booking_id' => $calcomBooking['booking']['id'] ?? null,
+                    'external_id' => $calcomBooking['booking']['uid'] ?? null,
+                ]);
+                
+                Log::info('Appointment synced with Cal.com via MCP', [
+                    'appointment_id' => $appointment->id,
+                    'calcom_booking_id' => $calcomBooking['booking']['id'] ?? null,
+                    'used_mcp' => true
+                ]);
+            } elseif (isset($calcomBooking['alternatives'])) {
+                Log::warning('Cal.com booking failed, alternatives suggested', [
+                    'appointment_id' => $appointment->id,
+                    'alternatives_count' => count($calcomBooking['alternatives']),
+                    'reason' => $calcomBooking['message'] ?? 'Slot unavailable'
+                ]);
+            }
             
         } catch (\Exception $e) {
-            Log::error('Failed to sync appointment with calendar', [
+            Log::error('Failed to sync appointment with calendar via MCP', [
                 'appointment_id' => $appointment->id,
-                'error' => $e->getMessage()
+                'event_type_id' => $eventTypeId ?? null,
+                'error' => $e->getMessage(),
+                'used_mcp' => true
             ]);
             
             // Queue retry job for calendar sync
@@ -533,19 +755,47 @@ class AppointmentBookingService
     private function sendConfirmations(Appointment $appointment): void
     {
         try {
-            // Send customer confirmation
+            // Send customer confirmation email via job queue
             if ($appointment->customer->email) {
-                $this->notificationService->sendAppointmentConfirmation($appointment);
+                // Determine locale based on company settings or customer preference
+                $locale = $appointment->branch->company->locale ?? 'de';
+                
+                // Dispatch email job
+                SendAppointmentEmailJob::dispatch(
+                    $appointment,
+                    'confirmation',
+                    $locale
+                );
+                
+                Log::info('Appointment confirmation email job dispatched', [
+                    'appointment_id' => $appointment->id,
+                    'customer_email' => $appointment->customer->email,
+                    'locale' => $locale,
+                ]);
             }
             
-            // Send SMS if available
+            // Send SMS if available (keep existing notification service for now)
             if ($appointment->customer->phone) {
-                $this->notificationService->sendAppointmentSms($appointment);
+                try {
+                    $this->notificationService->sendAppointmentConfirmation($appointment);
+                } catch (\Exception $e) {
+                    Log::warning('SMS notification failed', [
+                        'appointment_id' => $appointment->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
             
-            // Notify staff
-            if ($appointment->staff->email) {
-                $this->notificationService->notifyStaffNewAppointment($appointment);
+            // Notify staff (keep existing notification service for now)
+            if ($appointment->staff && $appointment->staff->email) {
+                try {
+                    $this->notificationService->notifyStaffNewAppointment($appointment);
+                } catch (\Exception $e) {
+                    Log::warning('Staff notification failed', [
+                        'appointment_id' => $appointment->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
             
         } catch (\Exception $e) {

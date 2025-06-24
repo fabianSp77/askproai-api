@@ -7,6 +7,7 @@
         "php": "^8.2",
         "bezhansalleh/filament-language-switch": "^3.1",
         "bezhansalleh/filament-shield": "^3.3",
+        "blade-ui-kit/blade-heroicons": "^2.6",
         "doctrine/dbal": "^4.2",
         "filament/actions": "3.3.14",
         "filament/filament": "3.3.14",
@@ -28,6 +29,8 @@
         "nunomaduro/collision": "^8.8",
         "promphp/prometheus_client_php": "^2.14",
         "sentry/sentry-laravel": "^4.15",
+        "spatie/browsershot": "^5.0",
+        "spatie/image": "^3.8",
         "spatie/laravel-activitylog": "^4.0",
         "spatie/laravel-backup": "^8.0",
         "spatie/laravel-permission": "^6",
@@ -51,7 +54,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helpers/features.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

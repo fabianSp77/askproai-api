@@ -29,6 +29,7 @@
         <env name="APP_KEY" value="base64:KgXuiSIghU/rFT2KFE699fYbjrXy8i8/h3rCvyfqZis="/> <!-- Key aus deiner .env -->
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
+        <env name="DB_DATABASE" value=":memory:"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

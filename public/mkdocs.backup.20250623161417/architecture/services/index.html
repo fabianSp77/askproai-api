@@ -1,0 +1,4376 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Complete documentation for AskProAI platform">
+      
+      
+      
+        <link rel="canonical" href="https://api.askproai.de/mkdocs/architecture/services/">
+      
+      
+        <link rel="prev" href="../database-schema/">
+      
+      
+        <link rel="next" href="../mcp-architecture/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Services - AskProAI Complete Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#service-layer-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AskProAI Complete Documentation" class="md-header__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AskProAI Complete Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Services
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quick Start
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../status/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  System Status
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/models/" class="md-tabs__link">
+          
+  
+  
+  API Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../MCP_COMPLETE_OVERVIEW/" class="md-tabs__link">
+          
+  
+  
+  MCP System
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../SERVICE_ARCHITECTURE/" class="md-tabs__link">
+          
+  
+  
+  Service Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../DEPLOYMENT_GUIDE/" class="md-tabs__link">
+          
+  
+  
+  Operations
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../configuration/reference/" class="md-tabs__link">
+          
+  
+  
+  Configuration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../TESTING_STRATEGY/" class="md-tabs__link">
+          
+  
+  
+  Testing
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../database_cleanup_plan/" class="md-tabs__link">
+          
+  
+  
+  Planning
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../DASHBOARD_REDESIGN_README/" class="md-tabs__link">
+          
+  
+  
+  UI/UX
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../STRUCTURED_LOGGER_GUIDE/" class="md-tabs__link">
+          
+  
+  
+  Developer Tools
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../statistics/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Statistics
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AskProAI Complete Documentation" class="md-nav__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AskProAI Complete Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Quick Start
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    System Status
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database Schema
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Services
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Services
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#service-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Service Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calcomeventsyncservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomEventSyncService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomeventtypeimportservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomEventTypeImportService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomeventtypesyncservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomEventTypeSyncService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomimportservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomImportService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcommigrationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomMigrationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomservicev1legacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomServiceV1Legacy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomsyncservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomSyncService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomv2migrationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomV2MigrationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomv2service" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomV2Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retellagentservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      RetellAgentService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retellservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      RetellService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retellv2service" class="md-nav__link">
+    <span class="md-ellipsis">
+      RetellV2Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stripeinvoiceservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      StripeInvoiceService
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#business-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Business Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Business Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#appointmentbookingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      AppointmentBookingService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appointmentservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      AppointmentService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customerportalservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CustomerPortalService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customerservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CustomerService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smartbookingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      SmartBookingService
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Other Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anomalydetectionservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      AnomalyDetectionService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#availabilitychecker" class="md-nav__link">
+    <span class="md-ellipsis">
+      AvailabilityChecker
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#availabilityservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      AvailabilityService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cacheservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CacheService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cachewarmer" class="md-nav__link">
+    <span class="md-ellipsis">
+      CacheWarmer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calldatarefresher" class="md-nav__link">
+    <span class="md-ellipsis">
+      CallDataRefresher
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#callservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CallService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#callbackservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CallbackService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#companyservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CompanyService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conflictdetectionservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ConflictDetectionService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookieconsentservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CookieConsentService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currencyconverter" class="md-nav__link">
+    <span class="md-ellipsis">
+      CurrencyConverter
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dashboardrouteresolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      DashboardRouteResolver
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#datevexportservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      DatevExportService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eagerloadinganalyzer" class="md-nav__link">
+    <span class="md-ellipsis">
+      EagerLoadingAnalyzer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encryptionservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      EncryptionService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eventtypematchingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      EventTypeMatchingService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eventtypenameparser" class="md-nav__link">
+    <span class="md-ellipsis">
+      EventTypeNameParser
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filewatcherservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      FileWatcherService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gdprservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      GdprService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#healthcheckservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      HealthCheckService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#horizonhealth" class="md-nav__link">
+    <span class="md-ellipsis">
+      HorizonHealth
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#improvedeventtypenameparser" class="md-nav__link">
+    <span class="md-ellipsis">
+      ImprovedEventTypeNameParser
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integrationtestservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      IntegrationTestService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoicecomplianceservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvoiceComplianceService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#knowledgebaseservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      KnowledgeBaseService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#masterservicemanager" class="md-nav__link">
+    <span class="md-ellipsis">
+      MasterServiceManager
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobiledetector" class="md-nav__link">
+    <span class="md-ellipsis">
+      MobileDetector
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#navigationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NavigationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notificationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NotificationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#onboardingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      OnboardingService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phonenumberresolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      PhoneNumberResolver
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pricingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      PricingService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompttemplateservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      PromptTemplateService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#querycache" class="md-nav__link">
+    <span class="md-ellipsis">
+      QueryCache
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#querymonitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      QueryMonitor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#queryoptimizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      QueryOptimizer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#screenshotauthservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ScreenshotAuthService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#screenshotservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ScreenshotService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serviceservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ServiceService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smarteventtypenameparser" class="md-nav__link">
+    <span class="md-ellipsis">
+      SmartEventTypeNameParser
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smartmigrationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      SmartMigrationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#staffservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      StaffService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#taxservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      TaxService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tutorialservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      TutorialService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ValidationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webhookprocessor" class="md-nav__link">
+    <span class="md-ellipsis">
+      WebhookProcessor
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MCP Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            API Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/routes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Routes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    MCP System
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            MCP System
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MCP_COMPLETE_OVERVIEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Complete Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MCP_INTEGRATION_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Integration Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MCP_SETUP_COMPLETE_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Setup Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MCP_EVOLUTION_SYSTEM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Evolution System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CALCOM_MCP_SERVER_API/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cal.com MCP Server
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../KNOWLEDGE_MCP_SERVER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Knowledge MCP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../QUEUE_MCP_IMPLEMENTATION_COMPLETE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Queue MCP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SENTRY_MCP_INTEGRATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sentry MCP
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Service Documentation
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Service Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SERVICE_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Service Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ENHANCED_BOOKING_SERVICE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Enhanced Booking
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../UNIVERSAL_BOOKING_SYSTEM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Universal Booking
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CALCOM_V2_API_DOCUMENTATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Cal.com V2 API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Operations
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Operations
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DEPLOYMENT_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Deployment Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MONITORING_AND_ALERTING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Monitoring Guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TROUBLESHOOTING_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/security-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Audit
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PERFORMANCE_INDEXES_MIGRATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Performance Indexes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            Configuration
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configuration/reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DATABASE_SAFETY_GUIDELINES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database Safety
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            Testing
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTING_STRATEGY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing Strategy
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../UNIVERSAL_BOOKING_TEST_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Universal Booking Tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Planning
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            Planning
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../database_cleanup_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database Cleanup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../service_consolidation_plan/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Service Consolidation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    UI/UX
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            UI/UX
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DASHBOARD_REDESIGN_README/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dashboard Redesign
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Developer Tools
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            Developer Tools
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../STRUCTURED_LOGGER_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Structured Logger
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../RETELL_WEBHOOK_MCP_MIGRATION_GUIDE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Retell Webhook Migration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../statistics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Statistics
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#service-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      Service Architecture
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Integration Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calcomeventsyncservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomEventSyncService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomeventtypeimportservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomEventTypeImportService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomeventtypesyncservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomEventTypeSyncService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomimportservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomImportService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcommigrationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomMigrationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomservicev1legacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomServiceV1Legacy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomsyncservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomSyncService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomv2migrationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomV2MigrationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calcomv2service" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalcomV2Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retellagentservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      RetellAgentService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retellservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      RetellService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retellv2service" class="md-nav__link">
+    <span class="md-ellipsis">
+      RetellV2Service
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stripeinvoiceservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      StripeInvoiceService
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#business-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Business Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Business Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#appointmentbookingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      AppointmentBookingService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#appointmentservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      AppointmentService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customerportalservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CustomerPortalService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customerservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CustomerService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smartbookingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      SmartBookingService
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other Services
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Other Services">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anomalydetectionservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      AnomalyDetectionService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#availabilitychecker" class="md-nav__link">
+    <span class="md-ellipsis">
+      AvailabilityChecker
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#availabilityservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      AvailabilityService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cacheservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CacheService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cachewarmer" class="md-nav__link">
+    <span class="md-ellipsis">
+      CacheWarmer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CalService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calldatarefresher" class="md-nav__link">
+    <span class="md-ellipsis">
+      CallDataRefresher
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#callservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CallService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#callbackservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CallbackService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#companyservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CompanyService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conflictdetectionservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ConflictDetectionService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cookieconsentservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      CookieConsentService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#currencyconverter" class="md-nav__link">
+    <span class="md-ellipsis">
+      CurrencyConverter
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dashboardrouteresolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      DashboardRouteResolver
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#datevexportservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      DatevExportService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eagerloadinganalyzer" class="md-nav__link">
+    <span class="md-ellipsis">
+      EagerLoadingAnalyzer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#encryptionservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      EncryptionService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eventtypematchingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      EventTypeMatchingService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#eventtypenameparser" class="md-nav__link">
+    <span class="md-ellipsis">
+      EventTypeNameParser
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filewatcherservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      FileWatcherService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gdprservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      GdprService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#healthcheckservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      HealthCheckService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#horizonhealth" class="md-nav__link">
+    <span class="md-ellipsis">
+      HorizonHealth
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#improvedeventtypenameparser" class="md-nav__link">
+    <span class="md-ellipsis">
+      ImprovedEventTypeNameParser
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integrationtestservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      IntegrationTestService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invoicecomplianceservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvoiceComplianceService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#knowledgebaseservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      KnowledgeBaseService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#masterservicemanager" class="md-nav__link">
+    <span class="md-ellipsis">
+      MasterServiceManager
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mobiledetector" class="md-nav__link">
+    <span class="md-ellipsis">
+      MobileDetector
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#navigationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NavigationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notificationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      NotificationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#onboardingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      OnboardingService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phonenumberresolver" class="md-nav__link">
+    <span class="md-ellipsis">
+      PhoneNumberResolver
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pricingservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      PricingService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompttemplateservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      PromptTemplateService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#querycache" class="md-nav__link">
+    <span class="md-ellipsis">
+      QueryCache
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#querymonitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      QueryMonitor
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#queryoptimizer" class="md-nav__link">
+    <span class="md-ellipsis">
+      QueryOptimizer
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#screenshotauthservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ScreenshotAuthService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#screenshotservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ScreenshotService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serviceservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ServiceService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smarteventtypenameparser" class="md-nav__link">
+    <span class="md-ellipsis">
+      SmartEventTypeNameParser
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#smartmigrationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      SmartMigrationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#staffservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      StaffService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#taxservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      TaxService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tutorialservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      TutorialService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validationservice" class="md-nav__link">
+    <span class="md-ellipsis">
+      ValidationService
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webhookprocessor" class="md-nav__link">
+    <span class="md-ellipsis">
+      WebhookProcessor
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="service-layer-documentation">Service Layer Documentation<a class="headerlink" href="#service-layer-documentation" title="Permanent link">&para;</a></h1>
+<p>Generated on: 2025-06-22 23:28:53</p>
+<h2 id="service-architecture">Service Architecture<a class="headerlink" href="#service-architecture" title="Permanent link">&para;</a></h2>
+<div class="admonition info">
+<p class="admonition-title">Service Count</p>
+<p>Found <strong>68 services</strong> in the codebase.</p>
+</div>
+<h2 id="integration-services">Integration Services<a class="headerlink" href="#integration-services" title="Permanent link">&para;</a></h2>
+<h3 id="calcomeventsyncservice">CalcomEventSyncService<a class="headerlink" href="#calcomeventsyncservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>syncAllEventTypes()</code></li>
+</ul>
+<p>Synchronisiert alle Event-Types aus Cal.com
+- <code>linkStaffToEventTypes()</code></p>
+<p>Verknüpft Mitarbeiter mit Event-Types basierend auf Cal.com Daten</p>
+<hr />
+<h3 id="calcomeventtypeimportservice">CalcomEventTypeImportService<a class="headerlink" href="#calcomeventtypeimportservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>importEventTypes(): array</code></li>
+<li><code>getEventTypeById($eventTypeId): ?array</code></li>
+</ul>
+<hr />
+<h3 id="calcomeventtypesyncservice">CalcomEventTypeSyncService<a class="headerlink" href="#calcomeventtypesyncservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>validateApiKey($apiKey): array</code></li>
+<li><code>fetchEventTypes($apiKey, $useCache = false): array</code></li>
+<li><code>checkWebhookStatus($eventTypeId, $apiKey): bool</code></li>
+<li><code>clearCache($apiKey): void</code></li>
+<li><code>debugApiCall($apiKey): array</code></li>
+</ul>
+<hr />
+<h3 id="calcomimportservice">CalcomImportService<a class="headerlink" href="#calcomimportservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>importEventTypes()</code></li>
+<li><code>resolveDuplicate($eventTypeId, $action = "keep_local")</code></li>
+</ul>
+<hr />
+<h3 id="calcommigrationservice">CalcomMigrationService<a class="headerlink" href="#calcommigrationservice" title="Permanent link">&para;</a></h3>
+<p>Service to handle gradual migration from Cal.com V1 to V2 API
+This service provides a unified interface that can switch between
+V1 and V2 implementations based on configuration or feature flags.</p>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getEventTypes(?string $teamSlug = null)</code></li>
+</ul>
+<p>Get event types with migration support
+- <code>getAvailableSlots(int $eventTypeId, string $startDate, string $endDate, string $timezone = "Europe\/Berlin")</code></p>
+<p>Get available slots with migration support
+- <code>bookAppointment(int $eventTypeId, string $startTime, ?string $endTime = null, array $customerData = [], ?string $notes = null, array $metadata = [])</code></p>
+<p>Create booking with migration support
+- <code>cancelBooking(string $bookingId, ?string $reason = null)</code></p>
+<p>Cancel booking with migration support
+- <code>getBooking(string $bookingId)</code></p>
+<p>Get booking by ID with migration support
+- <code>enableV2ForMethod(string $method, int $ttl = 3600): void</code></p>
+<p>Enable V2 for specific method (for gradual rollout)
+- <code>disableV2ForMethod(string $method): void</code></p>
+<p>Disable V2 for specific method (for rollback)
+- <code>getMigrationStatus(): array</code></p>
+<p>Get migration status</p>
+<hr />
+<h3 id="calcomservice">CalcomService<a class="headerlink" href="#calcomservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>setApiKey(string $apiKey): self</code></li>
+</ul>
+<p>Set API key (for dynamic configuration)
+- <code>checkAvailability($eventTypeId, $dateFrom, $dateTo)</code>
+- <code>bookAppointment($eventTypeId, $startTime, $endTime, $customerData, $notes = null)</code>
+- <code>getEventTypes($companyId = null)</code></p>
+<hr />
+<h3 id="calcomservicev1legacy">CalcomServiceV1Legacy<a class="headerlink" href="#calcomservicev1legacy" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>checkAvailability($eventTypeId, $dateFrom, $dateTo)</code></li>
+<li><code>bookAppointment($eventTypeId, $startTime, $endTime, $customerData, $notes = null)</code></li>
+<li><code>getEventTypes()</code></li>
+<li><code>getBookings($params = [])</code></li>
+<li><code>cancelBooking($bookingId, $reason = null)</code></li>
+</ul>
+<hr />
+<h3 id="calcomsyncservice">CalcomSyncService<a class="headerlink" href="#calcomsyncservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>syncEventTypesForCompany($companyId)</code></li>
+</ul>
+<p>Synchronisiere Event-Types für ein Unternehmen
+- <code>syncTeamMembers($companyId)</code></p>
+<p>Synchronisiere Team-Mitglieder für ein Unternehmen
+- <code>checkAvailability($eventTypeId, $dateFrom, $dateTo, $staffId = null)</code></p>
+<p>Prüfe Verfügbarkeit für einen Event-Type
+- <code>invalidateEventTypeCache($eventTypeId)</code></p>
+<p>Cache für einen Event-Type invalidieren
+- <code>invalidateCompanyCache($companyId)</code></p>
+<p>Cache für alle Event-Types einer Company invalidieren</p>
+<hr />
+<h3 id="calcomv2migrationservice">CalcomV2MigrationService<a class="headerlink" href="#calcomv2migrationservice" title="Permanent link">&para;</a></h3>
+<p>Cal.com V2 Migration Service
+This service provides v2 API compatibility while maintaining
+backward compatibility with existing v1 implementations.</p>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getEventTypes(string $apiKey): ?array</code></li>
+</ul>
+<p>Fetch event types using v2 API
+- <code>checkAvailability(string $apiKey, int $eventTypeId, string $startDate, string $endDate, ?string $timezone = null): ?array</code></p>
+<p>Check availability using v2 API
+- <code>createBooking(string $apiKey, array $bookingData): ?array</code></p>
+<p>Create a booking using v2 API
+- <code>testConnection(string $apiKey): array</code></p>
+<p>Test API connection and permissions</p>
+<hr />
+<h3 id="calcomv2service">CalcomV2Service<a class="headerlink" href="#calcomv2service" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getMe()</code></li>
+</ul>
+<p>Get current user info (v2)
+- <code>getUsers()</code></p>
+<p>V1 API für Users nutzen
+- <code>getEventTypes()</code></p>
+<p>V1 API für Event-Types nutzen
+- <code>getEventTypeDetails($eventTypeId)</code></p>
+<p>Get detailed information for a specific event type
+- <code>checkAvailability($eventTypeId, $date, $timezone = "Europe\/Berlin")</code></p>
+<p>V2 API für Verfügbarkeiten - mit korrektem Slot-Flattening
+- <code>bookAppointment($eventTypeId, $startTime, $endTime, $customerData, $notes = null)</code></p>
+<p>V1 API für Buchungen (wie im CalcomService)
+- <code>getBookings($params = [])</code></p>
+<p>Hole alle Bookings mit Paginierung
+- <code>getBooking($bookingId)</code></p>
+<p>Hole ein einzelnes Booking
+- <code>getSchedules()</code></p>
+<p>Get all schedules - Note: V2 doesn't have schedules endpoint, use V1
+- <code>getTeams()</code></p>
+<p>Get teams (v2)
+- <code>getTeamEventTypes($teamId)</code></p>
+<p>Get team event types (v2)
+- <code>getWebhooks()</code></p>
+<p>Get webhooks (v2)
+- <code>createWebhook($subscriberUrl, $triggers = ["BOOKING_CREATED","BOOKING_CANCELLED","BOOKING_RESCHEDULED"])</code></p>
+<p>Create webhook (v2)
+- <code>cancelBooking($bookingId, $reason = null)</code></p>
+<p>Cancel booking (v2)
+- <code>rescheduleBooking($bookingId, $start, $reason = null)</code></p>
+<p>Reschedule booking (v2)
+- <code>getSlots($eventTypeId, $startDate, $endDate, $timeZone = "Europe\/Berlin")</code></p>
+<p>Get available time slots for an event type
+  Uses V2 API
+- <code>updateBooking($bookingId, array $updateData)</code></p>
+<p>Update an existing booking</p>
+<hr />
+<h3 id="retellagentservice">RetellAgentService<a class="headerlink" href="#retellagentservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getAgentDetails($agentId)</code></li>
+<li><code>getAgentStatistics($agentId, $days = 7)</code></li>
+<li><code>listAgents()</code></li>
+<li><code>validateAgentConfiguration($agentId)</code></li>
+</ul>
+<hr />
+<h3 id="retellservice">RetellService<a class="headerlink" href="#retellservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getAgents()</code></li>
+</ul>
+<p>Alle Agenten abrufen
+- <code>getAgent($agentId)</code></p>
+<p>Einzelnen Agenten abrufen
+- <code>updateAgent($agentId, array $data)</code></p>
+<p>Update agent metadata
+- <code>clearCache()</code></p>
+<p>Cache leeren
+- <code>buildInboundResponse($agentId, $fromNumber = null, $dynamicVariables = [])</code></p>
+<p>Build response for inbound calls with dynamic variables</p>
+<hr />
+<h3 id="retellv2service">RetellV2Service<a class="headerlink" href="#retellv2service" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>createPhoneCall(array $payload): array</code></li>
+</ul>
+<p>Einen Anruf starten.
+   Erforderlich   : from_number  (+E.164)
+   Entweder ODER  : to_number    (+E.164)  <strong>oder</strong>  agent_id
+- <code>createAgent(array $config): array</code></p>
+<p>Create a new agent
+- <code>updateAgent(string $agentId, array $config): array</code></p>
+<p>Update existing agent
+- <code>getAgent(string $agentId): ?array</code></p>
+<p>Get agent details
+- <code>listAgents(): array</code></p>
+<p>List all agents
+- <code>deleteAgent(string $agentId): bool</code></p>
+<p>Delete an agent
+- <code>updatePhoneNumber(string $phoneNumber, array $config): array</code></p>
+<p>Update phone number configuration
+- <code>getCall(string $callId): ?array</code></p>
+<p>Get call details
+- <code>listCalls(int $limit = 50): array</code></p>
+<p>List recent calls
+- <code>listPhoneNumbers(): array</code></p>
+<p>List all phone numbers
+- <code>getPhoneNumber(string $phoneNumberId): ?array</code></p>
+<p>Get phone number details
+- <code>getAgentPrompt(string $agentId): ?string</code></p>
+<p>Get agent prompt only</p>
+<hr />
+<h3 id="stripeinvoiceservice">StripeInvoiceService<a class="headerlink" href="#stripeinvoiceservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>ensureStripeCustomer(App\Models\Company $company): ?string</code></li>
+</ul>
+<p>Create or update Stripe customer for a company.
+- <code>createInvoiceForBillingPeriod(App\Models\BillingPeriod $billingPeriod): ?App\Models\Invoice</code></p>
+<p>Create invoice for a billing period.
+- <code>processWebhook(array $event): void</code></p>
+<p>Process Stripe webhook for invoice events.
+- <code>createManualInvoice(App\Models\Company $company, array $items, ?int $branchId = null): ?App\Models\Invoice</code></p>
+<p>Create manual invoice for additional services.</p>
+<hr />
+<h2 id="business-services">Business Services<a class="headerlink" href="#business-services" title="Permanent link">&para;</a></h2>
+<h3 id="appointmentbookingservice">AppointmentBookingService<a class="headerlink" href="#appointmentbookingservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>bookFromPhoneCall($callOrData, ?array $appointmentData = null): array</code></li>
+</ul>
+<p>Complete phone-to-appointment booking flow
+  Supports both old format and new collect_appointment_data format
+- <code>cleanupExpiredLocks(): int</code></p>
+<p>Clean up expired locks (delegates to TimeSlotLockManager)
+- <code>extendLock(string $lockToken, int $additionalMinutes = 5): bool</code></p>
+<p>Extend an existing lock (useful for long-running operations)
+- <code>isSlotLocked($staff, $startTime, $endTime): bool</code></p>
+<p>Check if a time slot is currently locked</p>
+<hr />
+<h3 id="appointmentservice">AppointmentService<a class="headerlink" href="#appointmentservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>create(array $data): App\Models\Appointment</code></li>
+</ul>
+<p>Create new appointment
+- <code>update(int $appointmentId, array $data): App\Models\Appointment</code></p>
+<p>Update appointment
+- <code>cancel(int $appointmentId, ?string $reason = null): bool</code></p>
+<p>Cancel appointment
+- <code>checkAvailability(int $staffId, $startTime, $endTime, ?int $excludeAppointmentId = null): bool</code></p>
+<p>Check availability
+- <code>getAvailableSlots(int $staffId, Carbon\Carbon $date, int $duration = 30): array</code></p>
+<p>Get available time slots
+- <code>complete(int $appointmentId, array $data = []): bool</code></p>
+<p>Complete appointment
+- <code>markAsNoShow(int $appointmentId): bool</code></p>
+<p>Mark as no-show
+- <code>getStatistics(Carbon\Carbon $startDate, Carbon\Carbon $endDate): array</code></p>
+<p>Get appointment statistics</p>
+<hr />
+<h3 id="customerportalservice">CustomerPortalService<a class="headerlink" href="#customerportalservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>enablePortalAccess(App\Models\CustomerAuth $customer, ?string $password = null): bool</code></li>
+</ul>
+<p>Enable portal access for a customer.
+- <code>disablePortalAccess(App\Models\CustomerAuth $customer): bool</code></p>
+<p>Disable portal access for a customer.
+- <code>sendMagicLink(App\Models\CustomerAuth $customer, string $token): bool</code></p>
+<p>Send magic link to customer.
+- <code>getPortalUrl(App\Models\Company $company): string</code></p>
+<p>Generate portal URL for company.
+- <code>canAccessPortal(App\Models\CustomerAuth $customer): bool</code></p>
+<p>Check if customer can access portal.
+- <code>getPortalFeatures(App\Models\Company $company): array</code></p>
+<p>Get portal features for company.
+- <code>getCustomerStats(App\Models\CustomerAuth $customer): array</code></p>
+<p>Get portal statistics for customer.
+- <code>bulkEnablePortalAccess(App\Models\Company $company, array $customerIds = []): array</code></p>
+<p>Bulk enable portal access.</p>
+<hr />
+<h3 id="customerservice">CustomerService<a class="headerlink" href="#customerservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>findByPhone(string $phone, int $companyId): ?App\Models\Customer</code></li>
+</ul>
+<p>Find customer by phone with caching
+- <code>create(array $data): App\Models\Customer</code></p>
+<p>Create new customer
+- <code>update(int $customerId, array $data): App\Models\Customer</code></p>
+<p>Update customer
+- <code>mergeDuplicates(int $primaryId, int $duplicateId): App\Models\Customer</code></p>
+<p>Merge duplicate customers
+- <code>getHistory(int $customerId): array</code></p>
+<p>Get customer history
+- <code>findPotentialDuplicates(int $customerId): Illuminate\Support\Collection</code></p>
+<p>Search for potential duplicates
+- <code>block(int $customerId, string $reason): void</code></p>
+<p>Block customer
+- <code>unblock(int $customerId): void</code></p>
+<p>Unblock customer
+- <code>addTag(int $customerId, string $tag): void</code></p>
+<p>Add tag to customer
+- <code>removeTag(int $customerId, string $tag): void</code></p>
+<p>Remove tag from customer
+- <code>getByTag(string $tag): Illuminate\Support\Collection</code></p>
+<p>Get customers by tag
+- <code>export(int $customerId): array</code></p>
+<p>Export customer data</p>
+<hr />
+<h3 id="smartbookingservice">SmartBookingService<a class="headerlink" href="#smartbookingservice" title="Permanent link">&para;</a></h3>
+<p>SmartBookingService - Der zentrale Service für alle Terminbuchungen
+Konsolidiert die Funktionalität von:
+- AppointmentService
+- BookingService
+- Teile von CallService</p>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>handleIncomingCall(array $webhookData): ?App\Models\Appointment</code></li>
+</ul>
+<p>Hauptmethode: Verarbeitet einen eingehenden Anruf und bucht einen Termin</p>
+<hr />
+<h2 id="other-services">Other Services<a class="headerlink" href="#other-services" title="Permanent link">&para;</a></h2>
+<h3 id="anomalydetectionservice">AnomalyDetectionService<a class="headerlink" href="#anomalydetectionservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>detectSystemAnomalies(): array</code></li>
+</ul>
+<p>Detect anomalies across the entire system
+- <code>getSeverityScore(string $severity): int</code></p>
+<p>Get severity score for prioritization
+- <code>getSystemRecommendations(array $anomalies): array</code></p>
+<p>Get recommendations based on current anomalies</p>
+<hr />
+<h3 id="availabilitychecker">AvailabilityChecker<a class="headerlink" href="#availabilitychecker" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>checkAvailabilityFromRequest($request)</code></li>
+</ul>
+<p>Parse eine Anfrage und prüfe Verfügbarkeiten intelligent
+- <code>checkAvailability($eventTypeId, $dateFrom, $dateTo, $staffId = null, $branchId = null)</code></p>
+<p>Prüfe Verfügbarkeit mit allen Business-Regeln
+- <code>findNextAvailableSlot($eventTypeId, $staffId = null, $branchId = null)</code></p>
+<p>Finde nächsten verfügbaren Termin</p>
+<hr />
+<h3 id="availabilityservice">AvailabilityService<a class="headerlink" href="#availabilityservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>checkRealTimeAvailability(string $staffId, int $eventTypeId, Carbon\Carbon $date): array</code></li>
+</ul>
+<p>Prüfe Echtzeit-Verfügbarkeit für einen Mitarbeiter
+- <code>checkMultipleStaffAvailability(array $staffIds, int $eventTypeId, Carbon\Carbon $date): Illuminate\Support\Collection</code></p>
+<p>Prüfe Verfügbarkeit für mehrere Mitarbeiter gleichzeitig
+- <code>getNextAvailableSlot(string $staffId, int $eventTypeId, Carbon\Carbon $fromDate): ?array</code></p>
+<p>Finde nächsten verfügbaren Slot</p>
+<hr />
+<h3 id="cacheservice">CacheService<a class="headerlink" href="#cacheservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getEventTypes(int $companyId, callable $callback)</code></li>
+</ul>
+<p>Get Cal.com event types with caching
+- <code>getCustomerByPhone(string $phone, int $companyId, callable $callback)</code></p>
+<p>Get customer by phone with caching
+- <code>getAvailability(int $staffId, string $date, callable $callback)</code></p>
+<p>Get appointment availability with caching
+- <code>getCompanySettings(int $companyId, callable $callback)</code></p>
+<p>Get company settings with caching
+- <code>getStaffSchedules(int $staffId, callable $callback)</code></p>
+<p>Get staff schedules with caching
+- <code>getServiceLists(int $companyId, ?int $branchId, callable $callback)</code></p>
+<p>Get service lists with caching
+- <code>clearCompanyCache(int $companyId): void</code></p>
+<p>Clear cache by company
+- <code>clearStaffCache(int $staffId): void</code></p>
+<p>Clear cache by staff
+- <code>clearCustomerCache(string $identifier): void</code></p>
+<p>Clear cache by customer
+- <code>clearAppointmentsCache(string $date): void</code></p>
+<p>Clear appointments cache by date
+- <code>clearEventTypesCache(): void</code></p>
+<p>Clear all event types cache</p>
+<hr />
+<h3 id="cachewarmer">CacheWarmer<a class="headerlink" href="#cachewarmer" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>warmInvoiceCaches(): void</code></li>
+</ul>
+<p>Warm invoice-related caches
+- <code>isUsageBasedInvoice(App\Models\Invoice $invoice): bool</code></p>
+<p>Check if an invoice is usage-based using cache</p>
+<hr />
+<h3 id="calservice">CalService<a class="headerlink" href="#calservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getEventTypes()</code></li>
+<li><code>createBooking($data)</code></li>
+</ul>
+<hr />
+<h3 id="calldatarefresher">CallDataRefresher<a class="headerlink" href="#calldatarefresher" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>refresh(App\Models\Call $call): bool</code></li>
+</ul>
+<hr />
+<h3 id="callservice">CallService<a class="headerlink" href="#callservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>processWebhook(array $webhookData): App\Models\Call</code></li>
+</ul>
+<p>Process incoming call webhook
+- <code>getStatistics(Carbon\Carbon $startDate, Carbon\Carbon $endDate): array</code></p>
+<p>Get call statistics
+- <code>refreshCallData(int $callId): bool</code></p>
+<p>Refresh call data from Retell
+- <code>markAsFailed(int $callId, string $reason): void</code></p>
+<p>Mark call as failed</p>
+<hr />
+<h3 id="callbackservice">CallbackService<a class="headerlink" href="#callbackservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>createFromFailedBooking(App\Models\Call $call, string $reason, array $bookingData, ?string $errorDetails = null): App\Models\CallbackRequest</code></li>
+</ul>
+<p>Create callback request from failed booking
+- <code>sendDailySummary(App\Models\Company $company, string $email): void</code></p>
+<p>Send daily summary email
+- <code>autoCloseOldCallbacks(): int</code></p>
+<p>Auto-close old callbacks
+- <code>getStatistics(App\Models\Company $company, ?Carbon\Carbon $from = null, ?Carbon\Carbon $to = null): array</code></p>
+<p>Get callback statistics for company</p>
+<hr />
+<h3 id="companyservice">CompanyService<a class="headerlink" href="#companyservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getSettings(int $companyId): ?array</code></li>
+</ul>
+<p>Get company settings with caching
+- <code>updateSettings(int $companyId, array $settings): bool</code></p>
+<p>Update company settings
+- <code>updateConfiguration(int $companyId, array $data): bool</code></p>
+<p>Update company configuration
+- <code>getCompany(int $companyId): ?App\Models\Company</code></p>
+<p>Get company by ID with caching
+- <code>isActive(int $companyId): bool</code></p>
+<p>Check if company is active
+- <code>isInTrial(int $companyId): bool</code></p>
+<p>Check if company is in trial
+- <code>getNotificationEmails(int $companyId): array</code></p>
+<p>Get company notification emails
+- <code>getCalendarConfig(int $companyId): array</code></p>
+<p>Get company calendar configuration</p>
+<hr />
+<h3 id="conflictdetectionservice">ConflictDetectionService<a class="headerlink" href="#conflictdetectionservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>detectConflicts(string $staffId, Carbon\Carbon $startTime, Carbon\Carbon $endTime, ?int $excludeAppointmentId = null): array</code></li>
+</ul>
+<p>Erkenne Konflikte für eine neue Buchung
+- <code>batchConflictCheck(array $appointments): array</code></p>
+<p>Batch-Konfliktprüfung für mehrere Termine</p>
+<hr />
+<h3 id="cookieconsentservice">CookieConsentService<a class="headerlink" href="#cookieconsentservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>hasConsent(?string $category = null): bool</code></li>
+</ul>
+<p>Check if user has given consent
+- <code>getCurrentConsent(): ?array</code></p>
+<p>Get current consent status
+- <code>saveConsent(array $preferences): App\Models\CookieConsent</code></p>
+<p>Save consent preferences
+- <code>withdrawConsent(): void</code></p>
+<p>Withdraw consent
+- <code>getCookieCategories(): array</code></p>
+<p>Get cookie categories with descriptions
+- <code>shouldShowBanner(): bool</code></p>
+<p>Check if cookie banner should be shown
+- <code>getConsentStatistics(int $companyId): array</code></p>
+<p>Get consent statistics for a company</p>
+<hr />
+<h3 id="currencyconverter">CurrencyConverter<a class="headerlink" href="#currencyconverter" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>centsToEuros(float $cents): float</code></li>
+</ul>
+<p>Convert cents to euros
+- <code>dollarsToEuros(float $dollars): float</code></p>
+<p>Convert dollars to euros
+- <code>getExchangeRate($date = null): float</code></p>
+<p>Get current exchange rate (cached)
+- <code>convertRetellCostToEuros($costData): float</code></p>
+<p>Convert Retell cost structure to euros
+- <code>formatCostBreakdown(array $costBreakdown): array</code></p>
+<p>Format cost breakdown for storage
+  Konvertiert alle Cent-Werte zu Euro-Werten</p>
+<hr />
+<h3 id="dashboardrouteresolver">DashboardRouteResolver<a class="headerlink" href="#dashboardrouteresolver" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>resolve(string $slug): ?string</code></li>
+</ul>
+<p>Resolve a dashboard route by its slug
+- <code>getDefault(): string</code></p>
+<p>Get the default dashboard route
+- <code>exists(string $slug): bool</code></p>
+<p>Check if a dashboard exists
+- <code>getAllDashboards(): array</code></p>
+<p>Get all available dashboards</p>
+<hr />
+<h3 id="datevexportservice">DatevExportService<a class="headerlink" href="#datevexportservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>exportInvoices(App\Models\Company $company, Carbon\Carbon $startDate, Carbon\Carbon $endDate, string $format = "EXTF"): array</code></li>
+</ul>
+<p>Exportiert Rechnungen im DATEV-Format</p>
+<hr />
+<h3 id="eagerloadinganalyzer">EagerLoadingAnalyzer<a class="headerlink" href="#eagerloadinganalyzer" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>startAnalysis(): void</code></li>
+</ul>
+<p>Start analyzing queries for N+1 problems
+- <code>stopAnalysis(): array</code></p>
+<p>Stop analyzing and return results
+- <code>analyzeModel(string $modelClass): array</code></p>
+<p>Analyze a specific model for potential N+1 issues</p>
+<hr />
+<h3 id="encryptionservice">EncryptionService<a class="headerlink" href="#encryptionservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>encrypt(?string $value): ?string</code></li>
+</ul>
+<p>Encrypt sensitive data
+- <code>decrypt(?string $value): ?string</code></p>
+<p>Decrypt sensitive data
+- <code>isEncrypted(string $value): bool</code></p>
+<p>Check if a value is encrypted
+- <code>rotateKey(array $models, array $fields): void</code></p>
+<p>Rotate encryption key (requires APP_KEY rotation)</p>
+<hr />
+<h3 id="eventtypematchingservice">EventTypeMatchingService<a class="headerlink" href="#eventtypematchingservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>findMatchingEventType(string $serviceRequest, App\Models\Branch $branch, ?string $staffName = null, ?array $timePreference = null): ?array</code></li>
+</ul>
+<p>Find matching event type based on service request and optional staff preference
+- <code>createMapping(App\Models\Service $service, App\Models\CalcomEventType $eventType, ?array $keywords = null, int $priority = 0): void</code></p>
+<p>Create or update service to event type mapping</p>
+<hr />
+<h3 id="eventtypenameparser">EventTypeNameParser<a class="headerlink" href="#eventtypenameparser" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>parseEventTypeName(string $eventTypeName): array</code></li>
+</ul>
+<p>Parse einen Event-Type Namen nach dem Schema: "Filial-Unternehmen-Dienstleistung"
+- <code>validateBranchMatch(string $parsedBranchName, App\Models\Branch $selectedBranch): bool</code></p>
+<p>Validiere ob der geparste Filialname zur ausgewählten Filiale passt
+- <code>generateEventTypeName(App\Models\Branch $branch, string $serviceName): string</code></p>
+<p>Generiere den korrekten Event-Type Namen nach Schema
+- <code>analyzeEventTypesForImport(array $eventTypes, App\Models\Branch $targetBranch): array</code></p>
+<p>Analysiere eine Liste von Event-Types und schlage Zuordnungen vor
+- <code>extractServiceName(string $eventTypeName): string</code></p>
+<p>Extrahiere nur den Service-Namen aus einem vollständigen Event-Type Namen</p>
+<hr />
+<h3 id="filewatcherservice">FileWatcherService<a class="headerlink" href="#filewatcherservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>checkForChanges(): array</code></li>
+</ul>
+<p>Check for file changes and re-index if needed
+- <code>forceReindex(): array</code></p>
+<p>Force re-index all files
+- <code>getStatus(): array</code></p>
+<p>Get watcher status
+- <code>setLastCheck(): void</code></p>
+<p>Set last check time</p>
+<hr />
+<h3 id="gdprservice">GdprService<a class="headerlink" href="#gdprservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>exportCustomerData(App\Models\Customer $customer): array</code></li>
+</ul>
+<p>Export all customer data in a machine-readable format
+- <code>createExportFile(App\Models\Customer $customer): string</code></p>
+<p>Create a downloadable export file
+- <code>deleteCustomerData(App\Models\Customer $customer, bool $anonymize = true): void</code></p>
+<p>Delete all customer data (right to be forgotten)</p>
+<hr />
+<h3 id="healthcheckservice">HealthCheckService<a class="headerlink" href="#healthcheckservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>setCompany(App\Models\Company $company): self</code></li>
+</ul>
+<p>Set the company context
+- <code>runAll(): App\Contracts\HealthReport</code></p>
+<p>Run all health checks
+- <code>runCheck(App\Contracts\IntegrationHealthCheck $check): App\Contracts\HealthCheckResult</code></p>
+<p>Run a specific health check
+- <code>runCheckByName(string $name): ?App\Contracts\HealthCheckResult</code></p>
+<p>Run check by name
+- <code>getCriticalChecks(): array</code></p>
+<p>Get all critical checks
+- <code>getChecksByStatus(string $status): array</code></p>
+<p>Get checks by status
+- <code>attemptAutoFix(): array</code></p>
+<p>Attempt auto-fix for all checks with issues
+- <code>getSuggestedFixes(): array</code></p>
+<p>Get suggested fixes for all issues
+- <code>getHealthStatusForBadge(): array</code></p>
+<p>Get health status for admin badge
+- <code>clearCache(): void</code></p>
+<p>Clear all health check caches
+- <code>getHistory(string $checkName, int $days = 7): Illuminate\Support\Collection</code></p>
+<p>Get historical health check results</p>
+<hr />
+<h3 id="horizonhealth">HorizonHealth<a class="headerlink" href="#horizonhealth" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>ok(): bool</code></li>
+</ul>
+<p>true = queues healthy, false = stalled/offline */</p>
+<hr />
+<h3 id="improvedeventtypenameparser">ImprovedEventTypeNameParser<a class="headerlink" href="#improvedeventtypenameparser" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>extractCleanServiceName(string $eventTypeName, ?App\Models\Branch $branch = null, ?App\Models\Company $company = null): string</code></li>
+</ul>
+<p>Extract a clean service name from a marketing-style event type name
+- <code>analyzeEventTypesForImport(array $eventTypes, App\Models\Branch $targetBranch): array</code></p>
+<p>Improved analyze method that handles marketing-style names better
+- <code>generateEventTypeName(App\Models\Branch $branch, string $serviceName, string $format = "standard"): string</code></p>
+<p>Generate a standardized event type name with optional format
+- <code>parseEventTypeName(string $eventTypeName): array</code></p>
+<p>Parse einen Event-Type Namen nach dem Schema: "Filial-Unternehmen-Dienstleistung"
+- <code>validateBranchMatch(string $parsedBranchName, App\Models\Branch $selectedBranch): bool</code></p>
+<p>Validiere ob der geparste Filialname zur ausgewählten Filiale passt
+- <code>extractServiceName(string $eventTypeName): string</code></p>
+<p>Extrahiere nur den Service-Namen aus einem vollständigen Event-Type Namen</p>
+<hr />
+<h3 id="integrationtestservice">IntegrationTestService<a class="headerlink" href="#integrationtestservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>createTestBooking(App\Models\Branch $branch): array</code></li>
+</ul>
+<p>Create a test booking for a branch
+- <code>testCalcomConnection($apiKey)</code></p>
+<p>Test Cal.com connection
+- <code>testRetellConnection($apiKey, $agentId = null)</code></p>
+<p>Test Retell.ai connection</p>
+<hr />
+<h3 id="invoicecomplianceservice">InvoiceComplianceService<a class="headerlink" href="#invoicecomplianceservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>generateCompliantInvoiceNumber(App\Models\Company $company): string</code></li>
+</ul>
+<p>Generiert eine GoBD-konforme Rechnungsnummer
+  Format: [Mandantenkürzel]-[Jahr]-[Laufende Nr]-[Prüfziffer]
+  Beispiel: ASK-2024-00001-7
+- <code>finalizeInvoice(App\Models\Invoice $invoice): void</code></p>
+<p>Finalisiert eine Rechnung (macht sie unveränderbar)
+- <code>archiveInvoice(App\Models\Invoice $invoice): void</code></p>
+<p>Archiviert eine Rechnung GoBD-konform
+- <code>createAuditLog(App\Models\Invoice $invoice, string $action, ?array $changes = null): void</code></p>
+<p>Erstellt Audit-Log Eintrag
+- <code>validateInvoiceCompliance(App\Models\Invoice $invoice): array</code></p>
+<p>Validiert Rechnungspflichtangaben nach §14 UStG
+- <code>createCancellationInvoice(App\Models\Invoice $originalInvoice): App\Models\Invoice</code></p>
+<p>Generiert eine Storno-Rechnung
+- <code>canModifyInvoice(App\Models\Invoice $invoice): bool</code></p>
+<p>Prüft ob eine Rechnung geändert werden darf
+- <code>generateDatevExport(App\Models\Company $company, Carbon\Carbon $startDate, Carbon\Carbon $endDate): array</code></p>
+<p>Generiert DATEV-kompatible Buchungssätze</p>
+<hr />
+<h3 id="knowledgebaseservice">KnowledgeBaseService<a class="headerlink" href="#knowledgebaseservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>discoverAndIndexDocuments(array $paths = []): array</code></li>
+</ul>
+<p>Discover and index all documentation files
+- <code>indexFile(string $filePath): ?App\Models\KnowledgeDocument</code></p>
+<p>Index a single documentation file
+- <code>search(string $query, array $filters = []): Illuminate\Support\Collection</code></p>
+<p>Search documents</p>
+<hr />
+<h3 id="masterservicemanager">MasterServiceManager<a class="headerlink" href="#masterservicemanager" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getEffectiveServicesForBranch(App\Models\Branch $branch): array</code></li>
+<li><code>deployServiceToBranches(App\Models\MasterService $service, array $branchIds): void</code></li>
+</ul>
+<hr />
+<h3 id="mobiledetector">MobileDetector<a class="headerlink" href="#mobiledetector" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>setRequest(Illuminate\Http\Request $request): self</code></li>
+<li><code>isMobile(): bool</code></li>
+<li><code>isTablet(): bool</code></li>
+<li><code>isDesktop(): bool</code></li>
+<li><code>getDeviceType(): string</code></li>
+<li><code>getViewport(): array</code></li>
+<li><code>getUserAgent(): ?string</code></li>
+<li><code>isIOS(): bool</code></li>
+<li><code>isAndroid(): bool</code></li>
+<li><code>isTouchDevice(): bool</code></li>
+<li><code>getOS(): string</code></li>
+<li><code>getBrowser(): string</code></li>
+<li><code>supportsWebP(): bool</code></li>
+<li><code>supportsPWA(): bool</code></li>
+<li><code>getDevicePixelRatio(): float</code></li>
+</ul>
+<hr />
+<h3 id="navigationservice">NavigationService<a class="headerlink" href="#navigationservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getResourceGroup(string $resource): ?string</code></li>
+</ul>
+<p>Get navigation group for a resource
+- <code>getGroupLabel(string $group): string</code></p>
+<p>Get navigation group label
+- <code>getGroupSort(string $group): int</code></p>
+<p>Get navigation group sort order
+- <code>getGroupIcon(string $group): string</code></p>
+<p>Get navigation group icon
+- <code>getResourceSort(string $resource, int $default = 10): int</code></p>
+<p>Get sort order for a resource within its group
+- <code>canViewGroup(string $group, $user = null): bool</code></p>
+<p>Check if user has permission to view a navigation group
+- <code>getVisibleGroups($user = null): array</code></p>
+<p>Get all visible groups for a user
+- <code>getNavigationForResource(string $resourceClass): array</code></p>
+<p>Get navigation structure for use in Filament resources
+- <code>registerWithFilament(): void</code></p>
+<p>Register navigation groups with Filament
+  Call this in a service provider
+- <code>getBreadcrumbs(string $resourceClass, array $additionalCrumbs = []): array</code></p>
+<p>Get breadcrumb structure for a resource
+- <code>getActionLabel(string $action): string</code></p>
+<p>Get a consistent label for common actions</p>
+<hr />
+<h3 id="notificationservice">NotificationService<a class="headerlink" href="#notificationservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>sendAppointmentReminders(): void</code></li>
+</ul>
+<p>Sende Terminerinnerungen
+- <code>sendAppointmentConfirmation(App\Models\Appointment $appointment): void</code></p>
+<p>Sende Terminbestätigung</p>
+<hr />
+<h3 id="onboardingservice">OnboardingService<a class="headerlink" href="#onboardingservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getProgress(App\Models\Company $company, App\Models\User $user): array</code></li>
+</ul>
+<p>Get or create onboarding progress for a company/user
+- <code>updateProgress(App\Models\Company $company, App\Models\User $user, string $step, array $data = []): array</code></p>
+<p>Update onboarding progress
+- <code>validateStep(App\Models\Company $company, string $step): bool</code></p>
+<p>Validate a specific step
+- <code>getSampleData(string $step): array</code></p>
+<p>Get sample data for a step
+- <code>getChecklist(App\Models\Company $company, string $type = "getting_started"): array</code></p>
+<p>Get checklist for a company
+- <code>updateChecklistItem(App\Models\Company $company, string $type, string $itemKey, bool $completed): void</code></p>
+<p>Update checklist item status
+- <code>awardAchievement(App\Models\Company $company, string $achievementKey): void</code></p>
+<p>Award achievement to company
+- <code>getAchievements(App\Models\Company $company): Illuminate\Support\Collection</code></p>
+<p>Get company achievements
+- <code>getTutorialsForPage(string $pageRoute): Illuminate\Support\Collection</code></p>
+<p>Get available tutorials for a page
+- <code>markTutorialProgress(App\Models\User $user, int $tutorialId, bool $completed = false): void</code></p>
+<p>Mark tutorial as viewed/completed
+- <code>getSteps(): array</code></p>
+<p>Get all defined steps
+- <code>getReadinessScore(App\Models\Company $company): int</code></p>
+<p>Calculate overall readiness score</p>
+<hr />
+<h3 id="phonenumberresolver">PhoneNumberResolver<a class="headerlink" href="#phonenumberresolver" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>resolve(string $phoneNumber): array</code></li>
+</ul>
+<p>Simple resolve method for MCPContextResolver compatibility
+- <code>resolveFromWebhook(array $webhookData): array</code></p>
+<p>Resolve branch and agent from phone number or metadata
+  Enhanced for multi-location support
+- <code>normalize(string $phoneNumber): string</code></p>
+<p>Public method to normalize phone numbers</p>
+<hr />
+<h3 id="pricingservice">PricingService<a class="headerlink" href="#pricingservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>calculateCallPrice(App\Models\Call $call): array</code></li>
+</ul>
+<p>Calculate the customer price for a call
+- <code>getCurrentMonthMinutes($companyId, $branchId = null): float</code></p>
+<p>Get total minutes used in current month
+- <code>calculateBillingPeriod($companyId, Carbon\Carbon $startDate, Carbon\Carbon $endDate)</code></p>
+<p>Calculate billing for a period
+- <code>saveBillingPeriod(array $billingData): App\Models\BillingPeriod</code></p>
+<p>Create or update billing period record</p>
+<hr />
+<h3 id="prompttemplateservice">PromptTemplateService<a class="headerlink" href="#prompttemplateservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getAvailableTemplates(): array</code></li>
+</ul>
+<p>Get available industry templates
+- <code>renderPrompt(App\Models\Branch $branch, string $industry = "generic", array $additionalData = []): string</code></p>
+<p>Render a prompt template for a branch
+- <code>generateRetellPrompt(App\Models\Branch $branch, array $config = []): array</code></p>
+<p>Generate prompt for Retell agent</p>
+<hr />
+<h3 id="querycache">QueryCache<a class="headerlink" href="#querycache" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getAppointmentStats($companyId, $dateRange = "month")</code></li>
+</ul>
+<p>Cache appointment statistics
+- <code>getCustomerMetrics($companyId)</code></p>
+<p>Cache customer metrics
+- <code>getCallStats($companyId, $days = 30)</code></p>
+<p>Cache call statistics
+- <code>getStaffPerformance($companyId, $staffId = null, $days = 30)</code></p>
+<p>Cache staff performance metrics
+- <code>getBranchComparison($companyId, $dateRange = "month")</code></p>
+<p>Cache branch comparison data
+- <code>clearCompanyCache($companyId)</code></p>
+<p>Clear cache for a specific company
+- <code>clearAllCaches()</code></p>
+<p>Clear all query caches
+- <code>getCacheStats()</code></p>
+<p>Get cache statistics</p>
+<hr />
+<h3 id="querymonitor">QueryMonitor<a class="headerlink" href="#querymonitor" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>enable(): void</code></li>
+</ul>
+<p>Enable query monitoring
+- <code>getStats(): array</code></p>
+<p>Get query statistics
+- <code>getRecentQueries(int $limit = 50): array</code></p>
+<p>Get recent queries
+- <code>getSlowQueries(int $limit = 50): array</code></p>
+<p>Get slow queries
+- <code>clearStats(): void</code></p>
+<p>Clear query statistics
+- <code>analyzePatterns(): array</code></p>
+<p>Analyze query patterns
+- <code>setSlowQueryThreshold(int $milliseconds): void</code></p>
+<p>Set slow query threshold</p>
+<hr />
+<h3 id="queryoptimizer">QueryOptimizer<a class="headerlink" href="#queryoptimizer" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>optimizeEagerLoading(Illuminate\Database\Eloquent\Builder $query, array $relationships): Illuminate\Database\Eloquent\Builder</code></li>
+</ul>
+<p>Eagerly load relationships to prevent N+1 queries
+- <code>applyIndexHints(Illuminate\Database\Eloquent\Builder $query, string $table, array $indexes): Illuminate\Database\Eloquent\Builder</code></p>
+<p>Apply index hints for better query performance
+- <code>optimizeAppointmentQuery(Illuminate\Database\Eloquent\Builder $query): Illuminate\Database\Eloquent\Builder</code></p>
+<p>Optimize appointment queries
+- <code>optimizeCustomerQuery(Illuminate\Database\Eloquent\Builder $query): Illuminate\Database\Eloquent\Builder</code></p>
+<p>Optimize customer queries
+- <code>optimizeCallQuery(Illuminate\Database\Eloquent\Builder $query): Illuminate\Database\Eloquent\Builder</code></p>
+<p>Optimize call queries
+- <code>optimizeStaffQuery(Illuminate\Database\Eloquent\Builder $query): Illuminate\Database\Eloquent\Builder</code></p>
+<p>Optimize staff queries
+- <code>cacheAggregation(string $key, Closure $callback, int $ttl = 300)</code></p>
+<p>Cache complex aggregation queries
+- <code>analyzeQuery(Illuminate\Database\Eloquent\Builder $query): array</code></p>
+<p>Analyze query performance
+- <code>getQueryStats(): array</code></p>
+<p>Get query statistics
+- <code>optimizePagination(Illuminate\Database\Eloquent\Builder $query, int $perPage = 15): Illuminate\Database\Eloquent\Builder</code></p>
+<p>Optimize pagination queries
+- <code>forceIndex(Illuminate\Database\Eloquent\Builder $query, string $table, string $index): Illuminate\Database\Eloquent\Builder</code></p>
+<p>Force use of specific index
+- <code>addQueryHint(Illuminate\Database\Eloquent\Builder $query, string $hint): Illuminate\Database\Eloquent\Builder</code></p>
+<p>Add query hints</p>
+<hr />
+<h3 id="screenshotauthservice">ScreenshotAuthService<a class="headerlink" href="#screenshotauthservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getAuthCookies(): array</code></li>
+</ul>
+<p>Get authentication cookies for screenshot service
+- <code>authenticateViaHttp(string $email, string $password): ?array</code></p>
+<p>Authenticate via HTTP request (for testing)</p>
+<hr />
+<h3 id="screenshotservice">ScreenshotService<a class="headerlink" href="#screenshotservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>capture(string $urlOrRoute, array $options = []): string</code></li>
+</ul>
+<p>Capture a screenshot of a given URL or route
+- <code>captureSync(string $url, string $savePath, array $options = []): string</code></p>
+<p>Capture screenshot synchronously
+- <code>captureBatch(array $routes, array $options = []): array</code></p>
+<p>Capture multiple screenshots in batch
+- <code>getLatest(string $route): ?string</code></p>
+<p>Get the latest screenshot for a route
+- <code>cleanup(int $daysToKeep = 7): int</code></p>
+<p>Clean up old screenshots</p>
+<hr />
+<h3 id="serviceservice">ServiceService<a class="headerlink" href="#serviceservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getServicesList(int $companyId, ?int $branchId = null): Illuminate\Support\Collection</code></li>
+</ul>
+<p>Get services list with caching
+- <code>getServicesByCategory(int $companyId, string $category): Illuminate\Support\Collection</code></p>
+<p>Get services by category
+- <code>getOnlineBookableServices(int $companyId, ?int $branchId = null): Illuminate\Support\Collection</code></p>
+<p>Get online bookable services
+- <code>getService(int $serviceId): ?App\Models\Service</code></p>
+<p>Get service by ID with caching
+- <code>create(array $data): App\Models\Service</code></p>
+<p>Create new service
+- <code>update(int $serviceId, array $data): bool</code></p>
+<p>Update service
+- <code>delete(int $serviceId): bool</code></p>
+<p>Delete service
+- <code>getServicesGroupedByCategory(int $companyId, ?int $branchId = null): array</code></p>
+<p>Get services grouped by category
+- <code>getServiceStatistics(int $serviceId): array</code></p>
+<p>Get service statistics</p>
+<hr />
+<h3 id="smarteventtypenameparser">SmartEventTypeNameParser<a class="headerlink" href="#smarteventtypenameparser" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>extractCleanServiceName(string $eventTypeName): string</code></li>
+</ul>
+<p>Extrahiere einen sauberen Service-Namen aus Marketing-Text
+- <code>generateNameFormats(App\Models\Branch $branch, string $serviceName): array</code></p>
+<p>Generiere verschiedene Namensformate für den Import
+- <code>analyzeEventTypesForImport(array $eventTypes, App\Models\Branch $targetBranch): array</code></p>
+<p>Analysiere Event-Types für Import mit intelligenter Namensgebung</p>
+<hr />
+<h3 id="smartmigrationservice">SmartMigrationService<a class="headerlink" href="#smartmigrationservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>analyzeMigration(string $migrationPath): array</code></li>
+</ul>
+<p>Analyze migration impact before execution
+- <code>executeSafeMigration(string $migrationClass, array $options = []): bool</code></p>
+<p>Execute migration with zero downtime strategies
+- <code>performOnlineSchemaChange(string $table, callable $schemaChange): bool</code></p>
+<p>Perform online schema change for large tables</p>
+<hr />
+<h3 id="staffservice">StaffService<a class="headerlink" href="#staffservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getSchedule(int $staffId): array</code></li>
+</ul>
+<p>Get staff schedules with caching
+- <code>getWeeklySchedule(int $staffId, ?Carbon\Carbon $weekStart = null): array</code></p>
+<p>Get weekly schedule for staff
+- <code>updateWorkingHours(int $staffId, array $workingHours): bool</code></p>
+<p>Update staff working hours
+- <code>getCompanyStaff(int $companyId): Illuminate\Support\Collection</code></p>
+<p>Get all staff members for a company
+- <code>getAvailableStaff(int $serviceId, int $branchId, Carbon\Carbon $date): Illuminate\Support\Collection</code></p>
+<p>Get available staff for a specific service and branch</p>
+<hr />
+<h3 id="taxservice">TaxService<a class="headerlink" href="#taxservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>getDeterminedTaxRate(App\Models\Company $company, ?string $taxType = "standard"): array</code></li>
+</ul>
+<p>Ermittelt den anzuwendenden Steuersatz basierend auf Unternehmenskonfiguration
+- <code>getOrCreateTaxRate(App\Models\Company $company, string $name, float $rate)</code></p>
+<p>Erstellt oder holt einen Steuersatz
+- <code>checkSmallBusinessThreshold(App\Models\Company $company): array</code></p>
+<p>Überprüft und aktualisiert Kleinunternehmer-Status
+- <code>validateVatId(string $vatId, string $countryCode = "DE"): array</code></p>
+<p>Validiert eine USt-ID über VIES
+- <code>shouldApplyReverseCharge(App\Models\Company $company, ?string $customerVatId, string $customerCountry): bool</code></p>
+<p>Prüft ob Reverse-Charge anzuwenden ist
+- <code>generateTaxNote(App\Models\Company $company, App\Models\Invoice $invoice): ?string</code></p>
+<p>Generiert Steuerhinweis für Rechnung
+- <code>calculateInvoiceTaxes(App\Models\Invoice $invoice): array</code></p>
+<p>Berechnet Steuern für eine Rechnung
+- <code>syncStripeEUtaxRate(App\Models\Company $company, float $rate, string $name): ?string</code></p>
+<p>Erstellt Stripe Tax Rate</p>
+<hr />
+<h3 id="tutorialservice">TutorialService<a class="headerlink" href="#tutorialservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>initializeDefaultTutorials(): void</code></li>
+</ul>
+<p>Initialize default tutorials
+- <code>getTutorialsForCurrentPage(string $currentRoute, App\Models\User $user): Illuminate\Support\Collection</code></p>
+<p>Get tutorials for current page
+- <code>markAsViewed(App\Models\User $user, int $tutorialId): void</code></p>
+<p>Mark tutorial as viewed
+- <code>markAsCompleted(App\Models\User $user, int $tutorialId): void</code></p>
+<p>Mark tutorial as completed
+- <code>getUserProgress(App\Models\User $user): array</code></p>
+<p>Get user's tutorial progress summary
+- <code>resetProgress(App\Models\User $user): void</code></p>
+<p>Reset user's tutorial progress
+- <code>getNextTutorial(App\Models\User $user, string $currentRoute): ?object</code></p>
+<p>Get next unviewed tutorial for user</p>
+<hr />
+<h3 id="validationservice">ValidationService<a class="headerlink" href="#validationservice" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>validateBranch(App\Models\Branch $branch): array</code></li>
+</ul>
+<hr />
+<h3 id="webhookprocessor">WebhookProcessor<a class="headerlink" href="#webhookprocessor" title="Permanent link">&para;</a></h3>
+<p><strong>Public Methods</strong>:</p>
+<ul>
+<li><code>process(string $provider, array $payload, array $headers = [], ?string $correlationId = null): array</code></li>
+</ul>
+<p>Process an incoming webhook request
+- <code>retry(int $webhookEventId): array</code></p>
+<p>Retry a failed webhook</p>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+    
+  </body>
+</html>

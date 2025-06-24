@@ -25,6 +25,9 @@ class DatabaseServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Enable connection pooling
+        $this->enableConnectionPooling();
+        
         // Register health check route
         $this->registerHealthCheckRoute();
     }
@@ -34,40 +37,20 @@ class DatabaseServiceProvider extends ServiceProvider
      */
     private function enableConnectionPooling(): void
     {
-        // Override default database connector
-        DB::extend('mysql', function ($config, $name) {
-            $config['name'] = $name;
-            
-            // Add pool configuration
-            $config['pool'] = array_merge(
-                config('database.pool', []),
-                $config['pool'] ?? []
-            );
-            
-            // Enable persistent connections
-            $config['options'] = array_merge(
-                $config['options'] ?? [],
-                [
-                    \PDO::ATTR_PERSISTENT => true,
-                    \PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci'",
-                    \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => false,
-                ]
-            );
-            
-            return new \Illuminate\Database\MySqlConnection(
-                new \PDO(
-                    $this->getDsn($config),
-                    $config['username'],
-                    $config['password'],
-                    $config['options']
-                ),
-                $config['database'],
-                $config['prefix'],
-                $config
-            );
+        // TEMPORARILY DISABLED DUE TO ERRORS
+        return;
+        
+        // Only enable if configured
+        if (!config('database.pool.enabled', false)) {
+            return;
+        }
+        
+        // Replace the MySQL connector with our pooled version
+        $this->app->bind('db.connector.mysql', function () {
+            return new \App\Database\PooledMySqlConnector;
         });
         
-        Log::info('Database connection pooling enabled');
+        Log::info('Database connection pooling enabled with PooledMySqlConnector');
     }
     
     /**

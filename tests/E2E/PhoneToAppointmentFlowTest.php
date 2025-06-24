@@ -167,6 +167,9 @@ AI: You are welcome! We look forward to seeing you on Monday. Have a great day!'
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function complete_phone_to_appointment_flow_works_correctly()
     {
         Event::fake();
@@ -301,6 +304,9 @@ AI: You are welcome! We look forward to seeing you on Monday. Have a great day!'
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_call_with_no_appointment_request()
     {
         Event::fake();
@@ -366,6 +372,9 @@ AI: You are welcome! Have a great day!',
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_failed_booking_gracefully()
     {
         Event::fake();
@@ -445,6 +454,9 @@ AI: You are welcome! Have a great day!',
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_webhook_replay_attacks()
     {
         Queue::fake();
@@ -487,6 +499,9 @@ AI: You are welcome! Have a great day!',
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function processes_different_service_types_correctly()
     {
         Queue::fake();

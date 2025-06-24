@@ -353,7 +353,8 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('company.name')
                     ->label('Unternehmen')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(fn ($record) => $record?->company?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('invoice_date')
                     ->label('Datum')

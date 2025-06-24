@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI System Documentation - Konsistenz Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: white;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab:hover {
+            background: #f8f9fa;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #f8f9fa;
+        }
+        
+        .tab-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+        
+        .tab-panel {
+            display: none;
+        }
+        
+        .tab-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .status-card h3 {
+            margin-bottom: 1rem;
+            color: #444;
+        }
+        
+        .status-card .metric {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-bar {
+            background: #e9ecef;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.5s ease;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+        
+        .alert-danger {
+            background: #fee;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .flow-diagram {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .flow-step {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            margin: 0.5rem;
+            position: relative;
+        }
+        
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 1.5rem;
+        }
+        
+        .flow-step:last-child::after {
+            display: none;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+        }
+        
+        .checklist li::before {
+            content: '✓';
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: #28a745;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .checklist li.pending::before {
+            content: '○';
+            background: #6c757d;
+        }
+        
+        .timestamp {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+            margin: 0.5rem;
+        }
+        
+        .btn:hover {
+            background: #5a67d8;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>AskProAI System Documentation</h1>
+            <p>Konsistenz-Dashboard - Stand: 22. Juni 2025</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">Übersicht</button>
+            <button class="tab" onclick="showTab('consistency')">Konsistenz-Status</button>
+            <button class="tab" onclick="showTab('architecture')">Architektur</button>
+            <button class="tab" onclick="showTab('implementation')">Implementierung</button>
+            <button class="tab" onclick="showTab('testing')">Testing</button>
+            <button class="tab" onclick="showTab('tasks')">Aufgaben</button>
+        </div>
+        
+        <div class="tab-content">
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-panel active">
+                <h2>System-Übersicht</h2>
+                
+                <div class="status-grid">
+                    <div class="status-card">
+                        <h3>Datenbank-Status</h3>
+                        <div class="metric">119 → 25</div>
+                        <p>Tabellen müssen konsolidiert werden</p>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" style="width: 21%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h3>Service-Konsolidierung</h3>
+                        <div class="metric">12 → 3</div>
+                        <p>Services müssen vereinheitlicht werden</p>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" style="width: 25%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card">
+                        <h3>UI-Konsistenz</h3>
+                        <div class="metric">85%</div>
+                        <p>Portal wurde bereits optimiert</p>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <h3>🚨 Kritischer Status</h3>
+                    <p>Das System hat massive Inkonsistenzen durch organisches Wachstum. Multiple Entwickler haben dieselben Probleme auf unterschiedliche Weise gelöst.</p>
+                </div>
+                
+                <h3>Hauptprobleme</h3>
+                <ul class="checklist">
+                    <li class="pending">119 Datenbank-Tabellen (sollten 25 sein)</li>
+                    <li class="pending">9 verschiedene Event-Type-Tabellen</li>
+                    <li class="pending">7 Cal.com Service-Implementierungen</li>
+                    <li class="pending">5 Retell Service-Implementierungen</li>
+                    <li class="pending">API Keys an 4 verschiedenen Stellen gespeichert</li>
+                    <li>UI/UX inkonsistent (teilweise behoben)</li>
+                </ul>
+                
+                <h3>Der EINE klare Datenfluss</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">Kunde ruft an</div>
+                    <div class="flow-step">Phone → Branch</div>
+                    <div class="flow-step">Retell Agent</div>
+                    <div class="flow-step">Webhook</div>
+                    <div class="flow-step">Termin erstellt</div>
+                </div>
+            </div>
+            
+            <!-- Consistency Status Tab -->
+            <div id="consistency" class="tab-panel">
+                <h2>Konsistenz-Analyse Details</h2>
+                
+                <h3>Datenbank-Duplikate</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Bereich</th>
+                                <th>Aktuelle Tabellen</th>
+                                <th>Ziel</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Event Types</td>
+                                <td>9 Tabellen</td>
+                                <td>1 Tabelle (calcom_event_types)</td>
+                                <td>❌ Zu konsolidieren</td>
+                            </tr>
+                            <tr>
+                                <td>Staff Assignments</td>
+                                <td>8 Tabellen</td>
+                                <td>1 Tabelle (staff_event_types)</td>
+                                <td>❌ Zu konsolidieren</td>
+                            </tr>
+                            <tr>
+                                <td>Phone Numbers</td>
+                                <td>3 Speicherorte</td>
+                                <td>1 Tabelle (phone_numbers)</td>
+                                <td>❌ Zu konsolidieren</td>
+                            </tr>
+                            <tr>
+                                <td>Agent IDs</td>
+                                <td>4 Speicherorte</td>
+                                <td>phone_numbers.retell_agent_id</td>
+                                <td>❌ Zu konsolidieren</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h3>Service-Chaos</h3>
+                <div class="code-block">
+// Aktuelle Situation (CHAOS):
+CalcomService              // V1 API
+CalcomService_v1_only      // Backup?
+CalcomV2Service            // V2 API
+CalcomMCPServer            // MCP Wrapper
+CalcomMigrationService     // Migration
+CalcomV2MigrationService   // Noch eine Migration
+CalcomSyncService          // Sync
+
+// ZIEL (KLARHEIT):
+CalcomService    // Eine Implementation mit V2 API
+RetellService    // Eine Implementation
+AppointmentBookingService // Orchestrierung
+                </div>
+                
+                <h3>Konfiguration Verwirrung</h3>
+                <div class="alert alert-danger">
+                    <h4>API Keys werden an 4 Stellen gespeichert:</h4>
+                    <ul>
+                        <li>.env Datei</li>
+                        <li>companies Tabelle</li>
+                        <li>branches Tabelle (nur Cal.com)</li>
+                        <li>api_credentials Tabelle</li>
+                    </ul>
+                    <p><strong>Problem:</strong> Welcher Key wird verwendet? Priorität unklar!</p>
+                </div>
+            </div>
+            
+            <!-- Architecture Tab -->
+            <div id="architecture" class="tab-panel">
+                <h2>Ziel-Architektur</h2>
+                
+                <h3>Klare Hierarchie</h3>
+                <div class="code-block">
+Firma (Company)
+  └── Filialen (Branches)
+        ├── Telefonnummern (Phone Numbers) → mit Retell Agent
+        ├── Mitarbeiter (Staff)
+        ├── Services 
+        └── Event Types (Cal.com)
+                </div>
+                
+                <h3>Der EINE Weg: Phone Resolution</h3>
+                <div class="code-block">
+public function resolvePhoneNumber($number) 
+{
+    $phone = PhoneNumber::where('number', $number)
+        ->where('is_active', true)
+        ->with(['branch.company'])
+        ->first();
+        
+    if (!$phone) {
+        throw new PhoneNotFoundException();
+    }
+    
+    return [
+        'phone_id' => $phone->id,
+        'branch_id' => $phone->branch_id,
+        'company_id' => $phone->branch->company_id,
+        'agent_id' => $phone->retell_agent_id
+    ];
+}
+                </div>
+                
+                <h3>Kern-Tabellen (25 statt 119)</h3>
+                <ul class="checklist">
+                    <li>companies - Mandanten</li>
+                    <li>branches - Filialen</li>
+                    <li>phone_numbers - Telefonnummern mit Agents</li>
+                    <li>staff - Mitarbeiter</li>
+                    <li>services - Dienstleistungen</li>
+                    <li>calcom_event_types - Event Types</li>
+                    <li>appointments - Termine</li>
+                    <li>customers - Kunden</li>
+                    <li>calls - Anrufe</li>
+                    <li>webhook_events - Webhook-Verarbeitung</li>
+                </ul>
+            </div>
+            
+            <!-- Implementation Tab -->
+            <div id="implementation" class="tab-panel">
+                <h2>Implementierungs-Plan</h2>
+                
+                <h3>Woche 1: Datenbank-Bereinigung</h3>
+                <ul class="checklist">
+                    <li class="pending">Backup aller Daten erstellen</li>
+                    <li class="pending">Daten aus duplizierten Tabellen konsolidieren</li>
+                    <li class="pending">Alte Tabellen per Migration löschen</li>
+                    <li class="pending">Foreign Keys neu setzen</li>
+                    <li class="pending">Tests anpassen</li>
+                </ul>
+                
+                <h3>Woche 2: Service-Konsolidierung</h3>
+                <ul class="checklist">
+                    <li class="pending">Alle Calls auf neue Services umleiten</li>
+                    <li class="pending">Alte Services als deprecated markieren</li>
+                    <li class="pending">MCP Server konsolidieren</li>
+                    <li class="pending">Tests für neue Services schreiben</li>
+                    <li class="pending">Alte Services löschen</li>
+                </ul>
+                
+                <h3>Woche 3: Portal-Vereinfachung</h3>
+                <ul class="checklist">
+                    <li>Company Integration Portal als Hauptzentrale etabliert</li>
+                    <li class="pending">Alle redundanten Wizards entfernen</li>
+                    <li>Navigation vereinfacht</li>
+                    <li>UI/UX konsistent gemacht</li>
+                    <li class="pending">Dokumentation aktualisieren</li>
+                </ul>
+                
+                <h3>Quick Wins (Sofort umsetzbar)</h3>
+                <div class="status-grid">
+                    <div class="status-card">
+                        <h3>Config Cleanup</h3>
+                        <p>services.php bereinigen - nur eine API Key Quelle</p>
+                        <div class="btn btn-secondary">1 Stunde</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>Unused Columns</h3>
+                        <p>Ungenutzte Spalten per Migration entfernen</p>
+                        <div class="btn btn-secondary">2 Stunden</div>
+                    </div>
+                    <div class="status-card">
+                        <h3>Service Redirect</h3>
+                        <p>Alle V1 Calls auf V2 umleiten</p>
+                        <div class="btn btn-secondary">3 Stunden</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Testing Tab -->
+            <div id="testing" class="tab-panel">
+                <h2>Test-Status</h2>
+                
+                <div class="alert alert-danger">
+                    <h3>⚠️ Test Suite defekt</h3>
+                    <p>94% der Tests schlagen fehl wegen SQLite-inkompatibler Migrationen</p>
+                </div>
+                
+                <h3>Getestete Bereiche</h3>
+                <ul class="checklist">
+                    <li>Company Integration Portal UI</li>
+                    <li>Phone Number Resource</li>
+                    <li>Alpine.js Dropdown Fixes</li>
+                    <li>Responsive Design</li>
+                    <li>Branch Event Type Management</li>
+                </ul>
+                
+                <h3>Noch zu testen</h3>
+                <ul class="checklist">
+                    <li class="pending">Neue Phone Resolution Logic</li>
+                    <li class="pending">Konsolidierte Services</li>
+                    <li class="pending">Migration Rollback</li>
+                    <li class="pending">Performance unter Last</li>
+                    <li class="pending">Multi-Tenancy nach Cleanup</li>
+                </ul>
+                
+                <h3>Test-Befehle</h3>
+                <div class="code-block">
+# Alle Tests ausführen
+php artisan test
+
+# Spezifische Test-Suite
+php artisan test --testsuite=Feature
+
+# Mit Coverage
+php artisan test --coverage
+
+# Parallel für Geschwindigkeit
+php artisan test --parallel
+                </div>
+            </div>
+            
+            <!-- Tasks Tab -->
+            <div id="tasks" class="tab-panel">
+                <h2>Aktuelle Aufgaben</h2>
+                
+                <h3>Kritisch (Diese Woche)</h3>
+                <ul class="checklist">
+                    <li class="pending">SQLite-kompatible Migrationen erstellen</li>
+                    <li class="pending">Test Suite reparieren</li>
+                    <li class="pending">Datenbank-Backup erstellen</li>
+                    <li class="pending">Duplikate konsolidieren</li>
+                </ul>
+                
+                <h3>Hoch (Nächste Woche)</h3>
+                <ul class="checklist">
+                    <li class="pending">Service Layer bereinigen</li>
+                    <li class="pending">API Key Management vereinheitlichen</li>
+                    <li class="pending">Phone Resolution auf EINEN Weg reduzieren</li>
+                    <li class="pending">Monitoring implementieren</li>
+                </ul>
+                
+                <h3>Mittel (In 2 Wochen)</h3>
+                <ul class="checklist">
+                    <li class="pending">Wizards konsolidieren</li>
+                    <li class="pending">Dokumentation aktualisieren</li>
+                    <li class="pending">Performance-Tests durchführen</li>
+                    <li class="pending">Security Audit</li>
+                </ul>
+                
+                <h3>Abgeschlossene Aufgaben</h3>
+                <ul class="checklist">
+                    <li>Alpine.js Fehler behoben</li>
+                    <li>UI/UX verbessert</li>
+                    <li>Company Integration Portal optimiert</li>
+                    <li>Umfassende Analyse durchgeführt</li>
+                    <li>Konsistenz-Masterplan erstellt</li>
+                </ul>
+                
+                <div class="timestamp">
+                    Letzte Aktualisierung: 22. Juni 2025, 15:47 Uhr
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            const panels = document.querySelectorAll('.tab-panel');
+            panels.forEach(panel => panel.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Mark tab as active
+            event.target.classList.add('active');
+        }
+        
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            location.reload();
+        }, 300000);
+    </script>
+</body>
+</html>

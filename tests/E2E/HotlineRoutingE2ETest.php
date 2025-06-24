@@ -44,6 +44,9 @@ class HotlineRoutingE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function hotline_call_routes_to_selected_branch_and_creates_appointment()
     {
         // Simulate incoming call to hotline
@@ -85,6 +88,9 @@ class HotlineRoutingE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function hotline_voice_menu_handles_multiple_languages()
     {
         // Test German selection
@@ -121,6 +127,9 @@ class HotlineRoutingE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function hotline_fallback_when_no_branch_selected()
     {
         $payload = $this->createRetellWebhookPayload([
@@ -144,6 +153,9 @@ class HotlineRoutingE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function hotline_handles_business_hours_routing()
     {
         // Set Hamburg as closed, Munich as open
@@ -176,6 +188,9 @@ class HotlineRoutingE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function direct_line_bypasses_voice_menu()
     {
         // Create direct line for Munich branch
@@ -206,6 +221,9 @@ class HotlineRoutingE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function hotline_tracks_routing_metrics()
     {
         // Make multiple calls with different selections
@@ -242,6 +260,9 @@ class HotlineRoutingE2ETest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function emergency_routing_when_all_branches_closed()
     {
         // Close all branches

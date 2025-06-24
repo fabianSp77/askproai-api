@@ -171,6 +171,9 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function complete_booking_flow_from_retell_webhook_to_confirmation_email()
     {
         Event::fake([AppointmentCreated::class]);
@@ -411,6 +414,9 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_no_availability_scenario_gracefully()
     {
         Event::fake();
@@ -492,6 +498,9 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_existing_customer_with_appointment_history()
     {
         Event::fake();
@@ -603,6 +612,9 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_calcom_api_errors_with_retry_logic()
     {
         Event::fake();
@@ -697,6 +709,9 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_concurrent_booking_attempts_safely()
     {
         Event::fake();
@@ -827,6 +842,9 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function validates_and_handles_invalid_webhook_data()
     {
         Log::fake();
@@ -884,6 +902,9 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function tracks_complete_appointment_lifecycle_with_proper_database_state()
     {
         Event::fake();

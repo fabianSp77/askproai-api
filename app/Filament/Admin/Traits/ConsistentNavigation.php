@@ -145,7 +145,11 @@ trait ConsistentNavigation
      */
     public static function getModelLabel(): string
     {
-        return static::getNavigationLabel();
+        // FIX: Use the config directly to prevent recursion
+        $key = static::getResourceKey();
+        $config = UnifiedNavigationService::RESOURCE_CONFIG[$key] ?? null;
+        
+        return $config['label'] ?? parent::getModelLabel();
     }
     
     /**
@@ -153,6 +157,10 @@ trait ConsistentNavigation
      */
     public static function getPluralModelLabel(): string
     {
-        return static::getNavigationLabel();
+        // FIX: Use the config directly to prevent recursion
+        $key = static::getResourceKey();
+        $config = UnifiedNavigationService::RESOURCE_CONFIG[$key] ?? null;
+        
+        return $config['label'] ?? parent::getPluralModelLabel();
     }
 }

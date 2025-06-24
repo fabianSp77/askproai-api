@@ -53,6 +53,9 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_sync_event_types_from_calcom()
     {
         // Mock Cal.com API Response
@@ -88,6 +91,9 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_check_availability_with_specific_staff()
     {
         // Erstelle Staff-Event-Type Zuordnung
@@ -123,6 +129,9 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_returns_error_when_staff_not_assigned_to_event_type()
     {
         // Kein Staff-Event-Type Assignment
@@ -140,6 +149,9 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_manage_staff_event_assignments()
     {
         $response = $this->postJson('/api/event-management/staff-event-assignments', [
@@ -167,6 +179,9 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_find_event_type_by_name()
     {
         $availabilityChecker = new AvailabilityChecker(new CalcomSyncService());
@@ -183,6 +198,9 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_uses_default_event_type_when_none_specified()
     {
         // Setze Default Event-Type
@@ -207,6 +225,9 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function retell_webhook_can_extract_service_and_staff_preferences()
     {
         $webhookData = [
@@ -233,6 +254,9 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_handle_multi_branch_queries()
     {
         $branch = \App\Models\Branch::factory()->create([

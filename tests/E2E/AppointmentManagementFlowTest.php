@@ -204,6 +204,9 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function complete_appointment_lifecycle_from_booking_to_completion()
     {
         Event::fake();
@@ -391,6 +394,9 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_appointment_cancellation_flow()
     {
         Event::fake();
@@ -459,6 +465,9 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function prevents_double_booking_for_staff()
     {
         Queue::fake();
@@ -502,6 +511,9 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_recurring_appointments()
     {
         Event::fake();
@@ -580,6 +592,9 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function manages_waiting_list_and_notifications()
     {
         Event::fake();
@@ -642,6 +657,9 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function tracks_appointment_history_and_changes()
     {
         $appointment = Appointment::factory()->create([
@@ -692,6 +710,9 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_group_appointments()
     {
         Queue::fake();
@@ -765,6 +786,9 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function integrates_with_external_calendar_systems()
     {
         Event::fake();

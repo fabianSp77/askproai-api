@@ -87,7 +87,8 @@ class EventTypesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
                     ->placeholder('Unternehmensweit')
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(fn ($record) => $record?->branch?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('duration')
                     ->label('Dauer')

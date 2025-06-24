@@ -10,6 +10,7 @@ use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 
 class SystemHealthMonitor extends Widget
 {
@@ -201,10 +202,25 @@ class SystemHealthMonitor extends Widget
         }
         
         try {
+            $apiKey = config('services.retell.api_key') ?? config('services.retell.token');
+            if (!$apiKey) {
+                return [
+                    'name' => 'Retell.ai API',
+                    'status' => 'unknown',
+                    'response_time' => 0,
+                    'uptime' => 0,
+                    'error' => 'No API key configured',
+                    'last_check' => Carbon::now(),
+                ];
+            }
+            
             $start = microtime(true);
             $response = Http::timeout(5)
-                ->withHeaders(['Authorization' => 'Bearer ' . config('services.retell.api_key')])
-                ->get('https://api.retellai.com/list-calls?limit=1');
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json'
+                ])
+                ->get('https://api.retellai.com/v2/list-agents');
             
             $responseTime = round((microtime(true) - $start) * 1000, 2);
             
@@ -222,7 +238,7 @@ class SystemHealthMonitor extends Widget
                 'response_time' => $responseTime,
                 'uptime' => 99.8,
                 'details' => [
-                    'endpoint' => 'list-calls',
+                    'endpoint' => 'v2/list-agents',
                     'status_code' => $response->status(),
                 ],
                 'last_check' => Carbon::now(),
@@ -317,7 +333,7 @@ class SystemHealthMonitor extends Widget
     {
         try {
             // Check recent webhook processing times
-            $avgProcessingTime = DB::table('webhook_events')
+            $avgProcessingTime = (float) DB::table('webhook_events')
                 ->where('created_at', '>=', Carbon::now()->subMinutes(5))
                 ->whereNotNull('processed_at')
                 ->selectRaw('AVG(TIMESTAMPDIFF(MICROSECOND, created_at, processed_at) / 1000) as avg_ms')
@@ -362,26 +378,36 @@ class SystemHealthMonitor extends Widget
     private function getPerformanceMetrics(): array
     {
         return Cache::remember('system_performance_metrics', 60, function () {
-            // API call volume (last hour)
-            $apiCalls = DB::table('api_call_logs')
-                ->where('created_at', '>=', Carbon::now()->subHour())
-                ->count();
+            // Use mcp_metrics table instead of deleted api_call_logs
+            $hasMetricsTable = Schema::hasTable('mcp_metrics');
             
-            // Average response times
-            $avgResponseTimes = DB::table('api_call_logs')
-                ->where('created_at', '>=', Carbon::now()->subHour())
-                ->groupBy('service')
-                ->selectRaw('service, AVG(duration_ms) as avg_ms, COUNT(*) as count')
-                ->get();
-            
-            // Error rate
-            $totalRequests = $apiCalls;
-            $failedRequests = DB::table('api_call_logs')
-                ->where('created_at', '>=', Carbon::now()->subHour())
-                ->where('response_status', '>=', 400)
-                ->count();
-            
-            $errorRate = $totalRequests > 0 ? ($failedRequests / $totalRequests) * 100 : 0;
+            if ($hasMetricsTable) {
+                // API call volume (last hour) from mcp_metrics
+                $apiCalls = DB::table('mcp_metrics')
+                    ->where('created_at', '>=', Carbon::now()->subHour())
+                    ->count();
+                
+                // Average response times
+                $avgResponseTimes = DB::table('mcp_metrics')
+                    ->where('created_at', '>=', Carbon::now()->subHour())
+                    ->groupBy('service')
+                    ->selectRaw('service, AVG(duration_ms) as avg_ms, COUNT(*) as count')
+                    ->get();
+                
+                // Error rate
+                $totalRequests = $apiCalls;
+                $failedRequests = DB::table('mcp_metrics')
+                    ->where('created_at', '>=', Carbon::now()->subHour())
+                    ->where('success', false)
+                    ->count();
+                
+                $errorRate = $totalRequests > 0 ? ($failedRequests / $totalRequests) * 100 : 0;
+            } else {
+                // Fallback when no metrics available
+                $apiCalls = 0;
+                $avgResponseTimes = collect([]);
+                $errorRate = 0;
+            }
             
             return [
                 'requests_per_hour' => $apiCalls,

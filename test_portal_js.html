@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Integration Portal JS Test</title>
+</head>
+<body>
+    <h1>Company Integration Portal JavaScript Test</h1>
+    
+    <div id="test-results">
+        <h2>Test Results:</h2>
+        <ul id="results-list"></ul>
+    </div>
+
+    <script>
+        const results = [];
+        
+        function addResult(test, status, details = '') {
+            const result = {
+                test: test,
+                status: status,
+                details: details,
+                timestamp: new Date().toISOString()
+            };
+            results.push(result);
+            
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${status ? '✅' : '❌'} ${test}:</strong> ${details}`;
+            li.style.color = status ? 'green' : 'red';
+            document.getElementById('results-list').appendChild(li);
+        }
+        
+        // Test 1: Check if Alpine.js is loaded
+        setTimeout(() => {
+            if (typeof Alpine !== 'undefined') {
+                addResult('Alpine.js loaded', true, 'Alpine.js is available');
+            } else {
+                addResult('Alpine.js loaded', false, 'Alpine.js is not loaded');
+            }
+        }, 100);
+        
+        // Test 2: Check if Livewire is loaded
+        setTimeout(() => {
+            if (typeof Livewire !== 'undefined') {
+                addResult('Livewire loaded', true, 'Livewire is available');
+            } else {
+                addResult('Livewire loaded', false, 'Livewire is not loaded');
+            }
+        }, 100);
+        
+        // Test 3: Check for JavaScript errors
+        window.addEventListener('error', function(e) {
+            addResult('JavaScript Error', false, `${e.message} at ${e.filename}:${e.lineno}:${e.colno}`);
+        });
+        
+        // Test 4: Check viewport responsiveness
+        function checkViewport() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const isMobile = width < 768;
+            const isTablet = width >= 768 && width < 1024;
+            const isDesktop = width >= 1024;
+            
+            let deviceType = 'Unknown';
+            if (isMobile) deviceType = 'Mobile';
+            else if (isTablet) deviceType = 'Tablet';
+            else if (isDesktop) deviceType = 'Desktop';
+            
+            addResult('Viewport Detection', true, `${deviceType} (${width}x${height})`);
+        }
+        checkViewport();
+        
+        // Test 5: Check localStorage availability
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+            addResult('localStorage', true, 'localStorage is available');
+        } catch (e) {
+            addResult('localStorage', false, 'localStorage is not available');
+        }
+        
+        // Test 6: Check for console errors
+        const originalError = console.error;
+        console.error = function(...args) {
+            addResult('Console Error', false, args.join(' '));
+            originalError.apply(console, args);
+        };
+        
+        // Test 7: DOM Ready State
+        document.addEventListener('DOMContentLoaded', function() {
+            addResult('DOM Ready', true, 'DOM is fully loaded');
+        });
+        
+        // Test 8: Check for CSS loading
+        setTimeout(() => {
+            const styles = document.styleSheets;
+            addResult('Stylesheets Loaded', true, `${styles.length} stylesheets loaded`);
+        }, 500);
+        
+        // Summary
+        setTimeout(() => {
+            const passed = results.filter(r => r.status).length;
+            const failed = results.filter(r => !r.status).length;
+            const total = results.length;
+            
+            const summary = document.createElement('div');
+            summary.innerHTML = `
+                <h3>Summary:</h3>
+                <p>Total Tests: ${total}</p>
+                <p>Passed: ${passed}</p>
+                <p>Failed: ${failed}</p>
+                <p>Success Rate: ${((passed/total) * 100).toFixed(2)}%</p>
+            `;
+            summary.style.marginTop = '20px';
+            summary.style.padding = '10px';
+            summary.style.backgroundColor = failed === 0 ? '#d4edda' : '#f8d7da';
+            summary.style.border = `1px solid ${failed === 0 ? '#c3e6cb' : '#f5c6cb'}`;
+            summary.style.borderRadius = '5px';
+            
+            document.getElementById('test-results').appendChild(summary);
+            
+            // Log to console
+            console.log('Test Results:', results);
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -27,6 +27,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_fetch_event_types_with_v2_api()
     {
         Http::fake([
@@ -52,6 +55,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_falls_back_to_v1_when_v2_fails_for_event_types()
     {
         Http::fake([
@@ -76,6 +82,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_check_availability_with_v2_api()
     {
         $eventTypeId = 12345;
@@ -105,6 +114,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_normalizes_v2_availability_response_to_v1_format()
     {
         $eventTypeId = 12345;
@@ -142,6 +154,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_create_booking_with_v2_api()
     {
         $eventTypeId = 12345;
@@ -183,6 +198,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_includes_phone_in_notes_for_v2_booking()
     {
         $eventTypeId = 12345;
@@ -208,6 +226,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_get_booking_details()
     {
         $bookingId = 'abc123xyz';
@@ -232,6 +253,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_cancel_booking()
     {
         $bookingId = 'abc123xyz';
@@ -256,6 +280,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_test_api_connectivity()
     {
         Http::fake([
@@ -274,6 +301,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_v1_api_when_configured()
     {
         Config::set('services.calcom.api_version', 'v1');
@@ -300,6 +330,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_properly_formats_v1_booking_request()
     {
         Config::set('services.calcom.api_version', 'v1');
@@ -334,6 +367,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_api_errors_gracefully()
     {
         Http::fake([
@@ -348,6 +384,9 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_disables_fallback_when_configured()
     {
         Config::set('services.calcom.enable_fallback', false);

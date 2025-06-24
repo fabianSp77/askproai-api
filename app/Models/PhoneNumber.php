@@ -19,25 +19,29 @@ class PhoneNumber extends Model
         'company_id',
         'branch_id',
         'number',
-        'formatted_number',
         'type',
         'routing_config',
         'agent_id',
-        'active',
         'is_active',
         'description',
         'is_primary',
         'sms_enabled',
-        'whatsapp_enabled'
+        'whatsapp_enabled',
+        'retell_phone_id',
+        'retell_agent_id',
+        'retell_agent_version',
+        'capabilities',
+        'metadata'
     ];
     
     protected $casts = [
         'routing_config' => 'array',
-        'active' => 'boolean',
         'is_active' => 'boolean',
         'is_primary' => 'boolean',
         'sms_enabled' => 'boolean',
-        'whatsapp_enabled' => 'boolean'
+        'whatsapp_enabled' => 'boolean',
+        'capabilities' => 'array',
+        'metadata' => 'array'
     ];
     
     /**
@@ -69,10 +73,7 @@ class PhoneNumber extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where(function($q) {
-            $q->where('active', true)
-              ->orWhere('is_active', true);
-        });
+        return $query->where('is_active', true);
     }
     
     /**

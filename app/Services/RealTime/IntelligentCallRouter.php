@@ -155,8 +155,16 @@ class IntelligentCallRouter
         
         $query->where(function($q) use ($dayOfWeek, $currentTime) {
             $q->whereJsonContains("working_hours->{$dayOfWeek}->is_working", true)
-              ->whereRaw("JSON_EXTRACT(working_hours, '$.{$dayOfWeek}.start') <= ?", [$currentTime])
-              ->whereRaw("JSON_EXTRACT(working_hours, '$.{$dayOfWeek}.end') >= ?", [$currentTime]);
+              ->where(function($sq) use ($dayOfWeek, $currentTime) {
+                  // Validate dayOfWeek against whitelist
+                  $validDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                  if (!in_array($dayOfWeek, $validDays)) {
+                      throw new \InvalidArgumentException("Invalid day of week: " . $dayOfWeek);
+                  }
+                  
+                  $sq->whereRaw("JSON_EXTRACT(working_hours, ?) <= ?", ["$." . $dayOfWeek . ".start", $currentTime])
+                     ->whereRaw("JSON_EXTRACT(working_hours, ?) >= ?", ["$." . $dayOfWeek . ".end", $currentTime]);
+              });
         });
         
         // Exclude avoided staff

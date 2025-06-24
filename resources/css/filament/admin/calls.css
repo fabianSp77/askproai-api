@@ -1,0 +1,396 @@
+/* ========================================
+   CALLS RESOURCE - Professional Design
+   Consistent with Appointments & Company Portal
+   ======================================== */
+
+/* Table Container Styling */
+.fi-resource-calls .fi-ta-table-container {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Table Header Styling */
+.fi-resource-calls .fi-ta-header-toolbar {
+    background: linear-gradient(to right, #f9fafb, #ffffff);
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+}
+
+/* Search Input Styling */
+.fi-resource-calls .fi-ta-search-field input {
+    border-radius: 0.75rem;
+    border: 2px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.fi-resource-calls .fi-ta-search-field input:focus {
+    border-color: rgb(59, 130, 246);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Filter Pills Styling */
+.fi-resource-calls .fi-ta-filters {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.fi-resource-calls .fi-ta-filter {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.fi-resource-calls .fi-ta-filter:hover {
+    border-color: rgb(59, 130, 246);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.fi-resource-calls .fi-ta-filter.fi-active {
+    background: rgb(59, 130, 246);
+    border-color: rgb(59, 130, 246);
+    color: white;
+}
+
+/* Table Row Styling */
+.fi-resource-calls .fi-ta-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: all 0.2s ease;
+}
+
+.fi-resource-calls .fi-ta-table tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.02);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+}
+
+/* Table Cell Styling */
+.fi-resource-calls .fi-ta-table td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+}
+
+.fi-resource-calls .fi-ta-table th {
+    padding: 0.75rem 1.5rem;
+    background: #fafbfc;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+/* Status Badge Improvements */
+.fi-resource-calls .fi-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+/* Call Status Badges */
+.fi-resource-calls .fi-badge-color-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.fi-resource-calls .fi-badge-color-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fbbf24;
+}
+
+.fi-resource-calls .fi-badge-color-danger {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+.fi-resource-calls .fi-badge-color-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e3a8a;
+    border: 1px solid #60a5fa;
+}
+
+.fi-resource-calls .fi-badge-color-gray {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+/* Duration Badge Styling */
+.fi-resource-calls td:has(.fi-badge:contains("Min")) .fi-badge {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    color: #075985;
+    border: 1px solid #0284c7;
+}
+
+/* Sentiment Icons */
+.fi-resource-calls .fi-ta-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Action Buttons Styling */
+.fi-resource-calls .fi-ta-actions {
+    gap: 0.5rem;
+}
+
+.fi-resource-calls .fi-ta-action {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.fi-resource-calls .fi-ta-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Bulk Actions Bar */
+.fi-resource-calls .fi-ta-bulk-actions {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Pagination Styling */
+.fi-resource-calls .fi-ta-pagination {
+    padding: 1rem 1.5rem;
+    background: #fafbfc;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Column Toggle Dropdown */
+.fi-resource-calls .fi-ta-col-toggle .fi-dropdown-panel {
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    padding: 0.75rem;
+}
+
+/* Empty State Styling */
+.fi-resource-calls .fi-ta-empty-state {
+    padding: 3rem;
+    text-align: center;
+}
+
+/* Header Actions Styling */
+.fi-resource-calls .fi-page-header-actions {
+    gap: 0.75rem;
+}
+
+.fi-resource-calls .fi-page-header-actions .fi-btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.fi-resource-calls .fi-page-header-actions .fi-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Primary Button (Phone themed) */
+.fi-resource-calls .fi-btn-color-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+}
+
+.fi-resource-calls .fi-btn-color-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Secondary Button */
+.fi-resource-calls .fi-btn-color-gray {
+    background: white;
+    color: #374151;
+    border: 2px solid #e5e7eb;
+}
+
+/* Stats Overview Widget Styling */
+.fi-resource-calls .fi-wi-stats-overview-stat {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.fi-resource-calls .fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient backgrounds for call stat cards */
+.call-stat-gradient-primary {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.call-stat-gradient-primary .fi-wi-stats-overview-stat-value {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.call-stat-gradient-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.call-stat-gradient-success .fi-wi-stats-overview-stat-value {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.call-stat-gradient-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.call-stat-gradient-warning .fi-wi-stats-overview-stat-value {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.call-stat-gradient-info {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+}
+
+.call-stat-gradient-info .fi-wi-stats-overview-stat-value {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+/* Chart Widget Styling */
+.fi-resource-calls .fi-wi-chart {
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    background: white;
+}
+
+/* Tags Column Styling */
+.fi-resource-calls .fi-ta-tags-column {
+    gap: 0.25rem;
+}
+
+.fi-resource-calls .fi-ta-tags-column .fi-badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: rgb(59, 130, 246);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Audio Player Modal Styling */
+.fi-resource-calls .fi-modal-content audio {
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.fi-resource-calls .playback-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.fi-resource-calls .playback-controls button {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.fi-resource-calls .playback-controls button:hover {
+    background: #e5e7eb;
+}
+
+.fi-resource-calls .playback-controls button.active {
+    background: rgb(59, 130, 246);
+    color: white;
+    border-color: rgb(59, 130, 246);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .fi-resource-calls .fi-ta-table-container {
+        border-radius: 0;
+        box-shadow: none;
+    }
+    
+    .fi-resource-calls .fi-ta-header-toolbar {
+        padding: 1rem;
+    }
+    
+    .fi-resource-calls .fi-ta-table td,
+    .fi-resource-calls .fi-ta-table th {
+        padding: 0.75rem;
+    }
+}
+
+/* Dark Mode Support */
+.dark .fi-resource-calls .fi-ta-table-container {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark .fi-resource-calls .fi-ta-header-toolbar {
+    background: linear-gradient(to right, #1f2937, #111827);
+    border-color: #374151;
+}
+
+.dark .fi-resource-calls .fi-ta-table tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.dark .fi-resource-calls .fi-ta-search-field input {
+    background: #374151;
+    border-color: #4b5563;
+    color: white;
+}
+
+.dark .fi-resource-calls .fi-wi-chart {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+/* Smooth Transitions */
+.fi-resource-calls * {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}

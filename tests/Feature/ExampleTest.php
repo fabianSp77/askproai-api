@@ -7,6 +7,9 @@ use Tests\TestCase;
 class ExampleTest extends TestCase
 {
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function root_returns_not_found(): void
     {
         $response = $this->get('/');

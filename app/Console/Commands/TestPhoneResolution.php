@@ -95,7 +95,7 @@ class TestPhoneResolution extends Command
         } else {
             $this->info("Found " . $phoneRecords->count() . " matching record(s):");
             foreach ($phoneRecords as $record) {
-                $this->line("  - {$record->number} (Type: {$record->type}, Branch: {$record->branch_id}, Active: " . ($record->active ? 'Yes' : 'No') . ")");
+                $this->line("  - {$record->number} (Type: {$record->type}, Branch: {$record->branch_id}, Active: " . ($record->is_active ? 'Yes' : 'No') . ")");
             }
         }
         

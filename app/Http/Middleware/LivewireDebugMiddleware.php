@@ -10,37 +10,39 @@ class LivewireDebugMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if ($request->hasHeader('X-Livewire')) {
-            Log::channel('daily')->info('LIVEWIRE REQUEST', [
-                'url' => $request->fullUrl(),
+        // Only debug Livewire requests
+        if ($request->path() \!== 'livewire/update') {
+            return $next($request);
+        }
+
+        try {
+            Log::info('Livewire Request Debug', [
                 'method' => $request->method(),
-                'component' => $request->input('components.0.fingerprint.name') ?? 'unknown',
-                'method_called' => $request->input('components.0.calls.0.method') ?? 'none',
-                'path' => $request->input('components.0.calls.0.path') ?? 'none',
-                'session_id' => session()->getId(),
-                'csrf_token' => $request->input('_token'),
-                'session_token' => session()->token(),
-                'tokens_match' => $request->input('_token') === session()->token(),
-                'user_id' => auth()->id(),
+                'path' => $request->path(),
+                'payload' => $request->all(),
                 'headers' => $request->headers->all(),
+                'session_id' => session()->getId(),
+                'csrf_token' => $request->session()->token(),
             ]);
-        }
 
-        $response = $next($request);
+            $response = $next($request);
 
-        if ($request->hasHeader('X-Livewire') && method_exists($response, 'isRedirect') && $response->isRedirect()) {
-            $location = 'unknown';
-            if ($response instanceof \Illuminate\Http\Response || $response instanceof \Symfony\Component\HttpFoundation\Response) {
-                $location = $response->headers->get('Location');
-            }
+            Log::info('Livewire Response Debug', [
+                'status' => $response->getStatusCode(),
+                'content' => substr($response->getContent(), 0, 500),
+            ]);
+
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('Livewire Request Failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             
-            Log::channel('daily')->error('LIVEWIRE REDIRECT DETECTED', [
-                'status' => method_exists($response, 'getStatusCode') ? $response->getStatusCode() : 'unknown',
-                'location' => $location,
-                'content' => method_exists($response, 'getContent') ? substr($response->getContent(), 0, 1000) : 'unknown',
-            ]);
+            throw $e;
         }
-
-        return $response;
     }
 }
+EOF < /dev/null

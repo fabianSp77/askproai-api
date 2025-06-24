@@ -40,6 +40,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_test_calcom_api_connection()
     {
         // Mock successful v2 API response
@@ -79,6 +82,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_sync_bookings_from_calcom()
     {
         // Prepare test data
@@ -145,6 +151,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_updates_existing_appointments_on_sync()
     {
         // Create existing appointment
@@ -189,6 +198,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_different_calcom_statuses_correctly()
     {
         $statusMappings = [
@@ -228,6 +240,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_processes_calcom_webhook_for_booking_created()
     {
         $payload = [
@@ -281,6 +296,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_booking_cancelled_webhook()
     {
         // Create existing appointment
@@ -318,6 +336,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_rejects_webhook_with_invalid_signature()
     {
         $payload = [
@@ -333,6 +354,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_can_check_slot_availability()
     {
         Http::fake([
@@ -362,6 +386,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_api_errors_gracefully()
     {
         Http::fake([
@@ -378,6 +405,9 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_tracks_sync_statistics()
     {
         // Mock multiple bookings

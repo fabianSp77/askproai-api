@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Services\MCP\MCPOrchestrator;
+use App\Services\MCP\ExternalMCPManager;
 use App\Services\Database\ConnectionPoolManager;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -29,14 +30,17 @@ class MCPMonitor extends Command
 
     protected MCPOrchestrator $orchestrator;
     protected ConnectionPoolManager $connectionPool;
+    protected ExternalMCPManager $externalMCPManager;
     
     public function __construct(
         MCPOrchestrator $orchestrator,
-        ConnectionPoolManager $connectionPool
+        ConnectionPoolManager $connectionPool,
+        ExternalMCPManager $externalMCPManager
     ) {
         parent::__construct();
         $this->orchestrator = $orchestrator;
         $this->connectionPool = $connectionPool;
+        $this->externalMCPManager = $externalMCPManager;
     }
 
     /**
@@ -80,6 +84,7 @@ class MCPMonitor extends Command
         
         $this->displayActiveOperations();
         $this->displayQueueStatus();
+        $this->displayExternalMCPStatus();
         $this->displayRecentErrors();
     }
     
@@ -252,6 +257,37 @@ class MCPMonitor extends Command
                     $metadata['error'] ?? 'Unknown error'
                 ));
             }
+        }
+        $this->line('');
+    }
+    
+    protected function displayExternalMCPStatus(): void
+    {
+        $this->info('EXTERNAL MCP SERVERS');
+        $this->line('───────────────────');
+        
+        try {
+            $status = $this->externalMCPManager->getStatus();
+            
+            if (empty($status)) {
+                $this->line('No external MCP servers configured');
+            } else {
+                $this->table(
+                    ['Server', 'Enabled', 'Status', 'Description'],
+                    collect($status)->map(function ($info, $name) {
+                        return [
+                            $name,
+                            $info['enabled'] ? '<info>✓</>' : '<comment>✗</>',
+                            $info['running'] 
+                                ? '<info>Running</>' 
+                                : ($info['enabled'] ? '<error>Stopped</>' : '<comment>Disabled</>'),
+                            \Str::limit($info['description'], 40)
+                        ];
+                    })->toArray()
+                );
+            }
+        } catch (\Exception $e) {
+            $this->error('Unable to fetch external MCP status: ' . $e->getMessage());
         }
         $this->line('');
     }

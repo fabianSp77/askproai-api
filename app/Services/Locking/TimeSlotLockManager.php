@@ -2,13 +2,13 @@
 
 namespace App\Services\Locking;
 
-use App\Models\AppointmentLock;
 use App\Models\Branch;
 use App\Models\Staff;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class TimeSlotLockManager
 {
@@ -51,12 +51,9 @@ class TimeSlotLockManager
                 // Clean up any expired locks first
                 $this->cleanupExpiredLocks();
                 
-                // Check if there's already an active lock for this time range
-                $existingLock = AppointmentLock::active()
-                    ->where('staff_id', $staffId)
-                    ->forTimeRange($startTime, $endTime)
-                    ->lockForUpdate() // Prevent race conditions
-                    ->first();
+                // Check if there's already an active lock for this time range using cache
+                $lockKey = $this->getLockKey($staffId, $startTime, $endTime);
+                $existingLock = Cache::get($lockKey);
                 
                 if ($existingLock) {
                     Log::warning('Lock acquisition failed - slot already locked', [
@@ -64,8 +61,8 @@ class TimeSlotLockManager
                         'staff_id' => $staffId,
                         'start_time' => $startTime->toIso8601String(),
                         'end_time' => $endTime->toIso8601String(),
-                        'existing_lock_token' => substr($existingLock->lock_token, 0, 8) . '...',
-                        'existing_lock_expires' => $existingLock->lock_expires_at->toIso8601String(),
+                        'existing_lock_token' => substr($existingLock['lock_token'] ?? '', 0, 8) . '...',
+                        'existing_lock_expires' => $existingLock['expires_at'] ?? 'unknown',
                     ]);
                     
                     return null;
@@ -74,17 +71,23 @@ class TimeSlotLockManager
                 // Generate unique lock token
                 $lockToken = $this->generateLockToken();
                 
-                // Create the lock - using raw insert to handle race conditions
-                try {
-                    DB::table('appointment_locks')->insert([
-                        'branch_id' => $branchId,
-                        'staff_id' => $staffId,
-                        'starts_at' => $startTime,
-                        'ends_at' => $endTime,
-                        'lock_token' => $lockToken,
-                        'lock_expires_at' => now()->addMinutes($lockMinutes),
-                        'created_at' => now(),
-                    ]);
+                // Create the lock using cache
+                $lockData = [
+                    'branch_id' => $branchId,
+                    'staff_id' => $staffId,
+                    'starts_at' => $startTime->toIso8601String(),
+                    'ends_at' => $endTime->toIso8601String(),
+                    'lock_token' => $lockToken,
+                    'expires_at' => now()->addMinutes($lockMinutes)->toIso8601String(),
+                    'created_at' => now()->toIso8601String(),
+                ];
+                
+                // Store in cache with expiration
+                if (Cache::add($lockKey, $lockData, $lockMinutes * 60)) {
+                    // Track this lock key
+                    $allKeys = Cache::get('appointment_lock_keys', []);
+                    $allKeys[] = $lockKey;
+                    Cache::put('appointment_lock_keys', array_unique($allKeys), 86400);
                     
                     Log::info('Lock acquired successfully', [
                         'branch_id' => $branchId,
@@ -96,21 +99,16 @@ class TimeSlotLockManager
                     ]);
                     
                     return $lockToken;
+                } else {
+                    // Lock acquisition failed - race condition
+                    Log::warning('Lock acquisition failed - race condition detected', [
+                        'branch_id' => $branchId,
+                        'staff_id' => $staffId,
+                        'start_time' => $startTime->toIso8601String(),
+                        'end_time' => $endTime->toIso8601String(),
+                    ]);
                     
-                } catch (\Illuminate\Database\QueryException $e) {
-                    // Handle duplicate key error (race condition)
-                    if ($e->getCode() == 23000) { // Duplicate entry error
-                        Log::warning('Lock acquisition failed - race condition detected', [
-                            'branch_id' => $branchId,
-                            'staff_id' => $staffId,
-                            'start_time' => $startTime->toIso8601String(),
-                            'end_time' => $endTime->toIso8601String(),
-                        ]);
-                        
-                        return null;
-                    }
-                    
-                    throw $e;
+                    return null;
                 }
             });
         } catch (\Exception $e) {
@@ -309,13 +307,27 @@ class TimeSlotLockManager
      * @param string $branchId
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getActiveLocksForBranch(string $branchId)
+    public function getActiveLocksForBranch(string $branchId): array
     {
-        return AppointmentLock::active()
-            ->where('branch_id', $branchId)
-            ->with('staff')
-            ->orderBy('starts_at')
-            ->get();
+        $allKeys = Cache::get('appointment_lock_keys', []);
+        $branchLocks = [];
+        
+        foreach ($allKeys as $key) {
+            $lockData = Cache::get($key);
+            if ($lockData && isset($lockData['branch_id']) && $lockData['branch_id'] === $branchId) {
+                $expiresAt = Carbon::parse($lockData['expires_at']);
+                if (!$expiresAt->isPast()) {
+                    $branchLocks[] = $lockData;
+                }
+            }
+        }
+        
+        // Sort by start time
+        usort($branchLocks, function($a, $b) {
+            return Carbon::parse($a['starts_at'])->timestamp - Carbon::parse($b['starts_at'])->timestamp;
+        });
+        
+        return $branchLocks;
     }
 
     /**
@@ -328,7 +340,22 @@ class TimeSlotLockManager
     public function forceReleaseStaffLocks(string $staffId): int
     {
         try {
-            $count = AppointmentLock::where('staff_id', $staffId)->delete();
+            $allKeys = Cache::get('appointment_lock_keys', []);
+            $count = 0;
+            $remainingKeys = [];
+            
+            foreach ($allKeys as $key) {
+                $lockData = Cache::get($key);
+                if ($lockData && isset($lockData['staff_id']) && $lockData['staff_id'] === $staffId) {
+                    Cache::forget($key);
+                    $count++;
+                } else {
+                    $remainingKeys[] = $key;
+                }
+            }
+            
+            // Update the tracking list
+            Cache::put('appointment_lock_keys', $remainingKeys, 86400);
             
             if ($count > 0) {
                 Log::warning('Force released locks for staff', [
@@ -372,7 +399,13 @@ class TimeSlotLockManager
         
         $lock = $this->getLockInfo($lockToken);
         
-        return $lock && $lock->isActive();
+        if (!$lock) {
+            return false;
+        }
+        
+        // Check if lock is still active
+        $expiresAt = Carbon::parse($lock['expires_at']);
+        return !$expiresAt->isPast();
     }
 
     /**
@@ -382,17 +415,54 @@ class TimeSlotLockManager
      */
     public function getLockStatistics(): array
     {
+        $allKeys = Cache::get('appointment_lock_keys', []);
+        $activeLocks = 0;
+        $expiredLocks = 0;
+        $locksByBranch = [];
+        $totalDuration = 0;
+        $lockCount = 0;
+        
+        foreach ($allKeys as $key) {
+            $lockData = Cache::get($key);
+            if ($lockData) {
+                $expiresAt = Carbon::parse($lockData['expires_at']);
+                
+                if ($expiresAt->isPast()) {
+                    $expiredLocks++;
+                } else {
+                    $activeLocks++;
+                    
+                    // Count by branch
+                    $branchId = $lockData['branch_id'];
+                    $locksByBranch[$branchId] = ($locksByBranch[$branchId] ?? 0) + 1;
+                    
+                    // Calculate duration
+                    $createdAt = Carbon::parse($lockData['created_at']);
+                    $duration = $expiresAt->diffInMinutes($createdAt);
+                    $totalDuration += $duration;
+                    $lockCount++;
+                }
+            }
+        }
+        
         return [
-            'total_active_locks' => AppointmentLock::active()->count(),
-            'total_expired_locks' => AppointmentLock::expired()->count(),
-            'locks_by_branch' => AppointmentLock::active()
-                ->select('branch_id', DB::raw('COUNT(*) as count'))
-                ->groupBy('branch_id')
-                ->pluck('count', 'branch_id')
-                ->toArray(),
-            'average_lock_duration' => AppointmentLock::active()
-                ->selectRaw('AVG(TIMESTAMPDIFF(MINUTE, created_at, lock_expires_at)) as avg_duration')
-                ->value('avg_duration'),
+            'total_active_locks' => $activeLocks,
+            'total_expired_locks' => $expiredLocks,
+            'locks_by_branch' => $locksByBranch,
+            'average_lock_duration' => $lockCount > 0 ? round($totalDuration / $lockCount, 2) : 0,
         ];
+    }
+    
+    /**
+     * Generate a cache key for a lock
+     */
+    private function getLockKey(string $staffId, Carbon $startTime, Carbon $endTime): string
+    {
+        return sprintf(
+            'appointment_lock:%s:%s:%s',
+            $staffId,
+            $startTime->format('YmdHis'),
+            $endTime->format('YmdHis')
+        );
     }
 }

@@ -1,0 +1,10 @@
+Code Statistics
+===============
+
+PHP Files: 3587
+Blade Templates: 893
+JavaScript Files: 175
+CSS Files: 58
+
+Lines of Code (PHP): 94546
+Lines of Code (JS): 48611

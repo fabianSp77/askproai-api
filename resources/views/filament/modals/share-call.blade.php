@@ -8,22 +8,40 @@
                 </svg>
             </div>
             <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $customerName }}</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $record->customer?->name ?? 'Unbekannter Anrufer' }}</h3>
                 <div class="mt-2 grid grid-cols-2 gap-3 text-sm">
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
-                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $phoneNumber }}</span>
+                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $record->from_number }}</span>
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Dauer:</span>
-                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $duration }} Min.</span>
+                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ gmdate('i:s', $record->duration_sec ?? 0) }}</span>
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Datum:</span>
-                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $callDate }}</span>
+                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $record->start_timestamp?->format('d.m.Y H:i') ?? $record->created_at->format('d.m.Y H:i') }}</span>
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Stimmung:</span>
+                        @php
+                            $sentiment = $record->analysis['sentiment'] ?? 'neutral';
+                            $sentimentClass = match($sentiment) {
+                                'positive' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+                                'negative' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+                                default => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                            };
+                            $sentimentEmoji = match($sentiment) {
+                                'positive' => '😊',
+                                'negative' => '😞',
+                                default => '😐'
+                            };
+                            $sentimentText = match($sentiment) {
+                                'positive' => 'Positiv',
+                                'negative' => 'Negativ',
+                                default => 'Neutral'
+                            };
+                        @endphp
                         <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $sentimentClass }}">
                             {{ $sentimentEmoji }} {{ $sentimentText }}
                         </span>

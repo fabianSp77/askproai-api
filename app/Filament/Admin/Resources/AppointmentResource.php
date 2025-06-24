@@ -29,11 +29,11 @@ class AppointmentResource extends Resource
     }
 
     use MultiTenantResource;
-    use HasConsistentNavigation;
     
     protected static ?string $model = Appointment::class;
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $navigationLabel = 'Termine';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -126,47 +126,72 @@ class AppointmentResource extends Resource
                 static::getMultiTenantRelations()
             )))
             ->poll('30s')
-            ->striped()
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable()
+                    ->copyable()
+                    ->copyMessage('ID kopiert')
+                    ->copyMessageDuration(1500),
                     
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Kunde')
                     ->sortable()
                     ->searchable()
                     ->default('—')
-                    ->description(fn ($record) => $record->customer?->phone),
+                    ->weight('medium')
+                    ->size('sm')
+                    ->description(fn ($record) => $record->customer?->phone)
+                    ->wrap()
+                    ->getStateUsing(fn ($record) => $record?->customer?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('service.name')
                     ->label('Leistung')
                     ->searchable()
                     ->badge()
-                    ->default('—'),
+                    ->color('primary')
+                    ->default('—')
+                    ->size('sm')
+                    ->getStateUsing(fn ($record) => $record?->service?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('staff.name')
                     ->label('Mitarbeiter')
                     ->sortable()
                     ->searchable()
-                    ->default('—'),
+                    ->default('—')
+                    ->icon('heroicon-m-user')
+                    ->iconPosition('before')
+                    ->size('sm')
+                    ->getStateUsing(fn ($record) => $record?->staff?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('starts_at')
                     ->label('Datum & Zeit')
                     ->dateTime('d.m.Y H:i')
                     ->sortable()
-                    ->icon(fn ($record) => $record->starts_at && Carbon::parse($record->starts_at)->isPast() ? 'heroicon-o-clock' : null)
-                    ->iconColor('warning')
+                    ->size('sm')
+                    ->weight('medium')
                     ->description(function ($record) {
                         if (!$record->starts_at) return null;
                         $startsAt = Carbon::parse($record->starts_at);
-                        if ($startsAt->isToday()) return '🔵 Heute';
-                        if ($startsAt->isTomorrow()) return '🟢 Morgen';
-                        if ($startsAt->isPast()) return '⚠️ Vergangen';
-                        return '📅 ' . $startsAt->diffForHumans();
+                        if ($startsAt->isToday()) return 'Heute';
+                        if ($startsAt->isTomorrow()) return 'Morgen';
+                        if ($startsAt->isPast()) return 'Vergangen';
+                        return $startsAt->diffForHumans();
                     })
-                    ->weight('bold'),
+                    ->icon(fn ($record) => match(true) {
+                        !$record->starts_at => null,
+                        Carbon::parse($record->starts_at)->isToday() => 'heroicon-m-calendar',
+                        Carbon::parse($record->starts_at)->isPast() => 'heroicon-m-clock',
+                        default => 'heroicon-m-calendar-days'
+                    })
+                    ->iconColor(fn ($record) => match(true) {
+                        !$record->starts_at => 'gray',
+                        Carbon::parse($record->starts_at)->isToday() => 'primary',
+                        Carbon::parse($record->starts_at)->isPast() => 'warning',
+                        default => 'success'
+                    }),
                     
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
@@ -196,6 +221,7 @@ class AppointmentResource extends Resource
                     ->getStateUsing(fn ($record) => $record->service?->duration ? $record->service->duration . ' Min.' : '—')
                     ->badge()
                     ->color('gray')
+                    ->size('sm')
                     ->toggleable(),
                     
                 Tables\Columns\TextColumn::make('price')
@@ -203,7 +229,12 @@ class AppointmentResource extends Resource
                     ->getStateUsing(fn ($record) => $record->service?->price ? number_format($record->service->price / 100, 2, ',', '.') . ' €' : '—')
                     ->badge()
                     ->color('success')
+                    ->size('sm')
                     ->toggleable(),
+            ])
+            ->contentGrid([
+                'md' => 1,
+                'xl' => 1,
             ])
             ->filters(array_merge(
                 static::getMultiTenantFilters(),
@@ -290,8 +321,13 @@ class AppointmentResource extends Resource
                         return $indicators;
                     }),
                 ]
-            ), layout: FiltersLayout::AboveContent)
-            ->filtersFormColumns(4)
+            ), layout: FiltersLayout::AboveContentCollapsible)
+            ->filtersFormColumns([
+                'sm' => 1,
+                'md' => 2,
+                'lg' => 3,
+                'xl' => 4,
+            ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()
@@ -341,7 +377,15 @@ class AppointmentResource extends Resource
             ->defaultSort('starts_at', 'desc')
             ->emptyStateHeading('Keine Termine vorhanden')
             ->emptyStateDescription('Erstellen Sie einen neuen Termin über den Button oben.')
-            ->emptyStateIcon('heroicon-o-calendar');
+            ->emptyStateIcon('heroicon-o-calendar')
+            ->deferLoading()
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->persistSortInSession()
+            ->persistColumnSearchesInSession()
+            ->extremePaginationLinks()
+            ->paginated([10, 25, 50, 100])
+            ->selectCurrentPageOnly();
     }
 
     public static function getRelations(): array

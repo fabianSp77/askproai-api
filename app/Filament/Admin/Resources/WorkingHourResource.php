@@ -44,7 +44,8 @@ class WorkingHourResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('staff.name')->label('Mitarbeiter'),
+            Tables\Columns\TextColumn::make('staff.name')->label('Mitarbeiter')
+                    ->getStateUsing(fn ($record) => $record?->staff?->name ?? '-'),
             Tables\Columns\TextColumn::make('weekday')->label('Tag'),
             Tables\Columns\TextColumn::make('start')->label('Beginn'),
             Tables\Columns\TextColumn::make('end')->label('Ende'),

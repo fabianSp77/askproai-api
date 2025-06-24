@@ -81,16 +81,29 @@ class VerifyRetellSignature
         $signature = $signatureHeader;
         $timestamp = $timestampHeader;
         
-        // Check if signature uses combined format: v=timestamp,signature
+        // Check if signature uses combined format: v=timestamp,d=signature or v=timestamp,signature
         if (strpos($signatureHeader, 'v=') === 0) {
-            $parts = explode(',', substr($signatureHeader, 2), 2);
-            if (count($parts) === 2) {
-                // Format: v=timestamp,signature
+            // Parse format like: v=1750598562480,d=d14cb98fdd7e628640694d7bad14f1ea36444e3807b0ef76fa388d4ad139b04d
+            $headerParts = substr($signatureHeader, 2); // Remove 'v='
+            $parts = explode(',', $headerParts);
+            
+            foreach ($parts as $part) {
+                if (strpos($part, 'd=') === 0) {
+                    // Signature part
+                    $signature = substr($part, 2);
+                } elseif (is_numeric($part)) {
+                    // Timestamp part (just numbers)
+                    $timestamp = $timestamp ?? $part;
+                } elseif (strpos($part, '=') === false && strlen($part) > 20) {
+                    // Might be signature without prefix
+                    $signature = $part;
+                }
+            }
+            
+            // If we found timestamp in first part and no 'd=' prefix
+            if (count($parts) === 2 && is_numeric($parts[0]) && strpos($parts[1], '=') === false) {
                 $timestamp = $timestamp ?? $parts[0];
                 $signature = $parts[1];
-            } else {
-                // Format: v=signature (no timestamp)
-                $signature = $parts[0];
             }
         }
         

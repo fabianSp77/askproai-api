@@ -5,6 +5,8 @@ namespace App\Jobs;
 use App\Models\Company;
 use App\Models\Appointment;
 use App\Services\CalcomV2Service;
+use App\Services\MCP\MCPGateway;
+use Illuminate\Support\Str;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action;
+use App\Helpers\SafeQueryHelper;
 
 class SyncCalcomBookingsJob implements ShouldQueue
 {
@@ -30,48 +33,55 @@ class SyncCalcomBookingsJob implements ShouldQueue
 
     public function handle()
     {
-        Log::info('Starting Cal.com sync for company', [
+        Log::info('Starting Cal.com sync for company via MCP', [
             'company_id' => $this->company->id,
-            'company_name' => $this->company->name
+            'company_name' => $this->company->name,
+            'using_mcp' => true
         ]);
 
         try {
-            $calcomService = new CalcomV2Service($this->apiKey);
+            // Use MCP Gateway for sync
+            $mcpGateway = app(MCPGateway::class);
             
-            // Hole alle Buchungen der letzten 3 Monate
+            // Prepare sync request
             $fromDate = Carbon::now()->subMonths(3)->startOfDay();
             $toDate = Carbon::now()->addMonths(1)->endOfDay();
             
-            $bookings = $this->fetchAllBookings($calcomService, $fromDate, $toDate);
+            $mcpRequest = [
+                'jsonrpc' => '2.0',
+                'method' => 'calcom.syncBookings',
+                'params' => [
+                    'company_id' => $this->company->id,
+                    'from_date' => $fromDate->toIso8601String(),
+                    'to_date' => $toDate->toIso8601String()
+                ],
+                'id' => Str::uuid()->toString()
+            ];
             
-            Log::info('Fetched bookings from Cal.com', [
-                'count' => count($bookings),
-                'company_id' => $this->company->id
+            Log::info('Executing Cal.com sync via MCP', [
+                'company_id' => $this->company->id,
+                'from_date' => $fromDate->toDateString(),
+                'to_date' => $toDate->toDateString()
             ]);
             
-            $synced = 0;
-            $created = 0;
-            $updated = 0;
-            $errors = 0;
+            // Execute sync via MCP
+            $response = $mcpGateway->process($mcpRequest);
             
-            foreach ($bookings as $booking) {
-                try {
-                    $result = $this->syncBooking($booking);
-                    if ($result === 'created') {
-                        $created++;
-                    } elseif ($result === 'updated') {
-                        $updated++;
-                    }
-                    $synced++;
-                } catch (\Exception $e) {
-                    Log::error('Error syncing Cal.com booking', [
-                        'booking_id' => $booking['id'] ?? 'unknown',
-                        'error' => $e->getMessage(),
-                        'company_id' => $this->company->id
-                    ]);
-                    $errors++;
-                }
+            if (isset($response['error'])) {
+                throw new \Exception($response['error']['message'] ?? 'MCP sync failed');
             }
+            
+            $result = $response['result'] ?? [];
+            
+            if (!($result['success'] ?? false)) {
+                throw new \Exception($result['message'] ?? 'Sync failed');
+            }
+            
+            $stats = $result['stats'] ?? [];
+            $synced = $stats['synced'] ?? 0;
+            $created = $stats['created'] ?? 0;
+            $updated = $stats['updated'] ?? 0;
+            $errors = $stats['errors'] ?? 0;
             
             // Benachrichtigung senden
             $message = sprintf(
@@ -89,18 +99,19 @@ class SyncCalcomBookingsJob implements ShouldQueue
             $user = $this->company->users()->first();
             if ($user) {
                 Notification::make()
-                    ->title('Cal.com Synchronisation')
+                    ->title('Cal.com Synchronisation (via MCP)')
                     ->body($message)
                     ->success()
                     ->sendToDatabase($user);
             }
                 
-            Log::info('Cal.com sync completed', [
+            Log::info('Cal.com sync completed via MCP', [
                 'company_id' => $this->company->id,
                 'synced' => $synced,
                 'created' => $created,
                 'updated' => $updated,
-                'errors' => $errors
+                'errors' => $errors,
+                'using_mcp' => true
             ]);
             
         } catch (\Exception $e) {
@@ -253,7 +264,9 @@ class SyncCalcomBookingsJob implements ShouldQueue
         $title = $bookingData['title'] ?? '';
         if ($title) {
             return $this->company->services()
-                ->where('name', 'LIKE', '%' . $title . '%')
+                ->where(function($q) use ($title) {
+                    SafeQueryHelper::whereLike($q, 'name', $title);
+                })
                 ->first();
         }
         

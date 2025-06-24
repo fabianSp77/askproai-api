@@ -60,6 +60,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_login_with_email_and_password()
     {
         // Visit login page
@@ -102,6 +105,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_login_with_magic_link()
     {
         Mail::fake();
@@ -166,6 +172,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_reset_password()
     {
         Mail::fake();
@@ -255,6 +264,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function disabled_customer_cannot_login()
     {
         // Disable portal access
@@ -274,6 +286,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function unverified_email_requires_verification()
     {
         // Create unverified customer
@@ -332,6 +347,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function login_throttling_works_correctly()
     {
         // Make 5 failed login attempts
@@ -369,6 +387,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_logout()
     {
         // Login first
@@ -392,6 +413,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function session_timeout_redirects_to_login()
     {
         // Login
@@ -411,6 +435,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_portal_respects_company_settings()
     {
         // Disable customer portal for company
@@ -450,6 +477,9 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function multi_tenant_isolation_in_login()
     {
         // Create another company and customer

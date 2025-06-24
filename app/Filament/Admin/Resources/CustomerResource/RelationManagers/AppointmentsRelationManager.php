@@ -66,14 +66,17 @@ class AppointmentsRelationManager extends RelationManager
                     ->sortable(),
                 Tables\Columns\TextColumn::make('staff.name')
                     ->label('Mitarbeiter')
-                    ->searchable(),
+                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record?->staff?->name ?? '-'),
                 Tables\Columns\TextColumn::make('service.name')
                     ->label('Dienstleistung')
                     ->placeholder('Keine Dienstleistung')
-                    ->searchable(),
+                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record?->service?->name ?? '-'),
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
-                    ->searchable(),
+                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record?->branch?->name ?? '-'),
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->colors([

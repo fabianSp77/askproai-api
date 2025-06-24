@@ -13,6 +13,8 @@ use App\Models\Company;
 use App\Models\Appointment;
 use App\Models\Staff;
 use App\Models\Service;
+use App\Models\PhoneNumber;
+use App\Traits\CompanyAwareJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -24,7 +26,7 @@ use Carbon\Carbon;
 
 class ProcessRetellWebhookJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, CompanyAwareJob;
 
     /**
      * The number of times the job may be attempted.
@@ -86,10 +88,45 @@ class ProcessRetellWebhookJob implements ShouldQueue
         WebhookProcessor $webhookProcessor,
         EnhancedWebhookDeduplicationService $deduplicationService
     ): void {
+        // Resolve company context first
+        $payload = $this->webhookEvent->payload;
+        $callData = $payload['call'] ?? $payload;
+        
+        // Try to resolve company from phone number
+        if (isset($callData['to_number'])) {
+            $phoneNumber = PhoneNumber::withoutGlobalScopes()
+                ->where('number', $callData['to_number'])
+                ->where('is_active', true)
+                ->first();
+                
+            if ($phoneNumber && $phoneNumber->branch_id) {
+                $branch = Branch::withoutGlobalScopes()->find($phoneNumber->branch_id);
+                if ($branch) {
+                    $this->companyId = $branch->company_id;
+                }
+            }
+            
+            if (!$this->companyId) {
+                // Try direct branch lookup
+                $branch = Branch::withoutGlobalScopes()
+                    ->where('phone_number', $callData['to_number'])
+                    ->where('is_active', true)
+                    ->first();
+                    
+                if ($branch) {
+                    $this->companyId = $branch->company_id;
+                }
+            }
+        }
+        
+        // Apply company context
+        $this->applyCompanyContext();
+        
         Log::info('Processing Retell webhook job', [
             'webhook_event_id' => $this->webhookEvent->id,
             'event_type' => $this->webhookEvent->event_type,
             'correlation_id' => $this->correlationId,
+            'company_id' => $this->companyId,
             'attempt' => $this->attempts()
         ]);
 
@@ -166,8 +203,14 @@ class ProcessRetellWebhookJob implements ShouldQueue
             $request->merge($payload ?? []);
             $deduplicationService->markAsFailed('retell', $request, $e->getMessage());
             
+            // Clear company context
+            $this->clearCompanyContext();
+            
             // Re-throw to trigger retry logic
             throw $e;
+        } finally {
+            // Always clear company context
+            $this->clearCompanyContext();
         }
     }
 

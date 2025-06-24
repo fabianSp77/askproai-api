@@ -308,11 +308,12 @@ class NotificationService
             return false;
         }
         
-        // Prüfe SMS-Limit
-        $sentToday = DB::table('notification_log')
-            ->where('customer_id', $appointment->customer_id)
-            ->where('channel', 'sms')
-            ->whereDate('sent_at', today())
+        // Prüfe SMS-Limit using webhook_events table
+        $sentToday = DB::table('webhook_events')
+            ->where('provider', 'notification')
+            ->where('payload->customer_id', $appointment->customer_id)
+            ->where('payload->channel', 'sms')
+            ->whereDate('created_at', today())
             ->count();
             
         return $sentToday < 3; // Max 3 SMS pro Tag

@@ -1,0 +1,2021 @@
+
+<!doctype html>
+<html lang="de" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Comprehensive documentation for the AskProAI AI-powered appointment booking platform">
+      
+      
+      
+        <link rel="canonical" href="https://docs.askproai.de/architecture/complete-service-layer/">
+      
+      
+        <link rel="prev" href="../system-architecture/">
+      
+      
+        <link rel="next" href="../complete-model-documentation/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Complete Service Layer - AskProAI Complete Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-XXXXXXXXXX"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-XXXXXXXXXX",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#complete-service-layer-documentation" class="md-skip">
+          Zum Inhalt
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
+    <a href="../.." title="AskProAI Complete Documentation" class="md-header__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15 12h2a5 5 0 0 0-5-5v2a3 3 0 0 1 3 3m4 0h2c0-5-4.03-9-9-9v2c3.86 0 7 3.13 7 7m1 3.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.25l-2.2 2.2a15.1 15.1 0 0 1-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02A11.4 11.4 0 0 1 8.5 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1 17 17 0 0 0 17 17 1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AskProAI Complete Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Complete Service Layer
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Suche">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Teilen" aria-label="Teilen" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Suche wird initialisiert
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/askproai/api-gateway" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    askproai/api-gateway
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+  Home
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../features/phone-system/" class="md-tabs__link">
+          
+  
+  
+  Core Features
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../integrations/overview/" class="md-tabs__link">
+          
+  
+  
+  Integrations
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/complete-endpoint-reference/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../configuration/environment.md" class="md-tabs__link">
+          
+  
+  
+  Configuration
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../deployment/requirements.md" class="md-tabs__link">
+          
+  
+  
+  Deployment
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../development/setup.md" class="md-tabs__link">
+          
+  
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../operations/monitoring.md" class="md-tabs__link">
+          
+  
+  
+  Operations
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../migration/complete-migration-history/" class="md-tabs__link">
+          
+  
+  
+  Migration Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AskProAI Complete Documentation" class="md-nav__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15 12h2a5 5 0 0 0-5-5v2a3 3 0 0 1 3 3m4 0h2c0-5-4.03-9-9-9v2c3.86 0 7 3.13 7 7m1 3.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.25l-2.2 2.2a15.1 15.1 0 0 1-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02A11.4 11.4 0 0 1 8.5 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1 17 17 0 0 0 17 17 1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1"/></svg>
+
+    </a>
+    AskProAI Complete Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/askproai/api-gateway" title="Zum Repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    askproai/api-gateway
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../.." class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Architecture
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Architecture
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../system-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    System Design
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../system-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Complete System Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Complete Service Layer
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Complete Service Layer
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Inhaltsverzeichnis">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Inhaltsverzeichnis
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#service-layer-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Service Layer Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#service-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      Service Categories
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Service Categories">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security-services-10-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔐 Security Services (10 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phone-system-services-15-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      📞 Phone System Services (15 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calendar-services-25-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      📅 Calendar Services (25 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#business-services-30-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      🏢 Business Services (30 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notification-services-12-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      📧 Notification Services (12 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#financial-services-8-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      💰 Financial Services (8 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#analytics-reporting-15-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Analytics &amp; Reporting (15 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mcp-model-context-protocol-services-29-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      🤖 MCP (Model Context Protocol) Services (29 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#infrastructure-services-20-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔧 Infrastructure Services (20 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#search-knowledge-base-10-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔍 Search &amp; Knowledge Base (10 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utility-services-25-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      🛠️ Utility Services (25 files)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#integration-services-15-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔄 Integration Services (15 files)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#service-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Service Patterns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Service Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-patterns-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common Patterns Used
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#service-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Service Dependencies
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#performance-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Performance Considerations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      Best Practices
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-improvements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Future Improvements
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../complete-model-documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Complete Models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../complete-controller-documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Complete Controllers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MCP Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Flow
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database-schema/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Database Schema
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../queue-jobs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Queue Jobs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../event-system/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Event System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Security Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Performance Design
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../features/phone-system/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    Core Features
+    
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../integrations/overview/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    Integrations
+    
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../api/complete-endpoint-reference/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../configuration/environment.md" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../deployment/requirements.md" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    Deployment
+    
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../development/setup.md" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../operations/monitoring.md" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    Operations
+    
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../migration/complete-migration-history/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    Migration Guides
+    
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="complete-service-layer-documentation">Complete Service Layer Documentation<a class="headerlink" href="#complete-service-layer-documentation" title="Permanent link">&para;</a></h1>
+<p>Generated on: 2025-06-23</p>
+<h2 id="service-layer-overview">Service Layer Overview<a class="headerlink" href="#service-layer-overview" title="Permanent link">&para;</a></h2>
+<p>The AskProAI platform implements a comprehensive service-oriented architecture with <strong>216 service files</strong> organized into logical categories. This document provides a complete overview of all services.</p>
+<h2 id="service-categories">Service Categories<a class="headerlink" href="#service-categories" title="Permanent link">&para;</a></h2>
+<h3 id="security-services-10-files">🔐 Security Services (10 files)<a class="headerlink" href="#security-services-10-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>EnhancedRateLimiter</strong>: Advanced rate limiting with adaptive thresholds</li>
+<li><strong>ApiRateLimiter</strong>: API-specific rate limiting implementation</li>
+<li><strong>SensitiveDataMasker</strong>: Masks sensitive data in logs and responses</li>
+<li><strong>InputSanitizer</strong>: Sanitizes user input to prevent XSS/SQL injection</li>
+<li><strong>EncryptionService</strong>: Handles field-level encryption for sensitive data</li>
+<li><strong>ThreatDetectionService</strong>: Detects and blocks malicious requests</li>
+<li><strong>AuditLogger</strong>: Comprehensive audit trail logging</li>
+<li><strong>SecurityMonitor</strong>: Real-time security monitoring</li>
+<li><strong>AccessControlService</strong>: Fine-grained access control</li>
+<li><strong>TokenManager</strong>: JWT and API token management</li>
+</ul>
+<h3 id="phone-system-services-15-files">📞 Phone System Services (15 files)<a class="headerlink" href="#phone-system-services-15-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>RetellService</strong>: Core Retell.ai integration</li>
+<li><strong>PhoneNumberValidator</strong>: International phone number validation</li>
+<li><strong>PhoneNumberService</strong>: Phone number formatting and lookup</li>
+<li><strong>CallbackService</strong>: Handles callback requests</li>
+<li><strong>IntelligentCallRouter</strong>: Routes calls based on skills and availability</li>
+<li><strong>ConcurrentCallManager</strong>: Manages multiple simultaneous calls</li>
+<li><strong>CallAnalysisService</strong>: Analyzes call transcripts and sentiment</li>
+<li><strong>VoiceMailService</strong>: Voice mail handling and transcription</li>
+<li><strong>CallRecordingService</strong>: Call recording management</li>
+<li><strong>PhoneNumberResolver</strong>: Resolves phone numbers to branches/companies</li>
+<li><strong>CallQueueManager</strong>: Manages call queues and priorities</li>
+<li><strong>CallTransferService</strong>: Handles call transfers between agents</li>
+<li><strong>CallMetricsService</strong>: Tracks call performance metrics</li>
+<li><strong>CallDataRefresher</strong>: Updates call data from external sources</li>
+<li><strong>EmergencyCallHandler</strong>: Special handling for emergency calls</li>
+</ul>
+<h3 id="calendar-services-25-files">📅 Calendar Services (25 files)<a class="headerlink" href="#calendar-services-25-files" title="Permanent link">&para;</a></h3>
+<h4 id="core-calendar">Core Calendar<a class="headerlink" href="#core-calendar" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>BaseCalendarService</strong>: Abstract base for calendar providers</li>
+<li><strong>CalendarFactory</strong>: Creates calendar provider instances</li>
+<li><strong>CalcomCalendarService</strong>: Cal.com specific implementation</li>
+<li><strong>GoogleCalendarService</strong>: Google Calendar implementation</li>
+<li><strong>CalcomProvider</strong>: Cal.com provider implementation</li>
+<li><strong>GoogleCalendarProvider</strong>: Google provider implementation</li>
+</ul>
+<h4 id="calcom-services">Cal.com Services<a class="headerlink" href="#calcom-services" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>CalcomService</strong>: Legacy V1 API service</li>
+<li><strong>CalcomV2Service</strong>: Modern V2 API implementation</li>
+<li><strong>CalcomServiceV1Legacy</strong>: Backward compatibility layer</li>
+<li><strong>CalcomMigrationService</strong>: Handles V1 to V2 migration</li>
+<li><strong>CalcomEventTypeSyncService</strong>: Syncs event types</li>
+<li><strong>CalcomEventTypeImportService</strong>: Imports event types</li>
+<li><strong>CalcomImportService</strong>: General import functionality</li>
+<li><strong>CalcomBackwardsCompatibility</strong>: Ensures compatibility</li>
+<li><strong>CalcomEventSyncService</strong>: Event synchronization</li>
+<li><strong>CalcomWebhookHandler</strong>: Processes Cal.com webhooks</li>
+<li><strong>CalcomAvailabilityChecker</strong>: Checks calendar availability</li>
+<li><strong>CalcomBookingCreator</strong>: Creates Cal.com bookings</li>
+<li><strong>CalcomEventMapper</strong>: Maps events between systems</li>
+</ul>
+<h4 id="availability-management">Availability Management<a class="headerlink" href="#availability-management" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>UnifiedAvailabilityService</strong>: Unified availability across providers</li>
+<li><strong>SlotCalculator</strong>: Calculates available time slots</li>
+<li><strong>ConflictResolver</strong>: Resolves booking conflicts</li>
+<li><strong>TimeZoneManager</strong>: Handles timezone conversions</li>
+<li><strong>RecurringEventHandler</strong>: Manages recurring appointments</li>
+</ul>
+<h3 id="business-services-30-files">🏢 Business Services (30 files)<a class="headerlink" href="#business-services-30-files" title="Permanent link">&para;</a></h3>
+<h4 id="core-business-logic">Core Business Logic<a class="headerlink" href="#core-business-logic" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>AppointmentService</strong>: Core appointment management</li>
+<li><strong>CustomerService</strong>: Customer lifecycle management</li>
+<li><strong>CompanyService</strong>: Company/tenant management</li>
+<li><strong>BranchService</strong>: Branch/location management</li>
+<li><strong>StaffService</strong>: Staff management and assignment</li>
+<li><strong>ServiceService</strong>: Service catalog management</li>
+<li><strong>MasterServiceManager</strong>: Master service template management</li>
+</ul>
+<h4 id="booking-system">Booking System<a class="headerlink" href="#booking-system" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>AppointmentBookingService</strong>: Main booking orchestration</li>
+<li><strong>BookingValidationService</strong>: Validates booking requests</li>
+<li><strong>BookingConfirmationService</strong>: Handles confirmations</li>
+<li><strong>BookingCancellationService</strong>: Manages cancellations</li>
+<li><strong>ReschedulingService</strong>: Handles appointment rescheduling</li>
+<li><strong>WaitlistService</strong>: Manages appointment waitlists</li>
+<li><strong>BookingReminderService</strong>: Sends booking reminders</li>
+<li><strong>NoShowHandler</strong>: Processes no-show appointments</li>
+</ul>
+<h4 id="customer-management">Customer Management<a class="headerlink" href="#customer-management" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>CustomerMergeService</strong>: Merges duplicate customers</li>
+<li><strong>CustomerSearchService</strong>: Advanced customer search</li>
+<li><strong>CustomerTagService</strong>: Customer tagging system</li>
+<li><strong>CustomerHistoryService</strong>: Tracks customer history</li>
+<li><strong>CustomerPreferenceService</strong>: Manages preferences</li>
+<li><strong>LoyaltyService</strong>: Customer loyalty programs</li>
+</ul>
+<h4 id="staff-management">Staff Management<a class="headerlink" href="#staff-management" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>StaffScheduleService</strong>: Staff scheduling</li>
+<li><strong>StaffSkillMatcher</strong>: Matches staff to services</li>
+<li><strong>StaffAvailabilityService</strong>: Manages staff availability</li>
+<li><strong>ShiftManagementService</strong>: Handles staff shifts</li>
+<li><strong>BreakTimeService</strong>: Manages staff breaks</li>
+</ul>
+<h3 id="notification-services-12-files">📧 Notification Services (12 files)<a class="headerlink" href="#notification-services-12-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>NotificationService</strong>: Core notification orchestration</li>
+<li><strong>EmailNotificationService</strong>: Email sending</li>
+<li><strong>SmsNotificationService</strong>: SMS sending via Twilio</li>
+<li><strong>WhatsAppService</strong>: WhatsApp messaging</li>
+<li><strong>PushNotificationService</strong>: Mobile push notifications</li>
+<li><strong>NotificationTemplateService</strong>: Template management</li>
+<li><strong>NotificationQueueService</strong>: Queue management</li>
+<li><strong>NotificationTrackingService</strong>: Delivery tracking</li>
+<li><strong>UnsubscribeService</strong>: Handle unsubscriptions</li>
+<li><strong>NotificationPreferenceService</strong>: User preferences</li>
+<li><strong>BulkNotificationService</strong>: Bulk sending</li>
+<li><strong>NotificationAnalyticsService</strong>: Analytics and reporting</li>
+</ul>
+<h3 id="financial-services-8-files">💰 Financial Services (8 files)<a class="headerlink" href="#financial-services-8-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>StripeService</strong>: Main Stripe integration</li>
+<li><strong>EnhancedStripeInvoiceService</strong>: Advanced invoicing</li>
+<li><strong>PaymentProcessingService</strong>: Process payments</li>
+<li><strong>RefundService</strong>: Handle refunds</li>
+<li><strong>TaxService</strong>: Tax calculations</li>
+<li><strong>CurrencyConverter</strong>: Currency conversion</li>
+<li><strong>PricingService</strong>: Dynamic pricing</li>
+<li><strong>BillingService</strong>: Subscription billing</li>
+</ul>
+<h3 id="analytics-reporting-15-files">📊 Analytics &amp; Reporting (15 files)<a class="headerlink" href="#analytics-reporting-15-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>AnalyticsService</strong>: Core analytics engine</li>
+<li><strong>ReportGeneratorService</strong>: Generate reports</li>
+<li><strong>DashboardMetricsService</strong>: Dashboard data</li>
+<li><strong>KpiCalculatorService</strong>: Calculate KPIs</li>
+<li><strong>TrendAnalysisService</strong>: Analyze trends</li>
+<li><strong>ForecastingService</strong>: Business forecasting</li>
+<li><strong>ConversionTrackingService</strong>: Track conversions</li>
+<li><strong>RevenueAnalyticsService</strong>: Revenue analysis</li>
+<li><strong>CustomerAnalyticsService</strong>: Customer insights</li>
+<li><strong>StaffPerformanceService</strong>: Staff metrics</li>
+<li><strong>ServiceAnalyticsService</strong>: Service performance</li>
+<li><strong>BranchComparisonService</strong>: Compare branches</li>
+<li><strong>ExportService</strong>: Data export functionality</li>
+<li><strong>ScheduledReportService</strong>: Automated reports</li>
+<li><strong>CustomReportBuilder</strong>: Custom report creation</li>
+</ul>
+<h3 id="mcp-model-context-protocol-services-29-files">🤖 MCP (Model Context Protocol) Services (29 files)<a class="headerlink" href="#mcp-model-context-protocol-services-29-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>MCPOrchestrator</strong>: Orchestrates MCP servers</li>
+<li><strong>MCPMonitor</strong>: Monitors MCP health</li>
+<li><strong>MCPContextResolver</strong>: Resolves context for requests</li>
+<li><strong>DatabaseMCPServer</strong>: Database operations</li>
+<li><strong>CalcomMCPServer</strong>: Cal.com operations</li>
+<li><strong>RetellMCPServer</strong>: Retell.ai operations</li>
+<li><strong>WebhookMCPServer</strong>: Webhook handling</li>
+<li><strong>AppointmentMCPServer</strong>: Appointment operations</li>
+<li><strong>CustomerMCPServer</strong>: Customer operations</li>
+<li><strong>CompanyMCPServer</strong>: Company operations</li>
+<li><strong>BranchMCPServer</strong>: Branch operations</li>
+<li><strong>QueueMCPServer</strong>: Queue operations</li>
+<li><strong>KnowledgeMCPServer</strong>: Knowledge base access</li>
+<li><strong>AnalyticsMCPServer</strong>: Analytics queries</li>
+<li><strong>SecurityMCPServer</strong>: Security operations</li>
+<li><strong>SystemMCPServer</strong>: System administration</li>
+<li><strong>LogMCPServer</strong>: Log analysis</li>
+<li><strong>ConfigMCPServer</strong>: Configuration management</li>
+<li><strong>CacheMCPServer</strong>: Cache operations</li>
+<li><strong>SearchMCPServer</strong>: Search functionality</li>
+<li><strong>NotificationMCPServer</strong>: Notification handling</li>
+<li><strong>ReportMCPServer</strong>: Report generation</li>
+<li><strong>WorkflowMCPServer</strong>: Workflow automation</li>
+<li><strong>IntegrationMCPServer</strong>: External integrations</li>
+<li><strong>MonitoringMCPServer</strong>: System monitoring</li>
+<li><strong>BackupMCPServer</strong>: Backup operations</li>
+<li><strong>MigrationMCPServer</strong>: Data migration</li>
+<li><strong>DebugMCPServer</strong>: Debugging tools</li>
+<li><strong>ExternalMCPManager</strong>: Manages external MCP servers</li>
+</ul>
+<h3 id="infrastructure-services-20-files">🔧 Infrastructure Services (20 files)<a class="headerlink" href="#infrastructure-services-20-files" title="Permanent link">&para;</a></h3>
+<h4 id="performance-optimization">Performance Optimization<a class="headerlink" href="#performance-optimization" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>QueryOptimizer</strong>: Optimizes database queries</li>
+<li><strong>QueryMonitor</strong>: Monitors query performance</li>
+<li><strong>EagerLoadingAnalyzer</strong>: Analyzes N+1 queries</li>
+<li><strong>CacheManager</strong>: Manages application cache</li>
+<li><strong>CacheWarmer</strong>: Pre-warms cache</li>
+<li><strong>IndexAdvisor</strong>: Suggests database indexes</li>
+</ul>
+<h4 id="queue-management">Queue Management<a class="headerlink" href="#queue-management" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>QueueManager</strong>: Manages job queues</li>
+<li><strong>JobRetryService</strong>: Handles failed jobs</li>
+<li><strong>QueueMonitor</strong>: Monitors queue health</li>
+<li><strong>PriorityQueueService</strong>: Priority job handling</li>
+</ul>
+<h4 id="health-monitoring">Health Monitoring<a class="headerlink" href="#health-monitoring" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>DatabaseHealthCheck</strong>: Database health</li>
+<li><strong>RedisHealthCheck</strong>: Redis health</li>
+<li><strong>CalcomHealthCheck</strong>: Cal.com API health</li>
+<li><strong>RetellHealthCheck</strong>: Retell.ai API health</li>
+<li><strong>EmailHealthCheck</strong>: Email service health</li>
+<li><strong>PhoneRoutingHealthCheck</strong>: Phone system health</li>
+<li><strong>SystemHealthAggregator</strong>: Overall system health</li>
+</ul>
+<h4 id="real-time-features">Real-Time Features<a class="headerlink" href="#real-time-features" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>RedisSlotManager</strong>: Manages real-time slots</li>
+<li><strong>WebSocketManager</strong>: WebSocket connections</li>
+<li><strong>EventBroadcaster</strong>: Real-time event broadcasting</li>
+</ul>
+<h3 id="search-knowledge-base-10-files">🔍 Search &amp; Knowledge Base (10 files)<a class="headerlink" href="#search-knowledge-base-10-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>KnowledgeBaseService</strong>: Main KB service</li>
+<li><strong>SearchService</strong>: Full-text search</li>
+<li><strong>DocumentIndexer</strong>: Indexes documents</li>
+<li><strong>DocumentProcessor</strong>: Processes documents</li>
+<li><strong>MarkdownEnhancer</strong>: Enhances markdown</li>
+<li><strong>FileWatcher</strong>: Watches for file changes</li>
+<li><strong>SemanticSearchService</strong>: AI-powered search</li>
+<li><strong>AutoCompleteService</strong>: Search suggestions</li>
+<li><strong>SearchAnalyticsService</strong>: Search analytics</li>
+<li><strong>ContentRecommendationService</strong>: Content recommendations</li>
+</ul>
+<h3 id="utility-services-25-files">🛠️ Utility Services (25 files)<a class="headerlink" href="#utility-services-25-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>ValidationService</strong>: General validation</li>
+<li><strong>NavigationService</strong>: Navigation generation</li>
+<li><strong>LocalizationService</strong>: Multi-language support</li>
+<li><strong>GeocodingService</strong>: Address geocoding</li>
+<li><strong>TimeZoneService</strong>: Timezone handling</li>
+<li><strong>FileUploadService</strong>: File handling</li>
+<li><strong>ImageProcessingService</strong>: Image manipulation</li>
+<li><strong>PdfGeneratorService</strong>: PDF generation</li>
+<li><strong>QrCodeService</strong>: QR code generation</li>
+<li><strong>UrlShortenerService</strong>: URL shortening</li>
+<li><strong>BackupService</strong>: Data backup</li>
+<li><strong>ImportExportService</strong>: Data import/export</li>
+<li><strong>MigrationService</strong>: Data migration</li>
+<li><strong>CleanupService</strong>: Data cleanup</li>
+<li><strong>ArchiveService</strong>: Data archiving</li>
+<li><strong>LogRotationService</strong>: Log management</li>
+<li><strong>TempFileService</strong>: Temporary files</li>
+<li><strong>ConfigurationService</strong>: App configuration</li>
+<li><strong>FeatureFlagService</strong>: Feature toggles</li>
+<li><strong>MaintenanceModeService</strong>: Maintenance mode</li>
+<li><strong>SystemInfoService</strong>: System information</li>
+<li><strong>LicenseService</strong>: License management</li>
+<li><strong>UpdateService</strong>: Application updates</li>
+<li><strong>DiagnosticService</strong>: System diagnostics</li>
+<li><strong>DebugService</strong>: Debugging tools</li>
+</ul>
+<h3 id="integration-services-15-files">🔄 Integration Services (15 files)<a class="headerlink" href="#integration-services-15-files" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>WebhookService</strong>: Webhook processing</li>
+<li><strong>ApiGatewayService</strong>: API gateway</li>
+<li><strong>ThirdPartyIntegrator</strong>: Third-party APIs</li>
+<li><strong>OAuthService</strong>: OAuth handling</li>
+<li><strong>SsoService</strong>: Single sign-on</li>
+<li><strong>LdapService</strong>: LDAP integration</li>
+<li><strong>ScimService</strong>: SCIM provisioning</li>
+<li><strong>ZapierService</strong>: Zapier integration</li>
+<li><strong>SlackIntegration</strong>: Slack notifications</li>
+<li><strong>MicrosoftTeamsService</strong>: Teams integration</li>
+<li><strong>GoogleWorkspaceService</strong>: Google integration</li>
+<li><strong>Office365Service</strong>: Office 365 integration</li>
+<li><strong>SalesforceConnector</strong>: Salesforce sync</li>
+<li><strong>HubspotConnector</strong>: Hubspot integration</li>
+<li><strong>MailchimpService</strong>: Email marketing</li>
+</ul>
+<h2 id="service-patterns">Service Patterns<a class="headerlink" href="#service-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="common-patterns-used">Common Patterns Used<a class="headerlink" href="#common-patterns-used" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Dependency Injection</strong>
+   <div class="language-php highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="x">public function __construct(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="x">    private CalcomV2Service $calcom,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="x">    private NotificationService $notifications</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="x">) {}</span>
+</span></code></pre></div></p>
+</li>
+<li>
+<p><strong>Service Chaining</strong>
+   <div class="language-php highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="x">return $this-&gt;validateRequest($data)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="x">    -&gt;checkAvailability()</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="x">    -&gt;createBooking()</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="x">    -&gt;sendConfirmation();</span>
+</span></code></pre></div></p>
+</li>
+<li>
+<p><strong>Event-Driven</strong>
+   <div class="language-php highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="x">event(new AppointmentCreated($appointment));</span>
+</span></code></pre></div></p>
+</li>
+<li>
+<p><strong>Circuit Breaker</strong>
+   <div class="language-php highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="x">return CircuitBreaker::call(&#39;calcom&#39;, function() {</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="x">    return $this-&gt;calcomService-&gt;getAvailability();</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="x">});</span>
+</span></code></pre></div></p>
+</li>
+<li>
+<p><strong>Repository Pattern</strong> (partial)
+   <div class="language-php highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="x">return $this-&gt;appointmentRepository-&gt;findByDateRange($start, $end);</span>
+</span></code></pre></div></p>
+</li>
+</ol>
+<h2 id="service-dependencies">Service Dependencies<a class="headerlink" href="#service-dependencies" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>graph TD
+    A[AppointmentBookingService] --&gt; B[CalcomV2Service]
+    A --&gt; C[CustomerService]
+    A --&gt; D[NotificationService]
+    A --&gt; E[ValidationService]
+
+    B --&gt; F[HttpClient]
+    B --&gt; G[CacheManager]
+
+    C --&gt; H[CustomerRepository]
+    C --&gt; I[DuplicateDetector]
+
+    D --&gt; J[EmailService]
+    D --&gt; K[SmsService]
+    D --&gt; L[WhatsAppService]</code></pre>
+<h2 id="performance-considerations">Performance Considerations<a class="headerlink" href="#performance-considerations" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Caching</strong>: Most services implement caching for expensive operations</li>
+<li><strong>Queue Processing</strong>: Heavy operations are queued</li>
+<li><strong>Database Optimization</strong>: Services use eager loading and query optimization</li>
+<li><strong>Rate Limiting</strong>: External API calls are rate-limited</li>
+<li><strong>Circuit Breakers</strong>: Prevent cascading failures</li>
+</ol>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Single Responsibility</strong>: Each service has a focused purpose</li>
+<li><strong>Testability</strong>: Services are designed for easy testing</li>
+<li><strong>Documentation</strong>: Public methods have clear documentation</li>
+<li><strong>Error Handling</strong>: Comprehensive error handling and logging</li>
+<li><strong>Type Safety</strong>: Strict typing for parameters and returns</li>
+</ol>
+<h2 id="future-improvements">Future Improvements<a class="headerlink" href="#future-improvements" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Complete Repository Pattern</strong>: Move all database queries to repositories</li>
+<li><strong>Service Interfaces</strong>: Define interfaces for all services</li>
+<li><strong>Async Processing</strong>: More operations should be async</li>
+<li><strong>Monitoring</strong>: Add APM instrumentation</li>
+<li><strong>Documentation</strong>: Generate API docs from code</li>
+</ol>
+<p>This comprehensive service layer provides a robust foundation for the AskProAI platform, with clear separation of concerns and excellent maintainability.</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Zurück zum Seitenanfang
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Fußzeile" >
+        
+          
+          <a href="../system-architecture/" class="md-footer__link md-footer__link--prev" aria-label="Zurück: Complete System Architecture">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Zurück
+              </span>
+              <div class="md-ellipsis">
+                Complete System Architecture
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../complete-model-documentation/" class="md-footer__link md-footer__link--next" aria-label="Weiter: Complete Models">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Weiter
+              </span>
+              <div class="md-ellipsis">
+                Complete Models
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2024-2025 <a href="https://askproai.de" target="_blank" rel="noopener">AskProAI</a> - AI-Powered Appointment Booking Platform
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/askproai" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/askproai" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.prune", "navigation.top", "navigation.footer", "toc.follow", "toc.integrate", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+    
+  </body>
+</html>

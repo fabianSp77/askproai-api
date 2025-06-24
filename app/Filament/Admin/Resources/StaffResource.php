@@ -253,14 +253,16 @@ Tables\Columns\TextColumn::make('email')
                     ->label('Unternehmen')
                     ->badge()
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(fn ($record) => $record?->company?->name ?? '-'),
 
                 Tables\Columns\TextColumn::make('homeBranch.name')
                     ->label('Stammfiliale')
                     ->badge()
                     ->color('success')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(fn ($record) => $record?->homeBranch?->name ?? '-'),
 
                 Tables\Columns\TextColumn::make('branches_count')
                     ->label('Filialen')

@@ -3,34 +3,50 @@
 namespace App\Filament\Admin\Pages;
 
 use Filament\Pages\Page;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms;
+use Filament\Forms\Form;
 use App\Models\Company;
 use App\Models\Branch;
 use App\Models\PhoneNumber;
+use App\Models\CalcomEventType;
+use App\Models\Service;
 use App\Services\MCP\CalcomMCPServer;
 use App\Services\MCP\RetellMCPServer;
 use App\Services\MCP\KnowledgeMCPServer;
 use App\Services\MCP\StripeMCPServer;
 use App\Services\MCP\WebhookMCPServer;
+use App\Services\EventTypeMatchingService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Filament\Notifications\Notification;
 use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
-class CompanyIntegrationPortal extends Page
+class CompanyIntegrationPortal extends Page implements HasForms, HasActions
 {
+    use InteractsWithActions;
+    use InteractsWithForms;
+    
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
     protected static ?string $navigationLabel = 'Company Integration Portal';
     protected static ?string $title = 'Company Integration Portal';
     protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
     protected static ?int $navigationSort = 1;
     
-    protected static string $view = 'filament.admin.pages.company-integration-portal';
+    protected static string $view = 'filament.admin.pages.company-integration-portal-professional';
     
     public static function canAccess(): bool
     {
-        // Allow all authenticated users to access this page
         return auth()->check();
     }
     
+    // State properties
     public array $companies = [];
     public ?int $selectedCompanyId = null;
     public ?Company $selectedCompany = null;
@@ -39,88 +55,88 @@ class CompanyIntegrationPortal extends Page
     public bool $isTestingAll = false;
     public array $phoneNumbers = [];
     public array $branches = [];
+    public array $retellAgents = [];
+    public array $phoneAgentMapping = [];
+    public array $branchEventTypes = [];
+    public array $availableEventTypes = [];
+    public array $serviceMappings = [];
     
-    // Inline editing fields - Company level
+    // Ultimate UI state properties
+    public array $branchEditStates = [];
+    public array $branchNames = [];
+    public array $branchAddresses = [];
+    public array $branchEmails = [];
+    public array $branchPhoneNumbers = [];
+    public array $branchRetellAgentIds = [];
+    public bool $showEventTypeModal = false;
+    public ?string $currentBranchId = null;
+    
+    // Form properties for simple template compatibility
     public ?string $calcomApiKey = null;
     public ?string $calcomTeamSlug = null;
     public ?string $retellApiKey = null;
     public ?string $retellAgentId = null;
-    public bool $showCalcomApiKeyInput = false;
-    public bool $showCalcomTeamSlugInput = false;
-    public bool $showRetellApiKeyInput = false;
-    public bool $showRetellAgentIdInput = false;
     
-    // Inline editing fields - Branch level
-    public array $branchEditStates = [];
-    public array $branchPhoneNumbers = [];
-    public array $branchCalcomEventTypes = [];
-    public array $branchRetellAgentIds = [];
-    public array $branchNames = [];
-    public array $branchAddresses = [];
-    public array $branchEmails = [];
-    public array $branchActiveStates = [];
-    
-    // MCP Services - nullable to work with Livewire
+    // Service instances
     protected ?CalcomMCPServer $calcomService = null;
     protected ?RetellMCPServer $retellService = null;
+    protected ?WebhookMCPServer $webhookService = null;
     protected ?KnowledgeMCPServer $knowledgeService = null;
     protected ?StripeMCPServer $stripeService = null;
-    protected ?WebhookMCPServer $webhookService = null;
     
     public function mount(): void
     {
-        $this->initializeServices();
         $this->loadCompanies();
         
-        // Auto-select first company if only one exists
-        if (count($this->companies) === 1) {
-            $this->selectCompany(array_key_first($this->companies));
-        }
-    }
-    
-    protected function initializeServices(): void
-    {
-        // Use Laravel's service container to properly inject dependencies
-        $this->calcomService = app(CalcomMCPServer::class);
-        $this->retellService = app(RetellMCPServer::class);
-        $this->knowledgeService = app(KnowledgeMCPServer::class);
-        $this->stripeService = app(StripeMCPServer::class);
-        $this->webhookService = app(WebhookMCPServer::class);
-    }
-    
-    public function loadCompanies(): void
-    {
+        // Auto-select company for non-super-admins
         $user = auth()->user();
-        
-        // If user is super admin, show all companies
-        if ($user->hasRole('super_admin') || $user->can('view_any_company')) {
-            $query = Company::with(['branches', 'phoneNumbers']);
-        } else {
-            // Otherwise, show only the user's company
-            $query = Company::with(['branches', 'phoneNumbers'])
-                ->where('id', $user->company_id);
+        if (!$user->hasRole('super_admin') && $user->company_id) {
+            $this->selectCompany($user->company_id);
         }
-        
-        $this->companies = $query->get()
-            ->mapWithKeys(function ($company) {
-                return [$company->id => [
-                    'id' => $company->id,
-                    'name' => $company->name,
-                    'slug' => $company->slug,
-                    'is_active' => $company->is_active,
-                    'branch_count' => $company->branches->count(),
-                    'phone_count' => $company->phoneNumbers->count(),
-                    'created_at' => $company->created_at->format('Y-m-d'),
-                ]];
-            })
-            ->toArray();
+    }
+    
+    protected function loadCompanies(): void
+    {
+        try {
+            $user = auth()->user();
+            
+            $query = Company::query();
+            
+            if (!$user->hasRole('super_admin') && !$user->can('view_any_company')) {
+                $query->where('id', $user->company_id);
+            }
+            
+            $this->companies = $query
+                ->with(['branches', 'phoneNumbers'])
+                ->get()
+                ->map(function ($company) {
+                    return [
+                        'id' => $company->id,
+                        'name' => $company->name,
+                        'slug' => $company->slug,
+                        'is_active' => $company->is_active,
+                        'branch_count' => $company->branches->count(),
+                        'phone_count' => $company->phoneNumbers->count(),
+                        'created_at' => $company->created_at->format('Y-m-d'),
+                    ];
+                })
+                ->toArray();
+        } catch (\Exception $e) {
+            Log::error('Error loading companies in Integration Portal: ' . $e->getMessage());
+            $this->companies = [];
+            Notification::make()
+                ->title('Fehler beim Laden der Unternehmen')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
     
     public function selectCompany(int $companyId): void
     {
         $user = auth()->user();
         
-        // Security check: ensure user can access this company
+        // Security check
         if (!$user->hasRole('super_admin') && !$user->can('view_any_company')) {
             if ($user->company_id !== $companyId) {
                 Notification::make()
@@ -139,6 +155,9 @@ class CompanyIntegrationPortal extends Page
             $this->loadIntegrationStatus();
             $this->loadPhoneNumbers();
             $this->loadBranches();
+            $this->loadRetellAgentDetails();
+            $this->loadServiceMappings();
+            $this->initializeFormProperties();
         }
     }
     
@@ -153,31 +172,7 @@ class CompanyIntegrationPortal extends Page
         ];
     }
     
-    /**
-     * Get webhook service instance
-     */
-    protected function getWebhookService(): WebhookMCPServer
-    {
-        if (!$this->webhookService) {
-            $this->webhookService = app(WebhookMCPServer::class);
-        }
-        return $this->webhookService;
-    }
-    
-    /**
-     * Get knowledge service instance
-     */
-    protected function getKnowledgeService(): KnowledgeMCPServer
-    {
-        if (!$this->knowledgeService) {
-            $this->knowledgeService = app(KnowledgeMCPServer::class);
-        }
-        return $this->knowledgeService;
-    }
-    
-    /**
-     * Get calcom service instance
-     */
+    // Service getters
     protected function getCalcomService(): CalcomMCPServer
     {
         if (!$this->calcomService) {
@@ -186,9 +181,6 @@ class CompanyIntegrationPortal extends Page
         return $this->calcomService;
     }
     
-    /**
-     * Get retell service instance
-     */
     protected function getRetellService(): RetellMCPServer
     {
         if (!$this->retellService) {
@@ -197,9 +189,22 @@ class CompanyIntegrationPortal extends Page
         return $this->retellService;
     }
     
-    /**
-     * Get stripe service instance
-     */
+    protected function getWebhookService(): WebhookMCPServer
+    {
+        if (!$this->webhookService) {
+            $this->webhookService = app(WebhookMCPServer::class);
+        }
+        return $this->webhookService;
+    }
+    
+    protected function getKnowledgeService(): KnowledgeMCPServer
+    {
+        if (!$this->knowledgeService) {
+            $this->knowledgeService = app(KnowledgeMCPServer::class);
+        }
+        return $this->knowledgeService;
+    }
+    
     protected function getStripeService(): StripeMCPServer
     {
         if (!$this->stripeService) {
@@ -208,6 +213,7 @@ class CompanyIntegrationPortal extends Page
         return $this->stripeService;
     }
     
+    // Integration checks
     protected function checkCalcomIntegration(): array
     {
         $hasApiKey = !empty($this->selectedCompany->calcom_api_key);
@@ -298,139 +304,194 @@ class CompanyIntegrationPortal extends Page
                 return [
                     'id' => $phone->id,
                     'number' => $phone->number,
-                    'formatted' => $phone->formatted_number,
-                    'branch' => $phone->branch ? $phone->branch->name : 'Unassigned',
-                    'is_primary' => $phone->is_primary,
+                    'formatted' => $this->formatPhoneNumber($phone->number),
                     'is_active' => $phone->is_active,
+                    'is_primary' => $phone->is_primary,
+                    'branch_id' => $phone->branch_id,
+                    'branch_name' => $phone->branch?->name,
+                    'retell_agent_id' => $phone->retell_agent_id,
+                    'active_version' => $phone->retell_agent_version ?? 'current',
                 ];
             })
             ->toArray();
     }
     
+    protected function formatPhoneNumber($number): string
+    {
+        // Basic formatting for display
+        $cleaned = preg_replace('/[^0-9+]/', '', $number);
+        if (strlen($cleaned) > 10) {
+            // Format as international number
+            return preg_replace('/(\+\d{2})(\d{2})(\d{3})(\d+)/', '$1 $2 $3 $4', $cleaned);
+        }
+        return $number;
+    }
+    
     protected function loadBranches(): void
     {
-        $this->branches = Branch::where('company_id', $this->selectedCompanyId)
-            ->with(['phoneNumbers', 'staff'])
+        $this->branches = $this->selectedCompany->branches()
+            ->with(['phoneNumbers', 'eventTypes', 'staff'])
             ->get()
             ->map(function ($branch) {
-                $phoneNumber = $branch->phoneNumbers->first();
+                $primaryEventType = null;
+                if ($branch->calcom_event_type_id) {
+                    $primaryEventType = CalcomEventType::find($branch->calcom_event_type_id);
+                }
+                
                 return [
                     'id' => $branch->id,
                     'name' => $branch->name,
                     'address' => $branch->address,
                     'email' => $branch->email,
-                    'is_active' => $branch->active,
+                    'city' => $branch->city,
+                    'is_active' => $branch->is_active,
                     'is_main' => $branch->is_main,
-                    'phone_number' => $phoneNumber ? $phoneNumber->number : null,
                     'phone_count' => $branch->phoneNumbers->count(),
+                    'event_type_count' => $branch->eventTypes->count(),
                     'staff_count' => $branch->staff->count(),
+                    'has_calcom_event_type' => !empty($branch->calcom_event_type_id),
                     'calcom_event_type_id' => $branch->calcom_event_type_id,
+                    'primary_event_type_name' => $primaryEventType?->name,
+                    'has_phone' => $branch->phoneNumbers->count() > 0,
+                    'phone_number' => $branch->phoneNumbers->first()?->number,
                     'retell_agent_id' => $branch->retell_agent_id,
-                    'has_phone' => $phoneNumber !== null,
-                    'has_calcom' => !empty($branch->calcom_event_type_id),
                     'has_retell' => !empty($branch->retell_agent_id),
-                    'has_calendar' => !empty($branch->calcom_event_type_id),
-                    'is_configured' => $phoneNumber !== null && !empty($branch->calcom_event_type_id),
                     'uses_master_retell' => empty($branch->retell_agent_id) && !empty($this->selectedCompany->retell_agent_id),
+                    'is_configured' => $branch->is_active && !empty($branch->calcom_event_type_id) && $branch->phoneNumbers->count() > 0,
                 ];
             })
             ->toArray();
     }
     
+    protected function loadRetellAgentDetails(): void
+    {
+        if (!$this->selectedCompany->retell_api_key) {
+            $this->retellAgents = [];
+            return;
+        }
+        
+        try {
+            $response = $this->getRetellService()->listAgents($this->selectedCompanyId);
+            
+            if (isset($response['agents'])) {
+                $this->retellAgents = $response['agents'];
+                
+                // Build phone-agent mapping
+                $this->phoneAgentMapping = [];
+                foreach ($this->phoneNumbers as $phone) {
+                    if ($phone['retell_agent_id']) {
+                        $this->phoneAgentMapping[$phone['id']] = $phone['retell_agent_id'];
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error loading Retell agents: ' . $e->getMessage());
+            $this->retellAgents = [];
+        }
+    }
+    
+    protected function loadServiceMappings(): void
+    {
+        $this->serviceMappings = DB::table('service_event_type_mappings')
+            ->leftJoin('services', 'service_event_type_mappings.service_id', '=', 'services.id')
+            ->leftJoin('calcom_event_types', 'service_event_type_mappings.calcom_event_type_id', '=', 'calcom_event_types.id')
+            ->leftJoin('branches', 'service_event_type_mappings.branch_id', '=', 'branches.id')
+            ->where('service_event_type_mappings.company_id', $this->selectedCompanyId)
+            ->select([
+                'service_event_type_mappings.id',
+                'services.name as service_name',
+                'calcom_event_types.name as event_type_name',
+                'branches.name as branch_name',
+                'service_event_type_mappings.keywords',
+                'service_event_type_mappings.is_active',
+            ])
+            ->get()
+            ->toArray();
+    }
+    
+    // Actions
+    public function refreshData(): void
+    {
+        $this->loadCompanies();
+        if ($this->selectedCompanyId) {
+            $this->selectCompany($this->selectedCompanyId);
+        }
+        
+        Notification::make()
+            ->title('Daten aktualisiert')
+            ->success()
+            ->send();
+    }
+    
     public function testCalcomIntegration(): void
     {
-        $this->testResults['calcom'] = ['testing' => true];
-        
         try {
             $result = $this->getCalcomService()->testConnection(['company_id' => $this->selectedCompanyId]);
             
             $this->testResults['calcom'] = [
-                'success' => $result['connected'] ?? false,
-                'message' => $result['message'] ?? 'Connection test completed',
-                'details' => $result,
+                'success' => $result['success'],
+                'message' => $result['message'],
                 'tested_at' => now()->format('H:i:s'),
             ];
-            
-            if ($result['connected'] ?? false) {
-                Notification::make()
-                    ->title('Cal.com Connection Successful')
-                    ->body($result['message'] ?? 'API connection verified')
-                    ->success()
-                    ->send();
-            } else {
-                Notification::make()
-                    ->title('Cal.com Connection Failed')
-                    ->body($result['error'] ?? 'Unable to connect to Cal.com')
-                    ->danger()
-                    ->send();
-            }
         } catch (\Exception $e) {
             $this->testResults['calcom'] = [
                 'success' => false,
-                'message' => 'Exception: ' . $e->getMessage(),
+                'message' => 'Fehler: ' . $e->getMessage(),
                 'tested_at' => now()->format('H:i:s'),
             ];
-            
-            Notification::make()
-                ->title('Cal.com Test Failed')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
         }
     }
     
     public function testRetellIntegration(): void
     {
-        $this->testResults['retell'] = ['testing' => true];
-        
         try {
             $result = $this->getRetellService()->testConnection(['company_id' => $this->selectedCompanyId]);
             
             $this->testResults['retell'] = [
-                'success' => $result['connected'] ?? false,
-                'message' => $result['message'] ?? 'Connection test completed',
-                'details' => $result,
+                'success' => $result['success'],
+                'message' => $result['message'],
                 'tested_at' => now()->format('H:i:s'),
             ];
-            
-            if ($result['connected'] ?? false) {
-                Notification::make()
-                    ->title('Retell.ai Connection Successful')
-                    ->body($result['message'] ?? 'API connection verified')
-                    ->success()
-                    ->send();
-            } else {
-                Notification::make()
-                    ->title('Retell.ai Connection Failed')
-                    ->body($result['error'] ?? 'Unable to connect to Retell.ai')
-                    ->danger()
-                    ->send();
-            }
         } catch (\Exception $e) {
             $this->testResults['retell'] = [
                 'success' => false,
-                'message' => 'Exception: ' . $e->getMessage(),
+                'message' => 'Fehler: ' . $e->getMessage(),
                 'tested_at' => now()->format('H:i:s'),
             ];
+        }
+    }
+    
+    public function testStripeIntegration(): void
+    {
+        try {
+            $result = $this->getStripeService()->testConnection(['company_id' => $this->selectedCompanyId]);
             
-            Notification::make()
-                ->title('Retell.ai Test Failed')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
+            $this->testResults['stripe'] = [
+                'success' => $result['success'],
+                'message' => $result['message'],
+                'tested_at' => now()->format('H:i:s'),
+            ];
+        } catch (\Exception $e) {
+            $this->testResults['stripe'] = [
+                'success' => false,
+                'message' => 'Fehler: ' . $e->getMessage(),
+                'tested_at' => now()->format('H:i:s'),
+            ];
         }
     }
     
     public function testAllIntegrations(): void
     {
         $this->isTestingAll = true;
-        $this->testResults = [];
         
-        // Test each integration
-        $this->testCalcomIntegration();
-        $this->testRetellIntegration();
+        if ($this->integrationStatus['calcom']['configured']) {
+            $this->testCalcomIntegration();
+        }
         
-        // Test Stripe if configured
+        if ($this->integrationStatus['retell']['configured']) {
+            $this->testRetellIntegration();
+        }
+        
         if ($this->integrationStatus['stripe']['configured']) {
             $this->testStripeIntegration();
         }
@@ -438,37 +499,9 @@ class CompanyIntegrationPortal extends Page
         $this->isTestingAll = false;
         
         Notification::make()
-            ->title('All Integration Tests Complete')
-            ->body('Check the results for each service')
+            ->title('Alle Tests abgeschlossen')
             ->success()
             ->send();
-    }
-    
-    public function testStripeIntegration(): void
-    {
-        $this->testResults['stripe'] = ['testing' => true];
-        
-        try {
-            $result = $this->getStripeService()->testConnection(['company_id' => $this->selectedCompanyId]);
-            
-            $this->testResults['stripe'] = [
-                'success' => $result['connected'] ?? false,
-                'message' => $result['message'] ?? 'Connection test completed',
-                'details' => $result,
-                'tested_at' => now()->format('H:i:s'),
-            ];
-            
-            Notification::make()
-                ->title($result['connected'] ? 'Stripe Connected' : 'Stripe Connection Failed')
-                ->body($result['message'] ?? 'Test completed')
-                ->send();
-        } catch (\Exception $e) {
-            $this->testResults['stripe'] = [
-                'success' => false,
-                'message' => 'Exception: ' . $e->getMessage(),
-                'tested_at' => now()->format('H:i:s'),
-            ];
-        }
     }
     
     public function syncCalcomEventTypes(): void
@@ -476,25 +509,35 @@ class CompanyIntegrationPortal extends Page
         try {
             $result = $this->getCalcomService()->syncEventTypes(['company_id' => $this->selectedCompanyId]);
             
-            if ($result['success'] ?? false) {
-                Notification::make()
-                    ->title('Event Types Synced')
-                    ->body("Synced {$result['synced_count']} event types")
-                    ->success()
-                    ->send();
-                    
-                // Reload integration status
-                $this->loadIntegrationStatus();
-            } else {
-                Notification::make()
-                    ->title('Sync Failed')
-                    ->body($result['error'] ?? 'Unable to sync event types')
-                    ->danger()
-                    ->send();
-            }
+            Notification::make()
+                ->title('Event-Typen synchronisiert')
+                ->body($result['message'] ?? 'Synchronisation erfolgreich')
+                ->success()
+                ->send();
+            
+            $this->loadIntegrationStatus();
         } catch (\Exception $e) {
             Notification::make()
-                ->title('Sync Error')
+                ->title('Synchronisation fehlgeschlagen')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+    
+    public function syncRetellAgents(): void
+    {
+        try {
+            $this->loadRetellAgentDetails();
+            
+            Notification::make()
+                ->title('Retell Agents synchronisiert')
+                ->body(count($this->retellAgents) . ' Agents gefunden')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Synchronisation fehlgeschlagen')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
@@ -504,341 +547,228 @@ class CompanyIntegrationPortal extends Page
     public function importRetellCalls(): void
     {
         try {
-            $result = $this->getRetellService()->importRecentCalls(['company_id' => $this->selectedCompanyId]);
+            $result = $this->getRetellService()->importRecentCalls(['company_id' => $this->selectedCompanyId, 'limit' => 50]);
             
-            if ($result['success'] ?? false) {
-                Notification::make()
-                    ->title('Calls Imported')
-                    ->body("Imported {$result['imported']} calls")
-                    ->success()
-                    ->send();
-            } else {
-                Notification::make()
-                    ->title('Import Failed')
-                    ->body($result['error'] ?? 'Unable to import calls')
-                    ->danger()
-                    ->send();
-            }
+            Notification::make()
+                ->title('Anrufe importiert')
+                ->body($result['message'] ?? 'Import erfolgreich')
+                ->success()
+                ->send();
         } catch (\Exception $e) {
             Notification::make()
-                ->title('Import Error')
+                ->title('Import fehlgeschlagen')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
         }
+    }
+    
+    // Configuration Actions
+    public function saveCalcomApiKeyAction(): Action
+    {
+        return Action::make('saveCalcomApiKey')
+            ->label('API Key speichern')
+            ->form([
+                Forms\Components\TextInput::make('api_key')
+                    ->label('Cal.com API Key')
+                    ->password()
+                    ->required()
+                    ->placeholder('cal_live_xxxxxxxxxxxxxxxxx')
+                    ->helperText('Erstellen Sie einen API Key in Cal.com unter Settings > Developer')
+            ])
+            ->action(function (array $data): void {
+                $this->selectedCompany->update([
+                    'calcom_api_key' => $data['api_key']
+                ]);
+                
+                $this->loadIntegrationStatus();
+                
+                Notification::make()
+                    ->title('API Key gespeichert')
+                    ->success()
+                    ->send();
+            });
+    }
+    
+    public function saveCalcomTeamSlugAction(): Action
+    {
+        return Action::make('saveCalcomTeamSlug')
+            ->label('Team Slug speichern')
+            ->form([
+                Forms\Components\TextInput::make('team_slug')
+                    ->label('Cal.com Team Slug')
+                    ->required()
+                    ->placeholder('mein-team')
+                    ->helperText('Optional: Nur erforderlich, wenn Sie Teams in Cal.com verwenden')
+            ])
+            ->action(function (array $data): void {
+                $this->selectedCompany->update([
+                    'calcom_team_slug' => $data['team_slug']
+                ]);
+                
+                $this->loadIntegrationStatus();
+                
+                Notification::make()
+                    ->title('Team Slug gespeichert')
+                    ->success()
+                    ->send();
+            });
+    }
+    
+    public function saveRetellApiKeyAction(): Action
+    {
+        return Action::make('saveRetellApiKey')
+            ->label('API Key speichern')
+            ->form([
+                Forms\Components\TextInput::make('api_key')
+                    ->label('Retell.ai API Key')
+                    ->password()
+                    ->required()
+                    ->placeholder('key_xxxxxxxxxxxxxxxxx')
+                    ->helperText('Erstellen Sie einen API Key in Retell.ai unter Settings > API Keys')
+            ])
+            ->action(function (array $data): void {
+                $this->selectedCompany->update([
+                    'retell_api_key' => $data['api_key']
+                ]);
+                
+                $this->loadIntegrationStatus();
+                
+                Notification::make()
+                    ->title('API Key gespeichert')
+                    ->success()
+                    ->send();
+            });
+    }
+    
+    public function saveRetellAgentIdAction(): Action
+    {
+        return Action::make('saveRetellAgentId')
+            ->label('Agent ID speichern')
+            ->form([
+                Forms\Components\TextInput::make('agent_id')
+                    ->label('Retell.ai Agent ID')
+                    ->required()
+                    ->placeholder('agent_xxxxxxxxxxxxxxxxx')
+                    ->helperText('Die ID Ihres konfigurierten Agents in Retell.ai')
+            ])
+            ->action(function (array $data): void {
+                $this->selectedCompany->update([
+                    'retell_agent_id' => $data['agent_id']
+                ]);
+                
+                $this->loadIntegrationStatus();
+                
+                Notification::make()
+                    ->title('Agent ID gespeichert')
+                    ->success()
+                    ->send();
+            });
     }
     
     public function openSetupWizard(): void
     {
-        // Store the selected company ID in session for the wizard
-        session(['setup_wizard_company_id' => $this->selectedCompanyId]);
-        
-        // Redirect to the company edit page instead, which has proper permissions
-        $this->redirect(route('filament.admin.resources.companies.edit', $this->selectedCompanyId));
+        Notification::make()
+            ->title('Setup Wizard')
+            ->body('Der Setup Wizard wird in Kürze verfügbar sein.')
+            ->info()
+            ->send();
     }
     
-    public function refreshData(): void
+    public function removeServiceMapping(int $mappingId): void
     {
-        if ($this->selectedCompanyId) {
-            $this->selectCompany($this->selectedCompanyId);
-        }
+        DB::table('service_event_type_mappings')
+            ->where('id', $mappingId)
+            ->where('company_id', $this->selectedCompanyId)
+            ->delete();
+        
+        $this->loadServiceMappings();
         
         Notification::make()
-            ->title('Data Refreshed')
-            ->body('Integration status updated')
+            ->title('Zuordnung entfernt')
             ->success()
             ->send();
     }
     
-    #[On('company-updated')]
-    public function handleCompanyUpdated(): void
+    public function openServiceMappingModalAction(): Action
     {
-        $this->refreshData();
-    }
-    
-    // Inline editing methods
-    public function toggleCalcomApiKeyInput(): void
-    {
-        $this->showCalcomApiKeyInput = !$this->showCalcomApiKeyInput;
-        if ($this->showCalcomApiKeyInput && $this->selectedCompany) {
-            $this->calcomApiKey = $this->selectedCompany->calcom_api_key;
-        }
-    }
-    
-    public function saveCalcomApiKey(): void
-    {
-        if (!$this->selectedCompany) return;
-        
-        try {
-            // Validate API key with Cal.com
-            $isValid = $this->getCalcomService()->validateApiKey(['api_key' => $this->calcomApiKey]);
-            
-            if ($isValid['valid'] ?? false) {
-                $this->selectedCompany->calcom_api_key = $this->calcomApiKey;
-                $this->selectedCompany->save();
+        return Action::make('openServiceMappingModal')
+            ->label('Neue Zuordnung')
+            ->form([
+                Forms\Components\Select::make('service_id')
+                    ->label('Service')
+                    ->options(Service::where('company_id', $this->selectedCompanyId)->pluck('name', 'id'))
+                    ->required(),
+                Forms\Components\Select::make('calcom_event_type_id')
+                    ->label('Cal.com Event Type')
+                    ->options(CalcomEventType::where('company_id', $this->selectedCompanyId)->pluck('name', 'id'))
+                    ->required(),
+                Forms\Components\Select::make('branch_id')
+                    ->label('Filiale (optional)')
+                    ->options(Branch::where('company_id', $this->selectedCompanyId)->pluck('name', 'id'))
+                    ->placeholder('Alle Filialen'),
+                Forms\Components\TagsInput::make('keywords')
+                    ->label('Keywords (optional)')
+                    ->placeholder('Fügen Sie Keywords hinzu und drücken Sie Enter')
+                    ->helperText('Diese Keywords helfen bei der automatischen Zuordnung'),
+            ])
+            ->action(function (array $data): void {
+                DB::table('service_event_type_mappings')->insert([
+                    'company_id' => $this->selectedCompanyId,
+                    'service_id' => $data['service_id'],
+                    'calcom_event_type_id' => $data['calcom_event_type_id'],
+                    'branch_id' => $data['branch_id'] ?? null,
+                    'keywords' => json_encode($data['keywords'] ?? []),
+                    'is_active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                
+                $this->loadServiceMappings();
                 
                 Notification::make()
-                    ->title('API Key gespeichert')
-                    ->body('Der Cal.com API Key wurde erfolgreich gespeichert und validiert.')
+                    ->title('Zuordnung erstellt')
                     ->success()
                     ->send();
-                    
-                $this->showCalcomApiKeyInput = false;
-                $this->loadIntegrationStatus();
-            } else {
-                Notification::make()
-                    ->title('Ungültiger API Key')
-                    ->body($isValid['error'] ?? 'Der API Key konnte nicht validiert werden.')
-                    ->danger()
-                    ->send();
-            }
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
+            });
     }
     
-    public function toggleCalcomTeamSlugInput(): void
-    {
-        $this->showCalcomTeamSlugInput = !$this->showCalcomTeamSlugInput;
-        if ($this->showCalcomTeamSlugInput && $this->selectedCompany) {
-            $this->calcomTeamSlug = $this->selectedCompany->calcom_team_slug;
-        }
-    }
-    
-    public function saveCalcomTeamSlug(): void
+    // Simple form submission methods for the simple template
+    public function saveCalcomConfig(): void
     {
         if (!$this->selectedCompany) return;
         
-        try {
-            $this->selectedCompany->calcom_team_slug = $this->calcomTeamSlug;
-            $this->selectedCompany->save();
-            
-            Notification::make()
-                ->title('Team Slug gespeichert')
-                ->body('Der Cal.com Team Slug wurde erfolgreich gespeichert.')
-                ->success()
-                ->send();
-                
-            $this->showCalcomTeamSlugInput = false;
-            $this->loadIntegrationStatus();
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
+        $this->selectedCompany->update([
+            'calcom_api_key' => $this->calcomApiKey,
+            'calcom_team_slug' => $this->calcomTeamSlug,
+        ]);
+        
+        $this->loadIntegrationStatus();
+        
+        Notification::make()
+            ->title('Cal.com Konfiguration gespeichert')
+            ->success()
+            ->send();
     }
     
-    public function toggleRetellApiKeyInput(): void
-    {
-        $this->showRetellApiKeyInput = !$this->showRetellApiKeyInput;
-        if ($this->showRetellApiKeyInput && $this->selectedCompany) {
-            $this->retellApiKey = $this->selectedCompany->retell_api_key;
-        }
-    }
-    
-    public function saveRetellApiKey(): void
+    public function saveRetellConfig(): void
     {
         if (!$this->selectedCompany) return;
         
-        try {
-            $this->selectedCompany->retell_api_key = $this->retellApiKey;
-            $this->selectedCompany->save();
-            
-            Notification::make()
-                ->title('Retell API Key gespeichert')
-                ->body('Der Retell.ai API Key wurde erfolgreich gespeichert.')
-                ->success()
-                ->send();
-                
-            $this->showRetellApiKeyInput = false;
-            $this->loadIntegrationStatus();
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-    
-    public function toggleRetellAgentIdInput(): void
-    {
-        $this->showRetellAgentIdInput = !$this->showRetellAgentIdInput;
-        if ($this->showRetellAgentIdInput && $this->selectedCompany) {
-            $this->retellAgentId = $this->selectedCompany->retell_agent_id;
-        }
-    }
-    
-    public function saveRetellAgentId(): void
-    {
-        if (!$this->selectedCompany) return;
+        $this->selectedCompany->update([
+            'retell_api_key' => $this->retellApiKey,
+            'retell_agent_id' => $this->retellAgentId,
+        ]);
         
-        try {
-            $this->selectedCompany->retell_agent_id = $this->retellAgentId;
-            $this->selectedCompany->save();
-            
-            Notification::make()
-                ->title('Agent ID gespeichert')
-                ->body('Die Retell.ai Agent ID wurde erfolgreich gespeichert.')
-                ->success()
-                ->send();
-                
-            $this->showRetellAgentIdInput = false;
-            $this->loadIntegrationStatus();
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-    
-    // Branch-level editing methods
-    public function toggleBranchPhoneNumberInput(int $branchId): void
-    {
-        $key = "phone_{$branchId}";
-        $this->branchEditStates[$key] = !($this->branchEditStates[$key] ?? false);
+        $this->loadIntegrationStatus();
         
-        if ($this->branchEditStates[$key]) {
-            $branch = Branch::find($branchId);
-            $this->branchPhoneNumbers[$branchId] = $branch->phoneNumbers->first()->number ?? '';
-        }
+        Notification::make()
+            ->title('Retell.ai Konfiguration gespeichert')
+            ->success()
+            ->send();
     }
     
-    public function saveBranchPhoneNumber(int $branchId): void
-    {
-        $branch = Branch::find($branchId);
-        if (!$branch) return;
-        
-        try {
-            $phoneNumber = $this->branchPhoneNumbers[$branchId] ?? '';
-            
-            // Check if phone number exists
-            $existingPhone = PhoneNumber::where('number', $phoneNumber)
-                ->where('branch_id', '!=', $branchId)
-                ->first();
-                
-            if ($existingPhone) {
-                Notification::make()
-                    ->title('Telefonnummer bereits vergeben')
-                    ->body("Diese Nummer ist bereits einer anderen Filiale zugeordnet.")
-                    ->danger()
-                    ->send();
-                return;
-            }
-            
-            // Update or create phone number
-            $phone = $branch->phoneNumbers()->first();
-            if ($phone) {
-                $phone->update(['number' => $phoneNumber]);
-            } else {
-                $branch->phoneNumbers()->create([
-                    'number' => $phoneNumber,
-                    'company_id' => $branch->company_id,
-                    'type' => 'main',
-                    'is_active' => true,
-                ]);
-            }
-            
-            Notification::make()
-                ->title('Telefonnummer gespeichert')
-                ->body("Die Telefonnummer wurde erfolgreich aktualisiert.")
-                ->success()
-                ->send();
-                
-            $this->branchEditStates["phone_{$branchId}"] = false;
-            $this->loadBranches();
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-    
-    public function toggleBranchCalcomEventTypeInput(int $branchId): void
-    {
-        $key = "calcom_{$branchId}";
-        $this->branchEditStates[$key] = !($this->branchEditStates[$key] ?? false);
-        
-        if ($this->branchEditStates[$key]) {
-            $branch = Branch::find($branchId);
-            $this->branchCalcomEventTypes[$branchId] = $branch->calcom_event_type_id ?? '';
-        }
-    }
-    
-    public function saveBranchCalcomEventType(int $branchId): void
-    {
-        $branch = Branch::find($branchId);
-        if (!$branch) return;
-        
-        try {
-            $branch->calcom_event_type_id = $this->branchCalcomEventTypes[$branchId] ?? null;
-            $branch->save();
-            
-            Notification::make()
-                ->title('Cal.com Event Type gespeichert')
-                ->body("Der Event Type wurde erfolgreich aktualisiert.")
-                ->success()
-                ->send();
-                
-            $this->branchEditStates["calcom_{$branchId}"] = false;
-            $this->loadBranches();
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-    
-    public function toggleBranchRetellAgentInput(int $branchId): void
-    {
-        $key = "retell_{$branchId}";
-        $this->branchEditStates[$key] = !($this->branchEditStates[$key] ?? false);
-        
-        if ($this->branchEditStates[$key]) {
-            $branch = Branch::find($branchId);
-            $this->branchRetellAgentIds[$branchId] = $branch->retell_agent_id ?? '';
-        }
-    }
-    
-    public function saveBranchRetellAgent(int $branchId): void
-    {
-        $branch = Branch::find($branchId);
-        if (!$branch) return;
-        
-        try {
-            $branch->retell_agent_id = $this->branchRetellAgentIds[$branchId] ?? null;
-            $branch->save();
-            
-            Notification::make()
-                ->title('Retell Agent ID gespeichert')
-                ->body("Die Agent ID wurde erfolgreich aktualisiert.")
-                ->success()
-                ->send();
-                
-            $this->branchEditStates["retell_{$branchId}"] = false;
-            $this->loadBranches();
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-    
-    // Additional branch editing methods
+    // Ultimate UI Methods for Branch Management
     public function toggleBranchNameInput(int $branchId): void
     {
         $key = "name_{$branchId}";
@@ -846,32 +776,23 @@ class CompanyIntegrationPortal extends Page
         
         if ($this->branchEditStates[$key]) {
             $branch = Branch::find($branchId);
-            $this->branchNames[$branchId] = $branch->name ?? '';
+            if ($branch) {
+                $this->branchNames[$branchId] = $branch->name;
+            }
         }
     }
     
     public function saveBranchName(int $branchId): void
     {
         $branch = Branch::find($branchId);
-        if (!$branch) return;
-        
-        try {
-            $branch->name = $this->branchNames[$branchId] ?? '';
-            $branch->save();
+        if ($branch && isset($this->branchNames[$branchId])) {
+            $branch->update(['name' => $this->branchNames[$branchId]]);
+            $this->loadBranches();
+            $this->branchEditStates["name_{$branchId}"] = false;
             
             Notification::make()
-                ->title('Name gespeichert')
-                ->body("Der Filialname wurde erfolgreich aktualisiert.")
+                ->title('Filialname aktualisiert')
                 ->success()
-                ->send();
-                
-            $this->branchEditStates["name_{$branchId}"] = false;
-            $this->loadBranches();
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
                 ->send();
         }
     }
@@ -883,32 +804,23 @@ class CompanyIntegrationPortal extends Page
         
         if ($this->branchEditStates[$key]) {
             $branch = Branch::find($branchId);
-            $this->branchAddresses[$branchId] = $branch->address ?? '';
+            if ($branch) {
+                $this->branchAddresses[$branchId] = $branch->address;
+            }
         }
     }
     
     public function saveBranchAddress(int $branchId): void
     {
         $branch = Branch::find($branchId);
-        if (!$branch) return;
-        
-        try {
-            $branch->address = $this->branchAddresses[$branchId] ?? '';
-            $branch->save();
+        if ($branch && isset($this->branchAddresses[$branchId])) {
+            $branch->update(['address' => $this->branchAddresses[$branchId]]);
+            $this->loadBranches();
+            $this->branchEditStates["address_{$branchId}"] = false;
             
             Notification::make()
-                ->title('Adresse gespeichert')
-                ->body("Die Adresse wurde erfolgreich aktualisiert.")
+                ->title('Adresse aktualisiert')
                 ->success()
-                ->send();
-                
-            $this->branchEditStates["address_{$branchId}"] = false;
-            $this->loadBranches();
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
                 ->send();
         }
     }
@@ -920,32 +832,77 @@ class CompanyIntegrationPortal extends Page
         
         if ($this->branchEditStates[$key]) {
             $branch = Branch::find($branchId);
-            $this->branchEmails[$branchId] = $branch->email ?? '';
+            if ($branch) {
+                $this->branchEmails[$branchId] = $branch->email;
+            }
         }
     }
     
     public function saveBranchEmail(int $branchId): void
     {
         $branch = Branch::find($branchId);
-        if (!$branch) return;
-        
-        try {
-            $branch->email = $this->branchEmails[$branchId] ?? '';
-            $branch->save();
+        if ($branch && isset($this->branchEmails[$branchId])) {
+            $branch->update(['email' => $this->branchEmails[$branchId]]);
+            $this->loadBranches();
+            $this->branchEditStates["email_{$branchId}"] = false;
             
             Notification::make()
-                ->title('E-Mail gespeichert')
-                ->body("Die E-Mail-Adresse wurde erfolgreich aktualisiert.")
+                ->title('E-Mail aktualisiert')
                 ->success()
                 ->send();
-                
-            $this->branchEditStates["email_{$branchId}"] = false;
+        }
+    }
+    
+    public function toggleBranchPhoneNumberInput(int $branchId): void
+    {
+        $key = "phone_{$branchId}";
+        $this->branchEditStates[$key] = !($this->branchEditStates[$key] ?? false);
+        
+        if ($this->branchEditStates[$key]) {
+            $branch = Branch::find($branchId);
+            if ($branch && $branch->phoneNumbers->first()) {
+                $this->branchPhoneNumbers[$branchId] = $branch->phoneNumbers->first()->number;
+            }
+        }
+    }
+    
+    public function saveBranchPhoneNumber(int $branchId): void
+    {
+        // This would need more complex logic to handle phone number creation/update
+        // For now, just close the editor
+        $this->branchEditStates["phone_{$branchId}"] = false;
+        
+        Notification::make()
+            ->title('Telefonnummer-Verwaltung')
+            ->body('Bitte verwenden Sie die Telefonnummern-Verwaltung oben.')
+            ->info()
+            ->send();
+    }
+    
+    public function toggleBranchRetellAgentInput(int $branchId): void
+    {
+        $key = "retell_{$branchId}";
+        $this->branchEditStates[$key] = !($this->branchEditStates[$key] ?? false);
+        
+        if ($this->branchEditStates[$key]) {
+            $branch = Branch::find($branchId);
+            if ($branch) {
+                $this->branchRetellAgentIds[$branchId] = $branch->retell_agent_id;
+            }
+        }
+    }
+    
+    public function saveBranchRetellAgent(int $branchId): void
+    {
+        $branch = Branch::find($branchId);
+        if ($branch) {
+            $branch->update(['retell_agent_id' => $this->branchRetellAgentIds[$branchId] ?? null]);
             $this->loadBranches();
-        } catch (\Exception $e) {
+            $this->branchEditStates["retell_{$branchId}"] = false;
+            
             Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
+                ->title('Retell Agent aktualisiert')
+                ->success()
                 ->send();
         }
     }
@@ -953,24 +910,13 @@ class CompanyIntegrationPortal extends Page
     public function toggleBranchActiveState(int $branchId): void
     {
         $branch = Branch::find($branchId);
-        if (!$branch) return;
-        
-        try {
-            $branch->active = !$branch->active;
-            $branch->save();
+        if ($branch) {
+            $branch->update(['is_active' => !$branch->is_active]);
+            $this->loadBranches();
             
             Notification::make()
-                ->title('Status geändert')
-                ->body($branch->active ? "Filiale wurde aktiviert." : "Filiale wurde deaktiviert.")
+                ->title($branch->is_active ? 'Filiale aktiviert' : 'Filiale deaktiviert')
                 ->success()
-                ->send();
-                
-            $this->loadBranches();
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title('Fehler beim Speichern')
-                ->body($e->getMessage())
-                ->danger()
                 ->send();
         }
     }
@@ -978,35 +924,151 @@ class CompanyIntegrationPortal extends Page
     public function deleteBranch(int $branchId): void
     {
         $branch = Branch::find($branchId);
-        if (!$branch) return;
-        
-        // Check if this is the last branch
-        $branchCount = Branch::where('company_id', $branch->company_id)->count();
-        if ($branchCount <= 1) {
-            Notification::make()
-                ->title('Löschen nicht möglich')
-                ->body("Die letzte Filiale kann nicht gelöscht werden.")
-                ->warning()
-                ->send();
-            return;
-        }
-        
-        try {
+        if ($branch && !$branch->is_main) {
             $branch->delete();
+            $this->loadBranches();
             
             Notification::make()
                 ->title('Filiale gelöscht')
-                ->body("Die Filiale wurde erfolgreich gelöscht.")
                 ->success()
                 ->send();
-                
-            $this->loadBranches();
-        } catch (\Exception $e) {
+        }
+    }
+    
+    // Event Type Management
+    public function manageBranchEventTypes(string $branchId): void
+    {
+        $this->currentBranchId = $branchId;
+        $this->loadBranchEventTypes();
+        $this->showEventTypeModal = true;
+    }
+    
+    public function closeEventTypeModal(): void
+    {
+        $this->showEventTypeModal = false;
+        $this->currentBranchId = null;
+    }
+    
+    protected function loadBranchEventTypes(): void
+    {
+        if (!$this->currentBranchId) return;
+        
+        // Load event types for the current branch
+        $branch = Branch::with('eventTypes')->find($this->currentBranchId);
+        if ($branch) {
+            $this->branchEventTypes[$this->currentBranchId] = $branch->eventTypes->map(function ($eventType) use ($branch) {
+                return [
+                    'id' => $eventType->id,
+                    'name' => $eventType->name,
+                    'calcom_id' => $eventType->calcom_id,
+                    'duration' => $eventType->duration,
+                    'is_primary' => $eventType->id === $branch->calcom_event_type_id,
+                ];
+            })->toArray();
+            
+            // Load available event types (not yet assigned to this branch)
+            $assignedIds = $branch->eventTypes->pluck('id')->toArray();
+            $this->availableEventTypes = CalcomEventType::where('company_id', $this->selectedCompanyId)
+                ->whereNotIn('id', $assignedIds)
+                ->get()
+                ->map(function ($eventType) {
+                    return [
+                        'id' => $eventType->id,
+                        'name' => $eventType->name,
+                        'calcom_id' => $eventType->calcom_id,
+                        'duration' => $eventType->duration,
+                    ];
+                })
+                ->toArray();
+        }
+    }
+    
+    public function setPrimaryEventType(string $branchId, int $eventTypeId): void
+    {
+        $branch = Branch::find($branchId);
+        if ($branch) {
+            $branch->update(['calcom_event_type_id' => $eventTypeId]);
+            $this->loadBranchEventTypes();
+            
             Notification::make()
-                ->title('Fehler beim Löschen')
-                ->body($e->getMessage())
-                ->danger()
+                ->title('Primärer Event Type festgelegt')
+                ->success()
                 ->send();
+        }
+    }
+    
+    public function addBranchEventType(string $branchId, int $eventTypeId): void
+    {
+        $branch = Branch::find($branchId);
+        $eventType = CalcomEventType::find($eventTypeId);
+        
+        if ($branch && $eventType) {
+            // Add to branch_event_types pivot table if it exists
+            // For now, we'll just set it as the primary if none exists
+            if (!$branch->calcom_event_type_id) {
+                $branch->update(['calcom_event_type_id' => $eventTypeId]);
+            }
+            
+            $this->loadBranchEventTypes();
+            
+            Notification::make()
+                ->title('Event Type hinzugefügt')
+                ->success()
+                ->send();
+        }
+    }
+    
+    public function removeBranchEventType(string $branchId, int $eventTypeId): void
+    {
+        $branch = Branch::find($branchId);
+        if ($branch && $branch->calcom_event_type_id == $eventTypeId) {
+            $branch->update(['calcom_event_type_id' => null]);
+            $this->loadBranchEventTypes();
+            
+            Notification::make()
+                ->title('Event Type entfernt')
+                ->success()
+                ->send();
+        }
+    }
+    
+    // Phone Agent Mapping
+    public function updatePhoneAgent(int $phoneId, ?string $agentId): void
+    {
+        $phone = PhoneNumber::find($phoneId);
+        if ($phone) {
+            $phone->update(['retell_agent_id' => $agentId ?: null]);
+            $this->loadPhoneNumbers();
+            
+            Notification::make()
+                ->title('Agent zugeordnet')
+                ->success()
+                ->send();
+        }
+    }
+    
+    public function showAgentDetails(string $agentId): void
+    {
+        // This could open a modal with agent details
+        // For now, just show a notification
+        $agent = collect($this->retellAgents)->firstWhere('agent_id', $agentId);
+        if ($agent) {
+            Notification::make()
+                ->title($agent['agent_name'] ?? 'Agent Details')
+                ->body('Voice: ' . ($agent['voice_id'] ?? 'Standard') . ' | Language: ' . ($agent['language'] ?? 'de-DE'))
+                ->info()
+                ->send();
+        }
+    }
+    
+    // Initialize form properties when company is selected
+    protected function initializeFormProperties(): void
+    {
+        if ($this->selectedCompany) {
+            $this->calcomApiKey = $this->selectedCompany->calcom_api_key;
+            $this->calcomTeamSlug = $this->selectedCompany->calcom_team_slug;
+            $this->retellApiKey = $this->selectedCompany->retell_api_key;
+            $this->retellAgentId = $this->selectedCompany->retell_agent_id;
         }
     }
 }

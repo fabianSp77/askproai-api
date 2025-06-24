@@ -6,6 +6,19 @@
 @import '../../tab-tooltips.css';
 @import '../../column-editor-modern.css';
 @import '../../contrast-fix.css';
+@import './company-integration-portal.css';
+@import './responsive-fixes.css';
+@import './company-portal-fix.css';
+@import './retell-agent-portal.css';
+@import './ultimate-portal-design.css';
+@import './dashboard.css';
+@import './appointments.css';
+@import './calls.css';
+@import './customers.css';
+@import './table-responsive-fix.css';
+@import './resource-specific-responsive.css';
+@import './ultimate-ui.css';
+@import './retell-configuration-center.css';
 
 :root {
     --color-primary-50: 254 252 232;
@@ -242,4 +255,85 @@ html.dark .fi-body {
 
 .dark .tab-description.active h3 {
     color: rgba(251, 191, 36, 1);
+}
+
+/* Fix for content sliding under sidebar */
+.fi-page-wrapper {
+    position: relative !important;
+    z-index: 10 !important;
+    margin-left: 0 !important;
+}
+
+/* Ensure proper spacing when sidebar is open */
+@media (min-width: 1024px) {
+    /* Define sidebar width variable */
+    :root {
+        --fi-sidebar-width: 16rem;
+    }
+    
+    /* Fixed sidebar positioning */
+    .fi-sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: var(--fi-sidebar-width);
+        height: 100vh;
+        z-index: 40 !important;
+        background: white;
+        border-right: 1px solid rgb(229, 231, 235);
+    }
+    
+    /* Dark mode sidebar */
+    .dark .fi-sidebar {
+        background: rgb(17, 24, 39);
+        border-right-color: rgb(55, 65, 81);
+    }
+    
+    /* Main content offset */
+    .fi-main {
+        margin-left: var(--fi-sidebar-width) !important;
+        width: calc(100% - var(--fi-sidebar-width)) !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    
+    /* Collapsed sidebar */
+    .fi-sidebar-collapsed {
+        --fi-sidebar-width: 4rem;
+    }
+    
+    /* Prevent content jump */
+    .fi-sidebar-open .fi-page-wrapper,
+    .fi-page-wrapper {
+        transition: none !important;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .fi-main-ctn {
+        padding-left: 0 !important;
+        width: 100%;
+    }
+    
+    /* Force content to stay in place */
+    .fi-page {
+        position: relative !important;
+        margin-left: 0 !important;
+        transform: none !important;
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        position: fixed !important;
+        z-index: 50 !important;
+    }
+    
+    .fi-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
 }

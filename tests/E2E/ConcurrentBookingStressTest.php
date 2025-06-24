@@ -97,6 +97,9 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_multiple_concurrent_booking_requests_for_same_slot()
     {
         Queue::fake();
@@ -200,6 +203,9 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function stress_test_with_multiple_time_slots_and_staff()
     {
         Queue::fake();
@@ -335,6 +341,9 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function performance_test_booking_creation_speed()
     {
         Queue::fake();
@@ -401,6 +410,9 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function handles_database_deadlocks_gracefully()
     {
         Queue::fake();
@@ -474,6 +486,9 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function cache_performance_under_concurrent_load()
     {
         Queue::fake();

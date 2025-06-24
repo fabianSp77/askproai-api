@@ -76,6 +76,24 @@ class AppServiceProvider extends ServiceProvider
         
         // MCP Sentry Server
         $this->app->singleton(\App\Services\MCP\SentryMCPServer::class);
+        
+        // Register Unified Services
+        $this->app->singleton(\App\Services\Unified\CalcomServiceUnified::class);
+        $this->app->singleton(\App\Services\Unified\RetellServiceUnified::class);
+        
+        // Register Webhook Services
+        $this->app->singleton(\App\Services\Webhook\WebhookDeduplicationService::class);
+        
+        // Register MCP Services
+        $this->app->singleton(\App\Services\MCP\DatabaseMCPServer::class);
+        $this->app->singleton(\App\Services\MCP\CalcomMCPServer::class);
+        $this->app->singleton(\App\Services\MCP\RetellMCPServer::class);
+        $this->app->singleton(\App\Services\MCP\QueueMCPServer::class);
+        $this->app->singleton(\App\Services\MCP\WebhookMCPServer::class);
+        $this->app->singleton(\App\Services\MCP\BranchMCPServer::class);
+        $this->app->singleton(\App\Services\MCP\CompanyMCPServer::class);
+        $this->app->singleton(\App\Services\MCP\AppointmentMCPServer::class);
+        $this->app->singleton(\App\Services\MCP\CustomerMCPServer::class);
     }
 
     public function boot(Router $router): void
@@ -111,8 +129,13 @@ class AppServiceProvider extends ServiceProvider
         }
         
         // Register Livewire components
-        Livewire::component('tutorial-overlay', \App\Livewire\TutorialOverlay::class);
-        Livewire::component('test-debug', \App\Livewire\TestDebug::class);
+        // Livewire::component('tutorial-overlay', \App\Livewire\TutorialOverlay::class);
+        // Livewire::component('test-debug', \App\Livewire\TestDebug::class);
+        
+        // Register our test component
+        if (class_exists(\App\Livewire\TestComponent::class)) {
+            Livewire::component('test-component', \App\Livewire\TestComponent::class);
+        }
         
         // Let Livewire handle its own routes
     }

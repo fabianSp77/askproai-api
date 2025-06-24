@@ -1,0 +1,48 @@
+{
+    "name": "collect_appointment_data",
+    "description": "Sammelt alle notwendigen Informationen f\u00fcr eine Terminbuchung",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "datum": {
+                "type": "string",
+                "description": "Gew\u00fcnschtes Datum im Format DD.MM.YYYY"
+            },
+            "uhrzeit": {
+                "type": "string",
+                "description": "Gew\u00fcnschte Uhrzeit im Format HH:MM"
+            },
+            "dienstleistung": {
+                "type": "string",
+                "description": "Gew\u00fcnschte Dienstleistung oder Service"
+            },
+            "name": {
+                "type": "string",
+                "description": "Name des Kunden"
+            },
+            "telefonnummer": {
+                "type": "string",
+                "description": "Telefonnummer des Kunden"
+            },
+            "email": {
+                "type": "string",
+                "description": "E-Mail-Adresse des Kunden (optional)"
+            },
+            "notizen": {
+                "type": "string",
+                "description": "Zus\u00e4tzliche Notizen oder W\u00fcnsche"
+            },
+            "booking_confirmed": {
+                "type": "boolean",
+                "description": "Wurde die Buchung best\u00e4tigt?"
+            }
+        },
+        "required": [
+            "datum",
+            "uhrzeit",
+            "name",
+            "telefonnummer",
+            "booking_confirmed"
+        ]
+    }
+}

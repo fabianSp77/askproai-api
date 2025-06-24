@@ -35,6 +35,7 @@ class Call extends Model
         'video_url',
         'duration_sec',
         'duration_minutes',
+        'duration',  // Added for the new column
         'cost',
         'cost_cents',
         'customer_id',
@@ -51,6 +52,8 @@ class Call extends Model
         'metadata',
         'tags',
         'sentiment',
+        'sentiment_score',  // Added for the new column
+        'status',  // Added for the new column
         // New Retell fields
         'start_timestamp',
         'end_timestamp',
@@ -84,6 +87,8 @@ class Call extends Model
         'tags' => 'array',
         'cost' => 'decimal:2',
         'duration_minutes' => 'decimal:2',
+        'duration' => 'integer',  // Added for the new column
+        'sentiment_score' => 'decimal:1',  // Added for the new column
         'details' => 'array',
         'transcript_object' => 'array',
         'transcript_with_tools' => 'array',
@@ -430,6 +435,11 @@ class Call extends Model
             // Calculate duration in minutes if we have duration_sec
             if ($call->duration_sec && !$call->duration_minutes) {
                 $call->duration_minutes = round($call->duration_sec / 60, 2);
+            }
+            
+            // Also set duration (in seconds) from duration_sec if available
+            if ($call->duration_sec && !$call->duration) {
+                $call->duration = $call->duration_sec;
             }
             
             // Calculate cost in euros if we have cost_cents

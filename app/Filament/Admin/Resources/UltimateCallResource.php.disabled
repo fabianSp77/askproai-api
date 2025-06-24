@@ -1,0 +1,643 @@
+<?php
+
+namespace App\Filament\Admin\Resources;
+
+use App\Filament\Admin\Resources\UltimateCallResource\Pages;
+use App\Filament\Admin\Resources\UltimateCallResource\Widgets;
+use App\Filament\Admin\Resources\Concerns\MultiTenantResource;
+use App\Filament\Admin\Resources\Concerns\UltimateResourceUI;
+use App\Models\Call;
+use App\Models\Customer;
+use App\Models\Appointment;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Support\Enums\FontWeight;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Illuminate\Support\Str;
+use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\Log;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Forms\Components\DatePicker;
+use Illuminate\Database\Eloquent\Builder;
+use Carbon\Carbon;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
+use Illuminate\Database\Eloquent\Collection;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\ViewField;
+
+class UltimateCallResource extends Resource
+{
+    use MultiTenantResource, UltimateResourceUI;
+    
+    protected static ?string $model = Call::class;
+    protected static ?string $navigationIcon = 'heroicon-o-phone-arrow-down-left';
+    protected static ?string $navigationLabel = 'Anrufe';
+    protected static ?string $recordTitleAttribute = 'call_id';
+    protected static ?int $navigationSort = 2;
+    protected static ?string $slug = 'ultimate-calls';
+    
+    public static function canViewAny(): bool
+    {
+        return true;
+    }
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Temporarily disable from navigation
+    }
+    
+    public static function canView($record): bool
+    {
+        return true;
+    }
+
+    public static function table(Table $table): Table
+    {
+        return parent::table(
+            $table
+                ->columns(self::getTableColumns())
+                ->filters(self::getTableFilters())
+                ->actions(self::getTableActions())
+                ->bulkActions(self::getTableBulkActions())
+                ->defaultSort('start_timestamp', 'desc')
+                ->poll('10s')
+                ->striped()
+                ->searchDebounce('500ms')
+                ->persistColumnSearchesInSession()
+                ->persistFiltersInSession()
+                ->persistSortInSession()
+                ->extremePaginationLinks()
+                ->paginated([10, 25, 50, 100])
+                ->recordClasses(fn ($record) => $record ? match($record->sentiment) {
+                    'positive' => 'border-l-4 border-green-500',
+                    'negative' => 'border-l-4 border-red-500',
+                    default => '',
+                } : '')
+                ->contentGrid(fn () => self::getContentGrid())
+                ->modifyQueryUsing(fn ($query) => $query->with(['customer', 'appointment', 'branch']))
+                ->filtersLayout(FiltersLayout::Dropdown)
+                ->filtersFormColumns(3)
+                ->filtersTriggerAction(
+                    fn (Action $action) => $action
+                        ->button()
+                        ->label('Smart Filters')
+                        ->icon('heroicon-m-funnel')
+                        ->badge(fn () => self::getActiveFiltersCount())
+                        ->badgeColor('primary')
+                )
+        );
+    }
+    
+    protected static function getTableColumns(): array
+    {
+        return [
+            Tables\Columns\Layout\Stack::make([
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('customer.name')
+                        ->label('Kunde')
+                        ->searchable()
+                        ->weight(FontWeight::Bold)
+                        ->size('lg')
+                        ->placeholder('Unbekannter Anrufer')
+                        ->icon('heroicon-m-user')
+                        ->iconColor('primary')
+                        ->url(fn ($record) => $record?->customer ? 
+                            route('filament.admin.resources.customers.edit', ['record' => $record->customer]) : null)
+                        ->getStateUsing(fn ($record) => $record?->customer?->name ?? '-')
+                        ->extraAttributes([
+                            'class' => 'inline-editable',
+                            'data-field' => 'customer_name',
+                        ]),
+                        
+                    Tables\Columns\TextColumn::make('from_number')
+                        ->label('Nummer')
+                        ->searchable()
+                        ->icon('heroicon-m-phone')
+                        ->iconColor('gray')
+                        ->copyable()
+                        ->copyMessage('Kopiert!')
+                        ->alignEnd()
+                        ->extraAttributes([
+                            'class' => 'text-gray-600 dark:text-gray-400',
+                        ]),
+                ])->from('md'),
+                
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('start_timestamp')
+                        ->label('Zeit')
+                        ->dateTime('d.m.Y H:i')
+                        ->sortable()
+                        ->icon('heroicon-m-clock')
+                        ->iconColor('gray')
+                        ->color('gray')
+                        ->size('sm'),
+                        
+                    Tables\Columns\TextColumn::make('duration_sec')
+                        ->label('Dauer')
+                        ->formatStateUsing(fn ($state) => gmdate('i:s', $state))
+                        ->icon('heroicon-m-clock')
+                        ->iconColor(fn ($state) => match(true) {
+                            $state >= 180 => 'success',
+                            $state >= 60 => 'warning',
+                            default => 'danger'
+                        })
+                        ->badge()
+                        ->alignEnd(),
+                ])->from('md'),
+                
+                Tables\Columns\Layout\Panel::make([
+                    Tables\Columns\TextColumn::make('analysis_summary')
+                        ->label('Zusammenfassung')
+                        ->limit(100)
+                        ->getStateUsing(fn ($record) => $record ? ($record->analysis['summary'] ?? null) : null)
+                        ->tooltip(fn ($record) => $record ? ($record->analysis['summary'] ?? null) : null)
+                        ->placeholder('Keine Zusammenfassung')
+                        ->extraAttributes([
+                            'class' => 'text-sm text-gray-600 dark:text-gray-400 mt-2',
+                        ]),
+                ])->collapsed(false),
+                
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('sentiment')
+                        ->label('Stimmung')
+                        ->getStateUsing(fn ($record) => $record ? ($record->analysis['sentiment'] ?? 'neutral') : 'neutral')
+                        ->badge()
+                        ->color(fn (string $state): string => match ($state) {
+                            'positive' => 'success',
+                            'negative' => 'danger',
+                            default => 'gray',
+                        })
+                        ->icon(fn (string $state): string => match ($state) {
+                            'positive' => 'heroicon-m-face-smile',
+                            'negative' => 'heroicon-m-face-frown',
+                            default => 'heroicon-m-minus-circle',
+                        }),
+                        
+                    Tables\Columns\IconColumn::make('appointment_id')
+                        ->label('Termin')
+                        ->boolean()
+                        ->trueIcon('heroicon-o-calendar-days')
+                        ->falseIcon('heroicon-o-x-mark')
+                        ->trueColor('success')
+                        ->falseColor('gray')
+                        ->tooltip(fn ($record) => $record ? ($record->appointment ? 
+                            'Termin am ' . $record->appointment->starts_at->format('d.m.Y H:i') : 
+                            'Kein Termin gebucht') : null
+                        ),
+                        
+                    Tables\Columns\TextColumn::make('urgency')
+                        ->label('Priorität')
+                        ->getStateUsing(fn ($record) => $record ? ($record->analysis['urgency'] ?? 'normal') : 'normal')
+                        ->badge()
+                        ->color(fn (string $state): string => match ($state) {
+                            'high' => 'danger',
+                            'medium' => 'warning',
+                            default => 'gray',
+                        }),
+                        
+                    Tables\Columns\IconColumn::make('has_recording')
+                        ->label('Audio')
+                        ->getStateUsing(fn ($record) => $record ? !empty($record->audio_url) : false)
+                        ->boolean()
+                        ->trueIcon('heroicon-o-speaker-wave')
+                        ->falseIcon('heroicon-o-speaker-x-mark')
+                        ->trueColor('info')
+                        ->falseColor('gray')
+                        ->action(
+                            Action::make('play_audio')
+                                ->label('Abspielen')
+                                ->modalContent(fn ($record) => view('filament.modals.audio-player', ['record' => $record]))
+                                ->modalHeading('Anrufaufzeichnung')
+                                ->modalWidth('lg')
+                        ),
+                ])->from('md'),
+            ])->space(2),
+            
+            // Hidden columns for search and filtering
+            Tables\Columns\TextColumn::make('call_id')
+                ->label('Call ID')
+                ->searchable()
+                ->toggleable(isToggledHiddenByDefault: true),
+                
+            Tables\Columns\TextColumn::make('retell_call_id')
+                ->label('Retell ID')
+                ->searchable()
+                ->toggleable(isToggledHiddenByDefault: true),
+                
+            Tables\Columns\TextColumn::make('branch.name')
+                ->label('Filiale')
+                ->searchable()
+                ->toggleable(isToggledHiddenByDefault: true)
+                    ->getStateUsing(fn ($record) => $record?->branch?->name ?? '-'),
+        ];
+    }
+    
+    protected static function getTableFilters(): array
+    {
+        return array_merge(
+            static::getMultiTenantFilters(),
+            [
+                // Smart date filter
+                Filter::make('smart_date')
+                    ->form([
+                        Forms\Components\Select::make('preset')
+                            ->label('Zeitraum')
+                            ->options([
+                                'today' => 'Heute',
+                                'yesterday' => 'Gestern',
+                                'this_week' => 'Diese Woche',
+                                'last_week' => 'Letzte Woche',
+                                'this_month' => 'Diesen Monat',
+                                'last_month' => 'Letzten Monat',
+                                'last_7_days' => 'Letzte 7 Tage',
+                                'last_30_days' => 'Letzte 30 Tage',
+                                'custom' => 'Benutzerdefiniert',
+                            ])
+                            ->default('last_7_days')
+                            ->reactive(),
+                            
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\DatePicker::make('from')
+                                    ->label('Von')
+                                    ->visible(fn ($get) => $get('preset') === 'custom'),
+                                    
+                                Forms\Components\DatePicker::make('to')
+                                    ->label('Bis')
+                                    ->visible(fn ($get) => $get('preset') === 'custom'),
+                            ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $preset = $data['preset'] ?? 'last_7_days';
+                        
+                        return match ($preset) {
+                            'today' => $query->whereDate('start_timestamp', today()),
+                            'yesterday' => $query->whereDate('start_timestamp', today()->subDay()),
+                            'this_week' => $query->whereBetween('start_timestamp', [now()->startOfWeek(), now()->endOfWeek()]),
+                            'last_week' => $query->whereBetween('start_timestamp', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()]),
+                            'this_month' => $query->whereMonth('start_timestamp', now()->month),
+                            'last_month' => $query->whereMonth('start_timestamp', now()->subMonth()->month),
+                            'last_7_days' => $query->where('start_timestamp', '>=', now()->subDays(7)),
+                            'last_30_days' => $query->where('start_timestamp', '>=', now()->subDays(30)),
+                            'custom' => $query
+                                ->when($data['from'] ?? null, fn($q, $v) => $q->whereDate('start_timestamp', '>=', $v))
+                                ->when($data['to'] ?? null, fn($q, $v) => $q->whereDate('start_timestamp', '<=', $v)),
+                            default => $query,
+                        };
+                    }),
+                    
+                SelectFilter::make('sentiment')
+                    ->label('Stimmung')
+                    ->multiple()
+                    ->options([
+                        'positive' => 'Positiv',
+                        'negative' => 'Negativ',
+                        'neutral' => 'Neutral',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (!empty($data['values'])) {
+                            return $query->where(function ($q) use ($data) {
+                                foreach ($data['values'] as $value) {
+                                    $q->orWhereJsonContains('analysis->sentiment', $value);
+                                }
+                            });
+                        }
+                        return $query;
+                    }),
+                    
+                TernaryFilter::make('has_appointment')
+                    ->label('Termin Status')
+                    ->placeholder('Alle Anrufe')
+                    ->trueLabel('Mit Termin')
+                    ->falseLabel('Ohne Termin')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('appointment_id'),
+                        false: fn (Builder $query) => $query->whereNull('appointment_id'),
+                    ),
+                    
+                Filter::make('duration')
+                    ->form([
+                        Forms\Components\Select::make('duration_range')
+                            ->label('Anrufdauer')
+                            ->options([
+                                '0-60' => 'Unter 1 Minute',
+                                '60-180' => '1-3 Minuten',
+                                '180-300' => '3-5 Minuten',
+                                '300+' => 'Über 5 Minuten',
+                            ])
+                            ->placeholder('Alle Dauern'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (!empty($data['duration_range'])) {
+                            return match ($data['duration_range']) {
+                                '0-60' => $query->where('duration_sec', '<', 60),
+                                '60-180' => $query->whereBetween('duration_sec', [60, 180]),
+                                '180-300' => $query->whereBetween('duration_sec', [180, 300]),
+                                '300+' => $query->where('duration_sec', '>', 300),
+                                default => $query,
+                            };
+                        }
+                        return $query;
+                    }),
+                    
+                SelectFilter::make('urgency')
+                    ->label('Dringlichkeit')
+                    ->multiple()
+                    ->options([
+                        'high' => 'Hoch',
+                        'medium' => 'Mittel',
+                        'low' => 'Niedrig',
+                        'normal' => 'Normal',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (!empty($data['values'])) {
+                            return $query->where(function ($q) use ($data) {
+                                foreach ($data['values'] as $value) {
+                                    $q->orWhereJsonContains('analysis->urgency', $value);
+                                }
+                            });
+                        }
+                        return $query;
+                    }),
+                    
+                TernaryFilter::make('has_recording')
+                    ->label('Aufzeichnung')
+                    ->placeholder('Alle')
+                    ->trueLabel('Mit Aufzeichnung')
+                    ->falseLabel('Ohne Aufzeichnung')
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('audio_url'),
+                        false: fn (Builder $query) => $query->whereNull('audio_url'),
+                    ),
+            ]
+        );
+    }
+    
+    protected static function getTableActions(): array
+    {
+        return [
+            Tables\Actions\ActionGroup::make([
+                Tables\Actions\ViewAction::make()
+                    ->modalWidth('7xl')
+                    ->modalContent(fn ($record) => view('filament.resources.call-detail-modal', ['record' => $record])),
+                    
+                Tables\Actions\Action::make('create_appointment')
+                    ->label('Termin erstellen')
+                    ->icon('heroicon-o-calendar-days')
+                    ->color('success')
+                    ->visible(fn ($record) => !$record->appointment_id && $record->customer_id)
+                    ->form([
+                        Forms\Components\DateTimePicker::make('starts_at')
+                            ->label('Termin')
+                            ->required()
+                            ->native(false)
+                            ->displayFormat('d.m.Y H:i')
+                            ->minutesStep(15)
+                            ->minDate(now())
+                            ->default(fn ($record) => 
+                                isset($record->analysis['entities']['date']) ? 
+                                $record->analysis['entities']['date'] : 
+                                now()->addDay()->setHour(9)->setMinute(0)
+                            ),
+                            
+                        Forms\Components\Select::make('service_id')
+                            ->label('Dienstleistung')
+                            ->options(fn ($record) => 
+                                \App\Models\Service::where('company_id', $record->company_id)
+                                    ->pluck('name', 'id')
+                            )
+                            ->required()
+                            ->searchable()
+                            ->default(fn ($record) => 
+                                $record->analysis['entities']['service_id'] ?? null
+                            ),
+                            
+                        Forms\Components\Select::make('staff_id')
+                            ->label('Mitarbeiter')
+                            ->options(fn ($record) => 
+                                \App\Models\Staff::where('company_id', $record->company_id)
+                                    ->get()
+                                    ->mapWithKeys(fn ($staff) => 
+                                        [$staff->id => $staff->first_name . ' ' . $staff->last_name]
+                                    )
+                            )
+                            ->searchable(),
+                            
+                        Forms\Components\Textarea::make('notes')
+                            ->label('Notizen')
+                            ->rows(3)
+                            ->default(fn ($record) => 
+                                "Termin aus Anruf vom " . $record->created_at->format('d.m.Y H:i') . "\n\n" .
+                                "Zusammenfassung: " . ($record->analysis['summary'] ?? 'Keine Zusammenfassung')
+                            ),
+                    ])
+                    ->action(function (array $data, Call $record) {
+                        $appointment = Appointment::create([
+                            'customer_id' => $record->customer_id,
+                            'company_id' => $record->company_id,
+                            'branch_id' => $record->branch_id,
+                            'service_id' => $data['service_id'],
+                            'staff_id' => $data['staff_id'] ?? null,
+                            'starts_at' => $data['starts_at'],
+                            'ends_at' => Carbon::parse($data['starts_at'])->addMinutes(60),
+                            'status' => 'scheduled',
+                            'notes' => $data['notes'],
+                            'source' => 'phone',
+                            'call_id' => $record->id,
+                        ]);
+                        
+                        $record->update(['appointment_id' => $appointment->id]);
+                        
+                        Notification::make()
+                            ->title('Termin erstellt')
+                            ->success()
+                            ->body('Der Termin wurde erfolgreich angelegt.')
+                            ->send();
+                    }),
+                    
+                Tables\Actions\Action::make('play_recording')
+                    ->label('Anhören')
+                    ->icon('heroicon-o-play-circle')
+                    ->color('info')
+                    ->visible(fn ($record) => !empty($record->audio_url))
+                    ->modalContent(fn ($record) => view('filament.modals.audio-player', ['record' => $record]))
+                    ->modalHeading('Anrufaufzeichnung')
+                    ->modalWidth('lg'),
+                    
+                Tables\Actions\Action::make('analyze')
+                    ->label('Analysieren')
+                    ->icon('heroicon-o-chart-bar')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Anruf analysieren')
+                    ->modalDescription('Die KI wird den Anruf erneut analysieren und die Erkenntnisse aktualisieren.')
+                    ->modalSubmitActionLabel('Jetzt analysieren')
+                    ->action(fn ($record) => self::analyzeCall($record)),
+                    
+                Tables\Actions\Action::make('share')
+                    ->label('Teilen')
+                    ->icon('heroicon-o-share')
+                    ->color('gray')
+                    ->modalContent(fn ($record) => view('filament.modals.share-call', ['record' => $record]))
+                    ->modalHeading('Anruf teilen')
+                    ->modalWidth('lg'),
+            ])->tooltip('Aktionen'),
+            
+            // Quick inline actions
+            Tables\Actions\Action::make('quick_sentiment')
+                ->label('')
+                ->icon('heroicon-o-face-smile')
+                ->color(fn ($record) => match($record->analysis['sentiment'] ?? null) {
+                    'positive' => 'success',
+                    'negative' => 'danger',
+                    default => 'gray',
+                })
+                ->tooltip('Stimmung ändern')
+                ->form([
+                    Forms\Components\Radio::make('sentiment')
+                        ->label('Stimmung')
+                        ->options([
+                            'positive' => 'Positiv',
+                            'neutral' => 'Neutral',
+                            'negative' => 'Negativ',
+                        ])
+                        ->default(fn ($record) => $record->analysis['sentiment'] ?? 'neutral')
+                        ->inline(),
+                ])
+                ->action(function (array $data, Call $record) {
+                    $analysis = $record->analysis;
+                    $analysis['sentiment'] = $data['sentiment'];
+                    $record->update(['analysis' => $analysis]);
+                    
+                    Notification::make()
+                        ->title('Stimmung aktualisiert')
+                        ->success()
+                        ->send();
+                })
+                ->iconButton(),
+        ];
+    }
+    
+    protected static function getTableBulkActions(): array
+    {
+        return [
+            BulkAction::make('analyze_bulk')
+                ->label('Analysieren')
+                ->icon('heroicon-o-chart-bar')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading('Anrufe analysieren')
+                ->modalDescription('Die KI wird alle ausgewählten Anrufe analysieren.')
+                ->action(function (Collection $records) {
+                    foreach ($records as $record) {
+                        self::analyzeCall($record);
+                    }
+                    
+                    Notification::make()
+                        ->title('Analyse gestartet')
+                        ->success()
+                        ->body(count($records) . ' Anrufe werden analysiert.')
+                        ->send();
+                }),
+                
+            BulkAction::make('export')
+                ->label('Exportieren')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->form([
+                    Forms\Components\Select::make('format')
+                        ->label('Format')
+                        ->options([
+                            'csv' => 'CSV',
+                            'xlsx' => 'Excel',
+                            'pdf' => 'PDF',
+                            'json' => 'JSON',
+                        ])
+                        ->default('csv')
+                        ->required(),
+                        
+                    Forms\Components\CheckboxList::make('columns')
+                        ->label('Spalten')
+                        ->options([
+                            'customer' => 'Kunde',
+                            'phone' => 'Telefonnummer',
+                            'date' => 'Datum',
+                            'duration' => 'Dauer',
+                            'sentiment' => 'Stimmung',
+                            'summary' => 'Zusammenfassung',
+                            'appointment' => 'Termin',
+                            'recording' => 'Aufzeichnung Link',
+                        ])
+                        ->default(['customer', 'phone', 'date', 'duration', 'sentiment'])
+                        ->columns(2),
+                ])
+                ->action(function (Collection $records, array $data) {
+                    // Export logic here
+                    return response()->streamDownload(function () use ($records, $data) {
+                        // Generate export file
+                    }, 'calls-export.' . $data['format']);
+                }),
+                
+            BulkAction::make('create_appointments')
+                ->label('Termine erstellen')
+                ->icon('heroicon-o-calendar-days')
+                ->color('success')
+                ->visible(fn () => false) // Only show when records without appointments are selected
+                ->form([
+                    ViewField::make('ai_suggestions')
+                        ->view('filament.forms.bulk-appointment-suggestions')
+                        ->label('KI-Vorschläge für Termine'),
+                ])
+                ->action(function (Collection $records, array $data) {
+                    // Bulk appointment creation
+                }),
+                
+            Tables\Actions\DeleteBulkAction::make()
+                ->requiresConfirmation()
+                ->modalHeading('Anrufe löschen')
+                ->modalDescription('Sind Sie sicher, dass Sie die ausgewählten Anrufe löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.'),
+        ];
+    }
+    
+    protected static function analyzeCall(Call $call): void
+    {
+        // Trigger AI analysis job
+        dispatch(new \App\Jobs\AnalyzeCallJob($call));
+    }
+    
+    protected static function getActiveFiltersCount(): ?string
+    {
+        // Count active filters
+        $count = 0;
+        // Implementation here
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\UltimateListCalls::route('/'),
+            'create' => Pages\CreateCall::route('/create'),
+            'edit' => Pages\EditCall::route('/{record}/edit'),
+            'view' => Pages\ViewCall::route('/{record}'),
+        ];
+    }
+    
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::whereDate('created_at', today())->count();
+    }
+    
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return static::getModel()::whereDate('created_at', today())->count() > 0 ? 'primary' : 'gray';
+    }
+}

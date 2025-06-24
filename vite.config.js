@@ -6,10 +6,24 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css', 
+                'resources/css/filament/admin/theme.css',
+                'resources/css/filament/admin/agent-management.css',
+                'resources/css/filament/admin/company-integration-portal-clean.css',
+                'resources/css/filament/admin/company-integration-portal-v2.css',
+                'resources/css/filament/admin/responsive-fixes.css',
+                'resources/css/filament/admin/ultimate-theme.css',
+                'resources/css/filament/admin/ultra-calls.css',
+                'resources/css/filament/admin/ultra-appointments.css',
+                'resources/css/filament/admin/ultra-customers.css',
                 'resources/js/app.js',
+                'resources/js/agent-management.js',
                 'resources/js/column-toggle-enhancements.js',
                 'resources/js/column-selector-fix.js',
-                'resources/js/column-editor-modern.js'
+                'resources/js/column-editor-modern.js',
+                'resources/js/company-integration-portal.js',
+                'resources/js/components/askproai-ui-components.js',
+                'resources/js/alpine-dropdown-fix.js',
+                'resources/js/ultimate-ui-system-simple.js'
             ],
             refresh: true,
         }),

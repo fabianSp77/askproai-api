@@ -8,16 +8,18 @@ use App\Models\WebhookEvent;
 use App\Services\PhoneNumberResolver;
 use App\Services\CurrencyConverter;
 use App\Services\AppointmentBookingService;
+use App\Traits\CompanyAwareJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class ProcessRetellCallEndedJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, CompanyAwareJob;
 
     public $tries = 3;
     public $backoff = [10, 30, 60];
@@ -36,11 +38,22 @@ class ProcessRetellCallEndedJob implements ShouldQueue
 
     public function handle()
     {
+        // Apply company context from trait
+        $this->applyCompanyContext();
+        
+        // Enhanced logging to debug data structure
         Log::info('Processing Retell call_ended webhook', [
             'call_id' => $this->data['call']['call_id'] ?? 'unknown',
             'event' => $this->data['event'] ?? 'unknown',
             'correlation_id' => $this->correlationId,
-            'webhook_event_id' => $this->webhookEventId
+            'webhook_event_id' => $this->webhookEventId,
+            'company_id' => $this->companyId,
+            'has_call_data' => isset($this->data['call']),
+            'has_retell_llm_dynamic_variables' => isset($this->data['call']['retell_llm_dynamic_variables']),
+            'dynamic_vars_keys' => isset($this->data['call']['retell_llm_dynamic_variables']) 
+                ? array_keys($this->data['call']['retell_llm_dynamic_variables']) 
+                : [],
+            'custom_fields' => array_filter(array_keys($this->data['call'] ?? []), fn($k) => strpos($k, '_') === 0)
         ]);
 
         // Mark webhook event as processing
@@ -50,22 +63,26 @@ class ProcessRetellCallEndedJob implements ShouldQueue
         }
 
         try {
-            // Resolve company context first to set tenant scope
-            $callData = $this->data['call'] ?? $this->data;
-            $resolver = new PhoneNumberResolver();
-            $resolved = $resolver->resolveFromWebhook($callData);
-            
-            if ($resolved['company_id']) {
-                // Set the company context for this job
-                app()->instance('current_company_id', $resolved['company_id']);
-                Log::info('Set company context for webhook processing', [
-                    'company_id' => $resolved['company_id'],
-                    'resolution_method' => $resolved['resolution_method'] ?? 'unknown'
-                ]);
-            } else {
-                Log::warning('Could not resolve company context from webhook', [
-                    'call_id' => $callData['call_id'] ?? 'unknown'
-                ]);
+            // If company context not set by trait, resolve it
+            if (!$this->companyId) {
+                // Resolve company context first to set tenant scope
+                $callData = $this->data['call'] ?? $this->data;
+                $resolver = new PhoneNumberResolver();
+                $resolved = $resolver->resolveFromWebhook($callData);
+                
+                if ($resolved['company_id']) {
+                    // Set the company context for this job
+                    $this->companyId = $resolved['company_id'];
+                    $this->applyCompanyContext();
+                    Log::info('Set company context for webhook processing', [
+                        'company_id' => $resolved['company_id'],
+                        'resolution_method' => $resolved['resolution_method'] ?? 'unknown'
+                    ]);
+                } else {
+                    Log::warning('Could not resolve company context from webhook', [
+                        'call_id' => $callData['call_id'] ?? 'unknown'
+                    ]);
+                }
             }
             
             // Store raw webhook data
@@ -114,7 +131,13 @@ class ProcessRetellCallEndedJob implements ShouldQueue
                 $webhookEvent?->markAsFailed($e->getMessage());
             }
             
+            // Clear company context
+            $this->clearCompanyContext();
+            
             throw $e;
+        } finally {
+            // Always clear company context
+            $this->clearCompanyContext();
         }
     }
     
@@ -123,6 +146,7 @@ class ProcessRetellCallEndedJob implements ShouldQueue
         RetellWebhook::create([
             'event_type' => $this->data['event'] ?? 'call_ended',
             'payload' => $this->data,
+            'provider' => 'retell',
             'processed_at' => now()
         ]);
     }
@@ -334,6 +358,36 @@ class ProcessRetellCallEndedJob implements ShouldQueue
         try {
             $callData = $this->data['call'] ?? $this->data;
             
+            // Enhanced logging for debugging appointment data extraction
+            Log::info('Attempting to extract appointment data', [
+                'call_id' => $call->id,
+                'retell_call_id' => $call->retell_call_id,
+                'has_retell_llm_dynamic_variables' => isset($callData['retell_llm_dynamic_variables']),
+                'retell_llm_keys' => isset($callData['retell_llm_dynamic_variables']) 
+                    ? array_keys($callData['retell_llm_dynamic_variables']) 
+                    : [],
+                'transcript_length' => strlen($callData['transcript'] ?? ''),
+                'has_transcript_object' => isset($callData['transcript_object'])
+            ]);
+            
+            // FIRST: Check for cached appointment data from collect_appointment_data function
+            $cacheKey = "retell_appointment_data:{$call->retell_call_id}";
+            $cachedAppointmentData = Cache::get($cacheKey);
+            
+            if ($cachedAppointmentData) {
+                Log::info('Found cached appointment data from collect_appointment_data', [
+                    'call_id' => $call->retell_call_id,
+                    'data' => $cachedAppointmentData
+                ]);
+                
+                // Use cached data directly
+                $this->createAppointmentFromData($call, $cachedAppointmentData);
+                
+                // Clear cache after use
+                Cache::forget($cacheKey);
+                return;
+            }
+            
             // Check if appointment data exists from collect_appointment_data function
             $appointmentFields = ['datum', 'name', 'telefonnummer', 'dienstleistung', 'uhrzeit', 'email', 'kundenpraeferenzen', 'mitarbeiter_wunsch', 'verfuegbarkeit_pruefen', 'alternative_termine_gewuenscht'];
             $hasAppointmentData = false;
@@ -341,6 +395,10 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             
             // First check in retell_llm_dynamic_variables
             if (isset($callData['retell_llm_dynamic_variables'])) {
+                Log::info('Found retell_llm_dynamic_variables', [
+                    'data' => $callData['retell_llm_dynamic_variables']
+                ]);
+                
                 foreach ($appointmentFields as $field) {
                     if (isset($callData['retell_llm_dynamic_variables'][$field])) {
                         $appointmentData[$field] = $callData['retell_llm_dynamic_variables'][$field];
@@ -371,11 +429,48 @@ class ProcessRetellCallEndedJob implements ShouldQueue
                 }
             }
             
+            // CRITICAL FIX: Check cache for appointment data from custom function
+            $callId = $call->retell_call_id ?? $callData['call_id'] ?? null;
+            if ($callId) {
+                $cacheKey = "retell_appointment_data:{$callId}";
+                $cachedData = Cache::get($cacheKey);
+                
+                if ($cachedData) {
+                    Log::info('Retrieved cached appointment data from custom function', [
+                        'call_id' => $callId,
+                        'cache_key' => $cacheKey,
+                        'cached_data' => $cachedData
+                    ]);
+                    
+                    // Merge cached data with existing data (cached data takes precedence)
+                    $appointmentData = array_merge($appointmentData, $cachedData);
+                    $hasAppointmentData = true;
+                    
+                    // Clear cache after retrieval
+                    Cache::forget($cacheKey);
+                } else {
+                    Log::debug('No cached appointment data found', [
+                        'call_id' => $callId,
+                        'cache_key' => $cacheKey
+                    ]);
+                }
+            }
+            
             if (!$hasAppointmentData || empty($appointmentData['datum']) || empty($appointmentData['uhrzeit'])) {
-                Log::info('No appointment data found or incomplete data in call', [
+                Log::warning('No appointment data found or incomplete data in call', [
                     'call_id' => $call->id,
-                    'found_data' => $appointmentData
+                    'retell_call_id' => $call->retell_call_id,
+                    'found_data' => $appointmentData,
+                    'has_appointment_data' => $hasAppointmentData,
+                    'missing_fields' => array_diff(['datum', 'uhrzeit'], array_keys($appointmentData)),
+                    'webhook_data_structure' => array_keys($callData)
                 ]);
+                
+                // Try to extract appointment intent from transcript
+                if (!empty($callData['transcript'])) {
+                    $this->analyzeTranscriptForAppointment($call, $callData['transcript']);
+                }
+                
                 return;
             }
             
@@ -415,6 +510,106 @@ class ProcessRetellCallEndedJob implements ShouldQueue
                 'call_id' => $call->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+    
+    /**
+     * Create appointment from cached collector data
+     */
+    protected function createAppointmentFromData(Call $call, array $appointmentData): void
+    {
+        try {
+            // Log the appointment creation attempt
+            Log::info('Creating appointment from cached collector data', [
+                'call_id' => $call->id,
+                'appointment_data' => $appointmentData
+            ]);
+            
+            // Prepare data for AppointmentBookingService
+            $bookingData = [
+                'datum' => $appointmentData['datum'],
+                'uhrzeit' => $appointmentData['uhrzeit'],
+                'name' => $appointmentData['name'],
+                'telefonnummer' => $appointmentData['telefonnummer'],
+                'dienstleistung' => $appointmentData['dienstleistung'],
+                'email' => $appointmentData['email'] ?? null,
+                'notizen' => $appointmentData['kundenpraeferenzen'] ?? null,
+                'mitarbeiter_wunsch' => $appointmentData['mitarbeiter_wunsch'] ?? null,
+                'reference_id' => $appointmentData['reference_id'] ?? null,
+                'appointment_id' => $appointmentData['appointment_id'] ?? null,
+            ];
+            
+            // Use AppointmentBookingService to create the appointment
+            $bookingService = new AppointmentBookingService();
+            $result = $bookingService->bookFromPhoneCall($call, $bookingData);
+            
+            if ($result['success']) {
+                Log::info('Appointment successfully created from cached data', [
+                    'call_id' => $call->id,
+                    'appointment_id' => $result['appointment']->id ?? null
+                ]);
+                
+                // Update call with appointment reference
+                $call->update([
+                    'appointment_id' => $result['appointment']->id,
+                    'metadata' => array_merge($call->metadata ?? [], [
+                        'appointment_booked' => true,
+                        'appointment_booking_result' => $result,
+                        'used_cached_collector_data' => true
+                    ])
+                ]);
+            } else {
+                Log::error('Failed to create appointment from cached data', [
+                    'call_id' => $call->id,
+                    'error' => $result['message'] ?? 'Unknown error',
+                    'result' => $result
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Exception creating appointment from cached data', [
+                'call_id' => $call->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    }
+    
+    /**
+     * Analyze transcript for appointment intent when structured data is missing
+     */
+    protected function analyzeTranscriptForAppointment(Call $call, string $transcript): void
+    {
+        try {
+            // Look for appointment-related keywords
+            $appointmentKeywords = ['termin', 'buchen', 'vereinbaren', 'uhrzeit', 'datum', 'morgen', 'montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag'];
+            $foundKeywords = [];
+            
+            foreach ($appointmentKeywords as $keyword) {
+                if (stripos($transcript, $keyword) !== false) {
+                    $foundKeywords[] = $keyword;
+                }
+            }
+            
+            if (!empty($foundKeywords)) {
+                Log::warning('Appointment intent detected in transcript but no structured data', [
+                    'call_id' => $call->id,
+                    'retell_call_id' => $call->retell_call_id,
+                    'found_keywords' => $foundKeywords,
+                    'transcript_preview' => substr($transcript, 0, 500)
+                ]);
+                
+                // Update call metadata to indicate appointment intent
+                $metadata = $call->metadata ?? [];
+                $metadata['appointment_intent_detected'] = true;
+                $metadata['appointment_keywords'] = $foundKeywords;
+                $metadata['requires_manual_review'] = true;
+                $call->update(['metadata' => $metadata]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error analyzing transcript for appointment', [
+                'error' => $e->getMessage()
             ]);
         }
     }

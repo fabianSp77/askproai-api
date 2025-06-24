@@ -32,8 +32,16 @@ class QueryOptimizer
     public function applyIndexHints(Builder $query, string $table, array $indexes): Builder
     {
         if (DB::getDriverName() === 'mysql') {
+            // Sanitize table name to prevent SQL injection
+            $table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+            
+            // Sanitize index names
+            $indexes = array_map(function($index) {
+                return preg_replace('/[^a-zA-Z0-9_]/', '', $index);
+            }, $indexes);
+            
             $indexList = implode(', ', $indexes);
-            $query->from(DB::raw("{$table} USE INDEX ({$indexList})"));
+            $query->from(DB::raw("`{$table}` USE INDEX ({$indexList})"));
         }
         
         return $query;

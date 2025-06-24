@@ -65,7 +65,8 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('company.name')
                     ->label('Unternehmen')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->getStateUsing(fn ($record) => $record?->company?->name ?? '-'),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
                     ->sortable()

@@ -1,0 +1,55 @@
+Potential Security Issues
+========================
+
+Files with 'debug' in name:
+./debug-calcom-booking.php
+./debug-mcp-appointment.php
+./debug-webhook-appointment-flow.php
+./test-event-matching-debug.php
+./analyse/terminal_dumps/routes/debug.php
+./analyse/terminal_dumps/routes/api_retell_debug.php
+./routes/debug.php
+./routes/api_retell_debug.php
+./debug-mcp-cache.php
+./test-calcom-debug.php
+./debug-appointment-creation.php
+./debug-mcp-detailed.php
+./public/debug-dashboard.php
+./public/debug-admin.php
+./tests/manual/test_calcom_v2_debug.php
+./venv/lib/python3.11/site-packages/material/templates/.icons/material/debug-step-over.svg
+./venv/lib/python3.11/site-packages/material/templates/.icons/material/debug-step-out.svg
+./venv/lib/python3.11/site-packages/material/templates/.icons/material/debug-step-into.svg
+./venv/lib/python3.11/site-packages/pip/_internal/commands/debug.py
+./venv/lib/python3.11/site-packages/pip/_internal/commands/__pycache__/debug.cpython-311.pyc
+
+Routes with 'test' or 'debug':
+routes/debug.php:Route::post('/_debug/headers', function (Request $request) {
+routes/api.php:Route::prefix('test')->group(function () {
+routes/api.php:    Route::match(['GET', 'POST'], '/webhook', [App\Http\Controllers\Api\TestWebhookController::class, 'test'])
+routes/api.php:        ->name('api.test.webhook');
+routes/api.php:        ->name('api.test.webhook.simulate-retell');
+routes/api.php:    Route::get('/collect-appointment/test', [App\Http\Controllers\Api\RetellAppointmentCollectorController::class, 'test'])
+routes/api.php:        ->name('api.retell.collect-appointment.test');
+routes/api.php:Route::post('/retell/webhook-debug', [App\Http\Controllers\Api\RetellWebhookDebugController::class, 'handle'])
+routes/api.php:    ->name('retell.webhook.debug');
+routes/api.php:// Also create debug route for standard path
+routes/api.php:    Route::get('/webhook/test', [\App\Http\Controllers\Api\MCPWebhookController::class, 'test'])
+routes/api.php:        ->name('mcp.webhook.test');
+routes/api.php:        Route::get('/test/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'calcomTest']);
+routes/api.php:        Route::get('/test/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellTest']);
+routes/api.php:// Test route to debug metrics
+routes/api.php:Route::get('/metrics-test', function() {
+routes/api.php:            'redis_test' => \Illuminate\Support\Facades\Redis::connection()->ping()
+routes/api.php:Route::post('/retell/debug-webhook', function (Request $request) {
+routes/api.php:  ->name('retell.debug.webhook');
+routes/api.php:// ---- TEST: Simple webhook endpoint for testing ----
+
+Hardcoded credentials (potential):
+./simple-login-test.php:$password = 'Qwe421as1!1';
+./reprocess-webhooks-direct.php:$password = 'lkZ57Dju9EDjrMxn';
+./tests/Unit/Services/CustomerPortalServiceTest.php:        $password = 'customPassword123';
+./var/www/api-gateway/test_db.php:    $password = 'Vb39!pLc#7Lqwp$X';
+./fix-login-complete.php:$password = 'Qwe421as1!1';
+./test-direct-insert.php:$password = 'lkZ57Dju9EDjrMxn';
+./fix-user-login.php:$password = 'Qwe421as1!1';

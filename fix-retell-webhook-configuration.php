@@ -16,8 +16,8 @@ $apiKey = decrypt($company->retell_api_key);
 
 $service = new RetellV2Service($apiKey);
 
-// MCP webhook URL
-$mcpWebhookUrl = 'https://api.askproai.de/api/mcp/retell/webhook';
+// Standard webhook URL (MCP webhook has issues)
+$mcpWebhookUrl = 'https://api.askproai.de/api/retell/webhook';
 
 echo "1. Getting all agents...\n";
 $agentsResult = $service->listAgents();

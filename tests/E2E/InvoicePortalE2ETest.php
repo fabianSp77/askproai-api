@@ -80,6 +80,9 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_view_invoice_list_with_filters()
     {
         // Create various invoices
@@ -171,6 +174,9 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_view_detailed_invoice()
     {
         $service1 = Service::factory()->create([
@@ -278,6 +284,9 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_download_invoice_pdf()
     {
         $invoice = Invoice::factory()->create([
@@ -327,6 +336,9 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_pay_invoice_online()
     {
         Mail::fake();
@@ -392,6 +404,9 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_setup_payment_plan_for_large_invoice()
     {
         $invoice = Invoice::factory()->create([
@@ -456,6 +471,9 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_receives_invoice_reminders()
     {
         Mail::fake();
@@ -507,6 +525,9 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_dispute_invoice()
     {
         $invoice = Invoice::factory()->create([
@@ -555,6 +576,9 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function customer_can_view_payment_history()
     {
         // Create paid invoices with payments
@@ -595,6 +619,9 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function invoice_access_is_restricted_to_owner()
     {
         $otherCustomer = Customer::factory()->create(['company_id' => $this->company->id]);

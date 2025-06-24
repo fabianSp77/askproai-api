@@ -24,13 +24,13 @@ class WebhookAnalysis extends Page
     
     public function getWebhookData(): array
     {
-        // Get latest webhook
-        $latestWebhook = RetellWebhook::latest()->first();
+        // Get latest Retell webhook
+        $latestWebhook = RetellWebhook::retell()->latest()->first();
         
         if (!$latestWebhook) {
             return [
                 'hasData' => false,
-                'message' => 'Keine Webhooks gefunden'
+                'message' => 'Keine Retell Webhooks gefunden'
             ];
         }
         

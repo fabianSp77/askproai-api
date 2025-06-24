@@ -5,6 +5,7 @@ namespace App\Services\Webhook;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class WebhookDeduplicationService
 {
@@ -153,10 +154,17 @@ class WebhookDeduplicationService
     /**
      * Get processed webhook metadata if exists
      */
-    public function getProcessedMetadata(string $service, Request $request): ?array
+    public function getProcessedMetadata($serviceOrWebhookId, $requestOrProvider = null): ?array
     {
-        $idempotencyKey = $this->generateIdempotencyKey($service, $request);
-        $processedKey = self::KEY_PREFIX . $idempotencyKey;
+        // Handle both signatures
+        if ($requestOrProvider instanceof Request) {
+            // Original signature: (string $service, Request $request)
+            $idempotencyKey = $this->generateIdempotencyKey($serviceOrWebhookId, $requestOrProvider);
+            $processedKey = self::KEY_PREFIX . $idempotencyKey;
+        } else {
+            // New signature: (string $webhookId, string $provider)
+            $processedKey = self::KEY_PREFIX . $requestOrProvider . ':' . $serviceOrWebhookId;
+        }
         
         $data = Redis::get($processedKey);
         
@@ -383,5 +391,130 @@ class WebhookDeduplicationService
         
         Log::info("Cleaned up {$cleaned} stale processing flags");
         return $cleaned;
+    }
+    
+    /**
+     * Process webhook with deduplication
+     */
+    public function processWithDeduplication(string $webhookId, string $provider, callable $processor): array
+    {
+        // Check if already processed
+        if ($this->isProcessed($webhookId, $provider)) {
+            return [
+                'success' => true,
+                'duplicate' => true,
+                'message' => 'Webhook already processed'
+            ];
+        }
+        
+        // Try to acquire lock
+        if (!$this->acquireLock($webhookId, $provider)) {
+            return [
+                'success' => false,
+                'duplicate' => true,
+                'message' => 'Webhook is already being processed by another worker'
+            ];
+        }
+        
+        try {
+            // Process the webhook
+            $result = $processor();
+            
+            // Mark as processed
+            $this->markAsProcessedByIds($webhookId, $provider, true);
+            
+            // Return the processor result with success flag
+            return array_merge($result, [
+                'success' => true,
+                'duplicate' => false
+            ]);
+            
+        } catch (\Exception $e) {
+            // Release lock on failure
+            $this->releaseLock($webhookId, $provider);
+            
+            // Log the error
+            Log::error('Webhook processing failed', [
+                'webhook_id' => $webhookId,
+                'provider' => $provider,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'duplicate' => false,
+                'message' => 'Processing failed: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Check if webhook was already processed
+     */
+    public function isProcessed(string $webhookId, string $provider): bool
+    {
+        $processedKey = self::KEY_PREFIX . $provider . ':' . $webhookId;
+        return Redis::exists($processedKey);
+    }
+    
+    /**
+     * Acquire processing lock
+     */
+    public function acquireLock(string $webhookId, string $provider): bool
+    {
+        $lockKey = self::PROCESSING_PREFIX . $provider . ':' . $webhookId;
+        
+        // Use SETNX for atomic lock acquisition
+        $acquired = Redis::setnx($lockKey, now()->timestamp);
+        
+        if ($acquired) {
+            // Set expiration
+            Redis::expire($lockKey, self::PROCESSING_TTL);
+        }
+        
+        return $acquired;
+    }
+    
+    /**
+     * Release processing lock
+     */
+    public function releaseLock(string $webhookId, string $provider): void
+    {
+        $lockKey = self::PROCESSING_PREFIX . $provider . ':' . $webhookId;
+        Redis::del($lockKey);
+    }
+    
+    /**
+     * Mark webhook as processed by IDs
+     */
+    public function markAsProcessedByIds(string $webhookId, string $provider, bool $success = true): void
+    {
+        $processedKey = self::KEY_PREFIX . $provider . ':' . $webhookId;
+        $processingKey = self::PROCESSING_PREFIX . $provider . ':' . $webhookId;
+        
+        // Extend TTL for successful processing
+        $ttl = $success ? 600 : 300; // 10 minutes for success, 5 for failure
+        
+        $metadata = json_encode([
+            'processed_at' => now()->toIso8601String(),
+            'success' => $success,
+            'server' => gethostname(),
+        ]);
+        
+        // Use pipeline for atomic operations
+        Redis::pipeline(function ($pipe) use ($processedKey, $processingKey, $ttl, $metadata) {
+            $pipe->setex($processedKey, $ttl, $metadata);
+            $pipe->del($processingKey);
+        });
+    }
+    
+    
+    /**
+     * Clean up expired locks (alias for cleanupStaleProcessingFlags)
+     */
+    public function cleanupExpiredLocks(): int
+    {
+        return $this->cleanupStaleProcessingFlags();
     }
 }

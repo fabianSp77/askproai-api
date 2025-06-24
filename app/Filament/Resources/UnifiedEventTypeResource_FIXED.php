@@ -178,7 +178,8 @@ class UnifiedEventTypeResource extends Resource
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(fn ($record) => $record?->branch?->name ?? '-'),
 
                 Tables\Columns\TextColumn::make('duration_minutes')
                     ->label('Dauer')

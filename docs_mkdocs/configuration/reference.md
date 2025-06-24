@@ -1,0 +1,2924 @@
+# Configuration Reference
+
+Generated on: 2025-06-23 16:14:17
+
+## Configuration Files
+
+### activitylog
+
+- **enabled**: true
+- **delete_records_older_than_days**: 365
+- **default_log_name**: `default`
+- **default_auth_driver**: null
+- **subject_returns_soft_deleted_models**: false
+- **activity_model**: `Spatie\Activitylog\Models\Activity`
+- **table_name**: `activity_log`
+- **database_connection**: null
+
+---
+
+### alerts
+
+- **channels**:
+  - **email**:
+    - **enabled**: true
+    - **recipients**:
+    - **from_address**: `info@askproai.de`
+    - **from_name**: `AskProAI Alerts`
+  - **database**:
+    - **enabled**: true
+  - **slack**:
+    - **enabled**: false
+    - **webhook_url**: null
+    - **channel**: `#alerts`
+    - **username**: `AskProAI Bot`
+  - **webhook**:
+    - **enabled**: false
+    - **url**: null
+    - **secret**: null
+- **rules**:
+  - **api_success_rate_threshold**: 90
+  - **api_response_time_threshold**: 2000
+  - **error_rate_threshold**: 10
+  - **critical_error_threshold**: 5
+  - **disk_space_warning_threshold**: 80
+  - **disk_space_critical_threshold**: 90
+  - **database_size_threshold**: 5000
+  - **circuit_breaker_failure_threshold**: 5
+  - **circuit_breaker_timeout**: 60
+  - **throttle_minutes**: 15
+- **severity_mapping**:
+  - **critical**:
+    - **0**: `circuit_breaker_open`
+    - **1**: `api_down`
+    - **2**: `database_connection_failed`
+    - **3**: `disk_space_critical`
+    - **4**: `health_check_failed`
+  - **high**:
+    - **0**: `api_degraded`
+    - **1**: `high_error_rate`
+    - **2**: `slow_response`
+    - **3**: `disk_space_low`
+    - **4**: `database_size_large`
+  - **medium**:
+    - **0**: `webhook_failed`
+    - **1**: `cache_miss_high`
+    - **2**: `queue_backed_up`
+  - **low**:
+    - **0**: `test_alert`
+    - **1**: `maintenance_reminder`
+- **escalation**:
+  - **enabled**: false
+  - **intervals**:
+    - **0**: 30
+    - **1**: 60
+    - **2**: 120
+  - **max_escalations**: 3
+
+---
+
+### app
+
+- **name**: `AskProAI`
+- **env**: `production`
+- **debug**: true
+- **url**: `https://api.askproai.de`
+- **frontend_url**: `http://localhost:3000`
+- **asset_url**: `https://api.askproai.de`
+- **timezone**: `Europe/Berlin`
+- **locale**: `de`
+- **fallback_locale**: `en`
+- **faker_locale**: `de_DE`
+- **cipher**: `AES-256-CBC`
+- **key**: `base64:ZiXNrNCdJ2q95Km5gJ8ozSEX3gRHGud+w4gswlGhroQ=`
+- **previous_keys**:
+- **maintenance**:
+  - **driver**: `file`
+  - **store**: `database`
+- **providers**:
+  - **0**: `Illuminate\Auth\AuthServiceProvider`
+  - **1**: `Illuminate\Broadcasting\BroadcastServiceProvider`
+  - **2**: `Illuminate\Bus\BusServiceProvider`
+  - **3**: `Illuminate\Cache\CacheServiceProvider`
+  - **4**: `Illuminate\Foundation\Providers\ConsoleSupportServiceProvider`
+  - **5**: `Illuminate\Cookie\CookieServiceProvider`
+  - **6**: `Illuminate\Database\DatabaseServiceProvider`
+  - **7**: `Illuminate\Encryption\EncryptionServiceProvider`
+  - **8**: `Illuminate\Filesystem\FilesystemServiceProvider`
+  - **9**: `Illuminate\Foundation\Providers\FoundationServiceProvider`
+  - **10**: `Illuminate\Hashing\HashServiceProvider`
+  - **11**: `Illuminate\Mail\MailServiceProvider`
+  - **12**: `Illuminate\Notifications\NotificationServiceProvider`
+  - **13**: `Illuminate\Pagination\PaginationServiceProvider`
+  - **14**: `Illuminate\Pipeline\PipelineServiceProvider`
+  - **15**: `Illuminate\Queue\QueueServiceProvider`
+  - **16**: `Illuminate\Redis\RedisServiceProvider`
+  - **17**: `Illuminate\Auth\Passwords\PasswordResetServiceProvider`
+  - **18**: `Illuminate\Session\SessionServiceProvider`
+  - **19**: `Illuminate\Translation\TranslationServiceProvider`
+  - **20**: `Illuminate\Validation\ValidationServiceProvider`
+  - **21**: `Illuminate\View\ViewServiceProvider`
+  - **22**: `Laravel\Horizon\HorizonServiceProvider`
+  - **23**: `Filament\FilamentServiceProvider`
+  - **24**: `BezhanSalleh\FilamentShield\FilamentShieldServiceProvider`
+  - **25**: `App\Providers\AppServiceProvider`
+  - **26**: `App\Providers\AuthServiceProvider`
+  - **27**: `App\Providers\EventServiceProvider`
+  - **28**: `App\Providers\DatabaseServiceProvider`
+  - **29**: `App\Providers\ValidationServiceProvider`
+  - **30**: `App\Providers\Filament\AdminPanelProvider`
+  - **31**: `App\Providers\AppServiceProvider`
+  - **32**: `App\Providers\AuthServiceProvider`
+  - **33**: `App\Providers\CalcomMigrationServiceProvider`
+  - **34**: `App\Providers\CircuitBreakerServiceProvider`
+  - **35**: `App\Providers\DatabaseServiceProvider`
+  - **36**: `App\Providers\EventServiceProvider`
+  - **37**: `App\Providers\FilamentBadgeServiceProvider`
+  - **38**: `App\Providers\FilamentColumnToggleServiceProvider`
+  - **39**: `App\Providers\Filament\AdminPanelProvider`
+  - **40**: `App\Providers\GdprServiceProvider`
+  - **41**: `App\Providers\HorizonServiceProvider`
+  - **42**: `App\Providers\KnowledgeServiceProvider`
+  - **43**: `App\Providers\LockingServiceProvider`
+  - **44**: `App\Providers\LoggingServiceProvider`
+  - **45**: `App\Providers\MCPServiceProvider`
+  - **46**: `App\Providers\MonitoringServiceProvider`
+  - **47**: `App\Providers\PerformanceServiceProvider`
+  - **48**: `App\Providers\RouteServiceProvider`
+  - **49**: `App\Providers\ServiceTrackingProvider`
+  - **50**: `App\Providers\ValidationServiceProvider`
+- **aliases**:
+  - **App**: `Illuminate\Support\Facades\App`
+  - **Arr**: `Illuminate\Support\Arr`
+  - **Auth**: `Illuminate\Support\Facades\Auth`
+  - **Cache**: `Illuminate\Support\Facades\Cache`
+  - **Config**: `Illuminate\Support\Facades\Config`
+  - **DB**: `Illuminate\Support\Facades\DB`
+  - **Event**: `Illuminate\Support\Facades\Event`
+  - **File**: `Illuminate\Support\Facades\File`
+  - **Gate**: `Illuminate\Support\Facades\Gate`
+  - **Log**: `Illuminate\Support\Facades\Log`
+  - **Queue**: `Illuminate\Support\Facades\Queue`
+  - **Route**: `Illuminate\Support\Facades\Route`
+  - **Schema**: `Illuminate\Support\Facades\Schema`
+  - **Str**: `Illuminate\Support\Str`
+  - **URL**: `Illuminate\Support\Facades\URL`
+
+---
+
+### app.php
+
+
+---
+
+### auth
+
+- **defaults**:
+  - **guard**: `web`
+  - **passwords**: `users`
+- **guards**:
+  - **web**:
+    - **driver**: `session`
+    - **provider**: `users`
+  - **api**:
+    - **driver**: `passport`
+    - **provider**: `users`
+    - **hash**: false
+  - **customer**:
+    - **driver**: `session`
+    - **provider**: `customers`
+  - **customer-api**:
+    - **driver**: `sanctum`
+    - **provider**: `customers`
+  - **sanctum**:
+    - **driver**: `sanctum`
+    - **provider**: null
+- **providers**:
+  - **users**:
+    - **driver**: `eloquent`
+    - **model**: `App\Models\User`
+  - **customers**:
+    - **driver**: `eloquent`
+    - **model**: `App\Models\CustomerAuth`
+- **passwords**:
+  - **users**:
+    - **provider**: `users`
+    - **table**: `password_reset_tokens`
+    - **expire**: 60
+    - **throttle**: 60
+  - **customers**:
+    - **provider**: `customers`
+    - **table**: `customer_password_resets`
+    - **expire**: 60
+    - **throttle**: 60
+- **password_timeout**: 10800
+
+---
+
+### backup
+
+- **backup**:
+  - **name**: `AskProAI`
+  - **source**:
+    - **files**:
+      - **include**:
+        - **0**: `/var/www/api-gateway`
+      - **exclude**:
+        - **0**: `/var/www/api-gateway/vendor`
+        - **1**: `/var/www/api-gateway/node_modules`
+      - **follow_links**: false
+      - **ignore_unreadable_directories**: false
+      - **relative_path**: null
+    - **databases**:
+      - **0**: `mysql`
+  - **database_dump_compressor**: null
+  - **database_dump_file_timestamp_format**: null
+  - **database_dump_filename_base**: `database`
+  - **database_dump_file_extension**: ``
+  - **destination**:
+    - **compression_method**: -1
+    - **compression_level**: 9
+    - **filename_prefix**: ``
+    - **disks**:
+      - **0**: `local`
+  - **temporary_directory**: `/var/www/api-gateway/storage/app/backup-temp`
+  - **password**: null
+  - **encryption**: `default`
+  - **tries**: 1
+  - **retry_delay**: 0
+- **notifications**:
+  - **notifications**:
+    - **Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification**:
+      - **0**: `mail`
+    - **Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification**:
+      - **0**: `mail`
+    - **Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification**:
+      - **0**: `mail`
+    - **Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification**:
+      - **0**: `mail`
+    - **Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification**:
+      - **0**: `mail`
+    - **Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification**:
+      - **0**: `mail`
+  - **notifiable**: `Spatie\Backup\Notifications\Notifiable`
+  - **mail**:
+    - **to**: `your@example.com`
+    - **from**:
+      - **address**: `info@askproai.de`
+      - **name**: `AskProAI`
+  - **slack**:
+    - **webhook_url**: ``
+    - **channel**: null
+    - **username**: null
+    - **icon**: null
+  - **discord**:
+    - **webhook_url**: ``
+    - **username**: ``
+    - **avatar_url**: ``
+- **monitor_backups**:
+  - **0**:
+    - **name**: `AskProAI`
+    - **disks**:
+      - **0**: `local`
+    - **health_checks**:
+      - **Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays**: 1
+      - **Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumStorageInMegabytes**: 5000
+- **cleanup**:
+  - **strategy**: `Spatie\Backup\Tasks\Cleanup\Strategies\DefaultStrategy`
+  - **default_strategy**:
+    - **keep_all_backups_for_days**: 7
+    - **keep_daily_backups_for_days**: 16
+    - **keep_weekly_backups_for_weeks**: 8
+    - **keep_monthly_backups_for_months**: 4
+    - **keep_yearly_backups_for_years**: 2
+    - **delete_oldest_backups_when_using_more_megabytes_than**: 5000
+  - **tries**: 1
+  - **retry_delay**: 0
+
+---
+
+### billing
+
+- **price_per_second_cents**: 3
+
+---
+
+### booking
+
+- **default_branch_strategy**: `nearest`
+- **time_constraints**:
+  - **min_advance_booking**: 60
+  - **max_advance_booking**: 90
+  - **default_duration**: 30
+  - **buffer_time**: 15
+  - **slot_interval**: 15
+- **availability**:
+  - **cache_ttl**: 300
+  - **max_alternatives**: 5
+  - **alternative_search_days**: 7
+- **multi_location**:
+  - **enable_cross_branch**: true
+  - **max_distance_km**: 50
+  - **enable_mobile_staff**: true
+- **customer_preferences**:
+  - **remember_branch**: true
+  - **remember_staff**: true
+  - **preference_weight**: 0.7
+- **notifications**:
+  - **send_customer_confirmation**: true
+  - **send_staff_notification**: true
+  - **send_manager_notification**: false
+- **debug**:
+  - **enable_detailed_logging**: false
+  - **log_availability**: false
+  - **log_branch_selection**: false
+
+---
+
+### broadcasting
+
+- **default**: `null`
+- **connections**:
+  - **reverb**:
+    - **driver**: `reverb`
+    - **key**: null
+    - **secret**: null
+    - **app_id**: null
+    - **options**:
+      - **host**: null
+      - **port**: 443
+      - **scheme**: `https`
+      - **useTLS**: true
+    - **client_options**:
+  - **pusher**:
+    - **driver**: `pusher`
+    - **key**: null
+    - **secret**: null
+    - **app_id**: null
+    - **options**:
+      - **host**: `api-mt1.pusher.com`
+      - **port**: 443
+      - **scheme**: `https`
+      - **encrypted**: true
+      - **useTLS**: true
+      - **cluster**: `mt1`
+    - **client_options**:
+  - **ably**:
+    - **driver**: `ably`
+    - **key**: null
+  - **log**:
+    - **driver**: `log`
+  - **null**:
+    - **driver**: `null`
+  - **redis**:
+    - **driver**: `redis`
+    - **connection**: `default`
+
+---
+
+### cache-strategy
+
+- **ttl**:
+  - **event_types**: 300
+  - **customer_lookup**: 600
+  - **availability**: 120
+  - **company_settings**: 1800
+  - **staff_schedules**: 300
+  - **service_lists**: 3600
+  - **api_response_default**: 300
+- **tags**:
+  - **company_prefix**: `company`
+  - **staff_prefix**: `staff`
+  - **customer_prefix**: `customer`
+  - **appointments_prefix**: `appointments`
+  - **services_prefix**: `services`
+- **warming**:
+  - **enabled**: true
+  - **scheduled_types**:
+    - **0**: `event_types`
+    - **1**: `company_settings`
+    - **2**: `staff_schedules`
+    - **3**: `services`
+  - **schedules**:
+    - **all**: 30
+    - **event_types**: 15
+    - **critical**: 5
+  - **batch_size**: 50
+  - **queue**: `default`
+- **api_response**:
+  - **enabled**: true
+  - **routes**:
+    - **api/services**: 3600
+    - **api/services/***: 3600
+    - **api/event-types**: 300
+    - **api/event-types/***: 300
+    - **api/availability**: 120
+    - **api/availability/***: 120
+    - **api/staff/*/schedule**: 300
+    - **api/staff/*/availability**: 120
+    - **api/company/settings**: 1800
+    - **api/company/*/settings**: 1800
+    - **api/branches**: 900
+    - **api/branches/***: 900
+  - **exclude**:
+    - **0**: `api/auth/*`
+    - **1**: `api/webhooks/*`
+    - **2**: `api/admin/*`
+    - **3**: `api/billing/*`
+    - **4**: `api/user/profile`
+  - **vary_by_headers**:
+    - **0**: `X-Company-ID`
+    - **1**: `X-Tenant-ID`
+    - **2**: `Accept-Language`
+- **invalidation**:
+  - **cascade**:
+    - **company**:
+      - **0**: `services`
+      - **1**: `staff_schedules`
+      - **2**: `event_types`
+    - **staff**:
+      - **0**: `availability`
+      - **1**: `staff_schedules`
+    - **appointments**:
+      - **0**: `availability`
+  - **events**:
+    - **App\Events\CompanyUpdated**:
+      - **0**: `company`
+    - **App\Events\StaffUpdated**:
+      - **0**: `staff`
+    - **App\Events\ServiceUpdated**:
+      - **0**: `services`
+    - **App\Events\AppointmentCreated**:
+      - **0**: `availability`
+      - **1**: `appointments`
+    - **App\Events\AppointmentUpdated**:
+      - **0**: `availability`
+      - **1**: `appointments`
+    - **App\Events\AppointmentCancelled**:
+      - **0**: `availability`
+      - **1**: `appointments`
+- **drivers**:
+  - **default**: `database`
+  - **by_type**:
+    - **api_response**: `redis`
+    - **data**: `redis`
+    - **warming**: `redis`
+  - **redis**:
+    - **connection**: `cache`
+    - **lock_connection**: `default`
+- **monitoring**:
+  - **log_stats**: false
+  - **alerts**:
+    - **min_hit_rate**: 70
+    - **max_size_mb**: 1024
+  - **metrics**:
+    - **enabled**: true
+    - **sample_rate**: 0.1
+
+---
+
+### cache
+
+- **default**: `redis`
+- **stores**:
+  - **array**:
+    - **driver**: `array`
+    - **serialize**: false
+  - **database**:
+    - **driver**: `database`
+    - **connection**: null
+    - **table**: `cache`
+    - **lock_connection**: null
+    - **lock_table**: null
+  - **file**:
+    - **driver**: `file`
+    - **path**: `/var/www/api-gateway/storage/framework/cache/data`
+    - **lock_path**: `/var/www/api-gateway/storage/framework/cache/data`
+  - **memcached**:
+    - **driver**: `memcached`
+    - **persistent_id**: null
+    - **sasl**:
+      - **0**: null
+      - **1**: null
+    - **options**:
+    - **servers**:
+      - **0**:
+        - **host**: `127.0.0.1`
+        - **port**: 11211
+        - **weight**: 100
+  - **redis**:
+    - **driver**: `redis`
+    - **connection**: `cache`
+    - **lock_connection**: `default`
+  - **dynamodb**:
+    - **driver**: `dynamodb`
+    - **key**: ``
+    - **secret**: ``
+    - **region**: `us-east-1`
+    - **table**: `cache`
+    - **endpoint**: null
+  - **octane**:
+    - **driver**: `octane`
+- **prefix**: `askproai_cache_`
+
+---
+
+### calcom-migration
+
+- **log_status**: true
+- **log_v1_usage**: true
+- **force_v2**: false
+- **v2_rollout_percentage**: 100
+- **endpoints**:
+  - **availability**:
+    - **use_v2**: true
+  - **bookings**:
+    - **use_v2**: true
+  - **event_types**:
+    - **use_v2**: true
+- **monitoring**:
+  - **v1_usage_alert_threshold**: 100
+  - **alert_email**: `tech@askproai.de`
+- **compatibility**:
+  - **convert_responses**: true
+  - **add_deprecation_headers**: true
+
+---
+
+### calcom-v2
+
+- **api_key**: `cal_live_bd7aedbdf12085c5312c79ba73585920`
+- **api_url**: `https://api.cal.com/v2`
+- **organization_id**: null
+- **team_slug**: `askproai`
+- **default_event_type_id**: null
+- **webhook**:
+  - **secret**: `6846aed4d55f6f3df70c40781e02d964aae34147f72763e1ccedd726e66dfff7`
+  - **events**:
+    - **0**: `BOOKING_CREATED`
+    - **1**: `BOOKING_CONFIRMED`
+    - **2**: `BOOKING_CANCELLED`
+    - **3**: `BOOKING_RESCHEDULED`
+    - **4**: `BOOKING_REQUESTED`
+    - **5**: `BOOKING_REJECTED`
+    - **6**: `BOOKING_COMPLETED`
+    - **7**: `BOOKING_NO_SHOW`
+  - **endpoint**: `/api/webhooks/calcom`
+- **rate_limit**:
+  - **enabled**: true
+  - **max_requests_per_minute**: 60
+  - **retry_after_seconds**: 60
+- **circuit_breaker**:
+  - **enabled**: true
+  - **failure_threshold**: 5
+  - **timeout_seconds**: 60
+  - **success_threshold**: 2
+- **cache**:
+  - **enabled**: true
+  - **prefix**: `calcom_v2`
+  - **ttl**:
+    - **event_types**: 3600
+    - **availability**: 300
+    - **bookings**: 600
+    - **schedules**: 1800
+- **retry**:
+  - **max_attempts**: 3
+  - **initial_delay_ms**: 100
+  - **max_delay_ms**: 2000
+  - **multiplier**: 2
+- **timeout**:
+  - **connect**: 5
+  - **request**: 30
+- **logging**:
+  - **enabled**: true
+  - **channel**: `calcom`
+  - **level**: `info`
+  - **log_requests**: false
+  - **log_responses**: false
+- **environments**:
+  - **production**:
+    - **verify_ssl**: true
+    - **debug**: false
+    - **mock_enabled**: false
+  - **staging**:
+    - **verify_ssl**: true
+    - **debug**: true
+    - **mock_enabled**: false
+  - **local**:
+    - **verify_ssl**: false
+    - **debug**: true
+    - **mock_enabled**: false
+- **features**:
+  - **auto_confirm_bookings**: true
+  - **send_reminders**: true
+  - **allow_rescheduling**: true
+  - **allow_cancellation**: true
+  - **sync_attendees**: true
+  - **sync_custom_fields**: true
+- **booking_defaults**:
+  - **timezone**: `Europe/Berlin`
+  - **language**: `de`
+  - **buffer_time_minutes**: 0
+  - **metadata_prefix**: `askproai_`
+- **health_check**:
+  - **enabled**: true
+  - **interval_seconds**: 300
+  - **timeout_seconds**: 5
+
+---
+
+### calcom
+
+- **base_url**: `https://api.cal.com`
+- **api_key**: `cal_live_bd7aedbdf12085c5312c79ba73585920`
+- **team_slug**: `askproai`
+- **user_slug**: null
+
+---
+
+### circuit_breaker
+
+- **failure_threshold**: 5
+- **success_threshold**: 2
+- **timeout**: 60
+- **half_open_requests**: 3
+- **services**:
+  - **calcom**:
+    - **failure_threshold**: `5`
+    - **timeout**: `60`
+  - **retell**:
+    - **failure_threshold**: 5
+    - **timeout**: 60
+  - **stripe**:
+    - **failure_threshold**: 10
+    - **timeout**: 120
+
+---
+
+### database
+
+- **default**: `mysql`
+- **connections**:
+  - **sqlite**:
+    - **driver**: `sqlite`
+    - **url**: null
+    - **database**: `askproai_db`
+    - **prefix**: ``
+    - **foreign_key_constraints**: true
+  - **mysql**:
+    - **driver**: `mysql`
+    - **url**: null
+    - **host**: `127.0.0.1`
+    - **port**: `3306`
+    - **database**: `askproai_db`
+    - **username**: `askproai_user`
+    - **password**: `lkZ57Dju9EDjrMxn`
+    - **unix_socket**: ``
+    - **charset**: `utf8mb4`
+    - **collation**: `utf8mb4_unicode_ci`
+    - **prefix**: ``
+    - **prefix_indexes**: true
+    - **strict**: true
+    - **engine**: `InnoDB`
+    - **options**:
+      - **12**: true
+      - **1000**: true
+      - **19**: 5
+      - **3**: 2
+      - **2**: 30
+      - **1002**: `SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci', SESSION sql_mode='TRADITIONAL,NO_AUTO_VALUE_ON_ZERO', SESSION wait_timeout=28800`
+    - **log_queries**: false
+    - **log_slow_queries**: true
+    - **slow_query_time**: 2
+    - **pool**:
+      - **min_connections**: `2`
+      - **max_connections**: `10`
+      - **connection_timeout**: 10
+      - **idle_timeout**: 60
+      - **health_check_interval**: 30
+  - **mariadb**:
+    - **driver**: `mariadb`
+    - **url**: null
+    - **host**: `127.0.0.1`
+    - **port**: `3306`
+    - **database**: `askproai_db`
+    - **username**: `askproai_user`
+    - **password**: `lkZ57Dju9EDjrMxn`
+    - **unix_socket**: ``
+    - **charset**: `utf8mb4`
+    - **collation**: `utf8mb4_unicode_ci`
+    - **prefix**: ``
+    - **prefix_indexes**: true
+    - **strict**: true
+    - **engine**: null
+    - **options**:
+  - **pgsql**:
+    - **driver**: `pgsql`
+    - **url**: null
+    - **host**: `127.0.0.1`
+    - **port**: `3306`
+    - **database**: `askproai_db`
+    - **username**: `askproai_user`
+    - **password**: `lkZ57Dju9EDjrMxn`
+    - **charset**: `utf8`
+    - **prefix**: ``
+    - **prefix_indexes**: true
+    - **search_path**: `public`
+    - **sslmode**: `prefer`
+  - **sqlsrv**:
+    - **driver**: `sqlsrv`
+    - **url**: null
+    - **host**: `127.0.0.1`
+    - **port**: `3306`
+    - **database**: `askproai_db`
+    - **username**: `askproai_user`
+    - **password**: `lkZ57Dju9EDjrMxn`
+    - **charset**: `utf8`
+    - **prefix**: ``
+    - **prefix_indexes**: true
+- **migrations**: `migrations`
+- **redis**:
+  - **client**: `phpredis`
+  - **default**:
+    - **url**: null
+    - **host**: `127.0.0.1`
+    - **password**: ``
+    - **port**: `6379`
+    - **database**: `0`
+  - **cache**:
+    - **url**: null
+    - **host**: `127.0.0.1`
+    - **password**: ``
+    - **port**: `6379`
+    - **database**: `1`
+  - **horizon**:
+    - **url**: null
+    - **host**: `127.0.0.1`
+    - **password**: ``
+    - **port**: `6379`
+    - **database**: `0`
+    - **options**:
+      - **prefix**: `askproai`
+- **pool**:
+  - **enabled**: true
+  - **min_connections**: `2`
+  - **max_connections**: `10`
+  - **max_idle_time**: 60
+  - **validation_interval**: 30
+
+---
+
+### deployment
+
+- **checks**:
+  - **database**: true
+  - **migrations**: true
+  - **tests**: true
+  - **dependencies**: true
+  - **disk_space**: true
+  - **services**: true
+- **rollback**:
+  - **auto_rollback**: true
+  - **max_downtime**: 300
+  - **backup_retention**: 7
+  - **snapshot_before_deploy**: true
+- **notifications**:
+  - **enabled**: true
+  - **channels**:
+    - **0**: `log`
+    - **1**: `slack`
+    - **2**: `email`
+  - **slack**: null
+  - **email**: null
+- **zero_downtime**:
+  - **enabled**: true
+  - **strategy**: `blue_green`
+  - **health_check_url**: `/health`
+  - **warm_up_time**: 30
+  - **parallel_instances**: 2
+- **testing**:
+  - **run_unit_tests**: true
+  - **run_integration_tests**: true
+  - **run_e2e_tests**: false
+  - **fail_on_test_failure**: true
+  - **parallel_testing**: true
+- **pre_deployment**:
+  - **backup_database**: true
+  - **backup_code**: true
+  - **backup_config**: true
+  - **backup_storage**: false
+  - **verify_disk_space**: true
+  - **min_free_space_gb**: 2
+- **post_deployment**:
+  - **clear_caches**: true
+  - **restart_queues**: true
+  - **warm_up_cache**: true
+  - **run_health_checks**: true
+  - **monitor_duration**: 60
+- **services_check**:
+  - **mysql**:
+    - **enabled**: true
+    - **timeout**: 5
+  - **redis**:
+    - **enabled**: true
+    - **timeout**: 3
+  - **calcom**:
+    - **enabled**: true
+    - **url**: `https://api.cal.com/v2/api/health`
+    - **timeout**: 10
+  - **retell**:
+    - **enabled**: true
+    - **url**: `https://api.retellai.com/health`
+    - **timeout**: 10
+- **critical_paths**:
+  - **0**: `/admin/login`
+  - **1**: `/admin`
+  - **2**: `/api/appointments`
+  - **3**: `/api/retell/webhook`
+  - **4**: `/api/calcom/webhook`
+  - **5**: `/health`
+- **performance_monitoring**:
+  - **enabled**: true
+  - **response_time_threshold**: 3000
+  - **error_rate_threshold**: 0.05
+  - **check_interval**: 5
+- **git**:
+  - **auto_pull**: true
+  - **branch**: `main`
+  - **remote**: `origin`
+- **composer**:
+  - **install**: true
+  - **optimize**: true
+  - **no_dev**: true
+- **npm**:
+  - **install**: true
+  - **build**: true
+  - **production**: true
+- **logging**:
+  - **channel**: `deployment`
+  - **level**: `info`
+  - **separate_file**: true
+
+---
+
+### filament-shield
+
+- **shield_resource**:
+  - **should_register_navigation**: true
+  - **slug**: `shield/roles`
+  - **navigation_sort**: -1
+  - **navigation_badge**: true
+  - **navigation_group**: true
+  - **sub_navigation_position**: null
+  - **is_globally_searchable**: false
+  - **show_model_path**: true
+  - **is_scoped_to_tenant**: true
+  - **cluster**: null
+- **tenant_model**: null
+- **auth_provider_model**:
+  - **fqcn**: `App\Models\User`
+- **super_admin**:
+  - **enabled**: true
+  - **name**: `super_admin`
+  - **define_via_gate**: false
+  - **intercept_gate**: `before`
+- **panel_user**:
+  - **enabled**: true
+  - **name**: `panel_user`
+- **permission_prefixes**:
+  - **resource**:
+    - **0**: `view`
+    - **1**: `view_any`
+    - **2**: `create`
+    - **3**: `update`
+    - **4**: `restore`
+    - **5**: `restore_any`
+    - **6**: `replicate`
+    - **7**: `reorder`
+    - **8**: `delete`
+    - **9**: `delete_any`
+    - **10**: `force_delete`
+    - **11**: `force_delete_any`
+  - **page**: `page`
+  - **widget**: `widget`
+- **entities**:
+  - **pages**: true
+  - **widgets**: true
+  - **resources**: true
+  - **custom_permissions**: false
+- **generator**:
+  - **option**: `policies_and_permissions`
+  - **policy_directory**: `Policies`
+  - **policy_namespace**: `Policies`
+- **exclude**:
+  - **enabled**: true
+  - **pages**:
+    - **0**: `Dashboard`
+  - **widgets**:
+    - **0**: `AccountWidget`
+    - **1**: `FilamentInfoWidget`
+  - **resources**:
+- **discovery**:
+  - **discover_all_resources**: false
+  - **discover_all_widgets**: false
+  - **discover_all_pages**: false
+- **register_role_policy**:
+  - **enabled**: true
+- **enable**: true
+- **guard**: `web`
+- **super_admin_role_name**: `super_admin`
+- **panel_fqcn**: `Filament\Panel`
+
+---
+
+### filament
+
+- **broadcasting**:
+- **default_filesystem_disk**: `public`
+- **assets_path**: null
+- **cache_path**: `/var/www/api-gateway/bootstrap/cache/filament`
+- **livewire_loading_delay**: `default`
+- **system_route_prefix**: `filament`
+
+---
+
+### filesystems
+
+- **default**: `local`
+- **disks**:
+  - **local**:
+    - **driver**: `local`
+    - **root**: `/var/www/api-gateway/storage/app/private`
+    - **serve**: true
+    - **throw**: false
+    - **report**: false
+  - **public**:
+    - **driver**: `local`
+    - **root**: `/var/www/api-gateway/storage/app/public`
+    - **url**: `https://api.askproai.de/storage`
+    - **visibility**: `public`
+    - **throw**: false
+    - **report**: false
+  - **s3**:
+    - **driver**: `s3`
+    - **key**: ``
+    - **secret**: ``
+    - **region**: `us-east-1`
+    - **bucket**: ``
+    - **url**: null
+    - **endpoint**: null
+    - **use_path_style_endpoint**: false
+    - **throw**: false
+    - **report**: false
+- **links**:
+  - **/var/www/api-gateway/public/storage**: `/var/www/api-gateway/storage/app/public`
+
+---
+
+### gdpr
+
+- **enabled**: true
+- **cookie_policy_version**: `1.0`
+- **cookie_consent_duration_days**: 365
+- **cookie_categories**:
+  - **functional**:
+    - **0**: `askproai_session`
+    - **1**: `XSRF-TOKEN`
+    - **2**: `locale`
+    - **3**: `timezone`
+  - **analytics**:
+    - **0**: `_ga`
+    - **1**: `_gid`
+    - **2**: `_gat`
+    - **3**: `_gat_gtag_*`
+    - **4**: `gtag_*`
+  - **marketing**:
+    - **0**: `_fbp`
+    - **1**: `fr`
+    - **2**: `tr`
+    - **3**: `_gcl_*`
+    - **4**: `ide`
+- **retention_periods**:
+  - **appointments**: 730
+  - **calls**: 365
+  - **invoices**: 3650
+  - **consents**: 1095
+  - **logs**: 90
+- **request_response_days**: 30
+- **export_format**: `json`
+- **export_include_files**: true
+- **anonymization**:
+  - **enabled**: true
+  - **placeholder_email**: `deleted.user.{id}@anonymized.local`
+  - **placeholder_name**: `DELETED USER`
+  - **keep_statistical_data**: true
+- **third_party_services**:
+  - **google_analytics**:
+    - **enabled**: false
+    - **tracking_id**: null
+    - **anonymize_ip**: true
+    - **requires_consent**: `analytics`
+  - **facebook_pixel**:
+    - **enabled**: false
+    - **pixel_id**: null
+    - **requires_consent**: `marketing`
+  - **retell_ai**:
+    - **data_processing_agreement**: true
+    - **data_location**: `EU`
+    - **encryption**: `AES-256`
+  - **cal_com**:
+    - **data_processing_agreement**: true
+    - **data_location**: `EU`
+    - **gdpr_compliant**: true
+- **legal_pages**:
+  - **privacy_policy_url**: `/portal/privacy-policy`
+  - **cookie_policy_url**: `/portal/cookie-policy`
+  - **terms_of_service_url**: `/portal/terms`
+  - **imprint_url**: `/portal/imprint`
+- **data_protection_officer**:
+  - **name**: `Data Protection Officer`
+  - **email**: `dpo@askproai.com`
+  - **phone**: `+49 30 12345678`
+  - **address**: `Beispielstraße 1, 10115 Berlin, Germany`
+- **features**:
+  - **cookie_consent_banner**: true
+  - **privacy_center**: true
+  - **data_export**: true
+  - **data_deletion**: true
+  - **consent_logging**: true
+  - **automated_deletion**: false
+  - **breach_notification**: true
+- **bdsg**:
+  - **employee_data_protection**: true
+  - **works_council_agreement**: false
+  - **telecom_secrecy**: true
+
+---
+
+### hashing
+
+- **driver**: `bcrypt`
+- **bcrypt**:
+  - **rounds**: 12
+  - **verify**: false
+- **argon**:
+  - **memory**: 65536
+  - **threads**: 1
+  - **time**: 4
+  - **verify**: true
+- **rehash_on_login**: true
+
+---
+
+### horizon
+
+- **domain**: null
+- **path**: `horizon`
+- **use**: `default`
+- **prefix**: `askproai`
+- **middleware**:
+  - **0**: `web`
+- **waits**:
+  - **redis:default**: 60
+- **trim**:
+  - **recent**: 60
+  - **pending**: 60
+  - **completed**: 60
+  - **recent_failed**: 10080
+  - **failed**: 10080
+  - **monitored**: 10080
+- **silenced**:
+- **metrics**:
+  - **trim_snapshots**:
+    - **job**: 24
+    - **queue**: 24
+- **fast_termination**: false
+- **memory_limit**: 64
+- **defaults**:
+  - **supervisor-1**:
+    - **connection**: `redis`
+    - **queue**:
+      - **0**: `default`
+    - **balance**: `auto`
+    - **autoScalingStrategy**: `time`
+    - **maxProcesses**: 1
+    - **maxTime**: 0
+    - **maxJobs**: 0
+    - **memory**: 128
+    - **tries**: 1
+    - **timeout**: 60
+    - **nice**: 0
+  - **webhooks**:
+    - **connection**: `redis`
+    - **queue**:
+      - **0**: `webhooks`
+    - **balance**: `auto`
+    - **autoScalingStrategy**: `time`
+    - **maxProcesses**: 5
+    - **maxTime**: 0
+    - **maxJobs**: 0
+    - **memory**: 256
+    - **tries**: 3
+    - **timeout**: 90
+    - **nice**: 0
+  - **webhooks-high**:
+    - **connection**: `redis`
+    - **queue**:
+      - **0**: `webhooks-high`
+    - **balance**: `auto`
+    - **autoScalingStrategy**: `time`
+    - **maxProcesses**: 3
+    - **maxTime**: 0
+    - **maxJobs**: 0
+    - **memory**: 256
+    - **tries**: 3
+    - **timeout**: 120
+    - **nice**: -5
+- **environments**:
+  - **production**:
+    - **supervisor-1**:
+      - **maxProcesses**: 20
+      - **balanceMaxShift**: 5
+      - **balanceCooldown**: 3
+      - **minProcesses**: 5
+    - **webhooks**:
+      - **maxProcesses**: 30
+      - **balanceMaxShift**: 10
+      - **balanceCooldown**: 1
+      - **minProcesses**: 10
+    - **webhooks-high**:
+      - **maxProcesses**: 20
+      - **balanceMaxShift**: 5
+      - **balanceCooldown**: 1
+      - **minProcesses**: 5
+    - **mcp-operations**:
+      - **connection**: `redis`
+      - **queue**:
+        - **0**: `mcp-high`
+        - **1**: `mcp-default`
+      - **balance**: `auto`
+      - **autoScalingStrategy**: `time`
+      - **maxProcesses**: 25
+      - **minProcesses**: 5
+      - **balanceMaxShift**: 10
+      - **balanceCooldown**: 2
+      - **maxTime**: 0
+      - **maxJobs**: 0
+      - **memory**: 512
+      - **tries**: 3
+      - **timeout**: 60
+      - **nice**: -5
+    - **appointments**:
+      - **connection**: `redis`
+      - **queue**:
+        - **0**: `appointments`
+      - **balance**: `auto`
+      - **autoScalingStrategy**: `time`
+      - **maxProcesses**: 15
+      - **minProcesses**: 3
+      - **balanceMaxShift**: 5
+      - **balanceCooldown**: 3
+      - **maxTime**: 0
+      - **maxJobs**: 0
+      - **memory**: 256
+      - **tries**: 3
+      - **timeout**: 120
+      - **nice**: 0
+  - **local**:
+    - **supervisor-1**:
+      - **maxProcesses**: 3
+    - **webhooks**:
+      - **maxProcesses**: 2
+    - **webhooks-high**:
+      - **maxProcesses**: 1
+
+---
+
+### improvement-engine
+
+- **monitoring**:
+  - **enabled**: true
+  - **interval**: 300
+  - **retention**: 30
+  - **thresholds**:
+    - **response_time**: 1000
+    - **error_rate**: 0.01
+    - **cpu_usage**: 80
+    - **memory_usage**: 85
+    - **disk_usage**: 90
+    - **queue_size**: 1000
+    - **database_connections**: 80
+- **analysis**:
+  - **enabled**: true
+  - **schedule**: `hourly`
+  - **lookback_period**: 7
+  - **confidence_threshold**: 0.95
+  - **minimum_data_points**: 100
+  - **modules**:
+    - **performance**: true
+    - **bottlenecks**: true
+    - **patterns**: true
+    - **predictions**: true
+    - **optimizations**: true
+- **optimization**:
+  - **auto_apply**: false
+  - **test_environment**: `staging`
+  - **approval_required**: true
+  - **rollback_enabled**: true
+  - **types**:
+    - **query_optimization**: true
+    - **cache_optimization**: true
+    - **index_optimization**: true
+    - **configuration_tuning**: true
+    - **code_optimization**: false
+- **metrics**:
+  - **collect**:
+    - **performance**: true
+    - **resources**: true
+    - **business**: true
+    - **errors**: true
+    - **user_experience**: true
+  - **sources**:
+    - **application**: true
+    - **database**: true
+    - **cache**: true
+    - **queue**: true
+    - **external_apis**: true
+- **bottleneck_detection**:
+  - **database**:
+    - **slow_query_threshold**: 1000
+    - **lock_wait_threshold**: 50
+    - **connection_usage_threshold**: 0.8
+  - **api**:
+    - **response_time_threshold**: 2000
+    - **timeout_threshold**: 30000
+    - **error_rate_threshold**: 0.05
+  - **queue**:
+    - **processing_time_threshold**: 5000
+    - **backlog_threshold**: 1000
+    - **failure_rate_threshold**: 0.1
+- **pattern_detection**:
+  - **temporal**:
+    - **peak_hours**: true
+    - **day_patterns**: true
+    - **seasonal_trends**: true
+  - **behavioral**:
+    - **user_patterns**: true
+    - **error_patterns**: true
+    - **performance_patterns**: true
+- **predictions**:
+  - **enabled**: true
+  - **algorithms**:
+    - **linear_regression**: true
+    - **time_series**: true
+    - **anomaly_detection**: true
+  - **predict**:
+    - **resource_exhaustion**: true
+    - **performance_degradation**: true
+    - **scaling_needs**: true
+    - **failure_risks**: true
+- **alerts**:
+  - **enabled**: true
+  - **channels**:
+    - **0**: `log`
+    - **1**: `database`
+    - **2**: `slack`
+  - **levels**:
+    - **info**:
+      - **0**: `log`
+    - **warning**:
+      - **0**: `log`
+      - **1**: `database`
+    - **critical**:
+      - **0**: `log`
+      - **1**: `database`
+      - **2**: `slack`
+  - **throttle**:
+    - **enabled**: true
+    - **max_alerts_per_hour**: 10
+- **recommendations**:
+  - **generate**: true
+  - **priority_weights**:
+    - **performance_impact**: 0.4
+    - **implementation_effort**: 0.3
+    - **risk_level**: 0.2
+    - **cost_benefit**: 0.1
+  - **categories**:
+    - **performance**: true
+    - **scalability**: true
+    - **reliability**: true
+    - **security**: true
+    - **cost_optimization**: true
+- **benchmarks**:
+  - **response_times**:
+    - **excellent**: 100
+    - **good**: 500
+    - **acceptable**: 1000
+    - **poor**: 3000
+  - **availability**:
+    - **target**: 99.9
+    - **minimum**: 99
+  - **error_rates**:
+    - **excellent**: 0.001
+    - **good**: 0.01
+    - **acceptable**: 0.05
+- **storage**:
+  - **path**: `improvement-engine`
+  - **compression**: true
+  - **encryption**: false
+- **reporting**:
+  - **daily_summary**: true
+  - **weekly_report**: true
+  - **monthly_analysis**: true
+  - **export_formats**:
+    - **0**: `json`
+    - **1**: `pdf`
+    - **2**: `csv`
+
+---
+
+### knowledge
+
+- **watch_paths**:
+  - **0**: `/var/www/api-gateway/*.md`
+  - **1**: `/var/www/api-gateway/docs`
+  - **2**: `/var/www/api-gateway/resources/docs`
+- **file_extensions**:
+  - **0**: `md`
+  - **1**: `markdown`
+- **auto_index**:
+  - **enabled**: true
+  - **interval**: 60
+- **search**:
+  - **min_query_length**: 2
+  - **results_per_page**: 20
+  - **excerpt_length**: 300
+- **cache**:
+  - **ttl**: 300
+  - **prefix**: `knowledge_`
+- **ui**:
+  - **show_breadcrumbs**: true
+  - **show_toc**: true
+  - **show_related**: true
+  - **show_feedback**: true
+  - **show_reading_time**: true
+  - **show_view_count**: true
+- **markdown**:
+  - **html_input**: `strip`
+  - **allow_unsafe_links**: false
+  - **max_nesting_level**: 10
+  - **extensions**:
+    - **table**: true
+    - **task_list**: true
+    - **github_flavored**: true
+    - **attributes**: true
+- **default_categories**:
+  - **0**:
+    - **name**: `Getting Started`
+    - **slug**: `getting-started`
+    - **icon**: `🚀`
+    - **description**: `Learn the basics and get up and running quickly`
+    - **order**: 1
+  - **1**:
+    - **name**: `User Guide`
+    - **slug**: `user-guide`
+    - **icon**: `📖`
+    - **description**: `Comprehensive guides for using the platform`
+    - **order**: 2
+  - **2**:
+    - **name**: `API Reference`
+    - **slug**: `api-reference`
+    - **icon**: `🔌`
+    - **description**: `Technical documentation for developers`
+    - **order**: 3
+  - **3**:
+    - **name**: `Troubleshooting`
+    - **slug**: `troubleshooting`
+    - **icon**: `🔧`
+    - **description**: `Solutions to common problems`
+    - **order**: 4
+
+---
+
+### livewire
+
+- **class_namespace**: `App\Livewire`
+- **view_path**: `/var/www/api-gateway/resources/views/livewire`
+- **layout**: `components.layouts.app`
+- **lazy_placeholder**: null
+- **temporary_file_upload**:
+  - **disk**: null
+  - **rules**: null
+  - **directory**: null
+  - **middleware**: null
+  - **preview_mimes**:
+    - **0**: `png`
+    - **1**: `gif`
+    - **2**: `bmp`
+    - **3**: `svg`
+    - **4**: `wav`
+    - **5**: `mp4`
+    - **6**: `mov`
+    - **7**: `avi`
+    - **8**: `wmv`
+    - **9**: `mp3`
+    - **10**: `m4a`
+    - **11**: `jpg`
+    - **12**: `jpeg`
+    - **13**: `mpga`
+    - **14**: `webp`
+    - **15**: `wma`
+  - **max_upload_time**: 5
+  - **cleanup**: true
+- **render_on_redirect**: false
+- **legacy_model_binding**: false
+- **inject_assets**: true
+- **navigate**:
+  - **show_progress_bar**: true
+  - **progress_bar_color**: `#2299dd`
+- **inject_morph_markers**: true
+- **pagination_theme**: `tailwind`
+
+---
+
+### logging
+
+- **default**: `daily`
+- **deprecations**:
+  - **channel**: null
+  - **trace**: false
+- **channels**:
+  - **stack**:
+    - **driver**: `stack`
+    - **channels**:
+      - **0**: `daily`
+      - **1**: `sentry`
+    - **ignore_exceptions**: false
+  - **single**:
+    - **driver**: `single`
+    - **path**: `/var/www/api-gateway/storage/logs/laravel.log`
+    - **level**: `debug`
+    - **permission**: 436
+  - **daily**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/laravel.log`
+    - **level**: `debug`
+    - **days**: 7
+    - **permission**: 436
+  - **slack**:
+    - **driver**: `slack`
+    - **url**: null
+    - **username**: `Laravel Log`
+    - **emoji**: `:boom:`
+    - **level**: `debug`
+  - **papertrail**:
+    - **driver**: `monolog`
+    - **level**: `debug`
+    - **handler**: `Monolog\Handler\SyslogUdpHandler`
+    - **handler_with**:
+      - **host**: null
+      - **port**: null
+      - **connectionString**: `tls://:`
+    - **processors**:
+      - **0**: `Monolog\Processor\PsrLogMessageProcessor`
+  - **stderr**:
+    - **driver**: `monolog`
+    - **level**: `debug`
+    - **handler**: `Monolog\Handler\StreamHandler`
+    - **formatter**: null
+    - **with**:
+      - **stream**: `php://stderr`
+    - **processors**:
+      - **0**: `Monolog\Processor\PsrLogMessageProcessor`
+  - **syslog**:
+    - **driver**: `syslog`
+    - **level**: `debug`
+    - **facility**: 8
+    - **replace_placeholders**: true
+  - **errorlog**:
+    - **driver**: `errorlog`
+    - **level**: `debug`
+    - **replace_placeholders**: true
+  - **null**:
+    - **driver**: `monolog`
+    - **handler**: `Monolog\Handler\NullHandler`
+  - **emergency**:
+    - **path**: `/var/www/api-gateway/storage/logs/laravel.log`
+  - **mail**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/mail.log`
+    - **level**: `error`
+    - **days**: 7
+    - **permission**: 436
+  - **calcom**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/calcom.log`
+    - **level**: `error`
+    - **days**: 7
+    - **permission**: 436
+  - **retell**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/retell_webhook.log`
+    - **level**: `error`
+    - **days**: 7
+    - **permission**: 436
+  - **frontend**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/frontend-errors.log`
+    - **level**: `error`
+    - **days**: 14
+    - **permission**: 436
+  - **webhooks**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/webhooks.log`
+    - **level**: `info`
+    - **days**: 30
+    - **permission**: 436
+  - **critical**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/critical.log`
+    - **level**: `error`
+    - **days**: 90
+    - **permission**: 436
+  - **slow_queries**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/slow_queries.log`
+    - **level**: `warning`
+    - **days**: 30
+    - **permission**: 436
+  - **booking_flow**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/booking_flow.log`
+    - **level**: `info`
+    - **days**: 30
+    - **permission**: 436
+  - **api**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/api_calls.log`
+    - **level**: `info`
+    - **days**: 14
+    - **permission**: 436
+  - **sentry**:
+    - **driver**: `sentry`
+    - **level**: `debug`
+    - **bubble**: true
+  - **monitoring**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/monitoring.log`
+    - **level**: `debug`
+    - **days**: 14
+  - **security**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/security.log`
+    - **level**: `warning`
+    - **days**: 30
+  - **performance**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/performance.log`
+    - **level**: `info`
+    - **days**: 7
+  - **stripe**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/stripe.log`
+    - **level**: `info`
+    - **days**: 30
+    - **permission**: 436
+  - **portal**:
+    - **driver**: `daily`
+    - **path**: `/var/www/api-gateway/storage/logs/portal.log`
+    - **level**: `info`
+    - **days**: 14
+    - **permission**: 436
+  - **deprecations**:
+    - **driver**: `monolog`
+    - **handler**: `Monolog\Handler\NullHandler`
+
+---
+
+### mail
+
+- **default**: `smtp`
+- **mailers**:
+  - **smtp**:
+    - **transport**: `smtp`
+    - **host**: `smtp.udag.de`
+    - **port**: `465`
+    - **encryption**: `ssl`
+    - **username**: `askproai-de-0001`
+    - **password**: `Qwer421as1!11`
+    - **timeout**: 10
+  - **ses**:
+    - **transport**: `ses`
+  - **postmark**:
+    - **transport**: `postmark`
+  - **resend**:
+    - **transport**: `resend`
+  - **sendmail**:
+    - **transport**: `sendmail`
+    - **path**: `/usr/sbin/sendmail -bs -i`
+  - **log**:
+    - **transport**: `log`
+  - **array**:
+    - **transport**: `array`
+  - **failover**:
+    - **transport**: `failover`
+    - **mailers**:
+      - **0**: `smtp`
+      - **1**: `log`
+  - **roundrobin**:
+    - **transport**: `roundrobin`
+    - **mailers**:
+      - **0**: `ses`
+      - **1**: `postmark`
+- **from**:
+  - **address**: `info@askproai.de`
+  - **name**: `AskProAI`
+- **markdown**:
+  - **theme**: `default`
+  - **paths**:
+    - **0**: `/var/www/api-gateway/resources/views/vendor/mail`
+
+---
+
+### mcp-database
+
+- **cache**:
+  - **ttl**: 300
+  - **prefix**: `mcp:db`
+- **limits**:
+  - **max_rows**: 1000
+  - **max_tables**: 50
+- **read_only**: true
+- **allowed_tables**:
+  - **0**: `appointments`
+  - **1**: `calls`
+  - **2**: `customers`
+  - **3**: `companies`
+  - **4**: `branches`
+  - **5**: `staff`
+  - **6**: `services`
+  - **7**: `calcom_event_types`
+  - **8**: `staff_event_types`
+  - **9**: `phone_numbers`
+  - **10**: `webhook_events`
+  - **11**: `api_call_logs`
+  - **12**: `calcom_bookings`
+  - **13**: `working_hours`
+- **excluded_columns**:
+  - **0**: `password`
+  - **1**: `remember_token`
+  - **2**: `api_token`
+  - **3**: `two_factor_secret`
+  - **4**: `two_factor_recovery_codes`
+- **query_templates**:
+  - **failed_appointments**: `
+            SELECT a.*, c.name as customer_name, b.name as branch_name
+            FROM appointments a
+            LEFT JOIN customers c ON a.customer_id = c.id
+            LEFT JOIN branches b ON a.branch_id = b.id
+            WHERE a.status = 'failed' 
+            AND a.created_at >= DATE_SUB(NOW(), INTERVAL :hours HOUR)
+            ORDER BY a.created_at DESC
+            LIMIT :limit
+        `
+  - **call_summary**: `
+            SELECT 
+                DATE(created_at) as date,
+                COUNT(*) as total_calls,
+                AVG(duration_seconds) as avg_duration,
+                SUM(cost) as total_cost
+            FROM calls
+            WHERE company_id = :company_id
+            AND created_at >= DATE_SUB(NOW(), INTERVAL :days DAY)
+            GROUP BY DATE(created_at)
+            ORDER BY date DESC
+        `
+
+---
+
+### mcp-discovery
+
+- **sources**:
+  - **anthropic**:
+    - **enabled**: true
+    - **url**: `https://api.anthropic.com/mcp/registry`
+    - **check_interval**: 3600
+    - **api_key**: null
+  - **github**:
+    - **enabled**: true
+    - **org**: `anthropics`
+    - **topic**: `mcp`
+    - **check_interval**: 7200
+    - **token**: null
+  - **npm**:
+    - **enabled**: true
+    - **scope**: `@anthropic`
+    - **keyword**: `mcp`
+    - **check_interval**: 7200
+  - **community**:
+    - **enabled**: true
+    - **sources**:
+      - **0**: `https://awesome-mcp.com/api/list`
+      - **1**: `https://mcp-directory.dev/api/packages`
+    - **check_interval**: 14400
+- **evaluation**:
+  - **auto_install**: false
+  - **test_environment**: `staging`
+  - **approval_required**: true
+  - **relevance_threshold**: 0.3
+- **categories**:
+  - **priority**:
+    - **0**: `calendar`
+    - **1**: `scheduling`
+    - **2**: `appointment`
+    - **3**: `booking`
+    - **4**: `telephony`
+    - **5**: `voice`
+    - **6**: `ai`
+    - **7**: `conversation`
+  - **secondary**:
+    - **0**: `crm`
+    - **1**: `customer`
+    - **2**: `business`
+    - **3**: `automation`
+    - **4**: `monitoring`
+    - **5**: `analytics`
+    - **6**: `performance`
+  - **technical**:
+    - **0**: `database`
+    - **1**: `api`
+    - **2**: `integration`
+    - **3**: `laravel`
+    - **4**: `php`
+- **keywords**:
+  - **high_priority**:
+    - **0**: `laravel`
+    - **1**: `filament`
+    - **2**: `calcom`
+    - **3**: `retell`
+    - **4**: `appointment`
+    - **5**: `booking`
+    - **6**: `german`
+    - **7**: `gdpr`
+  - **medium_priority**:
+    - **0**: `php`
+    - **1**: `mysql`
+    - **2**: `webhook`
+    - **3**: `multi-tenant`
+    - **4**: `saas`
+    - **5**: `deployment`
+    - **6**: `monitoring`
+- **storage**:
+  - **catalog_path**: `mcp/catalog.json`
+  - **cache_ttl**: 86400
+  - **backup_enabled**: true
+- **notifications**:
+  - **channels**:
+    - **0**: `log`
+    - **1**: `database`
+  - **min_relevance_for_notification**: 0.7
+  - **slack_webhook**: null
+  - **email_recipients**: null
+
+---
+
+### mcp-external
+
+- **external_servers**:
+  - **sequential_thinking**:
+    - **enabled**: true
+    - **command**: `npx`
+    - **args**:
+      - **0**: `-y`
+      - **1**: `@modelcontextprotocol/server-sequential-thinking`
+    - **timeout**: 30
+    - **description**: `Step-by-step reasoning and problem-solving capabilities`
+  - **postgres**:
+    - **enabled**: true
+    - **command**: `npx`
+    - **args**:
+      - **0**: `-y`
+      - **1**: `@modelcontextprotocol/server-postgres`
+    - **env**:
+      - **POSTGRES_HOST**: `127.0.0.1`
+      - **POSTGRES_PORT**: `3306`
+      - **POSTGRES_USER**: `askproai_user`
+      - **POSTGRES_PASSWORD**: `lkZ57Dju9EDjrMxn`
+      - **POSTGRES_DATABASE**: `askproai_db`
+    - **timeout**: 15
+    - **description**: `Direct database access and management (MySQL/MariaDB)`
+  - **effect_docs**:
+    - **enabled**: false
+    - **command**: `npx`
+    - **args**:
+      - **0**: `-y`
+      - **1**: `@modelcontextprotocol/server-effect-docs`
+    - **timeout**: 20
+    - **description**: `Documentation generation and effect tracking`
+  - **taskmaster_ai**:
+    - **enabled**: false
+    - **command**: `npx`
+    - **args**:
+      - **0**: `-y`
+      - **1**: `@modelcontextprotocol/server-taskmaster-ai`
+    - **timeout**: 30
+    - **description**: `Advanced task management and automation`
+- **management**:
+  - **auto_start**: false
+  - **health_check_interval**: 60
+  - **restart_on_failure**: true
+  - **max_restart_attempts**: 3
+  - **log_channel**: `mcp-external`
+- **performance**:
+  - **max_concurrent_requests**: 10
+  - **request_timeout**: 30
+  - **memory_limit**: `256M`
+
+---
+
+### mcp-monitoring
+
+- **enabled**: true
+- **alerts**:
+  - **0**:
+    - **name**: `high_error_rate`
+    - **service**: null
+    - **condition**:
+      - **type**: `error_rate`
+      - **threshold**: 10
+      - **window**: 300
+    - **severity**: `critical`
+    - **message**: `High error rate detected`
+    - **cooldown**: 600
+    - **notify**:
+      - **0**: `email`
+      - **1**: `slack`
+  - **1**:
+    - **name**: `slow_response`
+    - **service**: null
+    - **condition**:
+      - **type**: `response_time`
+      - **threshold**: 2000
+    - **severity**: `warning`
+    - **message**: `Slow response time detected`
+    - **cooldown**: 300
+    - **notify**:
+      - **0**: `slack`
+  - **2**:
+    - **name**: `consecutive_errors`
+    - **service**: null
+    - **condition**:
+      - **type**: `consecutive_errors`
+      - **count**: 5
+    - **severity**: `critical`
+    - **message**: `Multiple consecutive errors detected`
+    - **cooldown**: 600
+    - **notify**:
+      - **0**: `email`
+      - **1**: `slack`
+  - **3**:
+    - **name**: `service_down`
+    - **service**: `database`
+    - **condition**:
+      - **type**: `service_down`
+      - **minutes**: 2
+    - **severity**: `critical`
+    - **message**: `Database service appears to be down`
+    - **cooldown**: 300
+    - **notify**:
+      - **0**: `email`
+      - **1**: `slack`
+      - **2**: `sms`
+  - **4**:
+    - **name**: `cache_miss_rate`
+    - **service**: `cache`
+    - **condition**:
+      - **type**: `cache_miss_rate`
+      - **threshold**: 50
+      - **window**: 600
+    - **severity**: `warning`
+    - **message**: `High cache miss rate detected`
+    - **cooldown**: 900
+    - **notify**:
+      - **0**: `slack`
+  - **5**:
+    - **name**: `queue_backlog`
+    - **service**: `queue`
+    - **condition**:
+      - **type**: `queue_size`
+      - **threshold**: 1000
+    - **severity**: `warning`
+    - **message**: `Large queue backlog detected`
+    - **cooldown**: 600
+    - **notify**:
+      - **0**: `slack`
+- **thresholds**:
+  - **response_time**:
+    - **excellent**: 100
+    - **good**: 500
+    - **acceptable**: 1000
+    - **poor**: 2000
+  - **error_rate**:
+    - **excellent**: 0.1
+    - **good**: 1
+    - **acceptable**: 5
+    - **poor**: 10
+  - **uptime**:
+    - **excellent**: 99.9
+    - **good**: 99
+    - **acceptable**: 95
+    - **poor**: 90
+- **retention**:
+  - **detailed**: 7
+  - **aggregated**: 30
+  - **alerts**: 90
+- **notifications**:
+  - **email**:
+    - **enabled**: true
+    - **to**: `admin@example.com`
+    - **from**: `monitoring@example.com`
+  - **slack**:
+    - **enabled**: false
+    - **webhook**: null
+    - **channel**: `#alerts`
+  - **sms**:
+    - **enabled**: false
+    - **provider**: `twilio`
+    - **to**: null
+- **circuit_breaker**:
+  - **failure_threshold**: 5
+  - **success_threshold**: 2
+  - **timeout**: 60
+  - **half_open_max_attempts**: 3
+- **dashboard**:
+  - **refresh_interval**: 10
+  - **default_time_range**: `1h`
+  - **max_chart_points**: 100
+  - **enable_auto_refresh**: true
+- **prometheus**:
+  - **enabled**: true
+  - **namespace**: `mcp`
+  - **labels**:
+    - **app**: `AskProAI`
+    - **env**: `production`
+- **services**:
+  - **database**:
+    - **health_check_query**: `SELECT 1`
+    - **slow_query_threshold**: 1000
+    - **connection_pool_monitor**: true
+  - **cache**:
+    - **monitor_hit_rate**: true
+    - **monitor_memory_usage**: true
+    - **low_hit_rate_threshold**: 70
+  - **queue**:
+    - **monitor_job_processing**: true
+    - **monitor_failed_jobs**: true
+    - **max_queue_size**: 10000
+  - **sentry**:
+    - **monitor_error_rate**: true
+    - **monitor_quota_usage**: true
+  - **ui_ux**:
+    - **monitor_page_load**: true
+    - **monitor_js_errors**: true
+    - **slow_page_threshold**: 3000
+- **debug**: false
+
+---
+
+### mcp-sentry
+
+- **enabled**: true
+- **server**:
+  - **name**: `sentry-mcp-server`
+  - **version**: `1.0.0`
+  - **description**: `MCP server for Sentry error tracking integration`
+- **sentry**:
+  - **organization**: `askproai`
+  - **project**: `api-gateway`
+  - **auth_token**: null
+  - **api_url**: `https://sentry.io/api/0/`
+- **capabilities**:
+  - **list_issues**: true
+  - **get_issue**: true
+  - **get_stacktrace**: true
+  - **get_context**: true
+  - **search_issues**: true
+  - **get_performance**: true
+  - **manage_issues**: false
+- **filters**:
+  - **days_back**: 7
+  - **min_level**: `warning`
+  - **exclude_types**:
+    - **0**: `Symfony\Component\HttpKernel\Exception\NotFoundHttpException`
+- **cache**:
+  - **ttl**: 300
+  - **prefix**: `mcp_sentry`
+
+---
+
+### mcp-uiux
+
+- **sources**:
+  - **laravel**: `https://laravel.com/docs/master`
+  - **filament**: `https://filamentphp.com/docs`
+  - **tailwind**: `https://tailwindcss.com/docs`
+  - **material**: `https://material.io/design`
+  - **carbon**: `https://carbondesignsystem.com`
+- **monitoring**:
+  - **enabled**: true
+  - **check_interval**: 86400
+  - **performance_threshold**: 3
+  - **accessibility_score**: 90
+  - **mobile_breakpoint**: 768
+- **analysis**:
+  - **check_accessibility**: true
+  - **check_performance**: true
+  - **check_responsive**: true
+  - **check_consistency**: true
+  - **check_best_practices**: true
+- **performance**:
+  - **targets**:
+    - **page_load**: 2
+    - **first_contentful_paint**: 1
+    - **time_to_interactive**: 3
+    - **largest_contentful_paint**: 2.5
+  - **widget_targets**:
+    - **render_time**: 0.5
+    - **update_time**: 0.3
+    - **query_count**: 5
+- **accessibility**:
+  - **wcag_level**: `AA`
+  - **color_contrast_ratio**: 4.5
+  - **focus_indicator_required**: true
+  - **aria_labels_required**: true
+  - **keyboard_navigation_required**: true
+- **design_system**:
+  - **colors**:
+    - **primary**: `#3B82F6`
+    - **secondary**: `#6B7280`
+    - **success**: `#10B981`
+    - **warning**: `#F59E0B`
+    - **danger**: `#EF4444`
+  - **spacing**:
+    - **unit**: 4
+    - **scale**:
+      - **0**: 1
+      - **1**: 2
+      - **2**: 3
+      - **3**: 4
+      - **4**: 5
+      - **5**: 6
+      - **6**: 8
+      - **7**: 10
+      - **8**: 12
+      - **9**: 16
+      - **10**: 20
+      - **11**: 24
+  - **typography**:
+    - **font_family**: `Inter, system-ui, sans-serif`
+    - **base_size**: 16
+    - **scale_ratio**: 1.25
+- **best_practices**:
+  - **laravel**:
+    - **use_route_model_binding**: true
+    - **use_form_requests**: true
+    - **use_resource_controllers**: true
+    - **use_view_composers**: true
+    - **use_blade_components**: true
+  - **filament**:
+    - **use_actions**: true
+    - **use_relation_managers**: true
+    - **use_custom_fields**: true
+    - **use_table_filters**: true
+    - **use_bulk_actions**: true
+- **suggestions**:
+  - **auto_suggest**: true
+  - **min_confidence**: 0.7
+  - **max_suggestions_per_component**: 5
+- **cache**:
+  - **ttl**: 3600
+  - **prefix**: `uiux`
+- **reports**:
+  - **generate_weekly**: true
+  - **generate_monthly**: true
+  - **storage_path**: `uiux-reports`
+  - **retention_days**: 90
+
+---
+
+### mcp
+
+- **enabled**: true
+- **services**:
+  - **webhook**:
+    - **enabled**: true
+    - **timeout**: 30
+    - **max_retries**: 3
+    - **rate_limit**:
+      - **per_minute**: 1000
+      - **per_hour**: 50000
+  - **calcom**:
+    - **enabled**: true
+    - **timeout**: 15
+    - **max_retries**: 3
+    - **rate_limit**:
+      - **per_minute**: 60
+      - **per_hour**: 1000
+    - **cache_ttl**: 300
+  - **retell**:
+    - **enabled**: true
+    - **timeout**: 20
+    - **max_retries**: 3
+    - **rate_limit**:
+      - **per_minute**: 100
+      - **per_hour**: 5000
+    - **cache_ttl**: 300
+  - **database**:
+    - **enabled**: true
+    - **timeout**: 10
+    - **max_rows**: 1000
+    - **read_only**: true
+    - **cache_ttl**: 60
+  - **queue**:
+    - **enabled**: true
+    - **timeout**: 5
+    - **cache_ttl**: 30
+- **orchestrator**:
+  - **health_check_interval**: 60
+  - **metrics_retention**: 86400
+  - **tenant_quotas**:
+    - **requests_per_minute**: 1000
+    - **concurrent_operations**: 50
+- **connection_pool**:
+  - **enabled**: true
+  - **min_connections**: `2`
+  - **max_connections**: `10`
+  - **max_idle_time**: 300
+  - **health_check_interval**: 60
+  - **acquire_timeout**: 5
+- **circuit_breakers**:
+  - **calcom**:
+    - **failure_threshold**: 5
+    - **success_threshold**: 2
+    - **timeout**: 60
+    - **half_open_requests**: 3
+  - **retell**:
+    - **failure_threshold**: 5
+    - **success_threshold**: 2
+    - **timeout**: 60
+    - **half_open_requests**: 3
+  - **stripe**:
+    - **failure_threshold**: 3
+    - **success_threshold**: 2
+    - **timeout**: 120
+    - **half_open_requests**: 2
+- **performance**:
+  - **target_latency_ms**: 100
+  - **max_latency_ms**: 1000
+  - **concurrent_calls**: 200
+  - **queue_workers**: 50
+- **monitoring**:
+  - **metrics_enabled**: true
+  - **alert_thresholds**:
+    - **error_rate**: 5
+    - **latency_p99**: 1000
+    - **queue_size**: 1000
+- **redis**:
+  - **connection_pool_size**: 50
+  - **persistent_connections**: true
+  - **read_timeout**: 2
+  - **timeout**: 5
+
+---
+
+### monitoring-thresholds
+
+- **performance**:
+  - **response_time**:
+    - **warning**: 200
+    - **critical**: 500
+  - **query_time**:
+    - **warning**: 50
+    - **critical**: 100
+  - **api_call_time**:
+    - **calcom**:
+      - **warning**: 1000
+      - **critical**: 3000
+    - **retell**:
+      - **warning**: 500
+      - **critical**: 2000
+- **availability**:
+  - **error_rate**:
+    - **warning**: 0.1
+    - **critical**: 1
+  - **success_rate**:
+    - **warning**: 99.9
+    - **critical**: 99
+  - **circuit_breaker**:
+    - **open_threshold**: 5
+    - **half_open_threshold**: 3
+- **resources**:
+  - **queue_size**:
+    - **webhooks-critical**:
+      - **warning**: 50
+      - **critical**: 100
+    - **webhooks-high**:
+      - **warning**: 200
+      - **critical**: 500
+    - **webhooks**:
+      - **warning**: 500
+      - **critical**: 1000
+  - **memory_usage**:
+    - **warning**: 256
+    - **critical**: 384
+  - **db_connections**:
+    - **warning**: 40
+    - **critical**: 45
+  - **redis_memory**:
+    - **warning**: 70
+    - **critical**: 85
+- **business**:
+  - **failed_bookings**:
+    - **warning**: 5
+    - **critical**: 10
+  - **webhook_failures**:
+    - **warning**: 10
+    - **critical**: 25
+  - **duplicate_bookings**:
+    - **warning**: 1
+    - **critical**: 3
+  - **no_show_rate**:
+    - **warning**: 5
+    - **critical**: 10
+- **security**:
+  - **failed_auth**:
+    - **warning**: 10
+    - **critical**: 50
+  - **invalid_signatures**:
+    - **warning**: 5
+    - **critical**: 20
+  - **rate_limit_violations**:
+    - **warning**: 50
+    - **critical**: 100
+- **channels**:
+  - **email**:
+    - **enabled**: true
+    - **recipients**: `ops@askproai.de`
+  - **slack**:
+    - **enabled**: true
+    - **webhook**: null
+    - **channel**: `#alerts`
+  - **sms**:
+    - **enabled**: false
+    - **numbers**: ``
+  - **pagerduty**:
+    - **enabled**: false
+    - **integration_key**: null
+- **cooldown**:
+  - **warning**: 15
+  - **critical**: 5
+- **escalation**:
+  - **enabled**: true
+  - **warning_to_critical_minutes**: 30
+  - **max_alerts_per_hour**: 20
+
+---
+
+### monitoring
+
+- **enabled**: true
+- **sentry**:
+  - **enabled**: true
+  - **dsn**: null
+  - **environment**: `production`
+  - **release**: null
+  - **traces_sample_rate**: 0.1
+  - **profiles_sample_rate**: 0.1
+  - **send_default_pii**: false
+  - **before_send**: `App\Services\Monitoring\SentryBeforeSend@handle`
+  - **contexts**:
+    - **stripe**: true
+    - **customer_portal**: true
+    - **tenant**: true
+  - **alert_thresholds**:
+    - **error_rate**: 0.05
+    - **transaction_duration**: 3000
+    - **crash_free_rate**: 0.99
+- **apm**:
+  - **enabled**: true
+  - **transactions**:
+    - **stripe_webhook**:
+      - **threshold**: 1000
+      - **sample_rate**: 1
+    - **customer_portal**:
+      - **threshold**: 500
+      - **sample_rate**: 0.5
+    - **api_endpoints**:
+      - **threshold**: 300
+      - **sample_rate**: 0.3
+  - **database**:
+    - **slow_query_threshold**: 100
+    - **log_queries**: false
+    - **explain_queries**: false
+  - **external_services**:
+    - **stripe**:
+      - **timeout_threshold**: 5000
+      - **error_rate_threshold**: 0.01
+    - **calcom**:
+      - **timeout_threshold**: 3000
+      - **error_rate_threshold**: 0.05
+    - **retell**:
+      - **timeout_threshold**: 3000
+      - **error_rate_threshold**: 0.05
+- **health_checks**:
+  - **enabled**: true
+  - **endpoint**: `/health`
+  - **secret**: null
+  - **checks**:
+    - **critical**:
+      - **database**:
+        - **enabled**: true
+        - **timeout**: 5
+      - **redis**:
+        - **enabled**: true
+        - **timeout**: 3
+      - **stripe_api**:
+        - **enabled**: true
+        - **timeout**: 10
+    - **warning**:
+      - **queue_size**:
+        - **enabled**: true
+        - **threshold**: 1000
+      - **disk_space**:
+        - **enabled**: true
+        - **threshold**: 90
+      - **memory_usage**:
+        - **enabled**: true
+        - **threshold**: 85
+- **alerts**:
+  - **channels**:
+    - **email**:
+      - **enabled**: true
+      - **recipients**:
+        - **0**: ``
+    - **slack**:
+      - **enabled**: false
+      - **webhook_url**: null
+      - **channel**: `#alerts`
+    - **sms**:
+      - **enabled**: false
+      - **recipients**:
+        - **0**: ``
+  - **rules**:
+    - **payment_failure**:
+      - **enabled**: true
+      - **threshold**: 3
+      - **window**: 300
+      - **severity**: `critical`
+      - **channels**:
+        - **0**: `email`
+        - **1**: `slack`
+        - **2**: `sms`
+    - **security_breach_attempt**:
+      - **enabled**: true
+      - **threshold**: 5
+      - **window**: 60
+      - **severity**: `critical`
+      - **channels**:
+        - **0**: `email`
+        - **1**: `slack`
+        - **2**: `sms`
+    - **stripe_webhook_failure**:
+      - **enabled**: true
+      - **threshold**: 5
+      - **window**: 300
+      - **severity**: `high`
+      - **channels**:
+        - **0**: `email`
+        - **1**: `slack`
+    - **high_error_rate**:
+      - **enabled**: true
+      - **threshold**: 0.05
+      - **window**: 300
+      - **severity**: `high`
+      - **channels**:
+        - **0**: `email`
+        - **1**: `slack`
+    - **database_connection_failure**:
+      - **enabled**: true
+      - **threshold**: 3
+      - **window**: 60
+      - **severity**: `critical`
+      - **channels**:
+        - **0**: `email`
+        - **1**: `slack`
+        - **2**: `sms`
+    - **queue_backlog**:
+      - **enabled**: true
+      - **threshold**: 1000
+      - **severity**: `medium`
+      - **channels**:
+        - **0**: `email`
+    - **portal_downtime**:
+      - **enabled**: true
+      - **threshold**: 1
+      - **severity**: `critical`
+      - **channels**:
+        - **0**: `email`
+        - **1**: `slack`
+        - **2**: `sms`
+- **logging**:
+  - **structured**: true
+  - **levels**:
+    - **stripe**: `info`
+    - **customer_portal**: `info`
+    - **webhooks**: `debug`
+    - **api**: `info`
+    - **security**: `warning`
+  - **masking**:
+    - **enabled**: true
+    - **fields**:
+      - **0**: `password`
+      - **1**: `stripe_secret`
+      - **2**: `api_key`
+      - **3**: `token`
+      - **4**: `secret`
+      - **5**: `card_number`
+      - **6**: `cvv`
+      - **7**: `ssn`
+      - **8**: `tax_id`
+  - **retention**:
+    - **days**: 30
+    - **archive**: true
+- **metrics**:
+  - **enabled**: true
+  - **endpoint**: `/metrics`
+  - **secret**: null
+  - **business**:
+    - **subscriptions_created**: true
+    - **subscriptions_cancelled**: true
+    - **revenue_processed**: true
+    - **portal_registrations**: true
+    - **portal_logins**: true
+    - **support_tickets**: true
+  - **technical**:
+    - **request_duration**: true
+    - **database_queries**: true
+    - **cache_hits**: true
+    - **queue_jobs**: true
+    - **external_api_calls**: true
+    - **error_rates**: true
+- **security**:
+  - **enabled**: true
+  - **events**:
+    - **failed_logins**: true
+    - **password_resets**: true
+    - **privilege_escalations**: true
+    - **data_exports**: true
+    - **api_key_usage**: true
+    - **suspicious_activity**: true
+  - **rate_limiting**:
+    - **track_violations**: true
+    - **alert_threshold**: 100
+  - **ip_monitoring**:
+    - **enabled**: true
+    - **track_suspicious_ips**: true
+    - **geo_blocking_alerts**: true
+- **dashboard**:
+  - **enabled**: true
+  - **route**: `/admin/monitoring`
+  - **middleware**:
+    - **0**: `auth`
+    - **1**: `can:view-monitoring`
+  - **widgets**:
+    - **system_health**: true
+    - **error_rates**: true
+    - **performance_metrics**: true
+    - **business_metrics**: true
+    - **security_overview**: true
+    - **alert_history**: true
+- **integrations**:
+  - **stripe**:
+    - **monitor_webhooks**: true
+    - **monitor_api_calls**: true
+    - **track_payment_failures**: true
+    - **track_dispute_rates**: true
+    - **track_subscription_churn**: true
+  - **customer_portal**:
+    - **track_page_views**: true
+    - **track_user_actions**: true
+    - **monitor_load_times**: true
+    - **track_errors**: true
+    - **session_analytics**: true
+
+---
+
+### passport
+
+- **guard**: `web`
+- **private_key**: null
+- **public_key**: null
+- **connection**: null
+- **client_uuids**: false
+- **personal_access_client**:
+  - **id**: null
+  - **secret**: null
+- **storage**:
+  - **database**:
+    - **connection**: `mysql`
+
+---
+
+### performance-monitoring
+
+- **enabled**: true
+- **metrics_token**: `4zSqVMOpB50ROJsur7Zk6r4CK/VU4oAzJS4od29o/S8=`
+- **prometheus**:
+  - **enabled**: true
+  - **namespace**: `askproai`
+- **query_monitoring**:
+  - **enabled**: false
+  - **slow_query_threshold**: 50
+  - **log_duplicate_queries**: true
+- **performance_baseline**:
+  - **save_results**: true
+  - **storage_path**: `/var/www/api-gateway/storage/performance-baselines`
+- **cache_warming**:
+  - **enabled**: true
+  - **schedule**: `0 * * * *`
+- **alerts**:
+  - **slow_response_threshold**: 1000
+  - **high_error_rate_threshold**: 5
+  - **queue_size_threshold**: 1000
+  - **failed_jobs_threshold**: 100
+
+---
+
+### performance
+
+- **cache_warming**:
+  - **enabled**: true
+  - **ttl**:
+    - **phone_mappings**: 3600
+    - **event_types**: 1800
+    - **company_settings**: 7200
+    - **branch_services**: 3600
+    - **staff_availability**: 900
+- **query_optimization**:
+  - **enabled**: true
+  - **slow_query_threshold**: 100
+  - **monitor_queries**: false
+  - **auto_create_indexes**: false
+  - **max_monitored_queries**: 1000
+- **connection_pool**:
+  - **enabled**: true
+  - **min_connections**: `2`
+  - **max_connections**: `10`
+  - **idle_timeout**: 300
+  - **health_check_interval**: 60
+  - **connection_timeout**: 5
+  - **retry_attempts**: 3
+  - **retry_delay**: 100
+- **compression**:
+  - **enabled**: true
+  - **min_size**: 1024
+  - **level**: 6
+  - **types**:
+    - **0**: `text/html`
+    - **1**: `text/css`
+    - **2**: `text/xml`
+    - **3**: `text/plain`
+    - **4**: `application/json`
+    - **5**: `application/javascript`
+    - **6**: `application/xml`
+    - **7**: `application/rss+xml`
+    - **8**: `application/atom+xml`
+    - **9**: `application/font-woff`
+    - **10**: `image/svg+xml`
+- **asset_caching**:
+  - **static_assets_ttl**: 31536000
+  - **api_cache_ttl**: 60
+  - **html_cache_enabled**: false
+- **required_indexes**:
+  - **phone_numbers**:
+    - **idx_phone_branch_lookup**:
+      - **0**: `phone_number`
+      - **1**: `branch_id`
+      - **2**: `is_active`
+  - **branches**:
+    - **idx_company_active_branches**:
+      - **0**: `company_id`
+      - **1**: `is_active`
+      - **2**: `id`
+    - **idx_calcom_event_lookup**:
+      - **0**: `calcom_event_type_id`
+      - **1**: `is_active`
+  - **appointments**:
+    - **idx_branch_appointments_time**:
+      - **0**: `branch_id`
+      - **1**: `start_time`
+      - **2**: `status`
+    - **idx_customer_appointments**:
+      - **0**: `customer_id`
+      - **1**: `start_time`
+      - **2**: `status`
+    - **idx_staff_schedule**:
+      - **0**: `staff_id`
+      - **1**: `start_time`
+      - **2**: `end_time`
+  - **calls**:
+    - **idx_company_recent_calls**:
+      - **0**: `company_id`
+      - **1**: `created_at`
+      - **2**: `status`
+    - **idx_phone_call_history**:
+      - **0**: `from_number`
+      - **1**: `created_at`
+    - **idx_retell_call_status**:
+      - **0**: `retell_call_id`
+      - **1**: `status`
+- **monitoring**:
+  - **track_memory_usage**: true
+  - **track_query_count**: true
+  - **alert_thresholds**:
+    - **memory_percent**: 80
+    - **query_count**: 100
+    - **response_time**: 1000
+    - **connection_usage_percent**: 80
+
+---
+
+### permission
+
+- **models**:
+  - **permission**: `Spatie\Permission\Models\Permission`
+  - **role**: `Spatie\Permission\Models\Role`
+- **table_names**:
+  - **roles**: `roles`
+  - **permissions**: `permissions`
+  - **model_has_permissions**: `model_has_permissions`
+  - **model_has_roles**: `model_has_roles`
+  - **role_has_permissions**: `role_has_permissions`
+- **column_names**:
+  - **role_pivot_key**: null
+  - **permission_pivot_key**: null
+  - **model_morph_key**: `model_id`
+  - **team_foreign_key**: `team_id`
+- **register_permission_check_method**: true
+- **register_octane_reset_listener**: false
+- **events_enabled**: false
+- **teams**: false
+- **team_resolver**: `Spatie\Permission\DefaultTeamResolver`
+- **use_passport_client_credentials**: false
+- **display_permission_in_exception**: false
+- **display_role_in_exception**: false
+- **enable_wildcard_permission**: false
+- **cache**:
+  - **expiration_time**: {"from_string":true,"date_string":"24 hours"}
+  - **key**: `spatie.permission.cache`
+  - **store**: `default`
+
+---
+
+### queue
+
+- **default**: `redis`
+- **connections**:
+  - **sync**:
+    - **driver**: `sync`
+  - **database**:
+    - **driver**: `database`
+    - **connection**: null
+    - **table**: `jobs`
+    - **queue**: `default`
+    - **retry_after**: 90
+    - **after_commit**: false
+  - **beanstalkd**:
+    - **driver**: `beanstalkd`
+    - **host**: `localhost`
+    - **queue**: `default`
+    - **retry_after**: 90
+    - **block_for**: 0
+    - **after_commit**: false
+  - **sqs**:
+    - **driver**: `sqs`
+    - **key**: ``
+    - **secret**: ``
+    - **prefix**: `https://sqs.us-east-1.amazonaws.com/your-account-id`
+    - **queue**: `default`
+    - **suffix**: null
+    - **region**: `us-east-1`
+    - **after_commit**: false
+  - **redis**:
+    - **driver**: `redis`
+    - **connection**: `default`
+    - **queue**: `default`
+    - **retry_after**: 90
+    - **block_for**: null
+    - **after_commit**: false
+- **batching**:
+  - **database**: `mysql`
+  - **table**: `job_batches`
+- **failed**:
+  - **driver**: `database-uuids`
+  - **database**: `mysql`
+  - **table**: `failed_jobs`
+
+---
+
+### retellai
+
+- **api_key**: null
+- **base_url**: `https://api.retellai.com`
+
+---
+
+### screenshot
+
+- **api_token**: null
+- **service_email**: `screenshot@askproai.de`
+- **chromium_path**: `/usr/bin/chromium`
+- **default_options**:
+  - **width**: 1920
+  - **height**: 1080
+  - **fullPage**: true
+  - **waitUntilNetworkIdle**: true
+  - **deviceScaleFactor**: 2
+- **storage_path**: `/var/www/api-gateway/storage/app/screenshots`
+- **cleanup_days**: 7
+
+---
+
+### sentry
+
+- **dsn**: null
+- **release**: null
+- **environment**: null
+- **sample_rate**: 1
+- **traces_sample_rate**: null
+- **profiles_sample_rate**: null
+- **enable_logs**: false
+- **send_default_pii**: false
+- **ignore_transactions**:
+  - **0**: `/up`
+- **breadcrumbs**:
+  - **logs**: true
+  - **cache**: true
+  - **livewire**: true
+  - **sql_queries**: true
+  - **sql_bindings**: false
+  - **queue_info**: true
+  - **command_info**: true
+  - **http_client_requests**: true
+  - **notifications**: true
+- **tracing**:
+  - **queue_job_transactions**: true
+  - **queue_jobs**: true
+  - **sql_queries**: true
+  - **sql_bindings**: false
+  - **sql_origin**: true
+  - **sql_origin_threshold_ms**: 100
+  - **views**: true
+  - **livewire**: true
+  - **http_client_requests**: true
+  - **cache**: true
+  - **redis_commands**: false
+  - **redis_origin**: true
+  - **notifications**: true
+  - **missing_routes**: false
+  - **continue_after_response**: true
+  - **default_integrations**: true
+
+---
+
+### services
+
+- **postmark**:
+  - **token**: null
+- **ses**:
+  - **key**: ``
+  - **secret**: ``
+  - **region**: `us-east-1`
+- **resend**:
+  - **key**: null
+- **slack**:
+  - **notifications**:
+    - **bot_user_oauth_token**: null
+    - **channel**: null
+- **mailgun**:
+  - **domain**: null
+  - **secret**: null
+  - **endpoint**: `api.mailgun.net`
+  - **scheme**: `https`
+- **calcom**:
+  - **api_key**: `cal_live_bd7aedbdf12085c5312c79ba73585920`
+  - **team_slug**: `askproai`
+  - **base_url**: `https://api.cal.com/v2`
+  - **user_id**: `1346408`
+  - **webhook_secret**: `6846aed4d55f6f3df70c40781e02d964aae34147f72763e1ccedd726e66dfff7`
+  - **api_version**: `v2`
+  - **v2_base_url**: `https://api.cal.com/v2`
+  - **use_v2_api**: true
+  - **v2_enabled_methods**:
+    - **0**: `getEventTypes`
+    - **1**: `getAvailableSlots`
+    - **2**: `bookAppointment`
+    - **3**: `cancelBooking`
+    - **4**: `getBooking`
+  - **v2_mandatory_methods**:
+    - **0**: `getEventTypes`
+    - **1**: `getAvailableSlots`
+    - **2**: `bookAppointment`
+    - **3**: `cancelBooking`
+    - **4**: `getBooking`
+  - **cache_ttl**: `300`
+  - **circuit_breaker_enabled**: true
+  - **circuit_breaker_threshold**: `5`
+  - **circuit_breaker_timeout**: `60`
+  - **default_event_type_id**: null
+- **retell**:
+  - **api_key**: `key_6ff998ba48e842092e04a5455d19`
+  - **webhook_secret**: `key_6ff998ba48e842092e04a5455d19`
+  - **secret**: `key_6ff998ba48e842092e04a5455d19`
+  - **token**: `key_6ff998ba48e842092e04a5455d19`
+  - **agent_id**: ``
+  - **base_url**: `https://api.retellai.com`
+  - **base**: `https://api.retellai.com`
+  - **verify_ip**: false
+- **stripe**:
+  - **secret**: `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`
+  - **publishable**: `pk_live_51QjozIEypZR52surHzCXaOHdCy0Y6vddflKOD4qZy0xH4sEb9vcfOSHJnQfaAT6ixRFiJkA7Xp6V1VidJfR1NrFw00FQ0i4xWa`
+  - **webhook_secret**: ``
+- **webhook**:
+  - **async**:
+    - **retell**: true
+    - **calcom**: true
+    - **stripe**: true
+  - **retry**:
+    - **max_attempts**: 3
+    - **backoff**: `10,30,90`
+  - **deduplication**:
+    - **ttl**: 300
+    - **processing_ttl**: 60
+  - **monitoring**:
+    - **alert_threshold**: 100
+    - **log_slow_webhooks**: true
+
+---
+
+### session
+
+- **driver**: `database`
+- **lifetime**: `120`
+- **expire_on_close**: false
+- **encrypt**: true
+- **files**: `/var/www/api-gateway/storage/framework/sessions`
+- **connection**: null
+- **table**: `sessions`
+- **store**: null
+- **lottery**:
+  - **0**: 0
+  - **1**: 100
+- **cookie**: `askproai_session`
+- **path**: `/`
+- **domain**: ``
+- **secure**: false
+- **http_only**: true
+- **same_site**: `lax`
+- **partitioned**: false
+
+---
+
+### webhook
+
+- **ip_whitelist**:
+- **retell**:
+  - **known_ips**:
+    - **0**: `35.160.120.126`
+    - **1**: `44.233.151.27`
+    - **2**: `34.211.200.85`
+  - **verify_signature**: true
+  - **webhook_secret**: `key_6ff998ba48e842092e04a5455d19`
+  - **debug_mode**: false
+  - **async_processing**: true
+  - **queue_name**: `webhooks`
+- **calcom**:
+  - **known_ips**:
+  - **verify_signature**: true
+  - **webhook_secret**: `6846aed4d55f6f3df70c40781e02d964aae34147f72763e1ccedd726e66dfff7`
+- **stripe**:
+  - **known_ips**:
+  - **verify_signature**: true
+  - **webhook_secret**: ``
+  - **webhook_tolerance**: 300
+- **processing**:
+  - **idempotency_enabled**: true
+  - **idempotency_ttl**: 86400
+  - **max_retries**: 3
+  - **retry_delay**: 60
+  - **log_all_webhooks**: true
+  - **log_retention_days**: 30
+- **bypass_all_security**: false
+
+---
+

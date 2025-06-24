@@ -61,10 +61,12 @@ class GdprRequestResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('customer.name')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(fn ($record) => $record?->customer?->name ?? '-'),
                 Tables\Columns\TextColumn::make('company.name')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(fn ($record) => $record?->company?->name ?? '-'),
                 Tables\Columns\TextColumn::make('type'),
                 Tables\Columns\TextColumn::make('status'),
                 Tables\Columns\TextColumn::make('export_file_path')

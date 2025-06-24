@@ -1,0 +1,9 @@
+AppointmentRescheduled
+AppointmentCreated
+CallCompleted
+MCPAlertTriggered
+CallFailed
+AppointmentCancelled
+MetricsUpdated
+CustomerCreated
+CustomerMerged

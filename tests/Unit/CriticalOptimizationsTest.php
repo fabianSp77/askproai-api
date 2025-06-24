@@ -24,6 +24,9 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_enforces_rate_limits_per_minute()
     {
         $service = 'calcom';
@@ -40,6 +43,9 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_applies_exponential_backoff()
     {
         $service = 'retell';
@@ -59,6 +65,9 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_provides_usage_statistics()
     {
         $service = 'calcom';
@@ -78,6 +87,9 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_validates_calcom_api_responses()
     {
         // Mock HTTP response
@@ -102,6 +114,9 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_rate_limit_responses_gracefully()
     {
         // Mock 429 response
@@ -120,6 +135,9 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_validates_input_parameters()
     {
         $service = new CalcomV2Service('test-api-key');
@@ -131,6 +149,9 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_validates_date_format()
     {
         $service = new CalcomV2Service('test-api-key');
@@ -142,6 +163,9 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_validates_timezone()
     {
         $service = new CalcomV2Service('test-api-key');
@@ -153,6 +177,9 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
+    use PHPUnit\Framework\Attributes\Test;
+
+    #[Test]
     public function it_handles_invalid_json_responses()
     {
         // Mock invalid JSON response

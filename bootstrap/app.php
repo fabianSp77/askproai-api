@@ -62,9 +62,9 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Add middleware in reverse order since prepend adds to the beginning
         $middleware->prepend(\App\Http\Middleware\TrustProxies::class);
-        $middleware->prepend(\App\Http\Middleware\EnsureProperResponseFormat::class);
+        // $middleware->prepend(\App\Http\Middleware\EnsureProperResponseFormat::class);
         // CRITICAL: ResponseWrapper MUST be first to catch all Livewire errors
-        $middleware->prepend(\App\Http\Middleware\ResponseWrapper::class);
+        // $middleware->prepend(\App\Http\Middleware\ResponseWrapper::class);
         // $middleware->append(\App\Http\Middleware\SessionManager::class);
         // $middleware->append(\App\Http\Middleware\LoginDebugger::class);
         

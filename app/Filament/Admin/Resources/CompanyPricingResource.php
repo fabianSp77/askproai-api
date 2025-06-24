@@ -193,7 +193,8 @@ class CompanyPricingResource extends Resource
                     ->label('Firma')
                     ->searchable()
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('bold')
+                    ->getStateUsing(fn ($record) => $record?->company?->name ?? '-'),
                     
                 Tables\Columns\TextColumn::make('price_per_minute')
                     ->label('Minutenpreis')

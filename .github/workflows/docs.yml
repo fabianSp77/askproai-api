@@ -1,0 +1,115 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'docs_mkdocs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'docs_mkdocs/**'
+      - 'mkdocs.yml'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild documentation'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git revision plugin
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-docs.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+      - name: Install MkDocs and dependencies
+        run: |
+          pip install --upgrade pip
+          pip install mkdocs-material==9.5.3
+          pip install mkdocs-mermaid2-plugin==1.1.1
+          pip install mkdocs-git-revision-date-localized-plugin==1.2.2
+          pip install mkdocs-minify-plugin==0.8.0
+          pip install pymdown-extensions==10.7
+          
+      - name: Generate dynamic documentation
+        run: |
+          # Create baseline directory
+          mkdir -p docs_mkdocs/baseline-$(date +%Y-%m-%d)
+          
+          # Generate route list
+          echo "# API Routes" > docs_mkdocs/api/routes-generated.md
+          echo "Generated on: $(date)" >> docs_mkdocs/api/routes-generated.md
+          echo "" >> docs_mkdocs/api/routes-generated.md
+          
+          # Copy existing markdown docs to MkDocs
+          if [ -d "docs" ]; then
+            find docs -name "*.md" -exec cp {} docs_mkdocs/ \; 2>/dev/null || true
+          fi
+          
+      - name: Build documentation
+        run: |
+          mkdocs build --strict --verbose
+          
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/
+          
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  notify:
+    if: always() && github.ref == 'refs/heads/main'
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify on success
+        if: needs.build.result == 'success' && needs.deploy.result == 'success'
+        run: |
+          echo "✅ Documentation deployed successfully!"
+          
+      - name: Notify on failure
+        if: needs.build.result == 'failure' || needs.deploy.result == 'failure'
+        run: |
+          echo "❌ Documentation deployment failed!"
+          exit 1
