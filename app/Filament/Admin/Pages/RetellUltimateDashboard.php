@@ -375,6 +375,11 @@ class RetellUltimateDashboard extends Page
         }
     }
     
+    public function editFunction($functionName): void
+    {
+        $this->startEditingFunction($functionName);
+    }
+    
     public function startEditingFunction($functionName): void
     {
         if (!$this->llmData || !isset($this->llmData['general_tools'])) return;
