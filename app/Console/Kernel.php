@@ -120,6 +120,20 @@ class Kernel extends ConsoleKernel
         $schedule->command('performance:optimize --analyze')
             ->daily()
             ->at('04:00');
+            
+        // Sync Retell agent configurations every hour
+        $schedule->command('retell:sync-configurations --all')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/retell-sync.log'));
+            
+        // Force sync all Retell agent configurations once a day at 2 AM
+        $schedule->command('retell:sync-configurations --all --force')
+            ->dailyAt('02:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/retell-sync.log'));
     }
 
     /**

@@ -36,7 +36,19 @@ class Appointment extends Model
         'payload',
         'version',
         'lock_expires_at',
-        'lock_token'
+        'lock_token',
+        // New fields for multi-booking support
+        'parent_appointment_id',
+        'recurrence_rule',
+        'series_id',
+        'group_booking_id',
+        'booking_type',
+        'package_sessions_total',
+        'package_sessions_used',
+        'package_expires_at',
+        'source',
+        'cancelled_at',
+        'cancellation_reason'
     ];
 
     protected $casts = [
@@ -48,7 +60,14 @@ class Appointment extends Model
         'reminder_2h_sent_at' => 'datetime',
         'reminder_30m_sent_at' => 'datetime',
         'lock_expires_at' => 'datetime',
-        'version' => 'integer'
+        'version' => 'integer',
+        // New casts for multi-booking fields
+        'recurrence_rule' => 'array',
+        'package_sessions_total' => 'integer',
+        'package_sessions_used' => 'integer',
+        'package_expires_at' => 'date',
+        'cancelled_at' => 'datetime',
+        'price' => 'decimal:2'
     ];
 
     /**
@@ -102,6 +121,63 @@ class Appointment extends Model
     public function call(): BelongsTo
     {
         return $this->belongsTo(Call::class);
+    }
+
+    /**
+     * Get the parent appointment (for recurring or group bookings)
+     */
+    public function parentAppointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class, 'parent_appointment_id');
+    }
+
+    /**
+     * Get child appointments (for recurring or group bookings)
+     */
+    public function childAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'parent_appointment_id');
+    }
+
+    /**
+     * Get the appointment series
+     */
+    public function series()
+    {
+        return $this->hasOne(AppointmentSeries::class, 'series_id', 'series_id');
+    }
+
+    /**
+     * Get all appointments in the same group
+     */
+    public function groupAppointments()
+    {
+        return Appointment::where('group_booking_id', $this->group_booking_id)
+            ->where('id', '!=', $this->id);
+    }
+
+    /**
+     * Check if appointment is part of a series
+     */
+    public function isPartOfSeries(): bool
+    {
+        return !empty($this->series_id);
+    }
+
+    /**
+     * Check if appointment is part of a group booking
+     */
+    public function isPartOfGroup(): bool
+    {
+        return !empty($this->group_booking_id);
+    }
+
+    /**
+     * Check if appointment is a package session
+     */
+    public function isPackageSession(): bool
+    {
+        return $this->booking_type === 'package' && $this->package_sessions_total > 0;
     }
 
     /**

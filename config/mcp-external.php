@@ -29,9 +29,9 @@ return [
                 // These settings map to MySQL for compatibility
                 'POSTGRES_HOST' => env('DB_HOST', '127.0.0.1'),
                 'POSTGRES_PORT' => env('DB_PORT', '3306'),
-                'POSTGRES_USER' => env('DB_USERNAME', 'askproai_user'),
-                'POSTGRES_PASSWORD' => env('DB_PASSWORD', 'lkZ57Dju9EDjrMxn'),
-                'POSTGRES_DATABASE' => env('DB_DATABASE', 'askproai_db'),
+                'POSTGRES_USER' => env('DB_USERNAME'),
+                'POSTGRES_PASSWORD' => env('DB_PASSWORD'),
+                'POSTGRES_DATABASE' => env('DB_DATABASE'),
             ],
             'timeout' => 15,
             'description' => 'Direct database access and management (MySQL/MariaDB)',

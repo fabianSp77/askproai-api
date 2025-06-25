@@ -49,7 +49,8 @@ class SecurityMonitor
         $this->checkForAlerts($type, $event);
 
         // Track in cache for rate limiting
-        $this->trackEvent($type, $request->ip());
+        $ip = $request->ip() ?? '127.0.0.1';
+        $this->trackEvent($type, $ip);
     }
 
     /**
@@ -196,8 +197,9 @@ class SecurityMonitor
     /**
      * Track event for analysis
      */
-    private function trackEvent(string $type, string $ip): void
+    private function trackEvent(string $type, ?string $ip): void
     {
+        $ip = $ip ?? '127.0.0.1';
         $cacheKey = "security_events:$type:$ip";
         $events = Cache::get($cacheKey, []);
         $events[] = now();

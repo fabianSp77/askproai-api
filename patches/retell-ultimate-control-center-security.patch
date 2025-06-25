@@ -1,0 +1,152 @@
+--- a/app/Filament/Admin/Pages/RetellUltimateControlCenter.php
++++ b/app/Filament/Admin/Pages/RetellUltimateControlCenter.php
+@@ -7,6 +7,8 @@ use Filament\Pages\Page;
+ use App\Services\RetellV2Service;
+ use App\Services\CalcomV2Service;
+ use App\Models\Company;
++use App\Services\Security\ApiKeyService;
++use App\Services\ErrorHandlingService;
+ use Illuminate\Support\Facades\Cache;
+ use Illuminate\Support\Facades\Log;
+ use Illuminate\Support\Facades\Http;
+@@ -23,6 +25,26 @@ class RetellUltimateControlCenter extends Page
+     
+     protected static string $view = 'filament.admin.pages.retell-ultimate-control-center';
+     
++    /**
++     * Check if the current user can access this page
++     */
++    public static function canAccess(): bool
++    {
++        $user = auth()->user();
++        
++        // Only super admins or users with specific permission
++        return $user && (
++            $user->hasRole('super_admin') || 
++            $user->can('manage_retell_control_center')
++        );
++    }
++
++    protected function authorize(): void
++    {
++        if (!static::canAccess()) {
++            abort(403, 'Unauthorized access to Retell Control Center');
++        }
++    }
++    
+     public function getHeading(): string
+     {
+         return ''; // Keine doppelte Überschrift
+@@ -172,6 +194,9 @@ class RetellUltimateControlCenter extends Page
+      */
+     public function mount(): void
+     {
++        // Add authorization check
++        $this->authorize();
++        
+         Log::info('Control Center Mount - Starting initialization');
+         $this->initializeServices();
+     }
+@@ -195,21 +220,17 @@ class RetellUltimateControlCenter extends Page
+             
+             if ($company && $company->retell_api_key) {
+                 Log::info('Control Center Init - Found company with Retell API key');
+-                $apiKey = $company->retell_api_key;
+-                
+-                // Decrypt if needed
+-                if (strlen($apiKey) > 50) {
+-                    try {
+-                        try {
+-                            $apiKey = decrypt($apiKey);
+-                        } catch (\Exception $decryptError) {
+-                            // If decryption fails, try using the key as-is
+-                            // This handles cases where the key might not be encrypted
+-                            Log::warning('Using API key as-is, decryption failed', ['error' => $decryptError->getMessage()]);
+-                        }
+-                    }
+-                    $this->retellApiKey = $apiKey;
+-                    Log::info('Control Center Init - Retell API key stored successfully');
++                
++                // Use secure API key service
++                $apiKey = $company->getDecryptedRetellApiKey();
++                
++                if (ApiKeyService::isValid($apiKey)) {
++                    $this->retellApiKey = $apiKey;
++                    Log::info('Control Center Init - API key loaded', [
++                        'masked_key' => ApiKeyService::mask($apiKey)
++                    ]);
++                } else {
++                    Log::warning('Control Center Init - Invalid API key format');
+                 } catch (\Exception $e) {
+                     $this->error = 'Failed to process API key: ' . $e->getMessage();
+                     Log::error('Control Center Init - Failed to process API key', ['error' => $e->getMessage()]);
+@@ -235,16 +256,8 @@ class RetellUltimateControlCenter extends Page
+         // If not available, try to get from company
+         if (!$apiKey && $this->companyId) {
+             $company = Company::find($this->companyId);
+-            if ($company && $company->retell_api_key) {
+-                $apiKey = $company->retell_api_key;
+-                if (strlen($apiKey) > 50) {
+-                    try {
+-                        $apiKey = decrypt($apiKey);
+-                    } catch (\Exception $e) {
+-                        // Use as-is if decryption fails
+-                    }
+-                }
+-                $this->retellApiKey = $apiKey;
++            if ($company) {
++                $apiKey = $company->getDecryptedRetellApiKey();
+             }
+         }
+         
+@@ -307,7 +320,7 @@ class RetellUltimateControlCenter extends Page
+             
+             // Agents abrufen
+             $agentsResponse = $retellService->listAgents();
+-            Log::info('Control Center - listAgents response', ['response' => $agentsResponse]);
++            Log::info('Control Center - listAgents response received');
+             
+             if (!isset($agentsResponse['agents'])) {
+                 Log::warning('Control Center - Unexpected agents response format', [
+@@ -382,8 +395,24 @@ class RetellUltimateControlCenter extends Page
+             
+             $this->dispatch('initialized');
+             
++        } catch (\App\Exceptions\CircuitBreakerOpenException $e) {
++            $errorInfo = ErrorHandlingService::handle($e, [
++                'component' => 'RetellUltimateControlCenter',
++                'action' => 'loadInitialData',
++            ]);
++            
++            $this->error = "Retell service is temporarily unavailable. Using cached data. (Error ID: {$errorInfo['error_id']})";
++            
++            // Try to load from cache
++            $this->loadCachedAgents();
++            
+         } catch (\Exception $e) {
+-            $this->error = 'Failed to load data: ' . $e->getMessage();
++            $errorInfo = ErrorHandlingService::handle($e, [
++                'component' => 'RetellUltimateControlCenter',
++                'action' => 'loadInitialData',
++            ]);
++            
++            $this->error = "{$errorInfo['message']} (Error ID: {$errorInfo['error_id']})";
+             Log::error('Control Center - Failed to load initial data', [
+                 'error' => $e->getMessage(),
+                 'trace' => $e->getTraceAsString()
+@@ -393,6 +422,16 @@ class RetellUltimateControlCenter extends Page
+         }
+     }
+     
++    protected function loadCachedAgents(): void
++    {
++        $cached = Cache::get('retell.agents.backup', []);
++        if (isset($cached['agents'])) {
++            $this->agents = $cached['agents'];
++            $this->groupAgents();
++            $this->successMessage = 'Loaded from cache due to service unavailability';
++        }
++    }
++    
+     /**
+      * Group agents by base name and version

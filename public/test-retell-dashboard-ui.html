@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Dashboard UI Test</title>
+    <link rel="stylesheet" href="/css/filament/admin/retell-ultimate-fixed.css">
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 40px;
+        }
+        .test-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #111827;
+        }
+        .test-description {
+            margin-bottom: 20px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="test-title">Retell Dashboard UI/UX Test Suite</h1>
+        <p class="test-description">This page tests all UI components to ensure proper rendering and no overlapping issues.</p>
+
+        <!-- Test 1: Search Bar with Icon -->
+        <div class="test-section">
+            <h2>Test 1: Search Bar with Icon (No Overlap)</h2>
+            <div class="bg-white">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Agent Search & Filter
+                    </h2>
+                    <div class="controls-bar">
+                        <div class="search-container">
+                            <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="search" placeholder="Search agents..." class="search-input">
+                        </div>
+                        <select class="filter-select">
+                            <option>Sort by Name</option>
+                            <option>Sort by Version</option>
+                            <option>Sort by Modified</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 2: Button Alignment -->
+        <div class="test-section">
+            <h2>Test 2: Button Consistency & Alignment</h2>
+            <div class="bg-white">
+                <div class="section-header">
+                    <h2 class="section-title">Quick Actions</h2>
+                </div>
+                <div class="flex gap-4 flex-wrap">
+                    <button class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Primary Action
+                    </button>
+                    <button class="btn-secondary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Secondary Action
+                    </button>
+                    <button class="btn-success">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Success Action
+                    </button>
+                    <button class="btn-icon" title="Refresh">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 3: Table Layout -->
+        <div class="test-section">
+            <h2>Test 3: Responsive Table</h2>
+            <div class="bg-white">
+                <div class="section-header">
+                    <h2 class="section-title">Phone Numbers</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Number</th>
+                                <th>Nickname</th>
+                                <th>Agent</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>+1 (555) 123-4567</td>
+                                <td>Main Line</td>
+                                <td>Agent V33</td>
+                                <td><span class="status-indicator active">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>+1 (555) 987-6543</td>
+                                <td>Support Line</td>
+                                <td>Agent V32</td>
+                                <td><span class="status-indicator warning">Warning</span></td>
+                            </tr>
+                            <tr>
+                                <td>+1 (555) 456-7890</td>
+                                <td>Sales Line</td>
+                                <td>-</td>
+                                <td><span class="status-indicator error">Not Configured</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 4: Tooltips -->
+        <div class="test-section">
+            <h2>Test 4: Tooltip System</h2>
+            <div class="bg-white">
+                <div class="section-header">
+                    <h2 class="section-title">Hover over items for tooltips</h2>
+                </div>
+                <div class="flex gap-4">
+                    <div class="tooltip">
+                        <button class="btn-primary">Hover Me</button>
+                        <span class="tooltip-content">This is a tooltip</span>
+                    </div>
+                    <div class="tooltip">
+                        <button class="btn-secondary">Multi-line Tooltip</button>
+                        <span class="tooltip-content multiline">This is a longer tooltip that wraps to multiple lines for better readability</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 5: Mobile Responsive -->
+        <div class="test-section">
+            <h2>Test 5: Mobile Responsive (resize window)</h2>
+            <div class="bg-white">
+                <div class="section-header">
+                    <h2 class="section-title">Responsive Controls</h2>
+                    <div class="controls-bar">
+                        <div class="search-container">
+                            <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="search" placeholder="Search..." class="search-input">
+                        </div>
+                        <select class="filter-select">
+                            <option>All Items</option>
+                            <option>Active Only</option>
+                            <option>Inactive Only</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="help-text">
+                    <svg class="help-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>This layout stacks vertically on mobile devices for better usability.</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Test 6: Empty State -->
+        <div class="test-section">
+            <h2>Test 6: Empty State Design</h2>
+            <div class="bg-white">
+                <div class="empty-state">
+                    <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <h3 class="empty-state-title">No Agents Found</h3>
+                    <p class="empty-state-description">Get started by creating your first Retell agent to handle incoming calls.</p>
+                    <button class="btn-primary">Create Your First Agent</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dark Mode Toggle for Testing -->
+        <div class="test-section">
+            <h2>Test 7: Dark Mode Support</h2>
+            <button onclick="document.body.classList.toggle('dark')" class="btn-secondary">
+                Toggle Dark Mode
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Test Alpine.js functionality
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('retellUltraDashboard', () => ({
+                searchQuery: '',
+                sortBy: 'name',
+                
+                filterAgents() {
+                    console.log('Search query:', this.searchQuery);
+                },
+                
+                sortAgents() {
+                    console.log('Sort by:', this.sortBy);
+                }
+            }))
+        });
+    </script>
+</body>
+</html>

@@ -37,20 +37,9 @@ class DatabaseServiceProvider extends ServiceProvider
      */
     private function enableConnectionPooling(): void
     {
-        // TEMPORARILY DISABLED DUE TO ERRORS
+        // PERMANENTLY DISABLED - PooledMySqlConnector class doesn't exist
+        // and was causing fatal errors
         return;
-        
-        // Only enable if configured
-        if (!config('database.pool.enabled', false)) {
-            return;
-        }
-        
-        // Replace the MySQL connector with our pooled version
-        $this->app->bind('db.connector.mysql', function () {
-            return new \App\Database\PooledMySqlConnector;
-        });
-        
-        Log::info('Database connection pooling enabled with PooledMySqlConnector');
     }
     
     /**

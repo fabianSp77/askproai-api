@@ -1,0 +1,233 @@
+{
+  "custom_functions": [
+    {
+      "name": "identify_customer",
+      "description": "Identifiziert Bestandskunden anhand der Telefonnummer und lädt deren Präferenzen und Historie",
+      "endpoint": "https://api.askproai.de/api/retell/identify-customer",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "phone_number",
+          "type": "string",
+          "description": "Telefonnummer des Anrufers (nutze {{caller_phone_number}})",
+          "required": true
+        },
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Retell Call ID für Caching",
+          "required": false
+        }
+      ],
+      "response_fields": [
+        "customer_found",
+        "customer_name",
+        "vip_status",
+        "personalized_greeting",
+        "time_preferences",
+        "staff_preferences",
+        "total_appointments",
+        "last_appointment"
+      ]
+    },
+    {
+      "name": "save_customer_preference",
+      "description": "Speichert eine Kundenpräferenz während des Anrufs",
+      "endpoint": "https://api.askproai.de/api/retell/save-preference",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "customer_id",
+          "type": "integer",
+          "description": "ID des Kunden",
+          "required": true
+        },
+        {
+          "name": "preference_type",
+          "type": "string",
+          "description": "Art der Präferenz (time, staff, service)",
+          "required": true
+        },
+        {
+          "name": "preference_key",
+          "type": "string",
+          "description": "Schlüssel der Präferenz",
+          "required": true
+        },
+        {
+          "name": "preference_value",
+          "type": "any",
+          "description": "Wert der Präferenz",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "apply_vip_benefits",
+      "description": "Wendet VIP-Vorteile auf eine Buchung an",
+      "endpoint": "https://api.askproai.de/api/retell/apply-vip-benefits",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "customer_id",
+          "type": "integer",
+          "description": "ID des VIP-Kunden",
+          "required": true
+        },
+        {
+          "name": "booking_data",
+          "type": "object",
+          "description": "Buchungsdaten für Rabatte etc.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "transfer_to_fabian",
+      "description": "Leitet den Anruf direkt an Fabian Spitzer weiter (+491604366218)",
+      "endpoint": "https://api.askproai.de/api/retell/transfer-to-fabian",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "call_id",
+          "type": "string",
+          "description": "Aktuelle Call ID",
+          "required": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "description": "Grund für die Weiterleitung",
+          "required": false
+        },
+        {
+          "name": "customer_name",
+          "type": "string",
+          "description": "Name des Kunden",
+          "required": false
+        },
+        {
+          "name": "topic",
+          "type": "string",
+          "description": "Thema des Anrufs",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "check_transfer_availability",
+      "description": "Prüft, ob eine Weiterleitung möglich ist",
+      "endpoint": "https://api.askproai.de/api/retell/check-transfer-availability",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [],
+      "response_fields": [
+        "available",
+        "current_time",
+        "is_business_hours",
+        "reason",
+        "alternative_options"
+      ]
+    },
+    {
+      "name": "schedule_callback",
+      "description": "Plant einen Rückruf für den Kunden",
+      "endpoint": "https://api.askproai.de/api/retell/schedule-callback",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "customer_name",
+          "type": "string",
+          "description": "Name des Kunden",
+          "required": true
+        },
+        {
+          "name": "phone_number",
+          "type": "string",
+          "description": "Rückrufnummer",
+          "required": true
+        },
+        {
+          "name": "preferred_time",
+          "type": "string",
+          "description": "Gewünschte Zeit (z.B. 'morgen 14 Uhr')",
+          "required": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "description": "Grund für den Rückruf",
+          "required": false
+        },
+        {
+          "name": "notes",
+          "type": "string",
+          "description": "Zusätzliche Notizen",
+          "required": false
+        },
+        {
+          "name": "customer_id",
+          "type": "integer",
+          "description": "Kunden-ID falls bekannt",
+          "required": false
+        },
+        {
+          "name": "vip_status",
+          "type": "string",
+          "description": "VIP-Status für Priorität",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "handle_urgent_transfer",
+      "description": "Behandelt dringende Weiterleitungsanfragen mit Prioritäts-Logik",
+      "endpoint": "https://api.askproai.de/api/retell/handle-urgent-transfer",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "reason",
+          "type": "string",
+          "description": "Grund der Dringlichkeit",
+          "required": true
+        },
+        {
+          "name": "urgency",
+          "type": "string",
+          "description": "Dringlichkeitsstufe",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "agent_prompt_additions": {
+    "german": "## Kundenerkennung und Personalisierung\n\n1. Beginne JEDEN Anruf mit:\n   - Rufe identify_customer mit {{caller_phone_number}} auf\n   - Wenn Kunde erkannt: Verwende die personalisierte Begrüßung\n   - Bei VIP-Kunden: Erwähne deren Status und Vorteile\n\n2. Speichere erkannte Präferenzen:\n   - Wenn Kunde Zeitpräferenz äußert: save_customer_preference\n   - Bei Mitarbeiterwunsch: save_customer_preference\n\n3. Weiterleitung zu Fabian Spitzer:\n   - Bei direkter Anfrage: transfer_to_fabian\n   - Bei komplexen rechtlichen Fragen: transfer_to_fabian\n   - Sage: \"Ich verbinde Sie gerne direkt mit Herrn Spitzer.\"\n\n4. Rückruf vereinbaren:\n   - Wenn Weiterleitung nicht möglich: schedule_callback\n   - Frage nach bevorzugter Zeit\n   - Bestätige den Termin\n\n## VIP-Kunden Behandlung\n\n- Bronze: Erwähne flexible Stornierung\n- Silver: 5% Rabatt, Prioritätsbuchung\n- Gold: 10% Rabatt, exklusive Termine\n- Platinum: 15% Rabatt, persönlicher Service",
+    "variables_to_use": [
+      "{{caller_phone_number}}",
+      "{{current_date}}",
+      "{{current_time}}",
+      "{{weekday}}",
+      "{{company_name}}"
+    ]
+  }
+}

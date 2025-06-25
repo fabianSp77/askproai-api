@@ -29,7 +29,7 @@ class RetellAppointmentCollectorController extends Controller
             $data = $request->input('args', $request->all());
             
             // Extract phone number from call data if not provided
-            if (empty($data['telefonnummer']) || $data['telefonnummer'] === 'caller_number') {
+            if (empty($data['telefonnummer']) || $data['telefonnummer'] === 'caller_number' || $data['telefonnummer'] === 'caller_phone_number') {
                 // Try multiple sources for phone number
                 $phoneNumber = null;
                 
@@ -39,12 +39,18 @@ class RetellAppointmentCollectorController extends Controller
                     $phoneNumber = $callData['from_number'];
                 }
                 
-                // 2. Try from top-level request data
+                // 2. Try from dynamic variables (new approach)
+                if (empty($phoneNumber)) {
+                    $dynamicVars = $callData['retell_llm_dynamic_variables'] ?? $request->input('dynamic_variables', []);
+                    $phoneNumber = $dynamicVars['caller_phone_number'] ?? $dynamicVars['caller_number'] ?? null;
+                }
+                
+                // 3. Try from top-level request data
                 if (empty($phoneNumber)) {
                     $phoneNumber = $request->input('from_number') ?? $request->input('caller_number');
                 }
                 
-                // 3. Try from custom fields that Retell might send
+                // 4. Try from custom fields that Retell might send
                 if (empty($phoneNumber)) {
                     $phoneNumber = $request->input('call_from_number') ?? $request->input('phone_number');
                 }
@@ -53,12 +59,15 @@ class RetellAppointmentCollectorController extends Controller
                     $data['telefonnummer'] = $phoneNumber;
                     Log::info('Auto-populated phone number', [
                         'phone' => $phoneNumber,
-                        'source' => 'auto-detected'
+                        'source' => 'auto-detected',
+                        'all_data' => $request->all() // Enhanced logging for debugging
                     ]);
                 } else {
                     // Phone number is unknown - agent should ask for it
                     Log::warning('Phone number unknown, agent should request it', [
-                        'request_data' => $request->all()
+                        'request_data' => $request->all(),
+                        'call_data' => $callData,
+                        'args' => $data
                     ]);
                     // Don't set a default - let validation fail so agent knows to ask
                 }

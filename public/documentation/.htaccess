@@ -1,0 +1,10 @@
+AuthType Basic
+AuthName "AskProAI Documentation - Restricted Access"
+AuthUserFile /var/www/api-gateway/.htpasswd
+Require valid-user
+
+# Deny access to sensitive files
+<Files ~ "\.(json|sql|log|env)$">
+    Order allow,deny
+    Deny from all
+</Files>

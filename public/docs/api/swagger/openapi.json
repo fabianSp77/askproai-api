@@ -10,7 +10,7 @@
   },
   "servers": [
     {
-      "url": "http://152.53.228.178/api",
+      "url": "https://api.askproai.de/api",
       "description": "Production API server"
     }
   ],

@@ -1,0 +1,81 @@
+/* Retell Modern UI - Safe Inline Styles */
+
+/* Function Cards with Glassmorphism */
+.retell-functions-wrapper .function-card-modern,
+.function-card-modern {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.dark .function-card-modern {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%) !important;
+    border: 1px solid rgba(99, 102, 241, 0.4) !important;
+}
+
+.function-card-modern:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(99, 102, 241, 0.5) !important;
+}
+
+/* Gradient Badges */
+span.inline-flex.items-center.px-3.py-1.text-xs.font-semibold.rounded-full {
+    padding: 6px 16px !important;
+    border-radius: 24px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Cal.com Badge */
+span.inline-flex:has-text("Cal.com"),
+span.inline-flex:contains("Cal.com"),
+[x-show*="functions"] span:has-text("Cal.com") {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+}
+
+/* Custom Badge */
+span.inline-flex:has-text("Custom"),
+span.inline-flex:contains("Custom"),
+[x-show*="functions"] span:has-text("Custom") {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    color: white !important;
+}
+
+/* System Badge */
+span.inline-flex:has-text("System"),
+span.inline-flex:contains("System"),
+[x-show*="functions"] span:has-text("System") {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important;
+    color: #744210 !important;
+}
+
+/* Gradient Buttons */
+.btn-gradient-primary,
+button[style*="gradient"] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 12px 24px !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    box-shadow: 0 4px 12px -2px rgba(102, 126, 234, 0.4) !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-gradient-primary:hover,
+button[style*="gradient"]:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px -4px rgba(102, 126, 234, 0.5) !important;
+}

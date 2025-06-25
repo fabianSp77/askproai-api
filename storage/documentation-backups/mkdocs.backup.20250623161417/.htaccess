@@ -1,0 +1,8 @@
+AuthType Basic
+AuthName "AskProAI Backup - Restricted Access"
+AuthUserFile /var/www/api-gateway/.htpasswd
+Require valid-user
+
+# Deny all access to backup files
+Order allow,deny
+Deny from all

@@ -19,6 +19,7 @@
 @import './resource-specific-responsive.css';
 @import './ultimate-ui.css';
 @import './retell-configuration-center.css';
+@import './retell-ultimate-modern.css';
 
 :root {
     --color-primary-50: 254 252 232;

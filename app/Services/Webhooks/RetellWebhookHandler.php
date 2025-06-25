@@ -221,6 +221,11 @@ class RetellWebhookHandler extends BaseWebhookHandler
             'dynamic_variables' => [
                 'company_name' => $company->name ?? 'AskProAI',
                 'caller_number' => $callData['from_number'] ?? '',
+                'caller_phone_number' => $callData['from_number'] ?? '', // Alternative variable name
+                'current_time_berlin' => now()->setTimezone('Europe/Berlin')->format('Y-m-d H:i:s'),
+                'current_date' => now()->setTimezone('Europe/Berlin')->format('Y-m-d'),
+                'current_time' => now()->setTimezone('Europe/Berlin')->format('H:i'),
+                'weekday' => now()->setTimezone('Europe/Berlin')->locale('de')->dayName,
                 'correlation_id' => $correlationId
             ]
         ];

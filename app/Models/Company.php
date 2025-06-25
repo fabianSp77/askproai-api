@@ -36,6 +36,7 @@ class Company extends Model
         // API Keys
         'retell_api_key',
         'retell_agent_id',
+        'retell_default_settings',
         'calcom_api_key',
         'calcom_team_slug',
         'calcom_user_id',
@@ -66,6 +67,7 @@ class Company extends Model
         'settings' => 'array',
         'metadata' => 'array',
         'tax_configuration' => 'array',
+        'retell_default_settings' => 'array',
         'google_calendar_credentials' => 'encrypted:array',
         'is_active' => 'boolean',
         'is_small_business' => 'boolean',

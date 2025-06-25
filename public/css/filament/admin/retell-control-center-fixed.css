@@ -1,0 +1,116 @@
+/* Fixed styles for Retell Ultimate Control Center */
+
+/* Ensure tab active state is properly styled */
+.modern-tab {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    background: transparent;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.modern-tab:hover {
+    color: #111827;
+    background: #f3f4f6;
+}
+
+.modern-tab.active {
+    color: white !important;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Fix search input focus state */
+.search-input:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+    outline: none !important;
+}
+
+/* Ensure proper z-index for search icon */
+.search-icon {
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Fix tab content transition */
+[x-show] {
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Ensure active tab indicator is visible */
+.modern-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Fix button hover states */
+button {
+    outline: none !important;
+}
+
+button:focus {
+    outline: none !important;
+}
+
+/* Ensure proper agent card grid layout */
+.agent-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .agent-card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Fix modern button styles */
+.modern-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none !important;
+}
+
+.modern-btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+}
+
+.modern-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+}
+
+.modern-btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.modern-btn-secondary:hover {
+    background: #e5e7eb;
+}

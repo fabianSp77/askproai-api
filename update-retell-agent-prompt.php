@@ -1,110 +1,134 @@
-#!/usr/bin/env php
 <?php
-
-/**
- * Update Retell.ai Agent Prompt with optimized version
- * This script updates the agent to:
- * 1. NOT ask for phone numbers (auto-captured)
- * 2. Better handle email addresses
- * 3. Proper error handling
- */
-
 require_once __DIR__ . '/vendor/autoload.php';
+
+use App\Models\Branch;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
 $app = require_once __DIR__ . '/bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
-use App\Models\Company;
+$branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
+    ->where('phone_number', '+493083793369')
+    ->first();
 
-$optimizedPrompt = <<<'PROMPT'
-Du bist ein freundlicher Telefonassistent für AskProAI. Deine Aufgabe ist es, Terminbuchungen entgegenzunehmen.
-
-WICHTIGE REGELN:
-
-1. **Telefonnummer NICHT erfragen** - Die Telefonnummer des Anrufers wird automatisch erfasst. Frage NIEMALS nach der Telefonnummer!
-
-2. **Email-Adressen korrekt erfassen**:
-   - Buchstabiere Email-Adressen zurück zur Bestätigung
-   - Bei "at" oder "@" verwende das @-Zeichen
-   - Beispiel: "fabian at askpro punkt ai" → "fabian@askpro.ai"
-   - Bei Unklarheiten nachfragen und buchstabieren lassen
-
-3. **Pflichtinformationen sammeln**:
-   - Name des Kunden
-   - Gewünschte Dienstleistung  
-   - Datum (mindestens heute)
-   - Uhrzeit (mindestens 2 Stunden in der Zukunft)
-   - Email-Adresse (optional aber empfohlen für Bestätigung)
-
-4. **Bei Fehlern oder fehlenden Informationen**:
-   - Frage freundlich nach den fehlenden Informationen
-   - Wiederhole wichtige Daten zur Bestätigung
-   - Bei Email-Fehlern: Lass den Kunden buchstabieren
-
-5. **Vor der Buchung**:
-   - Fasse ALLE Daten nochmal zusammen
-   - Warte auf explizite Bestätigung ("Ja", "Korrekt", "Stimmt")
-   - Erst NACH Bestätigung die collect_appointment_data Funktion aufrufen
-
-6. **Nach der Buchung**:
-   - Bestätige die erfolgreiche Buchung
-   - Erwähne dass eine Bestätigung per Email kommt (falls Email angegeben)
-   - Verabschiede dich freundlich
-
-WICHTIG: Verwende beim Funktionsaufruf IMMER "caller_number" für das Feld telefonnummer!
-PROMPT;
-
-echo "Retell.ai Agent Prompt Optimizer\n";
-echo "================================\n\n";
-
-// Get companies with Retell API keys
-$companies = Company::whereNotNull('retell_api_key')->get();
-
-if ($companies->isEmpty()) {
-    echo "No companies with Retell API keys found.\n";
+if (!$branch) {
+    echo "Branch not found\n";
     exit(1);
 }
 
-echo "Found {$companies->count()} companies with Retell integration.\n\n";
+$company = $branch->company;
 
-foreach ($companies as $company) {
-    echo "Company: {$company->name}\n";
-    
-    if (!$company->retell_agent_id) {
-        echo "  ⚠️  No Retell Agent ID configured\n\n";
-        continue;
-    }
-    
-    echo "  Agent ID: {$company->retell_agent_id}\n";
-    echo "  ℹ️  Please update the agent prompt in Retell.ai dashboard\n";
-    echo "  📋 Prompt saved to: retell-prompts/{$company->id}-prompt.txt\n\n";
-    
-    // Save prompt to file
-    $dir = base_path('retell-prompts');
-    if (!is_dir($dir)) {
-        mkdir($dir, 0755, true);
-    }
-    
-    file_put_contents(
-        "{$dir}/{$company->id}-prompt.txt",
-        $optimizedPrompt . "\n\n" .
-        "Company: {$company->name}\n" .
-        "Agent ID: {$company->retell_agent_id}\n"
-    );
+if (!$company) {
+    echo "Company not found\n";
+    exit(1);
 }
 
-echo "\nCustom Function Configuration:\n";
-echo "=============================\n";
-echo "Name: collect_appointment_data\n";
-echo "URL: https://api.askproai.de/api/retell/collect-appointment\n";
-echo "Method: POST\n";
-echo "Headers: Content-Type: application/json\n\n";
+echo "Company: {$company->name}\n";
+echo "Agent ID: {$company->retell_agent_id}\n";
 
-echo "Parameter Mapping:\n";
-echo "- datum: Terminsdatum (z.B. '24.06.2025')\n";
-echo "- uhrzeit: Uhrzeit (z.B. '16:30')\n";
-echo "- name: Kundenname\n";
-echo "- telefonnummer: IMMER 'caller_number' verwenden!\n";
-echo "- dienstleistung: Gewünschte Leistung\n";
-echo "- email: Email-Adresse (optional)\n\n";
+$apiKey = $company->retell_api_key;
 
-echo "✅ Done! Please update the agents in Retell.ai dashboard.\n";
+// Neuer Prompt mit dynamischen Variablen
+$newPrompt = <<<'PROMPT'
+# Rolle und Kontext
+
+Du bist ein KI-Assistent für Terminbuchungen bei AskProAI. Du hilfst Kunden dabei, Termine zu vereinbaren.
+
+## Verfügbare dynamische Variablen
+
+Folgende Variablen stehen dir zur Verfügung:
+- {{caller_phone_number}} - Die Telefonnummer des Anrufers
+- {{current_time_berlin}} - Aktuelle Zeit in Berlin (Format: YYYY-MM-DD HH:mm:ss)
+- {{current_date}} - Aktuelles Datum (Format: YYYY-MM-DD)
+- {{current_time}} - Aktuelle Uhrzeit (Format: HH:mm)
+- {{weekday}} - Aktueller Wochentag auf Deutsch
+
+## Wichtige Anweisungen
+
+1. **Verwende IMMER die korrekten dynamischen Variablen**:
+   - Für die Telefonnummer des Anrufers nutze IMMER {{caller_phone_number}}
+   - Für das aktuelle Datum nutze IMMER {{current_date}}
+   - Verwende NIEMALS hartcodierte Werte wie "+49 176 66664444" oder "16.05.2024"
+
+2. **Terminbuchung**:
+   - Sammle alle erforderlichen Informationen:
+     - Datum (verwende {{current_date}} als Referenz für "heute" oder "morgen")
+     - Uhrzeit
+     - Name des Kunden
+     - Telefonnummer (nutze {{caller_phone_number}})
+     - Gewünschte Dienstleistung
+   
+3. **Benutze die collect_appointment_data Funktion**:
+   - Rufe diese Funktion auf, sobald du alle Informationen hast
+   - Übergebe IMMER alle Felder:
+     - datum: Das gewünschte Datum
+     - uhrzeit: Die gewünschte Uhrzeit
+     - name: Name des Kunden
+     - telefonnummer: {{caller_phone_number}}
+     - dienstleistung: Die gewünschte Dienstleistung
+
+## Gesprächsführung
+
+1. Begrüße den Anrufer freundlich
+2. Frage nach dem Terminwunsch
+3. Sammle alle erforderlichen Informationen
+4. Bestätige die Termindetails
+5. Rufe die collect_appointment_data Funktion auf
+
+## Beispiel-Dialog
+
+Kunde: "Hallo, ich möchte gerne einen Termin vereinbaren."
+Du: "Guten Tag! Schön, dass Sie anrufen. Gerne helfe ich Ihnen bei der Terminvereinbarung. Für welche Dienstleistung möchten Sie einen Termin?"
+
+Kunde: "Ich brauche eine Beratung."
+Du: "Sehr gerne. Wann würde es Ihnen denn passen?"
+
+Kunde: "Morgen Nachmittag wäre gut."
+Du: "Morgen ist der [verwende {{current_date}} + 1 Tag]. Welche Uhrzeit am Nachmittag würde Ihnen passen?"
+
+WICHTIG: Nutze IMMER die dynamischen Variablen für aktuelle Informationen!
+PROMPT;
+
+// Update agent über Retell API
+$baseUrl = 'https://api.retellai.com';
+
+echo "\nUpdating agent prompt...\n";
+
+try {
+    // Update den Agent direkt
+    echo "Attempting direct update...\n";
+    
+    // Try both v2 and v1 endpoints
+    $updateResponse = Http::withHeaders([
+        'Authorization' => 'Bearer ' . $apiKey,
+        'Content-Type' => 'application/json',
+    ])->post($baseUrl . '/update-agent', [
+        'agent_id' => $company->retell_agent_id,
+        'llm_instructions' => $newPrompt,
+    ]);
+    
+    if ($updateResponse->successful()) {
+        echo "✅ Agent prompt successfully updated!\n";
+        echo "Agent ID: " . $company->retell_agent_id . "\n";
+        
+        // Clear cache
+        \Illuminate\Support\Facades\Cache::forget('retell_agent_' . $company->retell_agent_id);
+        \Illuminate\Support\Facades\Cache::forget('retell_agents');
+        
+        echo "\n📝 New prompt includes:\n";
+        echo "- Dynamic variable support for caller_phone_number\n";
+        echo "- Dynamic variable support for current date/time\n";
+        echo "- Instructions to use collect_appointment_data function\n";
+        echo "- Clear German language instructions\n";
+        
+    } else {
+        echo "❌ Failed to update agent. Status: " . $updateResponse->status() . "\n";
+        echo "Response: " . $updateResponse->body() . "\n";
+    }
+    
+} catch (\Exception $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+    exit(1);
+}

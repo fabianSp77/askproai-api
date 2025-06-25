@@ -52,6 +52,27 @@ Route::prefix('retell')->group(function () {
         ->name('api.retell.collect-appointment');
     Route::get('/collect-appointment/test', [App\Http\Controllers\Api\RetellAppointmentCollectorController::class, 'test'])
         ->name('api.retell.collect-appointment.test');
+    
+    // Customer recognition endpoints with security
+    Route::post('/identify-customer', [App\Http\Controllers\Api\RetellCustomerRecognitionController::class, 'identifyCustomer'])
+        ->middleware(['verify.retell.signature', 'validate.retell', 'throttle:60,1'])
+        ->name('api.retell.identify-customer');
+    Route::post('/save-preference', [App\Http\Controllers\Api\RetellCustomerRecognitionController::class, 'savePreference'])
+        ->middleware(['verify.retell.signature', 'validate.retell', 'throttle:30,1'])
+        ->name('api.retell.save-preference');
+    Route::post('/apply-vip-benefits', [App\Http\Controllers\Api\RetellCustomerRecognitionController::class, 'applyVipBenefits'])
+        ->middleware(['verify.retell.signature', 'validate.retell', 'throttle:30,1'])
+        ->name('api.retell.apply-vip-benefits');
+    
+    // Call transfer and callback endpoints
+    Route::post('/transfer-to-fabian', [App\Http\Controllers\Api\RetellCallTransferController::class, 'transferToFabian'])
+        ->name('api.retell.transfer-to-fabian');
+    Route::post('/check-transfer-availability', [App\Http\Controllers\Api\RetellCallTransferController::class, 'checkAvailabilityForTransfer'])
+        ->name('api.retell.check-transfer-availability');
+    Route::post('/schedule-callback', [App\Http\Controllers\Api\RetellCallTransferController::class, 'scheduleCallback'])
+        ->name('api.retell.schedule-callback');
+    Route::post('/handle-urgent-transfer', [App\Http\Controllers\Api\RetellCallTransferController::class, 'handleUrgentTransfer'])
+        ->name('api.retell.handle-urgent-transfer');
 });
 
 // ---- Documentation Data API ----------------------------

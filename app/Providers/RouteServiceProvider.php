@@ -44,5 +44,20 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+        
+        // Retell function endpoints - stricter limits
+        RateLimiter::for('retell-functions', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
+        });
+        
+        // VIP benefits endpoint - very strict
+        RateLimiter::for('retell-vip', function (Request $request) {
+            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+        });
+        
+        // Webhook endpoints - allow more for legitimate webhooks
+        RateLimiter::for('webhooks', function (Request $request) {
+            return Limit::perMinute(100)->by($request->ip());
+        });
     }
 }

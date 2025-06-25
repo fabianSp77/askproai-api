@@ -67,6 +67,7 @@ class Kernel extends HttpKernel
         'ip.whitelist' => \App\Http\Middleware\IpWhitelist::class,
         'api.metrics.auth' => \App\Http\Middleware\ApiMetricsAuth::class,
         'dashboard.routes' => \App\Http\Middleware\ResolveDashboardRoutes::class,
+        'validate.retell' => \App\Http\Middleware\ValidateRetellInput::class,
 
         // ── Laravel-Standard ──────────────────────────────────────────────
         'auth'              => \App\Http\Middleware\Authenticate::class,

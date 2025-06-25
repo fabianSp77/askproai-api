@@ -1,0 +1,212 @@
+/**
+ * Force Modern Styles CSS
+ * This file uses every possible CSS trick to force modern styles
+ */
+
+/* Use @layer to create highest priority */
+@layer force-modern-critical {
+    /* Multiple selector combinations for maximum specificity */
+    .function-card-modern,
+    div.function-card-modern,
+    .retell-functions-wrapper .function-card-modern,
+    body .function-card-modern,
+    html body .function-card-modern,
+    .fi-page .function-card-modern,
+    .fi-page-content .function-card-modern,
+    .fi-body .function-card-modern,
+    #app .function-card-modern,
+    main .function-card-modern,
+    [wire\\:id] .function-card-modern,
+    [x-data] .function-card-modern,
+    div[class*="function-card-modern"],
+    div[class~="function-card-modern"],
+    *:has(> .function-card-modern) .function-card-modern,
+    .function-card-modern:not(#\#):not(#\#):not(#\#) {
+        /* Glassmorphism background */
+        background: linear-gradient(
+            135deg, 
+            rgba(99, 102, 241, 0.15) 0%, 
+            rgba(139, 92, 246, 0.1) 100%
+        ) !important;
+        
+        /* Backdrop filters */
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        
+        /* Border with glow */
+        border: 1px solid rgba(99, 102, 241, 0.4) !important;
+        
+        /* Smooth rounded corners */
+        border-radius: 24px !important;
+        
+        /* Generous padding */
+        padding: 32px !important;
+        
+        /* Positioning context */
+        position: relative !important;
+        overflow: hidden !important;
+        
+        /* Smooth transitions */
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        
+        /* Spacing */
+        margin-bottom: 24px !important;
+        
+        /* Complex shadow */
+        box-shadow: 
+            0 10px 40px -10px rgba(99, 102, 241, 0.3),
+            0 0 0 1px rgba(99, 102, 241, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            0 0 80px -20px rgba(99, 102, 241, 0.2) !important;
+        
+        /* Performance optimizations */
+        transform: translateZ(0) !important;
+        will-change: transform, box-shadow !important;
+        
+        /* Ensure text is readable */
+        color: inherit !important;
+    }
+    
+    /* Hover state with even higher specificity */
+    html body .fi-page .function-card-modern:hover,
+    .function-card-modern:hover:not(#\#):not(#\#):not(#\#) {
+        transform: translateY(-8px) scale(1.02) !important;
+        box-shadow: 
+            0 20px 60px -15px rgba(99, 102, 241, 0.4),
+            0 0 0 1px rgba(99, 102, 241, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+            0 0 120px -20px rgba(99, 102, 241, 0.5) !important;
+        border-color: rgba(99, 102, 241, 0.6) !important;
+        background: linear-gradient(
+            135deg, 
+            rgba(99, 102, 241, 0.2) 0%, 
+            rgba(139, 92, 246, 0.15) 100%
+        ) !important;
+    }
+    
+    /* Dark mode adjustments */
+    .dark .function-card-modern,
+    .dark .function-card-modern:not(#\#):not(#\#):not(#\#) {
+        background: linear-gradient(
+            135deg, 
+            rgba(99, 102, 241, 0.25) 0%, 
+            rgba(139, 92, 246, 0.15) 50%,
+            rgba(99, 102, 241, 0.1) 100%
+        ) !important;
+        border: 1px solid rgba(99, 102, 241, 0.5) !important;
+        box-shadow: 
+            0 10px 40px -10px rgba(99, 102, 241, 0.5),
+            0 0 0 1px rgba(99, 102, 241, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            0 0 80px -20px rgba(99, 102, 241, 0.4) !important;
+    }
+    
+    /* Icon containers */
+    .function-card-modern .w-12.h-12,
+    .function-card-modern div[class*="w-12"][class*="h-12"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        box-shadow: 
+            0 10px 20px -5px rgba(102, 126, 234, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        border-radius: 16px !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    /* Gradient buttons */
+    .btn-gradient-primary,
+    button[wire\\:click*="AddingFunction"],
+    button[wire\\:click*="startAddingFunction"],
+    .retell-functions-wrapper button[class*="gradient"] {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        padding: 12px 24px !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        border: none !important;
+        box-shadow: 0 4px 15px -3px rgba(102, 126, 234, 0.5) !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+        position: relative !important;
+        overflow: hidden !important;
+        cursor: pointer !important;
+    }
+    
+    .btn-gradient-primary:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px -5px rgba(102, 126, 234, 0.6) !important;
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+    }
+    
+    /* Glass cards */
+    .glass-card,
+    .retell-functions-wrapper .glass-card {
+        background: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 16px !important;
+        padding: 16px !important;
+        box-shadow: 
+            0 8px 32px 0 rgba(31, 38, 135, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    /* Parameter cards */
+    .parameter-card {
+        background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.05) 0%,
+            rgba(255, 255, 255, 0.02) 100%
+        ) !important;
+        backdrop-filter: blur(5px) !important;
+        border: 1px solid rgba(99, 102, 241, 0.2) !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .parameter-card:hover {
+        background: linear-gradient(
+            135deg,
+            rgba(99, 102, 241, 0.1) 0%,
+            rgba(99, 102, 241, 0.05) 100%
+        ) !important;
+        border-color: rgba(99, 102, 241, 0.4) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px -5px rgba(99, 102, 241, 0.3) !important;
+    }
+}
+
+/* Animations */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 
+            0 10px 40px -10px rgba(99, 102, 241, 0.3),
+            0 0 0 0 rgba(99, 102, 241, 0.4);
+    }
+    50% {
+        box-shadow: 
+            0 10px 40px -10px rgba(99, 102, 241, 0.5),
+            0 0 0 10px rgba(99, 102, 241, 0);
+    }
+}
+
+@keyframes shimmer {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.function-card-modern.pulse {
+    animation: pulse-glow 2s infinite !important;
+}
+
+/* Override any conflicting styles */
+.function-card-modern * {
+    all: unset !important;
+    display: revert !important;
+    font-family: inherit !important;
+    color: inherit !important;
+}

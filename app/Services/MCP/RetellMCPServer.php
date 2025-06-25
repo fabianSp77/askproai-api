@@ -28,6 +28,23 @@ class RetellMCPServer
     }
     
     /**
+     * Get decrypted API key handling both encrypted and plain keys
+     */
+    protected function getDecryptedApiKey(string $apiKey): string
+    {
+        // If key is longer than typical API key, it might be encrypted
+        if (strlen($apiKey) > 50) {
+            try {
+                return decrypt($apiKey);
+            } catch (\Exception $e) {
+                // Use as-is if decryption fails
+            }
+        }
+        
+        return $apiKey;
+    }
+    
+    /**
      * Get agent information
      */
     public function getAgent(array $params): array
@@ -55,7 +72,7 @@ class RetellMCPServer
                     return ['error' => 'No agent ID configured'];
                 }
                 
-                $retellService = new RetellService(decrypt($company->retell_api_key));
+                $retellService = new RetellService($this->getDecryptedApiKey($company->retell_api_key));
                 $agent = $retellService->getAgent($company->retell_agent_id);
                 
                 if ($agent) {
@@ -90,7 +107,7 @@ class RetellMCPServer
                 return ['error' => 'Company not found or Retell.ai not configured'];
             }
             
-            $retellService = new RetellService(decrypt($company->retell_api_key));
+            $retellService = new RetellService($this->getDecryptedApiKey($company->retell_api_key));
             $agents = $retellService->getAgents();
             
             return [
@@ -118,6 +135,7 @@ class RetellMCPServer
     {
         $agentId = $params['agent_id'] ?? null;
         $companyId = $params['company_id'] ?? null;
+        $fullSync = $params['full_sync'] ?? true;
         
         if (!$agentId || !$companyId) {
             return ['error' => 'Agent ID and Company ID are required'];
@@ -129,28 +147,73 @@ class RetellMCPServer
                 return ['error' => 'Company not found or Retell.ai not configured'];
             }
             
-            $retellService = new RetellService(decrypt($company->retell_api_key));
+            // Use V2 service for better functionality
+            $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
+            
+            // Get full agent configuration
             $agentDetails = $retellService->getAgent($agentId);
             
             if (!$agentDetails) {
                 return ['error' => 'Agent not found'];
             }
             
-            // Store agent details in cache for quick access
+            // Get LLM configuration if using retell-llm and full sync requested
+            if ($fullSync && 
+                isset($agentDetails['response_engine']['type']) && 
+                $agentDetails['response_engine']['type'] === 'retell-llm' &&
+                isset($agentDetails['response_engine']['llm_id'])) {
+                
+                $llmData = $retellService->getRetellLLM($agentDetails['response_engine']['llm_id']);
+                if ($llmData) {
+                    $agentDetails['llm_configuration'] = $llmData;
+                }
+            }
+            
+            // Store or update in database
+            $retellAgent = \App\Models\RetellAgent::withoutGlobalScopes()->updateOrCreate(
+                [
+                    'company_id' => $companyId,
+                    'agent_id' => $agentId
+                ],
+                [
+                    'name' => $agentDetails['agent_name'] ?? 'Unknown Agent',
+                    'configuration' => $agentDetails,
+                    'is_active' => ($agentDetails['status'] ?? 'inactive') === 'active',
+                    'last_synced_at' => now(),
+                    'sync_status' => 'synced'
+                ]
+            );
+            
+            // Clear cache
             $cacheKey = $this->getCacheKey('agent_details', ['agent_id' => $agentId]);
-            Cache::put($cacheKey, $agentDetails, $this->config['cache']['ttl']);
+            Cache::forget($cacheKey);
+            Cache::forget($this->getCacheKey('agents_with_phones', ['company_id' => $companyId]));
+            
+            Log::info('MCP Retell agent synced', [
+                'agent_id' => $agentId,
+                'company_id' => $companyId,
+                'full_sync' => $fullSync,
+                'function_count' => isset($agentDetails['llm_configuration']['general_tools']) 
+                    ? count($agentDetails['llm_configuration']['general_tools']) 
+                    : 0
+            ]);
             
             return [
                 'success' => true,
                 'agent' => $agentDetails,
+                'stored_in_db' => true,
+                'function_count' => isset($agentDetails['llm_configuration']['general_tools']) 
+                    ? count($agentDetails['llm_configuration']['general_tools']) 
+                    : 0,
                 'synced_fields' => [
                     'agent_name' => $agentDetails['agent_name'] ?? null,
                     'general_prompt' => $agentDetails['general_prompt'] ?? null,
                     'begin_message' => $agentDetails['begin_message'] ?? null,
                     'voice_id' => $agentDetails['voice_id'] ?? null,
                     'language' => $agentDetails['language'] ?? null,
-                    'response_time' => $agentDetails['response_time'] ?? null,
-                    'webhook_url' => $agentDetails['webhook_url'] ?? null
+                    'response_engine' => $agentDetails['response_engine'] ?? null,
+                    'webhook_url' => $agentDetails['webhook_url'] ?? null,
+                    'interruption_sensitivity' => $agentDetails['interruption_sensitivity'] ?? null
                 ]
             ];
             
@@ -679,7 +742,7 @@ class RetellMCPServer
             }
             
             // Use RetellV2Service for agent updates
-            $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+            $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
             $response = $retellService->updateAgent($agentId, $config);
             
             // Clear related caches
@@ -730,7 +793,7 @@ class RetellMCPServer
                     return ['error' => 'Company not found or Retell not configured'];
                 }
                 
-                $retellService = new RetellService(decrypt($company->retell_api_key));
+                $retellService = new RetellService($this->getDecryptedApiKey($company->retell_api_key));
                 $response = $retellService->getCallTranscript($callId);
                 
                 if (!$response['success']) {
@@ -815,7 +878,7 @@ class RetellMCPServer
             }
             
             // Initialize validator with company's API key
-            $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+            $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
             $validator = new \App\Services\Config\RetellConfigValidator($retellService);
             
             // Validate current configuration
@@ -921,7 +984,7 @@ class RetellMCPServer
                 return ['error' => 'Company not found or Retell not configured'];
             }
             
-            $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+            $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
             
             // Get all phone numbers from Retell
             $phoneNumbersData = $retellService->listPhoneNumbers();
@@ -1054,7 +1117,7 @@ class RetellMCPServer
             }
             
             // Update agent
-            $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+            $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
             $result = $retellService->updateAgent($agentId, [
                 'prompt' => $prompt,
                 'metadata' => array_merge($params['metadata'] ?? [], [
@@ -1099,7 +1162,7 @@ class RetellMCPServer
                     return ['error' => 'Company not found or Retell not configured'];
                 }
                 
-                $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+                $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
                 
                 // Get agents - use v1 API fallback if v2 fails
                 try {
@@ -1476,7 +1539,7 @@ class RetellMCPServer
                     return ['error' => 'Company not found or Retell not configured'];
                 }
                 
-                $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+                $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
                 
                 // Get agent details (which includes version info)
                 $agentData = $retellService->getAgent($agentId);
@@ -1693,7 +1756,7 @@ class RetellMCPServer
                 ];
             }
             
-            $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+            $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
             
             // Update agent configuration
             $updateData = [];
@@ -1784,7 +1847,7 @@ class RetellMCPServer
                 ];
             }
             
-            $retellService = new RetellV2Service(decrypt($company->retell_api_key));
+            $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
             
             switch ($action) {
                 case 'list':
@@ -2005,6 +2068,308 @@ class RetellMCPServer
                 'error' => 'Failed to get analytics',
                 'message' => $e->getMessage()
             ];
+        }
+    }
+    
+    /**
+     * Sync all agent data for a company
+     */
+    public function syncAllAgentData(array $params): array
+    {
+        $companyId = $params['company_id'] ?? null;
+        $forceSync = $params['force'] ?? false;
+        
+        if (!$companyId) {
+            return ['error' => 'Company ID is required'];
+        }
+        
+        try {
+            $company = Company::find($companyId);
+            if (!$company || !$company->retell_api_key) {
+                return ['error' => 'Company not found or Retell.ai not configured'];
+            }
+            
+            $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
+            
+            // Get all agents from Retell
+            $agentsResult = $retellService->listAgents();
+            if (!isset($agentsResult['agents'])) {
+                return ['error' => 'Failed to fetch agents from Retell'];
+            }
+            
+            $syncResults = [];
+            $successCount = 0;
+            $errorCount = 0;
+            
+            foreach ($agentsResult['agents'] as $agent) {
+                $agentId = $agent['agent_id'];
+                
+                // Check if needs sync
+                $existingAgent = \App\Models\RetellAgent::withoutGlobalScopes()
+                    ->where('company_id', $companyId)
+                    ->where('agent_id', $agentId)
+                    ->first();
+                
+                if (!$forceSync && $existingAgent && !$existingAgent->needsSync()) {
+                    $syncResults[] = [
+                        'agent_id' => $agentId,
+                        'agent_name' => $agent['agent_name'] ?? 'Unknown',
+                        'status' => 'skipped',
+                        'reason' => 'Recently synced'
+                    ];
+                    continue;
+                }
+                
+                // Sync this agent
+                $syncResult = $this->syncAgentDetails([
+                    'agent_id' => $agentId,
+                    'company_id' => $companyId,
+                    'full_sync' => true
+                ]);
+                
+                if (isset($syncResult['success']) && $syncResult['success']) {
+                    $successCount++;
+                    $syncResults[] = [
+                        'agent_id' => $agentId,
+                        'agent_name' => $agent['agent_name'] ?? 'Unknown',
+                        'status' => 'success',
+                        'function_count' => $syncResult['function_count'] ?? 0
+                    ];
+                } else {
+                    $errorCount++;
+                    $syncResults[] = [
+                        'agent_id' => $agentId,
+                        'agent_name' => $agent['agent_name'] ?? 'Unknown',
+                        'status' => 'error',
+                        'error' => $syncResult['error'] ?? 'Unknown error'
+                    ];
+                }
+            }
+            
+            // Clear company-wide caches
+            Cache::forget($this->getCacheKey('agents_with_phones', ['company_id' => $companyId]));
+            
+            Log::info('MCP Retell syncAllAgentData completed', [
+                'company_id' => $companyId,
+                'total_agents' => count($agentsResult['agents']),
+                'success_count' => $successCount,
+                'error_count' => $errorCount,
+                'force_sync' => $forceSync
+            ]);
+            
+            return [
+                'success' => true,
+                'summary' => [
+                    'total' => count($agentsResult['agents']),
+                    'synced' => $successCount,
+                    'errors' => $errorCount,
+                    'skipped' => count($agentsResult['agents']) - $successCount - $errorCount
+                ],
+                'details' => $syncResults
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell syncAllAgentData error', [
+                'company_id' => $companyId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return ['error' => 'Failed to sync all agents', 'message' => $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Update agent functions
+     */
+    public function updateAgentFunctions(array $params): array
+    {
+        $companyId = $params['company_id'] ?? null;
+        $agentId = $params['agent_id'] ?? null;
+        $functions = $params['functions'] ?? [];
+        
+        if (!$companyId || !$agentId) {
+            return ['error' => 'Company ID and Agent ID are required'];
+        }
+        
+        try {
+            // Get agent from database first
+            $retellAgent = \App\Models\RetellAgent::where('company_id', $companyId)
+                ->where('agent_id', $agentId)
+                ->first();
+                
+            if (!$retellAgent) {
+                return ['error' => 'Agent not found in local database. Please sync first.'];
+            }
+            
+            $company = Company::find($companyId);
+            if (!$company || !$company->retell_api_key) {
+                return ['error' => 'Company not found or Retell.ai not configured'];
+            }
+            
+            $retellService = new RetellV2Service($this->getDecryptedApiKey($company->retell_api_key));
+            
+            // Update LLM with new functions
+            $llmId = $retellAgent->configuration['response_engine']['llm_id'] ?? null;
+            if (!$llmId) {
+                return ['error' => 'Agent does not have LLM configured'];
+            }
+            
+            $updateData = [
+                'general_tools' => $functions
+            ];
+            
+            $result = $retellService->updateRetellLLM($llmId, $updateData);
+            
+            if ($result) {
+                // Update local configuration
+                $config = $retellAgent->configuration;
+                if (!isset($config['llm_configuration'])) {
+                    $config['llm_configuration'] = [];
+                }
+                $config['llm_configuration']['general_tools'] = $functions;
+                
+                $retellAgent->update([
+                    'configuration' => $config,
+                    'last_synced_at' => now(),
+                    'sync_status' => 'synced'
+                ]);
+                
+                Log::info('MCP Retell updateAgentFunctions success', [
+                    'company_id' => $companyId,
+                    'agent_id' => $agentId,
+                    'function_count' => count($functions)
+                ]);
+                
+                return [
+                    'success' => true,
+                    'message' => 'Functions updated successfully',
+                    'function_count' => count($functions)
+                ];
+            }
+            
+            return ['error' => 'Failed to update functions'];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell updateAgentFunctions error', [
+                'company_id' => $companyId,
+                'agent_id' => $agentId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return ['error' => 'Failed to update functions', 'message' => $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Get agent configuration from local database
+     */
+    public function getAgentConfiguration(array $params): array
+    {
+        $companyId = $params['company_id'] ?? null;
+        $agentId = $params['agent_id'] ?? null;
+        
+        if (!$companyId || !$agentId) {
+            return ['error' => 'Company ID and Agent ID are required'];
+        }
+        
+        try {
+            $retellAgent = \App\Models\RetellAgent::where('company_id', $companyId)
+                ->where('agent_id', $agentId)
+                ->first();
+                
+            if (!$retellAgent) {
+                return ['error' => 'Agent not found in local database'];
+            }
+            
+            return [
+                'success' => true,
+                'agent' => [
+                    'agent_id' => $retellAgent->agent_id,
+                    'name' => $retellAgent->name,
+                    'is_active' => $retellAgent->is_active,
+                    'configuration' => $retellAgent->configuration,
+                    'function_count' => $retellAgent->getFunctionCount(),
+                    'voice_settings' => $retellAgent->getVoiceSettings(),
+                    'last_synced_at' => $retellAgent->last_synced_at?->toIso8601String(),
+                    'sync_status' => $retellAgent->sync_status,
+                    'needs_sync' => $retellAgent->needsSync()
+                ]
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell getAgentConfiguration error', [
+                'company_id' => $companyId,
+                'agent_id' => $agentId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return ['error' => 'Failed to get agent configuration', 'message' => $e->getMessage()];
+        }
+    }
+    
+    /**
+     * Push local agent configuration to Retell
+     */
+    public function pushAgentConfiguration(array $params): array
+    {
+        $companyId = $params['company_id'] ?? null;
+        $agentId = $params['agent_id'] ?? null;
+        $changes = $params['changes'] ?? [];
+        
+        if (!$companyId || !$agentId) {
+            return ['error' => 'Company ID and Agent ID are required'];
+        }
+        
+        try {
+            $retellAgent = \App\Models\RetellAgent::where('company_id', $companyId)
+                ->where('agent_id', $agentId)
+                ->first();
+                
+            if (!$retellAgent) {
+                return ['error' => 'Agent not found in local database'];
+            }
+            
+            $company = Company::find($companyId);
+            if (!$company || !$company->retell_api_key) {
+                return ['error' => 'Company not found or Retell.ai not configured'];
+            }
+            
+            // Get API key
+            $apiKey = $company->retell_api_key;
+            if (strlen($apiKey) > 50) {
+                try {
+                    $apiKey = decrypt($apiKey);
+                } catch (\Exception $e) {
+                    // Use as-is if decryption fails
+                }
+            }
+            
+            // Push changes
+            $success = $retellAgent->pushToRetell($changes);
+            
+            if ($success) {
+                Log::info('MCP Retell pushAgentConfiguration success', [
+                    'company_id' => $companyId,
+                    'agent_id' => $agentId,
+                    'changes' => array_keys($changes)
+                ]);
+                
+                return [
+                    'success' => true,
+                    'message' => 'Configuration pushed to Retell successfully'
+                ];
+            }
+            
+            return ['error' => 'Failed to push configuration'];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell pushAgentConfiguration error', [
+                'company_id' => $companyId,
+                'agent_id' => $agentId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return ['error' => 'Failed to push configuration', 'message' => $e->getMessage()];
         }
     }
 }

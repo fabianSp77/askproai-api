@@ -1,0 +1,8 @@
+AuthType Basic
+AuthName "AskProAI Legacy Admin - Restricted Access"
+AuthUserFile /var/www/api-gateway/.htpasswd
+Require valid-user
+
+# Deny access to all files
+Order allow,deny
+Deny from all

@@ -41,7 +41,23 @@ class Customer extends Authenticatable
         'portal_enabled',
         'portal_access_token',
         'portal_token_expires_at',
-        'last_portal_login_at'
+        'last_portal_login_at',
+        // New fields for enhanced customer service
+        'preference_data',
+        'last_seen_at',
+        'loyalty_points',
+        'custom_attributes',
+        'total_spent',
+        'average_booking_value',
+        'cancelled_count',
+        'first_appointment_date',
+        'last_appointment_date',
+        'communication_preferences',
+        'preferred_contact_method',
+        'preferred_appointment_time',
+        'loyalty_tier',
+        'vip_since',
+        'special_requirements'
     ];
     
     protected $casts = [
@@ -56,7 +72,20 @@ class Customer extends Authenticatable
         'sort_order' => 'integer',
         'portal_token_expires_at' => 'datetime',
         'last_portal_login_at' => 'datetime',
-        'email_verified_at' => 'datetime'
+        'email_verified_at' => 'datetime',
+        // New casts for enhanced fields
+        'preference_data' => 'array',
+        'last_seen_at' => 'datetime',
+        'loyalty_points' => 'integer',
+        'custom_attributes' => 'array',
+        'total_spent' => 'decimal:2',
+        'average_booking_value' => 'decimal:2',
+        'cancelled_count' => 'integer',
+        'first_appointment_date' => 'date',
+        'last_appointment_date' => 'date',
+        'communication_preferences' => 'array',
+        'vip_since' => 'datetime',
+        'special_requirements' => 'array'
     ];
 
     protected $hidden = [
@@ -130,6 +159,14 @@ class Customer extends Authenticatable
     }
 
     /**
+     * Get the customer's preferred staff
+     */
+    public function preferredStaff()
+    {
+        return $this->belongsTo(Staff::class, 'preferred_staff_id');
+    }
+
+    /**
      * Get the customer's cookie consents
      */
     public function cookieConsents()
@@ -154,6 +191,30 @@ class Customer extends Authenticatable
             return $this->hasMany(Invoice::class);
         }
         return $this->hasMany(Appointment::class); // Fallback to appointments
+    }
+
+    /**
+     * Get the customer's preferences
+     */
+    public function preferences()
+    {
+        return $this->hasOne(CustomerPreference::class);
+    }
+
+    /**
+     * Get the customer's interactions
+     */
+    public function interactions()
+    {
+        return $this->hasMany(CustomerInteraction::class);
+    }
+
+    /**
+     * Get the customer's appointment series
+     */
+    public function appointmentSeries()
+    {
+        return $this->hasMany(AppointmentSeries::class);
     }
 
     /**

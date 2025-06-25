@@ -52,7 +52,7 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     /**
      * Create a new agent
      */
-    public function createAgent(array $config): array
+    public function createAgent(array $config): ?array
     {
         return $this->circuitBreaker->call('retell', function() use ($config) {
             $response = $this->httpWithRetry()
@@ -65,14 +65,20 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
                 return $data;
             }
             
-            throw new \Exception("Failed to create agent: " . $response->body());
+            $this->logger->logError(new \Exception('Failed to create agent'), [
+                'status' => $response->status(),
+                'body' => substr($response->body(), 0, 500),
+                'data' => $this->masker->mask($config)
+            ]);
+            
+            return null;
         });
     }
     
     /**
      * Update existing agent
      */
-    public function updateAgent(string $agentId, array $config): array
+    public function updateAgent(string $agentId, array $config): ?array
     {
         return $this->circuitBreaker->call('retell', function() use ($agentId, $config) {
             // Remove agent_id from payload if present as it goes in the URL
@@ -88,7 +94,14 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
                 return $data;
             }
             
-            throw new \Exception("Failed to update agent: " . $response->body());
+            $this->logger->logError(new \Exception('Failed to update agent'), [
+                'status' => $response->status(),
+                'body' => substr($response->body(), 0, 500),
+                'agent_id' => $agentId,
+                'data' => $this->masker->mask($config)
+            ]);
+            
+            return null;
         });
     }
     
@@ -143,6 +156,7 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
             return ['agents' => []];
         });
     }
+    
     
     /**
      * Delete an agent
@@ -267,5 +281,73 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     {
         $agent = $this->getAgent($agentId);
         return $agent['prompt'] ?? null;
+    }
+    
+    /**
+     * Get Retell LLM configuration (contains prompt, model, custom functions)
+     */
+    public function getRetellLLM(string $llmId): ?array
+    {
+        return $this->circuitBreaker->call('retell', function() use ($llmId) {
+            $url = $this->url . '/get-retell-llm/' . $llmId;
+            
+            $this->logger->logApiCall('RetellV2', 'getRetellLLM', ['llm_id' => $llmId], null, 0);
+            
+            $response = $this->httpWithRetry()
+                ->withToken($this->token)
+                ->get($url);
+            
+            if ($response->successful()) {
+                return $response->json();
+            }
+            
+            $this->logger->logError(new \Exception('Failed to get LLM'), [
+                'status' => $response->status(),
+                'body' => substr($response->body(), 0, 500),
+                'llm_id' => $llmId
+            ]);
+            
+            return null;
+        });
+    }
+    
+    /**
+     * Update Retell LLM configuration
+     */
+    public function updateRetellLLM(string $llmId, array $config): ?array
+    {
+        return $this->circuitBreaker->call('retell', function() use ($llmId, $config) {
+            $url = $this->url . '/update-retell-llm/' . $llmId;
+            
+            $response = $this->httpWithRetry()
+                ->withToken($this->token)
+                ->patch($url, $config);
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                $this->logger->logApiCall('RetellV2', 'updateRetellLLM', $this->masker->mask($config), $data, 0);
+                return $data;
+            }
+            
+            throw new \Exception("Failed to update LLM: " . $response->body());
+        });
+    }
+    
+    /**
+     * List all Retell LLMs
+     */
+    public function listRetellLLMs(): array
+    {
+        return $this->circuitBreaker->call('retell', function() {
+            $response = $this->httpWithRetry()
+                ->withToken($this->token)
+                ->get($this->url . '/list-retell-llms');
+            
+            if ($response->successful()) {
+                return $response->json();
+            }
+            
+            return [];
+        });
     }
 }

@@ -1,0 +1,175 @@
+/* Retell Ultimate Dashboard Styles */
+
+/* Enhanced function cards */
+.function-card {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.function-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* collect_appointment_data special styling */
+.function-card.is-collect-appointment {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%);
+    border-color: rgb(99, 102, 241);
+}
+
+/* Parameter cards */
+.parameter-card {
+    background: rgba(249, 250, 251, 0.5);
+    border: 1px solid rgba(229, 231, 235, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.dark .parameter-card {
+    background: rgba(31, 41, 55, 0.5);
+    border: 1px solid rgba(55, 65, 81, 0.5);
+}
+
+/* Code editor styling */
+.prompt-editor {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    tab-size: 2;
+}
+
+/* Test console styling */
+.test-console {
+    background: #1a1a1a;
+    color: #f0f0f0;
+    font-family: 'Monaco', 'Menlo', monospace;
+    border-radius: 8px;
+}
+
+.test-console .success {
+    color: #4ade80;
+}
+
+.test-console .error {
+    color: #f87171;
+}
+
+/* JSON syntax highlighting */
+.json-key {
+    color: #8b92ff;
+}
+
+.json-string {
+    color: #a5f3fc;
+}
+
+.json-number {
+    color: #fbbf24;
+}
+
+.json-boolean {
+    color: #c084fc;
+}
+
+/* Tab indicators */
+.tab-indicator {
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-indicator::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgb(99, 102, 241);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.tab-indicator.active::after {
+    transform: scaleX(1);
+}
+
+/* Function parameter badges */
+.param-type-string {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: rgb(34, 197, 94);
+}
+
+.param-type-number {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: rgb(59, 130, 246);
+}
+
+.param-type-boolean {
+    background-color: rgba(168, 85, 247, 0.1);
+    color: rgb(168, 85, 247);
+}
+
+.param-type-object {
+    background-color: rgba(251, 146, 60, 0.1);
+    color: rgb(251, 146, 60);
+}
+
+/* Animation for expanding sections */
+.expand-enter {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.expand-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+/* Loading states */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Enhanced scrollbar for code blocks */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* Dark mode scrollbar */
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
