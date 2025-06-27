@@ -379,7 +379,7 @@ class EnhancedCustomerService
                 'company_id' => Customer::find($customerId)->company_id,
                 'preference_value' => json_encode($value),
                 'confidence_score' => $confidence,
-                'usage_count' => DB::raw('IFNULL(usage_count, 0) + 1'),
+                'usage_count' => DB::raw('IFNULL(usage_count, 0) + ?', [1]),
                 'last_used_at' => now(),
                 'updated_at' => now()
             ]
