@@ -2,19 +2,20 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Str;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Customer;
 use App\Mail\MagicLinkEmail;
 use App\Mail\PasswordResetEmail;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Customer;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CustomerPortalLoginE2ETest extends TestCase
 {
@@ -60,7 +61,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_login_with_email_and_password()
@@ -105,7 +105,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_login_with_magic_link()
@@ -172,7 +171,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_reset_password()
@@ -264,7 +262,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function disabled_customer_cannot_login()
@@ -286,7 +283,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function unverified_email_requires_verification()
@@ -347,7 +343,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function login_throttling_works_correctly()
@@ -387,7 +382,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_logout()
@@ -413,7 +407,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function session_timeout_redirects_to_login()
@@ -435,7 +428,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_portal_respects_company_settings()
@@ -477,7 +469,6 @@ class CustomerPortalLoginE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function multi_tenant_isolation_in_login()

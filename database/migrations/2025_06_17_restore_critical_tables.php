@@ -13,7 +13,7 @@ return new class extends CompatibleMigration
     {
         // 1. Sessions Table - KRITISCH für Laravel Session Management
         if (!Schema::hasTable('sessions')) {
-            Schema::create('sessions', function (Blueprint $table) {
+            $this->createTableIfNotExists('sessions', function (Blueprint $table) {
                 $table->string('id')->primary();
                 $table->foreignId('user_id')->nullable()->index();
                 $table->string('ip_address', 45)->nullable();
@@ -25,7 +25,7 @@ return new class extends CompatibleMigration
         
         // 2. Password Reset Tokens - KRITISCH für Laravel Auth
         if (!Schema::hasTable('password_reset_tokens')) {
-            Schema::create('password_reset_tokens', function (Blueprint $table) {
+            $this->createTableIfNotExists('password_reset_tokens', function (Blueprint $table) {
                 $table->string('email')->index();
                 $table->string('token');
                 $table->timestamp('created_at')->nullable();
@@ -34,7 +34,7 @@ return new class extends CompatibleMigration
         
         // 3. Retell Webhooks - WICHTIG: Enthielt 1383 Records!
         if (!Schema::hasTable('retell_webhooks')) {
-            Schema::create('retell_webhooks', function (Blueprint $table) {
+            $this->createTableIfNotExists('retell_webhooks', function (Blueprint $table) {
                 $table->id();
                 $table->string('event_type');
                 $table->string('call_id')->nullable();
@@ -53,7 +53,7 @@ return new class extends CompatibleMigration
         
         // 4. User Statuses - Hatte Foreign Key Dependencies
         if (!Schema::hasTable('user_statuses')) {
-            Schema::create('user_statuses', function (Blueprint $table) {
+            $this->createTableIfNotExists('user_statuses', function (Blueprint $table) {
                 $table->id();
                 $table->string('status_title');
                 $table->string('description')->nullable();
@@ -82,7 +82,7 @@ return new class extends CompatibleMigration
         
         // 6. Staff Event Type Assignments - Wichtig für Staff-Event Zuordnung
         if (!Schema::hasTable('staff_event_type_assignments')) {
-            Schema::create('staff_event_type_assignments', function (Blueprint $table) {
+            $this->createTableIfNotExists('staff_event_type_assignments', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('staff_id');
                 $table->unsignedBigInteger('event_type_id');
@@ -97,7 +97,7 @@ return new class extends CompatibleMigration
         
         // 7. Retell Agents - Möglicherweise noch verwendet
         if (!Schema::hasTable('retell_agents')) {
-            Schema::create('retell_agents', function (Blueprint $table) {
+            $this->createTableIfNotExists('retell_agents', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('company_id');
                 $table->string('agent_id')->unique();
@@ -112,7 +112,7 @@ return new class extends CompatibleMigration
         
         // 8. Activity Log - Wichtig für Audit Trail
         if (!Schema::hasTable('activity_log')) {
-            Schema::create('activity_log', function (Blueprint $table) {
+            $this->createTableIfNotExists('activity_log', function (Blueprint $table) {
                 $table->id();
                 $table->string('log_name')->nullable();
                 $table->text('description');
@@ -133,13 +133,13 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('activity_log');
-        Schema::dropIfExists('retell_agents');
-        Schema::dropIfExists('staff_event_type_assignments');
+        $this->dropTableIfExists('activity_log');
+        $this->dropTableIfExists('retell_agents');
+        $this->dropTableIfExists('staff_event_type_assignments');
         $this->dropTableIfExists('event_type_import_logs');
-        Schema::dropIfExists('user_statuses');
-        Schema::dropIfExists('retell_webhooks');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
+        $this->dropTableIfExists('user_statuses');
+        $this->dropTableIfExists('retell_webhooks');
+        $this->dropTableIfExists('password_reset_tokens');
+        $this->dropTableIfExists('sessions');
     }
 };

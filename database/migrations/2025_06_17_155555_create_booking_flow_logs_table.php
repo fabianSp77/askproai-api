@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('booking_flow_logs', function (Blueprint $table) {
+        $this->createTableIfNotExists('booking_flow_logs', function (Blueprint $table) {
             $table->id();
             $table->uuid('correlation_id')->index();
             $table->string('step', 100);
@@ -40,6 +40,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('booking_flow_logs');
+        $this->dropTableIfExists('booking_flow_logs');
     }
 };

@@ -2,32 +2,33 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Notification;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Customer;
-use App\Models\Appointment;
-use App\Models\User;
-use App\Models\CalcomBooking;
-use App\Models\CalcomEventType;
-use App\Events\AppointmentUpdated;
 use App\Events\AppointmentCancelled;
-use App\Jobs\SyncCalcomBooking;
+use App\Events\AppointmentUpdated;
 use App\Jobs\NotifyStaffOfChange;
+use App\Jobs\SyncCalcomBooking;
+use App\Mail\AppointmentCancellation;
 use App\Mail\AppointmentConfirmation;
 use App\Mail\AppointmentRescheduled;
-use App\Mail\AppointmentCancellation;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\CalcomBooking;
+use App\Models\CalcomEventType;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Models\User;
 use App\Notifications\StaffAppointmentNotification;
 use App\Services\CalcomV2Service;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class AppointmentManagementFlowTest extends TestCase
 {
@@ -204,7 +205,6 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function complete_appointment_lifecycle_from_booking_to_completion()
@@ -394,7 +394,6 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_appointment_cancellation_flow()
@@ -465,7 +464,6 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function prevents_double_booking_for_staff()
@@ -511,7 +509,6 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_recurring_appointments()
@@ -592,7 +589,6 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function manages_waiting_list_and_notifications()
@@ -657,7 +653,6 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function tracks_appointment_history_and_changes()
@@ -710,7 +705,6 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_group_appointments()
@@ -786,7 +780,6 @@ class AppointmentManagementFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function integrates_with_external_calendar_systems()

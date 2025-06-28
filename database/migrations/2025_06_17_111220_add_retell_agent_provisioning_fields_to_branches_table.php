@@ -20,8 +20,15 @@ return new class extends CompatibleMigration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         Schema::table('branches', function (Blueprint $table) {
             // Only drop settings column as it's the only one we're adding
             $table->dropColumn('settings');

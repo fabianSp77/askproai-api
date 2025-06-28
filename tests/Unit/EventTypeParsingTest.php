@@ -2,11 +2,12 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Services\EventTypeNameParser;
-use App\Services\SmartEventTypeNameParser;
 use App\Models\Branch;
 use App\Models\Company;
+use App\Services\EventTypeNameParser;
+use App\Services\SmartEventTypeNameParser;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class EventTypeParsingTest extends TestCase
 {
@@ -33,6 +34,7 @@ class EventTypeParsingTest extends TestCase
     /**
      * Test EventTypeNameParser parsing functionality
      */
+    #[Test]
     public function test_standard_event_type_name_parsing()
     {
         // Test cases
@@ -92,6 +94,7 @@ class EventTypeParsingTest extends TestCase
     /**
      * Test branch matching logic
      */
+    #[Test]
     public function test_branch_matching_validation()
     {
         $testCases = [
@@ -122,6 +125,7 @@ class EventTypeParsingTest extends TestCase
     /**
      * Test service name extraction from marketing text
      */
+    #[Test]
     public function test_service_name_extraction_from_marketing_text()
     {
         $testCases = [
@@ -153,6 +157,7 @@ class EventTypeParsingTest extends TestCase
     /**
      * Test SmartEventTypeNameParser extraction
      */
+    #[Test]
     public function test_smart_parser_clean_service_extraction()
     {
         $testCases = [
@@ -213,6 +218,7 @@ class EventTypeParsingTest extends TestCase
     /**
      * Test name generation
      */
+    #[Test]
     public function test_event_type_name_generation()
     {
         $testCases = [
@@ -238,6 +244,7 @@ class EventTypeParsingTest extends TestCase
     /**
      * Test smart parser name format generation
      */
+    #[Test]
     public function test_smart_parser_name_formats()
     {
         $formats = $this->smartParser->generateNameFormats($this->branch, 'Consultation Service');
@@ -257,6 +264,7 @@ class EventTypeParsingTest extends TestCase
     /**
      * Test edge cases and error handling
      */
+    #[Test]
     public function test_parser_edge_cases()
     {
         // Empty strings
@@ -284,6 +292,7 @@ class EventTypeParsingTest extends TestCase
     /**
      * Test analysis for import functionality
      */
+    #[Test]
     public function test_analyze_event_types_for_import()
     {
         $eventTypes = [

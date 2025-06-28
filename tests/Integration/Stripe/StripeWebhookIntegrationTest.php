@@ -2,18 +2,19 @@
 
 namespace Tests\Integration\Stripe;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Queue;
+use App\Jobs\ProcessWebhookJob;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\WebhookEvent;
-use App\Jobs\ProcessWebhookJob;
-use App\Services\Webhooks\StripeWebhookHandler;
 use App\Services\StripeInvoiceService;
+use App\Services\Webhooks\StripeWebhookHandler;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class StripeWebhookIntegrationTest extends TestCase
 {
@@ -145,6 +146,7 @@ class StripeWebhookIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_customer_subscription_lifecycle_webhooks()
     {
         $company = Company::factory()->create([
@@ -315,6 +317,7 @@ class StripeWebhookIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_checkout_session_completed_for_one_time_payment()
     {
         $company = Company::factory()->create([
@@ -407,6 +410,7 @@ class StripeWebhookIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_webhook_errors_gracefully()
     {
         $invalidPayload = [

@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -71,11 +71,20 @@ return new class extends Migration
             });
         }
         
-        // Staff table indexes
-        if (!$this->indexExists('staff', 'idx_staff_branch_active')) {
-            Schema::table('staff', function (Blueprint $table) {
-                $table->index(['branch_id', 'is_active'], 'idx_staff_branch_active');
-            });
+        // Staff table indexes - only if is_active column exists
+        if (Schema::hasColumn('staff', 'is_active')) {
+            if (!$this->indexExists('staff', 'idx_staff_branch_active')) {
+                Schema::table('staff', function (Blueprint $table) {
+                    $table->index(['branch_id', 'is_active'], 'idx_staff_branch_active');
+                });
+            }
+        } else {
+            // Create index without is_active if column doesn't exist
+            if (!$this->indexExists('staff', 'idx_staff_branch')) {
+                Schema::table('staff', function (Blueprint $table) {
+                    $table->index('branch_id', 'idx_staff_branch');
+                });
+            }
         }
         
         // Webhook events indexes
@@ -141,14 +150,5 @@ return new class extends Migration
                 });
             }
         }
-    }
-    
-    /**
-     * Check if index exists
-     */
-    private function indexExists($table, $index): bool
-    {
-        $indexes = DB::select("SHOW INDEX FROM $table WHERE Key_name = ?", [$index]);
-        return count($indexes) > 0;
     }
 };

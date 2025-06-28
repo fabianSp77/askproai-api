@@ -2,13 +2,14 @@
 
 namespace Tests\Unit\Http\Middleware;
 
-use Tests\TestCase;
-use App\Http\Middleware\VerifyRetellSignature;
 use App\Exceptions\WebhookSignatureException;
+use App\Http\Middleware\VerifyRetellSignature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Response;
+use Tests\TestCase;
 
 class VerifyRetellSignatureTest extends TestCase
 {
@@ -23,6 +24,8 @@ class VerifyRetellSignatureTest extends TestCase
         Config::set('services.retell.webhook_secret', $this->webhookSecret);
         Log::spy();
     }
+
+    #[Test]
 
     public function test_it_passes_valid_signature_with_timestamp()
     {
@@ -42,6 +45,8 @@ class VerifyRetellSignatureTest extends TestCase
         $this->assertEquals('OK', $response->getContent());
     }
 
+    #[Test]
+
     public function test_it_passes_valid_signature_without_timestamp()
     {
         $signature = hash_hmac('sha256', $this->testPayload, $this->webhookSecret);
@@ -56,6 +61,8 @@ class VerifyRetellSignatureTest extends TestCase
 
         $this->assertEquals('OK', $response->getContent());
     }
+
+    #[Test]
 
     public function test_it_passes_valid_signature_with_combined_format()
     {
@@ -75,6 +82,8 @@ class VerifyRetellSignatureTest extends TestCase
         $this->assertEquals('OK', $response->getContent());
     }
 
+    #[Test]
+
     public function test_it_passes_valid_base64_signature()
     {
         $timestamp = time();
@@ -93,6 +102,8 @@ class VerifyRetellSignatureTest extends TestCase
         $this->assertEquals('OK', $response->getContent());
     }
 
+    #[Test]
+
     public function test_it_rejects_invalid_signature()
     {
         $this->expectException(WebhookSignatureException::class);
@@ -106,6 +117,8 @@ class VerifyRetellSignatureTest extends TestCase
         });
     }
 
+    #[Test]
+
     public function test_it_rejects_missing_signature()
     {
         $this->expectException(WebhookSignatureException::class);
@@ -117,6 +130,8 @@ class VerifyRetellSignatureTest extends TestCase
             // Should not reach here
         });
     }
+
+    #[Test]
 
     public function test_it_handles_missing_configuration()
     {
@@ -133,6 +148,8 @@ class VerifyRetellSignatureTest extends TestCase
             // Should not reach here
         });
     }
+
+    #[Test]
 
     public function test_it_uses_api_key_as_fallback()
     {
@@ -151,6 +168,8 @@ class VerifyRetellSignatureTest extends TestCase
 
         $this->assertEquals('OK', $response->getContent());
     }
+
+    #[Test]
 
     public function test_it_handles_millisecond_timestamps()
     {
@@ -171,6 +190,8 @@ class VerifyRetellSignatureTest extends TestCase
         $this->assertEquals('OK', $response->getContent());
     }
 
+    #[Test]
+
     public function test_it_skips_in_testing_environment()
     {
         $this->app['env'] = 'testing';
@@ -185,6 +206,8 @@ class VerifyRetellSignatureTest extends TestCase
 
         $this->assertEquals('OK', $response->getContent());
     }
+
+    #[Test]
 
     public function test_it_logs_ip_verification_warning()
     {

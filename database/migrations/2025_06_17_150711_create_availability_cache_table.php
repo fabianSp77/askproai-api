@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('availability_cache', function (Blueprint $table) {
+        $this->createTableIfNotExists('availability_cache', function (Blueprint $table) {
             $table->id();
             $table->foreignUuid('staff_id')->constrained()->onDelete('cascade');
             $table->foreignId('event_type_id')->nullable()->constrained('calcom_event_types')->onDelete('cascade');
@@ -37,6 +37,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('availability_cache');
+        $this->dropTableIfExists('availability_cache');
     }
 };

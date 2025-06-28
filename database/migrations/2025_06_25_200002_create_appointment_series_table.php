@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('appointment_series', function (Blueprint $table) {
+        if (!Schema::hasTable('appointment_series')) {
+            Schema::create('appointment_series', function (Blueprint $table) {
             $table->id();
             $table->string('series_id')->unique();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
@@ -64,6 +65,7 @@ return new class extends Migration
             $table->index(['series_start_date', 'series_end_date']);
             $table->index(['staff_id', 'status']);
         });
+        }
     }
 
     /**

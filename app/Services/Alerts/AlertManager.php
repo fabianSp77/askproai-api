@@ -2,6 +2,7 @@
 
 namespace App\Services\Alerts;
 
+use App\Services\Monitoring\UnifiedAlertingService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -9,74 +10,65 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Carbon\Carbon;
 
+/**
+ * Legacy AlertManager - Delegates to UnifiedAlertingService
+ * @deprecated Use UnifiedAlertingService directly
+ */
 class AlertManager
 {
+    private UnifiedAlertingService $unifiedAlertingService;
     private array $alertChannels = [];
     private array $alertRules = [];
     
-    public function __construct()
+    public function __construct(UnifiedAlertingService $unifiedAlertingService = null)
     {
+        $this->unifiedAlertingService = $unifiedAlertingService ?? app(UnifiedAlertingService::class);
         $this->loadConfiguration();
     }
     
     /**
      * Send an alert for a critical error
+     * @deprecated Use UnifiedAlertingService::alert() instead
      */
     public function sendCriticalAlert(string $service, string $errorType, string $message, array $context = []): void
     {
-        // Check if we should throttle this alert
-        if ($this->shouldThrottle($service, $errorType)) {
-            return;
-        }
+        // Map to unified alerting service
+        $rule = $this->mapErrorTypeToRule($errorType);
+        $data = array_merge($context, [
+            'service' => $service,
+            'message' => $message,
+        ]);
         
-        // Store in database for tracking
-        $alertId = $this->storeAlert($service, $errorType, $message, $context);
-        
-        // Send to configured channels
-        foreach ($this->alertChannels as $channel => $config) {
-            if ($config['enabled'] ?? false) {
-                $this->sendToChannel($channel, $service, $errorType, $message, $context, $alertId);
-            }
-        }
-        
-        // Update throttle cache
-        $this->updateThrottle($service, $errorType);
+        $this->unifiedAlertingService->alert($rule, $data);
     }
     
     /**
      * Check system health and send alerts if needed
+     * @deprecated Use UnifiedAlertingService::checkSystemHealth() instead
      */
     public function checkSystemHealth(): array
     {
-        $alerts = [];
+        return $this->unifiedAlertingService->checkSystemHealth();
+    }
+    
+    /**
+     * Map legacy error types to unified alert rules
+     */
+    private function mapErrorTypeToRule(string $errorType): string
+    {
+        $mapping = [
+            'api_degraded' => 'high_error_rate',
+            'circuit_breaker_open' => 'portal_downtime',
+            'api_down' => 'portal_downtime',
+            'database_connection_failed' => 'database_connection_failure',
+            'disk_space_critical' => 'high_error_rate',
+            'disk_space_low' => 'high_error_rate',
+            'slow_response' => 'high_error_rate',
+            'high_error_rate' => 'high_error_rate',
+            'database_size_large' => 'queue_backlog',
+        ];
         
-        // Check API success rates
-        $apiAlerts = $this->checkApiHealth();
-        $alerts = array_merge($alerts, $apiAlerts);
-        
-        // Check error rates
-        $errorAlerts = $this->checkErrorRates();
-        $alerts = array_merge($alerts, $errorAlerts);
-        
-        // Check response times
-        $performanceAlerts = $this->checkPerformance();
-        $alerts = array_merge($alerts, $performanceAlerts);
-        
-        // Check disk space
-        $systemAlerts = $this->checkSystemResources();
-        $alerts = array_merge($alerts, $systemAlerts);
-        
-        // Send alerts
-        foreach ($alerts as $alert) {
-            $this->sendCriticalAlert(
-                $alert['service'],
-                $alert['type'],
-                $alert['message'],
-                $alert['context'] ?? []
-            );
-        }
-        
-        return $alerts;
+        return $mapping[$errorType] ?? 'high_error_rate';
     }
     
     /**

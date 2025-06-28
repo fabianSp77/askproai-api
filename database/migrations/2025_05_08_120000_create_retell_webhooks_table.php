@@ -8,7 +8,7 @@ return new class extends CompatibleMigration
 {
     public function up(): void
     {
-        Schema::create('retell_webhooks', function (Blueprint $t) {
+        $this->createTableIfNotExists('retell_webhooks', function (Blueprint $t) {
             $t->id();
             $t->string('event_type')->index();
             $t->string('call_id')->nullable()->index();
@@ -19,6 +19,6 @@ return new class extends CompatibleMigration
 
     public function down(): void
     {
-        Schema::dropIfExists('retell_webhooks');
+        $this->dropTableIfExists('retell_webhooks');
     }
 };

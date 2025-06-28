@@ -13,9 +13,14 @@ class SystemImprovements extends Page
 {
 
     protected static ?string $navigationIcon = 'heroicon-o-rocket-launch';
-    protected static ?string $navigationGroup = 'System & Überwachung';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static ?int $navigationSort = 100;
     protected static string $view = 'filament.admin.pages.system-improvements';
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - Functionality merged into other pages
+    }
 
     public array $latestAnalysis = [];
     public array $mcpCatalog = [];

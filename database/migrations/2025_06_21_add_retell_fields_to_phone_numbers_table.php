@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::table('phone_numbers', function (Blueprint $table) {
             // Add company_id for multi-tenancy
             if (!Schema::hasColumn('phone_numbers', 'company_id')) {
-                $table->foreignId('company_id')->nullable()->after('id')->constrained('companies');
+                $table->unsignedBigInteger('company_id')->nullable()->after('id');
+                $this->addForeignKey($table, 'company_id', 'companies');
             }
             
             // Add Retell-specific fields
@@ -37,28 +38,38 @@ return new class extends Migration
                 // Types: office, mobile, fax, retell, hotline
             }
             
-            // Rename active to is_active for consistency
-            if (Schema::hasColumn('phone_numbers', 'active') && !Schema::hasColumn('phone_numbers', 'is_active')) {
+            // Rename active to is_active for consistency (skip in SQLite)
+            if (!$this->isSQLite() && Schema::hasColumn('phone_numbers', 'active') && !Schema::hasColumn('phone_numbers', 'is_active')) {
                 $table->renameColumn('active', 'is_active');
             }
             
             // Add capabilities as JSON
             if (!Schema::hasColumn('phone_numbers', 'capabilities')) {
-                $table->json('capabilities')->nullable()->after('type');
+                $this->addJsonColumn($table, 'capabilities', true)->after('type');
                 // Example: {"sms": true, "voice": true, "whatsapp": false}
             }
             
             // Add metadata for additional information
             if (!Schema::hasColumn('phone_numbers', 'metadata')) {
-                $table->json('metadata')->nullable()->after('capabilities');
+                $this->addJsonColumn($table, 'metadata', true)->after('capabilities');
             }
             
-            // Add indexes for performance
-            $table->index('retell_phone_id');
-            $table->index('retell_agent_id');
-            $table->index('type');
-            $table->index(['company_id', 'is_active']);
         });
+        
+        // Add indexes for performance using compatible methods
+        $this->addIndexIfNotExists('phone_numbers', 'retell_phone_id');
+        $this->addIndexIfNotExists('phone_numbers', 'retell_agent_id');
+        $this->addIndexIfNotExists('phone_numbers', 'type');
+        if (!$this->isSQLite()) {
+            $this->addIndexIfNotExists('phone_numbers', ['company_id', 'is_active']);
+        } else {
+            // For SQLite, use is_active or active depending on what exists
+            if (Schema::hasColumn('phone_numbers', 'is_active')) {
+                $this->addIndexIfNotExists('phone_numbers', ['company_id', 'is_active']);
+            } else if (Schema::hasColumn('phone_numbers', 'active')) {
+                $this->addIndexIfNotExists('phone_numbers', ['company_id', 'active']);
+            }
+        }
     }
 
     /**
@@ -66,12 +77,21 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
+        // Drop indexes first using compatible methods
+        $this->dropIndexIfExists('phone_numbers', 'phone_numbers_company_id_is_active_index');
+        $this->dropIndexIfExists('phone_numbers', 'phone_numbers_company_id_active_index');
+        $this->dropIndexIfExists('phone_numbers', 'phone_numbers_type_index');
+        $this->dropIndexIfExists('phone_numbers', 'phone_numbers_retell_agent_id_index');
+        $this->dropIndexIfExists('phone_numbers', 'phone_numbers_retell_phone_id_index');
+        
         Schema::table('phone_numbers', function (Blueprint $table) {
-            // Drop indexes first
-            $table->dropIndex(['company_id', 'is_active']);
-            $table->dropIndex(['type']);
-            $table->dropIndex(['retell_agent_id']);
-            $table->dropIndex(['retell_phone_id']);
             
             // Drop columns
             if (Schema::hasColumn('phone_numbers', 'metadata')) {
@@ -98,14 +118,14 @@ return new class extends Migration
                 $table->dropColumn('retell_phone_id');
             }
             
-            // Rename back to active
-            if (Schema::hasColumn('phone_numbers', 'is_active') && !Schema::hasColumn('phone_numbers', 'active')) {
+            // Rename back to active (skip in SQLite)
+            if (!$this->isSQLite() && Schema::hasColumn('phone_numbers', 'is_active') && !Schema::hasColumn('phone_numbers', 'active')) {
                 $table->renameColumn('is_active', 'active');
             }
             
             // Drop foreign key and column
             if (Schema::hasColumn('phone_numbers', 'company_id')) {
-                $table->dropForeign(['company_id']);
+                $this->dropForeignKey('phone_numbers', 'phone_numbers_company_id_foreign');
                 $table->dropColumn('company_id');
             }
         });

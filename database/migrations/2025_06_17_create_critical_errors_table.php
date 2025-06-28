@@ -8,7 +8,7 @@ return new class extends CompatibleMigration
 {
     public function up()
     {
-        Schema::create('critical_errors', function (Blueprint $table) {
+        $this->createTableIfNotExists('critical_errors', function (Blueprint $table) {
             $table->id();
             $table->uuid('trace_id')->index();
             $table->string('error_class');
@@ -30,6 +30,6 @@ return new class extends CompatibleMigration
 
     public function down()
     {
-        Schema::dropIfExists('critical_errors');
+        $this->dropTableIfExists('critical_errors');
     }
 };

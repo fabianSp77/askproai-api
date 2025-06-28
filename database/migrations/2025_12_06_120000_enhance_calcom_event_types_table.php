@@ -65,18 +65,20 @@ return new class extends CompatibleMigration
             return;
         }
         
-        Schema::table('calcom_event_types', function (Blueprint $table) {
-            // Drop foreign keys first
-            $table->dropForeign(['company_id']);
-            $table->dropForeign(['branch_id']);
-            
-            // Drop unique constraint
-            $table->dropUnique('unique_calcom_event');
-            
-            // Drop columns
-            $columns = [
-                'company_id',
-                'branch_id', 
+        // Skip in SQLite due to limitations
+        if (!$this->isSQLite()) {
+            Schema::table('calcom_event_types', function (Blueprint $table) {
+                // Drop foreign keys first
+                $table->dropForeign(['company_id']);
+                $table->dropForeign(['branch_id']);
+                
+                // Drop unique constraint
+                $table->dropUnique('unique_calcom_event');
+                
+                // Drop columns
+                $columns = [
+                    'company_id',
+                    'branch_id', 
                 'calcom_event_type_id',
                 'slug',
                 'is_team_event',
@@ -91,6 +93,7 @@ return new class extends CompatibleMigration
                     $table->dropColumn($column);
                 }
             }
-        });
+            });
+        }
     }
 };

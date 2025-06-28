@@ -16,6 +16,11 @@ class VerifyCsrfToken extends Middleware
         'api/retell/webhook',
         'api/calcom/webhook',
         'api/calcom/direct-webhook',
+        // API Login endpoints
+        'api/login',
+        'api/logout',
+        'api/user',
+        'api/user/tokens',
         // Debug endpoints temporarily
         'debug/*',
     ];

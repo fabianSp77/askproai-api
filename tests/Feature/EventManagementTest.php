@@ -2,15 +2,16 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\CalcomEventType;
 use App\Models\Company;
 use App\Models\Staff;
-use App\Models\CalcomEventType;
-use App\Services\CalcomSyncService;
 use App\Services\AvailabilityChecker;
+use App\Services\CalcomSyncService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class EventManagementTest extends TestCase
 {
@@ -53,7 +54,6 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_sync_event_types_from_calcom()
@@ -91,7 +91,6 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_check_availability_with_specific_staff()
@@ -129,7 +128,6 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_returns_error_when_staff_not_assigned_to_event_type()
@@ -149,7 +147,6 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_manage_staff_event_assignments()
@@ -179,7 +176,6 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_find_event_type_by_name()
@@ -198,7 +194,6 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_uses_default_event_type_when_none_specified()
@@ -225,7 +220,6 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function retell_webhook_can_extract_service_and_staff_preferences()
@@ -254,7 +248,6 @@ class EventManagementTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_handle_multi_branch_queries()

@@ -2,20 +2,21 @@
 
 namespace Tests\Performance;
 
-use App\Services\MCP\MCPOrchestrator;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
 use App\Services\Cache\MCPCacheManager;
 use App\Services\CircuitBreaker\CircuitBreaker;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Customer;
-use App\Models\Appointment;
-use App\Models\Call;
-use Tests\TestCase;
+use App\Services\MCP\MCPOrchestrator;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
-use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class MCPLoadTest extends TestCase
 {

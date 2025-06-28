@@ -2,19 +2,20 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
+use App\Events\CustomerActivityTracked;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\Service;
+use App\Models\Staff;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Customer;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Appointment;
-use App\Models\Invoice;
-use App\Models\Call;
-use App\Events\CustomerActivityTracked;
-use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CustomerDashboardE2ETest extends TestCase
 {
@@ -87,7 +88,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_sees_personalized_dashboard()
@@ -182,7 +182,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_shows_loyalty_program_status()
@@ -217,7 +216,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_shows_personalized_recommendations()
@@ -257,7 +255,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_handles_new_customer_experience()
@@ -300,7 +297,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_shows_important_notifications()
@@ -340,7 +336,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_respects_portal_feature_settings()
@@ -375,7 +370,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_shows_multi_branch_information()
@@ -411,7 +405,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_tracks_page_performance_metrics()
@@ -437,7 +430,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_handles_real_time_updates()
@@ -459,7 +451,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_shows_weather_aware_recommendations()
@@ -482,7 +473,6 @@ class CustomerDashboardE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function dashboard_handles_multiple_customer_sessions()
@@ -516,11 +506,9 @@ class CustomerDashboardE2ETest extends TestCase
     {
         $this->app->bind('WeatherService', function () use ($data) {
             return new class($data) {
-                use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function __construct(private array $data) {}
-                use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function getCurrentWeather($location) { return $this->data; }

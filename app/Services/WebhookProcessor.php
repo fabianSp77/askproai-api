@@ -13,6 +13,7 @@ use App\Services\Webhooks\StripeWebhookHandler;
 use App\Exceptions\WebhookSignatureException;
 use App\Exceptions\WebhookProcessingException;
 use App\Services\Webhook\WebhookDeduplicationService;
+use App\Services\Webhook\UnifiedCompanyResolver;
 use Illuminate\Http\Request;
 
 class WebhookProcessor
@@ -38,12 +39,14 @@ class WebhookProcessor
     protected array $verifiers = [];
     
     protected WebhookDeduplicationService $deduplicationService;
+    protected UnifiedCompanyResolver $companyResolver;
     
     public function __construct()
     {
         $this->registerHandlers();
         $this->registerVerifiers();
         $this->deduplicationService = app(WebhookDeduplicationService::class);
+        $this->companyResolver = app(Webhook\UnifiedCompanyResolver::class);
     }
     
     /**
@@ -123,8 +126,28 @@ class WebhookProcessor
                 ];
             }
             
-            // Step 3: Create webhook event record
-            $webhookEvent = DB::transaction(function () use ($provider, $payload, $idempotencyKey, $correlationId) {
+            // Step 3: Resolve company ID early for all webhooks
+            $resolutionResult = $this->companyResolver->resolve($provider, $payload, $headers);
+            $companyId = $resolutionResult ? $resolutionResult['company_id'] : null;
+            
+            if ($companyId) {
+                Log::info('Company resolved for webhook', [
+                    'provider' => $provider,
+                    'company_id' => $companyId,
+                    'strategy' => $resolutionResult['strategy'],
+                    'confidence' => $resolutionResult['confidence'],
+                    'correlation_id' => $correlationId
+                ]);
+            } else {
+                Log::warning('Could not resolve company for webhook', [
+                    'provider' => $provider,
+                    'event_type' => $this->extractEventType($provider, $payload),
+                    'correlation_id' => $correlationId
+                ]);
+            }
+            
+            // Step 4: Create webhook event record with company_id
+            $webhookEvent = DB::transaction(function () use ($provider, $payload, $idempotencyKey, $correlationId, $companyId) {
                 // Double-check within transaction to prevent race conditions
                 $existing = WebhookEvent::where('idempotency_key', $idempotencyKey)
                     ->lockForUpdate()
@@ -135,6 +158,7 @@ class WebhookProcessor
                 }
                 
                 return WebhookEvent::create([
+                    'company_id' => $companyId,
                     'provider' => $provider,
                     'event_type' => $this->extractEventType($provider, $payload),
                     'event_id' => $this->extractEventId($provider, $payload),
@@ -160,9 +184,14 @@ class WebhookProcessor
             
             if ($asyncEnabled && !app()->runningInConsole()) {
                 // Dispatch job for async processing based on provider
+                // Company ID is already stored in the webhook event
                 switch ($provider) {
                     case WebhookEvent::PROVIDER_RETELL:
-                        \App\Jobs\ProcessRetellWebhookJob::dispatch($webhookEvent, $correlationId);
+                        $job = new \App\Jobs\ProcessRetellWebhookJob($webhookEvent, $correlationId);
+                        if ($companyId) {
+                            $job->setCompanyId($companyId);
+                        }
+                        dispatch($job);
                         break;
                     case WebhookEvent::PROVIDER_CALCOM:
                         \App\Jobs\ProcessCalcomWebhookJob::dispatch($webhookEvent, $correlationId);
@@ -303,11 +332,25 @@ class WebhookProcessor
         $verifier = $this->verifiers[$provider] ?? null;
         
         if (!$verifier) {
-            Log::warning("No signature verifier for provider: {$provider}");
-            return true; // Allow if no verifier configured
+            Log::error("No signature verifier configured for provider: {$provider}", [
+                'headers' => array_keys($headers),
+                'correlation_id' => $this->correlationId ?? null
+            ]);
+            
+            // Security: Reject webhooks without configured verifiers
+            throw new WebhookSignatureException("No signature verifier configured for provider: {$provider}");
         }
         
-        return $verifier($payload, $headers);
+        $isValid = $verifier($payload, $headers);
+        
+        if (!$isValid) {
+            WebhookSecurityService::logSecurityEvent('webhook_signature_invalid', [
+                'provider' => $provider,
+                'event_type' => $this->extractEventType($provider, $payload)
+            ]);
+        }
+        
+        return $isValid;
     }
     
     /**
@@ -316,9 +359,53 @@ class WebhookProcessor
      * @param string $provider
      * @return WebhookHandlerInterface|null
      */
-    protected function getHandler(string $provider): ?WebhookHandlerInterface
+    public function getHandler(string $provider): ?WebhookHandlerInterface
     {
         return $this->handlers[$provider] ?? null;
+    }
+    
+    /**
+     * Process a webhook event that was queued for async processing
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string|null $correlationId
+     * @return array
+     * @throws WebhookProcessingException
+     */
+    public function processWebhookEvent(WebhookEvent $webhookEvent, ?string $correlationId = null): array
+    {
+        $correlationId = $correlationId ?? $webhookEvent->correlation_id ?? Str::uuid()->toString();
+        
+        try {
+            // Get the appropriate handler
+            $handler = $this->getHandler($webhookEvent->provider);
+            
+            if (!$handler) {
+                throw new WebhookProcessingException("No handler registered for provider: {$webhookEvent->provider}");
+            }
+            
+            // Process the webhook
+            $result = $handler->handle($webhookEvent, $correlationId);
+            
+            Log::info('Webhook processed successfully', [
+                'webhook_event_id' => $webhookEvent->id,
+                'provider' => $webhookEvent->provider,
+                'event_type' => $webhookEvent->event_type,
+                'correlation_id' => $correlationId
+            ]);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            Log::error('Error processing webhook event', [
+                'webhook_event_id' => $webhookEvent->id,
+                'provider' => $webhookEvent->provider,
+                'error' => $e->getMessage(),
+                'correlation_id' => $correlationId
+            ]);
+            
+            throw $e;
+        }
     }
     
     /**
@@ -430,47 +517,39 @@ class WebhookProcessor
      */
     protected function verifyRetellSignature(array $payload, array $headers): bool
     {
-        // TEMPORARY: Bypass signature verification for Retell webhooks
-        // TODO: Work with Retell support to understand their exact signature format
-        Log::warning('RETELL WEBHOOK SIGNATURE BYPASS - TEMPORARY', [
-            'has_signature' => isset($headers['x-retell-signature']) || isset($headers['X-Retell-Signature']),
-            'has_timestamp' => isset($headers['x-retell-timestamp']) || isset($headers['X-Retell-Timestamp']),
-            'event' => $payload['event'] ?? 'unknown',
-            'call_id' => $payload['call']['call_id'] ?? null
-        ]);
-        
-        return true; // Temporarily allow all Retell webhooks
-        
-        /* ORIGINAL CODE - RESTORE AFTER FIXING SIGNATURE FORMAT
         $signatureHeader = $headers['x-retell-signature'][0] ?? $headers['X-Retell-Signature'][0] ?? null;
-        $timestamp = $headers['x-retell-timestamp'][0] ?? $headers['X-Retell-Timestamp'][0] ?? null;
-        $apiKey = config('services.retell.api_key') ?? config('services.retell.secret');
+        $webhookSecret = config('services.retell.webhook_secret');
         
-        if (!$signatureHeader || !$apiKey) {
+        if (!$signatureHeader || !$webhookSecret) {
+            Log::warning('Retell webhook signature verification failed - missing signature or secret', [
+                'has_signature' => !empty($signatureHeader),
+                'has_secret' => !empty($webhookSecret),
+                'event' => $payload['event'] ?? 'unknown'
+            ]);
             return false;
         }
         
-        // Extract signature from header
-        $signature = $signatureHeader;
-        if (strpos($signatureHeader, 'v=') === 0) {
-            $parts = explode(',', substr($signatureHeader, 2));
-            if (count($parts) >= 2) {
-                $timestamp = $timestamp ?? $parts[0];
-                $signature = $parts[1];
-            } else {
-                $signature = $parts[0] ?? $signatureHeader;
-            }
+        // Retell uses a simple HMAC-SHA256 signature
+        $body = json_encode($payload);
+        $expectedSignature = hash_hmac('sha256', $body, $webhookSecret);
+        
+        // Extract signature from header (handle potential prefix)
+        $providedSignature = $signatureHeader;
+        if (str_starts_with($signatureHeader, 'sha256=')) {
+            $providedSignature = substr($signatureHeader, 7);
         }
         
-        // Build signature payload
-        $body = json_encode($payload);
-        $signaturePayload = $timestamp ? "{$timestamp}.{$body}" : $body;
+        // Verify signature
+        $isValid = hash_equals($expectedSignature, $providedSignature);
         
-        // Calculate expected signature
-        $expectedSignature = hash_hmac('sha256', $signaturePayload, $apiKey);
+        if (!$isValid) {
+            Log::warning('Retell webhook signature verification failed', [
+                'event' => $payload['event'] ?? 'unknown',
+                'call_id' => $payload['call']['call_id'] ?? $payload['call_id'] ?? null
+            ]);
+        }
         
-        return hash_equals($expectedSignature, $signature);
-        */
+        return $isValid;
     }
     
     /**

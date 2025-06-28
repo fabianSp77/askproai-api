@@ -39,9 +39,13 @@ class RetellWebhookStrategy implements WebhookStrategy
             'call_id' => $payload['call']['call_id'] ?? null
         ]);
         
+        // Resolve company context
+        $companyResolver = app(\App\Services\Webhook\WebhookCompanyResolver::class);
+        $companyId = $companyResolver->resolveFromWebhook($payload);
+        
         match($event) {
-            'call_started' => ProcessRetellCallStartedJob::dispatch($payload)->onQueue('webhooks'),
-            'call_ended' => ProcessRetellCallEndedJob::dispatch($payload)->onQueue('webhooks'),
+            'call_started' => $this->dispatchWithCompany(ProcessRetellCallStartedJob::class, $payload, $companyId),
+            'call_ended' => $this->dispatchWithCompany(ProcessRetellCallEndedJob::class, $payload, $companyId),
             'call_analyzed' => $this->processCallAnalyzed($payload),
             default => Log::warning('Unknown Retell event', ['event' => $event])
         };
@@ -63,5 +67,19 @@ class RetellWebhookStrategy implements WebhookStrategy
         // Retell webhooks have specific headers
         return $request->hasHeader('x-retell-signature') &&
                $request->hasHeader('x-retell-timestamp');
+    }
+    
+    /**
+     * Dispatch job with company context
+     */
+    private function dispatchWithCompany(string $jobClass, array $payload, ?int $companyId): void
+    {
+        $job = new $jobClass($payload);
+        
+        if ($companyId && method_exists($job, 'setCompanyId')) {
+            $job->setCompanyId($companyId);
+        }
+        
+        dispatch($job)->onQueue('webhooks');
     }
 }

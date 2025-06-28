@@ -374,7 +374,14 @@ class ConnectionPoolManager
             'recycled_connections' => 0
         ];
         
-        Log::info('Database connection pool cleaned up');
+        // Don't log during shutdown as the app container might be gone
+        if (app()->bound('log')) {
+            try {
+                Log::info('Database connection pool cleaned up');
+            } catch (\Exception $e) {
+                // Ignore logging errors during cleanup
+            }
+        }
     }
     
     /**

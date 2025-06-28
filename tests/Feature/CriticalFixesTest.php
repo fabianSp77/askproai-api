@@ -2,18 +2,19 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Services\Database\ConnectionPoolManager;
-use App\Services\Validation\PhoneNumberValidator;
-use App\Services\Webhook\WebhookDeduplicationService;
-use App\Services\Provisioning\ProvisioningValidator;
-use App\Services\Provisioning\RetellAgentProvisioner;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Service;
-use Illuminate\Support\Facades\Redis;
+use App\Services\Database\ConnectionPoolManager;
+use App\Services\Provisioning\ProvisioningValidator;
+use App\Services\Provisioning\RetellAgentProvisioner;
+use App\Services\Validation\PhoneNumberValidator;
+use App\Services\Webhook\WebhookDeduplicationService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CriticalFixesTest extends TestCase
 {
@@ -22,6 +23,7 @@ class CriticalFixesTest extends TestCase
     /**
      * Test Database Connection Pooling
      */
+    #[Test]
     public function test_database_connection_pooling_works()
     {
         $manager = new ConnectionPoolManager();
@@ -41,6 +43,7 @@ class CriticalFixesTest extends TestCase
     /**
      * Test Phone Validation with libphonenumber
      */
+    #[Test]
     public function test_phone_validation_works()
     {
         $validator = new PhoneNumberValidator();
@@ -63,6 +66,7 @@ class CriticalFixesTest extends TestCase
     /**
      * Test Webhook Deduplication with Redis
      */
+    #[Test]
     public function test_webhook_deduplication_works()
     {
         $service = new WebhookDeduplicationService();
@@ -96,6 +100,7 @@ class CriticalFixesTest extends TestCase
     /**
      * Test Provisioning Validation
      */
+    #[Test]
     public function test_provisioning_validation_works()
     {
         $validator = new ProvisioningValidator();
@@ -131,6 +136,7 @@ class CriticalFixesTest extends TestCase
     /**
      * Test RetellAgentProvisioner with validation
      */
+    #[Test]
     public function test_retell_agent_provisioner_validates_before_creation()
     {
         $provisioner = new RetellAgentProvisioner();
@@ -154,6 +160,7 @@ class CriticalFixesTest extends TestCase
     /**
      * Test SQLite compatibility in tests
      */
+    #[Test]
     public function test_sqlite_migration_compatibility()
     {
         // This test runs with SQLite and should pass if migrations work

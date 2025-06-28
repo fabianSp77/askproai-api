@@ -21,7 +21,11 @@ return new class extends CompatibleMigration
             $table->decimal('unit_price', 10, 2);
             $table->decimal('amount', 10, 2);
             $table->decimal('tax_rate', 5, 2)->default(0);
-            $table->foreignId('tax_rate_id')->nullable()->constrained('tax_rates');
+            // Only add foreign key if tax_rates table exists
+            $table->unsignedBigInteger('tax_rate_id')->nullable();
+            if (Schema::hasTable('tax_rates')) {
+                $table->foreign('tax_rate_id')->references('id')->on('tax_rates');
+            }
             $table->date('period_start')->nullable();
             $table->date('period_end')->nullable();
             $this->addJsonColumn($table, 'metadata', true);

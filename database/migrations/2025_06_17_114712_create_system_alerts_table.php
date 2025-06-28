@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('system_alerts', function (Blueprint $table) {
+        $this->createTableIfNotExists('system_alerts', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('service', 50);
             $table->string('type', 50);
@@ -35,6 +35,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('system_alerts');
+        $this->dropTableIfExists('system_alerts');
     }
 };

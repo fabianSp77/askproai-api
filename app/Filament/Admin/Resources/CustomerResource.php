@@ -28,7 +28,69 @@ class CustomerResource extends EnhancedResourceSimple
 
     public static function canViewAny(): bool
     {
-        return true;
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission or if user belongs to a company
+        return $user->can('view_any_customer') || $user->company_id !== null;
+    }
+    
+    public static function canView($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('view_customer')) {
+            return true;
+        }
+        
+        // Users can view customers from their own company
+        return $user->company_id === $record->company_id;
+    }
+    
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can edit all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('update_customer')) {
+            return true;
+        }
+        
+        // Company users can edit customers from their own company
+        return $user->company_id === $record->company_id;
+    }
+    
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can create
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('create_customer')) {
+            return true;
+        }
+        
+        // Any company user can create customers
+        return $user->company_id !== null;
     }
 
     use MultiTenantResource;
@@ -36,14 +98,15 @@ class CustomerResource extends EnhancedResourceSimple
     protected static ?string $model = Customer::class;
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationLabel = 'Kunden';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'Täglicher Betrieb';
+    protected static ?int $navigationSort = 4;
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $user = auth()->user();
         
         if ($user && !$user->hasRole('super_admin') && !$user->hasRole('reseller')) {
-            return parent::getEloquentQuery()->where('tenant_id', $user->tenant_id);
+            return parent::getEloquentQuery()->where('company_id', $user->company_id);
         }
         
         return parent::getEloquentQuery();
@@ -192,6 +255,79 @@ class CustomerResource extends EnhancedResourceSimple
                                     ])
                                     ->default('phone'),
                             ]),
+                            
+                        // Communication Preferences Section
+                        Forms\Components\Section::make('Kommunikationseinstellungen')
+                            ->description('Verwalten Sie die Kommunikationspräferenzen des Kunden')
+                            ->schema([
+                                Forms\Components\Grid::make(2)
+                                    ->schema([
+                                        Forms\Components\Toggle::make('marketing_opt_in')
+                                            ->label('Marketing-Einwilligung')
+                                            ->helperText('Kunde darf Marketingnachrichten erhalten'),
+                                            
+                                        Forms\Components\Toggle::make('reminder_opt_in')
+                                            ->label('Terminerinnerungen')
+                                            ->default(true)
+                                            ->helperText('Kunde möchte Terminerinnerungen erhalten'),
+                                            
+                                        Forms\Components\Toggle::make('sms_opt_in')
+                                            ->label('SMS erlaubt')
+                                            ->helperText('SMS-Nachrichten dürfen gesendet werden'),
+                                            
+                                        Forms\Components\Toggle::make('do_not_contact')
+                                            ->label('Nicht kontaktieren')
+                                            ->helperText('WICHTIG: Kunde möchte nicht kontaktiert werden')
+                                            ->reactive()
+                                            ->afterStateUpdated(function ($state, $set) {
+                                                if ($state) {
+                                                    $set('marketing_opt_in', false);
+                                                    $set('reminder_opt_in', false);
+                                                    $set('sms_opt_in', false);
+                                                }
+                                            }),
+                                    ]),
+                                    
+                                Forms\Components\Select::make('preferred_reminder_time')
+                                    ->label('Bevorzugte Erinnerungszeit')
+                                    ->options([
+                                        '24h' => '24 Stunden vorher',
+                                        '48h' => '48 Stunden vorher',
+                                        '2h' => '2 Stunden vorher',
+                                        'morning' => 'Am Morgen des Termintags',
+                                    ])
+                                    ->default('24h')
+                                    ->visible(fn ($get) => $get('reminder_opt_in') && !$get('do_not_contact')),
+                                    
+                                Forms\Components\CheckboxList::make('communication_blacklist_days')
+                                    ->label('Keine Kommunikation an diesen Tagen')
+                                    ->options([
+                                        'monday' => 'Montag',
+                                        'tuesday' => 'Dienstag',
+                                        'wednesday' => 'Mittwoch',
+                                        'thursday' => 'Donnerstag',
+                                        'friday' => 'Freitag',
+                                        'saturday' => 'Samstag',
+                                        'sunday' => 'Sonntag',
+                                    ])
+                                    ->columns(3)
+                                    ->visible(fn ($get) => !$get('do_not_contact')),
+                                    
+                                Forms\Components\TimePicker::make('quiet_hours_start')
+                                    ->label('Ruhezeiten Beginn')
+                                    ->native(false)
+                                    ->seconds(false)
+                                    ->default('20:00')
+                                    ->visible(fn ($get) => !$get('do_not_contact')),
+                                    
+                                Forms\Components\TimePicker::make('quiet_hours_end')
+                                    ->label('Ruhezeiten Ende')
+                                    ->native(false)
+                                    ->seconds(false)
+                                    ->default('09:00')
+                                    ->visible(fn ($get) => !$get('do_not_contact')),
+                            ])
+                            ->collapsed(),
                     ]),
 
                 // Hilfe-Sektion
@@ -287,7 +423,7 @@ class CustomerResource extends EnhancedResourceSimple
         
         return $table
             ->modifyQueryUsing(fn ($query) => $query
-                ->with(['company', 'appointments' => fn($q) => $q->latest()->limit(5)])
+                ->with(['company', 'appointments' => fn($q) => $q->latest('starts_at')->limit(1)])
                 ->withCount(['appointments', 'calls']))
             ->striped()
             ->contentGrid([
@@ -353,7 +489,7 @@ class CustomerResource extends EnhancedResourceSimple
                     
                 Tables\Columns\TextColumn::make('last_appointment')
                     ->label('Letzter Termin')
-                    ->getStateUsing(fn ($record) => $record->appointments()->latest('starts_at')->first()?->starts_at)
+                    ->getStateUsing(fn ($record) => $record->appointments->first()?->starts_at)
                     ->dateTime('d.m.Y')
                     ->placeholder('Noch kein Termin')
                     ->toggleable(),
@@ -567,6 +703,13 @@ class CustomerResource extends EnhancedResourceSimple
         ];
     }
     
+    public static function getWidgets(): array
+    {
+        return [
+            CustomerResource\Widgets\CustomerInsightsWidget::class,
+        ];
+    }
+    
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
@@ -626,7 +769,13 @@ class CustomerResource extends EnhancedResourceSimple
                             
                         Infolists\Components\TextEntry::make('total_revenue')
                             ->label('Gesamtumsatz')
-                            ->state(fn ($record) => '€ ' . number_format($record->calculateTotalRevenue() ?? 0, 2, ',', '.'))
+                            ->state(function ($record) {
+                                $total = $record->appointments()
+                                    ->where('status', 'completed')
+                                    ->join('services', 'appointments.service_id', '=', 'services.id')
+                                    ->sum('services.price') / 100;
+                                return '€ ' . number_format($total, 2, ',', '.');
+                            })
                             ->badge()
                             ->color('warning'),
                     ])

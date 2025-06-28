@@ -2,13 +2,14 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\User;
 use App\Filament\Admin\Pages\QuickSetupWizard;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class QuickSetupWizardOptimizationTest extends TestCase
 {
@@ -28,7 +29,6 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_loads_companies_efficiently_with_only_needed_fields()
@@ -59,7 +59,6 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_creates_multiple_branches_efficiently_with_bulk_insert()
@@ -113,7 +112,6 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_validates_phone_numbers_correctly()
@@ -140,7 +138,6 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_database_errors_gracefully()
@@ -163,7 +160,6 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_loads_all_branches_in_edit_mode()
@@ -192,7 +188,6 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_performs_within_acceptable_time_limits()
@@ -228,7 +223,6 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_prevents_duplicate_company_creation()
@@ -252,7 +246,6 @@ class QuickSetupWizardOptimizationTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_uses_transactions_for_data_integrity()

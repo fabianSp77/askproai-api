@@ -38,9 +38,10 @@ class CallResource extends Resource
     protected static ?string $model = Call::class;
     protected static ?string $navigationIcon = 'heroicon-o-phone-arrow-down-left';
     protected static ?string $navigationLabel = 'Anrufe';
+    protected static ?string $navigationGroup = 'Täglicher Betrieb';
+    protected static ?int $navigationSort = 2;
     protected static bool $shouldRegisterNavigation = true;
     protected static ?string $recordTitleAttribute = 'call_id';
-    protected static ?int $navigationSort = 2;
     
     public static function canViewAny(): bool
     {
@@ -57,14 +58,10 @@ class CallResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(['customer', 'appointment', 'branch']))
-            ->poll('30s')
+            ->modifyQueryUsing(fn ($query) => $query->with(['customer', 'appointment', 'branch', 'mlPrediction']))
+            ->poll('5s') // Changed from 30s to 5s for faster updates
             ->striped()
             ->defaultSort('start_timestamp', 'desc')
-            ->contentGrid([
-                'md' => 1,
-                'xl' => 1,
-            ])
             ->extremePaginationLinks()
             ->paginated([10, 25, 50, 100])
             ->paginationPageOptions([10, 25, 50, 100])
@@ -226,6 +223,17 @@ class CallResource extends Resource
                     ->url(fn ($record) => $record->appointment ? AppointmentResource::getUrl('edit', ['record' => $record->appointment]) : null)
                     ->toggleable(),
                     
+                Tables\Columns\IconColumn::make('converted_to_appointment')
+                    ->label('Konvertiert')
+                    ->getStateUsing(fn ($record) => !is_null($record->appointment_id))
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->tooltip(fn ($record) => $record->appointment_id ? 'Erfolgreich zu Termin konvertiert' : 'Kein Termin gebucht')
+                    ->toggleable(),
+                    
                 Tables\Columns\TextColumn::make('urgency')
                     ->label('Dringlichkeit')
                     ->getStateUsing(function (Call $record) {
@@ -266,11 +274,11 @@ class CallResource extends Resource
                     ->icon('heroicon-m-phone')
                     ->toggleable(isToggledHiddenByDefault: true),
                     
-                Tables\Columns\TextColumn::make('agent.name')
-                    ->label('AI Agent')
-                    ->placeholder('Standard Agent')
-                    ->icon('heroicon-m-cpu-chip')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                // Tables\Columns\TextColumn::make('agent.name')
+                //     ->label('AI Agent')
+                //     ->placeholder('Standard Agent')
+                //     ->icon('heroicon-m-cpu-chip')
+                //     ->toggleable(isToggledHiddenByDefault: true),
                     
                 Tables\Columns\TextColumn::make('end_timestamp')
                     ->label('Anrufende')
@@ -540,6 +548,31 @@ class CallResource extends Resource
                             }
                             return $query;
                         }),
+                        
+                    Tables\Filters\Filter::make('today')
+                        ->label('Heute')
+                        ->query(fn (Builder $query): Builder => $query->whereDate('created_at', today()))
+                        ->toggle(),
+                        
+                    Tables\Filters\Filter::make('yesterday')
+                        ->label('Gestern')
+                        ->query(fn (Builder $query): Builder => $query->whereDate('created_at', today()->subDay()))
+                        ->toggle(),
+                        
+                    Tables\Filters\Filter::make('converted')
+                        ->label('Mit Termin')
+                        ->query(fn (Builder $query): Builder => $query->whereNotNull('appointment_id'))
+                        ->toggle(),
+                        
+                    Tables\Filters\Filter::make('not_converted')
+                        ->label('Ohne Termin')
+                        ->query(fn (Builder $query): Builder => $query->whereNull('appointment_id'))
+                        ->toggle(),
+                        
+                    Tables\Filters\Filter::make('long_calls')
+                        ->label('Lange Anrufe (>5 Min)')
+                        ->query(fn (Builder $query): Builder => $query->where('duration_sec', '>', 300))
+                        ->toggle(),
                 ]
             ), layout: Tables\Enums\FiltersLayout::Dropdown)
             ->filtersFormColumns(3)
@@ -554,46 +587,123 @@ class CallResource extends Resource
                     ->color('success')
                     ->visible(fn ($record) => !$record->appointment_id && $record->customer_id)
                     ->form([
-                        Forms\Components\DateTimePicker::make('starts_at')
-                            ->label('Termin')
-                            ->required()
-                            ->native(false)
-                            ->displayFormat('d.m.Y H:i')
-                            ->minutesStep(15)
-                            ->minDate(now())
-                            ->default(function ($record) {
-                                // Versuche Datum aus Analyse zu extrahieren
+                        Forms\Components\Section::make('Termindetails')
+                            ->description(function ($record) {
+                                $extractedData = [];
                                 if (isset($record->analysis['entities']['date'])) {
-                                    return $record->analysis['entities']['date'];
+                                    $extractedData[] = 'Datum: ' . $record->analysis['entities']['date'];
                                 }
-                                return now()->addDay()->setHour(9)->setMinute(0);
-                            }),
-                            
-                        Forms\Components\Select::make('service_id')
-                            ->label('Dienstleistung')
-                            ->options(function ($record) {
-                                return \App\Models\Service::where('company_id', $record->company_id)
-                                    ->pluck('name', 'id');
+                                if (isset($record->analysis['entities']['time'])) {
+                                    $extractedData[] = 'Zeit: ' . $record->analysis['entities']['time'];
+                                }
+                                if (isset($record->analysis['entities']['service'])) {
+                                    $extractedData[] = 'Service: ' . $record->analysis['entities']['service'];
+                                }
+                                
+                                return !empty($extractedData) 
+                                    ? 'Erkannte Daten aus dem Anruf: ' . implode(', ', $extractedData)
+                                    : 'Keine Termindaten im Anruf erkannt';
                             })
-                            ->required()
-                            ->searchable(),
-                            
-                        Forms\Components\Select::make('staff_id')
-                            ->label('Mitarbeiter')
-                            ->options(function ($record) {
-                                return \App\Models\Staff::where('company_id', $record->company_id)
-                                    ->get()
-                                    ->mapWithKeys(function ($staff) {
-                                        return [$staff->id => $staff->first_name . ' ' . $staff->last_name];
-                                    });
-                            })
-                            ->searchable(),
-                            
-                        Forms\Components\Textarea::make('notes')
-                            ->label('Notizen')
-                            ->rows(3)
-                            ->default(fn ($record) => "Termin erstellt aus Anruf vom " . $record->created_at->format('d.m.Y H:i')),
+                            ->schema([
+                                Forms\Components\DateTimePicker::make('starts_at')
+                                    ->label('Termin')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('d.m.Y H:i')
+                                    ->minutesStep(15)
+                                    ->minDate(now())
+                                    ->default(function ($record) {
+                                        // Try to extract date and time from analysis
+                                        $date = null;
+                                        $time = null;
+                                        
+                                        if (isset($record->analysis['entities']['date'])) {
+                                            try {
+                                                $date = Carbon::parse($record->analysis['entities']['date']);
+                                            } catch (\Exception $e) {
+                                                // Invalid date format
+                                            }
+                                        }
+                                        
+                                        if (isset($record->analysis['entities']['time'])) {
+                                            try {
+                                                $time = Carbon::parse($record->analysis['entities']['time']);
+                                            } catch (\Exception $e) {
+                                                // Invalid time format
+                                            }
+                                        }
+                                        
+                                        if ($date && $time) {
+                                            return $date->setTimeFrom($time);
+                                        } elseif ($date) {
+                                            return $date->setHour(9)->setMinute(0);
+                                        }
+                                        
+                                        return now()->addDay()->setHour(9)->setMinute(0);
+                                    })
+                                    ->helperText('Wählen Sie Datum und Uhrzeit für den Termin'),
+                                    
+                                Forms\Components\Select::make('service_id')
+                                    ->label('Dienstleistung')
+                                    ->options(function ($record) {
+                                        return \App\Models\Service::where('company_id', $record->company_id)
+                                            ->pluck('name', 'id');
+                                    })
+                                    ->required()
+                                    ->searchable()
+                                    ->default(function ($record) {
+                                        // Try to match extracted service
+                                        if (isset($record->analysis['entities']['service'])) {
+                                            $serviceName = $record->analysis['entities']['service'];
+                                            $service = \App\Models\Service::where('company_id', $record->company_id)
+                                                ->where('name', 'LIKE', "%{$serviceName}%")
+                                                ->first();
+                                            
+                                            if ($service) {
+                                                return $service->id;
+                                            }
+                                        }
+                                        
+                                        return null;
+                                    })
+                                    ->helperText('Wählen Sie die gewünschte Dienstleistung'),
+                                    
+                                Forms\Components\Select::make('staff_id')
+                                    ->label('Mitarbeiter')
+                                    ->options(function ($record) {
+                                        return \App\Models\Staff::where('company_id', $record->company_id)
+                                            ->get()
+                                            ->mapWithKeys(function ($staff) {
+                                                return [$staff->id => $staff->first_name . ' ' . $staff->last_name];
+                                            });
+                                    })
+                                    ->searchable()
+                                    ->helperText('Optional: Wählen Sie einen bestimmten Mitarbeiter'),
+                                    
+                                Forms\Components\Toggle::make('send_confirmation')
+                                    ->label('Bestätigung senden')
+                                    ->default(true)
+                                    ->helperText('E-Mail-Bestätigung an den Kunden senden'),
+                                    
+                                Forms\Components\Textarea::make('notes')
+                                    ->label('Notizen')
+                                    ->rows(3)
+                                    ->default(function ($record) {
+                                        $notes = "Termin erstellt aus Anruf vom " . $record->created_at->format('d.m.Y H:i');
+                                        
+                                        if (isset($record->analysis['summary'])) {
+                                            $notes .= "\n\nAnrufzusammenfassung: " . $record->analysis['summary'];
+                                        }
+                                        
+                                        return $notes;
+                                    })
+                                    ->helperText('Zusätzliche Notizen zum Termin'),
+                            ]),
                     ])
+                    ->modalWidth('md')
+                    ->modalHeading('Termin aus Anruf erstellen')
+                    ->modalSubmitActionLabel('Termin erstellen')
+                    ->modalCancelActionLabel('Abbrechen')
                     ->action(function (array $data, Call $record) {
                         $appointment = Appointment::create([
                             'customer_id' => $record->customer_id,
@@ -611,10 +721,20 @@ class CallResource extends Resource
                         
                         $record->update(['appointment_id' => $appointment->id]);
                         
+                        if ($data['send_confirmation'] ?? false) {
+                            // Here you would trigger the confirmation email
+                        }
+                        
                         \Filament\Notifications\Notification::make()
                             ->title('Termin erstellt')
                             ->success()
                             ->body('Der Termin wurde erfolgreich angelegt.')
+                            ->actions([
+                                \Filament\Notifications\Actions\Action::make('view')
+                                    ->label('Termin anzeigen')
+                                    ->url(AppointmentResource::getUrl('view', ['record' => $appointment]))
+                                    ->button(),
+                            ])
                             ->send();
                     }),
                     
@@ -1328,36 +1448,49 @@ class CallResource extends Resource
                 Infolists\Components\Section::make('Analyse & Inhalt')
                     ->schema([
                         Infolists\Components\ViewEntry::make('audio_player')
-                            ->label('Aufzeichnung')
-                            ->view('filament.infolists.audio-player')
-                            ->visible(fn ($record) => !empty($record->audio_url)),
+                            ->label('Aufzeichnung mit Sentiment-Timeline')
+                            ->view('filament.components.audio-player-sentiment')
+                            ->visible(fn ($record) => !empty($record->audio_url) || !empty($record->recording_url)),
                             
                         Infolists\Components\Grid::make(3)
                             ->schema([
                                 Infolists\Components\TextEntry::make('sentiment')
-                                    ->label('Stimmungsanalyse')
+                                    ->label('ML Stimmungsanalyse')
                                     ->getStateUsing(function ($record) {
+                                        // Check for ML prediction first
+                                        if ($record->mlPrediction) {
+                                            $sentiment = $record->mlPrediction->sentiment_label;
+                                            $score = $record->mlPrediction->sentiment_score;
+                                            $confidence = $record->mlPrediction->confidence_percentage;
+                                            
+                                            return match($sentiment) {
+                                                'positive' => "😊 Positiv ({$score}) - {$confidence}",
+                                                'negative' => "😔 Negativ ({$score}) - {$confidence}",
+                                                'neutral' => "😐 Neutral ({$score}) - {$confidence}",
+                                                default => 'Nicht analysiert'
+                                            };
+                                        }
+                                        
+                                        // Fallback to old analysis
                                         $sentiment = $record->analysis['sentiment'] ?? 'unknown';
                                         return match($sentiment) {
-                                            'positive' => 'Positiv',
-                                            'negative' => 'Negativ',
-                                            'neutral' => 'Neutral',
+                                            'positive' => '😊 Positiv',
+                                            'negative' => '😔 Negativ',
+                                            'neutral' => '😐 Neutral',
                                             default => 'Nicht analysiert'
                                         };
                                     })
                                     ->badge()
-                                    ->color(fn (string $state): string => match ($state) {
-                                        'Positiv' => 'success',
-                                        'Negativ' => 'danger',
-                                        'Neutral' => 'gray',
-                                        default => 'gray',
-                                    })
-                                    ->icon(fn (string $state): string => match ($state) {
-                                        'Positiv' => 'heroicon-m-face-smile',
-                                        'Negativ' => 'heroicon-m-face-frown',
-                                        'Neutral' => 'heroicon-m-minus-circle',
-                                        default => 'heroicon-m-question-mark-circle',
-                                    }),
+                                    ->color(fn ($record): string => 
+                                        $record->mlPrediction 
+                                            ? $record->mlPrediction->sentiment_color
+                                            : match($record->analysis['sentiment'] ?? 'unknown') {
+                                                'positive' => 'success',
+                                                'negative' => 'danger',
+                                                'neutral' => 'gray',
+                                                default => 'gray',
+                                            }
+                                    ),
                                     
                                 Infolists\Components\TextEntry::make('analysis.intent')
                                     ->label('Absicht')
@@ -1378,8 +1511,8 @@ class CallResource extends Resource
                             ]),
                             
                         Infolists\Components\ViewEntry::make('transcript')
-                            ->label('Transkript')
-                            ->view('filament.infolists.transcript-viewer')
+                            ->label('Transkript mit Sentiment-Analyse')
+                            ->view('filament.infolists.transcript-sentiment-viewer')
                             ->columnSpanFull(),
                     ]),
                     
@@ -1487,5 +1620,11 @@ class CallResource extends Resource
     public static function getNavigationBadgeColor(): ?string
     {
         return static::getModel()::whereDate('created_at', today())->count() > 0 ? 'primary' : 'gray';
+    }
+    
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['customer', 'appointment', 'company']);
     }
 }

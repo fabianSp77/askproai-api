@@ -2,18 +2,19 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\Company;
 use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\PhoneNumber;
-use App\Services\Booking\UniversalBookingOrchestrator;
-use App\Services\Booking\Strategies\NearestLocationStrategy;
+use App\Models\Service;
+use App\Models\Staff;
 use App\Services\Booking\Strategies\LoadBalancedStrategy;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Services\Booking\Strategies\NearestLocationStrategy;
+use App\Services\Booking\UniversalBookingOrchestrator;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class UniversalBookingOrchestratorTest extends TestCase
 {
@@ -35,6 +36,8 @@ class UniversalBookingOrchestratorTest extends TestCase
         // Get orchestrator instance
         $this->orchestrator = app(UniversalBookingOrchestrator::class);
     }
+    
+    #[Test]
     
     public function test_resolves_branch_from_phone_number()
     {
@@ -82,6 +85,8 @@ class UniversalBookingOrchestratorTest extends TestCase
         
         $this->assertEquals($berlinBranch->id, $result['branch_id']);
     }
+    
+    #[Test]
     
     public function test_finds_suitable_branches_based_on_service()
     {
@@ -140,6 +145,8 @@ class UniversalBookingOrchestratorTest extends TestCase
         }
     }
     
+    #[Test]
+    
     public function test_uses_customer_preferred_branch()
     {
         // Create branches
@@ -182,6 +189,8 @@ class UniversalBookingOrchestratorTest extends TestCase
         }
     }
     
+    #[Test]
+    
     public function test_load_balanced_strategy_distributes_bookings()
     {
         // Set load balanced strategy
@@ -222,6 +231,8 @@ class UniversalBookingOrchestratorTest extends TestCase
         // Check that bookings are distributed (not all at one branch)
         $this->assertGreaterThan(1, count($bookingCounts));
     }
+    
+    #[Test]
     
     public function test_multi_language_staff_matching()
     {
@@ -267,6 +278,8 @@ class UniversalBookingOrchestratorTest extends TestCase
         }
     }
     
+    #[Test]
+    
     public function test_handles_branch_without_specific_resolution()
     {
         // Create multiple branches
@@ -297,6 +310,8 @@ class UniversalBookingOrchestratorTest extends TestCase
             $this->assertContains($result['appointment']->branch_id, array_column($branches, 'id'));
         }
     }
+    
+    #[Test]
     
     public function test_returns_alternatives_when_requested_time_unavailable()
     {

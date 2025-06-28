@@ -2,17 +2,18 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
+use App\Filament\Admin\Pages\QuickSetupWizard;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\PhoneNumber;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\User;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\PhoneNumber;
 use Livewire\Livewire;
-use App\Filament\Admin\Pages\QuickSetupWizard;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class QuickSetupWizardEditModeTest extends TestCase
 {
@@ -66,7 +67,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_loads_existing_company_data_in_edit_mode()
@@ -88,7 +88,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_shows_mode_selection_when_companies_exist()
@@ -101,7 +100,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_update_existing_company()
@@ -137,7 +135,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_does_not_duplicate_services_when_updating()
@@ -160,7 +157,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_updates_phone_numbers_correctly()
@@ -193,7 +189,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_does_not_overwrite_api_key_when_placeholder_shown()
@@ -216,7 +211,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_switch_from_new_to_edit_mode()
@@ -232,7 +226,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_validates_required_fields_in_edit_mode()
@@ -249,7 +242,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_staff_updates_in_edit_mode()
@@ -272,7 +264,6 @@ class QuickSetupWizardEditModeTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_shows_correct_submit_button_label()

@@ -2,91 +2,107 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Services\Security\ApiKeyService;
 
 class RetellConfiguration extends Model
 {
-    use HasFactory;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'company_id',
-        'webhook_url',
+        'agent_id',
+        'agent_name',
         'webhook_secret',
-        'webhook_events',
-        'custom_functions',
-        'last_tested_at',
-        'test_status',
+        'voice_settings',
+        'llm_settings',
+        'general_settings',
+        'is_active'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'webhook_events' => 'array',
-        'custom_functions' => 'array',
-        'last_tested_at' => 'datetime',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
-        'webhook_secret',
+        'webhook_secret'
     ];
 
-    /**
-     * Get the company that owns the configuration.
-     */
-    public function company(): BelongsTo
+    protected $casts = [
+        'voice_settings' => 'array',
+        'llm_settings' => 'array',
+        'general_settings' => 'array',
+        'is_active' => 'boolean'
+    ];
+
+    protected static function booted(): void
     {
-        return $this->belongsTo(Company::class);
+        // Encrypt webhook_secret before saving
+        static::saving(function (self $config) {
+            if ($config->isDirty('webhook_secret') && !empty($config->webhook_secret)) {
+                // Check if not already encrypted (encrypted values start with 'eyJ')
+                if (!str_starts_with($config->webhook_secret, 'eyJ')) {
+                    $apiKeyService = app(ApiKeyService::class);
+                    $config->webhook_secret = $apiKeyService->encrypt($config->webhook_secret);
+                }
+            }
+        });
     }
 
     /**
-     * Check if webhook test is recent (within last hour)
+     * Get the decrypted webhook secret
      */
-    public function hasRecentTest(): bool
+    public function getWebhookSecretAttribute($value): ?string
     {
-        return $this->last_tested_at && 
-               $this->last_tested_at->isAfter(now()->subHour());
-    }
-
-    /**
-     * Get enabled custom functions
-     */
-    public function getEnabledCustomFunctions(): array
-    {
-        if (!$this->custom_functions) {
-            return [];
-        }
-
-        return collect($this->custom_functions)
-            ->where('enabled', true)
-            ->values()
-            ->toArray();
-    }
-
-    /**
-     * Find custom function by name
-     */
-    public function findCustomFunction(string $name): ?array
-    {
-        if (!$this->custom_functions) {
+        if (empty($value)) {
             return null;
         }
 
-        return collect($this->custom_functions)
-            ->firstWhere('name', $name);
+        // Check if encrypted (starts with 'eyJ')
+        if (str_starts_with($value, 'eyJ')) {
+            try {
+                $apiKeyService = app(ApiKeyService::class);
+                return $apiKeyService->decrypt($value);
+            } catch (\Exception $e) {
+                \Log::error('Failed to decrypt webhook secret', [
+                    'retell_configuration_id' => $this->id,
+                    'error' => $e->getMessage()
+                ]);
+                return null;
+            }
+        }
+
+        // Return as-is if not encrypted (for backward compatibility during migration)
+        return $value;
+    }
+
+    /**
+     * Set the webhook secret (will be encrypted on save)
+     */
+    public function setWebhookSecretAttribute($value): void
+    {
+        // Don't encrypt here, let the saving event handle it
+        // This prevents double encryption
+        $this->attributes['webhook_secret'] = $value;
+    }
+
+    /**
+     * Verify a webhook signature
+     */
+    public function verifyWebhookSignature(string $payload, string $signature): bool
+    {
+        if (empty($this->webhook_secret)) {
+            return false;
+        }
+
+        $expectedSignature = hash_hmac('sha256', $payload, $this->webhook_secret);
+        return hash_equals($expectedSignature, $signature);
+    }
+
+    /**
+     * Get the raw encrypted webhook secret (for debugging/verification)
+     */
+    public function getRawWebhookSecret(): ?string
+    {
+        return $this->attributes['webhook_secret'] ?? null;
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 }

@@ -2,16 +2,17 @@
 
 namespace Tests\Unit\Repositories;
 
-use Tests\TestCase;
-use App\Models\Call;
-use App\Models\Customer;
-use App\Models\Appointment;
-use App\Models\Company;
 use App\Models\Agent;
+use App\Models\Appointment;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
 use App\Repositories\CallRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Database\Eloquent\Collection;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 use Tests\Traits\SimplifiedMigrations;
 
 class CallRepositoryTest extends TestCase
@@ -41,6 +42,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_create_call()
     {
         $customer = Customer::factory()->create(['company_id' => $this->company->id]);
@@ -89,6 +91,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_delete_call()
     {
         $call = Call::factory()->create(['company_id' => $this->company->id]);
@@ -125,6 +128,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_recent_calls()
     {
         Call::factory()->count(10)->create([
@@ -177,6 +181,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_calls_by_date_range()
     {
         $startDate = Carbon::now()->startOfMonth();
@@ -228,6 +233,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_failed_calls()
     {
         Call::factory()->count(3)->create([
@@ -300,6 +306,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_empty_statistics_gracefully()
     {
         $startDate = Carbon::now()->startOfMonth();
@@ -340,6 +347,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_search_calls()
     {
         $customer = Customer::factory()->create([
@@ -412,6 +420,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_update_call_from_webhook()
     {
         $call = Call::factory()->create([
@@ -454,6 +463,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_merges_webhook_data_correctly()
     {
         $call = Call::factory()->create([
@@ -487,6 +497,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_apply_criteria_to_queries()
     {
         Call::factory()->count(5)->create([
@@ -537,6 +548,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_count_calls()
     {
         Call::factory()->count(7)->create(['company_id' => $this->company->id]);
@@ -570,6 +582,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_load_relationships()
     {
         $customer = Customer::factory()->create(['company_id' => $this->company->id]);
@@ -607,6 +620,7 @@ class CallRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_handle_complex_search_queries()
     {
         $customer1 = Customer::factory()->create([

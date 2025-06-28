@@ -9,6 +9,7 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
 
 class WebhookSignatureTester
 {

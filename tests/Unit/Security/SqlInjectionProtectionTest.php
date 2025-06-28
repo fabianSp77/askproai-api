@@ -2,15 +2,18 @@
 
 namespace Tests\Unit\Security;
 
-use Tests\TestCase;
 use App\Helpers\SafeQueryHelper;
-use App\Models\Customer;
 use App\Models\Call;
+use App\Models\Customer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class SqlInjectionProtectionTest extends TestCase
 {
     use RefreshDatabase;
+
+    #[Test]
 
     public function test_safe_query_helper_escapes_like_wildcards()
     {
@@ -19,6 +22,8 @@ class SqlInjectionProtectionTest extends TestCase
         
         $this->assertEquals("test\\%value\\_with\\\\special", $escaped);
     }
+    
+    #[Test]
     
     public function test_safe_query_helper_prevents_sql_injection_in_like()
     {
@@ -29,6 +34,8 @@ class SqlInjectionProtectionTest extends TestCase
         $this->assertStringContainsString("DROP TABLE customers", $escaped);
         $this->assertStringNotContainsString("%", $escaped);
     }
+    
+    #[Test]
     
     public function test_customer_search_is_safe_from_sql_injection()
     {
@@ -60,6 +67,8 @@ class SqlInjectionProtectionTest extends TestCase
         $this->assertDatabaseHas('customers', ['id' => $customer->id]);
     }
     
+    #[Test]
+    
     public function test_call_phone_search_is_safe_from_sql_injection()
     {
         // Create a test call
@@ -79,6 +88,8 @@ class SqlInjectionProtectionTest extends TestCase
         $this->assertDatabaseHas('calls', ['id' => $call->id]);
     }
     
+    #[Test]
+    
     public function test_sanitize_column_prevents_injection()
     {
         // Valid columns
@@ -94,6 +105,8 @@ class SqlInjectionProtectionTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         SafeQueryHelper::sanitizeColumn('1_invalid');
     }
+    
+    #[Test]
     
     public function test_where_lower_prevents_injection()
     {
@@ -113,6 +126,8 @@ class SqlInjectionProtectionTest extends TestCase
         $this->assertDatabaseHas('customers', ['email' => 'Test@Example.com']);
     }
     
+    #[Test]
+    
     public function test_order_by_safe_with_whitelist()
     {
         $allowedColumns = ['name', 'email', 'created_at'];
@@ -126,6 +141,8 @@ class SqlInjectionProtectionTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         SafeQueryHelper::orderBySafe($query, 'password', 'asc', $allowedColumns);
     }
+    
+    #[Test]
     
     public function test_full_text_search_escaping()
     {

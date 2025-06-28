@@ -19,7 +19,7 @@ class QuantumSystemMonitoring extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
     protected static ?string $navigationLabel = 'Quantum Monitoring';
-    protected static ?string $navigationGroup = 'System & Überwachung';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static string $view = 'filament.admin.pages.quantum-system-monitoring';
     protected static ?int $navigationSort = 0;
     

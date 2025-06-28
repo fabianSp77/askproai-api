@@ -5,6 +5,7 @@
     "license": "proprietary",
     "require": {
         "php": "^8.2",
+        "bacon/bacon-qr-code": "^3.0",
         "bezhansalleh/filament-language-switch": "^3.1",
         "bezhansalleh/filament-shield": "^3.3",
         "blade-ui-kit/blade-heroicons": "^2.6",
@@ -20,6 +21,7 @@
         "filament/widgets": "3.3.14",
         "giggsey/libphonenumber-for-php": "*",
         "illuminate/view": "*",
+        "laravel/fortify": "^1.27",
         "laravel/framework": "^11.0",
         "laravel/horizon": "^5.31",
         "laravel/passport": "^12.0",
@@ -27,7 +29,9 @@
         "league/commonmark": "*",
         "livewire/livewire": "^3.0",
         "nunomaduro/collision": "^8.8",
+        "pragmarx/google2fa-laravel": "^2.3",
         "promphp/prometheus_client_php": "^2.14",
+        "pusher/pusher-php-server": "^7.2",
         "sentry/sentry-laravel": "^4.15",
         "spatie/browsershot": "^5.0",
         "spatie/image": "^3.8",
@@ -47,6 +51,10 @@
         "laravel/sail": "^1.41",
         "laravel/tinker": "^2.10",
         "mockery/mockery": "^1.6",
+        "nunomaduro/larastan": "^2.0",
+        "pestphp/pest": "^2.0",
+        "pestphp/pest-plugin-laravel": "^2.0",
+        "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^11.5.3"
     },
     "autoload": {
@@ -80,6 +88,44 @@
             "@php artisan key:generate --ansi",
             "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi"
+        ],
+        "pint": [
+            "./vendor/bin/pint"
+        ],
+        "pint:test": [
+            "./vendor/bin/pint --test"
+        ],
+        "stan": [
+            "./vendor/bin/phpstan analyse --memory-limit=2G"
+        ],
+        "stan:baseline": [
+            "./vendor/bin/phpstan analyse --generate-baseline --memory-limit=2G"
+        ],
+        "test": [
+            "@php artisan test"
+        ],
+        "test:coverage": [
+            "@php artisan test --coverage --min=80"
+        ],
+        "quality": [
+            "@pint:test",
+            "@stan",
+            "@test"
+        ],
+        "docs:check": [
+            "@php artisan docs:check-updates"
+        ],
+        "impact": [
+            "@php artisan analyze:impact --git"
+        ],
+        "mcp:discover": [
+            "@php artisan mcp:discover"
+        ],
+        "setup": [
+            "@composer install",
+            "@php artisan key:generate",
+            "@php artisan migrate",
+            "./scripts/setup-git-hooks.sh"
         ]
     },
     "extra": {

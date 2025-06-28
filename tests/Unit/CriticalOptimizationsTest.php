@@ -2,13 +2,14 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Services\RateLimiter\ApiRateLimiter;
-use App\Services\CalcomV2Service;
 use App\Exceptions\RateLimitExceededException;
+use App\Services\CalcomV2Service;
+use App\Services\RateLimiter\ApiRateLimiter;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CriticalOptimizationsTest extends TestCase
 {
@@ -24,7 +25,6 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_enforces_rate_limits_per_minute()
@@ -43,7 +43,6 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_applies_exponential_backoff()
@@ -65,7 +64,6 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_provides_usage_statistics()
@@ -87,7 +85,6 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_validates_calcom_api_responses()
@@ -114,7 +111,6 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_rate_limit_responses_gracefully()
@@ -135,7 +131,6 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_validates_input_parameters()
@@ -149,7 +144,6 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_validates_date_format()
@@ -163,7 +157,6 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_validates_timezone()
@@ -177,7 +170,6 @@ class CriticalOptimizationsTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_invalid_json_responses()

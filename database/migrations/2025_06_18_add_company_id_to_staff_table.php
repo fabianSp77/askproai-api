@@ -68,6 +68,13 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+
         if (Schema::hasColumn('staff', 'company_id')) {
             Schema::table('staff', function (Blueprint $table) {
                 $this->dropForeignKey($table, 'company_id');

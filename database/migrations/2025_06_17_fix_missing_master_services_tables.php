@@ -10,7 +10,7 @@ return new class extends CompatibleMigration
     {
         // Create master_services table if it doesn't exist
         if (!Schema::hasTable('master_services')) {
-            Schema::create('master_services', function (Blueprint $table) {
+            $this->createTableIfNotExists('master_services', function (Blueprint $table) {
                 $table->uuid('id')->primary();
                 $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
                 $table->string('name');
@@ -51,6 +51,6 @@ return new class extends CompatibleMigration
     public function down(): void
     {
         $this->dropTableIfExists('branch_service_overrides');
-        Schema::dropIfExists('master_services');
+        $this->dropTableIfExists('master_services');
     }
 };

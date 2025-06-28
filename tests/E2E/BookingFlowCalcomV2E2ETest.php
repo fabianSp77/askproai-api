@@ -2,40 +2,41 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Customer;
-use App\Models\Appointment;
-use App\Models\Call;
-use App\Models\CalcomEventType;
+use App\Events\AppointmentCreated;
 use App\Jobs\ProcessRetellCallEndedJob;
 use App\Jobs\RefreshCallDataJob;
 use App\Jobs\SyncCalcomBookingsJob;
 use App\Mail\AppointmentConfirmation;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\CalcomEventType;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
 use App\Services\AppointmentBookingService;
 use App\Services\CalcomV2Service;
 use App\Services\Calcom\CalcomV2Client;
-use App\Services\Calcom\DTOs\SlotDTO;
-use App\Services\Calcom\DTOs\BookingDTO;
 use App\Services\Calcom\DTOs\AttendeeDTO;
+use App\Services\Calcom\DTOs\BookingDTO;
 use App\Services\Calcom\DTOs\EventTypeDTO;
+use App\Services\Calcom\DTOs\SlotDTO;
 use App\Services\Calcom\Exceptions\CalcomApiException;
 use App\Services\Calcom\Exceptions\CalcomRateLimitException;
 use App\Services\Calcom\Exceptions\CalcomValidationException;
-use App\Events\AppointmentCreated;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class BookingFlowCalcomV2E2ETest extends TestCase
 {
@@ -171,7 +172,6 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function complete_booking_flow_from_retell_webhook_to_confirmation_email()
@@ -414,7 +414,6 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_no_availability_scenario_gracefully()
@@ -498,7 +497,6 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_existing_customer_with_appointment_history()
@@ -612,7 +610,6 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_calcom_api_errors_with_retry_logic()
@@ -709,7 +706,6 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_concurrent_booking_attempts_safely()
@@ -842,7 +838,6 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function validates_and_handles_invalid_webhook_data()
@@ -902,7 +897,6 @@ class BookingFlowCalcomV2E2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function tracks_complete_appointment_lifecycle_with_proper_database_state()

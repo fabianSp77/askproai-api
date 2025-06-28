@@ -2,15 +2,16 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\Company;
 use App\Models\Branch;
-use App\Models\Staff;
 use App\Models\CalcomEventType;
+use App\Models\Company;
+use App\Models\Staff;
 use App\Services\CalcomSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CalcomUserAssignmentTest extends TestCase
 {
@@ -41,6 +42,7 @@ class CalcomUserAssignmentTest extends TestCase
     /**
      * Test that Cal.com user data is properly extracted from API response
      */
+    #[Test]
     public function test_calcom_api_returns_user_assignments()
     {
         // Mock Cal.com API response with detailed user information
@@ -177,6 +179,7 @@ class CalcomUserAssignmentTest extends TestCase
     /**
      * Test staff matching by email when Cal.com user ID is not set
      */
+    #[Test]
     public function test_staff_matching_by_email()
     {
         // Create staff without Cal.com user IDs
@@ -241,6 +244,7 @@ class CalcomUserAssignmentTest extends TestCase
     /**
      * Test handling of unmatched Cal.com users
      */
+    #[Test]
     public function test_unmatched_calcom_users_are_logged()
     {
         // Only create one staff member
@@ -293,6 +297,7 @@ class CalcomUserAssignmentTest extends TestCase
     /**
      * Test priority and fixed host handling
      */
+    #[Test]
     public function test_host_priority_information_is_preserved()
     {
         // Create staff
@@ -368,6 +373,7 @@ class CalcomUserAssignmentTest extends TestCase
     /**
      * Test handling of different scheduling types
      */
+    #[Test]
     public function test_different_scheduling_types_handled_correctly()
     {
         $staff = Staff::factory()->create([

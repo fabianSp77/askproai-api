@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('cookie_consents', function (Blueprint $table) {
+        $this->createTableIfNotExists('cookie_consents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('session_id')->nullable()->index();
@@ -36,6 +36,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cookie_consents');
+        $this->dropTableIfExists('cookie_consents');
     }
 };

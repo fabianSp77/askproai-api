@@ -14,9 +14,9 @@ class WebhookMonitor extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-signal';
     protected static ?string $navigationLabel = 'Webhook Monitor';
-    protected static ?string $title = '🔔 Webhook Monitoring Dashboard';
-    protected static ?string $navigationGroup = 'System & Überwachung';
-    protected static ?int $navigationSort = 101;
+    protected static ?string $title = 'Webhook Monitoring Dashboard';
+    protected static ?string $navigationGroup = 'System';
+    protected static ?int $navigationSort = 120;
     
     protected static string $view = 'filament.admin.pages.webhook-monitor';
     

@@ -15,7 +15,7 @@ class DashboardRouteResolver
         'cost-dashboard' => 'CostDashboard',
         'event-analytics-dashboard' => 'EventAnalyticsDashboard',
         'executive-dashboard' => 'ExecutiveDashboard',
-        'operational-dashboard' => 'OperationalDashboard',
+        'operational-dashboard' => 'OptimizedOperationalDashboard', // Updated to use optimized version
         'operations-dashboard' => 'OperationsDashboard',
         'roi-dashboard' => 'RoiDashboard',
         'mcp-dashboard' => 'MCPDashboard',

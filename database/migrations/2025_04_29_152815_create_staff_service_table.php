@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
         if (! Schema::hasTable('staff_service')) {
-            Schema::create('staff_service', function (Blueprint $table) {
+            $this->createTableIfNotExists('staff_service', function (Blueprint $table) {
                 $table->id();                      // BIGINT PK
                 $table->char('staff_id', 36);      // UUID
                 $table->foreign('staff_id')
@@ -28,7 +28,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('staff_service');
+        $this->dropTableIfExists('staff_service');
     }
 };
 

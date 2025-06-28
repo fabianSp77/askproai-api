@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('slow_query_log', function (Blueprint $table) {
+        $this->createTableIfNotExists('slow_query_log', function (Blueprint $table) {
             $table->id();
             $table->text('sql');
             $table->float('time'); // Execution time in milliseconds
@@ -30,6 +30,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('slow_query_log');
+        $this->dropTableIfExists('slow_query_log');
     }
 };

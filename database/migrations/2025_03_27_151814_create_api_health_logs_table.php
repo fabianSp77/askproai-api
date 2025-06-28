@@ -1,12 +1,12 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends CompatibleMigration {
     public function up() {
-        Schema::create('api_health_logs', function (Blueprint $table) {
+        $this->createTableIfNotExists('api_health_logs', function (Blueprint $table) {
             $table->id();
             $table->string('service');
             $table->foreignId('company_id')->nullable()->constrained()->nullOnDelete();
@@ -18,6 +18,6 @@ return new class extends Migration {
     }
 
     public function down() {
-        Schema::dropIfExists('api_health_logs');
+        $this->dropTableIfExists('api_health_logs');
     }
 };

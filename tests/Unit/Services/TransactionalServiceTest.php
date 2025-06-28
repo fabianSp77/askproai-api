@@ -2,12 +2,13 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
 use App\Traits\TransactionalService;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Exception;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class TransactionalServiceTest extends TestCase
 {
@@ -23,6 +24,8 @@ class TransactionalServiceTest extends TestCase
         Log::shouldReceive('error')->andReturnNull();
         Log::shouldReceive('warning')->andReturnNull();
     }
+    
+    #[Test]
     
     public function testSuccessfulTransaction()
     {
@@ -44,6 +47,8 @@ class TransactionalServiceTest extends TestCase
             'email' => 'test@example.com'
         ]);
     }
+    
+    #[Test]
     
     public function testTransactionRollbackOnException()
     {
@@ -72,6 +77,8 @@ class TransactionalServiceTest extends TestCase
         }
     }
     
+    #[Test]
+    
     public function testTransactionWithDeadlockRetry()
     {
         $attempts = 0;
@@ -92,6 +99,8 @@ class TransactionalServiceTest extends TestCase
         $this->assertEquals(2, $attempts);
     }
     
+    #[Test]
+    
     public function testExecuteInTransactionOrDefault()
     {
         // Test successful execution
@@ -108,6 +117,8 @@ class TransactionalServiceTest extends TestCase
         
         $this->assertEquals('default value', $result);
     }
+    
+    #[Test]
     
     public function testExecuteMultipleInTransaction()
     {
@@ -140,6 +151,8 @@ class TransactionalServiceTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'user2@example.com']);
     }
     
+    #[Test]
+    
     public function testExecuteMultipleInTransactionRollback()
     {
         $this->expectException(Exception::class);
@@ -166,6 +179,8 @@ class TransactionalServiceTest extends TestCase
         }
     }
     
+    #[Test]
+    
     public function testIsDeadlockException()
     {
         // MySQL deadlock
@@ -180,6 +195,8 @@ class TransactionalServiceTest extends TestCase
         $regularException = new Exception('Some other error');
         $this->assertFalse($this->isDeadlockException($regularException));
     }
+    
+    #[Test]
     
     public function testTransactionMetricsLogging()
     {

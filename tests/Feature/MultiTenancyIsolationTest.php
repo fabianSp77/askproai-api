@@ -2,20 +2,21 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\Company;
-use App\Models\User;
+use App\Models\AdditionalService;
 use App\Models\Appointment;
-use App\Models\Customer;
 use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Staff;
-use App\Models\Call;
-use App\Models\AdditionalService;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class MultiTenancyIsolationTest extends TestCase
 {
@@ -70,6 +71,8 @@ class MultiTenancyIsolationTest extends TestCase
         $this->user2->assignRole('admin');
     }
     
+    #[Test]
+    
     public function test_customers_are_isolated_by_company()
     {
         // Create customers for each company
@@ -105,6 +108,8 @@ class MultiTenancyIsolationTest extends TestCase
         $this->assertCount(1, $customers);
         $this->assertEquals($customer2->id, $customers->first()->id);
     }
+    
+    #[Test]
     
     public function test_appointments_are_isolated_by_company()
     {
@@ -155,6 +160,8 @@ class MultiTenancyIsolationTest extends TestCase
         $this->assertEquals($appointment2->id, $appointments->first()->id);
     }
     
+    #[Test]
+    
     public function test_services_are_isolated_by_company()
     {
         // Create services
@@ -183,6 +190,8 @@ class MultiTenancyIsolationTest extends TestCase
         $this->assertCount(1, $services);
         $this->assertEquals($service2->id, $services->first()->id);
     }
+    
+    #[Test]
     
     public function test_calls_are_isolated_by_company()
     {
@@ -216,6 +225,8 @@ class MultiTenancyIsolationTest extends TestCase
         $this->assertCount(1, $calls);
         $this->assertEquals($call2->id, $calls->first()->id);
     }
+    
+    #[Test]
     
     public function test_additional_services_show_platform_and_company_specific()
     {
@@ -265,6 +276,8 @@ class MultiTenancyIsolationTest extends TestCase
         $this->assertFalse($services->contains('id', $companyService1->id));
     }
     
+    #[Test]
+    
     public function test_cross_tenant_access_is_prevented()
     {
         // Create customer for company 1
@@ -287,6 +300,8 @@ class MultiTenancyIsolationTest extends TestCase
         $found = Customer::where('id', $customer->id)->first();
         $this->assertNull($found);
     }
+    
+    #[Test]
     
     public function test_super_admin_can_access_all_tenants()
     {

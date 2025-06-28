@@ -75,6 +75,10 @@ class MCPGateway
                     'notificationService' => app(NotificationService::class)
                 ]) 
                 : null,
+                
+            'whatsapp' => fn() => class_exists(WhatsAppBusinessMCPServer::class) 
+                ? app(WhatsAppBusinessMCPServer::class) 
+                : null,
         ];
         
         Log::info('MCP Gateway factories registered', [

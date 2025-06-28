@@ -2,21 +2,22 @@
 
 namespace Tests\Integration\Stripe;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
+use App\Filament\Admin\Resources\InvoiceResource;
+use App\Models\BillingPeriod;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
-use App\Models\BillingPeriod;
-use App\Filament\Admin\Resources\InvoiceResource;
+use App\Models\User;
 use App\Services\StripeInvoiceService;
-use Livewire\Livewire;
-use Filament\Actions\DeleteAction;
-use Mockery;
-use Stripe\StripeClient;
 use Carbon\Carbon;
+use Filament\Actions\DeleteAction;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Stripe\StripeClient;
+use Tests\TestCase;
 
 class InvoiceManagementIntegrationTest extends TestCase
 {
@@ -128,6 +129,7 @@ class InvoiceManagementIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_allows_creating_manual_invoice_with_line_items()
     {
         $this->actingAs($this->admin);
@@ -264,6 +266,7 @@ class InvoiceManagementIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_prevents_editing_finalized_invoice()
     {
         $this->actingAs($this->admin);
@@ -318,6 +321,7 @@ class InvoiceManagementIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_allows_marking_invoice_as_paid_manually()
     {
         $this->actingAs($this->admin);
@@ -423,6 +427,7 @@ class InvoiceManagementIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_bulk_invoice_actions()
     {
         $this->actingAs($this->admin);
@@ -479,6 +484,7 @@ class InvoiceManagementIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_shows_invoice_preview_with_company_branding()
     {
         $this->actingAs($this->admin);
@@ -538,6 +544,7 @@ class InvoiceManagementIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_validates_invoice_permissions()
     {
         // Create non-admin user with limited permissions

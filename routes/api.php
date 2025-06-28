@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\MCPHealthCheckController;
 use App\Http\Controllers\Api\DocumentationDataController;
 use App\Http\Controllers\MCPGatewayController;
 use App\Http\Controllers\RetellCustomFunctionController;
+use App\Http\Controllers\Api\CircuitBreakerHealthController;
+use App\Http\Controllers\Api\HealthCheckController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,13 +22,22 @@ use App\Http\Controllers\RetellCustomFunctionController;
 |--------------------------------------------------------------------------
 */
 
+// Command Intelligence API Routes (ohne CSRF)
+Route::middleware('api-no-csrf')->group(function () {
+    Route::post('/login', [App\Http\Controllers\Auth\ApiLoginController::class, 'login']);
+    Route::post('/logout', [App\Http\Controllers\Auth\ApiLoginController::class, 'logout'])
+        ->middleware('auth:sanctum');
+    Route::get('/user', [App\Http\Controllers\Auth\ApiLoginController::class, 'user'])
+        ->middleware('auth:sanctum');
+    Route::post('/user/tokens', [App\Http\Controllers\Auth\ApiTokenController::class, 'store'])
+        ->middleware('auth:sanctum');
+});
+
 // Load MCP Routes
 require __DIR__.'/api-mcp.php';
 
-// Load Test Webhook Routes (REMOVE IN PRODUCTION!)
-if (app()->environment('local', 'development', 'production')) {
-    require __DIR__.'/test-webhook.php';
-}
+// Test webhook routes removed for security
+// Never include test routes in production
 
 // ---- Metrics Endpoint ----------------------------
 Route::get('/metrics', [App\Http\Controllers\Api\MetricsController::class, 'metrics'])
@@ -34,24 +45,22 @@ Route::get('/metrics', [App\Http\Controllers\Api\MetricsController::class, 'metr
     ->name('api.metrics');
 
 // ---- Zeitinfo Endpoint for Retell.ai ----------------------------
+// Protected with auth:sanctum for security
 Route::get('/zeitinfo', [App\Http\Controllers\ZeitinfoController::class, 'jetzt'])
+    ->middleware(['auth:sanctum'])
     ->name('api.zeitinfo');
 
-// ---- Test Webhook Endpoints ----------------------------
-Route::prefix('test')->group(function () {
-    Route::match(['GET', 'POST'], '/webhook', [App\Http\Controllers\Api\TestWebhookController::class, 'test'])
-        ->name('api.test.webhook');
-    Route::post('/webhook/simulate-retell', [App\Http\Controllers\Api\TestWebhookController::class, 'simulateRetellWebhook'])
-        ->name('api.test.webhook.simulate-retell');
-});
+// Test webhook endpoints removed for security
 
 // ---- Retell.ai Custom Function Endpoints ----------------------------
 Route::prefix('retell')->group(function () {
     // Appointment data collection endpoint for Retell custom function
     Route::post('/collect-appointment', [App\Http\Controllers\Api\RetellAppointmentCollectorController::class, 'collect'])
+        ->middleware(['verify.retell.signature', 'throttle:60,1'])
         ->name('api.retell.collect-appointment');
-    Route::get('/collect-appointment/test', [App\Http\Controllers\Api\RetellAppointmentCollectorController::class, 'test'])
-        ->name('api.retell.collect-appointment.test');
+    // Test endpoint removed for security
+    // Route::get('/collect-appointment/test', [App\Http\Controllers\Api\RetellAppointmentCollectorController::class, 'test'])
+    //     ->name('api.retell.collect-appointment.test');
     
     // Customer recognition endpoints with security
     Route::post('/identify-customer', [App\Http\Controllers\Api\RetellCustomerRecognitionController::class, 'identifyCustomer'])
@@ -66,17 +75,22 @@ Route::prefix('retell')->group(function () {
     
     // Call transfer and callback endpoints
     Route::post('/transfer-to-fabian', [App\Http\Controllers\Api\RetellCallTransferController::class, 'transferToFabian'])
+        ->middleware(['verify.retell.signature', 'throttle:30,1'])
         ->name('api.retell.transfer-to-fabian');
     Route::post('/check-transfer-availability', [App\Http\Controllers\Api\RetellCallTransferController::class, 'checkAvailabilityForTransfer'])
+        ->middleware(['verify.retell.signature', 'throttle:30,1'])
         ->name('api.retell.check-transfer-availability');
     Route::post('/schedule-callback', [App\Http\Controllers\Api\RetellCallTransferController::class, 'scheduleCallback'])
+        ->middleware(['verify.retell.signature', 'throttle:30,1'])
         ->name('api.retell.schedule-callback');
     Route::post('/handle-urgent-transfer', [App\Http\Controllers\Api\RetellCallTransferController::class, 'handleUrgentTransfer'])
+        ->middleware(['verify.retell.signature', 'throttle:30,1'])
         ->name('api.retell.handle-urgent-transfer');
 });
 
 // ---- Documentation Data API ----------------------------
-Route::prefix('docs-data')->group(function () {
+// Protected with auth:sanctum to prevent data exposure
+Route::prefix('docs-data')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/metrics', [DocumentationDataController::class, 'metrics'])
         ->name('api.docs.metrics');
     Route::get('/performance', [DocumentationDataController::class, 'performance'])
@@ -87,47 +101,38 @@ Route::prefix('docs-data')->group(function () {
         ->name('api.docs.health');
 });
 
-// ---- TEMPORARY FIX: MCP Retell Webhook Route ----------------------------
+// ---- MCP Retell Webhook Route (with signature verification) ----
 Route::prefix('mcp')->group(function () {
-    // Redirect MCP webhook to standard webhook handler (WITHOUT signature verification for now)
     Route::post('/retell/webhook', function (Request $request) {
-        Log::warning('MCP Retell Webhook received - redirecting to standard handler', [
-            'url' => $request->fullUrl(),
-            'headers' => $request->headers->all()
-        ]);
-        
-        // Temporarily process without signature verification
         return app(RetellWebhookController::class)->processWebhook($request);
-    })->name('mcp.retell.webhook.temp');
+    })->middleware(['verify.retell.signature', 'webhook.replay.protection'])
+      ->name('mcp.retell.webhook');
 });
 
-// ---- TEMPORARY DEBUG: Retell Webhook without signature verification ----------------------------
-Route::post('/retell/webhook-debug', [App\Http\Controllers\Api\RetellWebhookDebugController::class, 'handle'])
-    ->name('retell.webhook.debug');
-    
-// Also create debug route for standard path
-Route::post('/retell/webhook-nosig', [App\Http\Controllers\Api\RetellWebhookDebugController::class, 'handle'])
-    ->name('retell.webhook.nosig');
+// Debug webhook routes removed for security
 
 // ---- Health Check Endpoints ----------------------------
-// Simple ping endpoint for load balancers
+// Simple ping endpoint for load balancers (public for monitoring tools)
 Route::get('/health', [HealthController::class, 'health'])
     ->name('api.health');
 
-// Comprehensive health check
+// Comprehensive health check (contains sensitive data - requires auth)
 Route::get('/health/comprehensive', [HealthController::class, 'comprehensive'])
+    ->middleware(['auth:sanctum'])
     ->name('api.health.comprehensive');
 
-// Individual service health checks
+// Individual service health checks (contains sensitive data - requires auth)
 Route::get('/health/service/{service}', [HealthController::class, 'service'])
+    ->middleware(['auth:sanctum'])
     ->name('api.health.service');
     
-// Legacy Cal.com specific health check
+// Legacy Cal.com specific health check (contains sensitive data - requires auth)
 Route::get('/health/calcom', [HealthController::class, 'calcomHealth'])
+    ->middleware(['auth:sanctum'])
     ->name('api.health.calcom');
 
 // ---- MCP Orchestrator Routes ----------------------------
-Route::prefix('mcp')->middleware(['throttle:1000,1'])->group(function () {
+Route::prefix('mcp')->middleware(['auth:sanctum', 'throttle:100,1', 'validate.company.context'])->group(function () {
     // MCPGateway endpoints (proper JSON-RPC 2.0)
     Route::post('/gateway', [\App\Http\Controllers\MCPGatewayController::class, 'handle'])
         ->name('mcp.gateway');
@@ -146,8 +151,7 @@ Route::prefix('mcp')->middleware(['throttle:1000,1'])->group(function () {
     // MCP Webhook handler (bypasses signature verification)
     Route::post('/webhook/retell', [\App\Http\Controllers\Api\MCPWebhookController::class, 'handleRetell'])
         ->name('mcp.webhook.retell');
-    Route::get('/webhook/test', [\App\Http\Controllers\Api\MCPWebhookController::class, 'test'])
-        ->name('mcp.webhook.test');
+    // Test endpoint removed for security
     
     // Service-specific endpoints (existing)
     Route::prefix('database')->group(function () {
@@ -165,7 +169,7 @@ Route::prefix('mcp')->middleware(['throttle:1000,1'])->group(function () {
         Route::get('/bookings', [\App\Http\Controllers\Api\MCPController::class, 'calcomBookings']);
         Route::get('/assignments/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'calcomAssignments']);
         Route::post('/sync', [\App\Http\Controllers\Api\MCPController::class, 'calcomSync']);
-        Route::get('/test/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'calcomTest']);
+        // Test endpoint removed - use health check or specific diagnostic endpoints
     });
     
     Route::prefix('retell')->group(function () {
@@ -176,7 +180,7 @@ Route::prefix('mcp')->middleware(['throttle:1000,1'])->group(function () {
         Route::get('/call/{callId}', [\App\Http\Controllers\Api\MCPController::class, 'retellCallDetails']);
         Route::post('/search-calls', [\App\Http\Controllers\Api\MCPController::class, 'retellSearchCalls']);
         Route::get('/phone-numbers/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellPhoneNumbers']);
-        Route::get('/test/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellTest']);
+        // Test endpoint removed - use health check or specific diagnostic endpoints
     });
     
     Route::prefix('queue')->group(function () {
@@ -208,24 +212,9 @@ Route::prefix('cookie-consent')->group(function () {
 });
 
 // ---- Metrics Endpoint for Prometheus ----------------------------
-Route::get('/metrics', [\App\Http\Controllers\Api\MetricsController::class, 'index'])
-    ->middleware(['throttle:100,1']); // Allow 100 requests per minute
+// Duplicate of line 33-35, removing this one to avoid conflicts
 
-// Test route to debug metrics
-Route::get('/metrics-test', function() {
-    try {
-        return response()->json([
-            'cache_default' => config('cache.default'),
-            'queue_default' => config('queue.default'),
-            'redis_test' => \Illuminate\Support\Facades\Redis::connection()->ping()
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-});
+// Test metrics endpoint removed for security
 
 // ---- Cal.com Webhook -------------------------------------------
 // 1) Ping-Route (GET)  ➜ ohne Signaturprüfung
@@ -252,41 +241,11 @@ Route::post('/retell/optimized-webhook', function (Request $request) {
 })->middleware(['verify.retell.signature'])
   ->name('retell.optimized.webhook');
 
-// ---- DEBUG: NOW USING MCP UnifiedWebhookController with extra logging ----
-Route::post('/retell/debug-webhook', function (Request $request) {
-    Log::info('[MCP Migration] Debug webhook endpoint used', [
-        'headers' => $request->headers->all(),
-        'body' => $request->all(),
-        'ip' => $request->ip()
-    ]);
-    return app(UnifiedWebhookController::class)->handle($request);
-})->middleware(['ip.whitelist'])
-  ->name('retell.debug.webhook');
+// Debug webhook removed for security - use standard webhook with logging if needed
 
-// ---- TEST: Simple webhook endpoint for testing ----
-Route::post('/test/webhook', [App\Http\Controllers\TestWebhookController::class, 'test'])
-    ->name('test.webhook');
+// Test webhook endpoint removed for security
 
-// ---- MCP TEST: Direct MCP webhook for testing (NO SECURITY) ----
-Route::post('/test/mcp-webhook', function (\Illuminate\Http\Request $request) {
-    \Log::info('[MCP Test] Direct webhook test', [
-        'body' => $request->all()
-    ]);
-    
-    try {
-        $controller = app(\App\Http\Controllers\RetellWebhookMCPController::class);
-        return $controller->processWebhook($request);
-    } catch (\Exception $e) {
-        \Log::error('[MCP Test] Error', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
-    }
-})
-    ->name('test.mcp.webhook');
+// MCP test webhook removed for security
 
 // ---- ENHANCED: NOW USING MCP UnifiedWebhookController ----
 Route::post('/retell/enhanced-webhook', function (Request $request) {
@@ -299,16 +258,29 @@ Route::post('/retell/enhanced-webhook', function (Request $request) {
 
 // ---- MCP-BASED: Retell Webhook using MCP services ----
 Route::post('/retell/mcp-webhook', [App\Http\Controllers\MCPWebhookController::class, 'handleRetellWebhook'])
+    ->middleware(['verify.retell.signature', 'webhook.replay.protection'])
     ->name('retell.mcp.webhook');
-Route::get('/retell/mcp-webhook/stats', [App\Http\Controllers\MCPWebhookController::class, 'getWebhookStats'])
-    ->name('retell.mcp.stats');
+// Stats endpoint removed - use authenticated MCP routes instead
 Route::get('/retell/mcp-webhook/health', [App\Http\Controllers\MCPWebhookController::class, 'health'])
+    ->middleware(['auth:sanctum'])
     ->name('retell.mcp.health');
 
 // ---- Retell Function Call Handler (for real-time during calls) ----
 // With signature verification middleware for security
 Route::post('/retell/function-call', [App\Http\Controllers\RetellRealtimeController::class, 'handleFunctionCall'])
     ->middleware('verify.retell.signature');
+
+// ---- NEW: Retell Real-time Routes for Live Updates ----
+Route::prefix('retell/realtime')->middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+    Route::post('/webhook', [\App\Http\Controllers\Api\RetellRealtimeController::class, 'handleWebhook'])
+        ->name('retell.realtime.webhook');
+    Route::get('/active-calls', [\App\Http\Controllers\Api\RetellRealtimeController::class, 'getActiveCalls'])
+        ->name('retell.realtime.active-calls');
+    Route::get('/stream', [\App\Http\Controllers\Api\RetellRealtimeController::class, 'streamCallUpdates'])
+        ->name('retell.realtime.stream');
+    Route::post('/sync', [\App\Http\Controllers\Api\RetellRealtimeController::class, 'syncRecentCalls'])
+        ->name('retell.realtime.sync');
+});
 
 // ---- Stripe Webhook (POST) --------------------------------------
 Route::post('/stripe/webhook', [App\Http\Controllers\Api\StripeWebhookController::class, 'handle'])
@@ -317,14 +289,15 @@ Route::post('/stripe/webhook', [App\Http\Controllers\Api\StripeWebhookController
 
 // ---- Billing Webhook (Stripe) - NO AUTH REQUIRED ----
 Route::post('/billing/webhook', [App\Http\Controllers\BillingController::class, 'webhook'])
+    ->middleware(['verify.stripe.signature', 'webhook.replay.protection'])
     ->name('billing.webhook');
 
-// ---- UNIFIED WEBHOOK HANDLER (NEW) ------------------------------
-// Automatically detects and routes webhooks from any source
-Route::post('/webhook', [UnifiedWebhookController::class, 'handle'])
-    ->name('webhook.unified');
-Route::get('/webhook/health', [UnifiedWebhookController::class, 'health'])
-    ->name('webhook.health');
+// ---- UNIFIED WEBHOOK HANDLER (REMOVED FOR SECURITY) ------------------------------
+// Generic webhook endpoint removed - use provider-specific endpoints with signature verification:
+// - /api/retell/webhook (with verify.retell.signature middleware)
+// - /api/calcom/webhook (with calcom.signature middleware)
+// - /api/stripe/webhook (with verify.stripe.signature middleware)
+// This ensures all webhooks are properly authenticated
 
 // ---- Cal.com V2 Health Check ------------------------------------
 // Removed duplicate route - using the one defined above at line 23-24
@@ -339,107 +312,9 @@ Route::prefix('hybrid')->middleware(['input.validation'])->group(function () {
     Route::post('/book', [HybridBookingController::class, 'bookAppointment']);
     Route::post('/book-next', [HybridBookingController::class, 'bookNextAvailable']);
 });
-Route::post('/calcom/book-test', function() {
-    try {
-        $calcomService = new \App\Services\CalcomService();
+// Test booking endpoint removed for security
 
-        // Testdaten mit korrektem Zeitformat
-        $eventTypeId = 2031093;
-        $startTime = now()->addDays(2)->setHour(14)->setMinute(0)->setSecond(0)->toIso8601String();
-        
-        $customerData = [
-            'name' => 'Test Kunde',
-            'email' => 'test@example.com',
-            'phone' => '+491604366218'
-        ];
-
-        \Log::info('Teste Cal.com Buchung', [
-            'eventTypeId' => $eventTypeId,
-            'startTime' => $startTime,
-            'customerData' => $customerData
-        ]);
-
-        $result = $calcomService->bookAppointment(
-            $eventTypeId,
-            $startTime,
-            null, // endTime wird von CalcomService nicht mehr benötigt
-            $customerData,
-            'Dies ist eine Testbuchung'
-        );
-
-        if ($result) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Buchung erfolgreich',
-                'data' => $result
-            ]);
-        } else {
-            // Prüfe Logs für Details
-            return response()->json([
-                'success' => false,
-                'message' => 'Buchung fehlgeschlagen - siehe Logs für Details'
-            ], 400);
-        }
-
-    } catch (\Exception $e) {
-        \Log::error('Cal.com Test-Buchung Fehler', [
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Fehler: ' . $e->getMessage(),
-            'details' => $e->getTraceAsString()
-        ], 500);
-    }
-});
-
-// ---- Calcom V2 Test Routes ----
-Route::prefix('test/calcom-v2')->group(function () {
-    Route::get('/event-types', function(Request $request) {
-        $calcom = new \App\Services\CalcomV2Service();
-        $teamSlug = config('services.calcom.team_slug', 'askproai');
-        return response()->json($calcom->getEventTypes($teamSlug));
-    });
-
-    Route::get('/slots', function(Request $request) {
-        $calcom = new \App\Services\CalcomV2Service();
-        $eventTypeId = $request->query('eventTypeId');
-        $start = $request->query('start', now()->toDateString());
-        $end = $request->query('end', now()->addWeek()->toDateString());
-        $tz = $request->query('tz', 'Europe/Berlin');
-        return response()->json($calcom->getSlots($eventTypeId, $start, $end, $tz));
-    });
-
-    Route::post('/book', function(Request $request) {
-        $calcom = new \App\Services\CalcomV2Service();
-        $eventTypeId = $request->input('eventTypeId');
-        $start = $request->input('start');
-        
-        // Calculate end time (add 30 minutes by default)
-        $startTime = new \DateTime($start);
-        $endTime = clone $startTime;
-        $endTime->add(new \DateInterval('PT30M'));
-        
-        $customerData = [
-            'name'     => $request->input('name', 'Max Mustermann'),
-            'email'    => $request->input('email', 'test@example.com'),
-            'phone'    => $request->input('phone', '+49 123 456789'),
-            'timeZone' => $request->input('tz', 'Europe/Berlin'),
-        ];
-        
-        $result = $calcom->bookAppointment(
-            $eventTypeId, 
-            $startTime->format('c'), 
-            $endTime->format('c'), 
-            $customerData,
-            $request->input('notes')
-        );
-        
-        return response()->json($result ?: ['error' => 'Booking failed']);
-    });
-});
+// Calcom V2 test routes removed for security - use authenticated MCP endpoints instead
 
 // Frontend error logging
 Route::post('/log-frontend-error', [FrontendErrorController::class, 'log'])->middleware('web');
@@ -470,8 +345,20 @@ Route::middleware(['auth:sanctum', 'input.validation'])->group(function () {
     // Call API
     Route::apiResource('calls', App\Http\Controllers\API\CallController::class);
     
-    // Billing routes
+    // Legacy billing route
     Route::get('/billing/checkout', [App\Http\Controllers\BillingController::class, 'checkout']);
+    
+    // Stripe Billing API
+    Route::prefix('billing')->group(function () {
+        Route::get('/plans', [App\Http\Controllers\StripeBillingController::class, 'getPlans']);
+        Route::post('/subscriptions', [App\Http\Controllers\StripeBillingController::class, 'createSubscription']);
+        Route::put('/subscriptions/{subscription}', [App\Http\Controllers\StripeBillingController::class, 'updateSubscription']);
+        Route::delete('/subscriptions/{subscription}', [App\Http\Controllers\StripeBillingController::class, 'cancelSubscription']);
+        Route::post('/subscriptions/{subscription}/resume', [App\Http\Controllers\StripeBillingController::class, 'resumeSubscription']);
+        Route::get('/subscriptions/{subscription}/usage', [App\Http\Controllers\StripeBillingController::class, 'getUsage']);
+        Route::post('/portal-session', [App\Http\Controllers\StripeBillingController::class, 'createPortalSession']);
+        Route::post('/checkout-session', [App\Http\Controllers\StripeBillingController::class, 'createCheckoutSession']);
+    });
 });
 
 // Event Management API Routes (also protected)
@@ -541,15 +428,25 @@ Route::prefix('monitoring')->middleware(['auth:sanctum', 'can:view-monitoring'])
 
 // MCP Health Check & Monitoring Routes
 Route::prefix('health')->middleware(['api'])->group(function () {
+    // Basic health check (public for monitoring tools)
     Route::get('/', [MCPHealthCheckController::class, 'health']);
-    Route::get('/detailed', [MCPHealthCheckController::class, 'detailed']);
-    Route::get('/service/{service}', [MCPHealthCheckController::class, 'service']);
     Route::get('/ready', [MCPHealthCheckController::class, 'ready']);
     Route::get('/live', [MCPHealthCheckController::class, 'live']);
+    
+    // Detailed health checks (contain sensitive data - require auth)
+    Route::get('/detailed', [MCPHealthCheckController::class, 'detailed'])
+        ->middleware(['auth:sanctum']);
+    Route::get('/service/{service}', [MCPHealthCheckController::class, 'service'])
+        ->middleware(['auth:sanctum']);
+    
+    // Circuit Breaker health checks
+    Route::get('/circuit-breakers', [CircuitBreakerHealthController::class, 'index'])
+        ->middleware(['auth:sanctum']);
+    Route::get('/circuit-breakers/{service}', [CircuitBreakerHealthController::class, 'show'])
+        ->middleware(['auth:sanctum']);
 });
 
-Route::get('/metrics', [MCPHealthCheckController::class, 'metrics'])
-    ->middleware(['api']);
+// Duplicate metrics endpoint - removed to avoid conflicts with line 33-35
 
 Route::prefix('monitoring')->middleware(['api', 'auth:sanctum'])->group(function () {
     Route::get('/alerts', [MCPHealthCheckController::class, 'alerts']);
@@ -561,14 +458,7 @@ Route::prefix('mobile')->group(function () {
     // Public routes
     Route::post('/device/register', [App\Http\Controllers\API\MobileAppController::class, 'registerDevice']);
     
-    // Test route without auth
-    Route::get('/test', function() {
-        return response()->json([
-            'status' => 'ok',
-            'message' => 'Mobile API is working',
-            'timestamp' => now()
-        ]);
-    });
+    // Test endpoint removed for security - use health check endpoints instead
     
     // Protected routes
     Route::middleware(['auth:sanctum'])->group(function () {
@@ -627,7 +517,7 @@ Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
         Route::get('bookings', [App\Http\Controllers\Api\MCPController::class, 'calcomBookings']);
         Route::get('assignments/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'calcomAssignments']);
         Route::post('sync', [App\Http\Controllers\Api\MCPController::class, 'calcomSync']);
-        Route::get('test/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'calcomTest']);
+        // Test endpoint removed - use health check or specific diagnostic endpoints
     });
     
     // Retell.ai MCP
@@ -639,7 +529,7 @@ Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
         Route::get('call/{callId}', [App\Http\Controllers\Api\MCPController::class, 'retellCallDetails']);
         Route::post('search-calls', [App\Http\Controllers\Api\MCPController::class, 'retellSearchCalls']);
         Route::get('phone-numbers/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellPhoneNumbers']);
-        Route::get('test/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellTest']);
+        // Test endpoint removed - use health check or specific diagnostic endpoints
     });
     
     // Sentry MCP (existing)
@@ -665,4 +555,57 @@ Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
     
     // Cache Management
     Route::post('{service}/cache/clear', [App\Http\Controllers\Api\MCPController::class, 'clearCache']);
+});
+
+// Retell AI Custom Function Routes
+Route::prefix('retell')->group(function () {
+    Route::post('/collect-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'collectAppointment']);
+    Route::post('/check-customer', [App\Http\Controllers\RetellCustomFunctionsController::class, 'checkCustomer']);
+    Route::post('/check-availability', [App\Http\Controllers\RetellCustomFunctionsController::class, 'checkAvailability']);
+    Route::post('/book-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'bookAppointment']);
+    Route::post('/cancel-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'cancelAppointment']);
+    Route::post('/reschedule-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'rescheduleAppointment']);
+});
+
+// User Token Management
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/user/tokens', [App\Http\Controllers\Api\UserTokenController::class, 'index']);
+    Route::post('/user/tokens', [App\Http\Controllers\Api\UserTokenController::class, 'store']);
+    Route::delete('/user/tokens/{tokenId}', [App\Http\Controllers\Api\UserTokenController::class, 'destroy']);
+});
+
+// Command Intelligence API Routes
+Route::middleware(['auth:sanctum'])->prefix('v2')->group(function () {
+    // Commands
+    Route::prefix('commands')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\V2\CommandController::class, 'index']);
+        Route::post('/', [App\Http\Controllers\Api\V2\CommandController::class, 'store']);
+        Route::get('/categories', [App\Http\Controllers\Api\V2\CommandController::class, 'categories']);
+        Route::post('/search', [App\Http\Controllers\Api\V2\CommandController::class, 'search']);
+        Route::get('/{id}', [App\Http\Controllers\Api\V2\CommandController::class, 'show']);
+        Route::put('/{id}', [App\Http\Controllers\Api\V2\CommandController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\Api\V2\CommandController::class, 'destroy']);
+        Route::post('/{id}/execute', [App\Http\Controllers\Api\V2\CommandController::class, 'execute']);
+        Route::post('/{id}/favorite', [App\Http\Controllers\Api\V2\CommandController::class, 'toggleFavorite']);
+    });
+    
+    // Workflows
+    Route::prefix('workflows')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\V2\WorkflowController::class, 'index']);
+        Route::post('/', [App\Http\Controllers\Api\V2\WorkflowController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\Api\V2\WorkflowController::class, 'show']);
+        Route::put('/{id}', [App\Http\Controllers\Api\V2\WorkflowController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\Api\V2\WorkflowController::class, 'destroy']);
+        Route::post('/{id}/execute', [App\Http\Controllers\Api\V2\WorkflowController::class, 'execute']);
+        Route::post('/{id}/favorite', [App\Http\Controllers\Api\V2\WorkflowController::class, 'toggleFavorite']);
+    });
+    
+    // Executions
+    Route::prefix('executions')->group(function () {
+        Route::get('/commands', [App\Http\Controllers\Api\V2\ExecutionController::class, 'commandExecutions']);
+        Route::get('/workflows', [App\Http\Controllers\Api\V2\ExecutionController::class, 'workflowExecutions']);
+        Route::get('/commands/{id}', [App\Http\Controllers\Api\V2\ExecutionController::class, 'commandExecutionDetails']);
+        Route::get('/workflows/{id}', [App\Http\Controllers\Api\V2\ExecutionController::class, 'workflowExecutionDetails']);
+        Route::get('/statistics', [App\Http\Controllers\Api\V2\ExecutionController::class, 'statistics']);
+    });
 });

@@ -10,7 +10,7 @@ return new class extends CompatibleMigration
     public function up(): void
     {
         if (!Schema::hasTable('business_hours_templates')) {
-            Schema::create('business_hours_templates', function (Blueprint $table) {
+            $this->createTableIfNotExists('business_hours_templates', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
@@ -75,6 +75,6 @@ return new class extends CompatibleMigration
 
     public function down(): void
     {
-        Schema::dropIfExists('business_hours_templates');
+        $this->dropTableIfExists('business_hours_templates');
     }
 };

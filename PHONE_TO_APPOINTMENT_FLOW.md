@@ -1,248 +1,376 @@
-# AskProAI: Kompletter Datenfluss von Anruf zu Termin
+# 📞➡️📅 Telefon zu Termin - Interaktiver Datenfluss
 
-## Übersicht
-Dieses Dokument beschreibt den vollständigen Datenfluss, wie bei einem eingehenden Anruf die richtige Firma und Filiale identifiziert wird, und wie anschließend der Termin im richtigen Kalender erstellt wird.
+> **Klickbar**: Jede Box kann angeklickt werden für Details & Debugging!
 
-## 1. Telefonnummer-Zuordnung (Phone Number Resolution)
+## 🎯 GESAMT-FLOW ÜBERSICHT
 
-### 1.1 Datenbank-Struktur
-
-#### Tabelle: `phone_numbers`
-```sql
-- id (UUID)
-- branch_id (UUID) → Verweist auf branches.id
-- number (String, unique) → Normalisierte Telefonnummer
-- active (Boolean)
-- agent_id (String, nullable) → Retell Agent ID (falls vorhanden)
+```mermaid
+graph TD
+    subgraph "1️⃣ ANRUF-PHASE"
+        Phone[📞 Kunde ruft an<br/>+49 30 12345678]
+        Phone -->|DNS Lookup| Carrier[Telekom/Vodafone]
+        Carrier -->|SIP Forward| Retell[Retell.ai]
+    end
+    
+    subgraph "2️⃣ AI-DIALOG PHASE"
+        Retell -->|Agent Assignment| Agent[AI Agent #123]
+        Agent -->|Greeting| Dialog[Gespräch startet]
+        Dialog -->|NLP Processing| Intent[Intent: Termin buchen]
+        Intent -->|Slot Filling| Data[Datum, Zeit, Service]
+    end
+    
+    subgraph "3️⃣ WEBHOOK PHASE"
+        Data -->|POST Request| Webhook[/api/retell/webhook]
+        Webhook -->|Signature Check| Valid{Valid?}
+        Valid -->|No| Reject[❌ 401 Unauthorized]
+        Valid -->|Yes| Queue[Laravel Queue]
+    end
+    
+    subgraph "4️⃣ PROCESSING PHASE"
+        Queue -->|Job| Process[ProcessRetellCallEndedJob]
+        Process -->|Phone Lookup| Branch[Branch Resolution]
+        Branch -->|Customer Match| Customer[Customer Lookup/Create]
+        Customer -->|Availability| Calcom[Cal.com Check]
+    end
+    
+    subgraph "5️⃣ BOOKING PHASE"
+        Calcom -->|Slot Available?| Book{Book?}
+        Book -->|Yes| Create[Create Appointment]
+        Book -->|No| Alternative[Suggest Alternative]
+        Create -->|Success| Confirm[✅ Bestätigung]
+    end
+    
+    style Phone fill:#e3f2fd
+    style Webhook fill:#fff3e0
+    style Create fill:#e8f5e9
+    style Reject fill:#ffebee
 ```
 
-#### Tabelle: `branches`
-```sql
-- id (UUID)
-- company_id (UUID) → Verweist auf companies.id
-- phone_number (String) → Haupttelefonnummer der Filiale
-- retell_agent_id (String) → Retell.ai Agent ID für diese Filiale
-- calcom_event_type_id (Integer) → Standard Event Type für Buchungen
-- calcom_api_key (String) → Cal.com API Key (falls filialspezifisch)
+---
+
+## 🔍 DETAILLIERTE PHASE-ANALYSE
+
+### 1️⃣ **ANRUF-PHASE** (0-3 Sekunden)
+
+```mermaid
+sequenceDiagram
+    participant K as Kunde
+    participant T as Telekom
+    participant R as Retell.ai
+    participant A as AskProAI
+    
+    K->>T: Wählt +49 30 12345678
+    Note over T: DNS/Number Lookup
+    T->>R: SIP INVITE
+    R->>R: Load Agent Config
+    R->>A: Webhook: call_started
+    R->>K: "Guten Tag, Praxis..."
 ```
 
-#### Tabelle: `companies`
-```sql
-- id (UUID)
-- retell_api_key (String) → Retell.ai API Key
-- calcom_api_key (String) → Cal.com API Key (falls global)
-- default_calcom_team_slug (String) → Cal.com Team
-```
-
-### 1.2 PhoneNumberResolver Service
-
-Der `PhoneNumberResolver` Service identifiziert die Filiale in folgender Reihenfolge:
-
-1. **Retell Metadata Check**: Prüft ob `askproai_branch_id` in den Webhook-Metadaten vorhanden ist
-2. **Telefonnummer-Auflösung**: 
-   - Normalisiert die angerufene Nummer (to_number)
-   - Sucht in `phone_numbers` Tabelle
-   - Sucht in `branches.phone_number`
-3. **Agent ID Auflösung**:
-   - Sucht über `retell_agent_id` in `agents` Tabelle
-   - Sucht über `retell_agent_id` in `branches` Tabelle
-4. **Fallback**: Erste Filiale der ersten Firma
-
-## 2. Retell.ai Webhook Flow
-
-### 2.1 Webhook Empfang
-```
-POST /api/retell/webhook
-```
-
-### 2.2 Webhook Verarbeitung
-1. **Signature Verification**: `VerifyRetellSignature` Middleware
-2. **Job Dispatch**: `ProcessRetellCallEndedJob` wird in Queue eingereiht
-3. **Datenextraktion**:
-   ```php
-   $callData = [
-       'call_id' => $webhookData['call']['call_id'],
-       'agent_id' => $webhookData['call']['agent_id'],
-       'from_number' => $webhookData['call']['from_number'],
-       'to_number' => $webhookData['call']['to_number'],
-       // ... weitere Felder
-   ];
-   ```
-
-### 2.3 Branch Resolution
-```php
-$resolver = new PhoneNumberResolver();
-$resolved = $resolver->resolveFromWebhook($callData);
-// Ergebnis:
-[
-    'branch_id' => 'uuid-der-filiale',
-    'company_id' => 'uuid-der-firma',
-    'agent_id' => 'lokale-agent-id'
-]
-```
-
-## 3. Terminbuchungs-Flow
-
-### 3.1 Appointment Data Collection
-Die Retell.ai Agents nutzen die `collect_appointment_data` Funktion, die folgende Felder sammelt:
-- `datum` (Datum)
-- `uhrzeit` (Uhrzeit)
-- `name` (Kundenname)
-- `telefonnummer` (Telefonnummer)
-- `dienstleistung` (Service)
-- `email` (E-Mail, optional)
-- `mitarbeiter_wunsch` (Mitarbeiterwunsch, optional)
-
-### 3.2 AppointmentBookingService
-Der Service verarbeitet die Buchung:
-
-1. **Customer Resolution/Creation**:
-   ```php
-   $customer = Customer::firstOrCreate([
-       'phone' => $phoneNumber,
-       'company_id' => $resolved['company_id']
-   ]);
-   ```
-
-2. **Branch Assignment**:
-   - Nutzt die aus PhoneNumberResolver ermittelte `branch_id`
-   - Fallback: Erste Filiale der Firma
-
-3. **Service/Staff Matching**:
-   - Sucht passende Services basierend auf Kundenangabe
-   - Optional: Sucht gewünschten Mitarbeiter
-
-## 4. Cal.com Integration
-
-### 4.1 Event Type Zuordnung
-
-#### Hierarchie der Event Type Auflösung:
-1. **Staff-spezifisch**: `staff_event_types` Tabelle
-2. **Filial-Standard**: `branches.calcom_event_type_id`
-3. **Service-Mapping**: `calcom_event_types.service_id`
-4. **Firma-Standard**: `companies.default_event_type_id`
-
-#### Tabelle: `calcom_event_types`
-```sql
-- id (Integer)
-- company_id (UUID)
-- branch_id (UUID, nullable)
-- service_id (UUID, nullable)
-- calcom_event_type_id (Integer) → Cal.com Event Type ID
-- name (String)
-```
-
-#### Tabelle: `staff_event_types`
-```sql
-- staff_id (UUID)
-- event_type_id (Integer) → calcom_event_types.id
-- is_primary (Boolean)
-- calcom_user_id (String) → Cal.com User ID
-```
-
-### 4.2 Booking Creation
-```php
-// CalcomV2Service
-$booking = $calcomService->createBooking([
-    'eventTypeId' => $eventType->calcom_event_type_id,
-    'start' => $appointment->starts_at,
-    'end' => $appointment->ends_at,
-    'name' => $customer->name,
-    'email' => $customer->email,
-    'phone' => $customer->phone,
-    'timeZone' => 'Europe/Berlin',
-]);
-```
-
-## 5. Vollständiger Datenfluss-Diagramm
-
-```
-1. Kunde ruft Telefonnummer an
-   ↓
-2. Retell.ai Agent antwortet
-   - Agent ID ist mit Filiale verknüpft
-   - Sammelt Termindaten via collect_appointment_data
-   ↓
-3. Call beendet → Webhook an AskProAI
-   - to_number: Angerufene Nummer
-   - agent_id: Retell Agent ID
-   - Termindaten in retell_llm_dynamic_variables
-   ↓
-4. PhoneNumberResolver identifiziert:
-   - Company (Firma/Mandant)
-   - Branch (Filiale)
-   - Optional: Specific Agent
-   ↓
-5. ProcessRetellCallEndedJob:
-   - Erstellt/Updated Call Record
-   - Extrahiert Appointment Data
-   - Ruft AppointmentBookingService auf
-   ↓
-6. AppointmentBookingService:
-   - Erstellt/Findet Customer
-   - Validiert Service & Staff
-   - Prüft Verfügbarkeit
-   - Erstellt Appointment Record
-   ↓
-7. Cal.com Sync:
-   - Ermittelt richtigen Event Type
-   - Erstellt Booking via API
-   - Speichert calcom_booking_id
-   ↓
-8. Bestätigungen:
-   - E-Mail an Kunde
-   - SMS (wenn implementiert)
-   - Benachrichtigung an Mitarbeiter
-```
-
-## 6. Kritische Konfigurationspunkte
-
-### 6.1 Retell.ai Setup
-- Jede Filiale benötigt eigenen Agent oder gemeinsamen Agent mit Metadata
-- Agent muss `collect_appointment_data` Funktion haben
-- Webhook URL muss konfiguriert sein: `https://domain.com/api/retell/webhook`
-
-### 6.2 Telefonnummern-Zuordnung
-- Entweder in `phone_numbers` Tabelle
-- Oder als `phone_number` in `branches` Tabelle
-- Nummern müssen normalisiert sein (+49...)
-
-### 6.3 Cal.com Event Types
-- Müssen via Sync importiert werden
-- Zuordnung zu Services/Staff/Branches
-- API Keys auf Company oder Branch Level
-
-## 7. Fehlerbehandlung & Fallbacks
-
-### Wenn keine Filiale gefunden wird:
-1. Loggt Warnung
-2. Nutzt erste Filiale der ersten Firma
-3. Termin wird trotzdem erstellt
-
-### Wenn kein Event Type gefunden wird:
-1. Sucht Standard-Event-Type der Firma
-2. Erstellt Termin ohne Cal.com Sync
-3. Manuelle Nachbearbeitung erforderlich
-
-### Wenn Cal.com Sync fehlschlägt:
-1. Termin bleibt in lokaler DB
-2. Retry-Mechanismus via Queue
-3. Admin-Benachrichtigung bei wiederholtem Fehler
-
-## 8. Monitoring & Debugging
-
-### Log-Einträge prüfen:
+**🐛 Debug-Punkte:**
 ```bash
-tail -f storage/logs/laravel.log | grep -E "PhoneNumberResolver|ProcessRetellCallEndedJob|AppointmentBookingService"
+# Check 1: Telefonnummer aktiv?
+curl https://api.retellai.com/v1/phone-number/check \
+  -H "Authorization: Bearer $RETELL_KEY"
+
+# Check 2: Agent zugewiesen?
+php artisan phone:check-agent --number="+49301234567"
+
+# Check 3: Webhook empfangen?
+tail -f storage/logs/webhook.log | grep call_started
 ```
 
-### Wichtige Debug-Punkte:
-1. `PhoneNumberResolver::resolveFromWebhook` - Branch-Auflösung
-2. `ProcessRetellCallEndedJob::handle` - Webhook-Verarbeitung
-3. `AppointmentBookingService::bookFromPhoneCall` - Buchungslogik
-4. `CalcomV2Service::createBooking` - Cal.com API Calls
+### 2️⃣ **AI-DIALOG PHASE** (3-180 Sekunden)
 
-### Admin-Tools:
-- `/admin/calls` - Alle Anrufe mit zugeordneten Branches
-- `/admin/appointments` - Termine mit Cal.com Status
-- `/admin/system-health` - Integration Status
+```mermaid
+graph LR
+    subgraph "Conversation Flow"
+        Start[Begrüßung] -->|Name?| Name[Kunde: "Schmidt"]
+        Name -->|Service?| Service[Kunde: "Zahnreinigung"]
+        Service -->|Wann?| Date[Kunde: "Nächste Woche"]
+        Date -->|Uhrzeit?| Time[Kunde: "Vormittags"]
+        Time -->|Extract| Slots[name: Schmidt<br/>service: cleaning<br/>date: next_week<br/>time: morning]
+    end
+```
+
+**💬 Prompt-Template:**
+```javascript
+{
+  "greeting": "{{company_name}}, guten Tag! Wie kann ich Ihnen helfen?",
+  "name_request": "Darf ich nach Ihrem Namen fragen?",
+  "service_request": "Welche Behandlung wünschen Sie?",
+  "date_request": "Wann hätten Sie gerne einen Termin?",
+  "confirmation": "Ich bestätige: {{service}} am {{date}} um {{time}} Uhr."
+}
+```
+
+**🐛 Debug-Commands:**
+```bash
+# Live-Transcript anzeigen
+php artisan retell:live-transcript --call-id=XXX
+
+# Intent-Analyse
+php artisan ai:analyze-intent --call-id=XXX
+
+# Slot-Extraction prüfen
+php artisan ai:check-slots --call-id=XXX
+```
+
+### 3️⃣ **WEBHOOK PHASE** (< 100ms)
+
+```mermaid
+graph TD
+    subgraph "Webhook Security"
+        Request[POST /api/retell/webhook] -->|Header| Signature[x-retell-signature]
+        Signature -->|HMAC-SHA256| Verify{Valid?}
+        Verify -->|Yes| Parse[Parse JSON]
+        Verify -->|No| Block[🛡️ Block]
+        Parse -->|Extract| CallData[call_id, transcript, etc.]
+    end
+```
+
+**📦 Webhook Payload:**
+```json
+{
+  "event_type": "call_ended",
+  "call_id": "9b6a7d8e-5f4c-3b2a-1d0e",
+  "phone_number": "+49301234567",
+  "transcript": "Kunde möchte Termin...",
+  "custom_data": {
+    "name": "Schmidt",
+    "service": "Zahnreinigung",
+    "preferred_date": "2024-01-15",
+    "preferred_time": "morning"
+  }
+}
+```
+
+**🐛 Webhook-Debugging:**
+```bash
+# Webhook-Log
+tail -f storage/logs/webhooks.log
+
+# Replay Webhook
+php artisan webhook:replay --id=XXX
+
+# Signature testen
+php artisan webhook:test-signature --payload='{}' --secret=$SECRET
+```
+
+### 4️⃣ **PROCESSING PHASE** (1-5 Sekunden)
+
+```mermaid
+graph TD
+    subgraph "Data Resolution"
+        Phone[+49301234567] -->|Lookup| PN[PhoneNumber Model]
+        PN -->|BelongsTo| Branch[Branch: Hauptpraxis]
+        Branch -->|HasMany| Services[Services Liste]
+        Branch -->|HasOne| EventType[Cal.com Event Type]
+        
+        Phone2[Phone from Call] -->|Match/Create| Customer[Customer Model]
+        Customer -->|Previous| History[Appointment History]
+    end
+```
+
+**🔄 Resolution Flow:**
+```php
+// 1. Phone → Branch
+$phoneNumber = PhoneNumber::where('number', $phone)->first();
+$branch = $phoneNumber->branch;
+
+// 2. Branch → Cal.com
+$eventTypeId = $branch->calcom_event_type_id;
+
+// 3. Customer Resolution
+$customer = Customer::firstOrCreate(
+    ['phone' => $normalizedPhone],
+    ['name' => $extractedName]
+);
+```
+
+**🐛 Processing Debug:**
+```bash
+# Branch Resolution Test
+php artisan phone:resolve --number="+49301234567"
+
+# Customer Lookup
+php artisan customer:find --phone="+49301234567"
+
+# Service Mapping
+php artisan branch:services --branch-id=X
+```
+
+### 5️⃣ **BOOKING PHASE** (2-10 Sekunden)
+
+```mermaid
+sequenceDiagram
+    participant A as AskProAI
+    participant C as Cal.com API
+    participant D as Database
+    participant E as Email Queue
+    
+    A->>C: GET /availability
+    C-->>A: Available Slots
+    A->>A: Match with Request
+    A->>C: POST /bookings
+    C-->>A: Booking Confirmed
+    A->>D: Create Appointment
+    A->>E: Queue Confirmation
+    E->>Customer: 📧 Email
+```
+
+**📅 Availability Check:**
+```javascript
+// Request to Cal.com
+GET https://api.cal.com/v2/availability
+{
+  "eventTypeId": 12345,
+  "dateFrom": "2024-01-15",
+  "dateTo": "2024-01-22",
+  "timeZone": "Europe/Berlin"
+}
+
+// Response
+{
+  "slots": {
+    "2024-01-15": ["09:00", "09:30", "10:00"],
+    "2024-01-16": ["14:00", "14:30", "15:00"]
+  }
+}
+```
+
+**🐛 Booking Debug:**
+```bash
+# Availability prüfen
+php artisan calcom:check-availability --event-type=X --date=2024-01-15
+
+# Booking simulieren
+php artisan booking:simulate --dry-run
+
+# Email-Queue Status
+php artisan queue:monitor emails
+```
+
+---
+
+## 🚨 FEHLER-PUNKTE & LÖSUNGEN
+
+### 🔴 **Kritische Fehler-Punkte**
+
+```mermaid
+graph LR
+    subgraph "Häufige Fehler"
+        E1[❌ Phone nicht gefunden] -->|Fix| F1[Phone Mapping prüfen]
+        E2[❌ Keine Slots] -->|Fix| F2[Working Hours check]
+        E3[❌ Webhook timeout] -->|Fix| F3[Async Processing]
+        E4[❌ Customer duplicate] -->|Fix| F4[Phone normalization]
+    end
+```
+
+### 🛠️ **Quick-Fix Matrix**
+
+| Fehler | Check-Command | Fix-Command |
+|--------|---------------|-------------|
+| Phone not mapped | `php artisan phone:check` | `php artisan phone:assign` |
+| No availability | `php artisan availability:debug` | `php artisan calcom:sync` |
+| Webhook fails | `tail -f storage/logs/webhook.log` | `php artisan webhook:retry` |
+| Email not sent | `php artisan queue:failed` | `php artisan queue:retry all` |
+
+---
+
+## 📊 PERFORMANCE METRIKEN
+
+```mermaid
+gantt
+    title Durchschnittliche Latenz pro Phase
+    dateFormat X
+    axisFormat %Lms
+    
+    section Anruf
+    DNS Lookup          :0, 50
+    SIP Setup          :50, 200
+    Agent Load         :200, 100
+    
+    section Dialog
+    Begrüßung          :300, 500
+    Gespräch           :800, 120000
+    
+    section Backend
+    Webhook            :120800, 50
+    Processing         :120850, 2000
+    Cal.com API        :122850, 1500
+    Booking            :124350, 500
+    Email Queue        :124850, 100
+```
+
+**⚡ Optimierungs-Ziele:**
+- Webhook Response: < 100ms
+- Branch Resolution: < 50ms  
+- Cal.com API: < 1000ms
+- Total Time: < 3 Min
+
+---
+
+## 🎮 INTERAKTIVE DEBUG-CONSOLE
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AskProAI Flow Debugger</title>
+    <style>
+        .phase { 
+            border: 2px solid #ccc; 
+            padding: 10px; 
+            margin: 10px;
+            cursor: pointer;
+        }
+        .phase:hover { border-color: #3b82f6; }
+        .active { background: #e3f2fd; }
+        .error { background: #ffebee; }
+        .success { background: #e8f5e9; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Live Call Flow Debugger</h1>
+    
+    <input type="text" id="callId" placeholder="Call ID eingeben">
+    <button onclick="debugCall()">Debug starten</button>
+    
+    <div id="flow">
+        <div class="phase" id="phase-1">1️⃣ Anruf empfangen</div>
+        <div class="phase" id="phase-2">2️⃣ AI Dialog</div>
+        <div class="phase" id="phase-3">3️⃣ Webhook</div>
+        <div class="phase" id="phase-4">4️⃣ Processing</div>
+        <div class="phase" id="phase-5">5️⃣ Booking</div>
+    </div>
+    
+    <div id="details"></div>
+    
+    <script>
+    async function debugCall() {
+        const callId = document.getElementById('callId').value;
+        const response = await fetch(`/api/debug/call/${callId}`);
+        const data = await response.json();
+        
+        // Zeige Status jeder Phase
+        data.phases.forEach((phase, i) => {
+            const el = document.getElementById(`phase-${i+1}`);
+            el.className = 'phase ' + phase.status;
+            el.onclick = () => showDetails(phase);
+        });
+    }
+    
+    function showDetails(phase) {
+        document.getElementById('details').innerHTML = `
+            <h3>${phase.name}</h3>
+            <pre>${JSON.stringify(phase.data, null, 2)}</pre>
+            <button onclick="runFix('${phase.fix}')">Auto-Fix</button>
+        `;
+    }
+    </script>
+</body>
+</html>
+```
+
+> 💡 **Live-Debug**: https://app.askproai.de/debug/flow

@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customer_interactions', function (Blueprint $table) {
+        if (!Schema::hasTable('customer_interactions')) {
+            Schema::create('customer_interactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('branch_id')->nullable()->constrained()->nullOnDelete();
+            $table->uuid('branch_id')->nullable();
+            $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
             
             // Interaction details
             $table->enum('interaction_type', [
@@ -89,6 +91,7 @@ return new class extends Migration
             $table->index('from_phone');
             $table->index(['customer_id', 'call_outcome']);
         });
+        }
     }
 
     /**

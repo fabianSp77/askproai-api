@@ -20,11 +20,16 @@ class CalcomSyncStatus extends Page implements HasTable
     use InteractsWithTable;
     
     protected static ?string $navigationIcon = 'heroicon-o-arrow-path';
-    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static ?string $navigationLabel = 'Cal.com Sync Status';
     protected static ?int $navigationSort = 5;
     
     protected static string $view = 'filament.admin.pages.calcom-sync-status';
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - Functionality included in EventTypeImportWizard
+    }
     
     public function mount(): void
     {

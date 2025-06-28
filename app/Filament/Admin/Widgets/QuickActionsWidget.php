@@ -45,7 +45,7 @@ class QuickActionsWidget extends Widget
                 [
                     'label' => 'System Status',
                     'icon' => 'heroicon-o-cpu-chip',
-                    'url' => '/admin/system-status',
+                    'url' => '/admin/system-monitoring',
                     'color' => 'gray',
                     'description' => 'System überwachen'
                 ],

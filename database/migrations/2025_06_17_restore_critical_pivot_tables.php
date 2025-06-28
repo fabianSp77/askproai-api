@@ -14,7 +14,7 @@ return new class extends CompatibleMigration
     {
         // 1. onboarding_progress - Wird von OnboardingService verwendet
         if (!Schema::hasTable('onboarding_progress')) {
-            Schema::create('onboarding_progress', function (Blueprint $table) {
+            $this->createTableIfNotExists('onboarding_progress', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('company_id');
                 $table->unsignedBigInteger('user_id');
@@ -35,7 +35,7 @@ return new class extends CompatibleMigration
 
         // 2. staff_branches - Pivot für Staff <-> Branch Beziehung
         if (!Schema::hasTable('staff_branches')) {
-            Schema::create('staff_branches', function (Blueprint $table) {
+            $this->createTableIfNotExists('staff_branches', function (Blueprint $table) {
                 // WICHTIG: staff.id ist UUID, branches.id ist UUID
                 $table->uuid('staff_id');
                 $table->uuid('branch_id');
@@ -67,7 +67,7 @@ return new class extends CompatibleMigration
 
         // 4. service_staff - Pivot für Service <-> Staff Beziehung
         if (!Schema::hasTable('service_staff')) {
-            Schema::create('service_staff', function (Blueprint $table) {
+            $this->createTableIfNotExists('service_staff', function (Blueprint $table) {
                 // services.id ist BIGINT, staff.id ist UUID
                 $table->unsignedBigInteger('service_id');
                 $table->uuid('staff_id');
@@ -84,7 +84,7 @@ return new class extends CompatibleMigration
 
         // 5. integrations - Möglicherweise noch verwendet
         if (!Schema::hasTable('integrations')) {
-            Schema::create('integrations', function (Blueprint $table) {
+            $this->createTableIfNotExists('integrations', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('company_id');
                 $table->string('type'); // 'calcom', 'retell', etc.
@@ -108,10 +108,10 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('integrations');
-        Schema::dropIfExists('service_staff');
+        $this->dropTableIfExists('integrations');
+        $this->dropTableIfExists('service_staff');
         $this->dropTableIfExists('branch_service');
-        Schema::dropIfExists('staff_branches');
-        Schema::dropIfExists('onboarding_progress');
+        $this->dropTableIfExists('staff_branches');
+        $this->dropTableIfExists('onboarding_progress');
     }
 };

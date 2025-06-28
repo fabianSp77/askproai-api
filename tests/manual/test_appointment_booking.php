@@ -5,12 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 $app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-use App\Services\AppointmentBookingService;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Call;
-use Carbon\Carbon;
-
 // Test appointment booking with collect_appointment_data format
 $testData = [
     'datum' => Carbon::tomorrow()->format('d.m.Y'), // Tomorrow

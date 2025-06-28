@@ -2,21 +2,22 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
+use App\Jobs\ProcessRetellWebhookJob;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Services\CalcomV2Service;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Customer;
-use App\Models\Call;
-use App\Models\Appointment;
-use App\Models\Service;
-use App\Models\Staff;
-use App\Services\CalcomV2Service;
-use App\Jobs\ProcessRetellWebhookJob;
-use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class RetellDataFlowE2ETest extends TestCase
 {
@@ -44,6 +45,7 @@ class RetellDataFlowE2ETest extends TestCase
      * Test 1: Complete phone call to appointment booking flow
      * Scenario: Customer calls, AI captures booking details, appointment is created
      */
+    #[Test]
     public function test_complete_phone_to_appointment_flow()
     {
         // Step 1: Simulate incoming call (call_started event)
@@ -98,6 +100,7 @@ class RetellDataFlowE2ETest extends TestCase
      * Test 2: Customer preferences and alternative slot finding
      * Scenario: Requested time not available, AI suggests alternatives
      */
+    #[Test]
     public function test_availability_check_with_customer_preferences()
     {
         // Mock Cal.com availability response
@@ -170,6 +173,7 @@ class RetellDataFlowE2ETest extends TestCase
      * Test 3: Multiple calls from same customer
      * Scenario: Returning customer, system recognizes them
      */
+    #[Test]
     public function test_returning_customer_recognition()
     {
         $customerPhone = '+49 151 11223344';
@@ -202,6 +206,7 @@ class RetellDataFlowE2ETest extends TestCase
      * Test 4: Call without appointment booking
      * Scenario: Customer just asks for information, no booking
      */
+    #[Test]
     public function test_informational_call_without_booking()
     {
         $callId = 'info-call-789';
@@ -241,6 +246,7 @@ class RetellDataFlowE2ETest extends TestCase
      * Test 5: Service and staff assignment
      * Scenario: Customer requests specific service and staff member
      */
+    #[Test]
     public function test_booking_with_service_and_staff_selection()
     {
         $callId = 'service-staff-call-123';
@@ -287,6 +293,7 @@ class RetellDataFlowE2ETest extends TestCase
      * Test 6: Multi-branch company phone routing
      * Scenario: Different phone numbers route to different branches
      */
+    #[Test]
     public function test_multi_branch_phone_routing()
     {
         // Create second branch
@@ -342,6 +349,7 @@ class RetellDataFlowE2ETest extends TestCase
      * Test 7: Error handling and retry logic
      * Scenario: Cal.com API failure, system handles gracefully
      */
+    #[Test]
     public function test_graceful_handling_of_calcom_api_failure()
     {
         // Mock Cal.com API failure
@@ -389,6 +397,7 @@ class RetellDataFlowE2ETest extends TestCase
      * Test 8: Webhook deduplication
      * Scenario: Same webhook sent multiple times
      */
+    #[Test]
     public function test_webhook_deduplication_prevents_duplicate_bookings()
     {
         $callId = 'dedup-test-call-123';

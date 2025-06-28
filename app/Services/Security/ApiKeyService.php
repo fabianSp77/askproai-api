@@ -35,25 +35,26 @@ class ApiKeyService
             return null;
         }
         
-        // Check if already decrypted (for backward compatibility)
-        if (strlen($encryptedKey) < 50 || !str_starts_with($encryptedKey, 'eyJ')) {
-            return $encryptedKey;
-        }
+        // SECURITY: Do NOT accept plain text keys
+        // All keys must be encrypted
         
         try {
             return Crypt::decryptString($encryptedKey);
         } catch (\Exception $e) {
-            Log::warning('API key decryption failed, attempting legacy format', [
-                'key_length' => strlen($encryptedKey),
+            // Log security incident if plain text key is attempted
+            if (self::looksLikePlainTextKey($encryptedKey)) {
+                Log::critical('SECURITY: Plain text API key detected', [
+                    'key_pattern' => self::mask($encryptedKey),
+                    'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5)
+                ]);
+            }
+            
+            Log::error('API key decryption failed', [
+                'error' => $e->getMessage(),
             ]);
             
-            // Try legacy decrypt method
-            try {
-                return decrypt($encryptedKey);
-            } catch (\Exception $e2) {
-                // Return as-is, might be plain text
-                return $encryptedKey;
-            }
+            // Do NOT return the key as-is
+            return null;
         }
     }
     
@@ -90,5 +91,42 @@ class ApiKeyService
         
         // Cal.com keys are usually UUIDs or similar
         return strlen($key) >= 32;
+    }
+    
+    /**
+     * Check if a string looks like a plain text API key
+     */
+    private static function looksLikePlainTextKey(string $value): bool
+    {
+        // Retell keys
+        if (str_starts_with($value, 'key_')) {
+            return true;
+        }
+        
+        // Cal.com style UUIDs
+        if (preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i', $value)) {
+            return true;
+        }
+        
+        // Stripe style keys
+        if (str_starts_with($value, 'sk_') || str_starts_with($value, 'pk_')) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if an API key is encrypted
+     */
+    public static function isEncrypted(?string $key): bool
+    {
+        if (empty($key)) {
+            return false;
+        }
+        
+        // Laravel encrypted strings typically start with 'eyJ'
+        // and are base64 encoded JSON
+        return str_starts_with($key, 'eyJ') && strlen($key) > 100;
     }
 }

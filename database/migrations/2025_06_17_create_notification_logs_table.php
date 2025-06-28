@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('notification_logs', function (Blueprint $table) {
+        $this->createTableIfNotExists('notification_logs', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('appointment_id')->index();
             $table->unsignedBigInteger('customer_id')->index();
@@ -42,6 +42,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notification_logs');
+        $this->dropTableIfExists('notification_logs');
     }
 };

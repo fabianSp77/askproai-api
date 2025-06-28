@@ -2,23 +2,24 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
-use App\Services\AppointmentBookingService;
-use App\Services\CalcomV2Service;
-use App\Services\NotificationService;
-use App\Services\AvailabilityService;
-use App\Services\Locking\TimeSlotLockManager;
-use App\Models\Call;
-use App\Models\Customer;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Branch;
-use App\Models\Company;
 use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Services\AppointmentBookingService;
+use App\Services\AvailabilityService;
+use App\Services\CalcomV2Service;
+use App\Services\Locking\TimeSlotLockManager;
+use App\Services\NotificationService;
+use Exception;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Mockery;
-use Exception;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class AppointmentBookingServiceTransactionTest extends TestCase
 {
@@ -76,6 +77,8 @@ class AppointmentBookingServiceTransactionTest extends TestCase
         $this->mockNotificationService->shouldReceive('notifyStaffNewAppointment')->andReturn(true);
     }
     
+    #[Test]
+    
     public function testSuccessfulBookingFromPhoneCall()
     {
         $call = Call::factory()->create([
@@ -120,6 +123,8 @@ class AppointmentBookingServiceTransactionTest extends TestCase
         ]);
     }
     
+    #[Test]
+    
     public function testRollbackWhenCustomerCreationFails()
     {
         $call = Call::factory()->create([
@@ -155,6 +160,8 @@ class AppointmentBookingServiceTransactionTest extends TestCase
         $this->assertGreaterThanOrEqual(0, $appointmentCount);
     }
     
+    #[Test]
+    
     public function testRollbackWhenLockAcquisitionFails()
     {
         $call = Call::factory()->create([
@@ -185,6 +192,8 @@ class AppointmentBookingServiceTransactionTest extends TestCase
             'call_id' => $call->id,
         ]);
     }
+    
+    #[Test]
     
     public function testRollbackWhenCalendarSyncFails()
     {
@@ -218,6 +227,8 @@ class AppointmentBookingServiceTransactionTest extends TestCase
         ]);
     }
     
+    #[Test]
+    
     public function testLockIsReleasedOnException()
     {
         $call = Call::factory()->create([
@@ -250,6 +261,8 @@ class AppointmentBookingServiceTransactionTest extends TestCase
         $this->assertFalse($result['success']);
         $this->assertEquals('Reservation failed', $result['message']);
     }
+    
+    #[Test]
     
     public function testDeadlockRetryMechanism()
     {

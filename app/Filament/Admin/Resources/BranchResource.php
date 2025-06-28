@@ -24,25 +24,84 @@ use Filament\Support\Enums\MaxWidth;
 
 class BranchResource extends Resource
 {
-
-    public static function canViewAny(): bool
-    {
-        return true;
-    }
-
     use HasConsistentNavigation;
     
     protected static ?string $model = Branch::class;
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
     protected static ?string $navigationLabel = 'Filialen';
+    protected static ?string $navigationGroup = 'Verwaltung';
+    protected static ?int $navigationSort = 85;
     
     protected static ?string $pluralLabel = 'Filialen';
     
     protected static ?string $label = 'Filiale';
+
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission or if user belongs to a company
+        return $user->can('view_any_branch') || $user->company_id !== null;
+    }
     
-    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    public static function canView($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('view_branch')) {
+            return true;
+        }
+        
+        // Users can view branches from their own company
+        return $user->company_id === $record->company_id;
+    }
     
-    protected static ?int $navigationSort = 12;
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can edit all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('update_branch')) {
+            return true;
+        }
+        
+        // Company admins can edit branches from their own company
+        return $user->company_id === $record->company_id && $user->hasRole('company_admin');
+    }
+    
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can create
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('create_branch')) {
+            return true;
+        }
+        
+        // Company admins can create branches for their company
+        return $user->company_id !== null && $user->hasRole('company_admin');
+    }
 
     public static function form(Form $form): Form
     {
@@ -356,6 +415,7 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with(['company']))
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Filialname')

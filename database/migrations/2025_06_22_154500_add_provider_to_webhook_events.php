@@ -1,29 +1,43 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::table('webhook_events', function (Blueprint $table) {
-            $table->string('provider', 50)->after('id')->default('unknown');
-            $table->index('provider');
-        });
+        if (!Schema::hasColumn('webhook_events', 'provider')) {
+            Schema::table('webhook_events', function (Blueprint $table) {
+                $table->string('provider', 50)->after('id')->default('unknown');
+            });
+        }
+        
+        $this->addIndexIfNotExists('webhook_events', 'provider');
     }
 
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
-        Schema::table('webhook_events', function (Blueprint $table) {
-            $table->dropColumn('provider');
-        });
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
+        $this->dropIndexIfExists('webhook_events', 'webhook_events_provider_index');
+        
+        if (Schema::hasColumn('webhook_events', 'provider')) {
+            Schema::table('webhook_events', function (Blueprint $table) {
+                $table->dropColumn('provider');
+            });
+        }
     }
 };

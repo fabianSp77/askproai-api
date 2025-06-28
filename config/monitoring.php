@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Str;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -23,22 +25,22 @@ return [
         'dsn' => env('SENTRY_LARAVEL_DSN'),
         'environment' => env('SENTRY_ENVIRONMENT', env('APP_ENV')),
         'release' => env('SENTRY_RELEASE', null),
-        
+
         // Performance monitoring
         'traces_sample_rate' => env('SENTRY_TRACES_SAMPLE_RATE', 0.1),
         'profiles_sample_rate' => env('SENTRY_PROFILES_SAMPLE_RATE', 0.1),
-        
+
         // PII and sensitive data
         'send_default_pii' => false,
         'before_send' => 'App\Services\Monitoring\SentryBeforeSend@handle',
-        
+
         // Custom contexts
         'contexts' => [
             'stripe' => true,
             'customer_portal' => true,
             'tenant' => true,
         ],
-        
+
         // Alert thresholds
         'alert_thresholds' => [
             'error_rate' => 0.05, // 5% error rate
@@ -54,7 +56,7 @@ return [
     */
     'apm' => [
         'enabled' => env('APM_ENABLED', true),
-        
+
         // Transaction monitoring
         'transactions' => [
             'stripe_webhook' => [
@@ -70,14 +72,14 @@ return [
                 'sample_rate' => 0.3,
             ],
         ],
-        
+
         // Database query monitoring
         'database' => [
             'slow_query_threshold' => 100, // 100ms
             'log_queries' => env('LOG_QUERIES', false),
             'explain_queries' => env('EXPLAIN_QUERIES', false),
         ],
-        
+
         // External service monitoring
         'external_services' => [
             'stripe' => [
@@ -104,7 +106,7 @@ return [
         'enabled' => env('HEALTH_CHECKS_ENABLED', true),
         'endpoint' => '/health',
         'secret' => env('HEALTH_CHECK_SECRET'),
-        
+
         'checks' => [
             // Critical checks (system will be marked as down if these fail)
             'critical' => [
@@ -121,7 +123,7 @@ return [
                     'timeout' => 10,
                 ],
             ],
-            
+
             // Warning checks (system operational but degraded)
             'warning' => [
                 'queue_size' => [
@@ -161,7 +163,7 @@ return [
                 'recipients' => explode(',', env('ALERT_SMS_RECIPIENTS', '')),
             ],
         ],
-        
+
         'rules' => [
             // Payment failures
             'payment_failure' => [
@@ -171,7 +173,7 @@ return [
                 'severity' => 'critical',
                 'channels' => ['email', 'slack', 'sms'],
             ],
-            
+
             // Security issues
             'security_breach_attempt' => [
                 'enabled' => true,
@@ -180,7 +182,7 @@ return [
                 'severity' => 'critical',
                 'channels' => ['email', 'slack', 'sms'],
             ],
-            
+
             // Stripe webhook failures
             'stripe_webhook_failure' => [
                 'enabled' => true,
@@ -189,7 +191,7 @@ return [
                 'severity' => 'high',
                 'channels' => ['email', 'slack'],
             ],
-            
+
             // High error rate
             'high_error_rate' => [
                 'enabled' => true,
@@ -198,7 +200,7 @@ return [
                 'severity' => 'high',
                 'channels' => ['email', 'slack'],
             ],
-            
+
             // Database connection issues
             'database_connection_failure' => [
                 'enabled' => true,
@@ -207,7 +209,7 @@ return [
                 'severity' => 'critical',
                 'channels' => ['email', 'slack', 'sms'],
             ],
-            
+
             // Queue backlog
             'queue_backlog' => [
                 'enabled' => true,
@@ -215,7 +217,7 @@ return [
                 'severity' => 'medium',
                 'channels' => ['email'],
             ],
-            
+
             // Customer portal downtime
             'portal_downtime' => [
                 'enabled' => true,
@@ -234,7 +236,7 @@ return [
     'logging' => [
         // Structured logging
         'structured' => env('STRUCTURED_LOGGING', true),
-        
+
         // Log levels for different components
         'levels' => [
             'stripe' => env('LOG_LEVEL_STRIPE', 'info'),
@@ -243,7 +245,7 @@ return [
             'api' => env('LOG_LEVEL_API', 'info'),
             'security' => env('LOG_LEVEL_SECURITY', 'warning'),
         ],
-        
+
         // Sensitive data masking
         'masking' => [
             'enabled' => true,
@@ -259,7 +261,7 @@ return [
                 'tax_id',
             ],
         ],
-        
+
         // Log retention
         'retention' => [
             'days' => env('LOG_RETENTION_DAYS', 30),
@@ -276,7 +278,8 @@ return [
         'enabled' => env('METRICS_ENABLED', true),
         'endpoint' => '/metrics',
         'secret' => env('METRICS_SECRET'),
-        
+        'metrics_token' => env('METRICS_AUTH_TOKEN', 'askproai-metrics-token-' . Str::random(32)),
+
         // Business metrics
         'business' => [
             'subscriptions_created' => true,
@@ -286,7 +289,7 @@ return [
             'portal_logins' => true,
             'support_tickets' => true,
         ],
-        
+
         // Technical metrics
         'technical' => [
             'request_duration' => true,
@@ -305,7 +308,7 @@ return [
     */
     'security' => [
         'enabled' => env('SECURITY_MONITORING_ENABLED', true),
-        
+
         // Track security events
         'events' => [
             'failed_logins' => true,
@@ -315,13 +318,13 @@ return [
             'api_key_usage' => true,
             'suspicious_activity' => true,
         ],
-        
+
         // Rate limiting monitoring
         'rate_limiting' => [
             'track_violations' => true,
             'alert_threshold' => 100, // Alert after 100 violations
         ],
-        
+
         // IP monitoring
         'ip_monitoring' => [
             'enabled' => true,
@@ -339,7 +342,7 @@ return [
         'enabled' => env('MONITORING_DASHBOARD_ENABLED', true),
         'route' => '/admin/monitoring',
         'middleware' => ['auth', 'can:view-monitoring'],
-        
+
         'widgets' => [
             'system_health' => true,
             'error_rates' => true,
@@ -363,7 +366,7 @@ return [
             'track_dispute_rates' => true,
             'track_subscription_churn' => true,
         ],
-        
+
         'customer_portal' => [
             'track_page_views' => true,
             'track_user_actions' => true,

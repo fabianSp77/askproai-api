@@ -2,25 +2,26 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
+use App\Jobs\ProcessRetellCallEndedJob;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\CalcomEventType;
+use App\Models\Company;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Services\AppointmentBookingService;
+use App\Services\CalcomV2Service;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\CalcomEventType;
-use App\Models\Appointment;
-use App\Jobs\ProcessRetellCallEndedJob;
-use App\Services\AppointmentBookingService;
-use App\Services\CalcomV2Service;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\E2E\Helpers\WebhookPayloadBuilder;
 use Tests\E2E\Mocks\MockCalcomV2Client;
-use Carbon\Carbon;
-use Illuminate\Support\Str;
+use Tests\TestCase;
 
 class ConcurrentBookingStressTest extends TestCase
 {
@@ -97,7 +98,6 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_multiple_concurrent_booking_requests_for_same_slot()
@@ -203,7 +203,6 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function stress_test_with_multiple_time_slots_and_staff()
@@ -341,7 +340,6 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function performance_test_booking_creation_speed()
@@ -410,7 +408,6 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_database_deadlocks_gracefully()
@@ -486,7 +483,6 @@ class ConcurrentBookingStressTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function cache_performance_under_concurrent_load()

@@ -8,7 +8,7 @@ return new class extends CompatibleMigration
 {
     public function up(): void
     {
-        Schema::create('unified_event_types', function (Blueprint $table) {
+        $this->createTableIfNotExists('unified_event_types', function (Blueprint $table) {
             $table->id();
             $table->uuid('branch_id');
             $table->string('provider'); // 'calcom', 'google', 'outlook', etc.
@@ -29,6 +29,6 @@ return new class extends CompatibleMigration
 
     public function down(): void
     {
-        Schema::dropIfExists('unified_event_types');
+        $this->dropTableIfExists('unified_event_types');
     }
 };

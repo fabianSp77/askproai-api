@@ -2,27 +2,28 @@
 
 namespace Tests\Integration\Services;
 
-use Tests\TestCase;
-use App\Services\CustomerService;
-use App\Services\AppointmentService;
-use App\Models\Customer;
-use App\Models\Company;
-use App\Models\Appointment;
-use App\Models\Call;
-use App\Models\User;
-use App\Models\Staff;
-use App\Models\Branch;
 use App\Events\CustomerCreated;
 use App\Events\CustomerMerged;
-use App\Repositories\CustomerRepository;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Staff;
+use App\Models\User;
 use App\Repositories\AppointmentRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Repositories\CustomerRepository;
+use App\Services\AppointmentService;
+use App\Services\CustomerService;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CustomerServiceTest extends TestCase
 {
@@ -59,6 +60,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test customer creation workflow with event
      */
+    #[Test]
     public function test_creates_customer_and_fires_event()
     {
         Event::fake();
@@ -95,6 +97,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test customer creation fails with duplicate phone
      */
+    #[Test]
     public function test_fails_to_create_customer_with_duplicate_phone()
     {
         Event::fake();
@@ -126,6 +129,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test customer creation fails with duplicate email
      */
+    #[Test]
     public function test_fails_to_create_customer_with_duplicate_email()
     {
         Event::fake();
@@ -152,6 +156,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test customer update workflow
      */
+    #[Test]
     public function test_updates_customer_data()
     {
         $customer = Customer::factory()->create([
@@ -179,6 +184,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test customer update fails when changing to existing phone
      */
+    #[Test]
     public function test_fails_to_update_customer_with_existing_phone()
     {
         // Create two customers
@@ -203,6 +209,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test merging duplicate customers
      */
+    #[Test]
     public function test_merges_duplicate_customers_with_all_data()
     {
         Event::fake();
@@ -281,6 +288,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test getting customer history with all related data
      */
+    #[Test]
     public function test_gets_complete_customer_history()
     {
         $customer = Customer::factory()->create([
@@ -358,6 +366,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test finding potential duplicate customers
      */
+    #[Test]
     public function test_finds_potential_duplicate_customers()
     {
         // Create main customer
@@ -412,6 +421,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test blocking customer cancels future appointments
      */
+    #[Test]
     public function test_blocks_customer_and_cancels_future_appointments()
     {
         Event::fake();
@@ -478,6 +488,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test unblocking customer
      */
+    #[Test]
     public function test_unblocks_customer()
     {
         $customer = Customer::factory()->create([
@@ -501,6 +512,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test tag management
      */
+    #[Test]
     public function test_manages_customer_tags()
     {
         $customer = Customer::factory()->create([
@@ -529,6 +541,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test getting customers by tag
      */
+    #[Test]
     public function test_gets_customers_by_tag()
     {
         // Create customers with different tags
@@ -562,6 +575,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test customer data export
      */
+    #[Test]
     public function test_exports_customer_data()
     {
         $customer = Customer::factory()->create([
@@ -598,6 +612,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test phone number normalization
      */
+    #[Test]
     public function test_normalizes_phone_numbers_on_create()
     {
         Event::fake();
@@ -621,6 +636,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test finding duplicates with phone number variants
      */
+    #[Test]
     public function test_finds_duplicates_with_phone_variants()
     {
         // Create customer with German phone
@@ -653,6 +669,7 @@ class CustomerServiceTest extends TestCase
     /**
      * Test transaction rollback on merge failure
      */
+    #[Test]
     public function test_rolls_back_merge_on_failure()
     {
         $primary = Customer::factory()->create([

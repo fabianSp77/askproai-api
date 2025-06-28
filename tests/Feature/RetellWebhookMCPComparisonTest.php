@@ -2,16 +2,17 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\PhoneNumber;
-use App\Models\Customer;
 use App\Http\Controllers\RetellWebhookController;
 use App\Http\Controllers\RetellWebhookMCPController;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\PhoneNumber;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class RetellWebhookMCPComparisonTest extends TestCase
 {
@@ -55,6 +56,7 @@ class RetellWebhookMCPComparisonTest extends TestCase
     /**
      * Test that both controllers handle call_ended events identically
      */
+    #[Test]
     public function test_call_ended_webhook_produces_same_result()
     {
         $webhookPayload = [
@@ -115,6 +117,7 @@ class RetellWebhookMCPComparisonTest extends TestCase
     /**
      * Test inbound call handling
      */
+    #[Test]
     public function test_inbound_call_produces_same_agent_response()
     {
         $inboundPayload = [
@@ -154,6 +157,7 @@ class RetellWebhookMCPComparisonTest extends TestCase
     /**
      * Test availability check request
      */
+    #[Test]
     public function test_availability_check_request_handling()
     {
         // Mock CalcomV2Service
@@ -204,6 +208,7 @@ class RetellWebhookMCPComparisonTest extends TestCase
     /**
      * Test error handling consistency
      */
+    #[Test]
     public function test_error_handling_consistency()
     {
         // Test with missing required fields
@@ -226,6 +231,7 @@ class RetellWebhookMCPComparisonTest extends TestCase
     /**
      * Test rate limiting behavior
      */
+    #[Test]
     public function test_rate_limiting_consistency()
     {
         Config::set('rate_limiter.webhook_limit', 2);
@@ -252,6 +258,7 @@ class RetellWebhookMCPComparisonTest extends TestCase
     /**
      * Test duplicate webhook handling
      */
+    #[Test]
     public function test_duplicate_webhook_handling()
     {
         $payload = [

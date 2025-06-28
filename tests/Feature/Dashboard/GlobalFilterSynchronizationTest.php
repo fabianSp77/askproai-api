@@ -2,18 +2,19 @@
 
 namespace Tests\Feature\Dashboard;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use Livewire\Livewire;
-use App\Filament\Admin\Widgets\GlobalFilterWidget;
 use App\Filament\Admin\Widgets\AppointmentKpiWidget;
 use App\Filament\Admin\Widgets\CallKpiWidget;
+use App\Filament\Admin\Widgets\GlobalFilterWidget;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Session;
+use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class GlobalFilterSynchronizationTest extends TestCase
 {
@@ -33,11 +34,7 @@ class GlobalFilterSynchronizationTest extends TestCase
         $this->branch = Branch::factory()->create(['company_id' => $this->company->id]);
         
         $this->actingAs($this->user);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function global_filter_widget_initializes_with_default_values()
     {
         Livewire::test(GlobalFilterWidget::class)
@@ -46,11 +43,7 @@ class GlobalFilterSynchronizationTest extends TestCase
             ->assertSet('globalFilters.branch_id', null)
             ->assertSet('globalFilters.staff_id', null)
             ->assertSet('globalFilters.service_id', null);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function changing_period_broadcasts_to_other_widgets()
     {
         // Test global filter widget
@@ -67,11 +60,7 @@ class GlobalFilterSynchronizationTest extends TestCase
         
         // Assert filter was persisted in session
         $this->assertEquals('this_week', Session::get('dashboard.period'));
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function branch_filter_updates_staff_and_service_dropdowns()
     {
         // Create additional branches, staff, and services
@@ -110,11 +99,7 @@ class GlobalFilterSynchronizationTest extends TestCase
         $this->assertCount(1, $filteredServices);
         $this->assertArrayHasKey($service1->id, $filteredServices);
         $this->assertArrayNotHasKey($service2->id, $filteredServices);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function custom_date_range_shows_date_picker()
     {
         $widget = Livewire::test(GlobalFilterWidget::class)
@@ -134,11 +119,7 @@ class GlobalFilterSynchronizationTest extends TestCase
         
         // Assert event was dispatched with date range
         $widget->assertDispatched('global-filter-updated');
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function active_filter_count_updates_correctly()
     {
         $widget = Livewire::test(GlobalFilterWidget::class);
@@ -158,11 +139,7 @@ class GlobalFilterSynchronizationTest extends TestCase
         $staff = Staff::factory()->create(['company_id' => $this->company->id]);
         $widget->set('globalFilters.staff_id', $staff->id);
         $this->assertEquals(3, $widget->call('getActiveFilterCount'));
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function filter_description_shows_active_filters()
     {
         $staff = Staff::factory()->create([
@@ -183,11 +160,7 @@ class GlobalFilterSynchronizationTest extends TestCase
         $this->assertStringContainsString('Diese Woche', $description);
         $this->assertStringContainsString($this->branch->name, $description);
         $this->assertStringContainsString('John Doe', $description);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function reset_filters_clears_all_selections()
     {
         $widget = Livewire::test(GlobalFilterWidget::class);
@@ -209,11 +182,7 @@ class GlobalFilterSynchronizationTest extends TestCase
         
         // Event should be dispatched
         $widget->assertDispatched('global-filter-updated');
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function filters_persist_across_page_loads()
     {
         // Set filters in session
@@ -225,11 +194,7 @@ class GlobalFilterSynchronizationTest extends TestCase
         
         $widget->assertSet('globalFilters.period', 'this_month')
             ->assertSet('globalFilters.branch_id', $this->branch->id);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function kpi_widgets_receive_filter_updates()
     {
         // Create appointment KPI widget
@@ -247,11 +212,7 @@ class GlobalFilterSynchronizationTest extends TestCase
         // KPI widget should update its filters
         $kpiWidget->assertSet('globalFilters.period', 'this_week')
             ->assertSet('globalFilters.branch_id', $this->branch->id);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function handles_missing_company_id_gracefully()
     {
         // Create user without company

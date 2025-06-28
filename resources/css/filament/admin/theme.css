@@ -20,6 +20,9 @@
 @import './ultimate-ui.css';
 @import './retell-configuration-center.css';
 @import './retell-ultimate-modern.css';
+@import './table-width-fix.css';
+@import './full-width-fix.css';
+@import './table-column-optimization.css';
 
 :root {
     --color-primary-50: 254 252 232;

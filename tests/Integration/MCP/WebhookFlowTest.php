@@ -2,25 +2,26 @@
 
 namespace Tests\Integration\MCP;
 
-use App\Services\MCP\MCPOrchestrator;
-use App\Services\Webhook\WebhookProcessor;
-use App\Services\Webhook\RetellWebhookHandler;
-use App\Services\RetellService;
-use App\Services\CalcomV2Service;
-use App\Models\Call;
-use App\Models\Customer;
-use App\Models\Appointment;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\PhoneNumber;
 use App\Jobs\ProcessRetellWebhookJob;
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Cache;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\PhoneNumber;
+use App\Services\CalcomV2Service;
+use App\Services\MCP\MCPOrchestrator;
+use App\Services\RetellService;
+use App\Services\Webhook\RetellWebhookHandler;
+use App\Services\Webhook\WebhookProcessor;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class WebhookFlowTest extends TestCase
 {
@@ -59,6 +60,8 @@ class WebhookFlowTest extends TestCase
         $this->orchestrator = app(MCPOrchestrator::class);
         $this->webhookProcessor = app(WebhookProcessor::class);
     }
+
+    #[Test]
 
     public function test_complete_retell_webhook_flow()
     {
@@ -125,6 +128,8 @@ class WebhookFlowTest extends TestCase
         $this->assertEquals($customer->id, $appointment->customer_id);
     }
 
+    #[Test]
+
     public function test_webhook_deduplication()
     {
         Queue::fake();
@@ -156,6 +161,8 @@ class WebhookFlowTest extends TestCase
         Queue::assertPushed(ProcessRetellWebhookJob::class, 1);
     }
 
+    #[Test]
+
     public function test_webhook_signature_validation()
     {
         $webhookPayload = [
@@ -171,6 +178,8 @@ class WebhookFlowTest extends TestCase
         $response->assertStatus(401);
         $response->assertJson(['error' => 'Invalid signature']);
     }
+
+    #[Test]
 
     public function test_webhook_handles_missing_phone_number()
     {
@@ -205,6 +214,8 @@ class WebhookFlowTest extends TestCase
         $this->assertNull($call->company_id);
     }
 
+    #[Test]
+
     public function test_webhook_retry_on_failure()
     {
         Queue::fake();
@@ -233,6 +244,8 @@ class WebhookFlowTest extends TestCase
         });
     }
 
+    #[Test]
+
     public function test_webhook_circuit_breaker_activation()
     {
         $webhookPayload = [
@@ -251,6 +264,8 @@ class WebhookFlowTest extends TestCase
         
         $response->assertStatus(503); // Service unavailable when circuit is open
     }
+
+    #[Test]
 
     public function test_webhook_processes_multiple_events()
     {
@@ -276,6 +291,8 @@ class WebhookFlowTest extends TestCase
         Queue::assertPushed(ProcessRetellWebhookJob::class, 3);
     }
 
+    #[Test]
+
     public function test_webhook_handles_malformed_payload()
     {
         $malformedPayloads = [
@@ -293,6 +310,8 @@ class WebhookFlowTest extends TestCase
             $response->assertStatus(422); // Unprocessable entity
         }
     }
+
+    #[Test]
 
     public function test_webhook_rate_limiting()
     {
@@ -314,6 +333,8 @@ class WebhookFlowTest extends TestCase
             }
         }
     }
+
+    #[Test]
 
     public function test_webhook_correlation_id_tracking()
     {

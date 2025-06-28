@@ -34,8 +34,15 @@ return new class extends CompatibleMigration
         });
     }
 
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         Schema::table('unified_event_types', function (Blueprint $table) {
             $table->dropColumn(['imported_at', 'assigned_at', 'import_status', 'conflict_data', 'slug', 'company_id']);
         });

@@ -9,6 +9,7 @@ use App\Models\Staff;
 use App\Services\Locking\TimeSlotLockManager;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class TimeSlotLockManagerTest extends TestCase
@@ -57,6 +58,7 @@ class TimeSlotLockManagerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_prevents_double_booking_with_concurrent_requests()
     {
         $startTime = Carbon::now()->addHour();
@@ -110,6 +112,7 @@ class TimeSlotLockManagerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_extend_an_active_lock()
     {
         $startTime = Carbon::now()->addHour();
@@ -157,6 +160,7 @@ class TimeSlotLockManagerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_checks_if_slot_is_locked()
     {
         $startTime = Carbon::now()->addHour();
@@ -229,6 +233,7 @@ class TimeSlotLockManagerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_overlapping_time_slots_correctly()
     {
         $baseTime = Carbon::now()->addHour();
@@ -294,6 +299,7 @@ class TimeSlotLockManagerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_gets_active_locks_for_staff()
     {
         $baseTime = Carbon::now()->addHour();

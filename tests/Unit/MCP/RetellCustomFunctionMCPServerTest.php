@@ -2,17 +2,18 @@
 
 namespace Tests\Unit\MCP;
 
-use Tests\TestCase;
-use App\Services\MCP\RetellCustomFunctionMCPServer;
-use App\Services\PhoneNumberResolver;
+use App\Models\Appointment;
 use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Customer;
-use App\Models\Appointment;
 use App\Models\Service;
+use App\Services\MCP\RetellCustomFunctionMCPServer;
+use App\Services\PhoneNumberResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class RetellCustomFunctionMCPServerTest extends TestCase
 {
@@ -77,6 +78,7 @@ class RetellCustomFunctionMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_validates_required_fields_for_appointment_collection()
     {
         // Arrange
@@ -118,6 +120,7 @@ class RetellCustomFunctionMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_find_appointments_by_phone()
     {
         // Arrange
@@ -182,6 +185,7 @@ class RetellCustomFunctionMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_change_appointment_details()
     {
         // Arrange
@@ -246,6 +250,7 @@ class RetellCustomFunctionMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_cancel_appointment()
     {
         // Arrange
@@ -303,6 +308,7 @@ class RetellCustomFunctionMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_formats_appointment_for_voice_output()
     {
         // Arrange
@@ -351,6 +357,7 @@ class RetellCustomFunctionMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_uses_correct_cache_ttl()
     {
         // Arrange

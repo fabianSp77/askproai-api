@@ -2,21 +2,22 @@
 
 namespace Tests\Unit\Services\Stripe;
 
-use Tests\TestCase;
-use App\Services\Stripe\EnhancedStripeInvoiceService;
-use App\Services\Tax\TaxService;
+use App\Models\BillingPeriod;
 use App\Models\Company;
+use App\Models\CompanyPricing;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
-use App\Models\BillingPeriod;
 use App\Models\TaxRate;
-use App\Models\CompanyPricing;
+use App\Services\Stripe\EnhancedStripeInvoiceService;
+use App\Services\Tax\TaxService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Stripe\StripeClient;
 use Mockery;
-use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Test;
+use Stripe\StripeClient;
+use Tests\TestCase;
 
 class EnhancedStripeInvoiceServiceTest extends TestCase
 {
@@ -83,6 +84,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test create draft invoice
      */
+    #[Test]
     public function test_create_draft_invoice()
     {
         $options = [
@@ -121,6 +123,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test create draft invoice for small business
      */
+    #[Test]
     public function test_create_draft_invoice_small_business()
     {
         $this->company->update(['is_small_business' => true]);
@@ -138,6 +141,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test preview invoice
      */
+    #[Test]
     public function test_preview_invoice()
     {
         $items = [
@@ -216,6 +220,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test preview invoice for small business
      */
+    #[Test]
     public function test_preview_invoice_small_business()
     {
         $this->company->update(['is_small_business' => true]);
@@ -263,6 +268,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test create invoice for billing period
      */
+    #[Test]
     public function test_create_invoice_for_billing_period()
     {
         $billingPeriod = BillingPeriod::factory()->create([
@@ -365,6 +371,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test create invoice for billing period with error
      */
+    #[Test]
     public function test_create_invoice_for_billing_period_with_error()
     {
         $billingPeriod = BillingPeriod::factory()->create([
@@ -388,6 +395,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test finalize invoice
      */
+    #[Test]
     public function test_finalize_invoice()
     {
         $invoice = Invoice::factory()->create([
@@ -438,6 +446,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test finalize already finalized invoice
      */
+    #[Test]
     public function test_finalize_already_finalized_invoice()
     {
         $invoice = Invoice::factory()->create([
@@ -455,6 +464,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test finalize invoice with validation errors
      */
+    #[Test]
     public function test_finalize_invoice_with_validation_errors()
     {
         $invoice = Invoice::factory()->create([
@@ -479,6 +489,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test validate invoice compliance
      */
+    #[Test]
     public function test_validate_invoice_compliance_valid()
     {
         $this->company->update([
@@ -509,6 +520,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test validate invoice compliance with errors
      */
+    #[Test]
     public function test_validate_invoice_compliance_with_errors()
     {
         $company = Company::factory()->create([
@@ -541,6 +553,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test generate invoice number
      */
+    #[Test]
     public function test_generate_invoice_number()
     {
         $this->company->update([
@@ -561,6 +574,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test update company revenue
      */
+    #[Test]
     public function test_update_company_revenue()
     {
         $this->company->update([
@@ -580,6 +594,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test update company revenue with threshold check
      */
+    #[Test]
     public function test_update_company_revenue_with_threshold_check()
     {
         $this->company->update([
@@ -609,6 +624,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test get payment terms text
      */
+    #[Test]
     public function test_get_payment_terms_text()
     {
         // Call protected method via reflection
@@ -633,6 +649,7 @@ class EnhancedStripeInvoiceServiceTest extends TestCase
     /**
      * Test get invoice footer
      */
+    #[Test]
     public function test_get_invoice_footer()
     {
         $this->company->update([

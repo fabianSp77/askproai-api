@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -68,9 +68,16 @@ return new class extends Migration
         }
         
         // Update existing records with random test data
-        DB::table('calls')->whereNull('duration')->update([
-            'duration' => DB::raw('FLOOR(60 + RAND() * 540)'), // Random duration between 1-10 minutes
-        ]);
+        if ($this->isSQLite()) {
+            // SQLite uses RANDOM() instead of RAND()
+            DB::table('calls')->whereNull('duration')->update([
+                'duration' => DB::raw('ABS(RANDOM() % 540) + 60'), // Random duration between 1-10 minutes
+            ]);
+        } else {
+            DB::table('calls')->whereNull('duration')->update([
+                'duration' => DB::raw('FLOOR(60 + RAND() * 540)'), // Random duration between 1-10 minutes
+            ]);
+        }
         
         // Set random status for existing records
         DB::table('calls')->where('status', '')->orWhereNull('status')->update([
@@ -83,6 +90,13 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         if (!Schema::hasTable('calls')) {
             return;
         }

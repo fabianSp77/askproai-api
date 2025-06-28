@@ -2,18 +2,19 @@
 
 namespace Tests\Feature\Webhook;
 
-use Tests\TestCase;
+use App\Jobs\ProcessRetellWebhookJob;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\WebhookEvent;
+use App\Services\WebhookProcessor;
+use App\Services\Webhook\EnhancedWebhookDeduplicationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
-use App\Jobs\ProcessRetellWebhookJob;
-use App\Models\WebhookEvent;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Call;
-use App\Models\Customer;
-use App\Services\WebhookProcessor;
-use App\Services\Webhook\EnhancedWebhookDeduplicationService;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class AsyncWebhookProcessingTest extends TestCase
 {
@@ -40,6 +41,8 @@ class AsyncWebhookProcessingTest extends TestCase
             'calcom_event_type_id' => 123456,
         ]);
     }
+
+    #[Test]
 
     public function test_retell_webhook_is_queued_for_async_processing()
     {
@@ -79,6 +82,8 @@ class AsyncWebhookProcessingTest extends TestCase
             return $job->queue === 'webhooks-high';
         });
     }
+
+    #[Test]
 
     public function test_webhook_deduplication_works_with_async_processing()
     {
@@ -120,6 +125,8 @@ class AsyncWebhookProcessingTest extends TestCase
         Queue::assertPushed(ProcessRetellWebhookJob::class, 1);
     }
 
+    #[Test]
+
     public function test_high_priority_events_use_dedicated_queue()
     {
         Queue::fake();
@@ -160,6 +167,8 @@ class AsyncWebhookProcessingTest extends TestCase
             return $job->queue === 'webhooks';
         });
     }
+
+    #[Test]
 
     public function test_job_processes_webhook_correctly()
     {
@@ -230,6 +239,8 @@ class AsyncWebhookProcessingTest extends TestCase
         $this->assertStringContainsString('Beratungsgespräch', $appointment->notes);
     }
 
+    #[Test]
+
     public function test_job_handles_failure_gracefully()
     {
         // Create webhook event with invalid data
@@ -266,6 +277,8 @@ class AsyncWebhookProcessingTest extends TestCase
         $this->assertNotNull($webhookEvent->error);
         $this->assertNotNull($webhookEvent->failed_at);
     }
+
+    #[Test]
 
     public function test_sync_processing_can_be_forced()
     {

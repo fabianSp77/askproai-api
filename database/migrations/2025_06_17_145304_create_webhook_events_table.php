@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('webhook_events', function (Blueprint $table) {
+        $this->createTableIfNotExists('webhook_events', function (Blueprint $table) {
             $table->id();
             $table->string('provider'); // retell, calcom, stripe, etc.
             $table->string('event_type'); // call_ended, booking.created, etc.
@@ -38,6 +38,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('webhook_events');
+        $this->dropTableIfExists('webhook_events');
     }
 };

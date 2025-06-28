@@ -12,7 +12,7 @@ class MCPControlCenter extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-rocket-launch';
     protected static ?string $navigationLabel = 'MCP Control Center';
-    protected static ?string $navigationGroup = 'System & Überwachung';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static ?int $navigationSort = 99;
     protected static ?string $slug = 'mcp-control';
     protected static string $view = 'filament.admin.pages.mcp-control-center';

@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('gdpr_requests', function (Blueprint $table) {
+        $this->createTableIfNotExists('gdpr_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
@@ -39,6 +39,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('gdpr_requests');
+        $this->dropTableIfExists('gdpr_requests');
     }
 };

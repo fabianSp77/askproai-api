@@ -2,19 +2,20 @@
 
 namespace Tests\Unit\MCP;
 
-use Tests\TestCase;
-use App\Services\MCP\AppointmentManagementMCPServer;
-use App\Services\CalcomV2Service;
-use App\Services\NotificationService;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Customer;
 use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Staff;
+use App\Services\CalcomV2Service;
+use App\Services\MCP\AppointmentManagementMCPServer;
+use App\Services\NotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class AppointmentManagementMCPServerTest extends TestCase
 {
@@ -101,6 +102,7 @@ class AppointmentManagementMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_returns_empty_array_for_unknown_phone()
     {
         // Arrange
@@ -129,6 +131,7 @@ class AppointmentManagementMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_reschedule_appointment()
     {
         // Arrange
@@ -211,6 +214,7 @@ class AppointmentManagementMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_prevents_rescheduling_past_appointments()
     {
         // Arrange
@@ -279,6 +283,7 @@ class AppointmentManagementMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_determines_refund_eligibility()
     {
         // Arrange
@@ -341,6 +346,7 @@ class AppointmentManagementMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_limits_appointments_returned()
     {
         // Arrange
@@ -386,6 +392,7 @@ class AppointmentManagementMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_includes_service_duration_in_response()
     {
         // Arrange

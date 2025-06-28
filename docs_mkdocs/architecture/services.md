@@ -7,6 +7,64 @@ Generated on: 2025-06-23 16:14:16
 !!! info "Service Count"
     Found **69 services** in the codebase.
 
+## 📊 Service Layer Übersicht
+
+```mermaid
+flowchart TB
+    subgraph External["Externe APIs"]
+        Retell["Retell.ai<br/>Phone AI"]
+        Calcom["Cal.com<br/>Calendar"]
+        Stripe["Stripe<br/>Payments"]
+    end
+    
+    subgraph Services["Service Layer"]
+        subgraph Integration["Integration Services"]
+            CalcomService["CalcomService<br/>V1/V2 Migration"]
+            RetellService["RetellService<br/>Call Processing"]
+            StripeService["StripeService<br/>Invoicing"]
+        end
+        
+        subgraph Business["Business Services"]
+            AppointmentService["AppointmentService<br/>Booking Logic"]
+            CustomerService["CustomerService<br/>Customer Mgmt"]
+            CallService["CallService<br/>Call Analytics"]
+        end
+        
+        subgraph MCP["MCP Servers"]
+            CalcomMCP["CalcomMCP<br/>Calendar Ops"]
+            RetellMCP["RetellMCP<br/>AI Config"]
+            DatabaseMCP["DatabaseMCP<br/>Safe Queries"]
+        end
+    end
+    
+    subgraph Core["Core Layer"]
+        Repositories["Repositories<br/>Data Access"]
+        Models["Models<br/>Domain"]
+        Events["Events<br/>System Events"]
+    end
+    
+    Retell -->|API| RetellService
+    Calcom -->|API| CalcomService
+    Stripe -->|API| StripeService
+    
+    RetellService --> CallService
+    CalcomService --> AppointmentService
+    AppointmentService --> CustomerService
+    
+    Business --> Repositories
+    Integration --> Repositories
+    MCP --> Repositories
+    
+    Repositories --> Models
+    Models --> Events
+    
+    style External fill:#ffe0b2
+    style Integration fill:#e3f2fd
+    style Business fill:#e8f5e9
+    style MCP fill:#f3e5f5
+    style Core fill:#f5f5f5
+```
+
 ## Integration Services
 
 ### CalcomEventSyncService
@@ -57,6 +115,27 @@ Generated on: 2025-06-23 16:14:16
 Service to handle gradual migration from Cal.com V1 to V2 API
 This service provides a unified interface that can switch between
 V1 and V2 implementations based on configuration or feature flags.
+
+#### Migration Strategy
+
+```mermaid
+flowchart LR
+    Request[API Request] --> Router{Migration<br/>Service}
+    Router -->|Check Flag| Decision{Use V2?}
+    Decision -->|Yes| V2[CalcomV2Service]
+    Decision -->|No| V1[CalcomService]
+    
+    V1 --> Response[Response]
+    V2 --> Response
+    
+    Cache["Cache Layer<br/>(5 min TTL)"] --> Router
+    Router --> Cache
+    
+    style Router fill:#e3f2fd
+    style V1 fill:#fff3cd
+    style V2 fill:#d4edda
+    style Cache fill:#f8d7da
+```
 
 **Public Methods**:
 

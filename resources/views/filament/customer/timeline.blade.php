@@ -1,179 +1,174 @@
-<div class="space-y-6">
-    <\!-- Header -->
-    <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Kunden-Timeline
-        </h2>
-        <span class="text-sm text-gray-500 dark:text-gray-400">
-            {{ $customer->created_at->format('d.m.Y') }} - Heute
-        </span>
-    </div>
-
-    <\!-- Timeline -->
-    <div class="relative">
-        <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+<div class="p-6">
+    @php
+        use App\Models\Appointment;
+        use App\Models\Call;
         
-        @php
-            $activities = collect();
-            
-            // Add appointments
-            foreach($customer->appointments as $appointment) {
-                $activities->push([
-                    'type' => 'appointment',
-                    'date' => $appointment->starts_at,
-                    'status' => $appointment->status,
-                    'data' => $appointment,
-                ]);
-            }
-            
-            // Add calls
-            foreach($customer->calls as $call) {
-                $activities->push([
-                    'type' => 'call',
-                    'date' => $call->created_at,
-                    'data' => $call,
-                ]);
-            }
-            
-            // Add customer creation
-            $activities->push([
-                'type' => 'created',
-                'date' => $customer->created_at,
-                'data' => $customer,
+        $events = collect();
+        
+        // Add customer creation
+        $events->push([
+            'date' => $customer->created_at,
+            'type' => 'created',
+            'title' => 'Kunde registriert',
+            'description' => 'Kunde wurde im System angelegt',
+            'icon' => 'heroicon-o-user-plus',
+            'color' => 'primary',
+        ]);
+        
+        // Add appointments
+        foreach ($customer->appointments()->with(['service', 'staff', 'branch'])->get() as $appointment) {
+            $events->push([
+                'date' => $appointment->starts_at,
+                'type' => 'appointment',
+                'title' => $appointment->service?->name ?? 'Termin',
+                'description' => sprintf(
+                    '%s bei %s%s',
+                    $appointment->starts_at->format('H:i') . ' Uhr',
+                    $appointment->staff?->name ?? 'Mitarbeiter',
+                    $appointment->branch ? ' - ' . $appointment->branch->name : ''
+                ),
+                'icon' => 'heroicon-o-calendar',
+                'color' => match($appointment->status) {
+                    'completed' => 'success',
+                    'cancelled' => 'danger',
+                    'no_show' => 'warning',
+                    default => 'info',
+                },
+                'status' => match($appointment->status) {
+                    'completed' => 'Abgeschlossen',
+                    'cancelled' => 'Abgesagt',
+                    'no_show' => 'Nicht erschienen',
+                    'confirmed' => 'Bestätigt',
+                    default => 'Geplant',
+                },
+                'link' => \App\Filament\Admin\Resources\AppointmentResource::getUrl('view', ['record' => $appointment]),
             ]);
-            
-            // Sort by date descending
-            $activities = $activities->sortByDesc('date');
-        @endphp
+        }
         
-        <div class="space-y-6">
-            @foreach($activities as $activity)
-                <div class="relative flex items-start space-x-3">
-                    <\!-- Icon -->
-                    <div class="relative">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full ring-4 ring-white dark:ring-gray-900
-                            @if($activity['type'] === 'appointment')
-                                @if($activity['status'] === 'completed') bg-green-500 @elseif($activity['status'] === 'cancelled') bg-red-500 @else bg-blue-500 @endif
-                            @elseif($activity['type'] === 'call')
-                                bg-purple-500
-                            @else
-                                bg-gray-500
-                            @endif">
-                            @if($activity['type'] === 'appointment')
-                                <x-heroicon-m-calendar-days class="h-4 w-4 text-white" />
-                            @elseif($activity['type'] === 'call')
-                                <x-heroicon-m-phone class="h-4 w-4 text-white" />
-                            @else
-                                <x-heroicon-m-user class="h-4 w-4 text-white" />
+        // Add calls
+        foreach ($customer->calls()->get() as $call) {
+            $events->push([
+                'date' => $call->created_at,
+                'type' => 'call',
+                'title' => 'Anruf',
+                'description' => sprintf(
+                    'Dauer: %s, Stimmung: %s',
+                    gmdate('i:s', $call->duration_sec ?? 0),
+                    match($call->sentiment ?? $call->analysis['sentiment'] ?? null) {
+                        'positive' => '😊 Positiv',
+                        'negative' => '😞 Negativ',
+                        'neutral' => '😐 Neutral',
+                        default => 'Unbekannt',
+                    }
+                ),
+                'icon' => 'heroicon-o-phone',
+                'color' => 'gray',
+                'link' => \App\Filament\Admin\Resources\CallResource::getUrl('view', ['record' => $call]),
+            ]);
+        }
+        
+        // Add notes (if relation exists)
+        if (method_exists($customer, 'notes')) {
+            foreach ($customer->notes as $note) {
+                $events->push([
+                    'date' => $note->created_at,
+                    'type' => 'note',
+                    'title' => 'Notiz hinzugefügt',
+                    'description' => \Str::limit($note->content, 100),
+                    'icon' => 'heroicon-o-document-text',
+                    'color' => 'gray',
+                ]);
+            }
+        }
+        
+        // Sort events by date descending
+        $events = $events->sortByDesc('date');
+        
+        // Group events by month
+        $groupedEvents = $events->groupBy(function ($event) {
+            return $event['date']->format('F Y');
+        });
+    @endphp
+    
+    <div class="space-y-8">
+        @foreach($groupedEvents as $month => $monthEvents)
+            <div>
+                <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
+                    {{ \Carbon\Carbon::parse($month)->locale('de')->isoFormat('MMMM YYYY') }}
+                </h3>
+                
+                <div class="relative">
+                    @foreach($monthEvents as $index => $event)
+                        <div class="flex gap-x-3 {{ $index < count($monthEvents) - 1 ? 'pb-6' : '' }}">
+                            <!-- Timeline line -->
+                            @if($index < count($monthEvents) - 1)
+                                <div class="absolute left-[1.125rem] top-10 h-full w-0.5 bg-gray-200 dark:bg-gray-700"></div>
                             @endif
-                        </div>
-                    </div>
-                    
-                    <\!-- Content -->
-                    <div class="flex-1 -mt-1.5">
-                        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                            <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    @if($activity['type'] === 'appointment')
-                                        Termin: {{ $activity['data']->service?->name ?? 'Unbekannter Service' }}
-                                    @elseif($activity['type'] === 'call')
-                                        Anruf von {{ $activity['data']->from_number }}
-                                    @else
-                                        Kunde registriert
-                                    @endif
-                                </h4>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ $activity['date']->diffForHumans() }}
-                                </span>
+                            
+                            <!-- Icon -->
+                            <div class="relative flex h-9 w-9 items-center justify-center rounded-full bg-{{ $event['color'] }}-100 dark:bg-{{ $event['color'] }}-900/20">
+                                <x-filament::icon
+                                    :icon="$event['icon']"
+                                    class="h-5 w-5 text-{{ $event['color'] }}-600 dark:text-{{ $event['color'] }}-400"
+                                />
                             </div>
                             
-                            <div class="text-sm text-gray-600 dark:text-gray-400">
-                                @if($activity['type'] === 'appointment')
-                                    <div class="space-y-1">
-                                        <div>{{ $activity['date']->format('d.m.Y H:i') }} Uhr</div>
-                                        <div>Mitarbeiter: {{ $activity['data']->staff?->name ?? 'Nicht zugewiesen' }}</div>
-                                        <div>Filiale: {{ $activity['data']->branch?->name ?? 'Nicht zugewiesen' }}</div>
-                                        @if($activity['data']->price)
-                                            <div>Preis: €{{ number_format($activity['data']->price, 2, ',', '.') }}</div>
-                                        @endif
-                                        <div class="mt-2">
-                                            @if($activity['status'] === 'completed')
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                                    Abgeschlossen
-                                                </span>
-                                            @elseif($activity['status'] === 'cancelled')
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-                                                    Storniert
-                                                </span>
-                                            @elseif($activity['status'] === 'no_show')
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                                                    Nicht erschienen
-                                                </span>
-                                            @else
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                    Geplant
+                            <!-- Content -->
+                            <div class="flex-1 pt-1">
+                                <div class="flex items-start justify-between gap-x-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-x-2">
+                                            <h4 class="text-sm font-medium text-gray-950 dark:text-white">
+                                                @if(isset($event['link']))
+                                                    <a href="{{ $event['link'] }}" class="hover:underline">
+                                                        {{ $event['title'] }}
+                                                    </a>
+                                                @else
+                                                    {{ $event['title'] }}
+                                                @endif
+                                            </h4>
+                                            @if(isset($event['status']))
+                                                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium 
+                                                    {{ match($event['color']) {
+                                                        'success' => 'bg-success-100 text-success-800 dark:bg-success-900/20 dark:text-success-400',
+                                                        'danger' => 'bg-danger-100 text-danger-800 dark:bg-danger-900/20 dark:text-danger-400',
+                                                        'warning' => 'bg-warning-100 text-warning-800 dark:bg-warning-900/20 dark:text-warning-400',
+                                                        default => 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
+                                                    } }}">
+                                                    {{ $event['status'] }}
                                                 </span>
                                             @endif
                                         </div>
-                                    </div>
-                                @elseif($activity['type'] === 'call')
-                                    <div class="space-y-1">
-                                        <div>Dauer: {{ gmdate('i:s', $activity['data']->duration_sec ?? 0) }}</div>
-                                        @if($activity['data']->analysis && isset($activity['data']->analysis['sentiment']))
-                                            <div>Stimmung: {{ ucfirst($activity['data']->analysis['sentiment']) }}</div>
-                                        @endif
-                                        @if($activity['data']->appointment)
-                                            <div class="text-green-600 dark:text-green-400">
-                                                → Termin gebucht
-                                            </div>
+                                        @if($event['description'])
+                                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                                {{ $event['description'] }}
+                                            </p>
                                         @endif
                                     </div>
-                                @else
-                                    <div>
-                                        Neuer Kunde wurde im System angelegt.
-                                        @if($customer->phone)
-                                            <div>Telefon: {{ $customer->phone }}</div>
-                                        @endif
-                                        @if($customer->email)
-                                            <div>E-Mail: {{ $customer->email }}</div>
-                                        @endif
-                                    </div>
-                                @endif
+                                    <time class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">
+                                        {{ $event['date']->format('d.m. H:i') }}
+                                    </time>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
-    </div>
-    
-    <\!-- Summary -->
-    <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-                <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {{ $customer->appointments()->count() }}
-                </div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Termine gesamt</div>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-                <div class="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {{ $customer->appointments()->where('status', 'completed')->count() }}
-                </div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Abgeschlossen</div>
+        @endforeach
+        
+        @if($events->isEmpty())
+            <div class="text-center py-12">
+                <x-filament::icon
+                    icon="heroicon-o-clock"
+                    class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600"
+                />
+                <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                    Keine Aktivitäten
+                </h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Für diesen Kunden wurden noch keine Aktivitäten aufgezeichnet.
+                </p>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-                <div class="text-2xl font-bold text-red-600 dark:text-red-400">
-                    {{ $customer->appointments()->whereIn('status', ['cancelled', 'no_show'])->count() }}
-                </div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Storniert/No-Show</div>
-            </div>
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 text-center">
-                <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {{ $customer->calls()->count() }}
-                </div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">Anrufe</div>
-            </div>
-        </div>
+        @endif
     </div>
 </div>

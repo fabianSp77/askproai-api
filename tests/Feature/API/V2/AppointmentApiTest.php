@@ -2,20 +2,21 @@
 
 namespace Tests\Feature\API\V2;
 
-use Tests\TestCase;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Models\Tenant;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Laravel\Sanctum\Sanctum;
-use App\Models\User;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Customer;
-use App\Models\Appointment;
-use App\Models\Tenant;
 use Illuminate\Support\Facades\RateLimiter;
-use Carbon\Carbon;
+use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class AppointmentApiTest extends TestCase
 {
@@ -62,6 +63,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test unauthenticated access is rejected
      */
+    #[Test]
     public function test_unauthenticated_access_is_rejected()
     {
         $response = $this->getJson('/api/v2/appointments');
@@ -75,6 +77,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test GET /appointments - List appointments with pagination
      */
+    #[Test]
     public function test_can_list_appointments_with_pagination()
     {
         Sanctum::actingAs($this->user);
@@ -123,6 +126,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test GET /appointments with filters
      */
+    #[Test]
     public function test_can_filter_appointments()
     {
         Sanctum::actingAs($this->user);
@@ -160,6 +164,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test POST /appointments - Create new appointment
      */
+    #[Test]
     public function test_can_create_appointment()
     {
         Sanctum::actingAs($this->user);
@@ -206,6 +211,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test POST /appointments with validation errors
      */
+    #[Test]
     public function test_create_appointment_validation()
     {
         Sanctum::actingAs($this->user);
@@ -250,6 +256,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test GET /appointments/{id} - Show single appointment
      */
+    #[Test]
     public function test_can_show_single_appointment()
     {
         Sanctum::actingAs($this->user);
@@ -288,6 +295,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test PUT /appointments/{id} - Update appointment
      */
+    #[Test]
     public function test_can_update_appointment()
     {
         Sanctum::actingAs($this->user);
@@ -316,6 +324,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test POST /appointments/{id}/cancel - Cancel appointment
      */
+    #[Test]
     public function test_can_cancel_appointment()
     {
         Sanctum::actingAs($this->user);
@@ -341,6 +350,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test POST /appointments/{id}/complete - Complete appointment
      */
+    #[Test]
     public function test_can_complete_appointment()
     {
         Sanctum::actingAs($this->user);
@@ -360,6 +370,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test POST /appointments/{id}/no-show - Mark as no-show
      */
+    #[Test]
     public function test_can_mark_appointment_as_no_show()
     {
         Sanctum::actingAs($this->user);
@@ -379,6 +390,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test GET /appointments/available-slots - Get available time slots
      */
+    #[Test]
     public function test_can_get_available_slots()
     {
         Sanctum::actingAs($this->user);
@@ -405,6 +417,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test multi-tenancy isolation
      */
+    #[Test]
     public function test_appointments_are_isolated_by_tenant()
     {
         // Create another tenant with appointments
@@ -437,6 +450,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test rate limiting
      */
+    #[Test]
     public function test_rate_limiting_is_enforced()
     {
         Sanctum::actingAs($this->user);
@@ -460,6 +474,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test API versioning headers
      */
+    #[Test]
     public function test_api_versioning_headers()
     {
         Sanctum::actingAs($this->user);
@@ -473,6 +488,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test search functionality
      */
+    #[Test]
     public function test_can_search_appointments()
     {
         Sanctum::actingAs($this->user);
@@ -505,6 +521,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test statistics endpoint
      */
+    #[Test]
     public function test_can_get_appointment_statistics()
     {
         Sanctum::actingAs($this->user);
@@ -549,6 +566,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test handling of non-existent resources
      */
+    #[Test]
     public function test_returns_404_for_non_existent_appointment()
     {
         Sanctum::actingAs($this->user);
@@ -564,6 +582,7 @@ class AppointmentApiTest extends TestCase
     /**
      * Test cross-tenant access is blocked
      */
+    #[Test]
     public function test_cannot_access_other_tenant_appointment()
     {
         Sanctum::actingAs($this->user);

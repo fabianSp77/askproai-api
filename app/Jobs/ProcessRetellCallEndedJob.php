@@ -102,6 +102,15 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             // Process appointment booking if appointment data is present
             $this->processAppointmentBooking($call);
             
+            // Dispatch sentiment analysis job
+            if ($call->transcript || $call->webhook_data) {
+                AnalyzeCallSentimentJob::dispatch($call)->delay(now()->addSeconds(5));
+                Log::info('Dispatched sentiment analysis job', [
+                    'call_id' => $call->id,
+                    'has_transcript' => !empty($call->transcript)
+                ]);
+            }
+            
             // Update call status
             $call->update(['call_status' => 'analyzed']);
             
@@ -177,12 +186,12 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             'call_status' => $callData['call_status'] ?? 'ended',
             'disconnection_reason' => $callData['disconnection_reason'] ?? null,
             
-            // Timestamps (Retell sends milliseconds, convert to seconds)
+            // Timestamps (handle different formats)
             'start_timestamp' => isset($callData['start_timestamp']) 
-                ? \Carbon\Carbon::createFromTimestampMs($callData['start_timestamp']) 
+                ? $this->parseTimestamp($callData['start_timestamp']) 
                 : null,
             'end_timestamp' => isset($callData['end_timestamp']) 
-                ? \Carbon\Carbon::createFromTimestampMs($callData['end_timestamp']) 
+                ? $this->parseTimestamp($callData['end_timestamp']) 
                 : null,
             
             // Duration
@@ -573,6 +582,41 @@ class ProcessRetellCallEndedJob implements ShouldQueue
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+        }
+    }
+    
+    /**
+     * Parse timestamp from various formats
+     */
+    protected function parseTimestamp($timestamp)
+    {
+        if (!$timestamp) {
+            return null;
+        }
+        
+        // If it's already a Carbon instance
+        if ($timestamp instanceof \Carbon\Carbon) {
+            return $timestamp;
+        }
+        
+        // If it's numeric (Unix timestamp in seconds or milliseconds)
+        if (is_numeric($timestamp)) {
+            // Check if it's milliseconds (larger than reasonable seconds timestamp)
+            if ($timestamp > 9999999999) {
+                return \Carbon\Carbon::createFromTimestampMs($timestamp);
+            }
+            return \Carbon\Carbon::createFromTimestamp($timestamp);
+        }
+        
+        // Try to parse as string (ISO 8601 or other formats)
+        try {
+            return \Carbon\Carbon::parse($timestamp);
+        } catch (\Exception $e) {
+            Log::warning('Failed to parse timestamp', [
+                'timestamp' => $timestamp,
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
     

@@ -4,11 +4,14 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PasswordConfirmationTest extends TestCase
 {
     use RefreshDatabase;
+
+    #[Test]
 
     public function test_confirm_password_screen_can_be_rendered(): void
     {
@@ -18,6 +21,8 @@ class PasswordConfirmationTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    #[Test]
 
     public function test_password_can_be_confirmed(): void
     {
@@ -30,6 +35,8 @@ class PasswordConfirmationTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHasNoErrors();
     }
+
+    #[Test]
 
     public function test_password_is_not_confirmed_with_invalid_password(): void
     {

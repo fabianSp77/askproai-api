@@ -28,6 +28,14 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
+// Branch switching route
+Route::post('/admin/branch/switch', [App\Http\Controllers\BranchSwitchController::class, 'switch'])
+    ->middleware(['auth'])
+    ->name('admin.branch.switch');
+
+// Test ML Dashboard outside Filament
+Route::get('/test-ml-dashboard', [\App\Http\Controllers\TestMLController::class, 'index']);
+
 // Documentation redirects to consolidate multiple locations
 Route::get('/documentation/{any?}', [App\Http\Controllers\DocumentationRedirectController::class, 'redirect'])
     ->where('any', '.*');
@@ -39,8 +47,13 @@ Route::get('/documentation', [App\Http\Controllers\DocumentationRedirectControll
 
 // Filament dashboard routes fix removed - pages now use default route generation
 
+// API Login routes are now in routes/api.php
+
 // Include help center routes
 require __DIR__.'/help-center.php';
+
+// Include no-CSRF routes
+require __DIR__.'/no-csrf.php';
 
 // Legal pages routes
 Route::get('/privacy', [App\Http\Controllers\PrivacyController::class, 'privacy'])->name('privacy');
@@ -199,14 +212,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('admin.calls.send-email');
 });
 
-require __DIR__.'/test-errors.php';
+// require __DIR__.'/test-errors.php';
 
 // Customer Portal Routes
 Route::prefix('portal')->group(function () {
     require __DIR__.'/portal.php';
 });
-require __DIR__.'/test-livewire.php';
-require __DIR__.'/livewire-test.php';
 
 // Remove temporary debug route - let Livewire handle its own routes
 
@@ -216,3 +227,4 @@ require __DIR__.'/livewire-test.php';
 Route::get('/test-livewire-simple', function() {
     return view('test-livewire-simple');
 })->middleware(['web']);
+Route::get('/test-ml-livewire-page', function() { return view('test-ml-livewire-page'); });

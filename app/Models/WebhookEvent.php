@@ -10,21 +10,26 @@ class WebhookEvent extends Model
     use HasFactory;
     
     protected $fillable = [
+        'company_id',
         'provider',
         'event_type',
         'event_id',
         'idempotency_key',
         'payload',
+        'headers',
         'status',
         'processed_at',
         'error_message',
         'retry_count',
-        'correlation_id'
+        'correlation_id',
+        'received_at'
     ];
     
     protected $casts = [
         'payload' => 'array',
-        'processed_at' => 'datetime'
+        'headers' => 'array',
+        'processed_at' => 'datetime',
+        'received_at' => 'datetime'
     ];
     
     /**

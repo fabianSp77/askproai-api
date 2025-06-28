@@ -57,7 +57,7 @@ return new class extends Migration
         'master_services',
         'model_has_permissions',
         'notification_log',
-        'onboarding_progress',
+        // 'onboarding_progress', // Has data - might be in use
         'retell_agents',
         'retell_webhooks',
         'service_staff',
@@ -69,7 +69,7 @@ return new class extends Migration
         // 'staff_services', // WICHTIG: Wird für Staff-Service Many-to-Many Beziehung verwendet!
         'staff_service_assignments_backup',
         'system_alerts',
-        'tenants',
+        // 'tenants', // Has data - might be in use
         'unified_event_types',
         'validation_results',
     ];

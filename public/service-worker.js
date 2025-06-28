@@ -1,16 +1,8 @@
-// AskProAI Service Worker
-const CACHE_VERSION = 'v1.0.0';
-const CACHE_NAME = `askproai-${CACHE_VERSION}`;
+// AskProAI Command Intelligence - Service Worker v1.0
+const CACHE_NAME = 'askproai-cmd-v1';
 const urlsToCache = [
-  '/',
-  '/mobile/dashboard',
-  '/mobile/appointments',
-  '/mobile/customers',
-  '/mobile/profile',
-  '/css/app.css',
-  '/js/app.js',
-  '/manifest.json',
-  '/offline.html'
+  '/claude-command-intelligence.html',
+  '/manifest.json'
 ];
 
 // Install Service Worker
@@ -21,161 +13,76 @@ self.addEventListener('install', event => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting())
+  );
+  self.skipWaiting();
+});
+
+// Cache and return requests
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request);
+      }
+    )
   );
 });
 
-// Activate Service Worker
+// Update service worker
 self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames
-          .filter(cacheName => cacheName.startsWith('askproai-') && cacheName !== CACHE_NAME)
-          .map(cacheName => caches.delete(cacheName))
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  self.clients.claim();
 });
 
-// Fetch Strategy: Network First, Cache Fallback
-self.addEventListener('fetch', event => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
-
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) return;
-
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Clone the response
-        const responseToCache = response.clone();
-
-        // Cache successful responses
-        if (response.status === 200) {
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-
-        return response;
-      })
-      .catch(() => {
-        // Network failed, try cache
-        return caches.match(event.request).then(response => {
-          if (response) {
-            return response;
-          }
-
-          // If it's a navigation request, return offline page
-          if (event.request.mode === 'navigate') {
-            return caches.match('/offline.html');
-          }
-
-          // Return a generic offline response
-          return new Response('Offline', {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: new Headers({
-              'Content-Type': 'text/plain'
-            })
-          });
-        });
-      })
-  );
-});
-
-// Background Sync for Offline Actions
+// Background sync
 self.addEventListener('sync', event => {
-  if (event.tag === 'sync-appointments') {
-    event.waitUntil(syncAppointments());
+  if (event.tag === 'sync-commands') {
+    event.waitUntil(syncPendingCommands());
   }
 });
 
-async function syncAppointments() {
-  try {
-    const cache = await caches.open(CACHE_NAME);
-    const requests = await cache.keys();
-    
-    // Filter for appointment-related requests
-    const appointmentRequests = requests.filter(req => 
-      req.url.includes('/api/appointments') && req.method === 'POST'
-    );
-
-    // Retry failed appointment creations
-    for (const request of appointmentRequests) {
-      try {
-        const response = await fetch(request);
-        if (response.ok) {
-          await cache.delete(request);
-        }
-      } catch (error) {
-        console.error('Failed to sync appointment:', error);
-      }
-    }
-  } catch (error) {
-    console.error('Sync failed:', error);
-  }
-}
-
-// Push Notifications
+// Push notifications
 self.addEventListener('push', event => {
   const options = {
-    body: event.data ? event.data.text() : 'New notification from AskProAI',
-    icon: '/images/icons/icon-192x192.png',
-    badge: '/images/icons/badge-72x72.png',
-    vibrate: [200, 100, 200],
+    body: event.data ? event.data.text() : 'Neue Benachrichtigung',
+    icon: 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 fill=%27%233B82F6%27/%3E%3Ctext x=%27256%27 y=%27320%27 font-family=%27Arial%27 font-size=%27256%27 fill=%27white%27 text-anchor=%27middle%27%3E🚀%3C/text%3E%3C/svg%3E',
+    badge: 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 72 72%27%3E%3Ccircle cx=%2736%27 cy=%2736%27 r=%2736%27 fill=%27%233B82F6%27/%3E%3C/svg%3E',
+    vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
       primaryKey: 1
-    },
-    actions: [
-      {
-        action: 'view',
-        title: 'View',
-        icon: '/images/icons/view.png'
-      },
-      {
-        action: 'close',
-        title: 'Close',
-        icon: '/images/icons/close.png'
-      }
-    ]
+    }
   };
 
   event.waitUntil(
-    self.registration.showNotification('AskProAI', options)
+    self.registration.showNotification('AskProAI Command Intelligence', options)
   );
 });
 
-// Notification Click Handler
+// Notification click
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-
-  if (event.action === 'view') {
-    event.waitUntil(
-      clients.openWindow('/mobile/appointments')
-    );
-  }
+  event.waitUntil(
+    clients.openWindow('/claude-command-intelligence.html')
+  );
 });
 
-// Periodic Background Sync (if supported)
-self.addEventListener('periodicsync', event => {
-  if (event.tag === 'update-appointments') {
-    event.waitUntil(updateAppointments());
-  }
-});
-
-async function updateAppointments() {
-  try {
-    const response = await fetch('/api/appointments/upcoming');
-    const data = await response.json();
-    
-    // Update cache with fresh data
-    const cache = await caches.open(CACHE_NAME);
-    await cache.put('/api/appointments/upcoming', new Response(JSON.stringify(data)));
-  } catch (error) {
-    console.error('Failed to update appointments:', error);
-  }
+// Helper function for syncing
+async function syncPendingCommands() {
+  // This would sync pending commands with the server
+  console.log('Syncing pending commands...');
 }

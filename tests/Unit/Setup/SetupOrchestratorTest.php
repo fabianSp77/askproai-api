@@ -2,13 +2,14 @@
 
 namespace Tests\Unit\Setup;
 
-use Tests\TestCase;
-use App\Services\Setup\SetupOrchestrator;
-use App\Models\Company;
 use App\Models\Branch;
+use App\Models\Company;
 use App\Models\User;
+use App\Services\Setup\SetupOrchestrator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class SetupOrchestratorTest extends TestCase
 {
@@ -68,6 +69,7 @@ class SetupOrchestratorTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_rollsback_on_failure()
     {
         $data = [
@@ -118,6 +120,7 @@ class SetupOrchestratorTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_creates_services_from_industry_template()
     {
         $data = [

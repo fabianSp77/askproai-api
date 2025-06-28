@@ -1,11 +1,11 @@
 <?php
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends CompatibleMigration {
     public function up(): void {
-        Schema::create('branches', function (Blueprint $table) {
+        $this->createTableIfNotExists('branches', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('customer_id')->index();
             $table->string('name');
@@ -17,5 +17,5 @@ return new class extends Migration {
             $table->softDeletes();
         });
     }
-    public function down(): void { Schema::dropIfExists('branches'); }
+    public function down(): void { $this->dropTableIfExists('branches'); }
 };

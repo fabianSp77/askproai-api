@@ -5,9 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 $app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-use App\Models\CalcomEventType;
-use Illuminate\Support\Facades\DB;
-
 echo "=== CAL.COM EVENT TYPES STRUKTUR ===\n\n";
 
 // 1. Table structure

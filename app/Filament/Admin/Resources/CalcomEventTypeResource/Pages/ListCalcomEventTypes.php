@@ -5,15 +5,24 @@ namespace App\Filament\Admin\Resources\CalcomEventTypeResource\Pages;
 use App\Filament\Admin\Resources\CalcomEventTypeResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ListCalcomEventTypes extends ListRecords
 {
     protected static string $resource = CalcomEventTypeResource::class;
+    
+    protected function getTableQuery(): Builder
+    {
+        return parent::getTableQuery()
+            ->with(['company', 'branch', 'assignedStaff']);
+    }
 
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\EventTypeAnalyticsWidget::class,
+            // Temporarily disable widget to test
+            // \App\Filament\Admin\Widgets\EventTypeAnalyticsWidget::class,
         ];
     }
 

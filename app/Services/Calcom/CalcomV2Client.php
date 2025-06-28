@@ -67,6 +67,14 @@ class CalcomV2Client
     }
 
     /**
+     * Make a raw request to the API (for testing and direct access)
+     */
+    public function request(string $method, string $endpoint, array $options = []): array
+    {
+        return $this->executeRequest($method, $endpoint, $options);
+    }
+    
+    /**
      * Get all event types
      * GET /api/v2/event-types
      */
@@ -230,7 +238,7 @@ class CalcomV2Client
                 ]);
                 
                 // Handle response
-                return $this->handleResponse($response, $method, $endpoint);
+                return $this->handleResponse($response, $method, $url);
                 
             } catch (\Exception $e) {
                 // Log error
@@ -239,17 +247,17 @@ class CalcomV2Client
                     'service' => 'calcom_v2',
                     'request_id' => $requestId,
                     'method' => $method,
-                    'endpoint' => $endpoint,
+                    'endpoint' => $url,
                     'duration_ms' => $duration
                 ]);
                 
                 throw $e;
             }
-        }, function() use ($method, $endpoint) {
+        }, function() use ($method, $url) {
             // Fallback when circuit is open
             $this->logger->logError(new \Exception('Cal.com V2 circuit breaker open'), [
                 'method' => $method,
-                'endpoint' => $endpoint
+                'endpoint' => $url
             ]);
             
             throw new CalcomApiException('Cal.com service temporarily unavailable', 503);

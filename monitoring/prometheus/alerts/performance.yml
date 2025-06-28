@@ -3,14 +3,34 @@ groups:
     interval: 30s
     rules:
       - alert: HighResponseTime
-        expr: histogram_quantile(0.95, http_request_duration_seconds_bucket) > 1
+        expr: histogram_quantile(0.95, http_request_duration_seconds_bucket{job="laravel",path=~"/api/.*"}) > 0.2
         for: 5m
         labels:
           severity: warning
           team: backend
         annotations:
-          summary: "High API response time"
-          description: "95th percentile response time is {{ $value }}s"
+          summary: "High API response time (> 200ms target)"
+          description: "95th percentile response time is {{ $value }}s for endpoint {{ $labels.path }}"
+          
+      - alert: CriticalResponseTime
+        expr: histogram_quantile(0.95, http_request_duration_seconds_bucket{job="laravel",path=~"/api/.*"}) > 0.5
+        for: 2m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Critical API response time (> 500ms)"
+          description: "95th percentile response time is {{ $value }}s for endpoint {{ $labels.path }}"
+          
+      - alert: AdminDashboardSlow
+        expr: histogram_quantile(0.95, http_request_duration_seconds_bucket{job="laravel",path=~"/admin/.*"}) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: frontend
+        annotations:
+          summary: "Admin dashboard slow (> 1s target)"
+          description: "95th percentile response time is {{ $value }}s for {{ $labels.path }}"
           
       - alert: HighMemoryUsage
         expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
@@ -41,3 +61,53 @@ groups:
         annotations:
           summary: "Large queue backlog"
           description: "Queue {{ $labels.queue }} has {{ $value }} pending jobs"
+          
+      - alert: WebhookProcessingSlow
+        expr: histogram_quantile(0.95, webhook_processing_duration_seconds_bucket) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Webhook processing slow (> 500ms target)"
+          description: "95th percentile webhook processing time is {{ $value }}s for provider {{ $labels.provider }}"
+          
+      - alert: DatabaseQuerySlow
+        expr: database_query_duration_seconds{query_time_ms > 100}
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Query taking {{ $value }}ms: {{ $labels.query }}"
+          
+      - alert: HighThroughput
+        expr: rate(http_requests_total{job="laravel"}[5m]) > 1000
+        for: 5m
+        labels:
+          severity: info
+          team: ops
+        annotations:
+          summary: "High request throughput"
+          description: "Request rate is {{ $value }} req/min (target: 1000 req/min)"
+          
+      - alert: QueueJobTimeout
+        expr: queue_job_duration_seconds{status="timeout"} > 30
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "Queue job timeout"
+          description: "Job {{ $labels.job }} timed out after {{ $value }}s"
+          
+      - alert: DatabaseConnectionsHigh
+        expr: mysql_global_status_threads_connected > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          summary: "High database connections"
+          description: "{{ $value }} connections (limit: 100)"

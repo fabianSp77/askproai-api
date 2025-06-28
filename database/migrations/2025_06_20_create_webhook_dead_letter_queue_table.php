@@ -8,7 +8,7 @@ return new class extends CompatibleMigration
 {
     public function up()
     {
-        Schema::create('webhook_dead_letter_queue', function (Blueprint $table) {
+        $this->createTableIfNotExists('webhook_dead_letter_queue', function (Blueprint $table) {
             $table->id();
             $table->string('correlation_id')->index();
             $table->string('event_type');
@@ -30,6 +30,6 @@ return new class extends CompatibleMigration
 
     public function down()
     {
-        Schema::dropIfExists('webhook_dead_letter_queue');
+        $this->dropTableIfExists('webhook_dead_letter_queue');
     }
 };

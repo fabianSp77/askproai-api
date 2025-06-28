@@ -6,16 +6,22 @@ use App\Models\WebhookEvent;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\Subscription;
 use App\Services\StripeInvoiceService;
+use App\Services\Billing\StripeSubscriptionService;
 use Carbon\Carbon;
 
 class StripeWebhookHandler extends BaseWebhookHandler
 {
     protected StripeInvoiceService $invoiceService;
+    protected StripeSubscriptionService $subscriptionService;
     
-    public function __construct(StripeInvoiceService $invoiceService)
-    {
+    public function __construct(
+        StripeInvoiceService $invoiceService,
+        StripeSubscriptionService $subscriptionService
+    ) {
         $this->invoiceService = $invoiceService;
+        $this->subscriptionService = $subscriptionService;
     }
     
     /**
@@ -33,11 +39,13 @@ class StripeWebhookHandler extends BaseWebhookHandler
             'customer.subscription.created',
             'customer.subscription.updated',
             'customer.subscription.deleted',
+            'customer.subscription.trial_will_end',
             'invoice.created',
             'invoice.finalized',
             'invoice.paid',
             'invoice.payment_failed',
             'invoice.payment_succeeded',
+            'invoice.upcoming',
             'payment_intent.succeeded',
             'payment_intent.payment_failed',
             'payment_method.attached',
@@ -266,6 +274,41 @@ class StripeWebhookHandler extends BaseWebhookHandler
     }
     
     /**
+     * Handle customer.subscription.created event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleCustomerSubscriptionCreated(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $this->logInfo('Processing subscription created');
+        
+        // Sync subscription via service
+        $subscription = $this->subscriptionService->syncFromWebhook($webhookEvent->payload);
+        
+        if ($subscription) {
+            $this->logInfo('Subscription created', [
+                'subscription_id' => $subscription->id,
+                'company_id' => $subscription->company_id,
+                'status' => $subscription->stripe_status
+            ]);
+            
+            return [
+                'success' => true,
+                'subscription_id' => $subscription->id,
+                'company_id' => $subscription->company_id,
+                'message' => 'Subscription created'
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'Subscription not found or not processed'
+        ];
+    }
+    
+    /**
      * Handle customer.subscription.updated event
      *
      * @param WebhookEvent $webhookEvent
@@ -274,58 +317,61 @@ class StripeWebhookHandler extends BaseWebhookHandler
      */
     protected function handleCustomerSubscriptionUpdated(WebhookEvent $webhookEvent, string $correlationId): array
     {
-        $subscription = $webhookEvent->payload['data']['object'] ?? [];
+        $this->logInfo('Processing subscription updated');
         
-        $this->logInfo('Processing subscription updated', [
-            'subscription_id' => $subscription['id'] ?? null,
-            'status' => $subscription['status'] ?? null
-        ]);
+        // Sync subscription via service
+        $subscription = $this->subscriptionService->syncFromWebhook($webhookEvent->payload);
         
-        // Find company by Stripe customer ID
-        $company = Company::where('stripe_customer_id', $subscription['customer'])->first();
-        
-        if ($company) {
-            $company->update([
-                'stripe_subscription_id' => $subscription['id'],
-                'subscription_status' => $subscription['status'],
-                'subscription_current_period_end' => isset($subscription['current_period_end'])
-                    ? Carbon::createFromTimestamp($subscription['current_period_end'])
-                    : null,
-                'metadata' => array_merge($company->metadata ?? [], [
-                    'subscription_updated_at' => now()->toIso8601String(),
-                    'subscription_items' => $subscription['items']['data'] ?? [],
-                    'cancel_at_period_end' => $subscription['cancel_at_period_end'] ?? false
-                ])
-            ]);
-            
-            $this->logInfo('Company subscription updated', [
-                'company_id' => $company->id,
-                'new_status' => $subscription['status']
+        if ($subscription) {
+            $this->logInfo('Subscription updated', [
+                'subscription_id' => $subscription->id,
+                'company_id' => $subscription->company_id,
+                'status' => $subscription->stripe_status
             ]);
             
             // Handle status-specific actions
-            switch ($subscription['status']) {
+            switch ($subscription->stripe_status) {
                 case 'canceled':
                 case 'unpaid':
-                    // TODO: Disable company access
+                    // Update company access
+                    $subscription->company->update([
+                        'is_active' => false,
+                        'subscription_status' => $subscription->stripe_status
+                    ]);
+                    
                     $this->logWarning('Company subscription cancelled/unpaid', [
-                        'company_id' => $company->id
+                        'company_id' => $subscription->company_id
                     ]);
                     break;
                     
                 case 'past_due':
-                    // TODO: Send payment reminder
+                    // TODO: Send payment reminder notification
                     $this->logWarning('Company subscription past due', [
-                        'company_id' => $company->id
+                        'company_id' => $subscription->company_id
+                    ]);
+                    break;
+                    
+                case 'active':
+                case 'trialing':
+                    // Ensure company is active
+                    $subscription->company->update([
+                        'is_active' => true,
+                        'subscription_status' => $subscription->stripe_status
                     ]);
                     break;
             }
+            
+            return [
+                'success' => true,
+                'subscription_id' => $subscription->id,
+                'company_id' => $subscription->company_id,
+                'message' => 'Subscription updated'
+            ];
         }
         
         return [
             'success' => true,
-            'company_id' => $company->id ?? null,
-            'message' => 'Subscription updated'
+            'message' => 'Subscription not found or not processed'
         ];
     }
     
@@ -338,35 +384,38 @@ class StripeWebhookHandler extends BaseWebhookHandler
      */
     protected function handleCustomerSubscriptionDeleted(WebhookEvent $webhookEvent, string $correlationId): array
     {
-        $subscription = $webhookEvent->payload['data']['object'] ?? [];
+        $this->logInfo('Processing subscription deleted');
         
-        $this->logInfo('Processing subscription deleted', [
-            'subscription_id' => $subscription['id'] ?? null
-        ]);
+        // Sync subscription via service
+        $subscription = $this->subscriptionService->syncFromWebhook($webhookEvent->payload);
         
-        // Find company
-        $company = Company::where('stripe_customer_id', $subscription['customer'])->first();
-        
-        if ($company) {
-            $company->update([
+        if ($subscription) {
+            // Update company access
+            $subscription->company->update([
+                'is_active' => false,
                 'subscription_status' => 'cancelled',
-                'subscription_ended_at' => now(),
-                'metadata' => array_merge($company->metadata ?? [], [
-                    'subscription_cancelled_at' => now()->toIso8601String(),
-                    'cancellation_details' => $subscription['cancellation_details'] ?? []
-                ])
+                'subscription_ended_at' => now()
             ]);
             
-            // TODO: Disable company access after grace period
             $this->logWarning('Company subscription cancelled', [
-                'company_id' => $company->id
+                'subscription_id' => $subscription->id,
+                'company_id' => $subscription->company_id
             ]);
+            
+            // TODO: Send cancellation notification
+            // TODO: Schedule data export/deletion if required
+            
+            return [
+                'success' => true,
+                'subscription_id' => $subscription->id,
+                'company_id' => $subscription->company_id,
+                'message' => 'Subscription deleted'
+            ];
         }
         
         return [
             'success' => true,
-            'company_id' => $company->id ?? null,
-            'message' => 'Subscription deleted'
+            'message' => 'Subscription not found or not processed'
         ];
     }
     
@@ -433,5 +482,194 @@ class StripeWebhookHandler extends BaseWebhookHandler
             'uncollectible' => 'failed',
             default => 'pending'
         };
+    }
+    
+    /**
+     * Handle customer.subscription.trial_will_end event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleCustomerSubscriptionTrialWillEnd(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $stripeSubscription = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logInfo('Processing trial will end notification', [
+            'subscription_id' => $stripeSubscription['id'] ?? null,
+            'trial_end' => $stripeSubscription['trial_end'] ?? null
+        ]);
+        
+        // Find subscription
+        $subscription = Subscription::where('stripe_subscription_id', $stripeSubscription['id'])->first();
+        
+        if ($subscription) {
+            // Calculate days until trial ends
+            $trialEndDate = Carbon::createFromTimestamp($stripeSubscription['trial_end']);
+            $daysUntilEnd = now()->diffInDays($trialEndDate);
+            
+            $this->logInfo('Trial ending soon', [
+                'subscription_id' => $subscription->id,
+                'company_id' => $subscription->company_id,
+                'days_until_end' => $daysUntilEnd
+            ]);
+            
+            // TODO: Send trial ending notification email
+            // TODO: Prompt user to add payment method if not present
+            
+            // Update subscription metadata
+            $subscription->update([
+                'metadata' => array_merge($subscription->metadata ?? [], [
+                    'trial_ending_notification_sent' => now()->toIso8601String(),
+                    'trial_end_days_remaining' => $daysUntilEnd
+                ])
+            ]);
+            
+            return [
+                'success' => true,
+                'subscription_id' => $subscription->id,
+                'company_id' => $subscription->company_id,
+                'days_until_end' => $daysUntilEnd,
+                'message' => 'Trial ending notification processed'
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'Subscription not found'
+        ];
+    }
+    
+    /**
+     * Handle invoice.upcoming event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleInvoiceUpcoming(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $invoice = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logInfo('Processing upcoming invoice', [
+            'invoice_id' => $invoice['id'] ?? null,
+            'subscription_id' => $invoice['subscription'] ?? null,
+            'amount_due' => ($invoice['amount_due'] ?? 0) / 100
+        ]);
+        
+        // Find subscription
+        if (isset($invoice['subscription'])) {
+            $subscription = Subscription::where('stripe_subscription_id', $invoice['subscription'])->first();
+            
+            if ($subscription) {
+                $this->logInfo('Upcoming invoice for subscription', [
+                    'subscription_id' => $subscription->id,
+                    'company_id' => $subscription->company_id,
+                    'amount' => ($invoice['amount_due'] ?? 0) / 100,
+                    'currency' => strtoupper($invoice['currency'] ?? 'eur')
+                ]);
+                
+                // TODO: Send upcoming invoice notification
+                // TODO: Check if payment method needs update
+                
+                return [
+                    'success' => true,
+                    'subscription_id' => $subscription->id,
+                    'company_id' => $subscription->company_id,
+                    'amount_due' => ($invoice['amount_due'] ?? 0) / 100,
+                    'message' => 'Upcoming invoice notification processed'
+                ];
+            }
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'Subscription not found for upcoming invoice'
+        ];
+    }
+    
+    /**
+     * Handle customer.created event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleCustomerCreated(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $customer = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logInfo('Processing customer created', [
+            'customer_id' => $customer['id'] ?? null,
+            'email' => $customer['email'] ?? null
+        ]);
+        
+        // Check if company exists with this customer ID
+        if (isset($customer['metadata']['company_id'])) {
+            $company = Company::find($customer['metadata']['company_id']);
+            
+            if ($company && !$company->stripe_customer_id) {
+                $company->update([
+                    'stripe_customer_id' => $customer['id']
+                ]);
+                
+                $this->logInfo('Company linked to Stripe customer', [
+                    'company_id' => $company->id,
+                    'customer_id' => $customer['id']
+                ]);
+            }
+        }
+        
+        return [
+            'success' => true,
+            'customer_id' => $customer['id'] ?? null,
+            'message' => 'Customer created'
+        ];
+    }
+    
+    /**
+     * Handle payment_method.attached event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handlePaymentMethodAttached(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $paymentMethod = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logInfo('Processing payment method attached', [
+            'payment_method_id' => $paymentMethod['id'] ?? null,
+            'customer_id' => $paymentMethod['customer'] ?? null,
+            'type' => $paymentMethod['type'] ?? null
+        ]);
+        
+        // Find company by customer ID
+        if (isset($paymentMethod['customer'])) {
+            $company = Company::where('stripe_customer_id', $paymentMethod['customer'])->first();
+            
+            if ($company) {
+                // Update company metadata with payment method info
+                $company->update([
+                    'metadata' => array_merge($company->metadata ?? [], [
+                        'payment_method_attached' => true,
+                        'payment_method_type' => $paymentMethod['type'] ?? 'unknown',
+                        'payment_method_last4' => $paymentMethod['card']['last4'] ?? null,
+                        'payment_method_attached_at' => now()->toIso8601String()
+                    ])
+                ]);
+                
+                $this->logInfo('Payment method attached to company', [
+                    'company_id' => $company->id,
+                    'payment_method_type' => $paymentMethod['type'] ?? 'unknown'
+                ]);
+            }
+        }
+        
+        return [
+            'success' => true,
+            'payment_method_id' => $paymentMethod['id'] ?? null,
+            'message' => 'Payment method attached'
+        ];
     }
 }

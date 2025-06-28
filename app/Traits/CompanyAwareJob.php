@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use Illuminate\Support\Facades\Log;
+use App\Traits\BelongsToCompany;
 
 /**
  * Trait for jobs that need company context
@@ -32,8 +33,8 @@ trait CompanyAwareJob
     protected function applyCompanyContext(): void
     {
         if ($this->companyId) {
-            // Set the company context for tenant scoping
-            app()->instance('current_company_id', $this->companyId);
+            // Use the secure method to set company context
+            BelongsToCompany::setTrustedCompanyContext($this->companyId, static::class);
             
             Log::debug('Applied company context in job', [
                 'job' => static::class,
@@ -51,13 +52,12 @@ trait CompanyAwareJob
      */
     protected function clearCompanyContext(): void
     {
-        if (app()->bound('current_company_id')) {
-            app()->forgetInstance('current_company_id');
-            
-            Log::debug('Cleared company context after job', [
-                'job' => static::class,
-                'company_id' => $this->companyId,
-            ]);
-        }
+        // Use the secure method to clear company context
+        BelongsToCompany::clearCompanyContext();
+        
+        Log::debug('Cleared company context after job', [
+            'job' => static::class,
+            'company_id' => $this->companyId,
+        ]);
     }
 }

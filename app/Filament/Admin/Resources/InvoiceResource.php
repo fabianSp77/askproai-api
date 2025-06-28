@@ -32,23 +32,94 @@ use Illuminate\Database\Eloquent\Model;
 
 class InvoiceResource extends Resource
 {
-
-    public static function canViewAny(): bool
-    {
-        return true;
-    }
-
     use HasConsistentNavigation;
     
     protected static ?string $model = Invoice::class;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Rechnungen';
+    protected static ?string $navigationGroup = 'Abrechnung';
+    protected static ?int $navigationSort = 1;
     
     protected static ?string $modelLabel = 'Rechnung';
     
     protected static ?string $pluralModelLabel = 'Rechnungen';
+
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('view_any_invoice')) {
+            return true;
+        }
+        
+        // Company admins and accountants can view invoices
+        return $user->company_id !== null && 
+               ($user->hasRole('company_admin') || $user->hasRole('accountant'));
+    }
     
-    protected static ?int $navigationSort = 1;
+    public static function canView($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('view_invoice')) {
+            return true;
+        }
+        
+        // Company admins and accountants can view invoices from their company
+        return $user->company_id === $record->company_id && 
+               ($user->hasRole('company_admin') || $user->hasRole('accountant'));
+    }
+    
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can edit all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('update_invoice')) {
+            return true;
+        }
+        
+        // Only allow editing draft invoices for company admins and accountants
+        return $record->status === 'draft' && 
+               $user->company_id === $record->company_id && 
+               ($user->hasRole('company_admin') || $user->hasRole('accountant'));
+    }
+    
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can create
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('create_invoice')) {
+            return true;
+        }
+        
+        // Company admins and accountants can create invoices
+        return $user->company_id !== null && 
+               ($user->hasRole('company_admin') || $user->hasRole('accountant'));
+    }
 
     public static function form(Form $form): Form
     {

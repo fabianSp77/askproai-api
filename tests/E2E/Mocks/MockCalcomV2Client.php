@@ -3,17 +3,18 @@
 namespace Tests\E2E\Mocks;
 
 use App\Services\Calcom\CalcomV2Client;
-use App\Services\Calcom\DTOs\EventTypeDTO;
-use App\Services\Calcom\DTOs\SlotDTO;
-use App\Services\Calcom\DTOs\BookingDTO;
 use App\Services\Calcom\DTOs\AttendeeDTO;
+use App\Services\Calcom\DTOs\BookingDTO;
+use App\Services\Calcom\DTOs\EventTypeDTO;
 use App\Services\Calcom\DTOs\ScheduleDTO;
+use App\Services\Calcom\DTOs\SlotDTO;
 use App\Services\Calcom\Exceptions\CalcomApiException;
 use App\Services\Calcom\Exceptions\CalcomRateLimitException;
 use App\Services\Calcom\Exceptions\CalcomValidationException;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
 
 class MockCalcomV2Client extends CalcomV2Client
 {

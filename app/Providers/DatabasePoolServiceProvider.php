@@ -23,7 +23,8 @@ class DatabasePoolServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Only enable connection pooling in production or if explicitly enabled
-        if (!app()->environment('production') && !config('database.pool.enabled', false)) {
+        // Connection pooling is now always enabled for stability
+        if (!config('database.pool.enabled', false)) {
             return;
         }
 
@@ -61,7 +62,14 @@ class DatabasePoolServiceProvider extends ServiceProvider
             
             // Register cleanup on shutdown
             register_shutdown_function(function () use ($poolManager) {
-                $poolManager->cleanup();
+                try {
+                    // Check if app is still available before cleanup
+                    if (app() && !app()->isDownForMaintenance()) {
+                        $poolManager->cleanup();
+                    }
+                } catch (\Exception $e) {
+                    // Silently ignore cleanup errors during shutdown
+                }
             });
             
         } catch (\Exception $e) {

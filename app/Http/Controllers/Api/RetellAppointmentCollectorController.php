@@ -208,25 +208,5 @@ class RetellAppointmentCollectorController extends Controller
         return implode('. ', $steps);
     }
     
-    /**
-     * Test endpoint to verify the collector is working
-     */
-    public function test(Request $request)
-    {
-        return response()->json([
-            'success' => true,
-            'message' => 'Retell appointment collector is working',
-            'timestamp' => now()->toIso8601String(),
-            'expected_fields' => [
-                'datum' => 'required|string',
-                'uhrzeit' => 'required|string', 
-                'name' => 'required|string',
-                'telefonnummer' => 'required|string',
-                'dienstleistung' => 'required|string',
-                'email' => 'optional|string',
-                'mitarbeiter_wunsch' => 'optional|string',
-                'kundenpraeferenzen' => 'optional|string'
-            ]
-        ]);
-    }
+    // Test method removed for security - use health check endpoints instead
 }

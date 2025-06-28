@@ -2,14 +2,14 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
 use App\Services\AppointmentBookingService;
-use App\Services\Locking\TimeSlotLockManager;
-use App\Services\CalcomV2Service;
-use App\Services\NotificationService;
 use App\Services\AvailabilityService;
-use PHPUnit\Framework\Attributes\Test;
+use App\Services\CalcomV2Service;
+use App\Services\Locking\TimeSlotLockManager;
+use App\Services\NotificationService;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class AppointmentBookingServiceLockUnitTest extends TestCase
 {

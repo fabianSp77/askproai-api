@@ -89,6 +89,7 @@ class StaffProductivityWidget extends Widget
     private function getWorkloadDistribution(): array
     {
         $staffWorkloads = Staff::where('active', true)
+            ->with('homeBranch')
             ->get()
             ->map(function ($staff) {
                 $todayAppointments = Appointment::where('staff_id', $staff->id)

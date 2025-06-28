@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class AppointmentCalendar extends Widget
 {
-    protected static string $view = 'filament.admin.resources.appointment-resource.widgets.appointment-calendar';
+    protected static string $view = 'filament.admin.resources.appointment-resource.widgets.appointment-calendar-fixed';
     
     protected static ?int $sort = 3;
     

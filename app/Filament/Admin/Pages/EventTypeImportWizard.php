@@ -32,9 +32,9 @@ class EventTypeImportWizard extends Page implements HasForms
     use InteractsWithForms, HasLoadingStates;
     
     protected static ?string $navigationIcon = 'heroicon-o-arrow-down-tray';
-    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
+    protected static ?string $navigationGroup = 'Einrichtung';
     protected static ?string $navigationLabel = 'Event-Type Import';
-    protected static ?int $navigationSort = 14;
+    protected static ?int $navigationSort = 60;
     protected static string $view = 'filament.admin.pages.event-type-import-wizard';
     protected static ?string $title = 'Event-Type Import Wizard';
     

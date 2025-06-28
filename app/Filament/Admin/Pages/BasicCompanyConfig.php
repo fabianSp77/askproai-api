@@ -18,10 +18,15 @@ class BasicCompanyConfig extends Page implements HasForms
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
     protected static ?string $navigationLabel = 'Basic Company Config';
     protected static ?string $title = 'Basic Company Configuration';
-    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static ?int $navigationSort = 3;
     
     protected static string $view = 'filament.admin.pages.basic-company-config';
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - Use QuickSetupWizard instead
+    }
     
     // Form data
     public ?array $data = [];

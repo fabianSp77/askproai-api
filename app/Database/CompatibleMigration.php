@@ -48,7 +48,15 @@ abstract class CompatibleMigration extends Migration
      */
     protected function dropTableIfExists(string $tableName): void
     {
-        Schema::dropIfExists($tableName);
+        if ($this->isSQLite()) {
+            // SQLite can have issues with foreign key constraints when dropping tables
+            // Disable foreign key checks temporarily
+            DB::statement('PRAGMA foreign_keys = OFF');
+            Schema::dropIfExists($tableName);
+            DB::statement('PRAGMA foreign_keys = ON');
+        } else {
+            Schema::dropIfExists($tableName);
+        }
     }
     
     /**

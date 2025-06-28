@@ -2,15 +2,16 @@
 
 namespace Tests\Unit\MCP;
 
-use Tests\TestCase;
+use App\Services\MCP\AppointmentManagementMCPServer;
 use App\Services\MCP\MCPGateway;
 use App\Services\MCP\RetellConfigurationMCPServer;
 use App\Services\MCP\RetellCustomFunctionMCPServer;
-use App\Services\MCP\AppointmentManagementMCPServer;
 use App\Services\MCP\WebhookMCPServer;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class MCPGatewayTest extends TestCase
 {
@@ -64,6 +65,7 @@ class MCPGatewayTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_requires_jsonrpc_version()
     {
         // Arrange
@@ -111,6 +113,7 @@ class MCPGatewayTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_unknown_server()
     {
         // Arrange
@@ -150,6 +153,7 @@ class MCPGatewayTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_server_exceptions()
     {
         // Arrange
@@ -201,6 +205,7 @@ class MCPGatewayTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_implements_circuit_breaker()
     {
         // Arrange
@@ -253,6 +258,7 @@ class MCPGatewayTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_invalid_method_format()
     {
         // Arrange
@@ -300,6 +306,7 @@ class MCPGatewayTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_validates_parameter_types()
     {
         // Arrange
@@ -346,6 +353,7 @@ class MCPGatewayTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_supports_batch_requests()
     {
         // Arrange

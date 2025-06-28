@@ -14,11 +14,11 @@ return new class extends Migration
         // Drop the existing table if it exists
         Schema::dropIfExists('staff_event_types');
         
-        // Create new table with UUID support
+        // Create new table with UUID support for staff, but keep bigint for calcom_event_type_id
         Schema::create('staff_event_types', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('staff_id');
-            $table->uuid('calcom_event_type_id');
+            $table->unsignedBigInteger('calcom_event_type_id');
             $table->string('calcom_user_id')->nullable();
             $table->boolean('is_primary')->default(false);
             $table->integer('custom_duration')->nullable();

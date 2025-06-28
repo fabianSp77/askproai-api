@@ -18,25 +18,64 @@ use Filament\Infolists\Components\TextEntry;
 
 class CompanyResource extends Resource
 {
+    protected static ?string $navigationGroup = 'Verwaltung';
+    protected static ?int $navigationSort = 80;
 
     public static function canViewAny(): bool
     {
-        return true;
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        return $user->can('view_any_company');
     }
     
     public static function canView($record): bool
     {
-        return true;
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('view_company')) {
+            return true;
+        }
+        
+        // Users can view their own company
+        return $user->company_id === $record->id;
     }
     
     public static function canEdit($record): bool
     {
-        return true;
+        $user = auth()->user();
+        
+        // Super admin can edit all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('update_company')) {
+            return true;
+        }
+        
+        // Company admins can edit their own company
+        return $user->company_id === $record->id && $user->hasRole('company_admin');
     }
     
     public static function canCreate(): bool
     {
-        return true;
+        $user = auth()->user();
+        
+        // Only super admins can create new companies
+        return $user->hasRole('super_admin') || $user->can('create_company');
     }
 
     use HasConsistentNavigation;

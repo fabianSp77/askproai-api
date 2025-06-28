@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends CompatibleMigration {
     public function up() {
-        Schema::create('companies', function (Blueprint $table) {
+        $this->createTableIfNotExists('companies', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->text('address')->nullable();
@@ -23,6 +23,6 @@ return new class extends CompatibleMigration {
     }
 
     public function down() {
-        Schema::dropIfExists('companies');
+        $this->dropTableIfExists('companies');
     }
 };

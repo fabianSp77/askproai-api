@@ -2,21 +2,22 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
+use App\Events\CustomerPreferencesUpdated;
+use App\Events\CustomerProfileUpdated;
+use App\Mail\EmailChangedNotification;
+use App\Mail\PasswordChangedNotification;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\CustomerPreference;
-use App\Mail\EmailChangedNotification;
-use App\Mail\PasswordChangedNotification;
-use App\Events\CustomerProfileUpdated;
-use App\Events\CustomerPreferencesUpdated;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class ProfileManagementE2ETest extends TestCase
 {
@@ -79,7 +80,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_view_and_update_profile_information()
@@ -147,7 +147,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_upload_and_manage_avatar()
@@ -197,7 +196,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_change_email_with_verification()
@@ -258,7 +256,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_change_password()
@@ -324,7 +321,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_manage_communication_preferences()
@@ -386,7 +382,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_setup_two_factor_authentication()
@@ -456,7 +451,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_manage_privacy_settings()
@@ -540,7 +534,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_manage_connected_accounts()
@@ -592,7 +585,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_view_and_download_activity_log()
@@ -642,7 +634,6 @@ class ProfileManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function profile_updates_sync_with_third_party_services()

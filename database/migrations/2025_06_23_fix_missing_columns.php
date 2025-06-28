@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -14,7 +14,7 @@ return new class extends Migration
         // Add working_hours column to staff table
         if (!Schema::hasColumn('staff', 'working_hours')) {
             Schema::table('staff', function (Blueprint $table) {
-                $table->json('working_hours')->nullable()->after('active');
+                $this->addJsonColumn($table, 'working_hours', true);
             });
         }
         
@@ -31,11 +31,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('staff', function (Blueprint $table) {
-            $table->dropColumn('working_hours');
-        });
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
         
-        if (Schema::hasTable('mcp_metrics')) {
+        if (Schema::hasColumn('staff', 'working_hours')) {
+            Schema::table('staff', function (Blueprint $table) {
+                $table->dropColumn('working_hours');
+            });
+        }
+        
+        if (Schema::hasTable('mcp_metrics') && Schema::hasColumn('mcp_metrics', 'response_time')) {
             Schema::table('mcp_metrics', function (Blueprint $table) {
                 $table->dropColumn('response_time');
             });

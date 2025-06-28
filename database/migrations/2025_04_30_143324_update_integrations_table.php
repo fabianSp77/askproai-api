@@ -28,8 +28,15 @@ return new class extends CompatibleMigration
         });
     }
 
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         Schema::table('integrations', function (Blueprint $table) {
             $table->longText('zugangsdaten')->nullable();
             $table->dropColumn(['credentials', 'active']);

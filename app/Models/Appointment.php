@@ -51,6 +51,11 @@ class Appointment extends Model
         'cancellation_reason'
     ];
 
+    protected $attributes = [
+        'source' => 'phone',
+        'status' => 'pending',
+    ];
+
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',

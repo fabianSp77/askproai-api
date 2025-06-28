@@ -36,8 +36,8 @@ class CompanyIntegrationPortal extends Page implements HasForms, HasActions
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
     protected static ?string $navigationLabel = 'Company Integration Portal';
     protected static ?string $title = 'Company Integration Portal';
-    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'Einstellungen';
+    protected static ?int $navigationSort = 3;
     
     protected static string $view = 'filament.admin.pages.company-integration-portal-professional';
     
@@ -572,6 +572,7 @@ class CompanyIntegrationPortal extends Page implements HasForms, HasActions
                 Forms\Components\TextInput::make('api_key')
                     ->label('Cal.com API Key')
                     ->password()
+                    ->autocomplete('new-password')
                     ->required()
                     ->placeholder('cal_live_xxxxxxxxxxxxxxxxx')
                     ->helperText('Erstellen Sie einen API Key in Cal.com unter Settings > Developer')
@@ -623,6 +624,7 @@ class CompanyIntegrationPortal extends Page implements HasForms, HasActions
                 Forms\Components\TextInput::make('api_key')
                     ->label('Retell.ai API Key')
                     ->password()
+                    ->autocomplete('new-password')
                     ->required()
                     ->placeholder('key_xxxxxxxxxxxxxxxxx')
                     ->helperText('Erstellen Sie einen API Key in Retell.ai unter Settings > API Keys')

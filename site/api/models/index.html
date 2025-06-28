@@ -1,989 +1,187 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/api/models/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Model Reference - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Model Reference";
+        var mkdocs_page_input_path = "api/models.md";
+        var mkdocs_page_url = "/mkdocs/api/models/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
 
-<!doctype html>
-<html lang="de" class="no-js">
-  <head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-        <meta name="description" content="Comprehensive documentation for the AskProAI AI-powered appointment booking platform">
-      
-      
-      
-        <link rel="canonical" href="https://docs.askproai.de/api/models/">
-      
-      
-      
-      
-      <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
-    
-    
-      
-        <title>Model Reference - AskProAI Complete Documentation</title>
-      
-    
-    
-      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
-      
-        
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
-      
-      
+<body class="wy-body-for-nav" role="document">
 
-
-    
-    
-      
-    
-    
-      
-        
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
-      
-    
-    
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
-    
-      
-  
-
-
-  
-  
-
-<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-XXXXXXXXXX"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-XXXXXXXXXX",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
-  
-    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
-  
-
-    
-    
-    
-  </head>
-  
-  
-    
-    
-      
-    
-    
-    
-    
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="purple">
-  
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-        
-        <a href="#model-reference" class="md-skip">
-          Zum Inhalt
-        </a>
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
-        
-      </div>
-    
-    
-      
-
-  
-
-<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
-    <a href="../.." title="AskProAI Complete Documentation" class="md-header__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15 12h2a5 5 0 0 0-5-5v2a3 3 0 0 1 3 3m4 0h2c0-5-4.03-9-9-9v2c3.86 0 7 3.13 7 7m1 3.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.25l-2.2 2.2a15.1 15.1 0 0 1-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02A11.4 11.4 0 0 1 8.5 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1 17 17 0 0 0 17 17 1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1"/></svg>
-
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            AskProAI Complete Documentation
-          </span>
-        </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            
-              Model Reference
-            
-          </span>
-        </div>
-      </div>
-    </div>
-    
-      
-        <form class="md-header__option" data-md-component="palette">
-  
-    
-    
-    
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
-    
-      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-      </label>
-    
-  
-    
-    
-    
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
-    
-      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-      </label>
-    
-  
-</form>
-      
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
-    
-    
-    
-      
-      
-        <label class="md-header__button md-icon" for="__search">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Suche">
-        
-          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Teilen" aria-label="Teilen" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
-            
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
-          </a>
-        
-        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-        <div class="md-search__suggest" data-md-component="search-suggest"></div>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Suche wird initialisiert
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
 </div>
-      
-    
-    
-      <div class="md-header__source">
-        <a href="https://github.com/askproai/api-gateway" title="Zum Repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
-  </div>
-  <div class="md-source__repository">
-    askproai/api-gateway
-  </div>
-</a>
       </div>
-    
-  </nav>
-  
-    
-      
-<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
-  <div class="md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../.." class="md-tabs__link">
-          
-  
-  
-  Home
 
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../architecture/overview/" class="md-tabs__link">
-          
-  
-  
-  Architecture
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../features/phone-system/" class="md-tabs__link">
-          
-  
-  
-  Core Features
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../integrations/overview/" class="md-tabs__link">
-          
-  
-  
-  Integrations
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../complete-endpoint-reference/" class="md-tabs__link">
-          
-  
-  
-  API Reference
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../configuration/environment.md" class="md-tabs__link">
-          
-  
-  
-  Configuration
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../deployment/requirements.md" class="md-tabs__link">
-          
-  
-  
-  Deployment
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../development/setup.md" class="md-tabs__link">
-          
-  
-  
-  Development
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../operations/monitoring.md" class="md-tabs__link">
-          
-  
-  
-  Operations
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../migration/complete-migration-history/" class="md-tabs__link">
-          
-  
-  
-  Migration Guides
-
-        </a>
-      </li>
-    
-  
-
-      
-    </ul>
-  </div>
-</nav>
-    
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-
-  
-
-
-  
-
-<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="AskProAI Complete Documentation" class="md-nav__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15 12h2a5 5 0 0 0-5-5v2a3 3 0 0 1 3 3m4 0h2c0-5-4.03-9-9-9v2c3.86 0 7 3.13 7 7m1 3.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.25l-2.2 2.2a15.1 15.1 0 0 1-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02A11.4 11.4 0 0 1 8.5 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1 17 17 0 0 0 17 17 1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1"/></svg>
-
-    </a>
-    AskProAI Complete Documentation
-  </label>
-  
-    <div class="md-nav__source">
-      <a href="https://github.com/askproai/api-gateway" title="Zum Repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
-  </div>
-  <div class="md-source__repository">
-    askproai/api-gateway
-  </div>
-</a>
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
     </div>
-  
-  <ul class="md-nav__list" data-md-scrollfix>
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../.." class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Home
-    
-  </span>
-  
+    </nav>
 
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>Model Reference</li>
+    <li class="wy-breadcrumbs-aside">
     </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../architecture/overview/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Architecture
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../features/phone-system/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Core Features
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../integrations/overview/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Integrations
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../complete-endpoint-reference/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    API Reference
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../configuration/environment.md" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Configuration
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../deployment/requirements.md" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Deployment
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../development/setup.md" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Development
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../operations/monitoring.md" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Operations
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../migration/complete-migration-history/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Migration Guides
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
   </ul>
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-            
-          
-          
-            <div class="md-content" data-md-component="content">
-              <article class="md-content__inner md-typeset">
-                
-                  
-
-
-  
-  
-
-
-<h1 id="model-reference">Model Reference<a class="headerlink" href="#model-reference" title="Permanent link">&para;</a></h1>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="model-reference">Model Reference</h1>
 <p>Generated on: 2025-06-23 16:14:16</p>
-<h2 id="model-hierarchy">Model Hierarchy<a class="headerlink" href="#model-hierarchy" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>graph TB
+<h2 id="model-hierarchy">Model Hierarchy</h2>
+<pre><code class="language-mermaid">graph TB
     AdditionalService --&gt; HasOne
     AdditionalService --&gt; HasOneThrough
     AdditionalService --&gt; BelongsTo
@@ -1694,8 +892,9 @@
     WorkingHours --&gt; HasManyThrough
     WorkingHours --&gt; MorphMany
     WorkingHours --&gt; BelongsToMany
-    WorkingHours --&gt; MorphToMany</code></pre>
-<h2 id="additionalservice">AdditionalService<a class="headerlink" href="#additionalservice" title="Permanent link">&para;</a></h2>
+    WorkingHours --&gt; MorphToMany
+</code></pre>
+<h2 id="additionalservice">AdditionalService</h2>
 <p><strong>Table</strong>: <code>additional_services</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -1723,7 +922,7 @@
 - <code>allTenants()</code>
 - <code>forTenant()</code></p>
 <hr />
-<h2 id="agent">Agent<a class="headerlink" href="#agent" title="Permanent link">&para;</a></h2>
+<h2 id="agent">Agent</h2>
 <p><strong>Table</strong>: <code>agents</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -1740,7 +939,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="apicalllog">ApiCallLog<a class="headerlink" href="#apicalllog" title="Permanent link">&para;</a></h2>
+<h2 id="apicalllog">ApiCallLog</h2>
 <p><strong>Table</strong>: <code>api_call_logs</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -1781,7 +980,7 @@
 - <code>correlated()</code>
 - <code>dateRange()</code></p>
 <hr />
-<h2 id="apicredential">ApiCredential<a class="headerlink" href="#apicredential" title="Permanent link">&para;</a></h2>
+<h2 id="apicredential">ApiCredential</h2>
 <p><strong>Table</strong>: <code>api_credentials</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -1802,7 +1001,7 @@
 - <code>forService()</code>
 - <code>ofType()</code></p>
 <hr />
-<h2 id="appointment">Appointment<a class="headerlink" href="#appointment" title="Permanent link">&para;</a></h2>
+<h2 id="appointment">Appointment</h2>
 <p><strong>Table</strong>: <code>appointments</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -1866,7 +1065,7 @@
 - <code>needingReminders()</code>
 - <code>overdue()</code></p>
 <hr />
-<h2 id="appointmentlock">AppointmentLock<a class="headerlink" href="#appointmentlock" title="Permanent link">&para;</a></h2>
+<h2 id="appointmentlock">AppointmentLock</h2>
 <p><strong>Table</strong>: <code>appointment_locks</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: No</p>
@@ -1891,7 +1090,7 @@
 - <code>expired()</code>
 - <code>forTimeRange()</code></p>
 <hr />
-<h2 id="availabilitycache">AvailabilityCache<a class="headerlink" href="#availabilitycache" title="Permanent link">&para;</a></h2>
+<h2 id="availabilitycache">AvailabilityCache</h2>
 <p><strong>Table</strong>: <code>availability_cache</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -1919,7 +1118,7 @@
 - <code>expired()</code>
 - <code>invalid()</code></p>
 <hr />
-<h2 id="billingperiod">BillingPeriod<a class="headerlink" href="#billingperiod" title="Permanent link">&para;</a></h2>
+<h2 id="billingperiod">BillingPeriod</h2>
 <p><strong>Table</strong>: <code>billing_periods</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -1958,7 +1157,7 @@
 - <code>uninvoiced()</code>
 - <code>currentMonth()</code></p>
 <hr />
-<h2 id="booking">Booking<a class="headerlink" href="#booking" title="Permanent link">&para;</a></h2>
+<h2 id="booking">Booking</h2>
 <p><strong>Table</strong>: <code>bookings</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -1967,7 +1166,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="branch">Branch<a class="headerlink" href="#branch" title="Permanent link">&para;</a></h2>
+<h2 id="branch">Branch</h2>
 <p><strong>Table</strong>: <code>branches</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2030,7 +1229,7 @@
 - <code>forCompany()</code>
 - <code>currentCompany()</code></p>
 <hr />
-<h2 id="brancheventtype">BranchEventType<a class="headerlink" href="#brancheventtype" title="Permanent link">&para;</a></h2>
+<h2 id="brancheventtype">BranchEventType</h2>
 <p><strong>Table</strong>: <code>branch_event_types</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2043,7 +1242,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="branchpricingoverride">BranchPricingOverride<a class="headerlink" href="#branchpricingoverride" title="Permanent link">&para;</a></h2>
+<h2 id="branchpricingoverride">BranchPricingOverride</h2>
 <p><strong>Table</strong>: <code>branch_pricing_overrides</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2066,7 +1265,7 @@
 <p><strong>Scopes</strong>:
 - <code>active()</code></p>
 <hr />
-<h2 id="branchserviceoverride">BranchServiceOverride<a class="headerlink" href="#branchserviceoverride" title="Permanent link">&para;</a></h2>
+<h2 id="branchserviceoverride">BranchServiceOverride</h2>
 <p><strong>Table</strong>: <code>branch_service_overrides</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2086,7 +1285,7 @@
 - <code>masterService()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="business">Business<a class="headerlink" href="#business" title="Permanent link">&para;</a></h2>
+<h2 id="business">Business</h2>
 <p><strong>Table</strong>: <code>businesses</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2110,7 +1309,7 @@
 - <code>faqs()</code>: HasMany</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="businesshourstemplate">BusinessHoursTemplate<a class="headerlink" href="#businesshourstemplate" title="Permanent link">&para;</a></h2>
+<h2 id="businesshourstemplate">BusinessHoursTemplate</h2>
 <p><strong>Table</strong>: <code>business_hours_templates</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2124,7 +1323,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="calcombooking">CalcomBooking<a class="headerlink" href="#calcombooking" title="Permanent link">&para;</a></h2>
+<h2 id="calcombooking">CalcomBooking</h2>
 <p><strong>Table</strong>: <code>calcom_bookings</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2140,7 +1339,7 @@
 - <code>appointment()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="calcomeventtype">CalcomEventType<a class="headerlink" href="#calcomeventtype" title="Permanent link">&para;</a></h2>
+<h2 id="calcomeventtype">CalcomEventType</h2>
 <p><strong>Table</strong>: <code>calcom_event_types</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2207,7 +1406,7 @@
 - <code>active()</code>
 - <code>synced()</code></p>
 <hr />
-<h2 id="calendar">Calendar<a class="headerlink" href="#calendar" title="Permanent link">&para;</a></h2>
+<h2 id="calendar">Calendar</h2>
 <p><strong>Table</strong>: <code>calendars</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2224,7 +1423,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="calendarmapping">CalendarMapping<a class="headerlink" href="#calendarmapping" title="Permanent link">&para;</a></h2>
+<h2 id="calendarmapping">CalendarMapping</h2>
 <p><strong>Table</strong>: <code>calendar_mappings</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2239,7 +1438,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="call">Call<a class="headerlink" href="#call" title="Permanent link">&para;</a></h2>
+<h2 id="call">Call</h2>
 <p><strong>Table</strong>: <code>calls</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2344,7 +1543,7 @@
 - <code>highCost()</code>
 - <code>currentCompany()</code></p>
 <hr />
-<h2 id="calllog">CallLog<a class="headerlink" href="#calllog" title="Permanent link">&para;</a></h2>
+<h2 id="calllog">CallLog</h2>
 <p><strong>Table</strong>: <code>call_logs</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2366,7 +1565,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="callbackrequest">CallbackRequest<a class="headerlink" href="#callbackrequest" title="Permanent link">&para;</a></h2>
+<h2 id="callbackrequest">CallbackRequest</h2>
 <p><strong>Table</strong>: <code>callback_requests</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2410,7 +1609,7 @@
 - <code>forCompany()</code>
 - <code>currentCompany()</code></p>
 <hr />
-<h2 id="company">Company<a class="headerlink" href="#company" title="Permanent link">&para;</a></h2>
+<h2 id="company">Company</h2>
 <p><strong>Table</strong>: <code>companies</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2497,7 +1696,7 @@
 - <code>phoneNumbers()</code>: HasMany</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="companypricing">CompanyPricing<a class="headerlink" href="#companypricing" title="Permanent link">&para;</a></h2>
+<h2 id="companypricing">CompanyPricing</h2>
 <p><strong>Table</strong>: <code>company_pricing</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2528,7 +1727,7 @@
 <p><strong>Scopes</strong>:
 - <code>active()</code></p>
 <hr />
-<h2 id="cookieconsent">CookieConsent<a class="headerlink" href="#cookieconsent" title="Permanent link">&para;</a></h2>
+<h2 id="cookieconsent">CookieConsent</h2>
 <p><strong>Table</strong>: <code>cookie_consents</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2557,7 +1756,7 @@
 - <code>customer()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="customer">Customer<a class="headerlink" href="#customer" title="Permanent link">&para;</a></h2>
+<h2 id="customer">Customer</h2>
 <p><strong>Table</strong>: <code>customers</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2608,7 +1807,7 @@
 - <code>withNoShowCount()</code>
 - <code>search()</code></p>
 <hr />
-<h2 id="customerauth">CustomerAuth<a class="headerlink" href="#customerauth" title="Permanent link">&para;</a></h2>
+<h2 id="customerauth">CustomerAuth</h2>
 <p><strong>Table</strong>: <code>customers</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2643,7 +1842,7 @@
 - <code>calls()</code>: HasMany</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="customerservice">CustomerService<a class="headerlink" href="#customerservice" title="Permanent link">&para;</a></h2>
+<h2 id="customerservice">CustomerService</h2>
 <p><strong>Table</strong>: <code>customer_services</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2676,7 +1875,7 @@
 - <code>invoiced()</code>
 - <code>inDateRange()</code></p>
 <hr />
-<h2 id="dashboardconfiguration">DashboardConfiguration<a class="headerlink" href="#dashboardconfiguration" title="Permanent link">&para;</a></h2>
+<h2 id="dashboardconfiguration">DashboardConfiguration</h2>
 <p><strong>Table</strong>: <code>dashboard_configurations</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2692,7 +1891,7 @@
 - <code>user()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="dienstleistung">Dienstleistung<a class="headerlink" href="#dienstleistung" title="Permanent link">&para;</a></h2>
+<h2 id="dienstleistung">Dienstleistung</h2>
 <p><strong>Table</strong>: <code>dienstleistungen</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2713,7 +1912,7 @@
 - <code>mitarbeiter()</code>: BelongsToMany</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="dummycompany">DummyCompany<a class="headerlink" href="#dummycompany" title="Permanent link">&para;</a></h2>
+<h2 id="dummycompany">DummyCompany</h2>
 <p><strong>Table</strong>: <code>dummy_companies</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2722,7 +1921,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="eventtypeimportlog">EventTypeImportLog<a class="headerlink" href="#eventtypeimportlog" title="Permanent link">&para;</a></h2>
+<h2 id="eventtypeimportlog">EventTypeImportLog</h2>
 <p><strong>Table</strong>: <code>event_type_import_logs</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2754,7 +1953,7 @@
 - <code>successful()</code>
 - <code>failed()</code></p>
 <hr />
-<h2 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">&para;</a></h2>
+<h2 id="faq">FAQ</h2>
 <p><strong>Table</strong>: <code>faqs</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2768,7 +1967,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="faq_1">Faq<a class="headerlink" href="#faq_1" title="Permanent link">&para;</a></h2>
+<h2 id="faq_1">Faq</h2>
 <p><strong>Table</strong>: <code>faqs</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2782,7 +1981,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="gdprrequest">GdprRequest<a class="headerlink" href="#gdprrequest" title="Permanent link">&para;</a></h2>
+<h2 id="gdprrequest">GdprRequest</h2>
 <p><strong>Table</strong>: <code>gdpr_requests</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2811,7 +2010,7 @@
 - <code>processedBy()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="integration">Integration<a class="headerlink" href="#integration" title="Permanent link">&para;</a></h2>
+<h2 id="integration">Integration</h2>
 <p><strong>Table</strong>: <code>integrations</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2828,7 +2027,7 @@
 - <code>customer()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="invoice">Invoice<a class="headerlink" href="#invoice" title="Permanent link">&para;</a></h2>
+<h2 id="invoice">Invoice</h2>
 <p><strong>Table</strong>: <code>invoices</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2894,7 +2093,7 @@
 - <code>paid()</code>
 - <code>overdue()</code></p>
 <hr />
-<h2 id="invoiceitem">InvoiceItem<a class="headerlink" href="#invoiceitem" title="Permanent link">&para;</a></h2>
+<h2 id="invoiceitem">InvoiceItem</h2>
 <p><strong>Table</strong>: <code>invoice_items</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2932,7 +2131,7 @@
 - <code>usage()</code>
 - <code>service()</code></p>
 <hr />
-<h2 id="invoiceitemflexible">InvoiceItemFlexible<a class="headerlink" href="#invoiceitemflexible" title="Permanent link">&para;</a></h2>
+<h2 id="invoiceitemflexible">InvoiceItemFlexible</h2>
 <p><strong>Table</strong>: <code>invoice_items_flexible</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2966,7 +2165,7 @@
 <p><strong>Scopes</strong>:
 - <code>ordered()</code></p>
 <hr />
-<h2 id="knowledgeanalytic">KnowledgeAnalytic<a class="headerlink" href="#knowledgeanalytic" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgeanalytic">KnowledgeAnalytic</h2>
 <p><strong>Table</strong>: <code>knowledge_analytics</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -2991,7 +2190,7 @@
 - <code>byUser()</code>
 - <code>inSession()</code></p>
 <hr />
-<h2 id="knowledgecategory">KnowledgeCategory<a class="headerlink" href="#knowledgecategory" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgecategory">KnowledgeCategory</h2>
 <p><strong>Table</strong>: <code>knowledge_categories</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3014,7 +2213,7 @@
 - <code>ordered()</code>
 - <code>root()</code></p>
 <hr />
-<h2 id="knowledgecodesnippet">KnowledgeCodeSnippet<a class="headerlink" href="#knowledgecodesnippet" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgecodesnippet">KnowledgeCodeSnippet</h2>
 <p><strong>Table</strong>: <code>knowledge_code_snippets</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3038,7 +2237,7 @@
 - <code>ofLanguage()</code>
 - <code>popular()</code></p>
 <hr />
-<h2 id="knowledgecomment">KnowledgeComment<a class="headerlink" href="#knowledgecomment" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgecomment">KnowledgeComment</h2>
 <p><strong>Table</strong>: <code>knowledge_comments</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3062,7 +2261,7 @@
 - <code>resolved()</code>
 - <code>root()</code></p>
 <hr />
-<h2 id="knowledgedocument">KnowledgeDocument<a class="headerlink" href="#knowledgedocument" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgedocument">KnowledgeDocument</h2>
 <p><strong>Table</strong>: <code>knowledge_documents</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3112,7 +2311,7 @@
 - <code>published()</code>
 - <code>ofType()</code></p>
 <hr />
-<h2 id="knowledgefeedback">KnowledgeFeedback<a class="headerlink" href="#knowledgefeedback" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgefeedback">KnowledgeFeedback</h2>
 <p><strong>Table</strong>: <code>knowledge_feedback</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3135,7 +2334,7 @@
 - <code>notHelpful()</code>
 - <code>withComments()</code></p>
 <hr />
-<h2 id="knowledgenotebook">KnowledgeNotebook<a class="headerlink" href="#knowledgenotebook" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgenotebook">KnowledgeNotebook</h2>
 <p><strong>Table</strong>: <code>knowledge_notebooks</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3157,7 +2356,7 @@
 - <code>public()</code>
 - <code>ownedBy()</code></p>
 <hr />
-<h2 id="knowledgenotebookentry">KnowledgeNotebookEntry<a class="headerlink" href="#knowledgenotebookentry" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgenotebookentry">KnowledgeNotebookEntry</h2>
 <p><strong>Table</strong>: <code>knowledge_notebook_entries</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3176,7 +2375,7 @@
 - <code>withTag()</code>
 - <code>withAnyTag()</code></p>
 <hr />
-<h2 id="knowledgerelateddocument">KnowledgeRelatedDocument<a class="headerlink" href="#knowledgerelateddocument" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgerelateddocument">KnowledgeRelatedDocument</h2>
 <p><strong>Table</strong>: <code>knowledge_related_documents</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3195,7 +2394,7 @@
 - <code>ofType()</code>
 - <code>highRelevance()</code></p>
 <hr />
-<h2 id="knowledgerelationship">KnowledgeRelationship<a class="headerlink" href="#knowledgerelationship" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgerelationship">KnowledgeRelationship</h2>
 <p><strong>Table</strong>: <code>knowledge_relationships</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3217,7 +2416,7 @@
 - <code>manual()</code>
 - <code>autoDetected()</code></p>
 <hr />
-<h2 id="knowledgesearchindex">KnowledgeSearchIndex<a class="headerlink" href="#knowledgesearchindex" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgesearchindex">KnowledgeSearchIndex</h2>
 <p><strong>Table</strong>: <code>knowledge_search_index</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3239,7 +2438,7 @@
 - <code>withKeywords()</code>
 - <code>search()</code></p>
 <hr />
-<h2 id="knowledgetag">KnowledgeTag<a class="headerlink" href="#knowledgetag" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgetag">KnowledgeTag</h2>
 <p><strong>Table</strong>: <code>knowledge_tags</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3254,7 +2453,7 @@
 <p><strong>Scopes</strong>:
 - <code>popular()</code></p>
 <hr />
-<h2 id="knowledgeversion">KnowledgeVersion<a class="headerlink" href="#knowledgeversion" title="Permanent link">&para;</a></h2>
+<h2 id="knowledgeversion">KnowledgeVersion</h2>
 <p><strong>Table</strong>: <code>knowledge_versions</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3278,7 +2477,7 @@
 - <code>creator()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="kunde">Kunde<a class="headerlink" href="#kunde" title="Permanent link">&para;</a></h2>
+<h2 id="kunde">Kunde</h2>
 <p><strong>Table</strong>: <code>kunden</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3294,7 +2493,7 @@
 - <code>appointments()</code>: HasMany</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="legacyuser">LegacyUser<a class="headerlink" href="#legacyuser" title="Permanent link">&para;</a></h2>
+<h2 id="legacyuser">LegacyUser</h2>
 <p><strong>Table</strong>: <code>users</code></p>
 <p><strong>Primary Key</strong>: <code>user_id</code></p>
 <p><strong>Timestamps</strong>: No</p>
@@ -3313,7 +2512,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="mcpmetric">MCPMetric<a class="headerlink" href="#mcpmetric" title="Permanent link">&para;</a></h2>
+<h2 id="mcpmetric">MCPMetric</h2>
 <p><strong>Table</strong>: <code>mcp_metrics</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3337,7 +2536,7 @@
 - <code>successful()</code>
 - <code>failed()</code></p>
 <hr />
-<h2 id="masterservice">MasterService<a class="headerlink" href="#masterservice" title="Permanent link">&para;</a></h2>
+<h2 id="masterservice">MasterService</h2>
 <p><strong>Table</strong>: <code>master_services</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3360,7 +2559,7 @@
 - <code>staffAssignments()</code>: HasMany</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="mitarbeiter">Mitarbeiter<a class="headerlink" href="#mitarbeiter" title="Permanent link">&para;</a></h2>
+<h2 id="mitarbeiter">Mitarbeiter</h2>
 <p><strong>Table</strong>: <code>mitarbeiters</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3378,7 +2577,7 @@
 - <code>kunde()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="note">Note<a class="headerlink" href="#note" title="Permanent link">&para;</a></h2>
+<h2 id="note">Note</h2>
 <p><strong>Table</strong>: <code>notes</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3398,7 +2597,7 @@
 - <code>user()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="payment">Payment<a class="headerlink" href="#payment" title="Permanent link">&para;</a></h2>
+<h2 id="payment">Payment</h2>
 <p><strong>Table</strong>: <code>payments</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3424,7 +2623,7 @@
 - <code>pending()</code>
 - <code>failed()</code></p>
 <hr />
-<h2 id="phonenumber">PhoneNumber<a class="headerlink" href="#phonenumber" title="Permanent link">&para;</a></h2>
+<h2 id="phonenumber">PhoneNumber</h2>
 <p><strong>Table</strong>: <code>phone_numbers</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3460,7 +2659,7 @@
 - <code>hotlines()</code>
 - <code>direct()</code></p>
 <hr />
-<h2 id="premiumservice">PremiumService<a class="headerlink" href="#premiumservice" title="Permanent link">&para;</a></h2>
+<h2 id="premiumservice">PremiumService</h2>
 <p><strong>Table</strong>: <code>premium_services</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3477,7 +2676,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="retellagent">RetellAgent<a class="headerlink" href="#retellagent" title="Permanent link">&para;</a></h2>
+<h2 id="retellagent">RetellAgent</h2>
 <p><strong>Table</strong>: <code>retell_agents</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3497,7 +2696,7 @@
 - <code>phoneNumber()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="retellwebhook">RetellWebhook<a class="headerlink" href="#retellwebhook" title="Permanent link">&para;</a></h2>
+<h2 id="retellwebhook">RetellWebhook</h2>
 <p><strong>Table</strong>: <code>webhook_events</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3513,7 +2712,7 @@
 <p><strong>Scopes</strong>:
 - <code>retell()</code></p>
 <hr />
-<h2 id="securitylog">SecurityLog<a class="headerlink" href="#securitylog" title="Permanent link">&para;</a></h2>
+<h2 id="securitylog">SecurityLog</h2>
 <p><strong>Table</strong>: <code>security_logs</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3537,7 +2736,7 @@
 - <code>fromIp()</code>
 - <code>inLastHours()</code></p>
 <hr />
-<h2 id="service">Service<a class="headerlink" href="#service" title="Permanent link">&para;</a></h2>
+<h2 id="service">Service</h2>
 <p><strong>Table</strong>: <code>services</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3575,7 +2774,7 @@
 - <code>forCompany()</code>
 - <code>currentCompany()</code></p>
 <hr />
-<h2 id="staff">Staff<a class="headerlink" href="#staff" title="Permanent link">&para;</a></h2>
+<h2 id="staff">Staff</h2>
 <p><strong>Table</strong>: <code>staff</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3618,7 +2817,7 @@
 - <code>withRelations()</code>
 - <code>currentCompany()</code></p>
 <hr />
-<h2 id="staffeventtype">StaffEventType<a class="headerlink" href="#staffeventtype" title="Permanent link">&para;</a></h2>
+<h2 id="staffeventtype">StaffEventType</h2>
 <p><strong>Table</strong>: <code>staff_event_types</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3638,7 +2837,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="staffservice">StaffService<a class="headerlink" href="#staffservice" title="Permanent link">&para;</a></h2>
+<h2 id="staffservice">StaffService</h2>
 <p><strong>Table</strong>: <code>staff_service</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3647,7 +2846,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="staffserviceassignment">StaffServiceAssignment<a class="headerlink" href="#staffserviceassignment" title="Permanent link">&para;</a></h2>
+<h2 id="staffserviceassignment">StaffServiceAssignment</h2>
 <p><strong>Table</strong>: <code>staff_service_assignments</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3667,7 +2866,7 @@
 - <code>branch()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="taxrate">TaxRate<a class="headerlink" href="#taxrate" title="Permanent link">&para;</a></h2>
+<h2 id="taxrate">TaxRate</h2>
 <p><strong>Table</strong>: <code>tax_rates</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3695,7 +2894,7 @@
 - <code>system()</code>
 - <code>forCompany()</code></p>
 <hr />
-<h2 id="telefonnummer">Telefonnummer<a class="headerlink" href="#telefonnummer" title="Permanent link">&para;</a></h2>
+<h2 id="telefonnummer">Telefonnummer</h2>
 <p><strong>Table</strong>: <code>telefonnummern</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3711,7 +2910,7 @@
 - <code>kunde()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="tenant">Tenant<a class="headerlink" href="#tenant" title="Permanent link">&para;</a></h2>
+<h2 id="tenant">Tenant</h2>
 <p><strong>Table</strong>: <code>tenants</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3723,7 +2922,7 @@
 - <code>users()</code>: HasMany</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="termin">Termin<a class="headerlink" href="#termin" title="Permanent link">&para;</a></h2>
+<h2 id="termin">Termin</h2>
 <p><strong>Table</strong>: <code>termine</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3753,7 +2952,7 @@
 - <code>call()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="unifiedeventtype">UnifiedEventType<a class="headerlink" href="#unifiedeventtype" title="Permanent link">&para;</a></h2>
+<h2 id="unifiedeventtype">UnifiedEventType</h2>
 <p><strong>Table</strong>: <code>unified_event_types</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3800,7 +2999,7 @@
 - <code>pendingReview()</code>
 - <code>active()</code></p>
 <hr />
-<h2 id="user">User<a class="headerlink" href="#user" title="Permanent link">&para;</a></h2>
+<h2 id="user">User</h2>
 <p><strong>Table</strong>: <code>users</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3834,7 +3033,7 @@
 - <code>permission()</code>
 - <code>withoutPermission()</code></p>
 <hr />
-<h2 id="validationresult">ValidationResult<a class="headerlink" href="#validationresult" title="Permanent link">&para;</a></h2>
+<h2 id="validationresult">ValidationResult</h2>
 <p><strong>Table</strong>: <code>validation_results</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3854,7 +3053,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="webhookevent">WebhookEvent<a class="headerlink" href="#webhookevent" title="Permanent link">&para;</a></h2>
+<h2 id="webhookevent">WebhookEvent</h2>
 <p><strong>Table</strong>: <code>webhook_events</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3876,7 +3075,7 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="workinghour">WorkingHour<a class="headerlink" href="#workinghour" title="Permanent link">&para;</a></h2>
+<h2 id="workinghour">WorkingHour</h2>
 <p><strong>Table</strong>: <code>working_hours</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3886,7 +3085,7 @@
 - <code>staff()</code>: BelongsTo</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-<h2 id="workinghours">WorkingHours<a class="headerlink" href="#workinghours" title="Permanent link">&para;</a></h2>
+<h2 id="workinghours">WorkingHours</h2>
 <p><strong>Table</strong>: <code>working_hours</code></p>
 <p><strong>Primary Key</strong>: <code>id</code></p>
 <p><strong>Timestamps</strong>: Yes</p>
@@ -3900,101 +3099,42 @@
 <p><strong>Relationships</strong>:</p>
 <p><strong>Scopes</strong>:</p>
 <hr />
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-                
-              </article>
+              
             </div>
-          
-          
-  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+          </div><footer>
 
-<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
-        </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Zurück zum Seitenanfang
-</button>
-        
-      </main>
-      
-        <footer class="md-footer">
-  
-    
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-    <div class="md-copyright__highlight">
-      &copy; 2024-2025 <a href="https://askproai.de" target="_blank" rel="noopener">AskProAI</a> - AI-Powered Appointment Booking Platform
-    </div>
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
-        <div class="md-social">
-  
-    
-    
-    
-    
-      
-      
-    
-    <a href="https://github.com/askproai" target="_blank" rel="noopener" title="github.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
-    </a>
-  
-    
-    
-    
-    
-      
-      
-    
-    <a href="https://twitter.com/askproai" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253"/></svg>
-    </a>
-  
-</div>
-      
-    </div>
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
   </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-      
-    </div>
-    <div class="md-dialog" data-md-component="dialog">
-      <div class="md-dialog__inner md-typeset"></div>
-    </div>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
     
     
     
-      
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.prune", "navigation.top", "navigation.footer", "toc.follow", "toc.integrate", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": {"provider": "mike"}}</script>
-    
-    
-      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
-      
-    
-  </body>
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
 </html>

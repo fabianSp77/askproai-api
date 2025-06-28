@@ -2,18 +2,19 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\Company;
 use App\Models\Branch;
-use App\Models\User;
-use App\Models\Staff;
 use App\Models\CalcomEventType;
+use App\Models\Company;
+use App\Models\Staff;
+use App\Models\User;
 use App\Services\EventTypeNameParser;
 use App\Services\SmartEventTypeNameParser;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class EventTypeImportFlowTest extends TestCase
 {
@@ -54,6 +55,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 1: Verify company selection works correctly
      */
+    #[Test]
     public function test_company_selection_works_correctly()
     {
         // Create another company without API key
@@ -74,6 +76,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 2: Verify branch dropdown functionality
      */
+    #[Test]
     public function test_branch_dropdown_loads_correct_branches()
     {
         // Create additional branches
@@ -111,6 +114,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 3: Verify Cal.com API integration
      */
+    #[Test]
     public function test_calcom_api_call_handles_v2_response_correctly()
     {
         // Mock Cal.com v2 API response
@@ -166,6 +170,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 4: Verify name parsing functionality
      */
+    #[Test]
     public function test_event_type_name_parsing_works_correctly()
     {
         $parser = new EventTypeNameParser();
@@ -190,6 +195,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 5: Verify smart name parser functionality
      */
+    #[Test]
     public function test_smart_name_parser_extracts_clean_service_names()
     {
         $parser = new SmartEventTypeNameParser();
@@ -216,6 +222,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 6: Verify staff assignment import from Cal.com
      */
+    #[Test]
     public function test_staff_assignments_are_imported_from_calcom()
     {
         // Create staff members
@@ -284,6 +291,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 7: Verify import selection logic
      */
+    #[Test]
     public function test_smart_selection_logic_works_correctly()
     {
         // Test the import wizard's smart selection
@@ -328,6 +336,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 8: Full import flow integration test
      */
+    #[Test]
     public function test_complete_import_flow_end_to_end()
     {
         // Mock complete Cal.com response
@@ -447,6 +456,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 9: Error handling and edge cases
      */
+    #[Test]
     public function test_error_handling_for_various_edge_cases()
     {
         // Test 1: No API key
@@ -490,6 +500,7 @@ class EventTypeImportFlowTest extends TestCase
     /**
      * Test 10: Database transaction integrity
      */
+    #[Test]
     public function test_import_rollback_on_failure()
     {
         $this->actingAs($this->admin);

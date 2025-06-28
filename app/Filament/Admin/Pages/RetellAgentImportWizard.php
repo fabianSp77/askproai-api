@@ -33,9 +33,14 @@ class RetellAgentImportWizard extends Page implements HasForms
     use InteractsWithForms, HasLoadingStates;
     
     protected static ?string $navigationIcon = 'heroicon-o-phone-arrow-down-left';
-    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static ?string $navigationLabel = 'Retell Agent Import';
     protected static ?int $navigationSort = 15;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - Use RetellUltimateControlCenter instead
+    }
     protected static string $view = 'filament.admin.pages.retell-agent-import-wizard';
     protected static ?string $title = 'Retell Agent Import & Konfiguration';
     

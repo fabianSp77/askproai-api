@@ -9,7 +9,7 @@ return new class extends CompatibleMigration {
     {
         /* nur anlegen, wenn die Tabelle noch nicht existiert */
         if (! Schema::hasTable('calls')) {
-            Schema::create('calls', function (Blueprint $table) {
+            $this->createTableIfNotExists('calls', function (Blueprint $table) {
                 $table->id();
                 $table->string('external_id')->nullable()->index();
                 $table->text('transcript')->nullable();

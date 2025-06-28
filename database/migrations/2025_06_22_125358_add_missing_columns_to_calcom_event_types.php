@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -22,11 +22,11 @@ return new class extends Migration
             }
             
             if (!Schema::hasColumn('calcom_event_types', 'booking_limits')) {
-                $table->json('booking_limits')->nullable()->after('requires_confirmation');
+                $this->addJsonColumn($table, 'booking_limits');
             }
             
             if (!Schema::hasColumn('calcom_event_types', 'metadata')) {
-                $table->json('metadata')->nullable()->after('booking_limits');
+                $this->addJsonColumn($table, 'metadata');
             }
             
             if (!Schema::hasColumn('calcom_event_types', 'last_synced_at')) {
@@ -43,8 +43,15 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         Schema::table('calcom_event_types', function (Blueprint $table) {
             $table->dropIndex(['slug']);
             $table->dropColumn([

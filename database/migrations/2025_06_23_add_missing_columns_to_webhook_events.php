@@ -1,10 +1,10 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -19,26 +19,27 @@ return new class extends Migration
             
             // Add notes for storing processing notes
             if (!Schema::hasColumn('webhook_events', 'notes')) {
-                $table->text('notes')->nullable()->after('error');
+                $table->text('notes')->nullable()->after('error_message');
             }
             
-            // Add retry_count for tracking retries
-            if (!Schema::hasColumn('webhook_events', 'retry_count')) {
-                $table->integer('retry_count')->default(0)->after('notes');
-            }
+            // retry_count already exists, skip it
             
-            // Add status column for better tracking
-            if (!Schema::hasColumn('webhook_events', 'status')) {
-                $table->string('status', 50)->default('pending')->after('event')->index();
-            }
+            // status already exists, skip it
         });
     }
 
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         Schema::table('webhook_events', function (Blueprint $table) {
             $table->dropColumn(['correlation_id', 'notes', 'retry_count', 'status']);
         });

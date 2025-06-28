@@ -2,18 +2,19 @@
 
 namespace Tests\Unit\Repositories;
 
-use Tests\TestCase;
 use App\Models\Appointment;
-use App\Models\Customer;
-use App\Models\Staff;
 use App\Models\Branch;
-use App\Models\Service;
 use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
 use App\Repositories\AppointmentRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\LengthAwarePaginator;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 use Tests\Traits\SimplifiedMigrations;
 
 class AppointmentRepositoryTest extends TestCase
@@ -43,6 +44,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_create_appointment()
     {
         $customer = Customer::factory()->create(['company_id' => $this->company->id]);
@@ -91,6 +93,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_delete_appointment()
     {
         $appointment = Appointment::factory()->create(['company_id' => $this->company->id]);
@@ -113,6 +116,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_returns_null_when_appointment_not_found()
     {
         $found = $this->repository->find(999999);
@@ -132,6 +136,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_paginate_appointments()
     {
         Appointment::factory()->count(25)->create(['company_id' => $this->company->id]);
@@ -170,6 +175,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_appointments_by_staff()
     {
         $staff = Staff::factory()->create(['company_id' => $this->company->id]);
@@ -217,6 +223,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_appointments_by_customer()
     {
         $customer = Customer::factory()->create(['company_id' => $this->company->id]);
@@ -261,6 +268,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_overlapping_appointments()
     {
         $staff = Staff::factory()->create(['company_id' => $this->company->id]);
@@ -331,6 +339,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_upcoming_appointments()
     {
         // Create future appointments
@@ -380,6 +389,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_mark_appointments_as_no_show()
     {
         $beforeTime = Carbon::now()->subHours(2);
@@ -441,6 +451,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_search_appointments()
     {
         $customer = Customer::factory()->create([
@@ -495,6 +506,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_apply_criteria()
     {
         Appointment::factory()->count(3)->create([
@@ -542,6 +554,7 @@ class AppointmentRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_update_or_create_appointment()
     {
         $customer = Customer::factory()->create(['company_id' => $this->company->id]);

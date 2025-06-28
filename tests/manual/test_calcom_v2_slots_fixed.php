@@ -2,9 +2,6 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use App\Services\CalcomV2Service;
-use Illuminate\Support\Facades\Log;
-
 $app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 

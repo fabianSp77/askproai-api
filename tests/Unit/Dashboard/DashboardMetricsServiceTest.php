@@ -2,18 +2,19 @@
 
 namespace Tests\Unit\Dashboard;
 
-use Tests\TestCase;
-use App\Services\Dashboard\DashboardMetricsService;
-use App\Models\Company;
-use App\Models\Branch;
 use App\Models\Appointment;
+use App\Models\Branch;
 use App\Models\Call;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Staff;
+use App\Services\Dashboard\DashboardMetricsService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class DashboardMetricsServiceTest extends TestCase
 {
@@ -32,11 +33,7 @@ class DashboardMetricsServiceTest extends TestCase
         // Create test data
         $this->company = Company::factory()->create();
         $this->branch = Branch::factory()->create(['company_id' => $this->company->id]);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function it_calculates_appointment_kpis_correctly()
     {
         // Create test appointments
@@ -79,11 +76,7 @@ class DashboardMetricsServiceTest extends TestCase
         
         // Assert appointment count
         $this->assertEquals(5, $kpis['appointments']['value']);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function it_calculates_call_kpis_correctly()
     {
         // Create test calls
@@ -130,11 +123,7 @@ class DashboardMetricsServiceTest extends TestCase
         // Assert average duration
         $avgDuration = (10 * 300 + 3 * 600) / 13; // 369.23 seconds
         $this->assertEquals(369, round($kpis['avg_duration']['value']));
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function it_calculates_customer_kpis_correctly()
     {
         // Create customers
@@ -171,11 +160,7 @@ class DashboardMetricsServiceTest extends TestCase
         
         // Assert total customers
         $this->assertEquals(110, $kpis['total_customers']['value']);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function it_caches_results_correctly()
     {
         $filters = [
@@ -204,11 +189,7 @@ class DashboardMetricsServiceTest extends TestCase
         
         // Now it should reflect the new appointment
         $this->assertNotEquals($kpis1['appointments']['value'], $kpis3['appointments']['value']);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function it_calculates_trends_correctly()
     {
         // Create service for revenue calculation
@@ -244,11 +225,7 @@ class DashboardMetricsServiceTest extends TestCase
         $this->assertEquals(1000, $kpis['revenue']['value']);
         $this->assertEquals(100, $kpis['revenue']['change']);
         $this->assertEquals('up', $kpis['revenue']['trend']);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function it_handles_branch_filters_correctly()
     {
         $branch2 = Branch::factory()->create(['company_id' => $this->company->id]);
@@ -277,11 +254,7 @@ class DashboardMetricsServiceTest extends TestCase
         
         // Should only count appointments from first branch
         $this->assertEquals(5, $kpis['appointments']['value']);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function it_handles_custom_date_ranges()
     {
         // Create appointments across multiple days
@@ -311,11 +284,7 @@ class DashboardMetricsServiceTest extends TestCase
         
         // Should only count appointments from last 3 days (5 + 2 = 7)
         $this->assertEquals(7, $kpis['appointments']['value']);
-    }
-    
-    /**
-     * @test
-     */
+    }    #[Test]
     public function it_handles_empty_results_gracefully()
     {
         $filters = [

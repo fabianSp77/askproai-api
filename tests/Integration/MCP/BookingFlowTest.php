@@ -2,23 +2,24 @@
 
 namespace Tests\Integration\MCP;
 
-use App\Services\MCP\MCPOrchestrator;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\CalcomEventType;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Services\AppointmentService;
 use App\Services\Booking\UniversalBookingOrchestrator;
 use App\Services\CalcomV2Service;
-use App\Services\AppointmentService;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Customer;
-use App\Models\Appointment;
-use App\Models\CalcomEventType;
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Cache;
+use App\Services\MCP\MCPOrchestrator;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class BookingFlowTest extends TestCase
 {
@@ -91,6 +92,8 @@ class BookingFlowTest extends TestCase
         $this->bookingOrchestrator = app(UniversalBookingOrchestrator::class);
     }
 
+    #[Test]
+
     public function test_complete_booking_flow_with_availability_check()
     {
         Event::fake();
@@ -161,6 +164,8 @@ class BookingFlowTest extends TestCase
         Event::assertDispatched('calcom.booking.created');
     }
 
+    #[Test]
+
     public function test_booking_flow_with_slot_collision()
     {
         // Create existing appointment
@@ -196,6 +201,8 @@ class BookingFlowTest extends TestCase
         $this->assertStringContainsString('time slot is no longer available', $result['message']);
     }
 
+    #[Test]
+
     public function test_booking_flow_with_calcom_failure()
     {
         // Mock Cal.com API failure
@@ -225,6 +232,8 @@ class BookingFlowTest extends TestCase
             ->count();
         $this->assertEquals(0, $appointmentCount);
     }
+
+    #[Test]
 
     public function test_booking_flow_with_validation_errors()
     {
@@ -258,6 +267,8 @@ class BookingFlowTest extends TestCase
             $this->assertStringContainsString($test['expected_error'], $result['message']);
         }
     }
+
+    #[Test]
 
     public function test_booking_flow_with_buffer_time()
     {
@@ -298,6 +309,8 @@ class BookingFlowTest extends TestCase
         $this->assertTrue($result['success']);
     }
 
+    #[Test]
+
     public function test_booking_flow_with_working_hours_validation()
     {
         // Set branch working hours (9 AM - 5 PM)
@@ -327,6 +340,8 @@ class BookingFlowTest extends TestCase
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('outside business hours', $result['message']);
     }
+
+    #[Test]
 
     public function test_booking_flow_with_concurrent_requests()
     {
@@ -368,6 +383,8 @@ class BookingFlowTest extends TestCase
         $this->assertEquals(1, $appointmentCount);
     }
 
+    #[Test]
+
     public function test_booking_cancellation_flow()
     {
         // Create appointment
@@ -392,6 +409,8 @@ class BookingFlowTest extends TestCase
         $this->assertEquals('cancelled', $appointment->status);
         $this->assertStringContainsString('Customer request', $appointment->notes);
     }
+
+    #[Test]
 
     public function test_booking_rescheduling_flow()
     {

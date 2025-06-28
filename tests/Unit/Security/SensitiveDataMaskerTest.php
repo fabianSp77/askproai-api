@@ -2,8 +2,9 @@
 
 namespace Tests\Unit\Security;
 
-use Tests\TestCase;
 use App\Services\Security\SensitiveDataMasker;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class SensitiveDataMaskerTest extends TestCase
 {
@@ -38,6 +39,7 @@ class SensitiveDataMaskerTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_masks_nested_sensitive_data()
     {
         $data = [
@@ -79,6 +81,7 @@ class SensitiveDataMaskerTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_masks_bearer_tokens()
     {
         $header = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
@@ -107,6 +110,7 @@ class SensitiveDataMaskerTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_masks_exception_data()
     {
         $exception = new \Exception('Failed to connect with api_key=sk_test_123456789');
@@ -136,6 +140,7 @@ class SensitiveDataMaskerTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_masks_calcom_and_retell_specific_keys()
     {
         $data = [

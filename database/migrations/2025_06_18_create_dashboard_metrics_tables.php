@@ -30,7 +30,7 @@ return new class extends CompatibleMigration
         
         // Metric snapshots for historical tracking
         if (!Schema::hasTable('metric_snapshots')) {
-            Schema::create('metric_snapshots', function (Blueprint $table) {
+            $this->createTableIfNotExists('metric_snapshots', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->uuid('branch_id')->nullable();
@@ -47,7 +47,7 @@ return new class extends CompatibleMigration
         
         // Anomaly logs
         if (!Schema::hasTable('anomaly_logs')) {
-            Schema::create('anomaly_logs', function (Blueprint $table) {
+            $this->createTableIfNotExists('anomaly_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete();
             $table->uuid('branch_id')->nullable();
@@ -72,7 +72,7 @@ return new class extends CompatibleMigration
         
         // Dashboard widget configurations per user
         if (!Schema::hasTable('dashboard_widget_settings')) {
-            Schema::create('dashboard_widget_settings', function (Blueprint $table) {
+            $this->createTableIfNotExists('dashboard_widget_settings', function (Blueprint $table) {
             $table->id();
             $table->uuid('user_id');
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
@@ -89,9 +89,9 @@ return new class extends CompatibleMigration
 
     public function down(): void
     {
-        Schema::dropIfExists('dashboard_widget_settings');
-        Schema::dropIfExists('anomaly_logs');
-        Schema::dropIfExists('metric_snapshots');
+        $this->dropTableIfExists('dashboard_widget_settings');
+        $this->dropTableIfExists('anomaly_logs');
+        $this->dropTableIfExists('metric_snapshots');
         $this->dropTableIfExists('api_call_logs');
     }
 };

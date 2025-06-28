@@ -12,7 +12,7 @@ return new class extends CompatibleMigration
     public function up(): void
     {
         // Categories for organizing documents
-        Schema::create('knowledge_categories', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
@@ -30,7 +30,7 @@ return new class extends CompatibleMigration
         });
 
         // Main documents table
-        Schema::create('knowledge_documents', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_documents', function (Blueprint $table) {
             $table->id();
             $table->string('path')->unique(); // File path relative to docs directory
             $table->string('title');
@@ -65,7 +65,7 @@ return new class extends CompatibleMigration
         });
 
         // Tags for flexible categorization
-        Schema::create('knowledge_tags', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_tags', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug')->unique();
@@ -79,7 +79,7 @@ return new class extends CompatibleMigration
         });
 
         // Many-to-many relationship between documents and tags
-        Schema::create('knowledge_document_tag', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_document_tag', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('document_id');
             $table->unsignedBigInteger('tag_id');
@@ -92,7 +92,7 @@ return new class extends CompatibleMigration
         });
 
         // Version control for documents
-        Schema::create('knowledge_versions', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_versions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('document_id');
             $table->integer('version_number');
@@ -108,7 +108,7 @@ return new class extends CompatibleMigration
         });
 
         // Search index with vector embeddings for semantic search
-        Schema::create('knowledge_search_index', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_search_index', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('document_id');
             $table->string('section_title')->nullable();
@@ -126,7 +126,7 @@ return new class extends CompatibleMigration
         });
 
         // Code snippets extracted from documents
-        Schema::create('knowledge_code_snippets', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_code_snippets', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('document_id');
             $table->string('language');
@@ -146,7 +146,7 @@ return new class extends CompatibleMigration
         });
 
         // Document relationships (related docs, prerequisites, etc.)
-        Schema::create('knowledge_relationships', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_relationships', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('source_document_id');
             $table->unsignedBigInteger('target_document_id');
@@ -163,7 +163,7 @@ return new class extends CompatibleMigration
         });
 
         // User interactions and analytics
-        Schema::create('knowledge_analytics', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_analytics', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('document_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
@@ -184,7 +184,7 @@ return new class extends CompatibleMigration
         });
 
         // Collaborative features - comments and annotations
-        Schema::create('knowledge_comments', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_comments', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('document_id');
             $table->unsignedBigInteger('parent_id')->nullable();
@@ -204,7 +204,7 @@ return new class extends CompatibleMigration
         });
 
         // Personal notebooks for developers
-        Schema::create('knowledge_notebooks', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_notebooks', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string('title');
@@ -221,7 +221,7 @@ return new class extends CompatibleMigration
         });
 
         // Notebook entries
-        Schema::create('knowledge_notebook_entries', function (Blueprint $table) {
+        $this->createTableIfNotExists('knowledge_notebook_entries', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('notebook_id');
             $table->string('title');
@@ -240,17 +240,17 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('knowledge_notebook_entries');
-        Schema::dropIfExists('knowledge_notebooks');
-        Schema::dropIfExists('knowledge_comments');
-        Schema::dropIfExists('knowledge_analytics');
-        Schema::dropIfExists('knowledge_relationships');
-        Schema::dropIfExists('knowledge_code_snippets');
-        Schema::dropIfExists('knowledge_search_index');
-        Schema::dropIfExists('knowledge_versions');
-        Schema::dropIfExists('knowledge_document_tag');
-        Schema::dropIfExists('knowledge_tags');
-        Schema::dropIfExists('knowledge_documents');
-        Schema::dropIfExists('knowledge_categories');
+        $this->dropTableIfExists('knowledge_notebook_entries');
+        $this->dropTableIfExists('knowledge_notebooks');
+        $this->dropTableIfExists('knowledge_comments');
+        $this->dropTableIfExists('knowledge_analytics');
+        $this->dropTableIfExists('knowledge_relationships');
+        $this->dropTableIfExists('knowledge_code_snippets');
+        $this->dropTableIfExists('knowledge_search_index');
+        $this->dropTableIfExists('knowledge_versions');
+        $this->dropTableIfExists('knowledge_document_tag');
+        $this->dropTableIfExists('knowledge_tags');
+        $this->dropTableIfExists('knowledge_documents');
+        $this->dropTableIfExists('knowledge_categories');
     }
 };

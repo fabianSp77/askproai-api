@@ -12,9 +12,14 @@ class SimpleOnboarding extends Page
     protected static ?string $title = 'AskProAI Schnellstart';
     protected static ?string $slug = 'simple-onboarding';
     protected static ?int $navigationSort = 1;
-    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
+    protected static ?string $navigationGroup = 'Einstellungen';
     
     protected static string $view = 'filament.admin.pages.simple-onboarding';
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - Use QuickSetupWizard instead
+    }
     
     public function mount(): void
     {

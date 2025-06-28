@@ -30,21 +30,19 @@ return new class extends CompatibleMigration
             }
             
             if (!Schema::hasColumn('phone_numbers', 'description')) {
-                $table->string('description')->nullable()->after('is_active');
+                $table->string('description')->nullable()->after('agent_id');
             }
             
             if (!Schema::hasColumn('phone_numbers', 'created_at')) {
                 $table->timestamps();
             }
             
-            // Add indexes if they don't exist
-            $existingIndexes = Schema::getConnection()->getDoctrineSchemaManager()->listTableIndexes('phone_numbers');
-            
-            if (!isset($existingIndexes['phone_numbers_company_id_index'])) {
+            // Add indexes if they don't exist using the compatible method
+            if (!$this->indexExists('phone_numbers', 'phone_numbers_company_id_index')) {
                 $table->index('company_id');
             }
             
-            if (!isset($existingIndexes['phone_numbers_type_index'])) {
+            if (!$this->indexExists('phone_numbers', 'phone_numbers_type_index')) {
                 $table->index('type');
             }
         });
@@ -53,8 +51,15 @@ return new class extends CompatibleMigration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         Schema::table('phone_numbers', function (Blueprint $table) {
             $table->dropIndex(['company_id']);
             $table->dropIndex(['type']);

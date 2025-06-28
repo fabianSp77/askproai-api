@@ -2,28 +2,29 @@
 
 namespace Tests\Integration\Services;
 
-use Tests\TestCase;
-use App\Services\AppointmentService;
-use App\Services\CalcomService;
+use App\Events\AppointmentCancelled;
+use App\Events\AppointmentCreated;
+use App\Events\AppointmentRescheduled;
 use App\Models\Appointment;
-use App\Models\Customer;
-use App\Models\Staff;
-use App\Models\Service;
 use App\Models\Branch;
 use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
 use App\Models\User;
-use App\Events\AppointmentCreated;
-use App\Events\AppointmentCancelled;
-use App\Events\AppointmentRescheduled;
 use App\Repositories\AppointmentRepository;
 use App\Repositories\CustomerRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Services\AppointmentService;
+use App\Services\CalcomService;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class AppointmentServiceTest extends TestCase
 {
@@ -79,6 +80,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test complete appointment creation workflow
      */
+    #[Test]
     public function test_creates_appointment_with_customer_and_fires_event()
     {
         Event::fake();
@@ -135,6 +137,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test appointment creation with Cal.com integration
      */
+    #[Test]
     public function test_creates_appointment_with_calcom_booking()
     {
         Event::fake();
@@ -184,6 +187,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test appointment creation fails when time slot is not available
      */
+    #[Test]
     public function test_fails_to_create_appointment_when_slot_unavailable()
     {
         Event::fake();
@@ -224,6 +228,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test appointment rescheduling workflow
      */
+    #[Test]
     public function test_reschedules_appointment_and_updates_calcom()
     {
         Event::fake();
@@ -274,6 +279,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test appointment cancellation workflow
      */
+    #[Test]
     public function test_cancels_appointment_and_fires_event()
     {
         Event::fake();
@@ -324,6 +330,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test transaction rollback on Cal.com failure
      */
+    #[Test]
     public function test_rolls_back_appointment_creation_on_calcom_failure()
     {
         Event::fake();
@@ -373,6 +380,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test marking appointment as no-show
      */
+    #[Test]
     public function test_marks_appointment_as_no_show_and_updates_customer()
     {
         $customer = Customer::factory()->create([
@@ -409,6 +417,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test getting available time slots
      */
+    #[Test]
     public function test_gets_available_time_slots_excluding_booked_appointments()
     {
         // Create some existing appointments
@@ -462,6 +471,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test appointment statistics calculation
      */
+    #[Test]
     public function test_calculates_appointment_statistics()
     {
         // Create various appointments
@@ -520,6 +530,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test complete appointment workflow
      */
+    #[Test]
     public function test_completes_appointment_with_additional_data()
     {
         $appointment = Appointment::factory()->create([
@@ -553,6 +564,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test availability check with excluded appointment
      */
+    #[Test]
     public function test_checks_availability_excluding_specific_appointment()
     {
         // Create existing appointment
@@ -588,6 +600,7 @@ class AppointmentServiceTest extends TestCase
     /**
      * Test creating appointment with existing customer by phone
      */
+    #[Test]
     public function test_creates_appointment_with_existing_customer_by_phone()
     {
         Event::fake();

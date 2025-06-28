@@ -13,6 +13,8 @@ class TenantScope implements Scope
      */
     public function apply(Builder $builder, Model $model): void
     {
-        //
+        // Use CompanyScope for actual implementation
+        $companyScope = new CompanyScope();
+        $companyScope->apply($builder, $model);
     }
 }

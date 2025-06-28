@@ -1,4 +1,11 @@
 <x-filament-widgets::widget>
+    @once
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/de.global.min.js"></script>
+    @endpush
+    @endonce
+    
     <x-filament::section>
         <x-slot name="heading">
             Terminkalender
@@ -12,6 +19,20 @@
             x-data="{
                 appointments: @js($this->getAppointments()),
                 init() {
+                    // Wait for FullCalendar to be loaded
+                    if (typeof FullCalendar === 'undefined') {
+                        // If FullCalendar isn't loaded yet, wait for it
+                        const checkInterval = setInterval(() => {
+                            if (typeof FullCalendar !== 'undefined') {
+                                clearInterval(checkInterval);
+                                this.initCalendar();
+                            }
+                        }, 100);
+                        return;
+                    }
+                    this.initCalendar();
+                },
+                initCalendar() {
                     // Initialize FullCalendar
                     const calendarEl = this.$refs.calendar;
                     
@@ -60,6 +81,7 @@ Telefon: ${props.phone || 'Nicht angegeben'}
                     
                     calendar.render();
                 }
+            }
             }"
             class="appointment-calendar-container"
         >
@@ -177,10 +199,5 @@ Telefon: ${props.phone || 'Nicht angegeben'}
                 background: rgba(168, 85, 247, 0.2) !important;
             }
         </style>
-
-        @push('scripts')
-            <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/de.global.min.js"></script>
-        @endpush
     </x-filament::section>
 </x-filament-widgets::widget>

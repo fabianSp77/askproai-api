@@ -2,16 +2,17 @@
 
 namespace Tests\Unit\Services\Tax;
 
-use Tests\TestCase;
-use App\Services\Tax\TaxService;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\TaxRate;
+use App\Services\Tax\TaxService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class TaxServiceTest extends TestCase
 {
@@ -63,6 +64,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test tax calculation for regular company
      */
+    #[Test]
     public function test_calculate_tax_for_regular_company()
     {
         $result = $this->taxService->calculateTax(100, $this->company);
@@ -78,6 +80,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test tax calculation for small business
      */
+    #[Test]
     public function test_calculate_tax_for_small_business()
     {
         $this->company->update(['is_small_business' => true]);
@@ -94,6 +97,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test tax calculation with specific tax rate
      */
+    #[Test]
     public function test_calculate_tax_with_specific_tax_rate()
     {
         $customRate = TaxRate::create([
@@ -115,6 +119,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test get applicable tax rate for regular company
      */
+    #[Test]
     public function test_get_applicable_tax_rate_for_regular_company()
     {
         $taxRate = $this->taxService->getApplicableTaxRate($this->company);
@@ -127,6 +132,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test get applicable tax rate for small business
      */
+    #[Test]
     public function test_get_applicable_tax_rate_for_small_business()
     {
         $this->company->update(['is_small_business' => true]);
@@ -140,6 +146,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test get applicable tax rate with invalid tax rate ID
      */
+    #[Test]
     public function test_get_applicable_tax_rate_with_invalid_id()
     {
         $taxRate = $this->taxService->getApplicableTaxRate($this->company, 999);
@@ -151,6 +158,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test small business threshold check - safe status
      */
+    #[Test]
     public function test_check_small_business_thresholds_safe()
     {
         $this->company->update([
@@ -171,6 +179,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test small business threshold check - warning status
      */
+    #[Test]
     public function test_check_small_business_thresholds_warning()
     {
         $this->company->update([
@@ -188,6 +197,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test small business threshold check - critical status (projection)
      */
+    #[Test]
     public function test_check_small_business_thresholds_critical()
     {
         // Set current month to March (month 3)
@@ -209,6 +219,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test small business threshold check - exceeded in current year
      */
+    #[Test]
     public function test_check_small_business_thresholds_exceeded_current()
     {
         $this->company->update([
@@ -226,6 +237,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test small business threshold check - exceeded in previous year
      */
+    #[Test]
     public function test_check_small_business_thresholds_exceeded_previous()
     {
         $this->company->update([
@@ -243,6 +255,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test VAT ID validation with valid ID
      */
+    #[Test]
     public function test_validate_vat_id_valid()
     {
         Http::fake([
@@ -264,6 +277,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test VAT ID validation with invalid ID
      */
+    #[Test]
     public function test_validate_vat_id_invalid()
     {
         Http::fake([
@@ -281,6 +295,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test VAT ID validation with invalid format
      */
+    #[Test]
     public function test_validate_vat_id_invalid_format()
     {
         $result = $this->taxService->validateVatId('INVALID');
@@ -292,6 +307,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test VAT ID validation with service error
      */
+    #[Test]
     public function test_validate_vat_id_service_error()
     {
         Http::fake([
@@ -309,6 +325,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test get tax note for small business
      */
+    #[Test]
     public function test_get_tax_note_small_business()
     {
         $this->company->update(['is_small_business' => true]);
@@ -321,6 +338,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test get tax note for reverse charge
      */
+    #[Test]
     public function test_get_tax_note_reverse_charge()
     {
         $reverseChargeRate = TaxRate::create([
@@ -337,6 +355,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test get tax note for regular taxation
      */
+    #[Test]
     public function test_get_tax_note_regular()
     {
         $note = $this->taxService->getTaxNote($this->company, $this->standardTaxRate);
@@ -347,6 +366,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test sync Stripe tax rate creation
      */
+    #[Test]
     public function test_sync_stripe_tax_rate_creation()
     {
         // Mock Stripe client
@@ -385,6 +405,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test sync Stripe tax rate when already exists
      */
+    #[Test]
     public function test_sync_stripe_tax_rate_already_exists()
     {
         $this->standardTaxRate->update(['stripe_tax_rate_id' => 'txr_existing']);
@@ -397,6 +418,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test sync Stripe tax rate with error
      */
+    #[Test]
     public function test_sync_stripe_tax_rate_error()
     {
         // Mock Stripe client
@@ -422,6 +444,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test get invoice tax configuration
      */
+    #[Test]
     public function test_get_invoice_tax_configuration()
     {
         $invoice = Invoice::factory()->create([
@@ -458,6 +481,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test get invoice tax configuration for small business
      */
+    #[Test]
     public function test_get_invoice_tax_configuration_small_business()
     {
         $this->company->update(['is_small_business' => true]);
@@ -483,6 +507,7 @@ class TaxServiceTest extends TestCase
     /**
      * Test caching of small business tax rate
      */
+    #[Test]
     public function test_small_business_tax_rate_caching()
     {
         Cache::shouldReceive('remember')

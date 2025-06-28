@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('api_call_logs', function (Blueprint $table) {
+        $this->createTableIfNotExists('api_call_logs', function (Blueprint $table) {
             $table->id();
             $table->string('service'); // retell, calcom, stripe, etc.
             $table->string('endpoint'); // API endpoint called
@@ -48,6 +48,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('api_call_logs');
+        $this->dropTableIfExists('api_call_logs');
     }
 };

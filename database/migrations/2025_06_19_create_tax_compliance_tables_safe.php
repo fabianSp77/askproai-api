@@ -14,7 +14,7 @@ return new class extends CompatibleMigration
     {
         // Only create tax_rates if it doesn't exist
         if (!Schema::hasTable('tax_rates')) {
-            Schema::create('tax_rates', function (Blueprint $table) {
+            $this->createTableIfNotExists('tax_rates', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->nullable()->constrained()->onDelete('cascade');
                 $table->string('name');
@@ -65,7 +65,7 @@ return new class extends CompatibleMigration
         
         // Only create invoice_items_flexible if it doesn't exist
         if (!Schema::hasTable('invoice_items_flexible')) {
-            Schema::create('invoice_items_flexible', function (Blueprint $table) {
+            $this->createTableIfNotExists('invoice_items_flexible', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('invoice_id')->constrained()->onDelete('cascade');
                 $table->string('stripe_invoice_item_id')->nullable();
@@ -90,7 +90,7 @@ return new class extends CompatibleMigration
         
         // Only create small_business_monitoring if it doesn't exist
         if (!Schema::hasTable('small_business_monitoring')) {
-            Schema::create('small_business_monitoring', function (Blueprint $table) {
+            $this->createTableIfNotExists('small_business_monitoring', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->onDelete('cascade');
                 $table->year('year');
@@ -114,8 +114,8 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('small_business_monitoring');
-        Schema::dropIfExists('invoice_items_flexible');
-        Schema::dropIfExists('tax_rates');
+        $this->dropTableIfExists('small_business_monitoring');
+        $this->dropTableIfExists('invoice_items_flexible');
+        $this->dropTableIfExists('tax_rates');
     }
 };

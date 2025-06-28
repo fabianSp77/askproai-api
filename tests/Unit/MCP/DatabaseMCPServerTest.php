@@ -2,21 +2,22 @@
 
 namespace Tests\Unit\MCP;
 
-use App\Services\MCP\Servers\DatabaseMCPServer;
-use App\Services\MCP\MCPRequest;
-use App\Services\MCP\MCPResponse;
-use App\Services\MCP\MCPError;
-use App\Models\Customer;
 use App\Models\Appointment;
+use App\Models\Branch;
 use App\Models\Call;
 use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
+use App\Models\Customer;
 use App\Models\Service;
-use Tests\TestCase;
+use App\Models\Staff;
+use App\Services\MCP\MCPError;
+use App\Services\MCP\MCPRequest;
+use App\Services\MCP\MCPResponse;
+use App\Services\MCP\Servers\DatabaseMCPServer;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class DatabaseMCPServerTest extends TestCase
 {
@@ -69,6 +70,8 @@ class DatabaseMCPServerTest extends TestCase
         ]);
     }
 
+    #[Test]
+
     public function test_can_handle_database_methods()
     {
         $this->assertTrue($this->server->canHandle('customers.find'));
@@ -78,6 +81,8 @@ class DatabaseMCPServerTest extends TestCase
         $this->assertFalse($this->server->canHandle('calcom.sync'));
         $this->assertFalse($this->server->canHandle('unknown.method'));
     }
+
+    #[Test]
 
     public function test_find_customer_by_phone()
     {
@@ -96,6 +101,8 @@ class DatabaseMCPServerTest extends TestCase
         $this->assertEquals('john@example.com', $response->getData()['email']);
     }
 
+    #[Test]
+
     public function test_find_customer_not_found()
     {
         $request = new MCPRequest([
@@ -111,6 +118,8 @@ class DatabaseMCPServerTest extends TestCase
         $this->assertFalse($response->isSuccess());
         $this->assertEquals('NOT_FOUND', $response->getError()->getCode());
     }
+
+    #[Test]
 
     public function test_create_appointment()
     {
@@ -140,6 +149,8 @@ class DatabaseMCPServerTest extends TestCase
             'service_id' => $this->service->id
         ]);
     }
+
+    #[Test]
 
     public function test_check_availability()
     {
@@ -177,6 +188,8 @@ class DatabaseMCPServerTest extends TestCase
         $this->assertNotContains('11:00', $response->getData()['available_slots']);
     }
 
+    #[Test]
+
     public function test_list_recent_calls()
     {
         // Create test calls
@@ -205,6 +218,8 @@ class DatabaseMCPServerTest extends TestCase
         $this->assertCount(5, $response->getData()['calls']);
         $this->assertEquals(5, $response->getData()['total']);
     }
+
+    #[Test]
 
     public function test_analytics_revenue_calculation()
     {
@@ -241,6 +256,8 @@ class DatabaseMCPServerTest extends TestCase
         $this->assertEquals(50.00, $response->getData()['average_revenue']);
     }
 
+    #[Test]
+
     public function test_database_transaction_rollback_on_error()
     {
         $request = new MCPRequest([
@@ -263,6 +280,8 @@ class DatabaseMCPServerTest extends TestCase
         $this->assertEquals($appointmentCountBefore, Appointment::count());
     }
 
+    #[Test]
+
     public function test_sql_injection_prevention()
     {
         $request = new MCPRequest([
@@ -282,6 +301,8 @@ class DatabaseMCPServerTest extends TestCase
         // Verify table still exists
         $this->assertTrue(DB::getSchemaBuilder()->hasTable('customers'));
     }
+
+    #[Test]
 
     public function test_bulk_operations_performance()
     {
@@ -309,6 +330,8 @@ class DatabaseMCPServerTest extends TestCase
         $this->assertCount(100, $response->getData()['customers']);
         $this->assertLessThan(0.5, $executionTime); // Should complete in under 500ms
     }
+
+    #[Test]
 
     public function test_complex_query_with_joins()
     {
@@ -342,6 +365,8 @@ class DatabaseMCPServerTest extends TestCase
         $this->assertEquals('Main Branch', $firstAppointment['branch']['name']);
     }
 
+    #[Test]
+
     public function test_database_connection_pool_handling()
     {
         $requests = [];
@@ -371,6 +396,8 @@ class DatabaseMCPServerTest extends TestCase
         $connectionCount = DB::select("SHOW STATUS LIKE 'Threads_connected'")[0]->Value ?? 0;
         $this->assertLessThan(50, $connectionCount);
     }
+
+    #[Test]
 
     public function test_data_validation_errors()
     {

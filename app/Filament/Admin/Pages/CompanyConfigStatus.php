@@ -10,10 +10,15 @@ class CompanyConfigStatus extends Page
     protected static ?string $navigationIcon = 'heroicon-o-information-circle';
     protected static ?string $navigationLabel = 'Config Status';
     protected static ?string $title = 'Company Configuration Status';
-    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static ?int $navigationSort = 4;
     
     protected static string $view = 'filament.admin.pages.company-config-status';
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - Use CompanyIntegrationPortal instead
+    }
     
     public ?Company $company = null;
     public array $status = [];

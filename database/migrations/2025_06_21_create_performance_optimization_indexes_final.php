@@ -71,16 +71,31 @@ return new class extends Migration
         }
 
         // Staff performance indexes
-        if (!$this->indexExists('staff', 'idx_branch_active_staff')) {
-            Schema::table('staff', function (Blueprint $table) {
-                $table->index(['branch_id', 'is_active', 'id'], 'idx_branch_active_staff');
-            });
-        }
-        
-        if (!$this->indexExists('staff', 'idx_company_staff')) {
-            Schema::table('staff', function (Blueprint $table) {
-                $table->index(['company_id', 'is_active'], 'idx_company_staff');
-            });
+        if (Schema::hasColumn('staff', 'is_active')) {
+            if (!$this->indexExists('staff', 'idx_branch_active_staff')) {
+                Schema::table('staff', function (Blueprint $table) {
+                    $table->index(['branch_id', 'is_active', 'id'], 'idx_branch_active_staff');
+                });
+            }
+            
+            if (!$this->indexExists('staff', 'idx_company_staff')) {
+                Schema::table('staff', function (Blueprint $table) {
+                    $table->index(['company_id', 'is_active'], 'idx_company_staff');
+                });
+            }
+        } else {
+            // Index without is_active if column doesn't exist
+            if (!$this->indexExists('staff', 'idx_branch_staff')) {
+                Schema::table('staff', function (Blueprint $table) {
+                    $table->index(['branch_id', 'id'], 'idx_branch_staff');
+                });
+            }
+            
+            if (!$this->indexExists('staff', 'idx_company_staff_simple')) {
+                Schema::table('staff', function (Blueprint $table) {
+                    $table->index(['company_id'], 'idx_company_staff_simple');
+                });
+            }
         }
 
         // Customers performance indexes

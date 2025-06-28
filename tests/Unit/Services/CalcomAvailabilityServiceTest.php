@@ -2,13 +2,14 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
+use App\Models\Branch;
 use App\Services\Calcom\CalcomAvailabilityService;
 use App\Services\Calcom\CalcomV2Service;
-use App\Models\Branch;
-use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CalcomAvailabilityServiceTest extends TestCase
 {
@@ -32,6 +33,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         Mockery::close();
         parent::tearDown();
     }
+
+    #[Test]
 
     public function test_check_availability_returns_available_slots()
     {
@@ -65,6 +68,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         $this->assertEquals(4, $result['total_slots']);
     }
 
+    #[Test]
+
     public function test_check_availability_with_no_slots()
     {
         $eventTypeId = 123456;
@@ -87,6 +92,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         $this->assertCount(0, $result['slots']);
     }
 
+    #[Test]
+
     public function test_check_availability_with_api_error()
     {
         $eventTypeId = 123456;
@@ -107,6 +114,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         $this->assertCount(0, $result['slots']);
         $this->assertEquals('API Error', $result['error']);
     }
+
+    #[Test]
 
     public function test_check_availability_uses_cache()
     {
@@ -131,6 +140,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         
         $this->assertEquals($result1, $result2);
     }
+
+    #[Test]
 
     public function test_is_time_slot_available()
     {
@@ -157,6 +168,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         $this->assertFalse($this->service->isTimeSlotAvailable($eventTypeId, $date, '15:00'));
     }
 
+    #[Test]
+
     public function test_find_next_available_slot()
     {
         $eventTypeId = 123456;
@@ -182,6 +195,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         $this->assertEquals(2, $result['days_ahead']);
         $this->assertEquals('11:00', $result['slot']['time']);
     }
+
+    #[Test]
 
     public function test_find_next_available_slot_with_time_preferences()
     {
@@ -211,6 +226,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         $this->assertTrue($result['found']);
         $this->assertEquals('14:00', $result['slot']['time']);
     }
+
+    #[Test]
 
     public function test_find_alternative_slots()
     {
@@ -270,6 +287,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         $this->assertNotEmpty($diffDayAlts);
     }
 
+    #[Test]
+
     public function test_check_multiple_dates_availability()
     {
         $eventTypeId = 123456;
@@ -291,6 +310,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         $this->assertEquals(2, $result['summary']['available_dates']);
         $this->assertEquals(3, $result['summary']['total_slots']);
     }
+
+    #[Test]
 
     public function test_get_branch_availability_summary()
     {
@@ -323,6 +344,8 @@ class CalcomAvailabilityServiceTest extends TestCase
         $this->assertNotNull($result['summary']['busiest_day']);
         $this->assertNotNull($result['summary']['quietest_day']);
     }
+
+    #[Test]
 
     public function test_slots_are_filtered_by_business_hours()
     {

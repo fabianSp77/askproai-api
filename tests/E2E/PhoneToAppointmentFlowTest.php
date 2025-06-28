@@ -2,27 +2,28 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Customer;
-use App\Models\Appointment;
-use App\Models\Call;
-use App\Models\CalcomEventType;
 use App\Jobs\ProcessRetellCallJob;
 use App\Jobs\RefreshCallDataJob;
 use App\Mail\AppointmentConfirmation;
-use App\Services\RetellV2Service;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\CalcomEventType;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
 use App\Services\CalcomV2Service;
+use App\Services\RetellV2Service;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class PhoneToAppointmentFlowTest extends TestCase
 {
@@ -167,7 +168,6 @@ AI: You are welcome! We look forward to seeing you on Monday. Have a great day!'
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function complete_phone_to_appointment_flow_works_correctly()
@@ -304,7 +304,6 @@ AI: You are welcome! We look forward to seeing you on Monday. Have a great day!'
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_call_with_no_appointment_request()
@@ -372,7 +371,6 @@ AI: You are welcome! Have a great day!',
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_failed_booking_gracefully()
@@ -454,7 +452,6 @@ AI: You are welcome! Have a great day!',
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_webhook_replay_attacks()
@@ -499,7 +496,6 @@ AI: You are welcome! Have a great day!',
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function processes_different_service_types_correctly()

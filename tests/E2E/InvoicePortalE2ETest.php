@@ -2,22 +2,23 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Mail;
-use App\Models\Company;
+use App\Mail\InvoiceReminderEmail;
+use App\Mail\PaymentReceiptEmail;
+use App\Models\Appointment;
 use App\Models\Branch;
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
 use App\Models\Service;
-use App\Models\Appointment;
-use App\Mail\PaymentReceiptEmail;
-use App\Mail\InvoiceReminderEmail;
-use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class InvoicePortalE2ETest extends TestCase
 {
@@ -80,7 +81,6 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_view_invoice_list_with_filters()
@@ -174,7 +174,6 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_view_detailed_invoice()
@@ -284,7 +283,6 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_download_invoice_pdf()
@@ -336,7 +334,6 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_pay_invoice_online()
@@ -404,7 +401,6 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_setup_payment_plan_for_large_invoice()
@@ -471,7 +467,6 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_receives_invoice_reminders()
@@ -525,7 +520,6 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_dispute_invoice()
@@ -576,7 +570,6 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_view_payment_history()
@@ -619,7 +612,6 @@ class InvoicePortalE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function invoice_access_is_restricted_to_owner()

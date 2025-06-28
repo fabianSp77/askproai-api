@@ -2,20 +2,21 @@
 
 namespace Tests\Unit\MCP;
 
-use App\Services\MCP\MCPOrchestrator;
+use App\Services\Cache\MCPCacheManager;
+use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\MCP\MCPConfig;
-use App\Services\MCP\Servers\DatabaseMCPServer;
-use App\Services\MCP\Servers\CalcomMCPServer;
-use App\Services\MCP\Servers\KnowledgeMCPServer;
+use App\Services\MCP\MCPError;
+use App\Services\MCP\MCPOrchestrator;
 use App\Services\MCP\MCPRequest;
 use App\Services\MCP\MCPResponse;
-use App\Services\MCP\MCPError;
-use App\Services\CircuitBreaker\CircuitBreaker;
-use App\Services\Cache\MCPCacheManager;
-use Tests\TestCase;
-use Mockery;
+use App\Services\MCP\Servers\CalcomMCPServer;
+use App\Services\MCP\Servers\DatabaseMCPServer;
+use App\Services\MCP\Servers\KnowledgeMCPServer;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class MCPOrchestratorTest extends TestCase
 {
@@ -61,6 +62,8 @@ class MCPOrchestratorTest extends TestCase
         $this->orchestrator->registerServer('knowledge', $this->mockKnowledgeServer);
     }
 
+    #[Test]
+
     public function test_single_server_request_success()
     {
         $request = new MCPRequest([
@@ -89,6 +92,8 @@ class MCPOrchestratorTest extends TestCase
         $this->assertTrue($result->isSuccess());
         $this->assertEquals('Test Customer', $result->getData()['name']);
     }
+
+    #[Test]
 
     public function test_parallel_execution_multiple_servers()
     {
@@ -140,6 +145,8 @@ class MCPOrchestratorTest extends TestCase
         $this->assertArrayHasKey('calcom', $result->getData());
     }
 
+    #[Test]
+
     public function test_circuit_breaker_open_fallback()
     {
         $request = new MCPRequest([
@@ -163,6 +170,8 @@ class MCPOrchestratorTest extends TestCase
         $this->assertTrue($result->isSuccess());
         $this->assertTrue($result->getData()['cached']);
     }
+
+    #[Test]
 
     public function test_retry_mechanism_on_failure()
     {
@@ -191,6 +200,8 @@ class MCPOrchestratorTest extends TestCase
         $this->assertEquals(3, $result->getData()['attempts']);
     }
 
+    #[Test]
+
     public function test_request_validation_failure()
     {
         $request = new MCPRequest([
@@ -203,6 +214,8 @@ class MCPOrchestratorTest extends TestCase
         $this->assertFalse($result->isSuccess());
         $this->assertStringContainsString('Invalid request', $result->getError()->getMessage());
     }
+
+    #[Test]
 
     public function test_timeout_handling()
     {
@@ -223,6 +236,8 @@ class MCPOrchestratorTest extends TestCase
         
         $this->orchestrator->execute($request);
     }
+
+    #[Test]
 
     public function test_server_priority_ordering()
     {
@@ -258,6 +273,8 @@ class MCPOrchestratorTest extends TestCase
         $this->assertEquals('database', $result->getData()['server']);
     }
 
+    #[Test]
+
     public function test_cache_hit_bypass_execution()
     {
         $request = new MCPRequest([
@@ -286,6 +303,8 @@ class MCPOrchestratorTest extends TestCase
         $this->assertTrue($result->getData()['from_cache']);
         $this->assertEquals(1764, $result->getData()['result']);
     }
+
+    #[Test]
 
     public function test_error_aggregation_from_multiple_servers()
     {
@@ -316,6 +335,8 @@ class MCPOrchestratorTest extends TestCase
         $this->assertStringContainsString('Database connection failed', $result->getError()->getDetails()['errors'][0]);
         $this->assertStringContainsString('API rate limit exceeded', $result->getError()->getDetails()['errors'][1]);
     }
+
+    #[Test]
 
     public function test_graceful_degradation_partial_success()
     {

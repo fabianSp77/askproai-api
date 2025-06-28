@@ -183,7 +183,7 @@ class InsightsActionsWidget extends Widget
             [
                 'label' => 'System Status',
                 'icon' => 'heroicon-o-server-stack',
-                'url' => route('filament.admin.pages.system-health-simple'),
+                'url' => route('filament.admin.pages.system-monitoring'),
                 'color' => 'gray',
             ],
         ];

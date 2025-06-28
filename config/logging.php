@@ -103,6 +103,14 @@ return [
             'permission' => 0664,
         ],
 
+        'webhook_security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/webhook_security.log'),
+            'level' => 'info',
+            'days' => 60,
+            'permission' => 0664,
+        ],
+
         'critical' => [
             'driver' => 'daily',
             'path' => storage_path('logs/critical.log'),

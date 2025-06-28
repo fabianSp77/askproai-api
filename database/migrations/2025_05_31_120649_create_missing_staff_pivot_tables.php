@@ -24,7 +24,7 @@ return new class extends CompatibleMigration
         
         // Erstelle staff_services falls nicht vorhanden
         if (!Schema::hasTable('staff_services')) {
-            Schema::create('staff_services', function (Blueprint $table) {
+            $this->createTableIfNotExists('staff_services', function (Blueprint $table) {
                 $table->id();
                 $table->uuid('staff_id');
                 $table->uuid('service_id');
@@ -40,6 +40,6 @@ return new class extends CompatibleMigration
     public function down(): void
     {
         $this->dropTableIfExists('staff_branches');
-        Schema::dropIfExists('staff_services');
+        $this->dropTableIfExists('staff_services');
     }
 };

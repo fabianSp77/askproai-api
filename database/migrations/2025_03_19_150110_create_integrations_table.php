@@ -8,7 +8,7 @@ return new class extends CompatibleMigration
 {
     public function up()
     {
-        Schema::create('integrations', function (Blueprint $table) {
+        $this->createTableIfNotExists('integrations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kunde_id')->constrained('kunden')->onDelete('cascade');
             $table->string('system');
@@ -19,6 +19,6 @@ return new class extends CompatibleMigration
 
     public function down()
     {
-        Schema::dropIfExists('integrations');
+        $this->dropTableIfExists('integrations');
     }
 };

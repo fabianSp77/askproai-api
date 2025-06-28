@@ -60,15 +60,9 @@ class ProcessWebhookJob implements ShouldQueue
             // Mark as processing
             $this->webhookEvent->markAsProcessing();
             
-            // Get the appropriate handler
-            $handler = $processor->getHandler($this->webhookEvent->provider);
-            
-            if (!$handler) {
-                throw new \Exception("No handler registered for provider: {$this->webhookEvent->provider}");
-            }
-            
-            // Process the webhook
-            $result = $handler->handle($this->webhookEvent, $this->correlationId);
+            // Process the webhook using the processor service
+            // The processor will handle routing to the appropriate handler
+            $result = $processor->processWebhookEvent($this->webhookEvent, $this->correlationId);
             
             // Mark as completed
             $this->webhookEvent->markAsCompleted();

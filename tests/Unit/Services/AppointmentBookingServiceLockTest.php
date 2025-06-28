@@ -2,22 +2,23 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
-use App\Services\AppointmentBookingService;
-use App\Services\Locking\TimeSlotLockManager;
-use App\Services\CalcomV2Service;
-use App\Services\NotificationService;
-use App\Services\AvailabilityService;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Customer;
+use App\Exceptions\AvailabilityException;
+use App\Models\Appointment;
 use App\Models\Branch;
 use App\Models\Company;
-use App\Models\Appointment;
-use App\Exceptions\AvailabilityException;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Services\AppointmentBookingService;
+use App\Services\AvailabilityService;
+use App\Services\CalcomV2Service;
+use App\Services\Locking\TimeSlotLockManager;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class AppointmentBookingServiceLockTest extends TestCase
 {
@@ -138,6 +139,7 @@ class AppointmentBookingServiceLockTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_releases_lock_on_booking_failure()
     {
         $appointmentData = [
@@ -199,6 +201,7 @@ class AppointmentBookingServiceLockTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_tries_alternative_slots_when_original_is_unavailable()
     {
         $appointmentData = [
@@ -301,6 +304,7 @@ class AppointmentBookingServiceLockTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_can_extend_lock_for_long_operations()
     {
         $lockToken = 'test-lock-token-xyz';

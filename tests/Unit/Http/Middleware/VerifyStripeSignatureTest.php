@@ -2,14 +2,15 @@
 
 namespace Tests\Unit\Http\Middleware;
 
-use Tests\TestCase;
 use App\Http\Middleware\VerifyStripeSignature;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
-use Stripe\Webhook;
-use Stripe\Exception\SignatureVerificationException;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Stripe\Exception\SignatureVerificationException;
+use Stripe\Webhook;
+use Tests\TestCase;
 
 class VerifyStripeSignatureTest extends TestCase
 {
@@ -48,6 +49,7 @@ class VerifyStripeSignatureTest extends TestCase
     /**
      * Test valid signature passes through
      */
+    #[Test]
     public function test_valid_signature_passes_through()
     {
         $signature = $this->generateValidSignature($this->validPayload);
@@ -84,6 +86,7 @@ class VerifyStripeSignatureTest extends TestCase
     /**
      * Test missing signature returns 400
      */
+    #[Test]
     public function test_missing_signature_returns_400()
     {
         $request = Request::create('/webhook', 'POST', [], [], [], [], $this->validPayload);
@@ -103,6 +106,7 @@ class VerifyStripeSignatureTest extends TestCase
     /**
      * Test missing webhook secret returns 500
      */
+    #[Test]
     public function test_missing_webhook_secret_returns_500()
     {
         config(['services.stripe.webhook_secret' => null]);
@@ -126,6 +130,7 @@ class VerifyStripeSignatureTest extends TestCase
     /**
      * Test invalid signature returns 400
      */
+    #[Test]
     public function test_invalid_signature_returns_400()
     {
         $invalidSignature = 't=1234567890,v1=invalid_signature';
@@ -153,6 +158,7 @@ class VerifyStripeSignatureTest extends TestCase
     /**
      * Test invalid payload returns 400
      */
+    #[Test]
     public function test_invalid_payload_returns_400()
     {
         $signature = $this->generateValidSignature('invalid json');
@@ -180,6 +186,7 @@ class VerifyStripeSignatureTest extends TestCase
     /**
      * Test unexpected exception returns 500
      */
+    #[Test]
     public function test_unexpected_exception_returns_500()
     {
         $signature = $this->generateValidSignature($this->validPayload);
@@ -207,6 +214,7 @@ class VerifyStripeSignatureTest extends TestCase
     /**
      * Test signature with old timestamp is rejected
      */
+    #[Test]
     public function test_old_timestamp_signature_rejected()
     {
         // Stripe rejects signatures older than 5 minutes
@@ -235,6 +243,7 @@ class VerifyStripeSignatureTest extends TestCase
     /**
      * Test multiple signatures in header
      */
+    #[Test]
     public function test_multiple_signatures_in_header()
     {
         $validSignature = $this->generateValidSignature($this->validPayload);
@@ -263,6 +272,7 @@ class VerifyStripeSignatureTest extends TestCase
     /**
      * Test request attributes are preserved
      */
+    #[Test]
     public function test_request_attributes_preserved()
     {
         $signature = $this->generateValidSignature($this->validPayload);

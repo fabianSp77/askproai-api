@@ -2,18 +2,19 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Services\SmartBookingService;
-use App\Services\CalcomV2Service;
-use App\Services\RetellV2Service;
-use App\Services\PhoneNumberResolver;
-use App\Models\Branch;
-use App\Models\Customer;
-use App\Models\Call;
 use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Customer;
+use App\Services\CalcomV2Service;
+use App\Services\PhoneNumberResolver;
+use App\Services\RetellV2Service;
+use App\Services\SmartBookingService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
-use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class SmartBookingServiceTest extends TestCase
 {
@@ -42,7 +43,6 @@ class SmartBookingServiceTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_processes_incoming_call_and_creates_appointment()
@@ -119,7 +119,6 @@ class SmartBookingServiceTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_missing_appointment_request()

@@ -74,8 +74,12 @@ class PhoneNumberResolver
         }
         
         // Fallback: Check branches table
+        $normalized = $this->normalizePhoneNumber($phoneNumber);
         $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
-            ->where('phone_number', $phoneNumber)
+            ->where(function($query) use ($phoneNumber, $normalized) {
+                $query->where('phone', $phoneNumber)
+                      ->orWhere('phone', $normalized);
+            })
             ->where('is_active', true)
             ->first();
             
@@ -105,6 +109,11 @@ class PhoneNumberResolver
             'resolution_method' => null,
             'confidence' => 0
         ];
+        
+        // 0. Check for test mode
+        if ($this->isTestMode($webhookData)) {
+            return $this->resolveTestModeContext($webhookData);
+        }
         
         // 1. Try to get from Retell metadata (if agent has branch_id stored)
         if (isset($webhookData['metadata']['askproai_branch_id'])) {
@@ -178,8 +187,24 @@ class PhoneNumberResolver
             }
         }
         
-        // 5. Fallback to company from webhook or default
+        // 5. Enhanced fallback mechanism with multiple strategies
+        $fallbackResult = $this->enhancedFallback($webhookData);
+        if ($fallbackResult) {
+            $fallbackResult['resolution_method'] = 'enhanced_fallback';
+            $fallbackResult['confidence'] = 0.5;
+            return $fallbackResult;
+        }
+        
+        // 6. Final fallback to company from webhook or default
         $companyId = $webhookData['company_id'] ?? Company::first()->id ?? null;
+        
+        // Log warning for unresolved calls
+        Log::warning('Could not resolve company/branch for incoming call', [
+            'to_number' => $toNumber ?? 'unknown',
+            'from_number' => $fromNumber ?? 'unknown',
+            'agent_id' => $retellAgentId ?? 'unknown',
+            'webhook_data_keys' => array_keys($webhookData)
+        ]);
         
         return [
             'branch_id' => null,
@@ -206,8 +231,11 @@ class PhoneNumberResolver
             // We need to search across all companies since incoming calls don't have company context
             $phoneRecord = PhoneNumber::withoutGlobalScope(\App\Scopes\TenantScope::class)
                 ->where(function($query) use ($normalized, $phoneNumber) {
-                    $query->where('number', $normalized)
-                          ->orWhere('number', $phoneNumber);
+                    $query->where(function($q) use ($normalized, $phoneNumber) {
+                    $numberColumn = Schema::hasColumn('phone_numbers', 'number') ? 'number' : 'phone_number';
+                    $q->where($numberColumn, $normalized)
+                      ->orWhere($numberColumn, $phoneNumber);
+                });
                 })
                 ->where('is_active', true)
                 ->first();
@@ -237,7 +265,7 @@ class PhoneNumberResolver
             // 2. Check branch main phone number (only active branches)
             $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
                 ->where(function($query) use ($normalized, $phoneNumber) {
-                    $query->where('phone_number', $normalized)
+                    $query->where('phone', $normalized)
                           ->orWhere('phone_number', $phoneNumber);
                 })
                 ->where('is_active', true)
@@ -519,5 +547,173 @@ class PhoneNumberResolver
         }
         
         return $cleaned;
+    }
+    
+    /**
+     * Check if this is a test mode call
+     */
+    protected function isTestMode(array $webhookData): bool
+    {
+        // Check multiple indicators for test mode
+        return 
+            // Environment variable
+            env('RETELL_TEST_MODE', false) ||
+            // Metadata flag
+            (isset($webhookData['metadata']['test_mode']) && $webhookData['metadata']['test_mode']) ||
+            // Test phone numbers
+            in_array($webhookData['to'] ?? '', ['+15551234567', '+4915551234567', '+491234567890']) ||
+            // Test agent IDs
+            in_array($webhookData['agent_id'] ?? '', ['test_agent', 'demo_agent']);
+    }
+    
+    /**
+     * Resolve context for test mode
+     */
+    protected function resolveTestModeContext(array $webhookData): array
+    {
+        // Get or create test company
+        $testCompany = Company::where('slug', 'test-company')->first();
+        if (!$testCompany) {
+            $testCompany = Company::first();
+        }
+        
+        // Get or create test branch
+        $testBranch = null;
+        if ($testCompany) {
+            // Use withoutGlobalScope to avoid tenant issues
+            $testBranch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                ->where('company_id', $testCompany->id)
+                ->where(function($query) {
+                    $query->where('slug', 'test-branch')
+                          ->orWhere('name', 'Test Branch');
+                })
+                ->first();
+                
+            if (!$testBranch) {
+                $testBranch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                    ->where('company_id', $testCompany->id)
+                    ->first();
+            }
+        }
+        
+        Log::info('Test mode activated for webhook processing', [
+            'company_id' => $testCompany?->id,
+            'branch_id' => $testBranch?->id,
+            'webhook_data' => array_keys($webhookData)
+        ]);
+        
+        return [
+            'branch_id' => $testBranch?->id,
+            'company_id' => $testCompany?->id,
+            'agent_id' => null,
+            'resolution_method' => 'test_mode',
+            'confidence' => 1.0
+        ];
+    }
+    
+    /**
+     * Enhanced fallback mechanism with multiple strategies
+     */
+    protected function enhancedFallback(array $webhookData): ?array
+    {
+        // Strategy 1: Check for phone numbers in metadata
+        if (isset($webhookData['metadata']['phone_number'])) {
+            $result = $this->resolveFromPhoneNumber($webhookData['metadata']['phone_number']);
+            if ($result) {
+                Log::info('Resolved from metadata phone number', $result);
+                return $result;
+            }
+        }
+        
+        // Strategy 2: Check for company name in metadata or transcript
+        if (isset($webhookData['metadata']['company_name'])) {
+            $company = Company::where('name', 'like', '%' . $webhookData['metadata']['company_name'] . '%')
+                ->orWhere('slug', 'like', '%' . str_slug($webhookData['metadata']['company_name']) . '%')
+                ->first();
+                
+            if ($company) {
+                $branch = $company->branches()->where('is_active', true)->first();
+                if ($branch) {
+                    Log::info('Resolved from company name in metadata', [
+                        'company_name' => $webhookData['metadata']['company_name'],
+                        'company_id' => $company->id,
+                        'branch_id' => $branch->id
+                    ]);
+                    
+                    return [
+                        'branch_id' => $branch->id,
+                        'company_id' => $company->id,
+                        'agent_id' => null
+                    ];
+                }
+            }
+        }
+        
+        // Strategy 3: Use the most recently active company/branch
+        $recentCall = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->whereNotNull('branch_id')
+            ->where('created_at', '>', now()->subHours(24))
+            ->orderBy('created_at', 'desc')
+            ->first();
+            
+        if ($recentCall && $recentCall->branch && $recentCall->branch->is_active) {
+            Log::info('Using most recently active branch as fallback', [
+                'branch_id' => $recentCall->branch_id,
+                'last_call_at' => $recentCall->created_at
+            ]);
+            
+            return [
+                'branch_id' => $recentCall->branch_id,
+                'company_id' => $recentCall->company_id,
+                'agent_id' => null
+            ];
+        }
+        
+        // Strategy 4: Check for partial phone number matches
+        $toNumber = $webhookData['to'] ?? $webhookData['to_number'] ?? null;
+        if ($toNumber && strlen($toNumber) >= 6) {
+            // Try to find a phone number that ends with the same digits
+            $lastDigits = substr(preg_replace('/[^0-9]/', '', $toNumber), -6);
+            
+            $phoneRecord = PhoneNumber::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                ->where('number', 'like', '%' . $lastDigits)
+                ->where('is_active', true)
+                ->first();
+                
+            if ($phoneRecord && $phoneRecord->branch_id) {
+                $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                    ->where('id', $phoneRecord->branch_id)
+                    ->where('is_active', true)
+                    ->first();
+                    
+                if ($branch) {
+                    Log::info('Resolved from partial phone number match', [
+                        'partial_match' => $lastDigits,
+                        'full_number' => $phoneRecord->number,
+                        'branch_id' => $branch->id
+                    ]);
+                    
+                    return [
+                        'branch_id' => $branch->id,
+                        'company_id' => $branch->company_id,
+                        'agent_id' => $phoneRecord->retell_agent_id
+                    ];
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Helper to create slug from string (if not available)
+     */
+    protected function str_slug($string): string
+    {
+        if (function_exists('str_slug')) {
+            return str_slug($string);
+        }
+        
+        return strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $string)));
     }
 }

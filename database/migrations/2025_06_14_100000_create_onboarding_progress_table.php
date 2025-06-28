@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('onboarding_progress', function (Blueprint $table) {
+        $this->createTableIfNotExists('onboarding_progress', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id')->nullable();
             $table->unsignedBigInteger('user_id');
@@ -31,6 +31,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('onboarding_progress');
+        $this->dropTableIfExists('onboarding_progress');
     }
 };

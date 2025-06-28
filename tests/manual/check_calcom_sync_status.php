@@ -5,11 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 $app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-use App\Models\CalcomEventType;
-use App\Models\Staff;
-use App\Models\Branch;
-use Illuminate\Support\Facades\DB;
-
 echo "=== CAL.COM SYNC STATUS FÜR ASKPROAI ===\n\n";
 
 $branch = Branch::where('name', 'LIKE', '%Berlin%')->where('company_id', 85)->first();

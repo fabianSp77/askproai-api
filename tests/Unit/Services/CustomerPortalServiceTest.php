@@ -2,14 +2,13 @@
 
 namespace Tests\Unit\Services;
 
-use Tests\TestCase;
-use App\Services\CustomerPortalService;
-use App\Models\CustomerAuth;
-use App\Models\Company;
 use App\Models\Appointment;
 use App\Models\Call;
+use App\Models\Company;
+use App\Models\CustomerAuth;
 use App\Notifications\CustomerMagicLinkNotification;
 use App\Notifications\CustomerWelcomeNotification;
+use App\Services\CustomerPortalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +16,8 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CustomerPortalServiceTest extends TestCase
 {
@@ -68,6 +69,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test enable portal access
      */
+    #[Test]
     public function test_enable_portal_access()
     {
         Notification::fake();
@@ -92,6 +94,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test enable portal access with custom password
      */
+    #[Test]
     public function test_enable_portal_access_with_custom_password()
     {
         Notification::fake();
@@ -118,6 +121,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test enable portal access with error
      */
+    #[Test]
     public function test_enable_portal_access_with_error()
     {
         // Mock customer to throw exception on update
@@ -136,6 +140,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test disable portal access
      */
+    #[Test]
     public function test_disable_portal_access()
     {
         // Enable portal first
@@ -166,6 +171,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test disable portal access with error
      */
+    #[Test]
     public function test_disable_portal_access_with_error()
     {
         $mockCustomer = Mockery::mock(CustomerAuth::class)->makePartial();
@@ -183,6 +189,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test send magic link
      */
+    #[Test]
     public function test_send_magic_link()
     {
         Notification::fake();
@@ -205,6 +212,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test send magic link with error
      */
+    #[Test]
     public function test_send_magic_link_with_error()
     {
         $mockCustomer = Mockery::mock(CustomerAuth::class)->makePartial();
@@ -223,6 +231,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test get portal URL in production
      */
+    #[Test]
     public function test_get_portal_url_production()
     {
         app()->detectEnvironment(function () {
@@ -239,6 +248,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test get portal URL in development
      */
+    #[Test]
     public function test_get_portal_url_development()
     {
         app()->detectEnvironment(function () {
@@ -255,6 +265,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test get portal URL with fallback to slug
      */
+    #[Test]
     public function test_get_portal_url_with_slug_fallback()
     {
         $this->company->update(['subdomain' => null]);
@@ -269,6 +280,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test get portal URL with name slug
      */
+    #[Test]
     public function test_get_portal_url_with_name_slug()
     {
         $this->company->update([
@@ -287,6 +299,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test can access portal - allowed
      */
+    #[Test]
     public function test_can_access_portal_allowed()
     {
         $this->customer->update([
@@ -302,6 +315,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test can access portal - not enabled
      */
+    #[Test]
     public function test_can_access_portal_not_enabled()
     {
         $this->customer->update([
@@ -317,6 +331,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test can access portal - email not verified
      */
+    #[Test]
     public function test_can_access_portal_email_not_verified()
     {
         $this->customer->update([
@@ -332,6 +347,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test can access portal - company portal disabled
      */
+    #[Test]
     public function test_can_access_portal_company_disabled()
     {
         $this->customer->update([
@@ -349,6 +365,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test get portal features
      */
+    #[Test]
     public function test_get_portal_features()
     {
         $features = $this->service->getPortalFeatures($this->company);
@@ -365,6 +382,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test get portal features with defaults
      */
+    #[Test]
     public function test_get_portal_features_defaults()
     {
         $this->company->update(['portal_features' => null]);
@@ -381,6 +399,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test get customer stats
      */
+    #[Test]
     public function test_get_customer_stats()
     {
         // Create test data
@@ -426,6 +445,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test bulk enable portal access
      */
+    #[Test]
     public function test_bulk_enable_portal_access()
     {
         Notification::fake();
@@ -464,6 +484,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test bulk enable portal access with specific IDs
      */
+    #[Test]
     public function test_bulk_enable_portal_access_with_specific_ids()
     {
         Notification::fake();
@@ -498,6 +519,7 @@ class CustomerPortalServiceTest extends TestCase
     /**
      * Test bulk enable portal access with failures
      */
+    #[Test]
     public function test_bulk_enable_portal_access_with_failures()
     {
         Notification::fake();

@@ -1,17 +1,17 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Arbeitszeiten-Tabelle: gehört zu einem Staff-Mitglied (UUID)
      */
     public function up(): void
     {
-        Schema::create('working_hours', function (Blueprint $table) {
+        $this->createTableIfNotExists('working_hours', function (Blueprint $table) {
             $table->id();                   // bigint auto-inc (PK)
 
             // FK-Spalten -----------------
@@ -31,6 +31,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('working_hours');
+        $this->dropTableIfExists('working_hours');
     }
 };

@@ -2,28 +2,29 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Customer;
-use App\Models\Appointment;
-use App\Models\Call;
-use App\Models\PhoneNumber;
-use App\Models\CalcomEventType;
-use App\Services\MCP\MCPGateway;
-use App\Services\MCP\WebhookMCPServer;
-use App\Services\MCP\RetellCustomFunctionMCPServer;
 use App\Mail\AppointmentConfirmation;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\CalcomEventType;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\PhoneNumber;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Services\MCP\MCPGateway;
+use App\Services\MCP\RetellCustomFunctionMCPServer;
+use App\Services\MCP\WebhookMCPServer;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class MCPBookingFlowE2ETest extends TestCase
 {
@@ -146,7 +147,6 @@ class MCPBookingFlowE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function complete_mcp_booking_flow_with_custom_functions()
@@ -275,7 +275,6 @@ class MCPBookingFlowE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_appointment_rescheduling_via_mcp()
@@ -346,7 +345,6 @@ class MCPBookingFlowE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_appointment_cancellation_via_mcp()
@@ -399,7 +397,6 @@ class MCPBookingFlowE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function validates_phone_ownership_for_appointment_changes()
@@ -436,7 +433,6 @@ class MCPBookingFlowE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_mcp_circuit_breaker_correctly()
@@ -484,7 +480,6 @@ class MCPBookingFlowE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function processes_batch_mcp_requests()
@@ -514,7 +509,6 @@ class MCPBookingFlowE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_complex_multi_language_booking_flow()

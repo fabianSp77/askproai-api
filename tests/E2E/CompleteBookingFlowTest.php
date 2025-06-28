@@ -2,22 +2,23 @@
 
 namespace Tests\E2E;
 
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Customer;
 use App\Models\Appointment;
-use App\Models\Call;
-use App\Models\PhoneNumber;
+use App\Models\Branch;
 use App\Models\CalcomEventType;
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Notification;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\PhoneNumber;
+use App\Models\Service;
+use App\Models\Staff;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CompleteBookingFlowTest extends TestCase
 {
@@ -175,6 +176,8 @@ class CompleteBookingFlowTest extends TestCase
         ]);
     }
 
+    #[Test]
+
     public function test_complete_phone_to_appointment_flow()
     {
         // Mock all external APIs
@@ -283,6 +286,8 @@ class CompleteBookingFlowTest extends TestCase
         Event::assertDispatched('appointment.synced');
     }
 
+    #[Test]
+
     public function test_appointment_lifecycle_complete_flow()
     {
         // Create initial appointment
@@ -366,6 +371,8 @@ class CompleteBookingFlowTest extends TestCase
         $this->assertStringContainsString('Follow-up', $followUp->notes);
     }
 
+    #[Test]
+
     public function test_multi_branch_routing()
     {
         // Test call to branch 2
@@ -398,6 +405,8 @@ class CompleteBookingFlowTest extends TestCase
         $this->assertNotNull($appointment);
         $this->assertEquals($this->branch2->id, $appointment->branch_id);
     }
+
+    #[Test]
 
     public function test_error_recovery_scenarios()
     {

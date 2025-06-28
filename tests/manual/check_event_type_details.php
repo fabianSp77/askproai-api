@@ -1,10 +1,9 @@
 <?php
+
 require __DIR__.'/vendor/autoload.php';
 $app = require_once __DIR__.'/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
-
-use App\Services\CalcomService;
 
 $calcomService = new CalcomService();
 $eventTypeId = env('CALCOM_EVENT_TYPE_ID');

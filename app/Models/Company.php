@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Services\Security\ApiKeyEncryptionService;
+use App\Services\Security\ApiKeyService;
 
 class Company extends Model
 {
@@ -94,13 +94,40 @@ class Company extends Model
         // Removed default values to prevent test issues with SQLite
         // These will be set by factory or creation logic
     ];
-
+    
     /**
-     * Get the branches for the company.
+     * Boot the model
      */
-    public function branches(): HasMany
+    protected static function boot()
     {
-        return $this->hasMany(Branch::class);
+        parent::boot();
+        
+        // Set defaults on creation
+        static::creating(function ($company) {
+            if (empty($company->slug)) {
+                $company->slug = \Str::slug($company->name);
+            }
+            
+            // Set trial period for new companies (14 days)
+            if (empty($company->trial_ends_at)) {
+                $company->trial_ends_at = now()->addDays(14);
+            }
+        });
+        
+        // Encrypt API keys on save
+        static::saving(function ($company) {
+            $apiKeyService = app(ApiKeyService::class);
+            
+            // Encrypt Retell API key if changed
+            if ($company->isDirty('retell_api_key') && !empty($company->retell_api_key)) {
+                $company->retell_api_key = $apiKeyService->encrypt($company->retell_api_key);
+            }
+            
+            // Encrypt Cal.com API key if changed
+            if ($company->isDirty('calcom_api_key') && !empty($company->calcom_api_key)) {
+                $company->calcom_api_key = $apiKeyService->encrypt($company->calcom_api_key);
+            }
+        });
     }
     
     /**
@@ -112,22 +139,13 @@ class Company extends Model
             return null;
         }
         
-        $encryptionService = app(ApiKeyEncryptionService::class);
-        return $encryptionService->decrypt($value);
-    }
-    
-    /**
-     * Set encrypted Retell API key
-     */
-    public function setRetellApiKeyAttribute($value)
-    {
-        if (empty($value)) {
-            $this->attributes['retell_api_key'] = null;
-            return;
+        try {
+            $apiKeyService = app(ApiKeyService::class);
+            return $apiKeyService->decrypt($value);
+        } catch (\Exception $e) {
+            // If decryption fails, assume it's not encrypted
+            return $value;
         }
-        
-        $encryptionService = app(ApiKeyEncryptionService::class);
-        $this->attributes['retell_api_key'] = $encryptionService->encrypt($value);
     }
     
     /**
@@ -139,23 +157,42 @@ class Company extends Model
             return null;
         }
         
-        $encryptionService = app(ApiKeyEncryptionService::class);
-        return $encryptionService->decrypt($value);
+        try {
+            $apiKeyService = app(ApiKeyService::class);
+            return $apiKeyService->decrypt($value);
+        } catch (\Exception $e) {
+            // If decryption fails, assume it's not encrypted
+            return $value;
+        }
     }
     
     /**
-     * Set encrypted Cal.com API key
+     * Get masked API key for display
      */
-    public function setCalcomApiKeyAttribute($value)
+    public function getMaskedRetellApiKey(): string
     {
-        if (empty($value)) {
-            $this->attributes['calcom_api_key'] = null;
-            return;
-        }
-        
-        $encryptionService = app(ApiKeyEncryptionService::class);
-        $this->attributes['calcom_api_key'] = $encryptionService->encrypt($value);
+        $apiKeyService = app(ApiKeyService::class);
+        return $apiKeyService->mask($this->retell_api_key);
     }
+    
+    /**
+     * Get masked Cal.com API key for display
+     */
+    public function getMaskedCalcomApiKey(): string
+    {
+        $apiKeyService = app(ApiKeyService::class);
+        return $apiKeyService->mask($this->calcom_api_key);
+    }
+
+    /**
+     * Get the branches for the company.
+     */
+    public function branches(): HasMany
+    {
+        return $this->hasMany(Branch::class);
+    }
+    
+    
 
     /**
      * Get the staff members for the company.
@@ -254,10 +291,30 @@ class Company extends Model
     }
 
     /**
+     * Get the subscriptions for the company.
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Get the active subscription for the company.
+     */
+    public function activeSubscription()
+    {
+        return $this->subscriptions()->active()->latest()->first();
+    }
+
+    /**
      * Check if company is in trial period
      */
     public function isInTrial(): bool
     {
+        $activeSubscription = $this->activeSubscription();
+        if ($activeSubscription) {
+            return $activeSubscription->onTrial();
+        }
         return $this->trial_ends_at && $this->trial_ends_at->isFuture();
     }
 
@@ -266,7 +323,7 @@ class Company extends Model
      */
     public function hasActiveSubscription(): bool
     {
-        return $this->subscription_status === 'active';
+        return $this->activeSubscription() !== null;
     }
 
     /**
@@ -297,22 +354,4 @@ class Company extends Model
     }
     
 
-    /**
-     * Boot method
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($company) {
-            if (empty($company->slug)) {
-                $company->slug = \Str::slug($company->name);
-            }
-            
-            // Set trial period for new companies (14 days)
-            if (empty($company->trial_ends_at)) {
-                $company->trial_ends_at = now()->addDays(14);
-            }
-        });
-    }
 }

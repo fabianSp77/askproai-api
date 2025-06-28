@@ -8,7 +8,7 @@ return new class extends CompatibleMigration {
     public function up(): void
     {
         if (! Schema::hasTable('appointments')) {
-            Schema::create('appointments', function (Blueprint $table) {
+            $this->createTableIfNotExists('appointments', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
                 $table->string('external_id')->nullable()->index();

@@ -28,11 +28,9 @@ class CallAnalyticsWidget extends ChartWidget
             $hourData = Call::whereBetween('created_at', [
                 $hour->copy()->startOfHour(),
                 $hour->copy()->endOfHour()
-            ])->select(
-                DB::raw('COUNT(*) as total'),
-                DB::raw('COUNT(CASE WHEN appointment_id IS NOT NULL THEN 1 END) as converted'),
-                DB::raw('AVG(duration_sec) as avg_duration')
-            )->first();
+            ])->selectRaw('COUNT(*) as total')
+            ->selectRaw('COUNT(CASE WHEN appointment_id IS NOT NULL THEN 1 END) as converted')
+            ->selectRaw('AVG(duration_sec) as avg_duration')->first();
             
             $data['calls'][] = $hourData && property_exists($hourData, 'total') ? ($hourData->total ?? 0) : 0;
             $data['conversions'][] = $hourData && property_exists($hourData, 'converted') ? ($hourData->converted ?? 0) : 0;

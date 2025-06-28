@@ -1,91 +1,118 @@
-# Retell.ai Webhook Setup
+# Retell.ai Webhook Setup Guide
 
-## Problem: "Es werden keine Anrufe eingespielt"
+## =¨ **WICHTIG: Webhook URL für automatische Updates**
 
-### Ursachen
-1. **Fehlende Webhook-Registrierung**: Die Webhook-URL muss bei Retell.ai registriert sein
-2. **Fehlende API Keys**: Company hatte keinen `retell_api_key` gesetzt
-3. **Queue Worker**: Horizon muss laufen, um Jobs zu verarbeiten
+Damit Anrufe automatisch ohne manuellen Import angezeigt werden, müssen Sie in Retell.ai die richtige Webhook URL konfigurieren.
 
-### LÃ¶sung
-
-#### 1. Webhook-URL bei Retell.ai registrieren
-
-Die Webhook-URL muss im Retell.ai Dashboard konfiguriert werden:
-
+### 1. **Neue Real-time Webhook URL** (Empfohlen)
 ```
-https://yourdomain.com/api/retell/webhook
+https://api.askproai.de/api/retell/realtime/webhook
 ```
 
-**Wichtig**: 
-- Die URL muss Ã¶ffentlich erreichbar sein
-- HTTPS ist erforderlich
-- Die Signatur-Verifizierung ist aktiviert (`verify.retell.signature` Middleware)
+Diese URL bietet:
+-  Sofortige Verarbeitung ohne Queue-Verzögerung
+-  Live-Updates während laufender Anrufe
+-  Automatische Company-Zuordnung
+-  Bessere Fehlerbehandlung
 
-#### 2. API Key Setup
-
-```bash
-# In .env setzen:
-RETELL_TOKEN=key_6ff998ba48e842092e04a5455d19
-RETELL_WEBHOOK_SECRET=key_6ff998ba48e842092e04a5455d19
-RETELL_BASE=https://api.retellai.com
+### 2. **Legacy Webhook URLs** (Falls Real-time nicht funktioniert)
+```
+https://api.askproai.de/api/retell/webhook
+https://api.askproai.de/api/webhook
 ```
 
-#### 3. Manuelle Anruf-Synchronisation
+### =Ë **Schritt-für-Schritt Anleitung**
 
-Falls Webhooks verpasst wurden, kÃ¶nnen Anrufe manuell importiert werden:
+1. **Login bei Retell.ai**
+   - Gehen Sie zu https://retell.ai/dashboard
+   - Navigieren Sie zu "Settings" ’ "Webhooks"
 
-**Option A: Ãœber die UI**
-- Gehe zur Anrufliste
-- Klicke auf "Anrufe abrufen"
-- BestÃ¤tige den Import
+2. **Webhook URL eintragen**
+   ```
+   Webhook URL: https://api.askproai.de/api/retell/realtime/webhook
+   ```
 
-**Option B: Ãœber die Kommandozeile**
-```bash
-php fix-retell-import.php
-```
+3. **Events aktivieren**
+   Aktivieren Sie ALLE folgenden Events:
+   -  `call_started` - Für Live-Anzeige
+   -  `call_ended` - Für Appointment-Erstellung
+   -  `call_analyzed` - Für Nachbearbeitung
+   -  `call_failed` - Für Fehlerbehandlung
 
-#### 4. Queue Worker sicherstellen
+4. **Webhook Secret kopieren**
+   - Kopieren Sie das Webhook Secret
+   - Fügen Sie es in `.env` ein:
+   ```
+   RETELL_WEBHOOK_SECRET=ihr_webhook_secret_hier
+   ```
 
-```bash
-# Horizon muss laufen:
-php artisan horizon
+5. **Testen**
+   - Klicken Sie auf "Test Webhook" in Retell
+   - Prüfen Sie die Logs: `tail -f storage/logs/laravel.log`
 
-# Oder einzelner Worker:
-php artisan queue:work --queue=webhooks
-```
+### =' **Troubleshooting**
 
-### Debugging
+#### Problem: Anrufe werden nicht angezeigt
+1. **Prüfen Sie Horizon Status**
+   ```bash
+   php artisan horizon:status
+   ```
+   Falls nicht läuft:
+   ```bash
+   php artisan horizon
+   ```
 
-#### PrÃ¼fen ob Webhooks ankommen:
-```bash
-# Logs prÃ¼fen
-tail -f storage/logs/laravel.log | grep -i retell
+2. **Prüfen Sie fehlgeschlagene Jobs**
+   ```bash
+   php artisan queue:failed
+   ```
 
-# Webhook-Tabelle prÃ¼fen
-php artisan tinker
->>> \App\Models\RetellWebhook::latest()->take(5)->get();
-```
+3. **Webhook Logs prüfen**
+   ```bash
+   tail -f storage/logs/laravel.log | grep -i retell
+   ```
 
-#### API-Verbindung testen:
-```bash
-php test-retell-api.php
-```
+#### Problem: Webhook Signature Error
+- Aktuell ist die Signatur-Verifizierung deaktiviert
+- Falls Sie sie aktivieren möchten, stellen Sie sicher, dass das Secret korrekt ist
 
-### Automatischer Flow
+### =Ê **Live Monitoring**
 
-1. **Anruf bei Retell.ai** â†’ 
-2. **Webhook an `/api/retell/webhook`** â†’ 
-3. **Signatur-Verifizierung** â†’ 
-4. **Job in Queue** â†’ 
-5. **ProcessRetellCallEndedJob** â†’ 
-6. **Call in Datenbank**
+1. **Live Calls Widget**
+   - Zeigt aktive Anrufe in Echtzeit
+   - 2-Sekunden Auto-Refresh
+   - Sync-Button für manuellen Import
 
-### Konfiguration in Retell.ai
+2. **Server-Sent Events Stream**
+   ```
+   GET https://api.askproai.de/api/retell/realtime/stream
+   ```
+   - Für eigene Integrationen
+   - Liefert Echtzeit-Updates
 
-Im Retell.ai Dashboard unter "Webhooks" folgende Events aktivieren:
-- `call_ended` (wichtigste Event fÃ¼r vollstÃ¤ndige Daten)
-- `call_started` (optional, fÃ¼r Echtzeit-Tracking)
-- `call_analyzed` (optional, fÃ¼r AI-Insights)
+3. **Active Calls API**
+   ```
+   GET https://api.askproai.de/api/retell/realtime/active-calls
+   ```
+   - JSON Response mit allen aktiven Anrufen
 
-Webhook Secret im Dashboard generieren und in `.env` als `RETELL_WEBHOOK_SECRET` eintragen.
+### =€ **Best Practices**
+
+1. **Verwenden Sie immer die Real-time URL** für beste Performance
+2. **Aktivieren Sie alle Events** für vollständige Datenerfassung
+3. **Monitoren Sie regelmäßig** Failed Jobs in Horizon
+4. **Testen Sie nach Änderungen** mit einem Testanruf
+
+### =Þ **Test-Anruf durchführen**
+
+1. Rufen Sie Ihre Retell-Nummer an
+2. Warten Sie 2-5 Sekunden
+3. Der Anruf sollte im Live Calls Widget erscheinen
+4. Nach Beendigung sollte er in der Anrufliste auftauchen
+
+## Support
+
+Bei Problemen prüfen Sie:
+- `/admin/horizon` - Queue Status
+- `/admin/calls` - Anrufliste
+- `storage/logs/laravel.log` - System Logs

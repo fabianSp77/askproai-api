@@ -1,419 +1,638 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://docs.askproai.de/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/CALCOM_MCP_SERVER_API/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/5-MINUTEN_ONBOARDING_PLAYBOOK/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/CALCOM_V2_API_DOCUMENTATION/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/BEST_PRACTICES_IMPLEMENTATION/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/DASHBOARD_REDESIGN_README/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/CALCOM_MCP_SERVER_API/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/DATABASE_SAFETY_GUIDELINES/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/CALCOM_V2_API_DOCUMENTATION/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/DEPLOYMENT_GUIDE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/CLAUDE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/ENHANCED_BOOKING_SERVICE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/CLAUDE_BEFEHLE_FUER_DICH/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/KNOWLEDGE_MCP_SERVER/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/CLAUDE_CONTEXT_SUMMARY/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/MCP_COMPLETE_OVERVIEW/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/CLAUDE_QUICK_REFERENCE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/MCP_EVOLUTION_SYSTEM/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/CUSTOMER_SUCCESS_RUNBOOK/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/MCP_INTEGRATION_GUIDE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/DASHBOARD_REDESIGN_README/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/MCP_SETUP_COMPLETE_GUIDE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/DATABASE_SAFETY_GUIDELINES/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/MONITORING_AND_ALERTING_GUIDE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/DEPLOYMENT_CHECKLIST/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/PERFORMANCE_INDEXES_MIGRATION/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/DEPLOYMENT_GUIDE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/QUEUE_MCP_IMPLEMENTATION_COMPLETE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/DEVELOPMENT_PROCESS_2025/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/RETELL_WEBHOOK_MCP_MIGRATION_GUIDE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/EMERGENCY_RESPONSE_PLAYBOOK/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/SENTRY_MCP_INTEGRATION/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/ENHANCED_BOOKING_SERVICE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/SERVICE_ARCHITECTURE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/ERROR_PATTERNS/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/STRUCTURED_LOGGER_GUIDE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/INTEGRATION_HEALTH_MONITOR/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/TESTING_STRATEGY/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/KNOWLEDGE_MCP_SERVER/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/TROUBLESHOOTING_GUIDE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/KPI_DASHBOARD_TEMPLATE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/UNIVERSAL_BOOKING_SYSTEM/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/MCP_COMPLETE_OVERVIEW/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/UNIVERSAL_BOOKING_TEST_GUIDE/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/MCP_EVOLUTION_SYSTEM/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/changelog/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/MCP_INTEGRATION_GUIDE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/database_cleanup_plan/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/MCP_SETUP_COMPLETE_GUIDE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/documentation-status-report/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/MONITORING_AND_ALERTING_GUIDE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/quickstart/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/MY_COMMANDS/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/service_consolidation_plan/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/PERFORMANCE_INDEXES_MIGRATION/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/statistics/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/PHONE_TO_APPOINTMENT_FLOW/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/status/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/QUEUE_MCP_IMPLEMENTATION_COMPLETE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/authentication/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/RETELL_WEBHOOK_MCP_MIGRATION_GUIDE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/complete-endpoint-reference/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/SENTRY_MCP_INTEGRATION/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/error-codes/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/SERVICE_ARCHITECTURE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/interactive-examples/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/STRUCTURED_LOGGER_GUIDE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/mcp/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/TESTING_STRATEGY/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/models/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/TOP_10_COMMANDS/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/rate-limiting/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/TROUBLESHOOTING_DECISION_TREE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/reference/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/TROUBLESHOOTING_GUIDE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/rest-v2/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/UNIVERSAL_BOOKING_SYSTEM/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/routes/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/UNIVERSAL_BOOKING_TEST_GUIDE/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/api/webhooks/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/changelog/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/complete-controller-documentation/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/database_cleanup_plan/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/complete-model-documentation/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/documentation-status-report/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/complete-service-layer/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/quickstart/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/data-flow/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/service_consolidation_plan/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/database-schema/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/statistics/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/dependencies/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/status/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/event-system/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/authentication/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/mcp-architecture/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/complete-endpoint-reference/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/overview/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/error-codes/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/performance/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/interactive-examples/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/queue-jobs/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/mcp-endpoints/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/security/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/mcp-gateway/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/services/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/mcp/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/system-architecture/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/mobile/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/architecture/system-design/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/models/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/baseline-2025-06-22/SUMMARY/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/rate-limiting/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/configuration/reference/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/reference/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/api/webhook-schemas/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/rest-v2/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/configuration/cache/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/routes/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/configuration/database/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/api/webhooks/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/configuration/environment/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/complete-controller-documentation/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/configuration/queues/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/complete-model-documentation/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/configuration/security/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/complete-service-layer/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/configuration/services/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/data-flow/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/deployment/backup/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/database-schema/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/deployment/installation/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/dependencies/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/deployment/monitoring/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/event-system/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/deployment/production/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/mcp-architecture/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/deployment/requirements/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/mcp-gateway-architecture/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/deployment/scaling/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/overview/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/development/contributing/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/performance/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/development/debugging/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/queue-jobs/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/development/setup/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/security/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/development/standards/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/services/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/development/testing/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/system-architecture/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/features/analytics/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/architecture/system-design/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/features/customer-portal/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/baseline-2025-06-22/SUMMARY/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/features/gdpr/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/configuration/reference/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/features/knowledge-base/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/api/webhook-schemas/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/integrations/calcom/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/configuration/cache/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/integrations/email/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/configuration/database/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/integrations/retell/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/configuration/environment/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/integrations/sentry/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/configuration/queues/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/integrations/sms/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/configuration/security/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/integrations/stripe/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/configuration/services/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/integrations/whatsapp/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/deployment/backup/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/migration/calcom-v2/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/deployment/installation/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/migration/database-consolidation/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/deployment/monitoring/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/migration/service-unification/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/deployment/production/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/operations/monitoring/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/deployment/requirements/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/docs/operations/troubleshooting/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/deployment/scaling/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/features/appointment-booking/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/development/contributing/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/features/mcp-servers/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/development/debugging/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/features/multi-tenancy/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/development/setup/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/features/phone-system/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/development/standards/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/guides/troubleshooting/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/development/testing/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/integrations/overview/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/features/analytics/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/migration/complete-migration-history/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/features/customer-portal/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/monitoring/live-dashboard/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/features/gdpr/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/monitoring/live-metrics/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/features/knowledge-base/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/operations/security-audit/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/integrations/calcom/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/performance/metrics/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/integrations/email/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://docs.askproai.de/workflows/business-workflows/</loc>
-         <lastmod>2025-06-23</lastmod>
+         <loc>https://api.askproai.de/mkdocs/docs/integrations/retell/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/docs/integrations/sentry/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/docs/integrations/sms/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/docs/integrations/stripe/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/docs/integrations/whatsapp/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/docs/migration/calcom-v2/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/docs/migration/database-consolidation/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/docs/migration/service-unification/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/docs/operations/monitoring/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/docs/operations/troubleshooting/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/features/appointment-booking/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/features/knowledge-base/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/features/mcp-servers/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/features/multi-tenancy/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/features/phone-system/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/features/retell-webhook-configuration/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/guides/troubleshooting/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/integrations/overview/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/migration/complete-migration-history/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/monitoring/live-dashboard/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/monitoring/live-metrics/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/operations/security-audit/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/performance/metrics/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://api.askproai.de/mkdocs/workflows/business-workflows/</loc>
+         <lastmod>2025-06-28</lastmod>
+         <changefreq>daily</changefreq>
     </url>
 </urlset>

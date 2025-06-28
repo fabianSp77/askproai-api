@@ -12,7 +12,7 @@ return new class extends CompatibleMigration
     public function up(): void
     {
         if (!Schema::hasTable('logs')) {
-            Schema::create('logs', function (Blueprint $table) {
+            $this->createTableIfNotExists('logs', function (Blueprint $table) {
                 $table->id();
                 $table->string('level', 20)->index();
                 $table->text('message');
@@ -31,6 +31,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('logs');
+        $this->dropTableIfExists('logs');
     }
 };

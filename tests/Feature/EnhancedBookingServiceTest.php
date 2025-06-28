@@ -14,6 +14,7 @@ use App\Services\CircuitBreaker\CircuitBreaker;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class EnhancedBookingServiceTest extends TestCase
@@ -55,6 +56,7 @@ class EnhancedBookingServiceTest extends TestCase
     /**
      * Test successful appointment creation
      */
+    #[Test]
     public function test_can_create_appointment_successfully()
     {
         // Mock Cal.com service
@@ -111,6 +113,7 @@ class EnhancedBookingServiceTest extends TestCase
     /**
      * Test appointment creation with Cal.com failure (should still succeed)
      */
+    #[Test]
     public function test_appointment_succeeds_even_if_calcom_fails()
     {
         // Mock Cal.com service to fail
@@ -146,6 +149,7 @@ class EnhancedBookingServiceTest extends TestCase
     /**
      * Test slot unavailable error
      */
+    #[Test]
     public function test_fails_when_slot_is_unavailable()
     {
         // Create existing appointment
@@ -178,6 +182,7 @@ class EnhancedBookingServiceTest extends TestCase
     /**
      * Test booking from phone call data
      */
+    #[Test]
     public function test_can_book_from_phone_call_data()
     {
         $callData = [
@@ -205,6 +210,7 @@ class EnhancedBookingServiceTest extends TestCase
     /**
      * Test circuit breaker functionality
      */
+    #[Test]
     public function test_circuit_breaker_opens_after_failures()
     {
         // Get circuit breaker instance
@@ -243,6 +249,7 @@ class EnhancedBookingServiceTest extends TestCase
     /**
      * Test finding existing customer by phone
      */
+    #[Test]
     public function test_finds_existing_customer_by_phone()
     {
         // Create existing customer

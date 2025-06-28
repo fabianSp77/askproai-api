@@ -2,14 +2,15 @@
 
 namespace Tests\Integration\Stripe;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
-use App\Services\TaxService;
 use App\Services\InvoiceComplianceService;
+use App\Services\TaxService;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class TaxComplianceIntegrationTest extends TestCase
 {
@@ -50,6 +51,7 @@ class TaxComplianceIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_applies_reverse_charge_for_eu_b2b()
     {
         $company = Company::factory()->create([
@@ -109,6 +111,7 @@ class TaxComplianceIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_non_eu_countries_with_zero_tax()
     {
         $countries = ['US', 'CA', 'JP', 'AU', 'CH', 'NO'];
@@ -164,6 +167,7 @@ class TaxComplianceIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_generates_compliant_invoice_numbers()
     {
         $company = Company::factory()->create();
@@ -228,6 +232,7 @@ class TaxComplianceIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_detects_non_compliant_invoices()
     {
         $company = Company::factory()->create([
@@ -277,6 +282,7 @@ class TaxComplianceIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_tax_exempt_services()
     {
         $company = Company::factory()->create([
@@ -353,6 +359,7 @@ class TaxComplianceIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_currency_conversion_for_tax_calculation()
     {
         $company = Company::factory()->create([

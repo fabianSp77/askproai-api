@@ -40,9 +40,14 @@ class RetellConfigurationCenter extends Page implements HasForms, HasTable
     use InteractsWithForms, InteractsWithTable;
     
     protected static ?string $navigationIcon = 'heroicon-o-phone-arrow-up-right';
-    protected static ?string $navigationGroup = 'System';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static ?string $navigationLabel = 'Retell Configuration Center';
-    protected static ?int $navigationSort = 100;
+    protected static ?int $navigationSort = 2;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - Use RetellUltimateControlCenter instead
+    }
     protected static ?string $title = 'Retell Configuration Center';
     
     protected static string $view = 'filament.admin.pages.retell-configuration-center';
@@ -428,7 +433,8 @@ class RetellConfigurationCenter extends Page implements HasForms, HasTable
                 ->required()
                 ->url()
                 ->default(url('/api/retell/webhook'))
-                ->copyable(),
+                ->hint('Click to copy')
+                ->extraAttributes(['readonly' => true]),
                 
             Select::make('webhook_events')
                 ->label('Webhook Events')
@@ -446,11 +452,13 @@ class RetellConfigurationCenter extends Page implements HasForms, HasTable
         ];
     }
     
-    public function agentForm(Form $form): Form
+    protected function getForms(): array
     {
-        return $form
-            ->schema($this->getAgentFormSchema())
-            ->statePath('agentData');
+        return [
+            'agentForm' => $this->makeForm()
+                ->schema($this->getAgentFormSchema())
+                ->statePath('agentData'),
+        ];
     }
     
     // Table Configuration
@@ -471,7 +479,7 @@ class RetellConfigurationCenter extends Page implements HasForms, HasTable
                     
                 TextColumn::make('call_id')
                     ->label('Call ID')
-                    ->copyable()
+                    ->searchable()
                     ->limit(20),
                     
                 TextColumn::make('status')
@@ -601,7 +609,7 @@ class RetellConfigurationCenter extends Page implements HasForms, HasTable
     public function activeAgents()
     {
         return RetellAgent::where('company_id', auth()->user()->company_id)
-            ->where('active', true)
+            ->where('is_active', true)
             ->with('phoneNumber')
             ->get();
     }

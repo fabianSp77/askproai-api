@@ -31,7 +31,7 @@ class EventTypeSetupWizard extends Page implements HasForms
     
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
     protected static ?string $navigationLabel = 'Event-Type Konfiguration';
-    protected static ?string $navigationGroup = 'Einrichtung & Konfiguration';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static ?int $navigationSort = 15;
     protected static ?string $title = 'Event-Type Konfiguration';
     

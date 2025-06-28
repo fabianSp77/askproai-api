@@ -2,16 +2,17 @@
 
 namespace Tests\Integration\MCP;
 
+use App\Services\CalcomV2Service;
 use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\CircuitBreaker\CircuitState;
 use App\Services\MCP\MCPOrchestrator;
-use App\Services\CalcomV2Service;
 use App\Services\RetellService;
-use Tests\TestCase;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CircuitBreakerTest extends TestCase
 {
@@ -30,6 +31,8 @@ class CircuitBreakerTest extends TestCase
         Cache::forget("circuit_breaker.{$this->testService}.last_failure");
     }
 
+    #[Test]
+
     public function test_circuit_starts_closed()
     {
         $state = $this->circuitBreaker->getState($this->testService);
@@ -37,6 +40,8 @@ class CircuitBreakerTest extends TestCase
         $this->assertEquals(CircuitState::CLOSED, $state);
         $this->assertEquals(0, $this->circuitBreaker->getFailureCount($this->testService));
     }
+
+    #[Test]
 
     public function test_circuit_opens_after_threshold_failures()
     {
@@ -66,6 +71,8 @@ class CircuitBreakerTest extends TestCase
         });
     }
 
+    #[Test]
+
     public function test_circuit_transitions_to_half_open()
     {
         // Open the circuit
@@ -91,6 +98,8 @@ class CircuitBreakerTest extends TestCase
         $this->assertEquals(CircuitState::CLOSED, $state);
     }
 
+    #[Test]
+
     public function test_circuit_reopens_on_half_open_failure()
     {
         // Open the circuit
@@ -112,6 +121,8 @@ class CircuitBreakerTest extends TestCase
         $state = $this->circuitBreaker->getState($this->testService);
         $this->assertEquals(CircuitState::OPEN, $state);
     }
+
+    #[Test]
 
     public function test_circuit_breaker_with_calcom_service()
     {
@@ -155,6 +166,8 @@ class CircuitBreakerTest extends TestCase
         ]);
     }
 
+    #[Test]
+
     public function test_circuit_breaker_with_retell_service()
     {
         // Mock Retell API failures
@@ -183,6 +196,8 @@ class CircuitBreakerTest extends TestCase
         $this->assertEquals(CircuitState::OPEN, $state);
     }
 
+    #[Test]
+
     public function test_circuit_breaker_fallback_mechanism()
     {
         // Open the circuit
@@ -201,6 +216,8 @@ class CircuitBreakerTest extends TestCase
         
         $this->assertEquals('Fallback response', $result);
     }
+
+    #[Test]
 
     public function test_circuit_breaker_metrics()
     {
@@ -229,6 +246,8 @@ class CircuitBreakerTest extends TestCase
         $this->assertEquals(60, $metrics['success_rate']);
         $this->assertEquals(CircuitState::CLOSED, $metrics['current_state']);
     }
+
+    #[Test]
 
     public function test_circuit_breaker_different_services_isolated()
     {
@@ -259,6 +278,8 @@ class CircuitBreakerTest extends TestCase
         
         $this->assertEquals('Service 2 works', $result);
     }
+
+    #[Test]
 
     public function test_circuit_breaker_with_custom_configuration()
     {
@@ -291,6 +312,8 @@ class CircuitBreakerTest extends TestCase
         $this->assertEquals(CircuitState::HALF_OPEN, $this->circuitBreaker->getState($customService));
     }
 
+    #[Test]
+
     public function test_circuit_breaker_reset_functionality()
     {
         // Open the circuit
@@ -304,6 +327,8 @@ class CircuitBreakerTest extends TestCase
         $this->assertEquals(CircuitState::CLOSED, $this->circuitBreaker->getState($this->testService));
         $this->assertEquals(0, $this->circuitBreaker->getFailureCount($this->testService));
     }
+
+    #[Test]
 
     public function test_circuit_breaker_concurrent_requests()
     {
@@ -328,6 +353,8 @@ class CircuitBreakerTest extends TestCase
         $this->assertCount(5, array_filter($exceptions, fn($msg) => $msg === 'Failure'));
         $this->assertGreaterThan(0, count(array_filter($exceptions, fn($msg) => str_contains($msg, 'Circuit breaker is OPEN'))));
     }
+
+    #[Test]
 
     public function test_mcp_orchestrator_handles_circuit_breaker()
     {

@@ -2,11 +2,12 @@
 
 namespace Tests\Unit\Services\Webhook;
 
-use Tests\TestCase;
 use App\Services\Webhook\WebhookDeduplicationService;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class WebhookDeduplicationServiceTest extends TestCase
 {
@@ -26,6 +27,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         Redis::flushdb();
         parent::tearDown();
     }
+    
+    #[Test]
     
     public function test_process_with_deduplication_allows_first_request()
     {
@@ -50,6 +53,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         $this->assertTrue($processed);
         $this->assertEquals('Processed successfully', $result['data']['message']);
     }
+    
+    #[Test]
     
     public function test_process_with_deduplication_blocks_duplicate_request()
     {
@@ -84,6 +89,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         $this->assertFalse($secondProcessed); // Processor should not have been called
         $this->assertEquals('Webhook already processed', $secondResult['message']);
     }
+    
+    #[Test]
     
     public function test_concurrent_requests_only_one_processes()
     {
@@ -131,6 +138,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         $this->assertEquals(4, $duplicateCount);
     }
     
+    #[Test]
+    
     public function test_failed_processing_allows_retry()
     {
         $webhookId = 'retry_test_' . time();
@@ -165,6 +174,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         $this->assertEquals(2, $attemptCount);
     }
     
+    #[Test]
+    
     public function test_different_webhook_ids_process_independently()
     {
         $provider = 'retell';
@@ -190,6 +201,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         }
     }
     
+    #[Test]
+    
     public function test_is_processed_detects_completed_webhooks()
     {
         $webhookId = 'detection_test_' . time();
@@ -210,6 +223,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         // Now should be detected as processed
         $this->assertTrue($this->service->isProcessed($webhookId, $provider));
     }
+    
+    #[Test]
     
     public function test_acquire_lock_prevents_concurrent_processing()
     {
@@ -235,6 +250,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         $this->service->releaseLock($webhookId, $provider);
     }
     
+    #[Test]
+    
     public function test_mark_as_processed_stores_metadata()
     {
         $webhookId = 'metadata_test_' . time();
@@ -249,6 +266,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         $this->assertArrayHasKey('success', $metadata);
         $this->assertTrue($metadata['success']);
     }
+    
+    #[Test]
     
     public function test_cleanup_expired_locks()
     {
@@ -267,6 +286,8 @@ class WebhookDeduplicationServiceTest extends TestCase
         $this->assertTrue($this->service->acquireLock($webhookId, $provider));
         $this->service->releaseLock($webhookId, $provider);
     }
+    
+    #[Test]
     
     public function test_high_load_simulation()
     {
@@ -311,6 +332,8 @@ class WebhookDeduplicationServiceTest extends TestCase
             $this->assertEquals(1, $count, "Webhook $index was processed $count times instead of 1");
         }
     }
+    
+    #[Test]
     
     public function test_different_providers_isolated()
     {

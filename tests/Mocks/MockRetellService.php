@@ -2,12 +2,13 @@
 
 namespace Tests\Mocks;
 
-use App\Services\RetellV2Service;
-use Illuminate\Support\Str;
-
 /**
  * Mock implementation of RetellV2Service for testing
  */
+use App\Services\RetellV2Service;
+use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
+
 class MockRetellService extends RetellV2Service
 {
     private array $calls = [];

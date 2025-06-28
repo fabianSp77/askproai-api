@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use App\Services\Traits\RetryableHttpClient;
 use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\Logging\ProductionLogger;
@@ -43,7 +44,7 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
         return $this->circuitBreaker->call('retell', function() use ($payload) {
             return $this->httpWithRetry()
                 ->withToken($this->token)
-                ->post($this->url . '/v2/create-phone-call', $payload)
+                ->post($this->url . '/create-phone-call', $payload)
                 ->throw()
                 ->json();
         });
@@ -121,7 +122,10 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
                 ->get($url);
             
             if ($response->successful()) {
-                return $response->json();
+                $agent = $response->json();
+                // Cache agent for fallback
+                Cache::put("retell_agent_{$agentId}", $agent, 3600);
+                return $agent;
             }
             
             $this->logger->logError(new \Exception('Failed to get agent'), [
@@ -130,6 +134,16 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
                 'agent_id' => $agentId
             ]);
             
+            return null;
+        }, function() use ($agentId) {
+            // Fallback: Return cached agent if available
+            $cachedAgent = Cache::get("retell_agent_{$agentId}");
+            if ($cachedAgent) {
+                Log::warning('Using cached agent due to circuit breaker', [
+                    'agent_id' => $agentId
+                ]);
+                return $cachedAgent;
+            }
             return null;
         });
     }
@@ -154,6 +168,13 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
             }
             
             return ['agents' => []];
+        }, function() {
+            // Fallback: Return cached agents if available
+            $cachedAgents = Cache::get('retell_agents_fallback', []);
+            Log::warning('Using cached agents due to circuit breaker', [
+                'cached_count' => count($cachedAgents)
+            ]);
+            return ['agents' => $cachedAgents];
         });
     }
     
@@ -201,7 +222,7 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
         return $this->circuitBreaker->call('retell', function() use ($callId) {
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->get($this->url . '/v2/get-call/' . $callId);
+                ->get($this->url . '/get-call/' . $callId);
             
             if ($response->successful()) {
                 return $response->json();
@@ -225,7 +246,12 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
                 ]);
             
             if ($response->successful()) {
-                return $response->json();
+                $data = $response->json();
+                // Normalize response to always have 'calls' key
+                if (isset($data['results'])) {
+                    return ['calls' => $data['results']];
+                }
+                return ['calls' => $data];
             }
             
             return ['calls' => []];
@@ -263,7 +289,7 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
         return $this->circuitBreaker->call('retell', function() use ($phoneNumberId) {
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->get($this->url . '/v2/get-phone-number/' . $phoneNumberId);
+                ->get($this->url . '/get-phone-number/' . $phoneNumberId);
             
             if ($response->successful()) {
                 return $response->json();

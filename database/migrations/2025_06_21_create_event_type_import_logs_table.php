@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('event_type_import_logs', function (Blueprint $table) {
+        $this->createTableIfNotExists('event_type_import_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->uuid('branch_id');
@@ -42,6 +42,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('event_type_import_logs');
+        $this->dropTableIfExists('event_type_import_logs');
     }
 };

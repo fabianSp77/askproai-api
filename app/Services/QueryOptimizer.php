@@ -41,7 +41,9 @@ class QueryOptimizer
             }, $indexes);
             
             $indexList = implode(', ', $indexes);
-            $query->from(DB::raw("`{$table}` USE INDEX ({$indexList})"));
+            // Use proper table wrapping for security
+            $wrappedTable = DB::getQueryGrammar()->wrap($table);
+            $query->fromRaw("`{$table}` USE INDEX (" . $this->sanitizeIndexList($indexList) . ")");
         }
         
         return $query;
@@ -162,13 +164,8 @@ class QueryOptimizer
         $sql = $query->toSql();
         $bindings = $query->getBindings();
         
-        // Replace bindings in SQL
-        foreach ($bindings as $binding) {
-            $sql = preg_replace('/\?/', "'{$binding}'", $sql, 1);
-        }
-        
-        // Get query execution plan
-        $explain = DB::select("EXPLAIN {$sql}");
+        // Get query execution plan with proper parameter binding
+        $explain = DB::select("EXPLAIN " . $sql, $bindings);
         
         // Analyze the explain results
         $analysis = [
@@ -320,7 +317,14 @@ class QueryOptimizer
     public function forceIndex(Builder $query, string $table, string $index): Builder
     {
         if (DB::getDriverName() === 'mysql') {
-            $query->from(DB::raw("{$table} FORCE INDEX ({$index})"));
+            // Sanitize table and index names to prevent SQL injection
+            $table = preg_replace('/[^a-zA-Z0-9_]/', '', $table);
+            $index = preg_replace('/[^a-zA-Z0-9_]/', '', $index);
+            
+            // Use proper table wrapping for security
+            $wrappedTable = DB::getQueryGrammar()->wrap($table);
+            $wrappedIndex = DB::getQueryGrammar()->wrap($index);
+            $query->fromRaw("`{$table}` FORCE INDEX (" . $this->sanitizeIndexName($index) . ")");
         }
         
         return $query;

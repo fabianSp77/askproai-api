@@ -2,25 +2,26 @@
 
 namespace Tests\Integration\Stripe;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Appointment;
+use App\Models\BillingPeriod;
+use App\Models\Call;
 use App\Models\Company;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
-use App\Models\BillingPeriod;
-use App\Models\Call;
-use App\Models\Appointment;
-use App\Services\StripeInvoiceService;
 use App\Services\PricingService;
+use App\Services\StripeInvoiceService;
 use App\Services\TaxService;
+use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
-use Stripe\StripeClient;
+use PHPUnit\Framework\Attributes\Test;
+use Stripe\Charge;
 use Stripe\Customer as StripeCustomer;
 use Stripe\Invoice as StripeInvoice;
 use Stripe\PaymentIntent;
-use Stripe\Charge;
-use Carbon\Carbon;
+use Stripe\StripeClient;
+use Tests\TestCase;
 
 class StripeInvoiceWorkflowTest extends TestCase
 {
@@ -246,6 +247,7 @@ class StripeInvoiceWorkflowTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_invoice_generation_with_discounts_and_credits()
     {
         // Setup company with discount
@@ -369,6 +371,7 @@ class StripeInvoiceWorkflowTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_generates_invoice_with_complex_tax_scenarios()
     {
         // EU B2B customer with reverse charge

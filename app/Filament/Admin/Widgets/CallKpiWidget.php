@@ -10,7 +10,7 @@ use Illuminate\Support\Number;
 
 class CallKpiWidget extends BaseWidget
 {
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $pollingInterval = '5s';
     
     protected function getStats(): array
     {

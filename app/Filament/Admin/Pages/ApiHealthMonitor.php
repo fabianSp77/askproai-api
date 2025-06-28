@@ -13,10 +13,10 @@ class ApiHealthMonitor extends Page
 {
     
     protected static ?string $navigationIcon = 'heroicon-o-heart';
-    protected static ?string $navigationLabel = 'API Health Monitor';
-    protected static ?string $title = '🩺 API Health Monitor';
-    protected static ?string $navigationGroup = 'System & Überwachung';
-    protected static ?int $navigationSort = 100;
+    protected static ?string $navigationLabel = 'API Monitor';
+    protected static ?string $title = 'API Health Monitor';
+    protected static ?string $navigationGroup = 'System';
+    protected static ?int $navigationSort = 115;
     
     protected static string $view = 'filament.admin.pages.api-health-monitor';
     

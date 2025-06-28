@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('notification_log', function (Blueprint $table) {
+        $this->createTableIfNotExists('notification_log', function (Blueprint $table) {
             $table->id();
             $table->foreignId('appointment_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
@@ -35,6 +35,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notification_log');
+        $this->dropTableIfExists('notification_log');
     }
 };

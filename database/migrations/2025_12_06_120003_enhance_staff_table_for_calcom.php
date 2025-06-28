@@ -24,14 +24,24 @@ return new class extends CompatibleMigration
 
     public function down(): void
     {
-        Schema::table('staff', function (Blueprint $table) {
-            $columns = ['calcom_username', 'working_hours'];
-            
-            foreach ($columns as $column) {
-                if (Schema::hasColumn('staff', $column)) {
-                    $table->dropColumn($column);
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+
+        // Skip column drops in SQLite due to limitations
+        if (!$this->isSQLite()) {
+            Schema::table('staff', function (Blueprint $table) {
+                $columns = ['calcom_username', 'working_hours'];
+                
+                foreach ($columns as $column) {
+                    if (Schema::hasColumn('staff', $column)) {
+                        $table->dropColumn($column);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 };

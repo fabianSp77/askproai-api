@@ -14,7 +14,7 @@ class EnhancedWebhookDeduplicationService extends WebhookDeduplicationService
      * Enhanced Lua script for atomic check-set-and-complete operation
      * This script handles the complete lifecycle in one atomic operation
      */
-    private const LUA_COMPLETE_LIFECYCLE = <<<'LUA'
+    protected const LUA_COMPLETE_LIFECYCLE = <<<'LUA'
         local processedKey = KEYS[1]
         local processingKey = KEYS[2]
         local failedKey = KEYS[3]
@@ -233,10 +233,14 @@ class EnhancedWebhookDeduplicationService extends WebhookDeduplicationService
      * This method combines Redis and database operations atomically
      */
     public function processWithDeduplication(
-        string $service,
-        Request $request,
+        string $webhookId,
+        string $provider,
         callable $processor
     ): array {
+        // For compatibility, we'll use the provider as service
+        $service = $provider;
+        // Create a dummy request for backward compatibility
+        $request = request();
         // Step 1: Check and start processing
         $checkResult = $this->checkAndStartProcessing($service, $request);
         

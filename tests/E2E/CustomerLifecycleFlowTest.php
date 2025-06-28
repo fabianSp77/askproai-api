@@ -2,27 +2,28 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Notification;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Customer;
+use App\Mail\AppointmentCancellation;
+use App\Mail\AppointmentConfirmation;
+use App\Mail\WelcomeEmail;
 use App\Models\Appointment;
-use App\Models\Call;
-use App\Models\User;
+use App\Models\Branch;
 use App\Models\CalcomBooking;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Models\User;
 use App\Notifications\AppointmentReminder;
 use App\Notifications\NoShowWarning;
-use App\Mail\WelcomeEmail;
-use App\Mail\AppointmentConfirmation;
-use App\Mail\AppointmentCancellation;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CustomerLifecycleFlowTest extends TestCase
 {
@@ -93,7 +94,6 @@ class CustomerLifecycleFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function complete_customer_lifecycle_from_creation_to_loyalty()
@@ -386,7 +386,6 @@ class CustomerLifecycleFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_customer_reactivation_after_long_absence()
@@ -462,7 +461,6 @@ class CustomerLifecycleFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function tracks_customer_communication_preferences()
@@ -515,7 +513,6 @@ class CustomerLifecycleFlowTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function handles_customer_data_export_request()

@@ -13,10 +13,76 @@ use Filament\Tables\Filters\SelectFilter;
 
 class ServiceResource extends Resource
 {
+    protected static ?string $navigationGroup = 'Verwaltung';
+    protected static ?int $navigationSort = 95;
 
     public static function canViewAny(): bool
     {
-        return true;
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission or if user belongs to a company
+        return $user->can('view_any_service') || $user->company_id !== null;
+    }
+    
+    public static function canView($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('view_service')) {
+            return true;
+        }
+        
+        // Users can view services from their own company
+        return $user->company_id === $record->company_id;
+    }
+    
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can edit all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('update_service')) {
+            return true;
+        }
+        
+        // Company admins and branch managers can edit services
+        return $user->company_id === $record->company_id && 
+               ($user->hasRole('company_admin') || $user->hasRole('branch_manager'));
+    }
+    
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can create
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('create_service')) {
+            return true;
+        }
+        
+        // Company admins and branch managers can create services
+        return $user->company_id !== null && 
+               ($user->hasRole('company_admin') || $user->hasRole('branch_manager'));
     }
 
     use HasConsistentNavigation;
@@ -61,6 +127,7 @@ class ServiceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with(['company']))
             ->columns([
                 Tables\Columns\TextColumn::make('company.name')
                     ->label('Unternehmen')

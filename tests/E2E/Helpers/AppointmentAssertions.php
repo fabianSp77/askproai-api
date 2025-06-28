@@ -2,16 +2,7 @@
 
 namespace Tests\E2E\Helpers;
 
-use PHPUnit\Framework\Assert;
-use App\Models\Appointment;
-use App\Models\Customer;
-use App\Models\Call;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Test;
 
 trait AppointmentAssertions
 {

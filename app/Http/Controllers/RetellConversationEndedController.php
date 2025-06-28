@@ -26,8 +26,18 @@ class RetellConversationEndedController
                 return response()->json(['error' => 'Invalid event type'], 400);
             }
 
+            // Resolve company ID from webhook
+            $companyResolver = app(\App\Services\Webhook\WebhookCompanyResolver::class);
+            $companyId = $companyResolver->resolveFromWebhook($request->all());
+            
+            // Create job with company context
+            $job = new ProcessRetellCallEndedJob($request->all());
+            if ($companyId) {
+                $job->setCompanyId($companyId);
+            }
+            
             // Dispatch job for async processing
-            ProcessRetellCallEndedJob::dispatch($request->all())
+            dispatch($job)
                 ->onQueue('webhooks')
                 ->delay(now()->addSeconds(1));
 

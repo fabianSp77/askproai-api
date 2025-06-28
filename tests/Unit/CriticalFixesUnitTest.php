@@ -2,17 +2,19 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
+use App\Services\Provisioning\ProvisioningValidator;
 use App\Services\Validation\PhoneNumberValidator;
 use App\Services\Webhook\WebhookDeduplicationService;
-use App\Services\Provisioning\ProvisioningValidator;
 use Illuminate\Http\Request;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CriticalFixesUnitTest extends TestCase
 {
     /**
      * Test Phone Validation
      */
+    #[Test]
     public function test_phone_validation()
     {
         $validator = new PhoneNumberValidator();
@@ -39,6 +41,7 @@ class CriticalFixesUnitTest extends TestCase
     /**
      * Test Webhook Deduplication Service initialization
      */
+    #[Test]
     public function test_webhook_deduplication_service_creation()
     {
         $service = new WebhookDeduplicationService();
@@ -48,6 +51,7 @@ class CriticalFixesUnitTest extends TestCase
     /**
      * Test Provisioning Validator initialization
      */
+    #[Test]
     public function test_provisioning_validator_creation()
     {
         $validator = new ProvisioningValidator();

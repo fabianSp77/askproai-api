@@ -2,21 +2,22 @@
 
 namespace Tests\Feature\API\V2;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\RateLimiter;
-use App\Models\Company;
-use App\Models\Tenant;
-use App\Models\Customer;
-use App\Models\Call;
+use App\Jobs\ProcessCalcomWebhookJob;
+use App\Jobs\ProcessRetellCallJob;
 use App\Models\Appointment;
 use App\Models\CalcomEventType;
-use App\Jobs\ProcessRetellCallJob;
-use App\Jobs\ProcessCalcomWebhookJob;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Tenant;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\RateLimiter;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class WebhookApiTest extends TestCase
 {
@@ -53,6 +54,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test Retell webhook without signature is rejected
      */
+    #[Test]
     public function test_retell_webhook_without_signature_is_rejected()
     {
         $response = $this->postJson('/api/v2/public/webhooks/retell', [
@@ -68,6 +70,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test Retell webhook with invalid signature is rejected
      */
+    #[Test]
     public function test_retell_webhook_with_invalid_signature_is_rejected()
     {
         $payload = [
@@ -90,6 +93,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test successful Retell webhook for completed call
      */
+    #[Test]
     public function test_retell_webhook_processes_completed_call()
     {
         Queue::fake();
@@ -144,6 +148,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test Retell webhook validation
      */
+    #[Test]
     public function test_retell_webhook_validates_required_fields()
     {
         $payload = [
@@ -167,6 +172,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test Retell webhook for different call statuses
      */
+    #[Test]
     public function test_retell_webhook_handles_different_call_statuses()
     {
         Queue::fake();
@@ -200,6 +206,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test Cal.com webhook without signature is rejected
      */
+    #[Test]
     public function test_calcom_webhook_without_signature_is_rejected()
     {
         $response = $this->postJson('/api/v2/public/webhooks/calcom', [
@@ -215,6 +222,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test successful Cal.com booking created webhook
      */
+    #[Test]
     public function test_calcom_webhook_processes_booking_created()
     {
         Queue::fake();
@@ -286,6 +294,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test Cal.com webhook for different trigger events
      */
+    #[Test]
     public function test_calcom_webhook_handles_different_trigger_events()
     {
         Queue::fake();
@@ -336,6 +345,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test webhook rate limiting
      */
+    #[Test]
     public function test_webhook_rate_limiting_is_enforced()
     {
         // Clear rate limiter
@@ -373,6 +383,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test webhook creates customer from call data
      */
+    #[Test]
     public function test_retell_webhook_creates_customer_from_call()
     {
         $payload = [
@@ -409,6 +420,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test webhook creates appointment from call data
      */
+    #[Test]
     public function test_retell_webhook_creates_appointment_from_call()
     {
         $customer = Customer::factory()->create([
@@ -452,6 +464,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test webhook idempotency
      */
+    #[Test]
     public function test_webhook_handles_duplicate_requests_idempotently()
     {
         $payload = [
@@ -482,6 +495,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test webhook error handling
      */
+    #[Test]
     public function test_webhook_handles_processing_errors_gracefully()
     {
         // Simulate an error by sending invalid data that will cause processing to fail
@@ -512,6 +526,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test webhook tenant identification
      */
+    #[Test]
     public function test_webhook_identifies_tenant_from_api_key()
     {
         // Create another tenant
@@ -546,6 +561,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test webhook with large payload
      */
+    #[Test]
     public function test_webhook_handles_large_payloads()
     {
         // Create a large transcript
@@ -577,6 +593,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test webhook logging
      */
+    #[Test]
     public function test_webhook_logs_requests_and_responses()
     {
         Log::shouldReceive('info')
@@ -608,6 +625,7 @@ class WebhookApiTest extends TestCase
     /**
      * Test webhook response time
      */
+    #[Test]
     public function test_webhook_responds_quickly()
     {
         $payload = [

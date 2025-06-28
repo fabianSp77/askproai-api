@@ -12,12 +12,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use App\Scopes\TenantScope;
+use App\Listeners\CallEventListener;
 
 class Call extends Model
 {
     use BelongsToCompany;
 
     use HasFactory;
+    
+    /**
+     * The event map for the model.
+     *
+     * @var array
+     */
+    protected $dispatchesEvents = [
+        'created' => \App\Events\CallCreated::class,
+        'updated' => \App\Events\CallUpdated::class,
+    ];
 
     protected $fillable = [
         'call_id',
@@ -221,7 +232,6 @@ class Call extends Model
     {
         return $query->with([
             'customer:id,name,phone,email',
-            'agent:id,name',
             'appointment:id,starts_at,status'
         ]);
     }
@@ -495,5 +505,13 @@ class Call extends Model
     public function staff(): BelongsTo
     {
         return $this->belongsTo(Staff::class);
+    }
+    
+    /**
+     * ML Prediction relationship
+     */
+    public function mlPrediction()
+    {
+        return $this->hasOne(MLCallPrediction::class);
     }
 }

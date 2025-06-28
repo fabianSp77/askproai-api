@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('security_logs', function (Blueprint $table) {
+        $this->createTableIfNotExists('security_logs', function (Blueprint $table) {
             $table->id();
             $table->string('type')->index(); // failed_login, suspicious_activity, etc.
             $table->string('ip_address')->index();
@@ -36,6 +36,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('security_logs');
+        $this->dropTableIfExists('security_logs');
     }
 };

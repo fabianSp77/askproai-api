@@ -10,7 +10,7 @@ return new class extends CompatibleMigration
     {
         // Create datev_configurations table
         if (!Schema::hasTable('datev_configurations')) {
-            Schema::create('datev_configurations', function (Blueprint $table) {
+            $this->createTableIfNotExists('datev_configurations', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->onDelete('cascade');
                 $table->string('consultant_number', 7)->nullable();
@@ -26,7 +26,7 @@ return new class extends CompatibleMigration
         
         // Create tax_threshold_monitoring table
         if (!Schema::hasTable('tax_threshold_monitoring')) {
-            Schema::create('tax_threshold_monitoring', function (Blueprint $table) {
+            $this->createTableIfNotExists('tax_threshold_monitoring', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->onDelete('cascade');
                 $table->year('year');
@@ -42,7 +42,7 @@ return new class extends CompatibleMigration
     
     public function down()
     {
-        Schema::dropIfExists('tax_threshold_monitoring');
-        Schema::dropIfExists('datev_configurations');
+        $this->dropTableIfExists('tax_threshold_monitoring');
+        $this->dropTableIfExists('datev_configurations');
     }
 };

@@ -2,8 +2,9 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\Mocks\MockRetellService;
+use Tests\TestCase;
 
 class MockRetellServiceTest extends TestCase
 {
@@ -21,6 +22,8 @@ class MockRetellServiceTest extends TestCase
         parent::tearDown();
     }
     
+    #[Test]
+    
     public function test_can_add_and_retrieve_mock_calls()
     {
         // Add a mock call
@@ -37,6 +40,8 @@ class MockRetellServiceTest extends TestCase
         $this->assertEquals('Test call', $call['transcript']);
     }
     
+    #[Test]
+    
     public function test_can_filter_calls_by_status()
     {
         // Add multiple calls
@@ -51,6 +56,8 @@ class MockRetellServiceTest extends TestCase
         $this->assertCount(2, $endedCalls);
         $this->assertCount(1, $activeCalls);
     }
+    
+    #[Test]
     
     public function test_can_create_and_update_agents()
     {
@@ -72,6 +79,8 @@ class MockRetellServiceTest extends TestCase
         $this->assertEquals('de-DE-KatjaNeural', $updated['voice_id']);
     }
     
+    #[Test]
+    
     public function test_can_simulate_failures()
     {
         $this->service->shouldFail('API Error');
@@ -81,6 +90,8 @@ class MockRetellServiceTest extends TestCase
         
         $this->service->getCalls();
     }
+    
+    #[Test]
     
     public function test_can_generate_realistic_scenarios()
     {
@@ -94,6 +105,8 @@ class MockRetellServiceTest extends TestCase
         $this->assertNotNull($call['call_analysis']['customer_name']);
         $this->assertStringContainsString('Termin', $call['transcript']);
     }
+    
+    #[Test]
     
     public function test_can_simulate_webhooks()
     {
@@ -110,6 +123,8 @@ class MockRetellServiceTest extends TestCase
         $this->assertEquals($callData, $webhook['payload']['call']);
         $this->assertNotEmpty($webhook['headers']['x-retell-signature']);
     }
+    
+    #[Test]
     
     public function test_can_add_call_analysis()
     {
@@ -128,6 +143,8 @@ class MockRetellServiceTest extends TestCase
         $this->assertEquals('positive', $call['call_analysis']['sentiment']);
     }
     
+    #[Test]
+    
     public function test_can_simulate_delay()
     {
         $this->service->withDelay(100); // 100ms delay
@@ -138,6 +155,8 @@ class MockRetellServiceTest extends TestCase
         
         $this->assertGreaterThan(90, $duration); // Allow some variance
     }
+    
+    #[Test]
     
     public function test_update_phone_number()
     {
@@ -150,6 +169,8 @@ class MockRetellServiceTest extends TestCase
         $this->assertEquals('test-agent', $result['agent_id']);
         $this->assertTrue($result['inbound_enabled']);
     }
+    
+    #[Test]
     
     public function test_different_call_scenarios()
     {

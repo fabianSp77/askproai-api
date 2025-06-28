@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\Database\ConnectionPoolManager;
+use App\Database\PooledMySqlConnector;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Connection;
 
 class DatabaseServiceProvider extends ServiceProvider
 {
@@ -37,9 +39,17 @@ class DatabaseServiceProvider extends ServiceProvider
      */
     private function enableConnectionPooling(): void
     {
-        // PERMANENTLY DISABLED - PooledMySqlConnector class doesn't exist
-        // and was causing fatal errors
-        return;
+        // Only enable if configured
+        if (!config('database.pool.enabled', true)) {
+            return;
+        }
+        
+        // Override the MySQL connector in the container
+        $this->app->bind('db.connector.mysql', function () {
+            return new PooledMySqlConnector();
+        });
+        
+        Log::info('Database connection pooling enabled');
     }
     
     /**

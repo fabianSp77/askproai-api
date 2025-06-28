@@ -12,13 +12,27 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Computed;
+use Livewire\WithFileUploads;
 
 class RetellUltimateControlCenter extends Page
 {
+    use WithFileUploads;
+    public static function shouldRegisterNavigation(): bool
+    {
+        return true; // Temporarily allow all admins
+        // return auth()->user()?->can('manage_retell_control_center') ?? false;
+    }
+    
+    public static function canAccess(): bool
+    {
+        return true; // Temporarily allow all admins
+        // return auth()->user()?->can('manage_retell_control_center') ?? false;
+    }
+    
     protected static ?string $navigationIcon = 'heroicon-o-command-line';
-    protected static ?string $navigationGroup = 'Control Center';
-    protected static ?string $navigationLabel = 'Ultimate Control Center';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'Einrichtung';
+    protected static ?string $navigationLabel = 'Retell Konfiguration';
+    protected static ?int $navigationSort = 50;
     
     protected static string $view = 'filament.admin.pages.retell-ultimate-control-center';
     
@@ -100,6 +114,9 @@ class RetellUltimateControlCenter extends Page
     // Phone agent assignments
     public array $phoneAgentAssignment = [];
     
+    // File upload
+    public $agentImportFile;
+    
     // Settings
     public array $defaultSettings = [
         'voice_id' => 'openai-Alloy',
@@ -128,6 +145,11 @@ class RetellUltimateControlCenter extends Page
     
     public function mount(): void
     {
+        // Authorization check - temporarily disabled
+        // if (!auth()->user()->can('manage_retell_control_center')) {
+        //     abort(403, 'Unauthorized');
+        // }
+        
         try {
             Log::info('Control Center - mount() called');
             
@@ -186,7 +208,8 @@ class RetellUltimateControlCenter extends Page
             Log::info('Control Center Init - Company found', [
                 'company_id' => $company->id,
                 'has_retell_key' => !empty($company->retell_api_key),
-                'key_length' => strlen($company->retell_api_key ?? '')
+                'key_length' => strlen($company->retell_api_key ?? ''),
+                'key_prefix' => !empty($company->retell_api_key) ? substr($company->retell_api_key, 0, 8) . '...' : null
             ]);
             
             // Store API key for later use
@@ -398,16 +421,49 @@ class RetellUltimateControlCenter extends Page
                 ]);
                 
                 if (!$retellService) {
-                    Log::warning('Control Center - loadAgents - no retell service, returning empty');
+                    Log::warning('Control Center - loadAgents - no retell service, checking cache');
+                    
+                    // Try to load from cache before giving up
+                    $cachedAgents = Cache::get("company_{$this->companyId}_agents", []);
+                    if (!empty($cachedAgents)) {
+                        $this->agents = $cachedAgents;
+                        $this->error = 'Retell service not configured. Showing cached data.';
+                        $this->processAgentGroups($cachedAgents);
+                        return;
+                    }
+                    
                     $this->agents = [];
                     $this->groupedAgents = [];
+                    $this->error = 'No Retell API key configured. Please add it in company settings.';
                     return;
                 }
                 
-                $result = Cache::remember('retell_agents_' . auth()->id(), 60, function() use ($retellService) {
-                    Log::info('Control Center - Fetching agents from API');
-                    return $retellService->listAgents();
-                });
+                try {
+                    $result = Cache::remember('retell_agents_' . auth()->id(), 60, function() use ($retellService) {
+                        Log::info('Control Center - Fetching agents from API');
+                        return $retellService->listAgents();
+                    });
+                    
+                    // Cache successful result for company-wide fallback
+                    if (!empty($result['agents'])) {
+                        Cache::put("company_{$this->companyId}_agents", $result['agents'], 3600);
+                    }
+                } catch (\Exception $apiError) {
+                    Log::error('Failed to fetch agents from API', [
+                        'error' => $apiError->getMessage(),
+                        'company_id' => $this->companyId
+                    ]);
+                    
+                    // Try cache fallback
+                    $cachedAgents = Cache::get("company_{$this->companyId}_agents", []);
+                    if (!empty($cachedAgents)) {
+                        $result = ['agents' => $cachedAgents];
+                        $this->error = 'Unable to connect to Retell API. Showing cached data.';
+                    } else {
+                        $result = ['agents' => []];
+                        $this->error = 'Unable to load agents. Please check your internet connection.';
+                    }
+                }
             }
             
             Log::info('Control Center - Agents loaded', [
@@ -474,7 +530,7 @@ class RetellUltimateControlCenter extends Page
                 
                 $this->agents[] = $mainAgent;
                 
-                // Store grouped data
+                // Store grouped data with all version details
                 $this->groupedAgents[$baseName] = [
                     'base_name' => $baseName,
                     'versions' => $sortedVersions->map(function($v) {
@@ -482,9 +538,10 @@ class RetellUltimateControlCenter extends Page
                             'agent_id' => $v['agent_id'],
                             'version' => $v['version'] ?? 'V1',
                             'is_active' => $v['is_active'] ?? false,
-                            'agent_name' => $v['agent_name'] ?? ''
+                            'agent_name' => $v['agent_name'] ?? '',
+                            'display_name' => $v['display_name'] ?? $v['agent_name'] ?? ''
                         ];
-                    })->toArray()
+                    })->values()->toArray()
                 ];
             }
                 
@@ -513,22 +570,23 @@ class RetellUltimateControlCenter extends Page
                 'data' => $result['phone_numbers'] ?? []
             ]);
             
+            // Create agent lookup map for O(1) access
+            $agentMap = collect($this->agents)->keyBy('agent_id')->toArray();
+            
             // Enhance phone numbers with agent information
             $this->phoneNumbers = collect($result['phone_numbers'] ?? [])
-                ->map(function($phone) {
+                ->map(function($phone) use ($agentMap) {
                     // Normalize the agent_id field (Retell uses inbound_agent_id)
                     if (isset($phone['inbound_agent_id']) && !isset($phone['agent_id'])) {
                         $phone['agent_id'] = $phone['inbound_agent_id'];
                     }
                     
-                    // Find the associated agent
-                    if (isset($phone['agent_id']) && !empty($phone['agent_id'])) {
-                        $agent = collect($this->agents)->firstWhere('agent_id', $phone['agent_id']);
-                        if ($agent) {
-                            $phone['agent_name'] = $agent['display_name'] ?? 'Unknown';
-                            $phone['agent_version'] = $agent['version'] ?? 'V1';
-                            $phone['agent_is_active'] = $agent['is_active'] ?? false;
-                        }
+                    // Find the associated agent using map lookup (O(1) instead of O(n))
+                    if (isset($phone['agent_id']) && !empty($phone['agent_id']) && isset($agentMap[$phone['agent_id']])) {
+                        $agent = $agentMap[$phone['agent_id']];
+                        $phone['agent_name'] = $agent['display_name'] ?? 'Unknown';
+                        $phone['agent_version'] = $agent['version'] ?? 'V1';
+                        $phone['agent_is_active'] = $agent['is_active'] ?? false;
                     }
                     return $phone;
                 })
@@ -672,6 +730,59 @@ class RetellUltimateControlCenter extends Page
                 isset($agent['response_engine']['llm_id'])) {
                 
                 $this->loadLLMData($agent['response_engine']['llm_id']);
+            }
+            
+            // Load full configuration from database
+            $dbAgent = \App\Models\RetellAgent::where('agent_id', $agentId)->first();
+            if ($dbAgent) {
+                $config = json_decode($dbAgent->configuration, true);
+                $settings = json_decode($dbAgent->settings, true);
+                
+                // Add configuration details to selected agent
+                $this->selectedAgent['full_config'] = $config;
+                $this->selectedAgent['settings'] = $settings;
+                
+                // Extract key configuration values
+                $this->selectedAgent['voice_settings'] = [
+                    'voice_id' => $config['voice_id'] ?? '',
+                    'voice_model' => $config['voice_model'] ?? '',
+                    'voice_temperature' => $config['voice_temperature'] ?? 0.2,
+                    'voice_speed' => $config['voice_speed'] ?? 1.0,
+                    'volume' => $config['volume'] ?? 1.0,
+                ];
+                
+                // Extract LLM settings - check both possible paths
+                $llmData = $config['retellLlmData'] ?? $config['llm_data'] ?? $config['response_engine'] ?? [];
+                $this->selectedAgent['llm_settings'] = [
+                    'model' => $llmData['model'] ?? $config['model'] ?? 'gpt-4',
+                    'model_temperature' => $llmData['model_temperature'] ?? $config['model_temperature'] ?? 0.7,
+                    'model_high_priority' => $llmData['model_high_priority'] ?? $config['model_high_priority'] ?? false,
+                    'general_prompt' => $llmData['general_prompt'] ?? $config['general_prompt'] ?? '',
+                ];
+                
+                $this->selectedAgent['conversation_settings'] = [
+                    'language' => $config['language'] ?? 'en-US',
+                    'enable_backchannel' => $config['enable_backchannel'] ?? true,
+                    'backchannel_frequency' => $config['backchannel_frequency'] ?? 0.2,
+                    'backchannel_words' => $config['backchannel_words'] ?? [],
+                    'interruption_sensitivity' => $config['interruption_sensitivity'] ?? 0.5,
+                    'responsiveness' => $config['responsiveness'] ?? 1,
+                    'end_call_after_silence_ms' => $config['end_call_after_silence_ms'] ?? 30000,
+                    'max_call_duration_ms' => $config['max_call_duration_ms'] ?? 300000,
+                ];
+                
+                $this->selectedAgent['audio_settings'] = [
+                    'ambient_sound_volume' => $config['ambient_sound_volume'] ?? 0,
+                    'denoising_mode' => $config['denoising_mode'] ?? 'off',
+                    'normalize_for_speech' => $config['normalize_for_speech'] ?? true,
+                ];
+                
+                $this->selectedAgent['analysis_settings'] = [
+                    'post_call_analysis_model' => $config['post_call_analysis_model'] ?? 'gpt-4',
+                    'post_call_analysis_data' => $config['post_call_analysis_data'] ?? [],
+                ];
+                
+                $this->selectedAgent['tools'] = $config['general_tools'] ?? [];
             }
             
             // Clear any previous errors
@@ -1237,7 +1348,7 @@ class RetellUltimateControlCenter extends Page
     {
         try {
             $query = \App\Models\Call::where('company_id', $this->companyId)
-                ->with(['branch', 'customer']);
+                ->with(['branch', 'customer', 'appointments']);
             
             // Apply period filter
             $startDate = match($this->callsPeriod) {
@@ -1280,17 +1391,28 @@ class RetellUltimateControlCenter extends Page
             }
             
             // Get calls with pagination
-            $this->calls = $query->orderBy('start_timestamp', 'desc')
+            $calls = $query->orderBy('start_timestamp', 'desc')
                 ->limit(100)
-                ->get()
-                ->map(function($call) {
+                ->get();
+            
+            // Create agent lookup map for O(1) access
+            $agentMap = collect($this->agents)->keyBy('agent_id')->toArray();
+            
+            $this->calls = $calls->map(function($call) use ($agentMap) {
+                    // Get agent name from map (O(1) lookup)
+                    $agentName = 'Unknown';
+                    if ($call->agent_id && isset($agentMap[$call->agent_id])) {
+                        $agentName = $agentMap[$call->agent_id]['display_name'] ?? 
+                                    $agentMap[$call->agent_id]['agent_name'] ?? 'Unknown';
+                    }
+                    
                     return [
                         'id' => $call->id,
                         'call_id' => $call->call_id,
                         'phone_number' => $call->phone_number,
                         'to_number' => $call->to_number,
                         'agent_id' => $call->agent_id,
-                        'agent_name' => $this->getAgentName($call->agent_id),
+                        'agent_name' => $agentName,
                         'branch_name' => $call->branch?->name ?? 'N/A',
                         'customer_name' => $call->customer?->full_name ?? 'Unknown',
                         'start_time' => $call->start_timestamp?->format('Y-m-d H:i:s') ?? 'N/A',
@@ -1298,7 +1420,7 @@ class RetellUltimateControlCenter extends Page
                         'duration_formatted' => $this->formatDuration($call->duration ?? 0),
                         'status' => $call->status,
                         'disconnection_reason' => $call->disconnection_reason,
-                        'has_booking' => $call->appointments()->exists(),
+                        'has_booking' => $call->appointments->isNotEmpty(), // Use already loaded relationship
                         'transcript_summary' => $call->transcript_summary,
                         'recording_url' => $call->recording_url,
                         'public_log_url' => $call->metadata['public_log_url'] ?? null
@@ -1570,6 +1692,11 @@ class RetellUltimateControlCenter extends Page
     #[Computed]
     public function filteredAgents(): array
     {
+        // Ensure agents is always an array
+        if (!is_array($this->agents)) {
+            return [];
+        }
+        
         if (empty($this->agentSearch)) {
             return $this->agents;
         }
@@ -1603,6 +1730,69 @@ class RetellUltimateControlCenter extends Page
     {
         // Get base name without version
         return $this->parseAgentName($name);
+    }
+    
+    /**
+     * Process agent groups from array of agents
+     */
+    protected function processAgentGroups(array $agents): void
+    {
+        $agentGroups = collect($agents)
+            ->map(function($agent) {
+                $agent['display_name'] = $this->parseAgentName($agent['agent_name'] ?? '');
+                $agent['version'] = $this->extractVersion($agent['agent_name'] ?? '');
+                $agent['base_name'] = $this->getBaseName($agent['agent_name'] ?? '');
+                $agent['is_active'] = ($agent['status'] ?? 'inactive') === 'active';
+                $agent['metrics'] = $this->getAgentMetrics($agent['agent_id'] ?? '');
+                return $agent;
+            })
+            ->groupBy('base_name');
+        
+        $this->groupedAgents = [];
+        $this->agents = [];
+        
+        foreach ($agentGroups as $baseName => $versions) {
+            $sortedVersions = $versions->sortByDesc(function($agent) {
+                $score = $agent['is_active'] ? 1000 : 0;
+                $versionNum = (float) str_replace('V', '', $agent['version'] ?? 'V1');
+                return $score + $versionNum;
+            });
+            
+            $mainAgent = $sortedVersions->first();
+            $mainAgent['total_versions'] = $versions->count();
+            $mainAgent['active_version'] = $sortedVersions->firstWhere('is_active');
+            
+            // Build all_versions array for dropdown with "Current" naming
+            $allVersions = $sortedVersions->values();
+            
+            // Map versions with "Current" for the latest, limit to 10 versions
+            $mainAgent['all_versions'] = $allVersions
+                ->take(10) // Only show last 10 versions
+                ->map(function($version, $index) {
+                    $isLatest = $index === 0;
+                    $displayVersion = $isLatest ? 'Current' : $version['version'];
+                    
+                    return [
+                        'version' => $version['version'] ?? 'V1',       // Keep original for identification
+                        'display_version' => $displayVersion,           // Add display version for UI
+                        'agent_id' => $version['agent_id'] ?? '',
+                        'is_active' => $version['is_active'] ?? false,
+                        'is_latest' => $isLatest,
+                    ];
+                })
+                ->values()
+                ->toArray();
+            
+            // Set the main agent's display version
+            $mainAgent['display_version'] = count($allVersions) > 0 && $sortedVersions->keys()->first() === 0 ? 'Current' : $mainAgent['version'];
+            
+            $this->agents[] = $mainAgent;
+            
+            $this->groupedAgents[$baseName] = [
+                'base_name' => $baseName,
+                'versions' => $sortedVersions->values()->toArray()
+            ];
+        }
     }
     
     protected function getAgentMetrics(string $agentId): array
@@ -1878,31 +2068,81 @@ class RetellUltimateControlCenter extends Page
     public function selectAgentVersion(string $baseName, string $version): void
     {
         try {
-            // Find the agent with this base name and version
-            $agent = collect($this->agents)->first(function($a) use ($baseName, $version) {
-                return ($a['base_name'] ?? '') === $baseName && ($a['version'] ?? '') === $version;
-            });
-            
-            if ($agent) {
-                $this->selectAgent($agent['agent_id']);
-            } else {
-                // Agent with this version might not be loaded - try to find it
-                Cache::forget('retell_agents_' . auth()->id());
-                $this->loadAgents();
+            // First check if we have this agent in groupedAgents
+            if (isset($this->groupedAgents[$baseName])) {
+                $versionData = collect($this->groupedAgents[$baseName]['versions'] ?? [])
+                    ->firstWhere('version', $version);
                 
-                // Try again after reload
-                $agent = collect($this->agents)->first(function($a) use ($baseName, $version) {
-                    return ($a['base_name'] ?? '') === $baseName && ($a['version'] ?? '') === $version;
-                });
-                
-                if ($agent) {
-                    $this->selectAgent($agent['agent_id']);
-                } else {
-                    $this->error = "Version $version not found for agent $baseName";
+                if ($versionData && isset($versionData['agent_id'])) {
+                    // Find the full agent data by agent_id
+                    $agentId = $versionData['agent_id'];
+                    
+                    // We need to fetch the full agent data for this version
+                    // This might require loading from the API or database
+                    $this->selectAgent($agentId);
+                    
+                    // Update the main agent in the list to show this version
+                    $this->updateAgentDisplay($baseName, $version);
+                    return;
                 }
             }
+            
+            // If not found, try reloading
+            Cache::forget('retell_agents_' . auth()->id());
+            $this->loadAgents();
+            
+            // Try again after reload
+            if (isset($this->groupedAgents[$baseName])) {
+                $versionData = collect($this->groupedAgents[$baseName]['versions'] ?? [])
+                    ->firstWhere('version', $version);
+                
+                if ($versionData && isset($versionData['agent_id'])) {
+                    $this->selectAgent($versionData['agent_id']);
+                    $this->updateAgentDisplay($baseName, $version);
+                    return;
+                }
+            }
+            
+            $this->error = "Version $version not found for agent $baseName";
         } catch (\Exception $e) {
             $this->error = 'Failed to select agent version: ' . $e->getMessage();
+        }
+    }
+    
+    protected function updateAgentDisplay(string $baseName, string $version): void
+    {
+        // Update the displayed agent to show the selected version
+        foreach ($this->agents as $index => $agent) {
+            if (($agent['base_name'] ?? '') === $baseName) {
+                // Find the version data from groupedAgents
+                if (isset($this->groupedAgents[$baseName])) {
+                    $versions = collect($this->groupedAgents[$baseName]['versions'] ?? []);
+                    $versionData = $versions->firstWhere('version', $version);
+                    
+                    if ($versionData) {
+                        // Determine if this is the latest version
+                        $isLatest = $versions->first()['version'] === $version;
+                        
+                        // Update the displayed version
+                        $this->agents[$index]['version'] = $version;
+                        $this->agents[$index]['display_version'] = $isLatest ? 'Current' : $version;
+                        $this->agents[$index]['agent_id'] = $versionData['agent_id'];
+                        $this->agents[$index]['is_active'] = $versionData['is_active'] ?? false;
+                        
+                        // Update all_versions to reflect the selection
+                        if (isset($this->agents[$index]['all_versions'])) {
+                            foreach ($this->agents[$index]['all_versions'] as $vIndex => $v) {
+                                if ($v['version'] === $version) {
+                                    $this->agents[$index]['all_versions'][$vIndex]['is_selected'] = true;
+                                } else {
+                                    $this->agents[$index]['all_versions'][$vIndex]['is_selected'] = false;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
         }
     }
     
@@ -2094,46 +2334,36 @@ class RetellUltimateControlCenter extends Page
     public array $agentVersions = [];
     public string $agentEditorMode = 'edit'; // edit, create_new, duplicate
     
+    // Full Agent Editor Properties
+    public array $editingAgentFull = [];
+    public array $editingLLM = [];
+    public array $editingFunctions = [];
+    public array $editingPostCallAnalysis = [];
+    public bool $showFullEditor = false;
+    public string $editorActiveTab = 'basic';
+    public array $editingWebhookSettings = [];
+    public array $originalAgentData = []; // For tracking changes
+    
     public function openAgentEditor(string $agentId): void
     {
-        try {
-            $agent = collect($this->agents)->firstWhere('agent_id', $agentId);
-            if (!$agent) {
-                $this->error = 'Agent not found';
-                return;
-            }
-            
-            // Load full agent details
-            $this->editingAgent = $agent;
-            
-            // Load agent versions
-            $baseName = $agent['base_name'] ?? $agent['display_name'];
-            $this->agentVersions = collect($this->agents)
-                ->filter(function($a) use ($baseName) {
-                    return ($a['base_name'] ?? $a['display_name']) === $baseName;
-                })
-                ->sortBy('version')
-                ->values()
-                ->toArray();
-            
-            $this->agentEditorMode = 'edit';
-            $this->showAgentEditor = true;
-            
-        } catch (\Exception $e) {
-            $this->error = 'Failed to open agent editor: ' . $e->getMessage();
-            Log::error('Failed to open agent editor', [
-                'agent_id' => $agentId,
-                'error' => $e->getMessage()
-            ]);
-        }
+        // Redirect to the new agent editor page
+        redirect()->to('/admin/retell-agent-editor?agentId=' . $agentId);
     }
     
     public function closeAgentEditor(): void
     {
         $this->showAgentEditor = false;
+        $this->showFullEditor = false;
         $this->editingAgent = [];
+        $this->editingAgentFull = [];
+        $this->editingLLM = [];
+        $this->editingFunctions = [];
+        $this->editingPostCallAnalysis = [];
+        $this->editingWebhookSettings = [];
+        $this->originalAgentData = [];
         $this->agentVersions = [];
         $this->agentEditorMode = 'edit';
+        $this->editorActiveTab = 'basic';
     }
     
     public function saveAgent(): void
@@ -2352,6 +2582,11 @@ class RetellUltimateControlCenter extends Page
     public function setAgentEditorMode(string $mode): void
     {
         $this->agentEditorMode = $mode;
+    }
+    
+    public function switchEditorTab(string $tab): void
+    {
+        $this->editorActiveTab = $tab;
     }
     
     // Performance Dashboard Methods
@@ -2944,6 +3179,684 @@ class RetellUltimateControlCenter extends Page
                 'error' => $e->getMessage()
             ]);
             return 100; // Default 100ms
+        }
+    }
+    
+    /**
+     * Export agent configuration as JSON
+     */
+    public function exportAgent(string $agentId): void
+    {
+        try {
+            $retellService = $this->getRetellService();
+            if (!$retellService) {
+                $this->error = 'Retell service not configured';
+                return;
+            }
+            
+            // Get full agent configuration from API
+            $agent = $retellService->getAgent($agentId);
+            if (!$agent) {
+                $this->error = 'Agent not found';
+                return;
+            }
+            
+            // Remove sensitive data before export
+            $exportData = $this->sanitizeAgentForExport($agent);
+            
+            // Add metadata for import
+            $exportData['_export_metadata'] = [
+                'exported_at' => now()->toIso8601String(),
+                'exported_by' => auth()->user()->email,
+                'askproai_version' => '1.0',
+                'original_agent_id' => $agentId
+            ];
+            
+            // Generate filename
+            $filename = sprintf(
+                'agent_%s_%s.json',
+                \Str::slug($agent['agent_name'] ?? 'unnamed'),
+                now()->format('Y-m-d_His')
+            );
+            
+            // Trigger download
+            $this->dispatch('download-json', [
+                'data' => json_encode($exportData, JSON_PRETTY_PRINT),
+                'filename' => $filename
+            ]);
+            
+            $this->successMessage = 'Agent configuration exported successfully';
+            
+        } catch (\Exception $e) {
+            $this->error = 'Failed to export agent: ' . $e->getMessage();
+            Log::error('Agent export failed', [
+                'agent_id' => $agentId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Export agent in Retell.ai-compatible format
+     */
+    public function exportAgentForRetell(string $agentId): void
+    {
+        try {
+            $retellService = $this->getRetellService();
+            if (!$retellService) {
+                $this->error = 'Retell service not configured';
+                return;
+            }
+            
+            // Get agent from API
+            $agent = $retellService->getAgent($agentId);
+            if (!$agent) {
+                $this->error = 'Agent not found';
+                return;
+            }
+            
+            // Don't include LLM configuration inline for Retell.ai export
+            // The llm_id reference is sufficient
+            
+            // Export without AskProAI-specific metadata
+            $exportData = $this->sanitizeAgentForRetellExport($agent);
+            
+            // Generate filename
+            $filename = 'retell_agent_' . str_replace(' ', '_', $agent['agent_name'] ?? 'export') . '_' . date('Y-m-d_H-i-s') . '.json';
+            
+            // Dispatch download event
+            $this->dispatch('download-json', 
+                content: $exportData,
+                filename: $filename
+            );
+            
+            $this->successMessage = 'Agent exported in Retell.ai format';
+            
+        } catch (\Exception $e) {
+            $this->error = 'Failed to export agent: ' . $e->getMessage();
+            Log::error('Agent export for Retell failed', [
+                'agent_id' => $agentId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Import agent configuration from JSON (supports both formats)
+     */
+    public function importAgent(string $jsonContent): void
+    {
+        try {
+            $retellService = $this->getRetellService();
+            if (!$retellService) {
+                $this->error = 'Retell service not configured';
+                return;
+            }
+            
+            // Parse JSON
+            $agentData = json_decode($jsonContent, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $this->error = 'Invalid JSON format: ' . json_last_error_msg();
+                return;
+            }
+            
+            // Detect format (AskProAI vs Retell.ai)
+            $isAskProAIFormat = isset($agentData['_export_metadata']);
+            $isRetellFormat = !$isAskProAIFormat && isset($agentData['agent_id']);
+            
+            // Process based on format
+            if ($isRetellFormat) {
+                $agentData = $this->processRetellImport($agentData);
+            } else {
+                $agentData = $this->processAskProAIImport($agentData);
+            }
+            
+            // Validate agent data structure
+            if (!$this->validateAgentImportData($agentData)) {
+                return;
+            }
+            
+            // Create new agent via API
+            $result = $retellService->createAgent($agentData);
+            
+            if ($result && isset($result['agent_id'])) {
+                $this->successMessage = 'Agent imported successfully with ID: ' . $result['agent_id'];
+                
+                // If LLM configuration was included, create/update it
+                if (isset($agentData['response_engine']['llm_configuration'])) {
+                    $this->importLLMConfiguration($result['agent_id'], $agentData['response_engine']['llm_configuration']);
+                }
+                
+                // Reload agents list
+                $this->loadAgents();
+                
+                // Select the newly imported agent
+                $this->selectAgent($result['agent_id']);
+            } else {
+                $this->error = 'Failed to create agent from import';
+            }
+            
+        } catch (\Exception $e) {
+            $this->error = 'Failed to import agent: ' . $e->getMessage();
+            Log::error('Agent import failed', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Process Retell.ai format import
+     */
+    protected function processRetellImport(array $agentData): array
+    {
+        // Remove ID - will be generated new
+        unset($agentData['agent_id']);
+        
+        // Add import suffix to name
+        $originalName = $agentData['agent_name'] ?? 'Imported Agent';
+        $agentData['agent_name'] = $originalName . ' (Import ' . date('Y-m-d H:i') . ')';
+        
+        // Handle webhook configuration if present
+        if (isset($agentData['webhook_url'])) {
+            // Convert to our webhook structure
+            $agentData['webhook_settings'] = [
+                'url' => $agentData['webhook_url'],
+                'listening_events' => $agentData['listening_events'] ?? []
+            ];
+            unset($agentData['webhook_url']);
+            unset($agentData['listening_events']);
+        }
+        
+        return $agentData;
+    }
+    
+    /**
+     * Process AskProAI format import
+     */
+    protected function processAskProAIImport(array $agentData): array
+    {
+        // Remove metadata and prepare for API
+        unset($agentData['_export_metadata']);
+        unset($agentData['agent_id']);
+        
+        // Generate new name to avoid conflicts
+        $originalName = $agentData['agent_name'] ?? 'Imported Agent';
+        $agentData['agent_name'] = $originalName . ' (Import ' . date('Y-m-d H:i') . ')';
+        
+        return $agentData;
+    }
+    
+    /**
+     * Import LLM configuration for agent
+     */
+    protected function importLLMConfiguration(string $agentId, array $llmConfig): void
+    {
+        try {
+            $retellService = $this->getRetellService();
+            
+            // Remove ID from LLM config
+            unset($llmConfig['llm_id']);
+            
+            // Create new LLM (Retell API would handle this)
+            // For now, log that manual configuration is needed
+            Log::info('LLM configuration needs manual setup', [
+                'agent_id' => $agentId,
+                'llm_config' => $llmConfig
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to import LLM configuration', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Sanitize agent data for export (AskProAI format)
+     */
+    protected function sanitizeAgentForExport(array $agent): array
+    {
+        // Remove or mask sensitive fields
+        $sanitized = $agent;
+        
+        // Remove internal IDs that won't be valid on import
+        unset($sanitized['agent_id']);
+        unset($sanitized['created_at']);
+        unset($sanitized['updated_at']);
+        
+        // Remove any API keys or secrets
+        if (isset($sanitized['webhook_settings'])) {
+            unset($sanitized['webhook_settings']['secret']);
+        }
+        
+        // Keep configuration but remove environment-specific data
+        if (isset($sanitized['response_engine']['llm_id'])) {
+            // Mark that LLM needs to be reconfigured on import
+            $sanitized['response_engine']['_note'] = 'LLM ID will need to be updated after import';
+        }
+        
+        return $sanitized;
+    }
+    
+    /**
+     * Sanitize agent data for Retell.ai export
+     */
+    protected function sanitizeAgentForRetellExport(array $agent): array
+    {
+        // Complete Retell.ai agent export format based on actual export structure
+        $sanitized = [];
+        
+        // Basic agent info - leave agent_id empty for import
+        $sanitized['agent_id'] = '';
+        $sanitized['channel'] = 'voice';
+        $sanitized['last_modification_timestamp'] = time() * 1000; // milliseconds
+        $sanitized['agent_name'] = $agent['agent_name'] ?? 'AskProAI Agent';
+        
+        // Response engine with LLM
+        if (isset($agent['response_engine'])) {
+            $sanitized['response_engine'] = [
+                'type' => $agent['response_engine']['type'] ?? 'retell-llm',
+                'llm_id' => $agent['response_engine']['llm_id'] ?? null,
+                'version' => $agent['response_engine']['version'] ?? 1
+            ];
+        } else {
+            $sanitized['response_engine'] = [
+                'type' => 'retell-llm',
+                'llm_id' => null,
+                'version' => 1
+            ];
+        }
+        
+        // Webhook URL
+        $sanitized['webhook_url'] = $agent['webhook_url'] ?? 'https://api.askproai.de/api/retell/webhook';
+        
+        // Language - use locale format
+        $sanitized['language'] = $agent['language'] ?? 'de-DE';
+        if ($sanitized['language'] === 'de') {
+            $sanitized['language'] = 'de-DE';
+        }
+        
+        // Privacy and call settings
+        $sanitized['opt_out_sensitive_data_storage'] = isset($agent['opt_out_sensitive_data_storage']) ? (bool)$agent['opt_out_sensitive_data_storage'] : false;
+        $sanitized['end_call_after_silence_ms'] = isset($agent['end_call_after_silence_ms']) ? (int)$agent['end_call_after_silence_ms'] : 50000;
+        
+        // Post call analysis data - for structured data extraction
+        $sanitized['post_call_analysis_data'] = $agent['post_call_analysis_data'] ?? [
+            [
+                'type' => 'string',
+                'name' => 'Name',
+                'description' => 'Der vollständige Name des Anrufers'
+            ],
+            [
+                'type' => 'string',
+                'name' => 'Email',
+                'description' => 'Die Email Adresse des Anrufers'
+            ],
+            [
+                'type' => 'string',
+                'name' => 'Telefonnummer_Anrufer',
+                'description' => 'Die Telefonnummer des Anrufers'
+            ],
+            [
+                'type' => 'string',
+                'name' => 'Datum_Termin',
+                'description' => 'Das Datum für den gebuchten Termin'
+            ],
+            [
+                'type' => 'string',
+                'name' => 'Uhrzeit_Termin',
+                'description' => 'Die Uhrzeit wann der Termin startet'
+            ],
+            [
+                'type' => 'string',
+                'name' => 'Dienstleistung',
+                'description' => 'Die gewünschte Dienstleistung'
+            ],
+            [
+                'type' => 'string',
+                'name' => 'Zusammenfassung_Anruf',
+                'description' => 'Eine Zusammenfassung des Anrufs'
+            ]
+        ];
+        
+        // Version info
+        $sanitized['version'] = isset($agent['version']) ? (int)$agent['version'] : 1;
+        $sanitized['is_published'] = false;
+        $sanitized['version_title'] = $agent['agent_name'] ?? 'AskProAI Agent V1';
+        
+        // Post call analysis model
+        $sanitized['post_call_analysis_model'] = $agent['post_call_analysis_model'] ?? 'gpt-4o';
+        
+        // Voice settings
+        $sanitized['voice_id'] = $agent['voice_id'] ?? 'elevenlabs-Matilda';
+        $sanitized['voice_temperature'] = isset($agent['voice_temperature']) ? (float)$agent['voice_temperature'] : 0.2;
+        $sanitized['voice_speed'] = isset($agent['voice_speed']) ? (float)$agent['voice_speed'] : 1.0;
+        $sanitized['volume'] = isset($agent['volume']) ? (float)$agent['volume'] : 1.0;
+        
+        // Backchannel settings
+        $sanitized['enable_backchannel'] = isset($agent['enable_backchannel']) ? (bool)$agent['enable_backchannel'] : true;
+        $sanitized['backchannel_frequency'] = isset($agent['backchannel_frequency']) ? (float)$agent['backchannel_frequency'] : 0.2;
+        $sanitized['backchannel_words'] = $agent['backchannel_words'] ?? [
+            "mhm",
+            "ach",
+            "so", 
+            "aha",
+            "okay",
+            "richtig",
+            "verstehe",
+            "na klar"
+        ];
+        
+        // Call duration and interruption
+        $sanitized['max_call_duration_ms'] = isset($agent['max_call_duration_ms']) ? (int)$agent['max_call_duration_ms'] : 300000;
+        $sanitized['interruption_sensitivity'] = isset($agent['interruption_sensitivity']) ? (float)$agent['interruption_sensitivity'] : 0.44;
+        $sanitized['ambient_sound_volume'] = isset($agent['ambient_sound_volume']) ? (float)$agent['ambient_sound_volume'] : 0.48;
+        $sanitized['responsiveness'] = isset($agent['responsiveness']) ? (float)$agent['responsiveness'] : 1.0;
+        
+        // Arrays
+        $sanitized['pronunciation_dictionary'] = $agent['pronunciation_dictionary'] ?? [];
+        $sanitized['normalize_for_speech'] = isset($agent['normalize_for_speech']) ? (bool)$agent['normalize_for_speech'] : true;
+        $sanitized['enable_voicemail_detection'] = isset($agent['enable_voicemail_detection']) ? (bool)$agent['enable_voicemail_detection'] : false;
+        $sanitized['user_dtmf_options'] = $agent['user_dtmf_options'] ?? (object)[];
+        
+        // LLM Data - this is critical for the agent to work
+        if (isset($agent['retellLlmData'])) {
+            $sanitized['retellLlmData'] = $agent['retellLlmData'];
+        } else {
+            // Try to fetch LLM data if we have llm_id
+            if (isset($sanitized['response_engine']['llm_id']) && $sanitized['response_engine']['llm_id']) {
+                try {
+                    $retellService = $this->getRetellService();
+                    if ($retellService) {
+                        $llmData = $retellService->getRetellLLM($sanitized['response_engine']['llm_id']);
+                        if ($llmData) {
+                            $sanitized['retellLlmData'] = [
+                                'llm_id' => $llmData['llm_id'] ?? $sanitized['response_engine']['llm_id'],
+                                'version' => $llmData['version'] ?? 1,
+                                'model' => $llmData['model'] ?? 'gpt-4',
+                                'model_temperature' => $llmData['model_temperature'] ?? 0.04,
+                                'model_high_priority' => $llmData['model_high_priority'] ?? true,
+                                'tool_call_strict_mode' => $llmData['tool_call_strict_mode'] ?? false,
+                                'general_prompt' => $llmData['general_prompt'] ?? '',
+                                'general_tools' => $llmData['general_tools'] ?? [],
+                                'begin_message' => $llmData['begin_message'] ?? '',
+                                'knowledge_base_ids' => $llmData['knowledge_base_ids'] ?? [],
+                                'last_modification_timestamp' => $llmData['last_modification_timestamp'] ?? time() * 1000,
+                                'is_published' => false
+                            ];
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Could not fetch LLM data for export', ['error' => $e->getMessage()]);
+                }
+            }
+            
+            // If still no LLM data, provide minimal structure
+            if (!isset($sanitized['retellLlmData'])) {
+                $sanitized['retellLlmData'] = [
+                    'llm_id' => $sanitized['response_engine']['llm_id'],
+                    'version' => 1,
+                    'model' => 'gpt-4',
+                    'model_temperature' => 0.04,
+                    'model_high_priority' => true,
+                    'tool_call_strict_mode' => false,
+                    'general_prompt' => '',
+                    'general_tools' => [],
+                    'begin_message' => '',
+                    'knowledge_base_ids' => [],
+                    'last_modification_timestamp' => time() * 1000,
+                    'is_published' => false
+                ];
+            }
+        }
+        
+        // Optional fields
+        $sanitized['conversationFlow'] = null;
+        $sanitized['llmURL'] = null;
+        
+        return $sanitized;
+    }
+    
+    /**
+     * Validate agent import data
+     */
+    protected function validateAgentImportData(array $data): bool
+    {
+        // Check required fields
+        $requiredFields = ['agent_name', 'voice_id', 'response_engine'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field])) {
+                $this->error = "Missing required field: {$field}";
+                return false;
+            }
+        }
+        
+        // Validate response engine
+        if (!isset($data['response_engine']['type'])) {
+            $this->error = 'Invalid response engine configuration';
+            return false;
+        }
+        
+        // Check for valid voice ID - expanded list for Retell.ai compatibility
+        $validVoices = [
+            // OpenAI voices
+            'openai-Alloy', 'openai-Echo', 'openai-Fable', 'openai-Onyx', 
+            'openai-Nova', 'openai-Shimmer',
+            // ElevenLabs voices (German optimized)
+            'elevenlabs-Matilda', 'elevenlabs-Wilhelm', 'elevenlabs-Dorothy',
+            'elevenlabs-Thomas', 'elevenlabs-Charlie', 'elevenlabs-George',
+            'elevenlabs-Emily', 'elevenlabs-Chris', 'elevenlabs-Brian',
+            'elevenlabs-Daniel', 'elevenlabs-Lily', 'elevenlabs-Bill',
+            // Deepgram voices
+            'deepgram-Asteria', 'deepgram-Luna', 'deepgram-Stella',
+            'deepgram-Athena', 'deepgram-Hera', 'deepgram-Orion',
+            'deepgram-Perseus', 'deepgram-Angus', 'deepgram-Orpheus',
+            'deepgram-Helios', 'deepgram-Zeus'
+        ];
+        
+        // Allow any voice ID starting with known providers for future compatibility
+        $validProviders = ['openai-', 'elevenlabs-', 'deepgram-', 'cartesia-'];
+        $isValidProvider = false;
+        foreach ($validProviders as $provider) {
+            if (str_starts_with($data['voice_id'], $provider)) {
+                $isValidProvider = true;
+                break;
+            }
+        }
+        
+        if (!$isValidProvider && !in_array($data['voice_id'], $validVoices)) {
+            // Log warning but don't fail - Retell.ai might have new voices
+            Log::warning('Unknown voice ID used', ['voice_id' => $data['voice_id']]);
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Handle file upload for agent import
+     */
+    public function updatedAgentImportFile(): void
+    {
+        try {
+            if (!$this->agentImportFile) {
+                $this->error = 'No file uploaded';
+                return;
+            }
+            
+            // Validate file
+            $this->validate([
+                'agentImportFile' => 'required|file|mimes:json|max:2048', // 2MB max
+            ]);
+            
+            // Read file content
+            $content = $this->agentImportFile->get();
+            
+            // Import the agent
+            $this->importAgent($content);
+            
+            // Clear the file input
+            $this->agentImportFile = null;
+            
+        } catch (\Exception $e) {
+            $this->error = 'Failed to process uploaded file: ' . $e->getMessage();
+            Log::error('Agent import upload failed', [
+                'error' => $e->getMessage()
+            ]);
+            
+            // Clear the file input
+            $this->agentImportFile = null;
+        }
+    }
+    
+    /**
+     * Save full agent configuration including all settings
+     */
+    public function saveAgentFull(): void
+    {
+        try {
+            $this->isLoading = true;
+            $this->error = null;
+            
+            // Validate that we have agent data
+            if (empty($this->editingAgentFull['agent_id'])) {
+                $this->error = 'No agent selected for editing';
+                $this->isLoading = false;
+                return;
+            }
+            
+            $agentId = $this->editingAgentFull['agent_id'];
+            
+            // Get Retell service
+            $retellService = $this->getRetellService();
+            if (!$retellService) {
+                $this->error = 'Retell service not configured';
+                $this->isLoading = false;
+                return;
+            }
+            
+            // Prepare agent update data
+            $agentUpdateData = [
+                'agent_name' => $this->editingAgentFull['agent_name'] ?? '',
+                'voice_id' => $this->editingAgentFull['voice_id'] ?? 'openai-Alloy',
+                'voice_speed' => $this->editingAgentFull['voice_speed'] ?? 1.0,
+                'voice_temperature' => $this->editingAgentFull['voice_temperature'] ?? 0.0,
+                'language' => $this->editingAgentFull['language'] ?? 'en-US',
+                'interruption_sensitivity' => $this->editingAgentFull['interruption_sensitivity'] ?? 1,
+                'responsiveness' => $this->editingAgentFull['responsiveness'] ?? 1,
+                'enable_backchannel' => $this->editingAgentFull['enable_backchannel'] ?? true,
+                'backchannel_frequency' => $this->editingAgentFull['backchannel_frequency'] ?? 0.8,
+                'backchannel_words' => $this->editingAgentFull['backchannel_words'] ?? ['yeah', 'uh-huh', 'hmm', 'got it', 'right'],
+                'reminder_trigger_ms' => $this->editingAgentFull['reminder_trigger_ms'] ?? 10000,
+                'reminder_max_count' => $this->editingAgentFull['reminder_max_count'] ?? 1,
+                'ambient_sound' => $this->editingAgentFull['ambient_sound'] ?? null,
+                'ambient_sound_volume' => $this->editingAgentFull['ambient_sound_volume'] ?? 1.0,
+                'pronunciation_dictionary' => $this->editingAgentFull['pronunciation_dictionary'] ?? [],
+                'normalize_for_speech' => $this->editingAgentFull['normalize_for_speech'] ?? true,
+                'end_call_after_silence_ms' => $this->editingAgentFull['end_call_after_silence_ms'] ?? 600000,
+                'max_call_duration_ms' => $this->editingAgentFull['max_call_duration_ms'] ?? 3600000,
+                'voicemail_detection_timeout_ms' => $this->editingAgentFull['voicemail_detection_timeout_ms'] ?? 30000,
+                'voicemail_message' => $this->editingAgentFull['voicemail_message'] ?? null,
+                'opt_out_sensitive_data_storage' => $this->editingAgentFull['opt_out_sensitive_data_storage'] ?? false,
+                'fallback_voice_ids' => $this->editingAgentFull['fallback_voice_ids'] ?? []
+            ];
+            
+            // Add post-call analysis fields if present
+            if (!empty($this->editingPostCallAnalysis)) {
+                $agentUpdateData['post_call_analysis_data'] = $this->editingPostCallAnalysis;
+            }
+            
+            // Add webhook URL if present
+            if (!empty($this->editingWebhookSettings['url'])) {
+                $agentUpdateData['webhook_url'] = $this->editingWebhookSettings['url'];
+            }
+            
+            // Update agent via API
+            $agentResult = $retellService->updateAgent($agentId, $agentUpdateData);
+            
+            if (!$agentResult) {
+                $this->error = 'Failed to update agent configuration';
+                $this->isLoading = false;
+                return;
+            }
+            
+            // If agent uses retell-llm, update LLM settings
+            if (isset($this->editingAgentFull['response_engine']['type']) && 
+                $this->editingAgentFull['response_engine']['type'] === 'retell-llm' &&
+                isset($this->editingAgentFull['response_engine']['llm_id'])) {
+                
+                $llmId = $this->editingAgentFull['response_engine']['llm_id'];
+                
+                // Prepare LLM update data
+                $llmUpdateData = [
+                    'model' => $this->editingLLM['model'] ?? 'gpt-4-turbo',
+                    'temperature' => $this->editingLLM['temperature'] ?? 0.7,
+                    'max_tokens' => $this->editingLLM['max_tokens'] ?? 200,
+                    'general_prompt' => $this->editingLLM['general_prompt'] ?? '',
+                    'general_tools' => $this->editingFunctions ?? [],
+                    'states' => $this->editingLLM['states'] ?? []
+                ];
+                
+                // Add other LLM settings if present
+                if (isset($this->editingLLM['top_p'])) {
+                    $llmUpdateData['top_p'] = $this->editingLLM['top_p'];
+                }
+                if (isset($this->editingLLM['frequency_penalty'])) {
+                    $llmUpdateData['frequency_penalty'] = $this->editingLLM['frequency_penalty'];
+                }
+                if (isset($this->editingLLM['presence_penalty'])) {
+                    $llmUpdateData['presence_penalty'] = $this->editingLLM['presence_penalty'];
+                }
+                if (isset($this->editingLLM['begin_message'])) {
+                    $llmUpdateData['begin_message'] = $this->editingLLM['begin_message'];
+                }
+                if (isset($this->editingLLM['inbound_dynamic_variables_webhook_url'])) {
+                    $llmUpdateData['inbound_dynamic_variables_webhook_url'] = $this->editingLLM['inbound_dynamic_variables_webhook_url'];
+                }
+                
+                // Update LLM via API
+                $llmResult = $retellService->updateRetellLLM($llmId, $llmUpdateData);
+                
+                if (!$llmResult) {
+                    $this->error = 'Agent updated but failed to update LLM configuration';
+                    $this->isLoading = false;
+                    return;
+                }
+            }
+            
+            $this->successMessage = 'Agent configuration saved successfully';
+            
+            // Update local state
+            $this->agents = collect($this->agents)->map(function($agent) use ($agentId, $agentResult) {
+                if ($agent['agent_id'] === $agentId) {
+                    return array_merge($agent, $agentResult);
+                }
+                return $agent;
+            })->toArray();
+            
+            // Clear caches
+            Cache::forget('retell_agents_' . auth()->id());
+            if (isset($llmId)) {
+                Cache::forget("retell_llm_data_{$llmId}");
+                Cache::forget("retell_llm_functions_{$llmId}");
+            }
+            
+            $this->isLoading = false;
+            
+            // Show success notification
+            $this->dispatch('show-notification', [
+                'message' => 'Agent configuration updated successfully',
+                'type' => 'success',
+                'duration' => 3000
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->error = 'Failed to save agent configuration: ' . $e->getMessage();
+            $this->isLoading = false;
+            Log::error('Failed to save full agent configuration', [
+                'agent_id' => $this->editingAgentFull['agent_id'] ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 }

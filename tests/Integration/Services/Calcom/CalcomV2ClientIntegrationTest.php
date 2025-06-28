@@ -2,15 +2,17 @@
 
 namespace Tests\Integration\Services\Calcom;
 
-use Tests\TestCase;
 use App\Services\Calcom\CalcomV2Client;
-use App\Services\Calcom\DTOs\EventTypeDTO;
 use App\Services\Calcom\DTOs\BookingDTO;
+use App\Services\Calcom\DTOs\EventTypeDTO;
 use App\Services\Calcom\DTOs\SlotDTO;
 use App\Services\CircuitBreaker\CircuitBreaker;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\Group;
+use Tests\TestCase;
 
 class CalcomV2ClientIntegrationTest extends TestCase
 {
@@ -28,12 +30,8 @@ class CalcomV2ClientIntegrationTest extends TestCase
         
         // Clear cache
         Cache::flush();
-    }
-
-    /**
-     * @test
-     * @group integration
-     */
+    }    #[Group('integration')]
+    #[Test]
     public function it_handles_full_booking_workflow()
     {
         // Mock responses for full workflow
@@ -102,12 +100,8 @@ class CalcomV2ClientIntegrationTest extends TestCase
         ]);
         
         $this->assertArrayHasKey('success', $cancellation);
-    }
-
-    /**
-     * @test
-     * @group integration
-     */
+    }    #[Group('integration')]
+    #[Test]
     public function it_handles_circuit_breaker_with_multiple_failures()
     {
         // Simulate API failures
@@ -136,12 +130,8 @@ class CalcomV2ClientIntegrationTest extends TestCase
         $this->expectExceptionMessage('Cal.com service temporarily unavailable');
         
         $this->client->getEventTypes();
-    }
-
-    /**
-     * @test
-     * @group integration
-     */
+    }    #[Group('integration')]
+    #[Test]
     public function it_respects_cache_ttl_for_different_endpoints()
     {
         $this->mockCachedResponses();
@@ -164,12 +154,8 @@ class CalcomV2ClientIntegrationTest extends TestCase
 
         // Verify only 2 HTTP calls were made (not 4)
         Http::assertSentCount(2);
-    }
-
-    /**
-     * @test
-     * @group integration
-     */
+    }    #[Group('integration')]
+    #[Test]
     public function it_handles_concurrent_bookings_with_locking()
     {
         $this->mockConcurrentBookingScenario();
@@ -215,12 +201,8 @@ class CalcomV2ClientIntegrationTest extends TestCase
         // Verify only one booking succeeded
         $successCount = count(array_filter($results, fn($r) => $r['success']));
         $this->assertEquals(1, $successCount);
-    }
-
-    /**
-     * @test
-     * @group integration
-     */
+    }    #[Group('integration')]
+    #[Test]
     public function it_handles_pagination_for_large_datasets()
     {
         $this->mockPaginatedResponses();
@@ -243,12 +225,8 @@ class CalcomV2ClientIntegrationTest extends TestCase
         } while ($hasMore && $page <= 10); // Safety limit
 
         $this->assertGreaterThan(50, count($allBookings));
-    }
-
-    /**
-     * @test
-     * @group integration
-     */
+    }    #[Group('integration')]
+    #[Test]
     public function it_handles_timezone_conversions_correctly()
     {
         $this->mockTimezoneResponses();

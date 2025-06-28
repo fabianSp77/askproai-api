@@ -1,11 +1,11 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
@@ -22,13 +22,33 @@ return new class extends Migration
         }
         
         // Copy agent assignments from branches to their phone numbers
-        DB::statement('
-            UPDATE phone_numbers p
-            INNER JOIN branches b ON p.branch_id = b.id
-            SET p.retell_agent_id = b.retell_agent_id
-            WHERE b.retell_agent_id IS NOT NULL
-            AND p.retell_agent_id IS NULL
-        ');
+        if ($this->isSQLite()) {
+            // SQLite doesn't support UPDATE with JOIN, use subquery instead
+            DB::statement('
+                UPDATE phone_numbers 
+                SET retell_agent_id = (
+                    SELECT retell_agent_id 
+                    FROM branches 
+                    WHERE branches.id = phone_numbers.branch_id
+                    AND branches.retell_agent_id IS NOT NULL
+                )
+                WHERE retell_agent_id IS NULL
+                AND EXISTS (
+                    SELECT 1 
+                    FROM branches 
+                    WHERE branches.id = phone_numbers.branch_id
+                    AND branches.retell_agent_id IS NOT NULL
+                )
+            ');
+        } else {
+            DB::statement('
+                UPDATE phone_numbers p
+                INNER JOIN branches b ON p.branch_id = b.id
+                SET p.retell_agent_id = b.retell_agent_id
+                WHERE b.retell_agent_id IS NOT NULL
+                AND p.retell_agent_id IS NULL
+            ');
+        }
         
         // Note: We're keeping retell_agent_id in branches for now as a fallback
         // It can be removed in a future migration after confirming everything works
@@ -40,17 +60,41 @@ return new class extends Migration
     public function down(): void
     {
         // Copy agent assignments back from phone numbers to branches (using primary phone)
-        DB::statement('
-            UPDATE branches b
-            INNER JOIN phone_numbers p ON p.branch_id = b.id AND p.is_primary = 1
-            SET b.retell_agent_id = p.retell_agent_id
-            WHERE p.retell_agent_id IS NOT NULL
-            AND b.retell_agent_id IS NULL
-        ');
+        if ($this->isSQLite()) {
+            // SQLite doesn't support UPDATE with JOIN, use subquery instead
+            DB::statement('
+                UPDATE branches 
+                SET retell_agent_id = (
+                    SELECT retell_agent_id 
+                    FROM phone_numbers 
+                    WHERE phone_numbers.branch_id = branches.id
+                    AND phone_numbers.is_primary = 1
+                    AND phone_numbers.retell_agent_id IS NOT NULL
+                )
+                WHERE retell_agent_id IS NULL
+                AND EXISTS (
+                    SELECT 1 
+                    FROM phone_numbers 
+                    WHERE phone_numbers.branch_id = branches.id
+                    AND phone_numbers.is_primary = 1
+                    AND phone_numbers.retell_agent_id IS NOT NULL
+                )
+            ');
+        } else {
+            DB::statement('
+                UPDATE branches b
+                INNER JOIN phone_numbers p ON p.branch_id = b.id AND p.is_primary = 1
+                SET b.retell_agent_id = p.retell_agent_id
+                WHERE p.retell_agent_id IS NOT NULL
+                AND b.retell_agent_id IS NULL
+            ');
+        }
         
-        // Remove columns from phone_numbers
-        Schema::table('phone_numbers', function (Blueprint $table) {
-            $table->dropColumn(['retell_agent_id', 'retell_agent_version']);
-        });
+        // Remove columns from phone_numbers (skip for SQLite)
+        if (!$this->isSQLite()) {
+            Schema::table('phone_numbers', function (Blueprint $table) {
+                $table->dropColumn(['retell_agent_id', 'retell_agent_version']);
+            });
+        }
     }
 };

@@ -1,994 +1,404 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/architecture/services/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Services - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Services";
+        var mkdocs_page_input_path = "architecture/services.md";
+        var mkdocs_page_url = "/mkdocs/architecture/services/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
 
-<!doctype html>
-<html lang="de" class="no-js">
-  <head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-        <meta name="description" content="Comprehensive documentation for the AskProAI AI-powered appointment booking platform">
-      
-      
-      
-        <link rel="canonical" href="https://docs.askproai.de/architecture/services/">
-      
-      
-      
-      
-      <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
-    
-    
-      
-        <title>Service Layer Documentation - AskProAI Complete Documentation</title>
-      
-    
-    
-      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
-      
-        
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
-      
-      
+<body class="wy-body-for-nav" role="document">
 
-
-    
-    
-      
-    
-    
-      
-        
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
-      
-    
-    
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
-    
-      
-  
-
-
-  
-  
-
-<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-XXXXXXXXXX"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-XXXXXXXXXX",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
-  
-    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
-  
-
-    
-    
-    
-  </head>
-  
-  
-    
-    
-      
-    
-    
-    
-    
-    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="purple">
-  
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-        
-        <a href="#service-layer-documentation" class="md-skip">
-          Zum Inhalt
-        </a>
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
-        
-      </div>
-    
-    
-      
-
-  
-
-<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Kopfzeile">
-    <a href="../.." title="AskProAI Complete Documentation" class="md-header__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15 12h2a5 5 0 0 0-5-5v2a3 3 0 0 1 3 3m4 0h2c0-5-4.03-9-9-9v2c3.86 0 7 3.13 7 7m1 3.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.25l-2.2 2.2a15.1 15.1 0 0 1-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02A11.4 11.4 0 0 1 8.5 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1 17 17 0 0 0 17 17 1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1"/></svg>
-
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            AskProAI Complete Documentation
-          </span>
-        </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            
-              Service Layer Documentation
-            
-          </span>
-        </div>
-      </div>
-    </div>
-    
-      
-        <form class="md-header__option" data-md-component="palette">
-  
-    
-    
-    
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
-    
-      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-      </label>
-    
-  
-    
-    
-    
-    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
-    
-      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
-      </label>
-    
-  
-</form>
-      
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
-    
-    
-    
-      
-      
-        <label class="md-header__button md-icon" for="__search">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Suche" placeholder="Suche" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Suche">
-        
-          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Teilen" aria-label="Teilen" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
-            
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
-          </a>
-        
-        <button type="reset" class="md-search__icon md-icon" title="Zurücksetzen" aria-label="Zurücksetzen" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        </button>
-      </nav>
-      
-        <div class="md-search__suggest" data-md-component="search-suggest"></div>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Suche wird initialisiert
-          </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
 </div>
-      
-    
-    
-      <div class="md-header__source">
-        <a href="https://github.com/askproai/api-gateway" title="Zum Repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
-  </div>
-  <div class="md-source__repository">
-    askproai/api-gateway
-  </div>
-</a>
       </div>
-    
-  </nav>
-  
-    
-      
-<nav class="md-tabs" aria-label="Hauptnavigation" data-md-component="tabs">
-  <div class="md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../.." class="md-tabs__link">
-          
-  
-  
-  Home
 
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../overview/" class="md-tabs__link">
-          
-  
-  
-  Architecture
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../features/phone-system/" class="md-tabs__link">
-          
-  
-  
-  Core Features
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../integrations/overview/" class="md-tabs__link">
-          
-  
-  
-  Integrations
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../api/complete-endpoint-reference/" class="md-tabs__link">
-          
-  
-  
-  API Reference
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../configuration/environment.md" class="md-tabs__link">
-          
-  
-  
-  Configuration
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../deployment/requirements.md" class="md-tabs__link">
-          
-  
-  
-  Deployment
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../development/setup.md" class="md-tabs__link">
-          
-  
-  
-  Development
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../operations/monitoring.md" class="md-tabs__link">
-          
-  
-  
-  Operations
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../migration/complete-migration-history/" class="md-tabs__link">
-          
-  
-  
-  Migration Guides
-
-        </a>
-      </li>
-    
-  
-
-      
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Services</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#service-architecture">Service Architecture</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#service-layer-ubersicht">📊 Service Layer Übersicht</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#integration-services">Integration Services</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#calcomeventsyncservice">CalcomEventSyncService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcomeventtypeimportservice">CalcomEventTypeImportService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcomeventtypesyncservice">CalcomEventTypeSyncService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcomimportservice">CalcomImportService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcommigrationservice">CalcomMigrationService</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#migration-strategy">Migration Strategy</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcomservice">CalcomService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcomservicev1legacy">CalcomServiceV1Legacy</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcomsyncservice">CalcomSyncService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcomv2migrationservice">CalcomV2MigrationService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcomv2service">CalcomV2Service</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#retellagentservice">RetellAgentService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#retellservice">RetellService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#retellv2service">RetellV2Service</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#stripeinvoiceservice">StripeInvoiceService</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#business-services">Business Services</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#appointmentbookingservice">AppointmentBookingService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#appointmentservice">AppointmentService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#customerportalservice">CustomerPortalService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#customerservice">CustomerService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#smartbookingservice">SmartBookingService</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#other-services">Other Services</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#anomalydetectionservice">AnomalyDetectionService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#availabilitychecker">AvailabilityChecker</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#availabilityservice">AvailabilityService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#cacheservice">CacheService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#cachewarmer">CacheWarmer</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calservice">CalService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calldatarefresher">CallDataRefresher</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#callservice">CallService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#callbackservice">CallbackService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#companyservice">CompanyService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#conflictdetectionservice">ConflictDetectionService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#cookieconsentservice">CookieConsentService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#currencyconverter">CurrencyConverter</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#dashboardrouteresolver">DashboardRouteResolver</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#datevexportservice">DatevExportService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#eagerloadinganalyzer">EagerLoadingAnalyzer</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#encryptionservice">EncryptionService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#eventtypematchingservice">EventTypeMatchingService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#eventtypenameparser">EventTypeNameParser</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#featureflagservice">FeatureFlagService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#filewatcherservice">FileWatcherService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#gdprservice">GdprService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#healthcheckservice">HealthCheckService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#horizonhealth">HorizonHealth</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#improvedeventtypenameparser">ImprovedEventTypeNameParser</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#integrationtestservice">IntegrationTestService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#invoicecomplianceservice">InvoiceComplianceService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#knowledgebaseservice">KnowledgeBaseService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#masterservicemanager">MasterServiceManager</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#mobiledetector">MobileDetector</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#navigationservice">NavigationService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#notificationservice">NotificationService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#onboardingservice">OnboardingService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#phonenumberresolver">PhoneNumberResolver</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#pricingservice">PricingService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#prompttemplateservice">PromptTemplateService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#querycache">QueryCache</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#querymonitor">QueryMonitor</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#queryoptimizer">QueryOptimizer</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#screenshotauthservice">ScreenshotAuthService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#screenshotservice">ScreenshotService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#serviceservice">ServiceService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#smarteventtypenameparser">SmartEventTypeNameParser</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#smartmigrationservice">SmartMigrationService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#staffservice">StaffService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#taxservice">TaxService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#tutorialservice">TutorialService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#validationservice">ValidationService</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#webhookprocessor">WebhookProcessor</a>
+    </li>
+        </ul>
+    </li>
     </ul>
-  </div>
-</nav>
-    
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-
-  
-
-
-  
-
-<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="AskProAI Complete Documentation" class="md-nav__button md-logo" aria-label="AskProAI Complete Documentation" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15 12h2a5 5 0 0 0-5-5v2a3 3 0 0 1 3 3m4 0h2c0-5-4.03-9-9-9v2c3.86 0 7 3.13 7 7m1 3.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.25l-2.2 2.2a15.1 15.1 0 0 1-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02A11.4 11.4 0 0 1 8.5 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1 17 17 0 0 0 17 17 1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1"/></svg>
-
-    </a>
-    AskProAI Complete Documentation
-  </label>
-  
-    <div class="md-nav__source">
-      <a href="https://github.com/askproai/api-gateway" title="Zum Repository" class="md-source" data-md-component="source">
-  <div class="md-source__icon md-icon">
-    
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
-  </div>
-  <div class="md-source__repository">
-    askproai/api-gateway
-  </div>
-</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
     </div>
-  
-  <ul class="md-nav__list" data-md-scrollfix>
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../.." class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Home
-    
-  </span>
-  
+    </nav>
 
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Architektur &raquo;</li>
+      <li>Services</li>
+    <li class="wy-breadcrumbs-aside">
     </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../overview/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Architecture
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../features/phone-system/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Core Features
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../integrations/overview/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Integrations
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../api/complete-endpoint-reference/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    API Reference
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../configuration/environment.md" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Configuration
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../deployment/requirements.md" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Deployment
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../development/setup.md" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Development
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../operations/monitoring.md" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Operations
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
-  
-  
-  
-    <a href="../../migration/complete-migration-history/" class="md-nav__link">
-      
-  
-  
-  <span class="md-ellipsis">
-    Migration Guides
-    
-  </span>
-  
-
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
-  
-
-      
-    </li>
-  
-
-    
   </ul>
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-            
-          
-          
-            <div class="md-content" data-md-component="content">
-              <article class="md-content__inner md-typeset">
-                
-                  
-
-
-  
-  
-
-
-<h1 id="service-layer-documentation">Service Layer Documentation<a class="headerlink" href="#service-layer-documentation" title="Permanent link">&para;</a></h1>
-<p>Generated on: 2025-06-23 16:14:16</p>
-<h2 id="service-architecture">Service Architecture<a class="headerlink" href="#service-architecture" title="Permanent link">&para;</a></h2>
-<div class="admonition info">
-<p class="admonition-title">Service Count</p>
-<p>Found <strong>69 services</strong> in the codebase.</p>
+  <hr/>
 </div>
-<h2 id="integration-services">Integration Services<a class="headerlink" href="#integration-services" title="Permanent link">&para;</a></h2>
-<h3 id="calcomeventsyncservice">CalcomEventSyncService<a class="headerlink" href="#calcomeventsyncservice" title="Permanent link">&para;</a></h3>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="service-layer-documentation">Service Layer Documentation</h1>
+<p>Generated on: 2025-06-23 16:14:16</p>
+<h2 id="service-architecture">Service Architecture</h2>
+<p>!!! info "Service Count"
+    Found <strong>69 services</strong> in the codebase.</p>
+<h2 id="service-layer-ubersicht">📊 Service Layer Übersicht</h2>
+<pre><code class="language-mermaid">flowchart TB
+    subgraph External[&quot;Externe APIs&quot;]
+        Retell[&quot;Retell.ai&lt;br/&gt;Phone AI&quot;]
+        Calcom[&quot;Cal.com&lt;br/&gt;Calendar&quot;]
+        Stripe[&quot;Stripe&lt;br/&gt;Payments&quot;]
+    end
+
+    subgraph Services[&quot;Service Layer&quot;]
+        subgraph Integration[&quot;Integration Services&quot;]
+            CalcomService[&quot;CalcomService&lt;br/&gt;V1/V2 Migration&quot;]
+            RetellService[&quot;RetellService&lt;br/&gt;Call Processing&quot;]
+            StripeService[&quot;StripeService&lt;br/&gt;Invoicing&quot;]
+        end
+
+        subgraph Business[&quot;Business Services&quot;]
+            AppointmentService[&quot;AppointmentService&lt;br/&gt;Booking Logic&quot;]
+            CustomerService[&quot;CustomerService&lt;br/&gt;Customer Mgmt&quot;]
+            CallService[&quot;CallService&lt;br/&gt;Call Analytics&quot;]
+        end
+
+        subgraph MCP[&quot;MCP Servers&quot;]
+            CalcomMCP[&quot;CalcomMCP&lt;br/&gt;Calendar Ops&quot;]
+            RetellMCP[&quot;RetellMCP&lt;br/&gt;AI Config&quot;]
+            DatabaseMCP[&quot;DatabaseMCP&lt;br/&gt;Safe Queries&quot;]
+        end
+    end
+
+    subgraph Core[&quot;Core Layer&quot;]
+        Repositories[&quot;Repositories&lt;br/&gt;Data Access&quot;]
+        Models[&quot;Models&lt;br/&gt;Domain&quot;]
+        Events[&quot;Events&lt;br/&gt;System Events&quot;]
+    end
+
+    Retell --&gt;|API| RetellService
+    Calcom --&gt;|API| CalcomService
+    Stripe --&gt;|API| StripeService
+
+    RetellService --&gt; CallService
+    CalcomService --&gt; AppointmentService
+    AppointmentService --&gt; CustomerService
+
+    Business --&gt; Repositories
+    Integration --&gt; Repositories
+    MCP --&gt; Repositories
+
+    Repositories --&gt; Models
+    Models --&gt; Events
+
+    style External fill:#ffe0b2
+    style Integration fill:#e3f2fd
+    style Business fill:#e8f5e9
+    style MCP fill:#f3e5f5
+    style Core fill:#f5f5f5
+</code></pre>
+<h2 id="integration-services">Integration Services</h2>
+<h3 id="calcomeventsyncservice">CalcomEventSyncService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>syncAllEventTypes()</code></li>
@@ -997,14 +407,14 @@
 - <code>linkStaffToEventTypes()</code></p>
 <p>Verknüpft Mitarbeiter mit Event-Types basierend auf Cal.com Daten</p>
 <hr />
-<h3 id="calcomeventtypeimportservice">CalcomEventTypeImportService<a class="headerlink" href="#calcomeventtypeimportservice" title="Permanent link">&para;</a></h3>
+<h3 id="calcomeventtypeimportservice">CalcomEventTypeImportService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>importEventTypes(): array</code></li>
 <li><code>getEventTypeById($eventTypeId): ?array</code></li>
 </ul>
 <hr />
-<h3 id="calcomeventtypesyncservice">CalcomEventTypeSyncService<a class="headerlink" href="#calcomeventtypesyncservice" title="Permanent link">&para;</a></h3>
+<h3 id="calcomeventtypesyncservice">CalcomEventTypeSyncService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>validateApiKey($apiKey): array</code></li>
@@ -1014,17 +424,35 @@
 <li><code>debugApiCall($apiKey): array</code></li>
 </ul>
 <hr />
-<h3 id="calcomimportservice">CalcomImportService<a class="headerlink" href="#calcomimportservice" title="Permanent link">&para;</a></h3>
+<h3 id="calcomimportservice">CalcomImportService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>importEventTypes()</code></li>
 <li><code>resolveDuplicate($eventTypeId, $action = "keep_local")</code></li>
 </ul>
 <hr />
-<h3 id="calcommigrationservice">CalcomMigrationService<a class="headerlink" href="#calcommigrationservice" title="Permanent link">&para;</a></h3>
+<h3 id="calcommigrationservice">CalcomMigrationService</h3>
 <p>Service to handle gradual migration from Cal.com V1 to V2 API
 This service provides a unified interface that can switch between
 V1 and V2 implementations based on configuration or feature flags.</p>
+<h4 id="migration-strategy">Migration Strategy</h4>
+<pre><code class="language-mermaid">flowchart LR
+    Request[API Request] --&gt; Router{Migration&lt;br/&gt;Service}
+    Router --&gt;|Check Flag| Decision{Use V2?}
+    Decision --&gt;|Yes| V2[CalcomV2Service]
+    Decision --&gt;|No| V1[CalcomService]
+
+    V1 --&gt; Response[Response]
+    V2 --&gt; Response
+
+    Cache[&quot;Cache Layer&lt;br/&gt;(5 min TTL)&quot;] --&gt; Router
+    Router --&gt; Cache
+
+    style Router fill:#e3f2fd
+    style V1 fill:#fff3cd
+    style V2 fill:#d4edda
+    style Cache fill:#f8d7da
+</code></pre>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getEventTypes(?string $teamSlug = null)</code></li>
@@ -1045,7 +473,7 @@ V1 and V2 implementations based on configuration or feature flags.</p>
 - <code>getMigrationStatus(): array</code></p>
 <p>Get migration status</p>
 <hr />
-<h3 id="calcomservice">CalcomService<a class="headerlink" href="#calcomservice" title="Permanent link">&para;</a></h3>
+<h3 id="calcomservice">CalcomService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>setApiKey(string $apiKey): self</code></li>
@@ -1055,7 +483,7 @@ V1 and V2 implementations based on configuration or feature flags.</p>
 - <code>bookAppointment($eventTypeId, $startTime, $endTime, $customerData, $notes = null)</code>
 - <code>getEventTypes($companyId = null)</code></p>
 <hr />
-<h3 id="calcomservicev1legacy">CalcomServiceV1Legacy<a class="headerlink" href="#calcomservicev1legacy" title="Permanent link">&para;</a></h3>
+<h3 id="calcomservicev1legacy">CalcomServiceV1Legacy</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>checkAvailability($eventTypeId, $dateFrom, $dateTo)</code></li>
@@ -1065,7 +493,7 @@ V1 and V2 implementations based on configuration or feature flags.</p>
 <li><code>cancelBooking($bookingId, $reason = null)</code></li>
 </ul>
 <hr />
-<h3 id="calcomsyncservice">CalcomSyncService<a class="headerlink" href="#calcomsyncservice" title="Permanent link">&para;</a></h3>
+<h3 id="calcomsyncservice">CalcomSyncService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>syncEventTypesForCompany($companyId)</code></li>
@@ -1080,7 +508,7 @@ V1 and V2 implementations based on configuration or feature flags.</p>
 - <code>invalidateCompanyCache($companyId)</code></p>
 <p>Cache für alle Event-Types einer Company invalidieren</p>
 <hr />
-<h3 id="calcomv2migrationservice">CalcomV2MigrationService<a class="headerlink" href="#calcomv2migrationservice" title="Permanent link">&para;</a></h3>
+<h3 id="calcomv2migrationservice">CalcomV2MigrationService</h3>
 <p>Cal.com V2 Migration Service
 This service provides v2 API compatibility while maintaining
 backward compatibility with existing v1 implementations.</p>
@@ -1096,7 +524,7 @@ backward compatibility with existing v1 implementations.</p>
 - <code>testConnection(string $apiKey): array</code></p>
 <p>Test API connection and permissions</p>
 <hr />
-<h3 id="calcomv2service">CalcomV2Service<a class="headerlink" href="#calcomv2service" title="Permanent link">&para;</a></h3>
+<h3 id="calcomv2service">CalcomV2Service</h3>
 <p>Cal.com V2 API Integration Service
 Provides comprehensive integration with Cal.com's V2 API for calendar management.
 This service handles:
@@ -1159,7 +587,7 @@ This service handles:
 - <code>updateBooking($bookingId, array $updateData)</code></p>
 <p>Update an existing booking</p>
 <hr />
-<h3 id="retellagentservice">RetellAgentService<a class="headerlink" href="#retellagentservice" title="Permanent link">&para;</a></h3>
+<h3 id="retellagentservice">RetellAgentService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getAgentDetails($agentId)</code></li>
@@ -1168,7 +596,7 @@ This service handles:
 <li><code>validateAgentConfiguration($agentId)</code></li>
 </ul>
 <hr />
-<h3 id="retellservice">RetellService<a class="headerlink" href="#retellservice" title="Permanent link">&para;</a></h3>
+<h3 id="retellservice">RetellService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getAgents()</code></li>
@@ -1183,7 +611,7 @@ This service handles:
 - <code>buildInboundResponse($agentId, $fromNumber = null, $dynamicVariables = [])</code></p>
 <p>Build response for inbound calls with dynamic variables</p>
 <hr />
-<h3 id="retellv2service">RetellV2Service<a class="headerlink" href="#retellv2service" title="Permanent link">&para;</a></h3>
+<h3 id="retellv2service">RetellV2Service</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>createPhoneCall(array $payload): array</code></li>
@@ -1214,7 +642,7 @@ This service handles:
 - <code>getAgentPrompt(string $agentId): ?string</code></p>
 <p>Get agent prompt only</p>
 <hr />
-<h3 id="stripeinvoiceservice">StripeInvoiceService<a class="headerlink" href="#stripeinvoiceservice" title="Permanent link">&para;</a></h3>
+<h3 id="stripeinvoiceservice">StripeInvoiceService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>ensureStripeCustomer(App\Models\Company $company): ?string</code></li>
@@ -1227,8 +655,8 @@ This service handles:
 - <code>createManualInvoice(App\Models\Company $company, array $items, ?int $branchId = null): ?App\Models\Invoice</code></p>
 <p>Create manual invoice for additional services.</p>
 <hr />
-<h2 id="business-services">Business Services<a class="headerlink" href="#business-services" title="Permanent link">&para;</a></h2>
-<h3 id="appointmentbookingservice">AppointmentBookingService<a class="headerlink" href="#appointmentbookingservice" title="Permanent link">&para;</a></h3>
+<h2 id="business-services">Business Services</h2>
+<h3 id="appointmentbookingservice">AppointmentBookingService</h3>
 <p>Central service for managing appointment bookings across all channels
 This service orchestrates the complete appointment booking flow, including:
 - Customer management (find/create)
@@ -1257,7 +685,7 @@ This service orchestrates the complete appointment booking flow, including:
 - <code>isSlotLocked($staff, $startTime, $endTime): bool</code></p>
 <p>Check if a time slot is currently locked</p>
 <hr />
-<h3 id="appointmentservice">AppointmentService<a class="headerlink" href="#appointmentservice" title="Permanent link">&para;</a></h3>
+<h3 id="appointmentservice">AppointmentService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>create(array $data): App\Models\Appointment</code></li>
@@ -1278,7 +706,7 @@ This service orchestrates the complete appointment booking flow, including:
 - <code>getStatistics(Carbon\Carbon $startDate, Carbon\Carbon $endDate): array</code></p>
 <p>Get appointment statistics</p>
 <hr />
-<h3 id="customerportalservice">CustomerPortalService<a class="headerlink" href="#customerportalservice" title="Permanent link">&para;</a></h3>
+<h3 id="customerportalservice">CustomerPortalService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>enablePortalAccess(App\Models\CustomerAuth $customer, ?string $password = null): bool</code></li>
@@ -1299,7 +727,7 @@ This service orchestrates the complete appointment booking flow, including:
 - <code>bulkEnablePortalAccess(App\Models\Company $company, array $customerIds = []): array</code></p>
 <p>Bulk enable portal access.</p>
 <hr />
-<h3 id="customerservice">CustomerService<a class="headerlink" href="#customerservice" title="Permanent link">&para;</a></h3>
+<h3 id="customerservice">CustomerService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>findByPhone(string $phone, int $companyId): ?App\Models\Customer</code></li>
@@ -1328,7 +756,7 @@ This service orchestrates the complete appointment booking flow, including:
 - <code>export(int $customerId): array</code></p>
 <p>Export customer data</p>
 <hr />
-<h3 id="smartbookingservice">SmartBookingService<a class="headerlink" href="#smartbookingservice" title="Permanent link">&para;</a></h3>
+<h3 id="smartbookingservice">SmartBookingService</h3>
 <p>SmartBookingService - Der zentrale Service für alle Terminbuchungen
 Konsolidiert die Funktionalität von:
 - AppointmentService
@@ -1340,8 +768,8 @@ Konsolidiert die Funktionalität von:
 </ul>
 <p>Hauptmethode: Verarbeitet einen eingehenden Anruf und bucht einen Termin</p>
 <hr />
-<h2 id="other-services">Other Services<a class="headerlink" href="#other-services" title="Permanent link">&para;</a></h2>
-<h3 id="anomalydetectionservice">AnomalyDetectionService<a class="headerlink" href="#anomalydetectionservice" title="Permanent link">&para;</a></h3>
+<h2 id="other-services">Other Services</h2>
+<h3 id="anomalydetectionservice">AnomalyDetectionService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>detectSystemAnomalies(): array</code></li>
@@ -1352,7 +780,7 @@ Konsolidiert die Funktionalität von:
 - <code>getSystemRecommendations(array $anomalies): array</code></p>
 <p>Get recommendations based on current anomalies</p>
 <hr />
-<h3 id="availabilitychecker">AvailabilityChecker<a class="headerlink" href="#availabilitychecker" title="Permanent link">&para;</a></h3>
+<h3 id="availabilitychecker">AvailabilityChecker</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>checkAvailabilityFromRequest($request)</code></li>
@@ -1363,7 +791,7 @@ Konsolidiert die Funktionalität von:
 - <code>findNextAvailableSlot($eventTypeId, $staffId = null, $branchId = null)</code></p>
 <p>Finde nächsten verfügbaren Termin</p>
 <hr />
-<h3 id="availabilityservice">AvailabilityService<a class="headerlink" href="#availabilityservice" title="Permanent link">&para;</a></h3>
+<h3 id="availabilityservice">AvailabilityService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>checkRealTimeAvailability(string $staffId, int $eventTypeId, Carbon\Carbon $date): array</code></li>
@@ -1374,7 +802,7 @@ Konsolidiert die Funktionalität von:
 - <code>getNextAvailableSlot(string $staffId, int $eventTypeId, Carbon\Carbon $fromDate): ?array</code></p>
 <p>Finde nächsten verfügbaren Slot</p>
 <hr />
-<h3 id="cacheservice">CacheService<a class="headerlink" href="#cacheservice" title="Permanent link">&para;</a></h3>
+<h3 id="cacheservice">CacheService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getEventTypes(int $companyId, callable $callback)</code></li>
@@ -1401,7 +829,7 @@ Konsolidiert die Funktionalität von:
 - <code>clearEventTypesCache(): void</code></p>
 <p>Clear all event types cache</p>
 <hr />
-<h3 id="cachewarmer">CacheWarmer<a class="headerlink" href="#cachewarmer" title="Permanent link">&para;</a></h3>
+<h3 id="cachewarmer">CacheWarmer</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>warmInvoiceCaches(): void</code></li>
@@ -1410,20 +838,20 @@ Konsolidiert die Funktionalität von:
 - <code>isUsageBasedInvoice(App\Models\Invoice $invoice): bool</code></p>
 <p>Check if an invoice is usage-based using cache</p>
 <hr />
-<h3 id="calservice">CalService<a class="headerlink" href="#calservice" title="Permanent link">&para;</a></h3>
+<h3 id="calservice">CalService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getEventTypes()</code></li>
 <li><code>createBooking($data)</code></li>
 </ul>
 <hr />
-<h3 id="calldatarefresher">CallDataRefresher<a class="headerlink" href="#calldatarefresher" title="Permanent link">&para;</a></h3>
+<h3 id="calldatarefresher">CallDataRefresher</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>refresh(App\Models\Call $call): bool</code></li>
 </ul>
 <hr />
-<h3 id="callservice">CallService<a class="headerlink" href="#callservice" title="Permanent link">&para;</a></h3>
+<h3 id="callservice">CallService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>processWebhook(array $webhookData): App\Models\Call</code></li>
@@ -1436,7 +864,7 @@ Konsolidiert die Funktionalität von:
 - <code>markAsFailed(int $callId, string $reason): void</code></p>
 <p>Mark call as failed</p>
 <hr />
-<h3 id="callbackservice">CallbackService<a class="headerlink" href="#callbackservice" title="Permanent link">&para;</a></h3>
+<h3 id="callbackservice">CallbackService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>createFromFailedBooking(App\Models\Call $call, string $reason, array $bookingData, ?string $errorDetails = null): App\Models\CallbackRequest</code></li>
@@ -1449,7 +877,7 @@ Konsolidiert die Funktionalität von:
 - <code>getStatistics(App\Models\Company $company, ?Carbon\Carbon $from = null, ?Carbon\Carbon $to = null): array</code></p>
 <p>Get callback statistics for company</p>
 <hr />
-<h3 id="companyservice">CompanyService<a class="headerlink" href="#companyservice" title="Permanent link">&para;</a></h3>
+<h3 id="companyservice">CompanyService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getSettings(int $companyId): ?array</code></li>
@@ -1470,7 +898,7 @@ Konsolidiert die Funktionalität von:
 - <code>getCalendarConfig(int $companyId): array</code></p>
 <p>Get company calendar configuration</p>
 <hr />
-<h3 id="conflictdetectionservice">ConflictDetectionService<a class="headerlink" href="#conflictdetectionservice" title="Permanent link">&para;</a></h3>
+<h3 id="conflictdetectionservice">ConflictDetectionService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>detectConflicts(string $staffId, Carbon\Carbon $startTime, Carbon\Carbon $endTime, ?int $excludeAppointmentId = null): array</code></li>
@@ -1479,7 +907,7 @@ Konsolidiert die Funktionalität von:
 - <code>batchConflictCheck(array $appointments): array</code></p>
 <p>Batch-Konfliktprüfung für mehrere Termine</p>
 <hr />
-<h3 id="cookieconsentservice">CookieConsentService<a class="headerlink" href="#cookieconsentservice" title="Permanent link">&para;</a></h3>
+<h3 id="cookieconsentservice">CookieConsentService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>hasConsent(?string $category = null): bool</code></li>
@@ -1498,7 +926,7 @@ Konsolidiert die Funktionalität von:
 - <code>getConsentStatistics(int $companyId): array</code></p>
 <p>Get consent statistics for a company</p>
 <hr />
-<h3 id="currencyconverter">CurrencyConverter<a class="headerlink" href="#currencyconverter" title="Permanent link">&para;</a></h3>
+<h3 id="currencyconverter">CurrencyConverter</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>centsToEuros(float $cents): float</code></li>
@@ -1514,7 +942,7 @@ Konsolidiert die Funktionalität von:
 <p>Format cost breakdown for storage
   Konvertiert alle Cent-Werte zu Euro-Werten</p>
 <hr />
-<h3 id="dashboardrouteresolver">DashboardRouteResolver<a class="headerlink" href="#dashboardrouteresolver" title="Permanent link">&para;</a></h3>
+<h3 id="dashboardrouteresolver">DashboardRouteResolver</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>resolve(string $slug): ?string</code></li>
@@ -1527,14 +955,14 @@ Konsolidiert die Funktionalität von:
 - <code>getAllDashboards(): array</code></p>
 <p>Get all available dashboards</p>
 <hr />
-<h3 id="datevexportservice">DatevExportService<a class="headerlink" href="#datevexportservice" title="Permanent link">&para;</a></h3>
+<h3 id="datevexportservice">DatevExportService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>exportInvoices(App\Models\Company $company, Carbon\Carbon $startDate, Carbon\Carbon $endDate, string $format = "EXTF"): array</code></li>
 </ul>
 <p>Exportiert Rechnungen im DATEV-Format</p>
 <hr />
-<h3 id="eagerloadinganalyzer">EagerLoadingAnalyzer<a class="headerlink" href="#eagerloadinganalyzer" title="Permanent link">&para;</a></h3>
+<h3 id="eagerloadinganalyzer">EagerLoadingAnalyzer</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>startAnalysis(): void</code></li>
@@ -1545,7 +973,7 @@ Konsolidiert die Funktionalität von:
 - <code>analyzeModel(string $modelClass): array</code></p>
 <p>Analyze a specific model for potential N+1 issues</p>
 <hr />
-<h3 id="encryptionservice">EncryptionService<a class="headerlink" href="#encryptionservice" title="Permanent link">&para;</a></h3>
+<h3 id="encryptionservice">EncryptionService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>encrypt(?string $value): ?string</code></li>
@@ -1558,7 +986,7 @@ Konsolidiert die Funktionalität von:
 - <code>rotateKey(array $models, array $fields): void</code></p>
 <p>Rotate encryption key (requires APP_KEY rotation)</p>
 <hr />
-<h3 id="eventtypematchingservice">EventTypeMatchingService<a class="headerlink" href="#eventtypematchingservice" title="Permanent link">&para;</a></h3>
+<h3 id="eventtypematchingservice">EventTypeMatchingService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>findMatchingEventType(string $serviceRequest, App\Models\Branch $branch, ?string $staffName = null, ?array $timePreference = null): ?array</code></li>
@@ -1567,7 +995,7 @@ Konsolidiert die Funktionalität von:
 - <code>createMapping(App\Models\Service $service, App\Models\CalcomEventType $eventType, ?array $keywords = null, int $priority = 0): void</code></p>
 <p>Create or update service to event type mapping</p>
 <hr />
-<h3 id="eventtypenameparser">EventTypeNameParser<a class="headerlink" href="#eventtypenameparser" title="Permanent link">&para;</a></h3>
+<h3 id="eventtypenameparser">EventTypeNameParser</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>parseEventTypeName(string $eventTypeName): array</code></li>
@@ -1582,7 +1010,7 @@ Konsolidiert die Funktionalität von:
 - <code>extractServiceName(string $eventTypeName): string</code></p>
 <p>Extrahiere nur den Service-Namen aus einem vollständigen Event-Type Namen</p>
 <hr />
-<h3 id="featureflagservice">FeatureFlagService<a class="headerlink" href="#featureflagservice" title="Permanent link">&para;</a></h3>
+<h3 id="featureflagservice">FeatureFlagService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>isEnabled(string $key, ?string $companyId = null, bool $trackUsage = true): bool</code></li>
@@ -1605,7 +1033,7 @@ Konsolidiert die Funktionalität von:
 - <code>emergencyDisableAll(string $reason): void</code></p>
 <p>Emergency kill switch - disable all features</p>
 <hr />
-<h3 id="filewatcherservice">FileWatcherService<a class="headerlink" href="#filewatcherservice" title="Permanent link">&para;</a></h3>
+<h3 id="filewatcherservice">FileWatcherService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>checkForChanges(): array</code></li>
@@ -1618,7 +1046,7 @@ Konsolidiert die Funktionalität von:
 - <code>setLastCheck(): void</code></p>
 <p>Set last check time</p>
 <hr />
-<h3 id="gdprservice">GdprService<a class="headerlink" href="#gdprservice" title="Permanent link">&para;</a></h3>
+<h3 id="gdprservice">GdprService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>exportCustomerData(App\Models\Customer $customer): array</code></li>
@@ -1629,7 +1057,7 @@ Konsolidiert die Funktionalität von:
 - <code>deleteCustomerData(App\Models\Customer $customer, bool $anonymize = true): void</code></p>
 <p>Delete all customer data (right to be forgotten)</p>
 <hr />
-<h3 id="healthcheckservice">HealthCheckService<a class="headerlink" href="#healthcheckservice" title="Permanent link">&para;</a></h3>
+<h3 id="healthcheckservice">HealthCheckService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>setCompany(App\Models\Company $company): self</code></li>
@@ -1656,14 +1084,14 @@ Konsolidiert die Funktionalität von:
 - <code>getHistory(string $checkName, int $days = 7): Illuminate\Support\Collection</code></p>
 <p>Get historical health check results</p>
 <hr />
-<h3 id="horizonhealth">HorizonHealth<a class="headerlink" href="#horizonhealth" title="Permanent link">&para;</a></h3>
+<h3 id="horizonhealth">HorizonHealth</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>ok(): bool</code></li>
 </ul>
 <p>true = queues healthy, false = stalled/offline */</p>
 <hr />
-<h3 id="improvedeventtypenameparser">ImprovedEventTypeNameParser<a class="headerlink" href="#improvedeventtypenameparser" title="Permanent link">&para;</a></h3>
+<h3 id="improvedeventtypenameparser">ImprovedEventTypeNameParser</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>extractCleanServiceName(string $eventTypeName, ?App\Models\Branch $branch = null, ?App\Models\Company $company = null): string</code></li>
@@ -1680,7 +1108,7 @@ Konsolidiert die Funktionalität von:
 - <code>extractServiceName(string $eventTypeName): string</code></p>
 <p>Extrahiere nur den Service-Namen aus einem vollständigen Event-Type Namen</p>
 <hr />
-<h3 id="integrationtestservice">IntegrationTestService<a class="headerlink" href="#integrationtestservice" title="Permanent link">&para;</a></h3>
+<h3 id="integrationtestservice">IntegrationTestService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>createTestBooking(App\Models\Branch $branch): array</code></li>
@@ -1691,7 +1119,7 @@ Konsolidiert die Funktionalität von:
 - <code>testRetellConnection($apiKey, $agentId = null)</code></p>
 <p>Test Retell.ai connection</p>
 <hr />
-<h3 id="invoicecomplianceservice">InvoiceComplianceService<a class="headerlink" href="#invoicecomplianceservice" title="Permanent link">&para;</a></h3>
+<h3 id="invoicecomplianceservice">InvoiceComplianceService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>generateCompliantInvoiceNumber(App\Models\Company $company): string</code></li>
@@ -1714,7 +1142,7 @@ Konsolidiert die Funktionalität von:
 - <code>generateDatevExport(App\Models\Company $company, Carbon\Carbon $startDate, Carbon\Carbon $endDate): array</code></p>
 <p>Generiert DATEV-kompatible Buchungssätze</p>
 <hr />
-<h3 id="knowledgebaseservice">KnowledgeBaseService<a class="headerlink" href="#knowledgebaseservice" title="Permanent link">&para;</a></h3>
+<h3 id="knowledgebaseservice">KnowledgeBaseService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>discoverAndIndexDocuments(array $paths = []): array</code></li>
@@ -1725,14 +1153,14 @@ Konsolidiert die Funktionalität von:
 - <code>search(string $query, array $filters = []): Illuminate\Support\Collection</code></p>
 <p>Search documents</p>
 <hr />
-<h3 id="masterservicemanager">MasterServiceManager<a class="headerlink" href="#masterservicemanager" title="Permanent link">&para;</a></h3>
+<h3 id="masterservicemanager">MasterServiceManager</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getEffectiveServicesForBranch(App\Models\Branch $branch): array</code></li>
 <li><code>deployServiceToBranches(App\Models\MasterService $service, array $branchIds): void</code></li>
 </ul>
 <hr />
-<h3 id="mobiledetector">MobileDetector<a class="headerlink" href="#mobiledetector" title="Permanent link">&para;</a></h3>
+<h3 id="mobiledetector">MobileDetector</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>setRequest(Illuminate\Http\Request $request): self</code></li>
@@ -1752,7 +1180,7 @@ Konsolidiert die Funktionalität von:
 <li><code>getDevicePixelRatio(): float</code></li>
 </ul>
 <hr />
-<h3 id="navigationservice">NavigationService<a class="headerlink" href="#navigationservice" title="Permanent link">&para;</a></h3>
+<h3 id="navigationservice">NavigationService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getResourceGroup(string $resource): ?string</code></li>
@@ -1780,7 +1208,7 @@ Konsolidiert die Funktionalität von:
 - <code>getActionLabel(string $action): string</code></p>
 <p>Get a consistent label for common actions</p>
 <hr />
-<h3 id="notificationservice">NotificationService<a class="headerlink" href="#notificationservice" title="Permanent link">&para;</a></h3>
+<h3 id="notificationservice">NotificationService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>sendAppointmentReminders(): void</code></li>
@@ -1789,7 +1217,7 @@ Konsolidiert die Funktionalität von:
 - <code>sendAppointmentConfirmation(App\Models\Appointment $appointment): void</code></p>
 <p>Sende Terminbestätigung</p>
 <hr />
-<h3 id="onboardingservice">OnboardingService<a class="headerlink" href="#onboardingservice" title="Permanent link">&para;</a></h3>
+<h3 id="onboardingservice">OnboardingService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getProgress(App\Models\Company $company, App\Models\User $user): array</code></li>
@@ -1818,7 +1246,7 @@ Konsolidiert die Funktionalität von:
 - <code>getReadinessScore(App\Models\Company $company): int</code></p>
 <p>Calculate overall readiness score</p>
 <hr />
-<h3 id="phonenumberresolver">PhoneNumberResolver<a class="headerlink" href="#phonenumberresolver" title="Permanent link">&para;</a></h3>
+<h3 id="phonenumberresolver">PhoneNumberResolver</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>resolve(string $phoneNumber): array</code></li>
@@ -1830,7 +1258,7 @@ Konsolidiert die Funktionalität von:
 - <code>normalize(string $phoneNumber): string</code></p>
 <p>Public method to normalize phone numbers</p>
 <hr />
-<h3 id="pricingservice">PricingService<a class="headerlink" href="#pricingservice" title="Permanent link">&para;</a></h3>
+<h3 id="pricingservice">PricingService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>calculateCallPrice(App\Models\Call $call): array</code></li>
@@ -1843,7 +1271,7 @@ Konsolidiert die Funktionalität von:
 - <code>saveBillingPeriod(array $billingData): App\Models\BillingPeriod</code></p>
 <p>Create or update billing period record</p>
 <hr />
-<h3 id="prompttemplateservice">PromptTemplateService<a class="headerlink" href="#prompttemplateservice" title="Permanent link">&para;</a></h3>
+<h3 id="prompttemplateservice">PromptTemplateService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getAvailableTemplates(): array</code></li>
@@ -1854,7 +1282,7 @@ Konsolidiert die Funktionalität von:
 - <code>generateRetellPrompt(App\Models\Branch $branch, array $config = []): array</code></p>
 <p>Generate prompt for Retell agent</p>
 <hr />
-<h3 id="querycache">QueryCache<a class="headerlink" href="#querycache" title="Permanent link">&para;</a></h3>
+<h3 id="querycache">QueryCache</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getAppointmentStats($companyId, $dateRange = "month")</code></li>
@@ -1875,7 +1303,7 @@ Konsolidiert die Funktionalität von:
 - <code>getCacheStats()</code></p>
 <p>Get cache statistics</p>
 <hr />
-<h3 id="querymonitor">QueryMonitor<a class="headerlink" href="#querymonitor" title="Permanent link">&para;</a></h3>
+<h3 id="querymonitor">QueryMonitor</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>enable(): void</code></li>
@@ -1894,7 +1322,7 @@ Konsolidiert die Funktionalität von:
 - <code>setSlowQueryThreshold(int $milliseconds): void</code></p>
 <p>Set slow query threshold</p>
 <hr />
-<h3 id="queryoptimizer">QueryOptimizer<a class="headerlink" href="#queryoptimizer" title="Permanent link">&para;</a></h3>
+<h3 id="queryoptimizer">QueryOptimizer</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>optimizeEagerLoading(Illuminate\Database\Eloquent\Builder $query, array $relationships): Illuminate\Database\Eloquent\Builder</code></li>
@@ -1923,7 +1351,7 @@ Konsolidiert die Funktionalität von:
 - <code>addQueryHint(Illuminate\Database\Eloquent\Builder $query, string $hint): Illuminate\Database\Eloquent\Builder</code></p>
 <p>Add query hints</p>
 <hr />
-<h3 id="screenshotauthservice">ScreenshotAuthService<a class="headerlink" href="#screenshotauthservice" title="Permanent link">&para;</a></h3>
+<h3 id="screenshotauthservice">ScreenshotAuthService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getAuthCookies(): array</code></li>
@@ -1932,7 +1360,7 @@ Konsolidiert die Funktionalität von:
 - <code>authenticateViaHttp(string $email, string $password): ?array</code></p>
 <p>Authenticate via HTTP request (for testing)</p>
 <hr />
-<h3 id="screenshotservice">ScreenshotService<a class="headerlink" href="#screenshotservice" title="Permanent link">&para;</a></h3>
+<h3 id="screenshotservice">ScreenshotService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>capture(string $urlOrRoute, array $options = []): string</code></li>
@@ -1947,7 +1375,7 @@ Konsolidiert die Funktionalität von:
 - <code>cleanup(int $daysToKeep = 7): int</code></p>
 <p>Clean up old screenshots</p>
 <hr />
-<h3 id="serviceservice">ServiceService<a class="headerlink" href="#serviceservice" title="Permanent link">&para;</a></h3>
+<h3 id="serviceservice">ServiceService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getServicesList(int $companyId, ?int $branchId = null): Illuminate\Support\Collection</code></li>
@@ -1970,7 +1398,7 @@ Konsolidiert die Funktionalität von:
 - <code>getServiceStatistics(int $serviceId): array</code></p>
 <p>Get service statistics</p>
 <hr />
-<h3 id="smarteventtypenameparser">SmartEventTypeNameParser<a class="headerlink" href="#smarteventtypenameparser" title="Permanent link">&para;</a></h3>
+<h3 id="smarteventtypenameparser">SmartEventTypeNameParser</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>extractCleanServiceName(string $eventTypeName): string</code></li>
@@ -1981,7 +1409,7 @@ Konsolidiert die Funktionalität von:
 - <code>analyzeEventTypesForImport(array $eventTypes, App\Models\Branch $targetBranch): array</code></p>
 <p>Analysiere Event-Types für Import mit intelligenter Namensgebung</p>
 <hr />
-<h3 id="smartmigrationservice">SmartMigrationService<a class="headerlink" href="#smartmigrationservice" title="Permanent link">&para;</a></h3>
+<h3 id="smartmigrationservice">SmartMigrationService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>analyzeMigration(string $migrationPath): array</code></li>
@@ -1992,7 +1420,7 @@ Konsolidiert die Funktionalität von:
 - <code>performOnlineSchemaChange(string $table, callable $schemaChange): bool</code></p>
 <p>Perform online schema change for large tables</p>
 <hr />
-<h3 id="staffservice">StaffService<a class="headerlink" href="#staffservice" title="Permanent link">&para;</a></h3>
+<h3 id="staffservice">StaffService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getSchedule(int $staffId): array</code></li>
@@ -2007,7 +1435,7 @@ Konsolidiert die Funktionalität von:
 - <code>getAvailableStaff(int $serviceId, int $branchId, Carbon\Carbon $date): Illuminate\Support\Collection</code></p>
 <p>Get available staff for a specific service and branch</p>
 <hr />
-<h3 id="taxservice">TaxService<a class="headerlink" href="#taxservice" title="Permanent link">&para;</a></h3>
+<h3 id="taxservice">TaxService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>getDeterminedTaxRate(App\Models\Company $company, ?string $taxType = "standard"): array</code></li>
@@ -2028,7 +1456,7 @@ Konsolidiert die Funktionalität von:
 - <code>syncStripeEUtaxRate(App\Models\Company $company, float $rate, string $name): ?string</code></p>
 <p>Erstellt Stripe Tax Rate</p>
 <hr />
-<h3 id="tutorialservice">TutorialService<a class="headerlink" href="#tutorialservice" title="Permanent link">&para;</a></h3>
+<h3 id="tutorialservice">TutorialService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>initializeDefaultTutorials(): void</code></li>
@@ -2047,13 +1475,13 @@ Konsolidiert die Funktionalität von:
 - <code>getNextTutorial(App\Models\User $user, string $currentRoute): ?object</code></p>
 <p>Get next unviewed tutorial for user</p>
 <hr />
-<h3 id="validationservice">ValidationService<a class="headerlink" href="#validationservice" title="Permanent link">&para;</a></h3>
+<h3 id="validationservice">ValidationService</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>validateBranch(App\Models\Branch $branch): array</code></li>
 </ul>
 <hr />
-<h3 id="webhookprocessor">WebhookProcessor<a class="headerlink" href="#webhookprocessor" title="Permanent link">&para;</a></h3>
+<h3 id="webhookprocessor">WebhookProcessor</h3>
 <p><strong>Public Methods</strong>:</p>
 <ul>
 <li><code>process(string $provider, array $payload, array $headers = [], ?string $correlationId = null): array</code></li>
@@ -2062,101 +1490,50 @@ Konsolidiert die Funktionalität von:
 - <code>retry(int $webhookEventId): array</code></p>
 <p>Retry a failed webhook</p>
 <hr />
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-                
-              </article>
+              
             </div>
-          
-          
-  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../overview/" class="btn btn-neutral float-left" title="Übersicht"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../system-design/" class="btn btn-neutral float-right" title="System Design">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
 
-<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
-        </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
-  Zurück zum Seitenanfang
-</button>
-        
-      </main>
-      
-        <footer class="md-footer">
-  
-    
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-    <div class="md-copyright__highlight">
-      &copy; 2024-2025 <a href="https://askproai.de" target="_blank" rel="noopener">AskProAI</a> - AI-Powered Appointment Booking Platform
-    </div>
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
-        <div class="md-social">
-  
-    
-    
-    
-    
-      
-      
-    
-    <a href="https://github.com/askproai" target="_blank" rel="noopener" title="github.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
-    </a>
-  
-    
-    
-    
-    
-      
-      
-    
-    <a href="https://twitter.com/askproai" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253"/></svg>
-    </a>
-  
-</div>
-      
-    </div>
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
   </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-      
-    </div>
-    <div class="md-dialog" data-md-component="dialog">
-      <div class="md-dialog__inner md-typeset"></div>
-    </div>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-    
-      
-      <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.prune", "navigation.top", "navigation.footer", "toc.follow", "toc.integrate", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "In Zwischenablage kopiert", "clipboard.copy": "In Zwischenablage kopieren", "search.result.more.one": "1 weiteres Suchergebnis auf dieser Seite", "search.result.more.other": "# weitere Suchergebnisse auf dieser Seite", "search.result.none": "Keine Suchergebnisse", "search.result.one": "1 Suchergebnis", "search.result.other": "# Suchergebnisse", "search.result.placeholder": "Suchbegriff eingeben", "search.result.term.missing": "Es fehlt", "select.version": "Version ausw\u00e4hlen"}, "version": {"provider": "mike"}}</script>
+      <span><a href="../overview/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
-      
+      <span><a href="../system-design/" style="color: #fcfcfc">Next &raquo;</a></span>
     
-  </body>
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
 </html>

@@ -16,7 +16,9 @@ class TestPhoneResolution extends Command
      */
     protected $signature = 'phone:test-resolution 
                             {phone : Phone number to test}
-                            {--agent= : Optional agent ID to include in test}';
+                            {--agent= : Optional agent ID to include in test}
+                            {--test-mode : Enable test mode resolution}
+                            {--webhook : Show full webhook resolution details}';
 
     /**
      * The console command description.
@@ -49,6 +51,12 @@ class TestPhoneResolution extends Command
             'to' => $phone,
             'agent_id' => $agentId
         ];
+        
+        // Add test mode flag if requested
+        if ($this->option('test-mode')) {
+            $webhookData['metadata']['test_mode'] = true;
+            $this->info("Test mode enabled");
+        }
         
         // Test resolution
         $result = $this->resolver->resolveFromWebhook($webhookData);
@@ -95,8 +103,46 @@ class TestPhoneResolution extends Command
         } else {
             $this->info("Found " . $phoneRecords->count() . " matching record(s):");
             foreach ($phoneRecords as $record) {
-                $this->line("  - {$record->number} (Type: {$record->type}, Branch: {$record->branch_id}, Active: " . ($record->is_active ? 'Yes' : 'No') . ")");
+                $this->line("  - {$record->number} (Branch: {$record->branch_id}, Active: " . ($record->is_active ? 'Yes' : 'No') . ", Agent: " . ($record->retell_agent_id ?? 'N/A') . ")");
             }
+        }
+        
+        // Show additional webhook details
+        if ($this->option('webhook')) {
+            $this->info("\n=== Webhook Resolution Details ===");
+            
+            // Test different resolution methods
+            $methods = [
+                'Phone Number' => ['to' => $phone],
+                'Agent ID' => ['agent_id' => $agentId ?? 'test_agent_123'],
+                'Metadata Branch' => ['metadata' => ['askproai_branch_id' => Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)->first()?->id]],
+                'Test Mode' => ['metadata' => ['test_mode' => true]],
+            ];
+            
+            foreach ($methods as $method => $data) {
+                $testData = array_merge(['to' => $phone], $data);
+                $testResult = $this->resolver->resolveFromWebhook($testData);
+                
+                $this->line(sprintf(
+                    "  %s: %s (Method: %s, Confidence: %s)",
+                    str_pad($method, 15),
+                    $testResult['branch_id'] ? 'Found' : 'Not Found',
+                    $testResult['resolution_method'] ?? 'N/A',
+                    $testResult['confidence'] ?? '0'
+                ));
+            }
+        }
+        
+        // Show recommendations
+        $this->info("\n=== Recommendations ===");
+        if (!$result['branch_id']) {
+            $this->warn("⚠ No branch found for this phone number!");
+            $this->line("To fix this:");
+            $this->line("  1. Create a phone number record: php artisan phone:create $phone --branch=<branch-id>");
+            $this->line("  2. Or update branch phone number: Branch::find('<id>')->update(['phone_number' => '$phone'])");
+            $this->line("  3. Or use test mode: php artisan phone:test-resolution $phone --test-mode");
+        } else {
+            $this->info("✓ Phone number is properly configured");
         }
         
         return 0;

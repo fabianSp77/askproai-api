@@ -171,7 +171,7 @@ class ProcessRetellWebhookJob implements ShouldQueue
             $request = request();
             $request->merge($payload);
             $deduplicationService->markAsCompleted('retell', $request, [
-                'job_id' => $this->job->uuid(),
+                'job_id' => $this->job ? $this->job->uuid() : 'manual-' . uniqid(),
                 'webhook_event_id' => $this->webhookEvent->id
             ]);
             
@@ -219,7 +219,9 @@ class ProcessRetellWebhookJob implements ShouldQueue
      */
     protected function processCallEnded(array $payload): void
     {
-        $callId = $payload['call_id'] ?? null;
+        // Retell sends call data nested under 'call' key
+        $callData = $payload['call'] ?? $payload;
+        $callId = $callData['call_id'] ?? null;
         
         if (!$callId) {
             throw new \Exception('Missing call_id in call_ended event');
@@ -230,7 +232,7 @@ class ProcessRetellWebhookJob implements ShouldQueue
             'correlation_id' => $this->correlationId
         ]);
         
-        DB::transaction(function () use ($payload, $callId) {
+        DB::transaction(function () use ($payload, $callId, $callData) {
             // Find or create call record
             $call = Call::where('retell_call_id', $callId)->first();
             
@@ -240,7 +242,6 @@ class ProcessRetellWebhookJob implements ShouldQueue
             }
             
             // Update call with end data
-            $callData = $payload['call'] ?? [];
             $call->update([
                 'ended_at' => isset($callData['end_timestamp']) 
                     ? Carbon::createFromTimestampMs($callData['end_timestamp']) 
@@ -284,7 +285,9 @@ class ProcessRetellWebhookJob implements ShouldQueue
      */
     protected function processCallStarted(array $payload): void
     {
-        $callId = $payload['call_id'] ?? null;
+        // Retell sends call data nested under 'call' key
+        $callData = $payload['call'] ?? $payload;
+        $callId = $callData['call_id'] ?? null;
         
         if (!$callId) {
             throw new \Exception('Missing call_id in call_started event');
@@ -296,8 +299,6 @@ class ProcessRetellWebhookJob implements ShouldQueue
         ]);
         
         // Create or update call record
-        $callData = $payload['call'] ?? [];
-        
         $call = Call::updateOrCreate(
             ['retell_call_id' => $callId],
             [
@@ -323,7 +324,9 @@ class ProcessRetellWebhookJob implements ShouldQueue
      */
     protected function processCallAnalyzed(array $payload): void
     {
-        $callId = $payload['call_id'] ?? null;
+        // Retell sends call data nested under 'call' key
+        $callData = $payload['call'] ?? $payload;
+        $callId = $callData['call_id'] ?? null;
         
         if (!$callId) {
             throw new \Exception('Missing call_id in call_analyzed event');
@@ -389,10 +392,10 @@ class ProcessRetellWebhookJob implements ShouldQueue
      */
     protected function createCallFromPayload(array $payload): Call
     {
-        $callData = $payload['call'] ?? [];
+        $callData = $payload['call'] ?? $payload;
         
         $call = Call::create([
-            'retell_call_id' => $payload['call_id'],
+            'retell_call_id' => $callData['call_id'],
             'from_number' => $callData['from_number'] ?? null,
             'to_number' => $callData['to_number'] ?? null,
             'direction' => $callData['direction'] ?? 'inbound',

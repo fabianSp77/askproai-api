@@ -2,16 +2,17 @@
 
 namespace Tests\Unit\MCP;
 
-use App\Services\MCP\Servers\KnowledgeMCPServer;
+use App\Models\Company;
+use App\Models\KnowledgeCategory;
+use App\Models\KnowledgeDocument;
+use App\Services\KnowledgeBaseService;
 use App\Services\MCP\MCPRequest;
 use App\Services\MCP\MCPResponse;
-use App\Services\KnowledgeBaseService;
-use App\Models\KnowledgeDocument;
-use App\Models\KnowledgeCategory;
-use App\Models\Company;
-use Tests\TestCase;
+use App\Services\MCP\Servers\KnowledgeMCPServer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class KnowledgeMCPServerTest extends TestCase
 {
@@ -31,6 +32,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->company = Company::factory()->create();
     }
 
+    #[Test]
+
     public function test_can_handle_knowledge_methods()
     {
         $this->assertTrue($this->server->canHandle('knowledge.search'));
@@ -39,6 +42,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertTrue($this->server->canHandle('knowledge.categories'));
         $this->assertFalse($this->server->canHandle('database.query'));
     }
+
+    #[Test]
 
     public function test_search_knowledge_documents()
     {
@@ -80,6 +85,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertEquals(0.95, $response->getData()['results'][0]['relevance_score']);
     }
 
+    #[Test]
+
     public function test_create_knowledge_document()
     {
         $request = new MCPRequest([
@@ -117,6 +124,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertEquals('new-faq-cancellation-policy', $response->getData()['slug']);
     }
 
+    #[Test]
+
     public function test_update_knowledge_document()
     {
         $request = new MCPRequest([
@@ -141,6 +150,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertTrue($response->isSuccess());
         $this->assertTrue($response->getData()['updated']);
     }
+
+    #[Test]
 
     public function test_get_knowledge_categories()
     {
@@ -168,6 +179,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertCount(3, $response->getData()['categories']);
         $this->assertEquals('FAQs', $response->getData()['categories'][0]['name']);
     }
+
+    #[Test]
 
     public function test_get_document_by_slug()
     {
@@ -203,6 +216,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertCount(2, $response->getData()['related_documents']);
     }
 
+    #[Test]
+
     public function test_delete_knowledge_document()
     {
         $request = new MCPRequest([
@@ -223,6 +238,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertTrue($response->isSuccess());
         $this->assertTrue($response->getData()['deleted']);
     }
+
+    #[Test]
 
     public function test_get_popular_documents()
     {
@@ -252,6 +269,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertEquals(5000, $response->getData()['documents'][0]['views']);
     }
 
+    #[Test]
+
     public function test_mark_document_helpful()
     {
         $request = new MCPRequest([
@@ -273,6 +292,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertTrue($response->isSuccess());
         $this->assertEquals(90, $response->getData()['helpful_count']);
     }
+
+    #[Test]
 
     public function test_search_with_filters()
     {
@@ -302,6 +323,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertTrue($response->isSuccess());
     }
 
+    #[Test]
+
     public function test_handle_document_not_found()
     {
         $request = new MCPRequest([
@@ -321,6 +344,8 @@ class KnowledgeMCPServerTest extends TestCase
         $this->assertFalse($response->isSuccess());
         $this->assertEquals('NOT_FOUND', $response->getError()->getCode());
     }
+
+    #[Test]
 
     public function test_validate_required_params()
     {

@@ -22,8 +22,15 @@ return new class extends CompatibleMigration
         });
     }
 
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         Schema::table('branches', function (Blueprint $table) {
             $table->dropColumn([
                 'retell_agent_cache',

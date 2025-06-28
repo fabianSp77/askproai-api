@@ -35,6 +35,7 @@ $currentStatusColor = $statusColors[$performanceStatus] ?? $statusColors['good']
      x-data="{ 
          showVersionDropdown: false,
          selectedVersion: '{{ $agent['version'] ?? 'V1' }}',
+         selectedDisplayVersion: '{{ $agent['display_version'] ?? $agent['version'] ?? 'V1' }}',
          versions: {{ json_encode($agent['all_versions'] ?? []) }}
      }">
     
@@ -136,7 +137,7 @@ $currentStatusColor = $statusColors[$performanceStatus] ?? $statusColors['good']
                         onmouseover="this.style.backgroundColor='#c7d2fe'"
                         onmouseout="this.style.backgroundColor='#e0e7ff'"
                         title="Select agent version">
-                    <span x-text="selectedVersion">{{ $agent['version'] ?? 'V1' }}</span>
+                    <span x-text="selectedDisplayVersion">{{ $agent['display_version'] ?? $agent['version'] ?? 'V1' }}</span>
                     <svg style="margin-left: 4px; width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
@@ -159,10 +160,40 @@ $currentStatusColor = $statusColors[$performanceStatus] ?? $statusColors['good']
                         right: 0;
                      ">
                     <div style="padding: 4px;">
-                        @if($agent['total_versions'] ?? 0 > 1)
+                        @if(isset($agent['all_versions']) && count($agent['all_versions']) > 0)
+                            @foreach($agent['all_versions'] as $versionData)
+                                <button wire:click="selectAgentVersion('{{ $agent['base_name'] ?? '' }}', '{{ $versionData['version'] ?? 'V1' }}')"
+                                        @click="selectedVersion = '{{ $versionData['version'] ?? 'V1' }}'; selectedDisplayVersion = '{{ $versionData['display_version'] ?? $versionData['version'] ?? 'V1' }}'; showVersionDropdown = false"
+                                        style="
+                                            width: 100%;
+                                            text-align: left;
+                                            padding: 8px 16px;
+                                            font-size: 14px;
+                                            color: #374151;
+                                            background: none;
+                                            border: none;
+                                            cursor: pointer;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: space-between;
+                                            border-radius: 4px;
+                                            transition: background-color 0.15s ease;
+                                        "
+                                        onmouseover="this.style.backgroundColor='#f3f4f6'"
+                                        onmouseout="this.style.backgroundColor='transparent'">
+                                    <span>{{ $versionData['display_version'] ?? $versionData['version'] ?? 'V1' }}</span>
+                                    @if($versionData['is_active'] ?? false)
+                                        <span style="font-size: 12px; color: #10b981;">Active</span>
+                                    @elseif($versionData['is_latest'] ?? false)
+                                        <span style="font-size: 12px; color: #6366f1;">Latest</span>
+                                    @endif
+                                </button>
+                            @endforeach
+                        @elseif(($agent['total_versions'] ?? 0) > 1)
+                            {{-- Fallback to sequential version generation if all_versions is not available --}}
                             @for($i = ($agent['total_versions'] ?? 1); $i >= 1; $i--)
                                 <button wire:click="selectAgentVersion('{{ $agent['base_name'] ?? '' }}', 'V{{ $i }}')"
-                                        @click="selectedVersion = 'V{{ $i }}'; showVersionDropdown = false"
+                                        @click="selectedVersion = 'V{{ $i }}'; selectedDisplayVersion = 'V{{ $i }}'; showVersionDropdown = false"
                                         style="
                                             width: 100%;
                                             text-align: left;
@@ -377,6 +408,103 @@ $currentStatusColor = $statusColors[$performanceStatus] ?? $statusColors['good']
                 </svg>
                 Analytics
             </button>
+            
+            {{-- Export Dropdown --}}
+            <div x-data="{ showExportMenu: false }" style="position: relative;">
+                <button @click="showExportMenu = !showExportMenu"
+                        @click.away="showExportMenu = false"
+                        style="
+                            display: inline-flex;
+                            align-items: center;
+                            padding: 6px 12px;
+                            font-size: 13px;
+                            font-weight: 500;
+                            border-radius: 6px;
+                            background-color: #fef3c7;
+                            color: #92400e;
+                            border: none;
+                            cursor: pointer;
+                            transition: all 0.15s ease;
+                        "
+                        title="Export agent configuration"
+                        onmouseover="this.style.backgroundColor='#fde68a'"
+                        onmouseout="this.style.backgroundColor='#fef3c7'">
+                    <svg style="width: 14px; height: 14px; margin-right: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export
+                    <svg style="width: 12px; height: 12px; margin-left: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                
+                <div x-show="showExportMenu"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="transform opacity-0 scale-95"
+                     x-transition:enter-end="transform opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="transform opacity-100 scale-100"
+                     x-transition:leave-end="transform opacity-0 scale-95"
+                     style="
+                         position: absolute;
+                         bottom: 100%;
+                         left: 0;
+                         margin-bottom: 4px;
+                         background: white;
+                         border: 1px solid #e5e7eb;
+                         border-radius: 8px;
+                         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                         z-index: 50;
+                         min-width: 200px;
+                     ">
+                    <button wire:click.stop="exportAgent('{{ $agent['agent_id'] ?? '' }}')"
+                            @click="showExportMenu = false"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                width: 100%;
+                                padding: 10px 16px;
+                                font-size: 13px;
+                                color: #374151;
+                                background: none;
+                                border: none;
+                                cursor: pointer;
+                                text-align: left;
+                                transition: background-color 0.15s ease;
+                            "
+                            onmouseover="this.style.backgroundColor='#f3f4f6'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                        <svg style="width: 16px; height: 16px; margin-right: 8px; color: #6366f1;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        AskProAI Format
+                    </button>
+                    
+                    <button wire:click.stop="exportAgentForRetell('{{ $agent['agent_id'] ?? '' }}')"
+                            @click="showExportMenu = false"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                width: 100%;
+                                padding: 10px 16px;
+                                font-size: 13px;
+                                color: #374151;
+                                background: none;
+                                border: none;
+                                cursor: pointer;
+                                text-align: left;
+                                transition: background-color 0.15s ease;
+                                border-top: 1px solid #e5e7eb;
+                            "
+                            onmouseover="this.style.backgroundColor='#f3f4f6'"
+                            onmouseout="this.style.backgroundColor='transparent'">
+                        <svg style="width: 16px; height: 16px; margin-right: 8px; color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        Retell.ai Format
+                    </button>
+                </div>
+            </div>
         </div>
         
         {{-- View Details --}}

@@ -31,15 +31,65 @@ class UnifiedWebhookController extends Controller
                 ], 400);
             }
             
-            // Process webhook with detected provider
-            $result = $this->processor->process(
-                $provider,
-                $request->all(),
-                $request->headers->all(),
-                null // Let processor generate correlation ID
-            );
+            // Generate correlation ID for tracking
+            $correlationId = \Illuminate\Support\Str::uuid()->toString();
             
-            return response()->json($result, 200);
+            // Log webhook receipt
+            \Log::info('Webhook received', [
+                'provider' => $provider,
+                'event' => $request->input('event') ?? $request->input('type') ?? 'unknown',
+                'correlation_id' => $correlationId,
+                'ip' => $request->ip()
+            ]);
+            
+            // Check for real-time webhooks that need immediate response
+            if ($this->requiresSynchronousProcessing($provider, $request)) {
+                // Process synchronously for real-time requirements
+                $result = $this->processor->process(
+                    $provider,
+                    $request->all(),
+                    $request->headers->all(),
+                    $correlationId
+                );
+                return response()->json($result, 200);
+            }
+            
+            // Generate idempotency key and event ID
+            $payload = $request->all();
+            $idempotencyKey = \App\Models\WebhookEvent::generateIdempotencyKey($provider, $payload);
+            $eventId = $this->extractEventId($provider, $payload);
+            
+            // Create webhook event record for async processing
+            $webhookEvent = \App\Models\WebhookEvent::create([
+                'provider' => $provider,
+                'event_type' => $request->input('event') ?? $request->input('type') ?? 'unknown',
+                'event_id' => $eventId,
+                'idempotency_key' => $idempotencyKey,
+                'payload' => $payload,
+                'headers' => $request->headers->all(),
+                'correlation_id' => $correlationId,
+                'status' => \App\Models\WebhookEvent::STATUS_PENDING,
+                'received_at' => now(),
+            ]);
+            
+            // Dispatch to appropriate queue based on provider and priority
+            $job = new \App\Jobs\ProcessWebhookJob($webhookEvent, $correlationId);
+            
+            // Determine queue priority
+            $queue = $this->determineQueue($provider, $webhookEvent->event_type);
+            
+            // Dispatch with timeout protection
+            dispatch($job)
+                ->onQueue($queue)
+                ->afterCommit(); // Ensure database transaction completes first
+            
+            // Return immediate success response to prevent timeout
+            return response()->json([
+                'success' => true,
+                'message' => 'Webhook accepted for processing',
+                'correlation_id' => $correlationId,
+                'webhook_id' => $webhookEvent->id
+            ], 202); // 202 Accepted
             
         } catch (\App\Exceptions\WebhookSignatureException $e) {
             return response()->json([
@@ -54,7 +104,8 @@ class UnifiedWebhookController extends Controller
             // Log unexpected errors
             \Log::error('Unexpected webhook error', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'correlation_id' => $correlationId ?? 'unknown'
             ]);
             
             return response()->json([
@@ -109,6 +160,59 @@ class UnifiedWebhookController extends Controller
     }
     
     /**
+     * Check if webhook requires synchronous processing
+     */
+    private function requiresSynchronousProcessing(string $provider, Request $request): bool
+    {
+        // Retell inbound calls need immediate response for real-time interaction
+        if ($provider === 'retell') {
+            $eventType = $request->input('event');
+            if (in_array($eventType, ['call_inbound', 'call_analyzed'])) {
+                return true;
+            }
+        }
+        
+        // All other webhooks can be processed asynchronously
+        return false;
+    }
+    
+    /**
+     * Determine queue priority based on provider and event type
+     */
+    private function determineQueue(string $provider, string $eventType): string
+    {
+        // High priority: Critical business events
+        if ($provider === 'retell' && in_array($eventType, ['call_ended', 'call_failed'])) {
+            return 'webhooks-high';
+        }
+        
+        if ($provider === 'calcom' && in_array($eventType, ['booking.created', 'booking.cancelled', 'booking.rescheduled'])) {
+            return 'webhooks-high';
+        }
+        
+        // Medium priority: Payment events
+        if ($provider === 'stripe') {
+            return 'webhooks-medium';
+        }
+        
+        // Low priority: Everything else
+        return 'webhooks-low';
+    }
+    
+    /**
+     * Extract event ID from payload
+     */
+    private function extractEventId(string $provider, array $payload): string
+    {
+        return match ($provider) {
+            'retell' => $payload['call']['call_id'] ?? $payload['call_id'] ?? \Illuminate\Support\Str::uuid(),
+            'calcom' => $payload['payload']['uid'] ?? \Illuminate\Support\Str::uuid(),
+            'stripe' => $payload['id'] ?? \Illuminate\Support\Str::uuid(),
+            default => \Illuminate\Support\Str::uuid()
+        };
+    }
+    
+    /**
      * Health check endpoint for webhook processing
      */
     public function health(): JsonResponse
@@ -120,7 +224,9 @@ class UnifiedWebhookController extends Controller
                 'deduplication' => true,
                 'retry_logic' => true,
                 'database_logging' => true,
-                'mcp_architecture' => true
+                'mcp_architecture' => true,
+                'async_processing' => true,
+                'circuit_breaker' => true
             ],
             'timestamp' => now()->toIso8601String()
         ]);

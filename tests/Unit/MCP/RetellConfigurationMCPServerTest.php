@@ -2,15 +2,16 @@
 
 namespace Tests\Unit\MCP;
 
-use Tests\TestCase;
-use App\Services\MCP\RetellConfigurationMCPServer;
-use App\Services\RetellV2Service;
 use App\Models\Company;
 use App\Models\RetellConfiguration;
+use App\Services\MCP\RetellConfigurationMCPServer;
+use App\Services\RetellV2Service;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Mockery;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class RetellConfigurationMCPServerTest extends TestCase
 {
@@ -70,6 +71,7 @@ class RetellConfigurationMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_validates_webhook_update_parameters()
     {
         // Arrange
@@ -108,6 +110,7 @@ class RetellConfigurationMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_update_webhook_configuration()
     {
         // Arrange
@@ -159,6 +162,7 @@ class RetellConfigurationMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_test_webhook_endpoint()
     {
         // Arrange
@@ -221,6 +225,7 @@ class RetellConfigurationMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_generates_agent_prompt_template()
     {
         // Arrange
@@ -270,6 +275,7 @@ class RetellConfigurationMCPServerTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_validates_required_events()
     {
         // Arrange

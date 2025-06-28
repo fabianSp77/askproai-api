@@ -5,11 +5,6 @@ require_once __DIR__ . '/vendor/autoload.php';
 $app = require_once __DIR__ . '/bootstrap/app.php';
 $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
-use App\Models\Branch;
-use App\Models\Company;
-use App\Models\Staff;
-use App\Models\CalcomEventType;
-
 echo "=== ASKPROAI BERLIN ANALYSE ===\n\n";
 
 // 1. Company Check

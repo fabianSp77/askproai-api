@@ -42,6 +42,36 @@ class CalcomMCPServer
     }
     
     /**
+     * Get the API key for a company, handling encryption properly
+     */
+    protected function getApiKey(Company $company): ?string
+    {
+        $apiKey = $company->calcom_api_key;
+        
+        if (!$apiKey) {
+            // Fall back to config
+            return config('services.calcom.api_key');
+        }
+        
+        // Check if the API key is encrypted (starts with eyJ which is base64 for {"i)
+        if (substr($apiKey, 0, 3) === 'eyJ') {
+            try {
+                return decrypt($apiKey);
+            } catch (\Exception $e) {
+                // If decryption fails, it might be a plain text key that happens to start with eyJ
+                Log::warning('Failed to decrypt Cal.com API key, using as plain text', [
+                    'company_id' => $company->id,
+                    'error' => $e->getMessage()
+                ]);
+                return $apiKey;
+            }
+        }
+        
+        // It's plain text
+        return $apiKey;
+    }
+    
+    /**
      * Get event types for a company
      */
     public function getEventTypes(array $params): array
@@ -62,9 +92,7 @@ class CalcomMCPServer
                 }
                 
                 // Use company API key or fall back to default
-                $apiKey = $company->calcom_api_key 
-                    ? decrypt($company->calcom_api_key) 
-                    : config('services.calcom.api_key');
+                $apiKey = $this->getApiKey($company);
                     
                 if (!$apiKey) {
                     return ['error' => 'No Cal.com API key configured'];
@@ -133,7 +161,7 @@ class CalcomMCPServer
             
             // Execute with circuit breaker protection
             $result = $this->circuitBreaker->call('calcom_availability', function () use ($company, $eventTypeId, $dateFrom, $dateTo, $timezone) {
-                $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+                $calcomService = new CalcomV2Service($this->getApiKey($company));
                 
                 return $calcomService->getAvailability([
                     'eventTypeId' => $eventTypeId,
@@ -268,7 +296,7 @@ class CalcomMCPServer
             $result = $this->circuitBreaker->call(
                 'calcom_booking',
                 function () use ($company, $eventTypeId, $startTime, $endTime, $customerData, $notes, $metadata) {
-                    $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+                    $calcomService = new CalcomV2Service($this->getApiKey($company));
                     
                     // First check availability
                     $date = Carbon::parse($startTime)->format('Y-m-d');
@@ -410,7 +438,7 @@ class CalcomMCPServer
             $result = $this->circuitBreaker->call(
                 'calcom_cancel',
                 function () use ($company, $bookingId, $bookingUid, $reason) {
-                    $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+                    $calcomService = new CalcomV2Service($this->getApiKey($company));
                     return $calcomService->cancelBooking($bookingId, $bookingUid, $reason);
                 },
                 function () {
@@ -490,7 +518,7 @@ class CalcomMCPServer
             $result = $this->circuitBreaker->call(
                 'calcom_reschedule',
                 function () use ($company, $bookingId, $rescheduleUid, $newStartTime, $newEndTime, $reason) {
-                    $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+                    $calcomService = new CalcomV2Service($this->getApiKey($company));
                     
                     // Note: Cal.com V2 API uses PATCH /bookings/:id for rescheduling
                     // For now, we might need to cancel and rebook
@@ -574,7 +602,7 @@ class CalcomMCPServer
             $result = $this->circuitBreaker->call(
                 'calcom_availability_batch',
                 function () use ($company, $eventTypeId, $startDate, $endDate, $timezone) {
-                    $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+                    $calcomService = new CalcomV2Service($this->getApiKey($company));
                     
                     // Use the new batch method if available
                     if (method_exists($calcomService, 'checkAvailabilityRange')) {
@@ -754,7 +782,7 @@ class CalcomMCPServer
                 return ['error' => 'Company not found or Cal.com not configured'];
             }
             
-            $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+            $calcomService = new CalcomV2Service($this->getApiKey($company));
             
             $queryParams = [
                 'dateFrom' => $dateFrom,
@@ -867,7 +895,7 @@ class CalcomMCPServer
             }
             
             // Update via Cal.com API
-            $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+            $calcomService = new CalcomV2Service($this->getApiKey($company));
             $result = $calcomService->updateEventType($eventTypeId, $updateData);
             
             if ($result['success'] ?? false) {
@@ -1155,9 +1183,7 @@ class CalcomMCPServer
                 return ['error' => 'Company not found'];
             }
             
-            $apiKey = $company->calcom_api_key 
-                ? decrypt($company->calcom_api_key) 
-                : config('services.calcom.api_key');
+            $apiKey = $this->getApiKey($company);
                 
             if (!$apiKey) {
                 return ['error' => 'No Cal.com API key configured'];
@@ -1341,9 +1367,7 @@ class CalcomMCPServer
                 return ['error' => 'Company not found'];
             }
             
-            $apiKey = $company->calcom_api_key 
-                ? decrypt($company->calcom_api_key) 
-                : config('services.calcom.api_key');
+            $apiKey = $this->getApiKey($company);
                 
             if (!$apiKey) {
                 return ['error' => 'No Cal.com API key configured'];
@@ -1505,30 +1529,56 @@ class CalcomMCPServer
             // Clear cache first
             $this->clearCache(['company_id' => $companyId]);
             
-            $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+            $calcomService = new CalcomV2Service($this->getApiKey($company));
             $response = $calcomService->getEventTypes();
             
-            if (!$response['success']) {
-                return ['error' => 'Failed to fetch event types from Cal.com'];
+            // The response is the raw Cal.com API response
+            // It should have either 'event_types' array or be an array of event types
+            $eventTypes = [];
+            if (isset($response['event_types'])) {
+                $eventTypes = $response['event_types'];
+            } elseif (isset($response['data'])) {
+                $eventTypes = $response['data'];
+            } elseif (is_array($response) && !isset($response['error'])) {
+                // Direct array of event types
+                $eventTypes = $response;
+            } else {
+                return ['error' => 'Failed to fetch event types from Cal.com', 'message' => 'Invalid response format'];
+            }
+            
+            if (empty($eventTypes)) {
+                return ['error' => 'No event types found in Cal.com'];
             }
             
             $synced = 0;
             $errors = [];
             
-            foreach ($response['data'] as $eventTypeData) {
+            foreach ($eventTypes as $eventTypeData) {
                 try {
+                    // Find or get the first branch for this company
+                    $branch = \App\Models\Branch::where('company_id', $companyId)
+                        ->where('active', true)
+                        ->first();
+                    
+                    if (!$branch) {
+                        throw new \Exception('No active branch found for company');
+                    }
+                    
                     CalcomEventType::updateOrCreate(
                         [
                             'company_id' => $companyId,
-                            'calcom_id' => $eventTypeData['id']
+                            'calcom_numeric_event_type_id' => $eventTypeData['id']
                         ],
                         [
-                            'title' => $eventTypeData['title'],
+                            'branch_id' => $branch->id,
+                            'name' => $eventTypeData['title'],
                             'slug' => $eventTypeData['slug'],
                             'description' => $eventTypeData['description'] ?? null,
-                            'length' => $eventTypeData['length'],
-                            'metadata' => $eventTypeData,
-                            'is_active' => true
+                            'duration_minutes' => $eventTypeData['length'],
+                            'minimum_booking_notice' => $eventTypeData['minimumBookingNotice'] ?? 120,
+                            'is_active' => !($eventTypeData['hidden'] ?? false),
+                            'last_synced_at' => now(),
+                            'metadata' => json_encode($eventTypeData)
                         ]
                     );
                     $synced++;
@@ -1543,7 +1593,7 @@ class CalcomMCPServer
             return [
                 'success' => true,
                 'synced_count' => $synced,
-                'total_count' => count($response['data']),
+                'total_count' => count($eventTypes),
                 'errors' => $errors,
                 'synced_at' => now()->toIso8601String()
             ];
@@ -1582,7 +1632,7 @@ class CalcomMCPServer
                 ];
             }
             
-            $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+            $calcomService = new CalcomV2Service($this->getApiKey($company));
             $response = $calcomService->getMe();
             
             if ($response['success']) {
@@ -1706,9 +1756,7 @@ class CalcomMCPServer
             }
             
             // Use company API key or fall back to default
-            $apiKey = $company->calcom_api_key 
-                ? decrypt($company->calcom_api_key) 
-                : config('services.calcom.api_key');
+            $apiKey = $this->getApiKey($company);
                 
             if (!$apiKey) {
                 return [
@@ -1834,5 +1882,204 @@ class CalcomMCPServer
         // This would be implemented to match the logic in SyncCalcomBookingsJob
         // For now, return a placeholder
         return 'updated';
+    }
+    
+    /**
+     * Sync event type users from Cal.com
+     * This method fetches event type details and maps Cal.com users to local staff
+     */
+    public function syncEventTypeUsers(array $params): array
+    {
+        $eventTypeId = $params['event_type_id'] ?? null;
+        $companyId = $params['company_id'] ?? null;
+        
+        if (!$eventTypeId || !$companyId) {
+            return [
+                'success' => false,
+                'error' => 'event_type_id and company_id are required'
+            ];
+        }
+        
+        try {
+            $company = Company::find($companyId);
+            if (!$company || !$company->calcom_api_key) {
+                return [
+                    'success' => false,
+                    'error' => 'Company not found or Cal.com not configured'
+                ];
+            }
+            
+            $apiKey = $this->getApiKey($company);
+            $calcomService = new CalcomV2Service($apiKey);
+            
+            // Try to get event type details from V2 API first
+            $detailsResponse = $calcomService->getEventTypeDetails($eventTypeId);
+            
+            if (!$detailsResponse['success']) {
+                // Fallback to V1 API if V2 fails
+                Log::info('Cal.com V2 API failed, trying V1 for event type users', [
+                    'event_type_id' => $eventTypeId,
+                    'v2_error' => $detailsResponse['error'] ?? 'Unknown error'
+                ]);
+                
+                // Try V1 API as fallback
+                $v1Response = $calcomService->getEventTypes();
+                if ($v1Response && isset($v1Response['event_types'])) {
+                    $eventType = collect($v1Response['event_types'])->firstWhere('id', $eventTypeId);
+                    if ($eventType) {
+                        $detailsResponse = [
+                            'success' => true,
+                            'data' => $eventType
+                        ];
+                    }
+                }
+            }
+            
+            if (!$detailsResponse['success']) {
+                return [
+                    'success' => false,
+                    'error' => 'Failed to fetch event type details from Cal.com',
+                    'message' => $detailsResponse['error'] ?? 'Unknown error'
+                ];
+            }
+            
+            $eventTypeData = $detailsResponse['data'];
+            $hosts = $eventTypeData['hosts'] ?? $eventTypeData['users'] ?? [];
+            
+            // Map Cal.com users to local staff
+            $mappingResults = [];
+            $successCount = 0;
+            $failedCount = 0;
+            
+            foreach ($hosts as $host) {
+                $calcomUserId = $host['id'] ?? null;
+                $email = $host['email'] ?? null;
+                $name = $host['name'] ?? $host['username'] ?? null;
+                
+                if (!$calcomUserId) {
+                    $failedCount++;
+                    $mappingResults[] = [
+                        'calcom_user' => $host,
+                        'status' => 'failed',
+                        'reason' => 'No Cal.com user ID'
+                    ];
+                    continue;
+                }
+                
+                // Try to find staff by calcom_user_id first
+                $staff = \App\Models\Staff::withoutGlobalScopes()
+                    ->where('company_id', $companyId)
+                    ->where('calcom_user_id', $calcomUserId)
+                    ->first();
+                
+                // If not found by calcom_user_id, try by email
+                if (!$staff && $email) {
+                    $staff = \App\Models\Staff::withoutGlobalScopes()
+                        ->where('company_id', $companyId)
+                        ->where('email', $email)
+                        ->first();
+                    
+                    // Update calcom_user_id if found by email
+                    if ($staff) {
+                        $staff->update(['calcom_user_id' => $calcomUserId]);
+                    }
+                }
+                
+                // If still not found, try by name
+                if (!$staff && $name) {
+                    $staff = \App\Models\Staff::withoutGlobalScopes()
+                        ->where('company_id', $companyId)
+                        ->where('name', 'LIKE', '%' . $name . '%')
+                        ->first();
+                    
+                    // Update calcom_user_id if found by name
+                    if ($staff) {
+                        $staff->update(['calcom_user_id' => $calcomUserId]);
+                    }
+                }
+                
+                if ($staff) {
+                    $successCount++;
+                    $mappingResults[] = [
+                        'calcom_user' => [
+                            'id' => $calcomUserId,
+                            'email' => $email,
+                            'name' => $name
+                        ],
+                        'local_staff' => [
+                            'id' => $staff->id,
+                            'name' => $staff->name,
+                            'email' => $staff->email
+                        ],
+                        'status' => 'matched',
+                        'match_method' => $staff->wasRecentlyCreated ? 'created' : 'existing'
+                    ];
+                    
+                    // Create or update staff_event_types assignment
+                    try {
+                        $existingAssignment = \DB::table('staff_event_types')
+                            ->where('staff_id', $staff->id)
+                            ->where('calcom_event_type_id', $eventTypeId)
+                            ->first();
+                            
+                        if (!$existingAssignment) {
+                            \DB::table('staff_event_types')->insert([
+                                'id' => \Illuminate\Support\Str::uuid(),
+                                'staff_id' => $staff->id,
+                                'calcom_event_type_id' => $eventTypeId,
+                                'calcom_user_id' => $calcomUserId,
+                                'is_primary' => false,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to create staff event type assignment', [
+                            'staff_id' => $staff->id,
+                            'event_type_id' => $eventTypeId,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                } else {
+                    $failedCount++;
+                    $mappingResults[] = [
+                        'calcom_user' => [
+                            'id' => $calcomUserId,
+                            'email' => $email,
+                            'name' => $name
+                        ],
+                        'status' => 'not_found',
+                        'reason' => 'No matching staff member found in local database',
+                        'suggestion' => 'Create staff member with email: ' . ($email ?? 'N/A')
+                    ];
+                }
+            }
+            
+            // Clear cache for this event type
+            $this->clearCache(['company_id' => $companyId]);
+            
+            return [
+                'success' => true,
+                'event_type_id' => $eventTypeId,
+                'total_hosts' => count($hosts),
+                'matched' => $successCount,
+                'not_matched' => $failedCount,
+                'mapping_results' => $mappingResults,
+                'message' => "Synchronisiert: {$successCount} von " . count($hosts) . " Mitarbeitern zugeordnet"
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP CalCom syncEventTypeUsers error', [
+                'event_type_id' => $eventTypeId,
+                'company_id' => $companyId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Failed to sync event type users',
+                'message' => $e->getMessage()
+            ];
+        }
     }
 }

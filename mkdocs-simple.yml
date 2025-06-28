@@ -1,47 +1,27 @@
-site_name: AskProAI Documentation
-site_description: Complete documentation for AskProAI platform
-site_url: https://api.askproai.de/documentation
+site_name: AskProAI Dokumentation
+site_url: https://api.askproai.de/mkdocs
+site_description: Komplette Dokumentation für AskProAI
 
-theme:
-  name: material
-  palette:
-    primary: indigo
-    accent: purple
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - navigation.expand
-    - search.suggest
-    - search.highlight
-    - content.code.copy
-
-plugins:
-  - search
-  - mermaid2:
-      version: 10.6.1
-
-markdown_extensions:
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - admonition
-  - pymdownx.details
-  - pymdownx.highlight
-  - pymdownx.inlinehilite
-  - toc:
-      permalink: true
-
-docs_dir: docs_mkdocs
+docs_dir: docs_build
 site_dir: public/mkdocs
 
+theme: readthedocs
+
 nav:
-  - Home: README.md
-  - MCP Architecture: MCP_TECHNICAL_ARCHITECTURE.md
-  - Data Flow: MCP_DATA_FLOW_COMPLETE.md
-  - Implementation: MCP_IMPLEMENTATION_COMPLETE.md
-  - Cal.com API: CALCOM_V2_API_DOCUMENTATION.md
-  - Deployment: DEPLOYMENT_GUIDE.md
-  - Monitoring: MONITORING_AND_ALERTING_GUIDE.md
-  - Troubleshooting: TROUBLESHOOTING_GUIDE.md
+  - Start: index.md
+  - Schnellstart:
+    - 5-Minuten Onboarding: 5-MINUTEN_ONBOARDING_PLAYBOOK.md
+    - Quick Reference: CLAUDE_QUICK_REFERENCE.md
+  - Betrieb:
+    - Customer Success: CUSTOMER_SUCCESS_RUNBOOK.md
+    - Emergency Response: EMERGENCY_RESPONSE_PLAYBOOK.md
+    - Error Patterns: ERROR_PATTERNS.md
+  - Entwicklung:
+    - Projekt Übersicht: CLAUDE.md
+    - Deployment: DEPLOYMENT_CHECKLIST.md
+    - Troubleshooting: TROUBLESHOOTING_DECISION_TREE.md
+  - Monitoring:
+    - KPI Dashboard: KPI_DASHBOARD_TEMPLATE.md
+    - Health Monitor: INTEGRATION_HEALTH_MONITOR.md
+  - Architektur:
+    - Datenfluss: PHONE_TO_APPOINTMENT_FLOW.md

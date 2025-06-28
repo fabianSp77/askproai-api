@@ -11,11 +11,11 @@ return new class extends CompatibleMigration
         // Prüfe ob die Tabelle bereits existiert
         if (Schema::hasTable('calendar_mappings')) {
             // Lösche die alte Tabelle
-            Schema::dropIfExists('calendar_mappings');
+            $this->dropTableIfExists('calendar_mappings');
         }
         
         // Erstelle die Tabelle neu mit dem richtigen Spaltentyp
-        Schema::create('calendar_mappings', function (Blueprint $table) {
+        $this->createTableIfNotExists('calendar_mappings', function (Blueprint $table) {
             $table->id();
             $table->char('branch_id', 36);
             $table->char('staff_id', 36); // Geändert von unsignedBigInteger zu char(36)
@@ -32,6 +32,6 @@ return new class extends CompatibleMigration
 
     public function down()
     {
-        Schema::dropIfExists('calendar_mappings');
+        $this->dropTableIfExists('calendar_mappings');
     }
 };

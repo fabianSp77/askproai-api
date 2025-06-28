@@ -11,7 +11,7 @@ class WebhookAnalysis extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?string $navigationLabel = 'Webhook Analyse';
-    protected static ?string $navigationGroup = 'System & Überwachung';
+    protected static ?string $navigationGroup = 'Einstellungen';
     protected static string $view = 'filament.admin.pages.webhook-analysis';
     
     public function mount(): void

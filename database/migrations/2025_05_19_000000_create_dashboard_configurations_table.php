@@ -8,7 +8,7 @@ return new class extends CompatibleMigration
 {
     public function up(): void
     {
-        Schema::create('dashboard_configurations', function (Blueprint $table) {
+        $this->createTableIfNotExists('dashboard_configurations', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
@@ -22,6 +22,6 @@ return new class extends CompatibleMigration
 
     public function down(): void
     {
-        Schema::dropIfExists('dashboard_configurations');
+        $this->dropTableIfExists('dashboard_configurations');
     }
 };

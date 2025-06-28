@@ -9,10 +9,10 @@ use Illuminate\Support\Str;
 
 class WebhookDeduplicationService
 {
-    private const KEY_PREFIX = 'webhook:processed:';
-    private const PROCESSING_PREFIX = 'webhook:processing:';
-    private const DEFAULT_TTL = 300; // 5 minutes
-    private const PROCESSING_TTL = 60; // 1 minute for processing state
+    protected const KEY_PREFIX = 'webhook:processed:';
+    protected const PROCESSING_PREFIX = 'webhook:processing:';
+    protected const DEFAULT_TTL = 300; // 5 minutes
+    protected const PROCESSING_TTL = 60; // 1 minute for processing state
     
     private array $ttlConfig = [
         'retell' => [
@@ -200,7 +200,7 @@ class WebhookDeduplicationService
     /**
      * Generate unique idempotency key for the webhook
      */
-    private function generateIdempotencyKey(string $service, Request $request): string
+    protected function generateIdempotencyKey(string $service, Request $request): string
     {
         $payload = $request->all();
         
@@ -215,7 +215,7 @@ class WebhookDeduplicationService
     /**
      * Generate key for Retell webhooks
      */
-    private function generateRetellKey(array $payload): string
+    protected function generateRetellKey(array $payload): string
     {
         // Use call_id as primary identifier
         $callId = $payload['call_id'] ?? $payload['data']['call_id'] ?? '';
@@ -234,7 +234,7 @@ class WebhookDeduplicationService
     /**
      * Generate key for Cal.com webhooks
      */
-    private function generateCalcomKey(array $payload): string
+    protected function generateCalcomKey(array $payload): string
     {
         // Use booking UID or event ID
         $bookingUid = $payload['payload']['uid'] ?? 
@@ -294,7 +294,7 @@ class WebhookDeduplicationService
     /**
      * Get TTL for specific service and event type
      */
-    private function getTTL(string $service, Request $request): int
+    protected function getTTL(string $service, Request $request): int
     {
         $eventType = $this->extractEventType($service, $request);
         

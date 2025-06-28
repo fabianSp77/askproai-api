@@ -40,5 +40,6 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="DB_POOL_ENABLED" value="false"/>
     </php>
 </phpunit>

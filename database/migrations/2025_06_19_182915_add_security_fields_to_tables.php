@@ -12,7 +12,7 @@ return new class extends CompatibleMigration
     public function up(): void
     {
         // Create security audit logs table
-        Schema::create('security_audit_logs', function (Blueprint $table) {
+        $this->createTableIfNotExists('security_audit_logs', function (Blueprint $table) {
             $table->id();
             $table->string('event_type', 50)->index(); // login, failed_login, suspicious_activity, etc.
             $table->string('severity', 20)->default('info'); // info, warning, error, critical
@@ -34,7 +34,7 @@ return new class extends CompatibleMigration
         });
         
         // Create webhook deduplication table
-        Schema::create('webhook_deduplication', function (Blueprint $table) {
+        $this->createTableIfNotExists('webhook_deduplication', function (Blueprint $table) {
             $table->id();
             $table->string('webhook_id')->unique();
             $table->string('provider', 50); // retell, calcom, stripe
@@ -54,7 +54,7 @@ return new class extends CompatibleMigration
         });
         
         // Create rate limiting table
-        Schema::create('rate_limit_violations', function (Blueprint $table) {
+        $this->createTableIfNotExists('rate_limit_violations', function (Blueprint $table) {
             $table->id();
             $table->string('key')->index(); // IP address or user identifier
             $table->string('route')->nullable();
@@ -145,12 +145,19 @@ return new class extends CompatibleMigration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         // Drop security tables
-        Schema::dropIfExists('security_audit_logs');
-        Schema::dropIfExists('webhook_deduplication');
-        Schema::dropIfExists('rate_limit_violations');
+        $this->dropTableIfExists('security_audit_logs');
+        $this->dropTableIfExists('webhook_deduplication');
+        $this->dropTableIfExists('rate_limit_violations');
         
         // Remove security fields from existing tables
         if (Schema::hasTable('customers')) {

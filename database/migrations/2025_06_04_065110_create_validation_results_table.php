@@ -8,7 +8,7 @@ return new class extends CompatibleMigration
 {
     public function up(): void
     {
-        Schema::create('validation_results', function (Blueprint $table) {
+        $this->createTableIfNotExists('validation_results', function (Blueprint $table) {
             $table->id();
             $table->enum('entity_type', ['company', 'branch', 'staff']);
             $table->string('entity_id', 36);
@@ -26,6 +26,6 @@ return new class extends CompatibleMigration
 
     public function down(): void
     {
-        Schema::dropIfExists('validation_results');
+        $this->dropTableIfExists('validation_results');
     }
 };

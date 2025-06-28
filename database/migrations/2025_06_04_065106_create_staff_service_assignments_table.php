@@ -8,7 +8,7 @@ return new class extends CompatibleMigration
 {
     public function up(): void
     {
-        Schema::create('staff_service_assignments', function (Blueprint $table) {
+        $this->createTableIfNotExists('staff_service_assignments', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('staff_id');
             $table->uuid('master_service_id');
@@ -29,6 +29,6 @@ return new class extends CompatibleMigration
 
     public function down(): void
     {
-        Schema::dropIfExists('staff_service_assignments');
+        $this->dropTableIfExists('staff_service_assignments');
     }
 };

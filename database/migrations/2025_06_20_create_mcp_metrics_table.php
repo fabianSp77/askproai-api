@@ -11,7 +11,7 @@ return new class extends CompatibleMigration
      */
     public function up(): void
     {
-        Schema::create('mcp_metrics', function (Blueprint $table) {
+        $this->createTableIfNotExists('mcp_metrics', function (Blueprint $table) {
             $table->id();
             $table->string('service', 50)->index();
             $table->boolean('success')->default(true)->index();
@@ -33,6 +33,6 @@ return new class extends CompatibleMigration
      */
     public function down(): void
     {
-        Schema::dropIfExists('mcp_metrics');
+        $this->dropTableIfExists('mcp_metrics');
     }
 };

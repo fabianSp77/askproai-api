@@ -235,6 +235,11 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        /* Hide x-cloak elements until Alpine loads */
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
     
     <div class="control-center-container" 
@@ -430,6 +435,20 @@
                         </button>
                     </div>
                     
+                    {{-- Import Agent Button --}}
+                    <label for="agent-import-file" class="modern-btn modern-btn-secondary" style="cursor: pointer; margin: 0;">
+                        <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        Import Agent
+                        <input 
+                            id="agent-import-file" 
+                            type="file" 
+                            accept=".json"
+                            wire:model="agentImportFile"
+                            style="display: none;">
+                    </label>
+                    
                     {{-- Create Agent Button --}}
                     <button 
                         wire:click="openAgentCreator" 
@@ -448,9 +467,9 @@
                             <div class="loading-spinner" style="margin: 0 auto 1rem;"></div>
                             <p style="font-size: 0.875rem; color: var(--modern-text-secondary);">Loading agents...</p>
                         </div>
-                    @elseif(count($this->filteredAgents) > 0)
+                    @elseif(count($this->filteredAgents()) > 0)
                         <div class="agent-card-grid">
-                            @foreach($this->filteredAgents as $agent)
+                            @foreach($this->filteredAgents() as $agent)
                                 @php
                                 $agentData = $agent;
                                 $agentData['all_versions'] = [];
@@ -489,6 +508,9 @@
                         </div>
                     @endif
                 </div>
+                
+                {{-- Agent Configuration Details --}}
+                @include('filament.admin.pages.partials.retell-control-center.agent-configuration-details')
             </div>
             
             {{-- Calls Tab --}}
@@ -515,7 +537,7 @@
         {{-- Agent Functions Viewer Modal --}}
         @include('filament.admin.pages.partials.retell-control-center.agent-functions-viewer')
         
-        {{-- Agent Editor Modal --}}
+        {{-- Agent Editor Modal (old version) --}}
         @if($showAgentEditor)
             @include('filament.admin.pages.partials.retell-control-center.agent-editor')
         @endif
@@ -649,6 +671,38 @@
                 // In Livewire v3, the event data comes directly as parameter
                 if (data && data.tab) {
                     console.log('Tab changed to:', data.tab);
+                }
+            });
+            
+            // Handle agent export
+            Livewire.on('download-json', (data) => {
+                if (data && data.content && data.filename) {
+                    // Create blob from JSON content
+                    const blob = new Blob([JSON.stringify(data.content, null, 2)], { type: 'application/json' });
+                    
+                    // Create download link
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = data.filename;
+                    
+                    // Trigger download
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Cleanup
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    // Show success notification
+                    window.dispatchEvent(new CustomEvent('show-notification', {
+                        detail: {
+                            message: 'Agent configuration exported successfully',
+                            type: 'success',
+                            duration: 3000
+                        }
+                    }));
                 }
             });
         });

@@ -2,7 +2,6 @@
 
 namespace Tests\Security;
 
-use Tests\TestCase;
 use App\Models\Company;
 use App\Models\CustomerAuth;
 use App\Models\Invoice;
@@ -10,6 +9,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class StripePortalSecurityTest extends TestCase
 {

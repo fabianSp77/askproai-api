@@ -2,20 +2,21 @@
 
 namespace Tests\Feature\Webhook;
 
-use Tests\TestCase;
+use App\Events\WebhookReceived;
+use App\Jobs\ProcessCalcomWebhookJob;
+use App\Jobs\ProcessRetellCallEndedJob;
+use App\Jobs\ProcessStripeWebhookJob;
+use App\Models\Branch;
+use App\Models\CalcomEventType;
+use App\Models\Company;
+use App\Models\Service;
+use App\Models\Staff;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\CalcomEventType;
-use App\Events\WebhookReceived;
-use App\Jobs\ProcessRetellCallEndedJob;
-use App\Jobs\ProcessCalcomWebhookJob;
-use App\Jobs\ProcessStripeWebhookJob;
+use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class WebhookIntegrationTest extends TestCase
 {
@@ -89,6 +90,7 @@ class WebhookIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function calcom_webhook_processes_booking_created()
     {
         Queue::fake();
@@ -182,6 +184,7 @@ class WebhookIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function webhook_with_invalid_signature_is_rejected()
     {
         Queue::fake();
@@ -233,6 +236,7 @@ class WebhookIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function unified_webhook_handler_routes_correctly()
     {
         Queue::fake();
@@ -268,6 +272,7 @@ class WebhookIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function webhook_handles_malformed_json_gracefully()
     {
         $response = $this->postJson('/api/retell/webhook', 'invalid json', [
@@ -301,6 +306,7 @@ class WebhookIntegrationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function webhook_correlation_id_tracks_through_system()
     {
         Queue::fake();

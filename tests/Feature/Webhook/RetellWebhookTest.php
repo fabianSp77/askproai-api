@@ -2,18 +2,19 @@
 
 namespace Tests\Feature\Webhook;
 
-use Tests\TestCase;
+// DB Facade wird hier nicht mehr benötigt
+
+use App\Mail\ErrorNotificationMail;
+use App\Models\Call;
+use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase; // <-- STANDARD-Trait verwenden!
-use PHPUnit\Framework\Attributes\Test;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-use App\Models\User;
-use App\Mail\ErrorNotificationMail;
-use App\Models\Tenant;
-use App\Models\Call;
 use Illuminate\Support\Str;
-// DB Facade wird hier nicht mehr benötigt
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class RetellWebhookTest extends TestCase
 {
@@ -41,7 +42,6 @@ class RetellWebhookTest extends TestCase
         $this->tenant2 = Tenant::factory()->create(['api_key' => 'tenant2-test-key']);
         $this->defaultUser = User::factory()->create(['id' => 1]);
     }
-
 
     // --- Payloads (unverändert) ---
     private function getSuccessfulCallPayload(string $callIdSuffix = ''): array { return [ "call_id" => "test_call_" . uniqid($callIdSuffix), "status" => "completed", "phone_number" => "+491701234567", "duration" => 120, "transcript" => "...", "user_sentiment" => "positive", "call_successful" => true, "_name" => "Max Mustermann", "_email" => "test@example.com", "_datum__termin" => now()->addWeek()->format('Y-m-d'), "_uhrzeit__termin" => "14:30", ]; }

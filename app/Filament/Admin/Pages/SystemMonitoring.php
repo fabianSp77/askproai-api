@@ -14,9 +14,14 @@ class SystemMonitoring extends Page
 {
     
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
-    protected static ?string $navigationGroup = 'System & Überwachung';
-    protected static ?int $navigationSort = 99;
+    protected static ?string $navigationGroup = 'Einstellungen';
+    protected static ?int $navigationSort = 4;
     protected static string $view = 'filament.admin.pages.system-monitoring';
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Deaktiviert - Use SystemHealthSimple or QuantumSystemMonitoring instead
+    }
     
     public $systemHealth = [];
     public $performanceMetrics = [];
@@ -108,20 +113,56 @@ class SystemMonitoring extends Page
     
     protected function loadRecentErrors(): void
     {
-        $this->recentErrors = DB::table('logs')
-            ->where('level', 'error')
-            ->where('created_at', '>', now()->subHours(24))
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function($error) {
-                return [
-                    'message' => Str::limit($error->message, 100),
-                    'context' => json_decode($error->context, true),
-                    'time' => Carbon::parse($error->created_at)->diffForHumans(),
-                ];
-            })
-            ->toArray();
+        try {
+            // Read from Laravel log files instead of non-existent logs table
+            $logFile = storage_path('logs/laravel.log');
+            $this->recentErrors = [];
+            
+            if (file_exists($logFile)) {
+                // Read last 1000 lines of log file
+                $lines = collect(explode("\n", trim(shell_exec("tail -n 1000 " . escapeshellarg($logFile)))));
+                
+                $errors = [];
+                $currentError = null;
+                
+                foreach ($lines as $line) {
+                    // Check if line starts with a timestamp and contains ERROR
+                    if (preg_match('/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\].*\.ERROR:(.*)/', $line, $matches)) {
+                        if ($currentError) {
+                            $errors[] = $currentError;
+                        }
+                        $currentError = [
+                            'time' => Carbon::parse($matches[1])->diffForHumans(),
+                            'message' => trim($matches[2]),
+                            'context' => [],
+                        ];
+                    } elseif ($currentError && $line) {
+                        // Add additional lines to context
+                        $currentError['message'] .= ' ' . trim($line);
+                    }
+                }
+                
+                if ($currentError) {
+                    $errors[] = $currentError;
+                }
+                
+                // Get last 10 errors
+                $this->recentErrors = collect($errors)
+                    ->reverse()
+                    ->take(10)
+                    ->map(function($error) {
+                        return [
+                            'message' => Str::limit($error['message'], 100),
+                            'context' => $error['context'],
+                            'time' => $error['time'],
+                        ];
+                    })
+                    ->values()
+                    ->toArray();
+            }
+        } catch (\Exception $e) {
+            $this->recentErrors = [];
+        }
     }
     
     protected function checkDatabase(): array

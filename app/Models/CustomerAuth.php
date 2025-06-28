@@ -2,195 +2,190 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Notifications\CustomerResetPasswordNotification;
-use App\Notifications\CustomerVerifyEmailNotification;
+use App\Services\Security\ApiKeyService;
+use Illuminate\Support\Str;
 
 class CustomerAuth extends Authenticatable
 {
-    use HasApiTokens, Notifiable;
+    use HasFactory;
 
-    protected $table = 'customers';
+    protected $table = 'customer_auth';
 
-    /**
-     * The attributes that are mass assignable.
-     */
     protected $fillable = [
-        'company_id',
-        'branch_id',
-        'first_name',
-        'last_name',
+        'customer_id',
         'email',
-        'phone',
         'password',
-        'portal_enabled',
         'portal_access_token',
-        'portal_token_expires_at',
-        'last_portal_login_at',
-        'preferred_language',
+        'portal_access_token_expires_at',
+        'last_login_at',
         'email_verified_at',
+        'remember_token',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     */
     protected $hidden = [
         'password',
         'remember_token',
         'portal_access_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'portal_token_expires_at' => 'datetime',
-        'last_portal_login_at' => 'datetime',
-        'portal_enabled' => 'boolean',
+        'portal_access_token_expires_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'password' => 'hashed', // Laravel 11 feature
     ];
 
-    /**
-     * Get the company that owns the customer.
-     */
-    public function company(): BelongsTo
+    protected static function booted(): void
     {
-        return $this->belongsTo(Company::class);
+        // Encrypt portal_access_token before saving
+        static::saving(function (self $auth) {
+            if ($auth->isDirty('portal_access_token') && !empty($auth->portal_access_token)) {
+                // Check if not already encrypted (encrypted values start with 'eyJ')
+                if (!str_starts_with($auth->portal_access_token, 'eyJ')) {
+                    $apiKeyService = app(ApiKeyService::class);
+                    $auth->portal_access_token = $apiKeyService->encrypt($auth->portal_access_token);
+                }
+            }
+        });
     }
 
     /**
-     * Get the branch that owns the customer.
+     * Get the decrypted portal access token
      */
-    public function branch(): BelongsTo
+    public function getPortalAccessTokenAttribute($value): ?string
     {
-        return $this->belongsTo(Branch::class);
+        if (empty($value)) {
+            return null;
+        }
+
+        // Check if encrypted (starts with 'eyJ')
+        if (str_starts_with($value, 'eyJ')) {
+            try {
+                $apiKeyService = app(ApiKeyService::class);
+                return $apiKeyService->decrypt($value);
+            } catch (\Exception $e) {
+                \Log::error('Failed to decrypt portal access token', [
+                    'customer_auth_id' => $this->id,
+                    'error' => $e->getMessage()
+                ]);
+                return null;
+            }
+        }
+
+        // Return as-is if not encrypted (for backward compatibility during migration)
+        return $value;
     }
 
     /**
-     * Get the appointments for the customer.
+     * Set the portal access token (will be encrypted on save)
      */
-    public function appointments(): HasMany
+    public function setPortalAccessTokenAttribute($value): void
     {
-        return $this->hasMany(Appointment::class, 'customer_id');
+        // Don't encrypt here, let the saving event handle it
+        // This prevents double encryption
+        $this->attributes['portal_access_token'] = $value;
     }
 
     /**
-     * Get the calls for the customer.
-     */
-    public function calls(): HasMany
-    {
-        return $this->hasMany(Call::class, 'customer_id');
-    }
-
-    /**
-     * Get the invoices for the customer.
-     */
-    public function invoices()
-    {
-        // Invoices are linked to company/branch, we need to filter by customer's appointments
-        return Invoice::whereHas('billingPeriod', function ($query) {
-            $query->whereHas('appointments', function ($q) {
-                $q->where('customer_id', $this->id);
-            });
-        })->orWhere('metadata->customer_id', $this->id);
-    }
-
-    /**
-     * Get full name attribute.
-     */
-    public function getFullNameAttribute(): string
-    {
-        return trim("{$this->first_name} {$this->last_name}");
-    }
-
-    /**
-     * Check if portal access is enabled.
-     */
-    public function hasPortalAccess(): bool
-    {
-        return $this->portal_enabled && 
-               $this->email_verified_at !== null;
-    }
-
-    /**
-     * Generate a new portal access token.
+     * Generate a new portal access token
      */
     public function generatePortalAccessToken(): string
     {
-        $token = \Illuminate\Support\Str::random(60);
-        
-        $this->update([
-            'portal_access_token' => hash('sha256', $token),
-            'portal_token_expires_at' => now()->addHours(24),
-        ]);
-        
+        $token = Str::random(60);
+        $this->portal_access_token = $token;
+        $this->portal_access_token_expires_at = now()->addDays(30);
+        $this->save();
+
         return $token;
     }
 
     /**
-     * Verify portal access token.
+     * Check if portal access token is valid
      */
-    public function verifyPortalAccessToken(string $token): bool
+    public function isPortalAccessTokenValid(): bool
     {
-        if (!$this->portal_access_token || !$this->portal_token_expires_at) {
+        if (empty($this->portal_access_token)) {
             return false;
         }
-        
-        return hash('sha256', $token) === $this->portal_access_token &&
-               $this->portal_token_expires_at->isFuture();
+
+        if ($this->portal_access_token_expires_at && $this->portal_access_token_expires_at->isPast()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
-     * Send password reset notification.
+     * Verify a provided token matches this auth's token
      */
-    public function sendPasswordResetNotification($token): void
+    public function verifyPortalAccessToken(string $providedToken): bool
     {
-        $this->notify(new CustomerResetPasswordNotification($token));
+        if (!$this->isPortalAccessTokenValid()) {
+            return false;
+        }
+
+        return hash_equals($this->portal_access_token ?? '', $providedToken);
     }
 
     /**
-     * Send email verification notification.
+     * Revoke the portal access token
      */
-    public function sendEmailVerificationNotification(): void
+    public function revokePortalAccessToken(): void
     {
-        $this->notify(new CustomerVerifyEmailNotification());
+        $this->portal_access_token = null;
+        $this->portal_access_token_expires_at = null;
+        $this->save();
     }
 
     /**
-     * Get upcoming appointments.
+     * Get the raw encrypted portal access token (for debugging/verification)
      */
-    public function getUpcomingAppointmentsAttribute()
+    public function getRawPortalAccessToken(): ?string
     {
-        return $this->appointments()
-            ->where('starts_at', '>=', now())
-            ->orderBy('starts_at')
-            ->limit(5)
-            ->get();
+        return $this->attributes['portal_access_token'] ?? null;
     }
 
     /**
-     * Get past appointments.
+     * Update last login timestamp
      */
-    public function getPastAppointmentsAttribute()
+    public function recordLogin(): void
     {
-        return $this->appointments()
-            ->where('starts_at', '<', now())
-            ->orderBy('starts_at', 'desc')
-            ->limit(10)
-            ->get();
+        $this->last_login_at = now();
+        $this->save();
     }
 
     /**
-     * Record portal login.
+     * Get the customer relationship
      */
-    public function recordPortalLogin(): void
+    public function customer()
     {
-        $this->update([
-            'last_portal_login_at' => now(),
-        ]);
+        return $this->belongsTo(Customer::class);
+    }
+
+    /**
+     * Get the name attribute for the authenticatable
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->customer->name ?? $this->email;
+    }
+
+    /**
+     * Get the unique identifier for authentication
+     */
+    public function getAuthIdentifierName(): string
+    {
+        return 'email';
+    }
+
+    /**
+     * Get the password for authentication
+     */
+    public function getAuthPassword(): string
+    {
+        return $this->password;
     }
 }

@@ -252,7 +252,7 @@ class DatabaseMCPServer
                 'default' => $column->Default,
                 'extra' => $column->Extra
             ];
-        }, DB::select("SHOW COLUMNS FROM `$table`"));
+        }, DB::select("SHOW COLUMNS FROM " . self::quoteIdentifier($table)));
     }
     
     /**
@@ -267,7 +267,7 @@ class DatabaseMCPServer
                 'unique' => !$index->Non_unique,
                 'type' => $index->Index_type
             ];
-        }, DB::select("SHOW INDEX FROM `$table`"));
+        }, DB::select("SHOW INDEX FROM " . self::quoteIdentifier($table)));
     }
     
     /**

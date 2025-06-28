@@ -2,17 +2,18 @@
 
 namespace Tests\Feature\API\V2;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Laravel\Sanctum\Sanctum;
-use App\Models\User;
+use App\Models\Appointment;
+use App\Models\Call;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Tenant;
-use App\Models\Appointment;
-use App\Models\Call;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\RateLimiter;
+use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CustomerApiTest extends TestCase
 {
@@ -40,6 +41,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test unauthenticated access is rejected
      */
+    #[Test]
     public function test_unauthenticated_access_is_rejected()
     {
         $response = $this->getJson('/api/v2/customers');
@@ -53,6 +55,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test GET /customers - List customers with pagination
      */
+    #[Test]
     public function test_can_list_customers_with_pagination()
     {
         Sanctum::actingAs($this->user);
@@ -102,6 +105,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test POST /customers - Create new customer
      */
+    #[Test]
     public function test_can_create_customer()
     {
         Sanctum::actingAs($this->user);
@@ -156,6 +160,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test POST /customers validation
      */
+    #[Test]
     public function test_create_customer_validation()
     {
         Sanctum::actingAs($this->user);
@@ -225,6 +230,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test GET /customers/{id} - Show single customer
      */
+    #[Test]
     public function test_can_show_single_customer()
     {
         Sanctum::actingAs($this->user);
@@ -263,6 +269,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test PUT /customers/{id} - Update customer
      */
+    #[Test]
     public function test_can_update_customer()
     {
         Sanctum::actingAs($this->user);
@@ -292,6 +299,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test DELETE /customers/{id} - Delete customer
      */
+    #[Test]
     public function test_can_delete_customer()
     {
         Sanctum::actingAs($this->user);
@@ -308,6 +316,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test cannot delete customer with appointments
      */
+    #[Test]
     public function test_cannot_delete_customer_with_appointments()
     {
         Sanctum::actingAs($this->user);
@@ -333,6 +342,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test GET /customers/search - Search customers
      */
+    #[Test]
     public function test_can_search_customers()
     {
         Sanctum::actingAs($this->user);
@@ -376,6 +386,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test GET /customers/{id}/appointments - Get customer appointments
      */
+    #[Test]
     public function test_can_get_customer_appointments()
     {
         Sanctum::actingAs($this->user);
@@ -417,6 +428,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test POST /customers/{id}/tags - Add tag to customer
      */
+    #[Test]
     public function test_can_add_tag_to_customer()
     {
         Sanctum::actingAs($this->user);
@@ -442,6 +454,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test DELETE /customers/{id}/tags/{tag} - Remove tag from customer
      */
+    #[Test]
     public function test_can_remove_tag_from_customer()
     {
         Sanctum::actingAs($this->user);
@@ -460,6 +473,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test multi-tenancy isolation
      */
+    #[Test]
     public function test_customers_are_isolated_by_tenant()
     {
         // Create another tenant with customers
@@ -492,6 +506,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test filtering customers
      */
+    #[Test]
     public function test_can_filter_customers()
     {
         Sanctum::actingAs($this->user);
@@ -533,6 +548,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test sorting customers
      */
+    #[Test]
     public function test_can_sort_customers()
     {
         Sanctum::actingAs($this->user);
@@ -571,6 +587,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test rate limiting
      */
+    #[Test]
     public function test_rate_limiting_is_enforced()
     {
         Sanctum::actingAs($this->user);
@@ -594,6 +611,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test API versioning headers
      */
+    #[Test]
     public function test_api_versioning_headers()
     {
         Sanctum::actingAs($this->user);
@@ -607,6 +625,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test handling of non-existent resources
      */
+    #[Test]
     public function test_returns_404_for_non_existent_customer()
     {
         Sanctum::actingAs($this->user);
@@ -622,6 +641,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test cross-tenant access is blocked
      */
+    #[Test]
     public function test_cannot_access_other_tenant_customer()
     {
         Sanctum::actingAs($this->user);
@@ -639,6 +659,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test customer merge functionality
      */
+    #[Test]
     public function test_can_merge_duplicate_customers()
     {
         Sanctum::actingAs($this->user);
@@ -683,6 +704,7 @@ class CustomerApiTest extends TestCase
     /**
      * Test customer export functionality
      */
+    #[Test]
     public function test_can_export_customers()
     {
         Sanctum::actingAs($this->user);

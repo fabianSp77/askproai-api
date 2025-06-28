@@ -1,16 +1,21 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
+        // Check if table exists before trying to alter it
+        if (!Schema::hasTable('retell_agents')) {
+            return;
+        }
+        
         Schema::table('retell_agents', function (Blueprint $table) {
             // Check if columns don't exist before adding
             if (!Schema::hasColumn('retell_agents', 'configuration')) {
@@ -34,8 +39,20 @@ return new class extends Migration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
+        // Check if table exists before trying to alter it
+        if (!Schema::hasTable('retell_agents')) {
+            return;
+        }
+        
         Schema::table('retell_agents', function (Blueprint $table) {
             $table->dropIndex(['company_id', 'sync_status']);
             

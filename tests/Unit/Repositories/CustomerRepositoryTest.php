@@ -2,15 +2,16 @@
 
 namespace Tests\Unit\Repositories;
 
-use Tests\TestCase;
-use App\Models\Customer;
-use App\Models\Company;
 use App\Models\Appointment;
 use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Customer;
 use App\Repositories\CustomerRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Database\Eloquent\Collection;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 use Tests\Traits\SimplifiedMigrations;
 
 class CustomerRepositoryTest extends TestCase
@@ -40,6 +41,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_create_customer()
     {
         $data = [
@@ -80,6 +82,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_delete_customer()
     {
         $customer = Customer::factory()->create(['company_id' => $this->company->id]);
@@ -115,6 +118,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_returns_null_when_customer_not_found_by_phone()
     {
         $found = $this->repository->findByPhone('+99999999999');
@@ -136,6 +140,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_find_or_create_customer_by_phone()
     {
         $data = [
@@ -181,6 +186,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_customers_with_appointments()
     {
         // Create customers with appointments
@@ -238,6 +244,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_customers_with_no_shows()
     {
         $customer1 = Customer::factory()->create(['company_id' => $this->company->id]);
@@ -305,6 +312,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_search_customers()
     {
         $customer1 = Customer::factory()->create([
@@ -380,6 +388,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_manage_customer_tags()
     {
         $customer = Customer::factory()->create([
@@ -420,6 +429,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_get_customers_by_tag()
     {
         Customer::factory()->count(2)->create([
@@ -477,6 +487,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_count_customers()
     {
         Customer::factory()->count(5)->create(['company_id' => $this->company->id]);
@@ -510,6 +521,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_can_paginate_customers()
     {
         Customer::factory()->count(25)->create(['company_id' => $this->company->id]);
@@ -537,6 +549,7 @@ class CustomerRepositoryTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function it_handles_phone_normalization_correctly()
     {
         $customer = Customer::factory()->create([

@@ -2,23 +2,24 @@
 
 namespace Tests\E2E;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Notification;
-use App\Models\Company;
-use App\Models\Branch;
-use App\Models\Customer;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Appointment;
-use App\Mail\AppointmentCancellationConfirmation;
-use App\Mail\AppointmentRescheduledConfirmation;
-use App\Notifications\AppointmentCancelledNotification;
 use App\Events\AppointmentCancelled;
 use App\Events\AppointmentRescheduled;
+use App\Mail\AppointmentCancellationConfirmation;
+use App\Mail\AppointmentRescheduledConfirmation;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Notifications\AppointmentCancelledNotification;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class AppointmentManagementE2ETest extends TestCase
 {
@@ -88,7 +89,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_view_appointment_list_with_filters()
@@ -182,7 +182,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_view_appointment_details()
@@ -243,7 +242,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_cancel_appointment_with_confirmation()
@@ -327,7 +325,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_cannot_cancel_appointment_within_policy_window()
@@ -367,7 +364,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_cancel_recurring_appointments()
@@ -440,7 +436,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_request_appointment_reschedule()
@@ -504,7 +499,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_download_appointment_calendar_file()
@@ -552,7 +546,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_view_appointment_history_with_pagination()
@@ -583,7 +576,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_can_print_appointment_details()
@@ -616,7 +608,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function customer_receives_appointment_reminders()
@@ -654,7 +645,6 @@ class AppointmentManagementE2ETest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function appointment_access_is_restricted_to_owner()

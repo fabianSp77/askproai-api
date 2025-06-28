@@ -2,21 +2,22 @@
 
 namespace Tests\Unit\Models;
 
-use Tests\TestCase;
-use App\Models\CustomerAuth;
-use App\Models\Company;
-use App\Models\Branch;
 use App\Models\Appointment;
-use App\Models\Call;
-use App\Models\Invoice;
 use App\Models\BillingPeriod;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\CustomerAuth;
+use App\Models\Invoice;
 use App\Notifications\CustomerResetPasswordNotification;
 use App\Notifications\CustomerVerifyEmailNotification;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
-use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CustomerAuthTest extends TestCase
 {
@@ -49,6 +50,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test mass assignable attributes
      */
+    #[Test]
     public function test_mass_assignable_attributes()
     {
         $data = [
@@ -78,6 +80,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test hidden attributes
      */
+    #[Test]
     public function test_hidden_attributes()
     {
         $array = $this->customer->toArray();
@@ -90,6 +93,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test date casting
      */
+    #[Test]
     public function test_date_casting()
     {
         $this->assertInstanceOf(Carbon::class, $this->customer->email_verified_at);
@@ -106,6 +110,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test company relationship
      */
+    #[Test]
     public function test_company_relationship()
     {
         $company = $this->customer->company;
@@ -117,6 +122,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test branch relationship
      */
+    #[Test]
     public function test_branch_relationship()
     {
         $branch = $this->customer->branch;
@@ -128,6 +134,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test appointments relationship
      */
+    #[Test]
     public function test_appointments_relationship()
     {
         // Create appointments
@@ -144,6 +151,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test calls relationship
      */
+    #[Test]
     public function test_calls_relationship()
     {
         // Create calls
@@ -160,6 +168,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test invoices relationship
      */
+    #[Test]
     public function test_invoices_relationship()
     {
         // Create invoice with billing period
@@ -189,6 +198,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test full name attribute
      */
+    #[Test]
     public function test_full_name_attribute()
     {
         $this->assertEquals('John Doe', $this->customer->full_name);
@@ -205,6 +215,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test has portal access
      */
+    #[Test]
     public function test_has_portal_access()
     {
         $this->assertTrue($this->customer->hasPortalAccess());
@@ -224,6 +235,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test generate portal access token
      */
+    #[Test]
     public function test_generate_portal_access_token()
     {
         $token = $this->customer->generatePortalAccessToken();
@@ -243,6 +255,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test verify portal access token - valid
      */
+    #[Test]
     public function test_verify_portal_access_token_valid()
     {
         $token = $this->customer->generatePortalAccessToken();
@@ -255,6 +268,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test verify portal access token - invalid token
      */
+    #[Test]
     public function test_verify_portal_access_token_invalid()
     {
         $this->customer->generatePortalAccessToken();
@@ -267,6 +281,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test verify portal access token - expired
      */
+    #[Test]
     public function test_verify_portal_access_token_expired()
     {
         $token = $this->customer->generatePortalAccessToken();
@@ -284,6 +299,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test verify portal access token - no token set
      */
+    #[Test]
     public function test_verify_portal_access_token_no_token()
     {
         $result = $this->customer->verifyPortalAccessToken('any_token');
@@ -294,6 +310,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test send password reset notification
      */
+    #[Test]
     public function test_send_password_reset_notification()
     {
         Notification::fake();
@@ -313,6 +330,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test send email verification notification
      */
+    #[Test]
     public function test_send_email_verification_notification()
     {
         Notification::fake();
@@ -328,6 +346,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test upcoming appointments attribute
      */
+    #[Test]
     public function test_upcoming_appointments_attribute()
     {
         // Create future appointments
@@ -362,6 +381,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test past appointments attribute
      */
+    #[Test]
     public function test_past_appointments_attribute()
     {
         // Create past appointments
@@ -396,6 +416,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test record portal login
      */
+    #[Test]
     public function test_record_portal_login()
     {
         $this->assertNull($this->customer->last_portal_login_at);
@@ -410,6 +431,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test Sanctum API tokens
      */
+    #[Test]
     public function test_sanctum_api_tokens()
     {
         // Create token
@@ -429,6 +451,7 @@ class CustomerAuthTest extends TestCase
     /**
      * Test uses customers table
      */
+    #[Test]
     public function test_uses_customers_table()
     {
         $reflection = new \ReflectionClass($this->customer);

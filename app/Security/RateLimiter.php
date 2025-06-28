@@ -11,13 +11,17 @@ class RateLimiter
     /**
      * Rate limit configurations per endpoint
      */
-    private array $limits = [
-        'api/retell/webhook' => ['requests' => 100, 'minutes' => 1],
-        'api/calcom/webhook' => ['requests' => 100, 'minutes' => 1],
-        'api/appointments' => ['requests' => 60, 'minutes' => 1],
-        'api/customers' => ['requests' => 60, 'minutes' => 1],
-        'admin/*' => ['requests' => 300, 'minutes' => 1],
-    ];
+    private array $limits;
+    
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->limits = config('rate-limiting.endpoints', [
+            'api/*' => ['requests' => 60, 'minutes' => 1],
+        ]);
+    }
 
     /**
      * Check if request should be rate limited
@@ -114,8 +118,8 @@ class RateLimiter
             }
         }
 
-        // Default limit
-        return ['requests' => 60, 'minutes' => 1];
+        // Default limit from config
+        return config('rate-limiting.default', ['requests' => 60, 'minutes' => 1]);
     }
 
     /**

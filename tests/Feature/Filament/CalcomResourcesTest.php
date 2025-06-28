@@ -2,15 +2,16 @@
 
 namespace Tests\Feature\Filament;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Company;
 use App\Models\Appointment;
+use App\Models\Company;
 use App\Models\Customer;
-use Livewire\Livewire;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\User;
 use Filament\Actions\DeleteAction;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CalcomResourcesTest extends TestCase
 {
@@ -44,6 +45,7 @@ class CalcomResourcesTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_shows_sync_calcom_button_on_appointments_page()
     {
         Livewire::test(\App\Filament\Admin\Resources\AppointmentResource\Pages\ListAppointments::class)
@@ -67,6 +69,7 @@ class CalcomResourcesTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_shows_appointment_tabs_with_counts()
     {
         // Create test appointments
@@ -115,6 +118,7 @@ class CalcomResourcesTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_displays_appointment_timeline()
     {
         $appointment = Appointment::factory()->create([
@@ -157,6 +161,7 @@ class CalcomResourcesTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_can_trigger_manual_sync_from_status_page()
     {
         Http::fake([
@@ -187,6 +192,7 @@ class CalcomResourcesTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_can_access_calcom_api_test_page()
     {
         $response = $this->get('/admin/calcom-api-test');
@@ -219,6 +225,7 @@ class CalcomResourcesTest extends TestCase
     }
     
     /** @test */
+    #[Test]
     public function it_shows_calcom_booking_id_in_appointment_table()
     {
         $appointment = Appointment::factory()->create([

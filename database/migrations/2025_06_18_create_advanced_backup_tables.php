@@ -9,7 +9,7 @@ return new class extends CompatibleMigration
     public function up()
     {
         // External sync logs
-        Schema::create('external_sync_logs', function (Blueprint $table) {
+        $this->createTableIfNotExists('external_sync_logs', function (Blueprint $table) {
             $table->id();
             $table->string('sync_type', 50); // full, incremental, calcom, retell
             $this->addJsonColumn($table, 'report', false);
@@ -19,7 +19,7 @@ return new class extends CompatibleMigration
         });
         
         // Cal.com backup data
-        Schema::create('calcom_bookings_backup', function (Blueprint $table) {
+        $this->createTableIfNotExists('calcom_bookings_backup', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('calcom_booking_id');
@@ -33,7 +33,7 @@ return new class extends CompatibleMigration
             $table->index(['company_id', 'starts_at']);
         });
         
-        Schema::create('calcom_event_types_backup', function (Blueprint $table) {
+        $this->createTableIfNotExists('calcom_event_types_backup', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->unsignedBigInteger('calcom_event_type_id');
@@ -43,7 +43,7 @@ return new class extends CompatibleMigration
         });
         
         // Retell.ai backup data
-        Schema::create('retell_calls_backup', function (Blueprint $table) {
+        $this->createTableIfNotExists('retell_calls_backup', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->string('retell_call_id');
@@ -58,7 +58,7 @@ return new class extends CompatibleMigration
             $table->index(['company_id', 'synced_at']);
         });
         
-        Schema::create('retell_agents_backup', function (Blueprint $table) {
+        $this->createTableIfNotExists('retell_agents_backup', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->string('retell_agent_id');
@@ -68,7 +68,7 @@ return new class extends CompatibleMigration
         });
         
         // Billing snapshots
-        Schema::create('billing_snapshots', function (Blueprint $table) {
+        $this->createTableIfNotExists('billing_snapshots', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id');
             $table->string('period', 7); // YYYY-MM
@@ -81,7 +81,7 @@ return new class extends CompatibleMigration
             $table->index('is_finalized');
         });
         
-        Schema::create('billing_line_items', function (Blueprint $table) {
+        $this->createTableIfNotExists('billing_line_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('billing_snapshot_id');
             $table->string('branch_id', 36);
@@ -94,7 +94,7 @@ return new class extends CompatibleMigration
             $table->index(['billing_snapshot_id', 'branch_id']);
         });
         
-        Schema::create('billing_snapshots_archive', function (Blueprint $table) {
+        $this->createTableIfNotExists('billing_snapshots_archive', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('original_id');
             $this->addJsonColumn($table, 'snapshot_data', false);
@@ -104,7 +104,7 @@ return new class extends CompatibleMigration
         });
         
         // Audit trail for critical operations
-        Schema::create('audit_trail', function (Blueprint $table) {
+        $this->createTableIfNotExists('audit_trail', function (Blueprint $table) {
             $table->id();
             $table->string('user_id')->nullable();
             $table->string('action', 100);
@@ -122,14 +122,14 @@ return new class extends CompatibleMigration
 
     public function down()
     {
-        Schema::dropIfExists('audit_trail');
-        Schema::dropIfExists('billing_snapshots_archive');
-        Schema::dropIfExists('billing_line_items');
-        Schema::dropIfExists('billing_snapshots');
-        Schema::dropIfExists('retell_agents_backup');
-        Schema::dropIfExists('retell_calls_backup');
-        Schema::dropIfExists('calcom_event_types_backup');
-        Schema::dropIfExists('calcom_bookings_backup');
-        Schema::dropIfExists('external_sync_logs');
+        $this->dropTableIfExists('audit_trail');
+        $this->dropTableIfExists('billing_snapshots_archive');
+        $this->dropTableIfExists('billing_line_items');
+        $this->dropTableIfExists('billing_snapshots');
+        $this->dropTableIfExists('retell_agents_backup');
+        $this->dropTableIfExists('retell_calls_backup');
+        $this->dropTableIfExists('calcom_event_types_backup');
+        $this->dropTableIfExists('calcom_bookings_backup');
+        $this->dropTableIfExists('external_sync_logs');
     }
 };

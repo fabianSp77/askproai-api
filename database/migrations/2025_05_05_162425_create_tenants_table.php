@@ -1,14 +1,14 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     public function up(): void
     {
-        Schema::create('tenants', function (Blueprint $table) {
+        $this->createTableIfNotExists('tenants', function (Blueprint $table) {
             $table->id();                     // BIGINT unsigned PK
             $table->string('name');
             // weitere Pflichtspalten hier …
@@ -18,6 +18,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('tenants');
+        $this->dropTableIfExists('tenants');
     }
 };

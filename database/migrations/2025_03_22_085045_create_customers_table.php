@@ -1,13 +1,13 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends CompatibleMigration {
     public function up(): void
     {
-        Schema::create('customers', function (Blueprint $table) {
+        $this->createTableIfNotExists('customers', function (Blueprint $table) {
             $table->id();                       // BIGINT UNSIGNED AUTO_INCREMENT
             $table->string('name');
             $table->string('email')->nullable();
@@ -19,6 +19,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('customers');
+        $this->dropTableIfExists('customers');
     }
 };

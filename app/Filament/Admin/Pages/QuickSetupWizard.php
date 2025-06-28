@@ -43,8 +43,10 @@ class QuickSetupWizard extends Page implements HasForms
     use HasConsistentNavigation;
     
     protected static ?string $navigationIcon = 'heroicon-o-rocket-launch';
-    protected static ?string $navigationLabel = 'Quick Setup';
-    protected static ?string $title = 'Quick Setup Wizard';
+    protected static ?string $navigationLabel = 'Schnell-Setup';
+    protected static ?string $title = 'Schnell-Setup Assistent';
+    protected static ?string $navigationGroup = 'Einrichtung';
+    protected static ?int $navigationSort = 55;
     
     protected static string $view = 'filament.admin.pages.quick-setup-wizard';
     
@@ -552,6 +554,7 @@ class QuickSetupWizard extends Page implements HasForms
                             TextInput::make('calcom_api_key')
                                 ->label('Cal.com API Key')
                                 ->password()
+                                ->autocomplete('new-password')
                                 ->visible(fn($get) => $get('calcom_connection_type') === 'api_key')
                                 ->helperText(fn() => $this->editMode && $this->editingCompany && $this->editingCompany->calcom_api_key 
                                     ? 'API Key ist gespeichert. Leer lassen um den bestehenden Key zu behalten.' 
@@ -588,6 +591,7 @@ class QuickSetupWizard extends Page implements HasForms
                                     TextInput::make('retell_api_key')
                                         ->label('Retell.ai API Key')
                                         ->password()
+                                        ->autocomplete('new-password')
                                         ->helperText(fn() => $this->editMode && $this->editingCompany && $this->editingCompany->retell_api_key 
                                             ? 'API Key ist gespeichert. Leer lassen um den bestehenden Key zu behalten.' 
                                             : 'Finden Sie unter dashboard.retellai.com/api-keys')

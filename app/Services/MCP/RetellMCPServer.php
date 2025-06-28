@@ -207,13 +207,15 @@ class RetellMCPServer
                     : 0,
                 'synced_fields' => [
                     'agent_name' => $agentDetails['agent_name'] ?? null,
-                    'general_prompt' => $agentDetails['general_prompt'] ?? null,
-                    'begin_message' => $agentDetails['begin_message'] ?? null,
                     'voice_id' => $agentDetails['voice_id'] ?? null,
                     'language' => $agentDetails['language'] ?? null,
                     'response_engine' => $agentDetails['response_engine'] ?? null,
                     'webhook_url' => $agentDetails['webhook_url'] ?? null,
-                    'interruption_sensitivity' => $agentDetails['interruption_sensitivity'] ?? null
+                    'interruption_sensitivity' => $agentDetails['interruption_sensitivity'] ?? null,
+                    'responsiveness' => $agentDetails['responsiveness'] ?? null,
+                    'enable_backchannel' => $agentDetails['enable_backchannel'] ?? null,
+                    'voice_speed' => $agentDetails['voice_speed'] ?? null,
+                    'voice_temperature' => $agentDetails['voice_temperature'] ?? null
                 ]
             ];
             

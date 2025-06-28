@@ -8,6 +8,8 @@ use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ListCalls extends ListRecords
 {
@@ -111,42 +113,57 @@ class ListCalls extends ListRecords
     
     public function getTabs(): array
     {
-        $model = \App\Models\Call::class;
+        // Cache tab counts for 60 seconds to avoid multiple queries
+        $counts = Cache::remember('call_tab_counts_' . auth()->user()->company_id, 60, function() {
+            $companyId = auth()->user()->company_id;
+            
+            return DB::table('calls')
+                ->where('company_id', $companyId)
+                ->selectRaw("
+                    COUNT(*) as total,
+                    COUNT(CASE WHEN DATE(start_timestamp) = CURDATE() THEN 1 END) as today,
+                    COUNT(CASE WHEN appointment_id IS NOT NULL THEN 1 END) as with_appointments,
+                    COUNT(CASE WHEN appointment_id IS NULL THEN 1 END) as without_appointments,
+                    COUNT(CASE WHEN duration_sec > 300 THEN 1 END) as long_calls,
+                    COUNT(CASE WHEN call_status = 'failed' THEN 1 END) as failed
+                ")
+                ->first();
+        });
         
         return [
             'all' => Tab::make('Alle Anrufe')
                 ->icon('heroicon-m-phone')
-                ->badge($model::count())
+                ->badge($counts->total)
                 ->badgeColor('gray'),
                 
             'today' => Tab::make('Heute')
                 ->icon('heroicon-m-calendar')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereDate('start_timestamp', today()))
-                ->badge($model::whereDate('start_timestamp', today())->count())
+                ->badge($counts->today)
                 ->badgeColor('primary'),
                 
             'with_appointments' => Tab::make('Mit Termin')
                 ->icon('heroicon-m-check-circle')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereNotNull('appointment_id'))
-                ->badge($model::whereNotNull('appointment_id')->count())
+                ->badge($counts->with_appointments)
                 ->badgeColor('success'),
                 
             'without_appointments' => Tab::make('Ohne Termin')
                 ->icon('heroicon-m-x-circle')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereNull('appointment_id'))
-                ->badge($model::whereNull('appointment_id')->count())
+                ->badge($counts->without_appointments)
                 ->badgeColor('warning'),
                 
             'long_calls' => Tab::make('Lange Gespräche')
                 ->icon('heroicon-m-clock')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('duration_sec', '>', 300))
-                ->badge($model::where('duration_sec', '>', 300)->count())
+                ->badge($counts->long_calls)
                 ->badgeColor('info'),
                 
             'failed' => Tab::make('Fehlgeschlagen')
                 ->icon('heroicon-m-exclamation-triangle')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('call_status', 'failed'))
-                ->badge($model::where('call_status', 'failed')->count())
+                ->badge($counts->failed)
                 ->badgeColor('danger'),
         ];
     }
@@ -154,6 +171,7 @@ class ListCalls extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
+            \App\Filament\Admin\Widgets\CallLiveStatusWidget::class,
             \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
             \App\Filament\Admin\Widgets\CallKpiWidget::class,
         ];

@@ -256,13 +256,15 @@ class FeatureFlagService
      */
     public function emergencyDisableAll(string $reason): void
     {
-        DB::table('feature_flags')
-            ->where('enabled', true)
-            ->update([
-                'enabled' => false,
-                'disabled_at' => now(),
-                'metadata' => DB::raw("JSON_SET(COALESCE(metadata, '{}'), '$.emergency_reason', '$reason')")
-            ]);
+        // Use parameterized query for JSON update
+        DB::statement(
+            "UPDATE feature_flags 
+             SET enabled = ?, 
+                 disabled_at = ?, 
+                 metadata = JSON_SET(COALESCE(metadata, '{}'), '$.emergency_reason', ?)
+             WHERE enabled = ?",
+            [false, now(), $reason, true]
+        );
             
         // Clear all cache
         Cache::tags(['feature_flags'])->flush();

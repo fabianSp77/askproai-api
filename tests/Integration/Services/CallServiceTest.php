@@ -2,30 +2,31 @@
 
 namespace Tests\Integration\Services;
 
-use Tests\TestCase;
-use App\Services\CallService;
-use App\Services\RetellService;
-use App\Services\AppointmentService;
-use App\Models\Call;
-use App\Models\Customer;
-use App\Models\Company;
-use App\Models\Appointment;
-use App\Models\User;
-use App\Models\Staff;
-use App\Models\Branch;
 use App\Events\CallCompleted;
 use App\Events\CallFailed;
+use App\Models\Appointment;
+use App\Models\Branch;
+use App\Models\Call;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Staff;
+use App\Models\User;
+use App\Repositories\AppointmentRepository;
 use App\Repositories\CallRepository;
 use App\Repositories\CustomerRepository;
-use App\Repositories\AppointmentRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Queue;
+use App\Services\AppointmentService;
+use App\Services\CallService;
+use App\Services\RetellService;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CallServiceTest extends TestCase
 {
@@ -69,6 +70,7 @@ class CallServiceTest extends TestCase
     /**
      * Test processing call started webhook
      */
+    #[Test]
     public function test_processes_call_started_webhook()
     {
         Event::fake();
@@ -116,6 +118,7 @@ class CallServiceTest extends TestCase
     /**
      * Test processing call ended webhook with appointment creation
      */
+    #[Test]
     public function test_processes_call_ended_webhook_with_appointment()
     {
         Event::fake();
@@ -186,6 +189,7 @@ class CallServiceTest extends TestCase
     /**
      * Test processing call analyzed webhook
      */
+    #[Test]
     public function test_processes_call_analyzed_webhook()
     {
         Event::fake();
@@ -242,6 +246,7 @@ class CallServiceTest extends TestCase
     /**
      * Test creating new call with customer creation
      */
+    #[Test]
     public function test_creates_new_call_with_customer()
     {
         Event::fake();
@@ -277,6 +282,7 @@ class CallServiceTest extends TestCase
     /**
      * Test updating existing call preserves data
      */
+    #[Test]
     public function test_updates_existing_call_preserving_data()
     {
         $existingCall = Call::factory()->create([
@@ -315,6 +321,7 @@ class CallServiceTest extends TestCase
     /**
      * Test call statistics calculation
      */
+    #[Test]
     public function test_calculates_call_statistics()
     {
         // Create calls with different statuses and dates
@@ -374,6 +381,7 @@ class CallServiceTest extends TestCase
     /**
      * Test refreshing call data from Retell API
      */
+    #[Test]
     public function test_refreshes_call_data_from_retell()
     {
         $call = Call::factory()->create([
@@ -413,6 +421,7 @@ class CallServiceTest extends TestCase
     /**
      * Test refresh handles Retell API errors
      */
+    #[Test]
     public function test_handles_retell_api_errors_on_refresh()
     {
         Log::spy();
@@ -445,6 +454,7 @@ class CallServiceTest extends TestCase
     /**
      * Test marking call as failed
      */
+    #[Test]
     public function test_marks_call_as_failed_with_reason()
     {
         Event::fake();
@@ -471,6 +481,7 @@ class CallServiceTest extends TestCase
     /**
      * Test webhook processing with missing customer phone
      */
+    #[Test]
     public function test_processes_webhook_without_customer_phone()
     {
         $webhookData = [
@@ -494,6 +505,7 @@ class CallServiceTest extends TestCase
     /**
      * Test structured data processing updates customer
      */
+    #[Test]
     public function test_processes_structured_data_and_updates_customer()
     {
         $customer = Customer::factory()->create([
@@ -538,6 +550,7 @@ class CallServiceTest extends TestCase
     /**
      * Test transaction rollback on appointment creation failure
      */
+    #[Test]
     public function test_rolls_back_call_update_on_appointment_failure()
     {
         Event::fake();
@@ -592,6 +605,7 @@ class CallServiceTest extends TestCase
     /**
      * Test call without retell_call_id cannot be refreshed
      */
+    #[Test]
     public function test_cannot_refresh_call_without_retell_id()
     {
         $call = Call::factory()->create([
@@ -611,6 +625,7 @@ class CallServiceTest extends TestCase
     /**
      * Test finding existing call by retell_call_id
      */
+    #[Test]
     public function test_finds_existing_call_for_update()
     {
         $existingCall = Call::factory()->create([

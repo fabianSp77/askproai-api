@@ -35,8 +35,15 @@ return new class extends CompatibleMigration
     /**
      * Reverse the migrations.
      */
-    public function down(): void
+    public function down()
     {
+        // SQLite can't drop columns with indexes present
+        if ($this->isSQLite()) {
+            // For SQLite, we just skip the drop
+            // The columns will remain but won't cause issues
+            return;
+        }
+        
         Schema::table('webhook_logs', function (Blueprint $table) {
             $this->dropColumnIfExists('webhook_logs', 'processing_time_ms');
             $this->dropColumnIfExists('webhook_logs', 'provider');

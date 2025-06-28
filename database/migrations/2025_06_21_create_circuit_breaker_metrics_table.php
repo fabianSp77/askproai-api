@@ -1,17 +1,17 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
+use App\Database\CompatibleMigration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends CompatibleMigration
 {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('circuit_breaker_metrics', function (Blueprint $table) {
+        $this->createTableIfNotExists('circuit_breaker_metrics', function (Blueprint $table) {
             $table->id();
             $table->string('service');
             $table->string('status');
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('circuit_breaker_metrics');
+        $this->dropTableIfExists('circuit_breaker_metrics');
     }
 };

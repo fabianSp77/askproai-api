@@ -9,7 +9,7 @@ return new class extends CompatibleMigration
     public function up(): void
     {
         // Erstelle staff_event_types Verknüpfungstabelle
-        Schema::create('staff_event_types', function (Blueprint $table) {
+        $this->createTableIfNotExists('staff_event_types', function (Blueprint $table) {
             $table->id();
             $table->char('staff_id', 36);
             $table->unsignedBigInteger('event_type_id');
@@ -36,6 +36,6 @@ return new class extends CompatibleMigration
 
     public function down(): void
     {
-        Schema::dropIfExists('staff_event_types');
+        $this->dropTableIfExists('staff_event_types');
     }
 };

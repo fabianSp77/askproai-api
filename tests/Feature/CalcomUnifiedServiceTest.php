@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
 use App\Services\CalcomUnifiedService;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Config;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CalcomUnifiedServiceTest extends TestCase
 {
@@ -27,7 +28,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_fetch_event_types_with_v2_api()
@@ -55,7 +55,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_falls_back_to_v1_when_v2_fails_for_event_types()
@@ -82,7 +81,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_check_availability_with_v2_api()
@@ -114,7 +112,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_normalizes_v2_availability_response_to_v1_format()
@@ -154,7 +151,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_create_booking_with_v2_api()
@@ -198,7 +194,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_includes_phone_in_notes_for_v2_booking()
@@ -226,7 +221,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_get_booking_details()
@@ -253,7 +247,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_cancel_booking()
@@ -280,7 +273,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_test_api_connectivity()
@@ -301,7 +293,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_v1_api_when_configured()
@@ -330,7 +321,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_properly_formats_v1_booking_request()
@@ -367,7 +357,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_api_errors_gracefully()
@@ -384,7 +373,6 @@ class CalcomUnifiedServiceTest extends TestCase
     }
 
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_disables_fallback_when_configured()

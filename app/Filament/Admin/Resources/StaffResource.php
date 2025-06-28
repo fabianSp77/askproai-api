@@ -32,16 +32,81 @@ class StaffResource extends EnhancedResourceSimple
 
     public static function canViewAny(): bool
     {
-        return true;
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission or if user belongs to a company
+        return $user->can('view_any_staff') || $user->company_id !== null;
+    }
+    
+    public static function canView($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can view all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('view_staff')) {
+            return true;
+        }
+        
+        // Users can view staff from their own company
+        return $user->company_id === $record->company_id;
+    }
+    
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can edit all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('update_staff')) {
+            return true;
+        }
+        
+        // Company admins can edit staff from their own company
+        return $user->company_id === $record->company_id && 
+               ($user->hasRole('company_admin') || $user->hasRole('branch_manager'));
+    }
+    
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can create
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('create_staff')) {
+            return true;
+        }
+        
+        // Company admins and branch managers can create staff
+        return $user->company_id !== null && 
+               ($user->hasRole('company_admin') || $user->hasRole('branch_manager'));
     }
 
     use HasConsistentNavigation;
     protected static ?string $model = Staff::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationGroup = 'Personal & Services';
+    protected static ?string $navigationLabel = 'Mitarbeiter';
+    protected static ?string $navigationGroup = 'Täglicher Betrieb';
+    protected static ?int $navigationSort = 25;
     protected static ?string $modelLabel = 'Mitarbeiter';
     protected static ?string $pluralModelLabel = 'Mitarbeiter';
-    protected static ?int $navigationSort = 30;
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Form $form): Form
@@ -73,7 +138,7 @@ class StaffResource extends EnhancedResourceSimple
                                                         name: 'homeBranch',
                                                         titleAttribute: 'name',
                                                         modifyQueryUsing: fn (Builder $query, Forms\Get $get) => 
-                                                            $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->whereRaw('1=0')
+                                                            $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->where(DB::raw('1'), '=', DB::raw('0'))
                                                     )
                                                     ->label('Stammfiliale')
                                                     ->required()
@@ -134,7 +199,7 @@ class StaffResource extends EnhancedResourceSimple
                                                 name: 'branches',
                                                 titleAttribute: 'name',
                                                 modifyQueryUsing: fn (Builder $query, Forms\Get $get) =>
-                                                    $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->whereRaw('1=0')
+                                                    $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->where(DB::raw('1'), '=', DB::raw('0'))
                                             )
                                             ->label('Arbeitet in Filialen')
                                             ->columns(2)
@@ -155,7 +220,7 @@ class StaffResource extends EnhancedResourceSimple
                                                 name: 'services',
                                                 titleAttribute: 'name',
                                                 modifyQueryUsing: fn (Builder $query, Forms\Get $get) => 
-                                                    $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->whereRaw('1=0')
+                                                    $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->where(DB::raw('1'), '=', DB::raw('0'))
                                             )
                                             ->label('Bietet Services an')
                                             ->columns(2)
@@ -225,9 +290,11 @@ class StaffResource extends EnhancedResourceSimple
         $table = parent::enhanceTable($table);
         
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->withCount(['appointments', 'appointments as upcoming_appointments_count' => function ($query) {
-                $query->where('starts_at', '>=', now())->whereIn('status', ['confirmed', 'pending']);
-            }]))
+            ->modifyQueryUsing(fn ($query) => $query
+                ->with(['company', 'homeBranch'])
+                ->withCount(['appointments', 'appointments as upcoming_appointments_count' => function ($query) {
+                    $query->where('starts_at', '>=', now())->whereIn('status', ['confirmed', 'pending']);
+                }]))
             ->columns([
                 Split::make([
                     Tables\Columns\ImageColumn::make('avatar')

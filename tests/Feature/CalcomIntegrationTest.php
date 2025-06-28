@@ -2,18 +2,19 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\Company;
-use App\Models\User;
 use App\Models\Appointment;
-use App\Models\Customer;
-use App\Models\Staff;
-use App\Models\Service;
 use App\Models\Branch;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Service;
+use App\Models\Staff;
+use App\Models\User;
 use App\Services\CalcomV2Service;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CalcomIntegrationTest extends TestCase
 {
@@ -40,7 +41,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_test_calcom_api_connection()
@@ -82,7 +82,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_sync_bookings_from_calcom()
@@ -151,7 +150,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_updates_existing_appointments_on_sync()
@@ -198,7 +196,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_different_calcom_statuses_correctly()
@@ -240,7 +237,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_processes_calcom_webhook_for_booking_created()
@@ -296,7 +292,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_booking_cancelled_webhook()
@@ -336,7 +331,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_rejects_webhook_with_invalid_signature()
@@ -354,7 +348,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_can_check_slot_availability()
@@ -386,7 +379,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_handles_api_errors_gracefully()
@@ -405,7 +397,6 @@ class CalcomIntegrationTest extends TestCase
     }
     
     /** @test */
-    use PHPUnit\Framework\Attributes\Test;
 
     #[Test]
     public function it_tracks_sync_statistics()

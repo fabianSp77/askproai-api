@@ -2,16 +2,17 @@
 
 namespace Tests\Unit\MCP;
 
-use App\Services\MCP\Servers\CalcomMCPServer;
-use App\Services\MCP\MCPRequest;
-use App\Services\MCP\MCPResponse;
-use App\Services\CalcomV2Service;
-use App\Models\Company;
 use App\Models\Branch;
 use App\Models\CalcomEventType;
-use Tests\TestCase;
-use Mockery;
+use App\Models\Company;
+use App\Services\CalcomV2Service;
+use App\Services\MCP\MCPRequest;
+use App\Services\MCP\MCPResponse;
+use App\Services\MCP\Servers\CalcomMCPServer;
 use Illuminate\Support\Facades\Http;
+use Mockery;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
 
 class CalcomMCPServerTest extends TestCase
 {
@@ -37,6 +38,8 @@ class CalcomMCPServerTest extends TestCase
         ]);
     }
 
+    #[Test]
+
     public function test_can_handle_calcom_methods()
     {
         $this->assertTrue($this->server->canHandle('calcom.availability'));
@@ -45,6 +48,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertTrue($this->server->canHandle('calcom.event_types'));
         $this->assertFalse($this->server->canHandle('database.query'));
     }
+
+    #[Test]
 
     public function test_check_availability()
     {
@@ -78,6 +83,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertCount(3, $response->getData()['slots']);
         $this->assertEquals('09:00', $response->getData()['slots'][0]);
     }
+
+    #[Test]
 
     public function test_create_booking()
     {
@@ -114,6 +121,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertEquals('booking_uid_123', $response->getData()['uid']);
     }
 
+    #[Test]
+
     public function test_cancel_booking()
     {
         $request = new MCPRequest([
@@ -134,6 +143,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertTrue($response->isSuccess());
         $this->assertTrue($response->getData()['cancelled']);
     }
+
+    #[Test]
 
     public function test_get_event_types()
     {
@@ -170,6 +181,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertEquals('Consultation', $response->getData()['event_types'][0]['title']);
     }
 
+    #[Test]
+
     public function test_handle_api_error()
     {
         $request = new MCPRequest([
@@ -190,6 +203,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertStringContainsString('Event type not found', $response->getError()->getMessage());
     }
 
+    #[Test]
+
     public function test_validate_required_params()
     {
         $request = new MCPRequest([
@@ -205,6 +220,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertFalse($response->isSuccess());
         $this->assertEquals('MISSING_PARAMS', $response->getError()->getCode());
     }
+
+    #[Test]
 
     public function test_reschedule_booking()
     {
@@ -231,6 +248,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertEquals(123457, $response->getData()['id']);
     }
 
+    #[Test]
+
     public function test_bulk_availability_check()
     {
         $request = new MCPRequest([
@@ -254,6 +273,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertArrayHasKey('54321', $response->getData()['availability']);
         $this->assertArrayHasKey('54322', $response->getData()['availability']);
     }
+
+    #[Test]
 
     public function test_sync_event_types()
     {
@@ -280,6 +301,8 @@ class CalcomMCPServerTest extends TestCase
         $this->assertArrayHasKey('created', $response->getData());
         $this->assertArrayHasKey('updated', $response->getData());
     }
+
+    #[Test]
 
     public function test_handle_rate_limiting()
     {

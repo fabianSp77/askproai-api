@@ -94,4 +94,30 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'business_id' => env('WHATSAPP_BUSINESS_ID'),
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'webhook_verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v18.0'),
+        'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com'),
+        
+        // Templates
+        'templates' => [
+            'appointment_reminder_24h' => env('WHATSAPP_TEMPLATE_REMINDER_24H', 'appointment_reminder_24h'),
+            'appointment_reminder_2h' => env('WHATSAPP_TEMPLATE_REMINDER_2H', 'appointment_reminder_2h'),
+            'appointment_reminder_30min' => env('WHATSAPP_TEMPLATE_REMINDER_30MIN', 'appointment_reminder_30min'),
+            'appointment_confirmation' => env('WHATSAPP_TEMPLATE_CONFIRMATION', 'appointment_confirmation'),
+            'appointment_cancellation' => env('WHATSAPP_TEMPLATE_CANCELLATION', 'appointment_cancellation'),
+        ],
+        
+        // Twilio alternative configuration (if using Twilio for WhatsApp)
+        'provider' => env('WHATSAPP_PROVIDER', 'meta'), // meta or twilio
+        'twilio' => [
+            'account_sid' => env('TWILIO_ACCOUNT_SID'),
+            'auth_token' => env('TWILIO_AUTH_TOKEN'),
+            'whatsapp_from' => env('TWILIO_WHATSAPP_FROM'),
+        ],
+    ],
+
 ];

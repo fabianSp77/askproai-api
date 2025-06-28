@@ -271,25 +271,45 @@ class RetellWebhookHandler extends BaseWebhookHandler
                 return null;
             }
             
-            // Book appointment
-            $bookingService = app(AppointmentBookingService::class);
-            $result = $bookingService->bookFromPhoneCall(
-                $appointmentData,
-                $call
-            );
-            
-            // Update call with appointment reference
-            if ($result['success'] && isset($result['appointment'])) {
-                $call->update([
-                    'appointment_id' => $result['appointment']->id,
-                    'metadata' => array_merge($call->metadata ?? [], [
-                        'appointment_booked' => true,
-                        'booking_result' => $result
-                    ])
-                ]);
+            // Check if appointment data came from transcript extraction
+            if (isset($appointmentData['source']) && $appointmentData['source'] === 'transcript_extraction') {
+                // Use the extraction service for transcript-based appointments
+                $extractionService = app(\App\Services\AppointmentExtractionService::class);
+                $appointment = $extractionService->createAppointmentFromExtraction($call, $appointmentData);
+                
+                if ($appointment) {
+                    return [
+                        'success' => true,
+                        'appointment' => $appointment,
+                        'message' => 'Appointment created from transcript'
+                    ];
+                } else {
+                    return [
+                        'success' => false,
+                        'message' => 'Failed to create appointment from transcript'
+                    ];
+                }
+            } else {
+                // Use the regular booking service for structured data
+                $bookingService = app(AppointmentBookingService::class);
+                $result = $bookingService->bookFromPhoneCall(
+                    $appointmentData,
+                    $call
+                );
+                
+                // Update call with appointment reference
+                if ($result['success'] && isset($result['appointment'])) {
+                    $call->update([
+                        'appointment_id' => $result['appointment']->id,
+                        'metadata' => array_merge($call->metadata ?? [], [
+                            'appointment_booked' => true,
+                            'booking_result' => $result
+                        ])
+                    ]);
+                }
+                
+                return $result;
             }
-            
-            return $result;
             
         } catch (\Exception $e) {
             $this->logError('Failed to process appointment booking', [
@@ -418,6 +438,24 @@ class RetellWebhookHandler extends BaseWebhookHandler
             }
         }
         
+        // Fallback: Try to extract from transcript
+        if (!empty($callData['transcript'])) {
+            $this->logInfo('Attempting transcript extraction as fallback');
+            
+            $extractor = app(\App\Services\AppointmentExtractionService::class);
+            $extractedData = $extractor->extractFromTranscript($callData['transcript']);
+            
+            if ($extractedData) {
+                $this->logInfo('Successfully extracted appointment from transcript', [
+                    'confidence' => $extractedData['confidence'],
+                    'date' => $extractedData['date'],
+                    'time' => $extractedData['time']
+                ]);
+                
+                return $extractedData;
+            }
+        }
+        
         // Log what we tried and failed to find
         $this->logWarning('No appointment data found in any expected location', [
             'call_id' => $callId,
@@ -426,7 +464,8 @@ class RetellWebhookHandler extends BaseWebhookHandler
                 'retell_llm_dynamic_variables' => $dynamicVars ? 'exists but no appointment data' : 'not set',
                 'custom_analysis_data' => isset($callData['call_analysis']['custom_analysis_data']) ? 'exists' : 'not set',
                 'transcript_object' => isset($callData['transcript_object']) ? 'exists' : 'not set',
-                'custom_fields' => !empty($callData['custom_fields']) ? 'exists' : 'not set'
+                'custom_fields' => !empty($callData['custom_fields']) ? 'exists' : 'not set',
+                'transcript_extraction' => !empty($callData['transcript']) ? 'attempted' : 'no transcript'
             ]
         ]);
         
