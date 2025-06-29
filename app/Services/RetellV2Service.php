@@ -131,7 +131,8 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
             $this->logger->logError(new \Exception('Failed to get agent'), [
                 'status' => $response->status(),
                 'body' => substr($response->body(), 0, 500), // Limit body size
-                'agent_id' => $agentId
+                'agent_id' => $agentId,
+                'url' => $url
             ]);
             
             return null;
@@ -154,9 +155,11 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     public function listAgents(): array
     {
         return $this->circuitBreaker->call('retell', function() {
+            $url = $this->url . '/list-agents';
+            
             $response = $this->httpWithRetry()
                 ->withToken($this->token)
-                ->get($this->url . '/list-agents');
+                ->get($url);
             
             if ($response->successful()) {
                 $agents = $response->json();
@@ -166,6 +169,12 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
                 }
                 return $agents;
             }
+            
+            $this->logger->logError(new \Exception('Failed to list agents'), [
+                'status' => $response->status(),
+                'body' => substr($response->body(), 0, 500),
+                'url' => $url
+            ]);
             
             return ['agents' => []];
         }, function() {
@@ -247,6 +256,10 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
             
             if ($response->successful()) {
                 $data = $response->json();
+                // V2 API returns direct array
+                if (is_array($data) && !isset($data['calls'])) {
+                    return ['calls' => $data];
+                }
                 // Normalize response to always have 'calls' key
                 if (isset($data['results'])) {
                     return ['calls' => $data['results']];
