@@ -12,11 +12,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📑 Inhaltsverzeichnis
 
-### 🆘 AKTUELLE BLOCKER (Stand: 2025-06-27)
+### 🆘 AKTUELLE BLOCKER (Stand: 2025-06-28)
 - **Multi-Branch Implementation Issue** - Branch Selector verursacht Livewire/Blade Fehler
   - Details: [MULTI_BRANCH_IMPLEMENTATION_STATUS_2025-06-27.md](./MULTI_BRANCH_IMPLEMENTATION_STATUS_2025-06-27.md)
   - Problem: Global Branch Selector Dropdown funktioniert nicht
   - Workaround: Branch Selector als separate Page verfügbar
+
+### 🚨 KRITISCH: Retell.ai Integration nach Context Reset
+**Problem**: Retell Integration funktioniert nicht mehr nach Context Reset
+**Lösung**: 
+```bash
+# Quick Fix - Führe diese Befehle aus:
+./retell-quick-setup.sh
+
+# Oder manuell:
+php retell-health-check.php  # Prüft und repariert automatisch
+php sync-retell-agent.php    # Synchronisiert Agent-Konfiguration
+php fetch-retell-calls.php   # Importiert Anrufe
+```
+
+**Wichtige Dokumentationen**:
+- [RETELL_COMPLETE_SYSTEM_DOCUMENTATION_2025-06-29.md](./RETELL_COMPLETE_SYSTEM_DOCUMENTATION_2025-06-29.md) - Vollständige Systemdokumentation
+- [RETELL_INTEGRATION_COMPLETE_2025-06-29.md](./RETELL_INTEGRATION_COMPLETE_2025-06-29.md) - Integration Status
+- [RETELL_INTEGRATION_CRITICAL.md](./RETELL_INTEGRATION_CRITICAL.md) - Kritische Infos
 
 ### 🔴 Kritisch (Täglich benötigt)
 - [Essential Commands](#essential-commands)

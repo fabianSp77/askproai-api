@@ -84,12 +84,18 @@ php fetch-retell-calls.php
 ## 4. Event-Typen und Status-Codes
 
 ### Retell Event-Typen
+#### Primäre Call-Events (im Retell Dashboard aktivieren):
 - `call_started` - Anruf gestartet
-- `call_ended` - Anruf beendet
-- `call_analyzed` - Post-Call-Analysis
-- `call_inbound` / `call_outbound`
-- `phone_number_updated`
-- `agent_updated` / `agent_deleted`
+- `call_ended` - Anruf beendet (mit disconnection_reason)
+- `call_analyzed` - Post-Call-Analysis abgeschlossen
+
+#### Echtzeit-Events:
+- `call_inbound` - Eingehender Anruf (für Echtzeit-Antworten)
+
+#### System-Events (automatisch gesendet):
+- `phone_number_updated` - Telefonnummer-Konfiguration geändert
+- `agent_updated` - Agent-Konfiguration aktualisiert
+- `agent_deleted` - Agent gelöscht
 
 ### Disconnection Reasons
 - `user_hangup` - Nutzer hat aufgelegt
