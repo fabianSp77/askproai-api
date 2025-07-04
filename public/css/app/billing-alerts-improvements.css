@@ -1,0 +1,149 @@
+/* Billing Alerts UI Improvements for Filament 3 */
+
+/* Enhanced Toggle Switch Styles */
+input[type="checkbox"].peer:checked ~ div {
+    background-color: #10b981 !important;
+}
+
+input[type="checkbox"].peer:not(:checked) ~ div {
+    background-color: #e5e7eb !important;
+}
+
+.dark input[type="checkbox"].peer:not(:checked) ~ div {
+    background-color: #374151 !important;
+}
+
+/* Toggle switch animation */
+input[type="checkbox"].peer ~ div::after {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Alert Card States */
+.alert-enabled-card {
+    border-color: #86efac !important;
+    background-color: #f0fdf4 !important;
+}
+
+.dark .alert-enabled-card {
+    border-color: #166534 !important;
+    background-color: #052e16 !important;
+}
+
+.alert-disabled-card {
+    opacity: 0.7;
+}
+
+/* Enhanced Checkbox Styles */
+input[type="checkbox"]:not(.peer) {
+    cursor: pointer;
+    width: 1rem;
+    height: 1rem;
+    transition: all 0.15s ease-in-out;
+}
+
+input[type="checkbox"]:not(.peer):hover {
+    transform: scale(1.1);
+}
+
+input[type="checkbox"]:not(.peer):checked {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+}
+
+input[type="checkbox"]:not(.peer):focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button Enhancements */
+.fi-btn-success {
+    background-color: #10b981 !important;
+    border-color: #10b981 !important;
+}
+
+.fi-btn-success:hover {
+    background-color: #059669 !important;
+    border-color: #059669 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.fi-btn-danger {
+    background-color: #ef4444 !important;
+    border-color: #ef4444 !important;
+}
+
+.fi-btn-danger:hover {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Badge Styles */
+.fi-badge {
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+.fi-badge:hover {
+    transform: scale(1.05);
+}
+
+/* Loading States */
+.fi-loading-indicator {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Hover Effects for Alert Cards */
+.alert-config-row:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+    transition: all 0.2s ease-in-out;
+}
+
+/* Icon Colors */
+.icon-enabled {
+    color: #10b981;
+}
+
+.icon-disabled {
+    color: #6b7280;
+}
+
+.dark .icon-disabled {
+    color: #9ca3af;
+}
+
+/* Status Indicator Animation */
+.status-indicator {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .5;
+    }
+}
+
+/* Responsive Improvements */
+@media (max-width: 640px) {
+    .fi-section {
+        padding: 1rem;
+    }
+    
+    .alert-config-row {
+        padding: 1rem;
+    }
+}

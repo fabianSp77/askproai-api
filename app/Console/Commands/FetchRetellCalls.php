@@ -45,17 +45,26 @@ class FetchRetellCalls extends Command
             
             $calls = $response->json();
             
-            if (isset($calls['results']) && is_array($calls['results'])) {
-                $this->info('Gefundene Anrufe: ' . count($calls['results']));
+            // Retell API v2 returns calls directly as an array, not in a 'results' wrapper
+            if (is_array($calls) && count($calls) > 0) {
+                $this->info('Gefundene Anrufe: ' . count($calls));
                 
-                $bar = $this->output->createProgressBar(count($calls['results']));
+                $bar = $this->output->createProgressBar(count($calls));
                 $bar->start();
                 
-                foreach ($calls['results'] as $callData) {
-                    ProcessRetellCallEndedJob::dispatch([
+                foreach ($calls as $callData) {
+                    // Create job instance and set company ID via trait method
+                    $job = new ProcessRetellCallEndedJob([
                         'event' => 'call_ended',
                         'call' => $callData
-                    ], $company);
+                    ]);
+                    
+                    // Set company ID using the CompanyAwareJob trait
+                    if ($company) {
+                        $job->setCompanyId($company->id);
+                    }
+                    
+                    dispatch($job);
                     
                     $bar->advance();
                 }
@@ -68,7 +77,7 @@ class FetchRetellCalls extends Command
                 // Zeige kurze Übersicht
                 $this->table(
                     ['Call ID', 'From', 'Duration', 'Status'],
-                    collect($calls['results'])->map(function ($call) {
+                    collect($calls)->map(function ($call) {
                         return [
                             $call['call_id'] ?? 'N/A',
                             $call['from_number'] ?? 'Unknown',
@@ -80,8 +89,8 @@ class FetchRetellCalls extends Command
                     })->take(10)->toArray()
                 );
                 
-                if (count($calls['results']) > 10) {
-                    $this->info('... und ' . (count($calls['results']) - 10) . ' weitere Anrufe');
+                if (count($calls) > 10) {
+                    $this->info('... und ' . (count($calls) - 10) . ' weitere Anrufe');
                 }
             } else {
                 $this->warn('Keine Anrufe gefunden.');

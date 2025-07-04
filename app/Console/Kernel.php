@@ -12,11 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Send appointment reminders every 5 minutes
-        $schedule->command('appointments:send-reminders')
+        // Schedule appointment reminders every 5 minutes
+        $schedule->command('appointments:schedule-reminders')
             ->everyFiveMinutes()
             ->withoutOverlapping()
-            ->runInBackground();
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/appointment-reminders.log'));
 
         // Clean up old notifications daily
         $schedule->command('notifications:cleanup')
@@ -143,6 +144,13 @@ class Kernel extends ConsoleKernel
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/calcom-user-sync.log'));
 
+        // Import Retell calls every 15 minutes
+        $schedule->command('retell:fetch-calls --limit=50')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/retell-call-import.log'));
+
         // Collect metrics every minute for Prometheus monitoring
         $schedule->command('metrics:collect')
             ->everyMinute()
@@ -157,6 +165,124 @@ class Kernel extends ConsoleKernel
             ->runInBackground()
             ->onOneServer()
             ->appendOutputTo(storage_path('logs/health-checks.log'));
+
+        // Knowledge base file watcher (moved from KnowledgeServiceProvider)
+        if (config('knowledge.auto_index.enabled', false)) {
+            $schedule->call(function () {
+                $watcher = app(\App\Services\FileWatcherService::class);
+                $watcher->checkForChanges();
+                $watcher->setLastCheck();
+            })->everyMinute()
+              ->name('knowledge:watch')
+              ->withoutOverlapping();
+        }
+
+        // Billing Automation Jobs
+        
+        // Create billing periods at the start of each month
+        $schedule->command('billing:create-periods')
+            ->monthlyOn(1, '00:01')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/billing-periods.log'));
+        
+        // Also check daily for any missed billing periods
+        $schedule->command('billing:create-periods')
+            ->dailyAt('01:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/billing-periods.log'));
+        
+        // Report usage to Stripe every hour
+        $schedule->command('billing:report-usage')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/billing-usage.log'));
+        
+        // Process billing periods and create invoices daily
+        $schedule->command('billing:process-periods')
+            ->dailyAt('02:30')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/billing-process.log'));
+        
+        // Also run billing processing on the 1st of each month after period creation
+        $schedule->command('billing:process-periods')
+            ->monthlyOn(1, '03:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/billing-process.log'));
+        
+        // Dunning Management Jobs
+        
+        // Process dunning retries every 4 hours
+        $schedule->command('dunning:process-retries')
+            ->everyFourHours()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/dunning-retries.log'));
+        
+        // Also run dunning retries daily at 10 AM for better success rates
+        $schedule->command('dunning:process-retries')
+            ->dailyAt('10:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/dunning-retries.log'));
+        
+        // Check prepaid balances for low balance warnings
+        $schedule->command('billing:check-low-balances')
+            ->everyThirtyMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/prepaid-balance-monitoring.log'));
+        
+        // Billing Alerts Jobs
+        
+        // Check billing alerts every hour
+        $schedule->command('billing:check-alerts')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/billing-alerts.log'));
+        
+        // Also check alerts during business hours more frequently
+        $schedule->command('billing:check-alerts')
+            ->everyThirtyMinutes()
+            ->between('08:00', '18:00')
+            ->weekdays()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/billing-alerts.log'));
+        
+        // Prepaid Balance Monitoring
+        
+        // Check low balances every hour
+        $schedule->command('balances:check-low')
+            ->hourly()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/balance-monitoring.log'));
+        
+        // Also check during business hours more frequently
+        $schedule->command('balances:check-low')
+            ->everyThirtyMinutes()
+            ->between('08:00', '20:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/balance-monitoring.log'));
     }
 
     /**

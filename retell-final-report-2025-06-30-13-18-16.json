@@ -1,0 +1,116 @@
+{
+    "timestamp": "2025-06-30 13:18:15",
+    "agent_id": "agent_9a8202a740cd3120d96fcfda1e",
+    "routes": [
+        {
+            "uri": "api\/retell\/functions\/check-customer",
+            "methods": "POST",
+            "name": "retell.functions.check-customer",
+            "action": "App\\Http\\Controllers\\RetellCustomFunctionsController@checkCustomer"
+        },
+        {
+            "uri": "api\/retell\/functions\/collect-appointment",
+            "methods": "POST",
+            "name": "retell.functions.collect-appointment",
+            "action": "App\\Http\\Controllers\\RetellCustomFunctionsController@collectAppointment"
+        },
+        {
+            "uri": "api\/retell\/functions\/check-availability",
+            "methods": "POST",
+            "name": "retell.functions.check-availability",
+            "action": "App\\Http\\Controllers\\RetellCustomFunctionsController@checkAvailability"
+        },
+        {
+            "uri": "api\/retell\/functions\/book-appointment",
+            "methods": "POST",
+            "name": "retell.functions.book-appointment",
+            "action": "App\\Http\\Controllers\\RetellCustomFunctionsController@bookAppointment"
+        },
+        {
+            "uri": "api\/retell\/functions\/cancel-appointment",
+            "methods": "POST",
+            "name": "retell.functions.cancel-appointment",
+            "action": "App\\Http\\Controllers\\RetellCustomFunctionsController@cancelAppointment"
+        },
+        {
+            "uri": "api\/retell\/functions\/reschedule-appointment",
+            "methods": "POST",
+            "name": "retell.functions.reschedule-appointment",
+            "action": "App\\Http\\Controllers\\RetellCustomFunctionsController@rescheduleAppointment"
+        },
+        {
+            "uri": "api\/retell\/functions\/current-time-berlin",
+            "methods": "POST",
+            "name": "retell.functions.current-time-berlin",
+            "action": "App\\Http\\Controllers\\RetellCustomFunctionsController@currentTimeBerlin"
+        },
+        {
+            "uri": "api\/retell\/functions\/book-simple",
+            "methods": "POST",
+            "name": "retell.functions.book-simple",
+            "action": "App\\Http\\Controllers\\RetellCustomFunctionsController@bookAppointmentSimple"
+        },
+        {
+            "uri": "api\/retell\/function-call",
+            "methods": "POST",
+            "name": null,
+            "action": "App\\Http\\Controllers\\RetellRealtimeController@handleFunctionCall"
+        },
+        {
+            "uri": "api\/mcp\/gateway\/retell\/functions\/{function}",
+            "methods": "POST",
+            "name": "mcp.gateway.retell.functions",
+            "action": "App\\Http\\Controllers\\RetellCustomFunctionController@handle"
+        }
+    ],
+    "controller_analysis": {
+        "bookAppointmentSimple": {
+            "phone_params": [
+                "caller_phone_number",
+                "from_number"
+            ],
+            "has_call_id": false
+        },
+        "collectAppointment": {
+            "phone_params": [],
+            "has_call_id": false
+        },
+        "checkCustomer": {
+            "phone_params": [],
+            "has_call_id": true
+        },
+        "checkAvailability": {
+            "phone_params": [],
+            "has_call_id": false
+        },
+        "bookAppointment": {
+            "phone_params": [],
+            "has_call_id": false
+        },
+        "cancelAppointment": {
+            "phone_params": [
+                "phone_number"
+            ],
+            "has_call_id": false
+        },
+        "rescheduleAppointment": {
+            "phone_params": [
+                "phone_number"
+            ],
+            "has_call_id": false
+        },
+        "currentTimeBerlin": {
+            "phone_params": [],
+            "has_call_id": false
+        }
+    },
+    "issues": [
+        "Method bookAppointmentSimple has phone parameters: caller_phone_number, from_number",
+        "Method cancelAppointment has phone parameters: phone_number",
+        "Method rescheduleAppointment has phone parameters: phone_number"
+    ],
+    "successes": [
+        "Method checkCustomer correctly uses call_id"
+    ],
+    "status": "NEEDS_FIX"
+}

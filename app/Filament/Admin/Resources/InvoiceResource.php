@@ -38,7 +38,7 @@ class InvoiceResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Rechnungen';
     protected static ?string $navigationGroup = 'Abrechnung';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 200;
     
     protected static ?string $modelLabel = 'Rechnung';
     

@@ -10,13 +10,27 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Mail\AppointmentReminder;
 use App\Mail\AppointmentConfirmation;
+use App\Jobs\SendAppointmentEmailJob;
 use App\Notifications\PushNotification;
+use App\Services\MCP\TwilioMCPServer;
+use App\Helpers\TranslationHelper;
+use App\Models\NotificationTemplate;
 
 class NotificationService
 {
     protected array $channels = ['email', 'sms', 'push', 'whatsapp'];
+    protected ?TwilioMCPServer $twilioMCP = null;
+    
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->twilioMCP = new TwilioMCPServer();
+    }
     
     /**
      * Sende Terminerinnerungen
@@ -47,25 +61,45 @@ class NotificationService
             
         foreach ($appointments as $appointment) {
             try {
-                // Email
-                if ($appointment->customer->email) {
+                $company = $appointment->company;
+                
+                // Skip if Cal.com handles reminders
+                if ($this->shouldSkipNotification($company, 'appointment')) {
+                    Log::info('Skipping 24h reminder - handled by Cal.com', [
+                        'appointment_id' => $appointment->id
+                    ]);
+                    $appointment->update(['reminder_24h_sent_at' => now()]);
+                    continue;
+                }
+                
+                // Email (only if not handled by Cal.com)
+                if ($appointment->customer->email && !$this->isCalcomHandlingEmails($company)) {
                     Mail::to($appointment->customer->email)
                         ->send(new AppointmentReminder($appointment, '24_hours'));
                 }
                 
-                // SMS
-                if ($appointment->customer->phone && $this->canSendSms($appointment)) {
+                // SMS (only if Twilio provider)
+                if ($appointment->customer->phone && 
+                    $this->canSendSms($appointment) && 
+                    $company->notification_provider === 'twilio') {
                     $this->sendSms(
                         $appointment->customer->phone,
-                        $this->getSmsTemplate('24h_reminder', $appointment)
+                        $this->getSmsTemplate('24h_reminder', $appointment),
+                        $appointment->company_id,
+                        $appointment->customer_id,
+                        $appointment->id
                     );
                 }
                 
-                // WhatsApp
-                if ($appointment->customer->whatsapp_opt_in) {
+                // WhatsApp (only if Twilio provider)
+                if ($appointment->customer->whatsapp_opt_in && 
+                    $company->notification_provider === 'twilio') {
                     $this->sendWhatsApp(
                         $appointment->customer->phone,
-                        $this->getWhatsAppTemplate('24h_reminder', $appointment)
+                        $this->getSmsTemplate('24h_reminder', $appointment),
+                        $appointment->company_id,
+                        $appointment->customer_id,
+                        $appointment->id
                     );
                 }
                 
@@ -142,7 +176,10 @@ class NotificationService
                 if (!$appointment->customer->push_token && $appointment->customer->phone) {
                     $this->sendSms(
                         $appointment->customer->phone,
-                        "Erinnerung: Ihr Termin beginnt in 30 Minuten um {$appointment->starts_at->format('H:i')} Uhr."
+                        "Erinnerung: Ihr Termin beginnt in 30 Minuten um {$appointment->starts_at->format('H:i')} Uhr.",
+                        $appointment->company_id,
+                        $appointment->customer_id,
+                        $appointment->id
                     );
                 }
                 
@@ -162,17 +199,33 @@ class NotificationService
      */
     public function sendAppointmentConfirmation(Appointment $appointment): void
     {
-        // Email
-        if ($appointment->customer->email) {
+        $company = $appointment->company;
+        
+        // Check if Cal.com handles notifications
+        if ($this->shouldSkipNotification($company, 'appointment')) {
+            Log::info('Skipping notification - handled by Cal.com', [
+                'appointment_id' => $appointment->id,
+                'company_id' => $company->id
+            ]);
+            return;
+        }
+        
+        // Email (only if not handled by Cal.com)
+        if ($appointment->customer->email && !$this->isCalcomHandlingEmails($company)) {
             Mail::to($appointment->customer->email)
                 ->send(new AppointmentConfirmation($appointment));
         }
         
-        // SMS
-        if ($appointment->customer->phone && $appointment->customer->sms_opt_in) {
+        // SMS (only if Twilio provider is selected)
+        if ($appointment->customer->phone && 
+            $appointment->customer->sms_opt_in && 
+            $company->notification_provider === 'twilio') {
             $this->sendSms(
                 $appointment->customer->phone,
-                $this->getSmsTemplate('confirmation', $appointment)
+                $this->getSmsTemplate('confirmation', $appointment),
+                $appointment->company_id,
+                $appointment->customer_id,
+                $appointment->id
             );
         }
         
@@ -183,20 +236,23 @@ class NotificationService
     /**
      * Sende SMS
      */
-    protected function sendSms(string $phone, string $message): bool
+    protected function sendSms(string $phone, string $message, ?int $companyId = null, ?int $customerId = null, ?int $appointmentId = null): bool
     {
         try {
-            // Beispiel mit Twilio
-            $response = Http::withBasicAuth(
-                config('services.twilio.sid'),
-                config('services.twilio.token')
-            )->post('https://api.twilio.com/2010-04-01/Accounts/' . config('services.twilio.sid') . '/Messages.json', [
-                'From' => config('services.twilio.from'),
-                'To' => $phone,
-                'Body' => $message
+            if (!$this->twilioMCP) {
+                Log::error('TwilioMCPServer not initialized');
+                return false;
+            }
+            
+            $result = $this->twilioMCP->sendSms([
+                'to' => $phone,
+                'message' => $message,
+                'company_id' => $companyId,
+                'customer_id' => $customerId,
+                'appointment_id' => $appointmentId
             ]);
             
-            return $response->successful();
+            return $result['success'] ?? false;
         } catch (\Exception $e) {
             Log::error('SMS sending failed', ['error' => $e->getMessage()]);
             return false;
@@ -206,19 +262,23 @@ class NotificationService
     /**
      * Sende WhatsApp
      */
-    protected function sendWhatsApp(string $phone, array $template): bool
+    protected function sendWhatsApp(string $phone, string $message, ?int $companyId = null, ?int $customerId = null, ?int $appointmentId = null): bool
     {
         try {
-            // WhatsApp Business API
-            $response = Http::withToken(config('services.whatsapp.token'))
-                ->post(config('services.whatsapp.url') . '/messages', [
-                    'messaging_product' => 'whatsapp',
-                    'to' => $phone,
-                    'type' => 'template',
-                    'template' => $template
-                ]);
-                
-            return $response->successful();
+            if (!$this->twilioMCP) {
+                Log::error('TwilioMCPServer not initialized');
+                return false;
+            }
+            
+            $result = $this->twilioMCP->sendWhatsapp([
+                'to' => $phone,
+                'message' => $message,
+                'company_id' => $companyId,
+                'customer_id' => $customerId,
+                'appointment_id' => $appointmentId
+            ]);
+            
+            return $result['success'] ?? false;
         } catch (\Exception $e) {
             Log::error('WhatsApp sending failed', ['error' => $e->getMessage()]);
             return false;
@@ -251,41 +311,108 @@ class NotificationService
     }
     
     /**
-     * SMS-Template generieren
+     * SMS-Template generieren mit Mehrsprachigkeit
      */
     protected function getSmsTemplate(string $type, Appointment $appointment): string
     {
+        // Determine customer language
+        $language = $appointment->customer->preferred_language ?? 
+                   $appointment->company->default_language ?? 
+                   'de';
+        
+        // Try to get template from database
+        $templateKey = match($type) {
+            '24h_reminder' => 'appointment.reminder.24h',
+            '2h_reminder' => 'appointment.reminder.2h',
+            '30m_reminder' => 'appointment.reminder.30m',
+            'confirmation' => 'appointment.confirmed',
+            default => null
+        };
+        
+        if ($templateKey) {
+            $notificationTemplate = TranslationHelper::getNotificationTemplate(
+                $appointment->company,
+                $templateKey,
+                'sms',
+                $language,
+                [
+                    'date' => $appointment->starts_at->format($language === 'de' ? 'd.m.Y' : 'M d, Y'),
+                    'time' => $appointment->starts_at->format($language === 'de' ? 'H:i' : 'g:i A'),
+                    'staff_name' => $appointment->staff->name,
+                    'service_name' => $appointment->service?->name ?? '',
+                    'branch_address' => $appointment->branch->address ?? '',
+                    'company_name' => $appointment->company->name,
+                    'phone' => $appointment->branch->phone ?? $appointment->company->phone
+                ]
+            );
+            
+            if ($notificationTemplate && isset($notificationTemplate['body'])) {
+                return $notificationTemplate['body'];
+            }
+        }
+        
+        // Fallback to hardcoded templates
         $templates = [
-            '24h_reminder' => "Erinnerung: Termin morgen um {time} Uhr bei {staff}. Adresse: {location}. Antworten Sie mit ABSAGE zum Stornieren.",
-            '2h_reminder' => "Ihr Termin heute um {time} Uhr bei {staff}. Bitte seien Sie pünktlich.",
-            'confirmation' => "Termin bestätigt: {date} um {time} Uhr bei {staff}. Speichern Sie diese SMS."
+            'de' => [
+                '24h_reminder' => "Erinnerung: Termin morgen um {time} Uhr bei {staff}. Adresse: {location}. Antworten Sie mit ABSAGE zum Stornieren.",
+                '2h_reminder' => "Ihr Termin heute um {time} Uhr bei {staff}. Bitte seien Sie pünktlich.",
+                '30m_reminder' => "Ihr Termin beginnt in 30 Minuten um {time} Uhr bei {staff}.",
+                'confirmation' => "Termin bestätigt: {date} um {time} Uhr bei {staff}. Speichern Sie diese SMS."
+            ],
+            'en' => [
+                '24h_reminder' => "Reminder: Appointment tomorrow at {time} with {staff}. Address: {location}. Reply CANCEL to cancel.",
+                '2h_reminder' => "Your appointment today at {time} with {staff}. Please be on time.",
+                '30m_reminder' => "Your appointment starts in 30 minutes at {time} with {staff}.",
+                'confirmation' => "Appointment confirmed: {date} at {time} with {staff}. Save this SMS."
+            ]
         ];
         
-        $template = $templates[$type] ?? '';
+        $languageTemplates = $templates[$language] ?? $templates['de'];
+        $template = $languageTemplates[$type] ?? '';
         
-        return str_replace([
-            '{date}' => $appointment->starts_at->format('d.m.Y'),
-            '{time}' => $appointment->starts_at->format('H:i'),
+        // Replace variables
+        $replacements = [
+            '{date}' => $appointment->starts_at->format($language === 'de' ? 'd.m.Y' : 'M d, Y'),
+            '{time}' => $appointment->starts_at->format($language === 'de' ? 'H:i' : 'g:i A'),
             '{staff}' => $appointment->staff->name,
             '{location}' => $appointment->branch->address ?? ''
-        ], $template);
+        ];
+        
+        return str_replace(array_keys($replacements), array_values($replacements), $template);
     }
     
     /**
-     * WhatsApp-Template
+     * WhatsApp-Template mit Mehrsprachigkeit
      */
     protected function getWhatsAppTemplate(string $type, Appointment $appointment): array
     {
+        // Determine customer language
+        $language = $appointment->customer->preferred_language ?? 
+                   $appointment->company->default_language ?? 
+                   'de';
+        
+        // Map language codes for WhatsApp
+        $whatsappLang = match($language) {
+            'de' => 'de',
+            'en' => 'en_US',
+            'es' => 'es',
+            'fr' => 'fr',
+            'it' => 'it',
+            default => 'de'
+        };
+        
         return [
             'name' => $type . '_template',
-            'language' => ['code' => 'de'],
+            'language' => ['code' => $whatsappLang],
             'components' => [
                 [
                     'type' => 'body',
                     'parameters' => [
-                        ['type' => 'text', 'text' => $appointment->starts_at->format('d.m.Y')],
-                        ['type' => 'text', 'text' => $appointment->starts_at->format('H:i')],
-                        ['type' => 'text', 'text' => $appointment->staff->name]
+                        ['type' => 'text', 'text' => $appointment->starts_at->format($language === 'de' ? 'd.m.Y' : 'M d, Y')],
+                        ['type' => 'text', 'text' => $appointment->starts_at->format($language === 'de' ? 'H:i' : 'g:i A')],
+                        ['type' => 'text', 'text' => $appointment->staff->name],
+                        ['type' => 'text', 'text' => $appointment->service?->name ?? ''],
+                        ['type' => 'text', 'text' => $appointment->branch->address ?? '']
                     ]
                 ]
             ]
@@ -349,5 +476,177 @@ class NotificationService
         $ics .= "END:VCALENDAR\r\n";
         
         return $ics;
+    }
+    
+    /**
+     * Check if notifications should be skipped (handled by Cal.com)
+     */
+    protected function shouldSkipNotification(Company $company, string $type = 'appointment'): bool
+    {
+        // If Cal.com is the provider and handles notifications, skip all appointment notifications
+        if ($company->notification_provider === 'calcom' && 
+            $company->calcom_handles_notifications && 
+            $type === 'appointment') {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if Cal.com is handling email notifications
+     */
+    protected function isCalcomHandlingEmails(Company $company): bool
+    {
+        return $company->notification_provider === 'calcom' && 
+               $company->calcom_handles_notifications;
+    }
+    
+    /**
+     * Send appointment cancelled notification
+     */
+    public function sendAppointmentCancelledNotification(Appointment $appointment, ?string $reason = null): void
+    {
+        try {
+            // Dispatch email job
+            SendAppointmentEmailJob::dispatch(
+                $appointment,
+                'cancellation',
+                $appointment->customer->preferred_language ?? 'de',
+                $reason
+            );
+            
+            // Send SMS if enabled
+            if ($appointment->customer->phone && $appointment->customer->sms_opt_in && $this->canSendSms($appointment)) {
+                $message = $appointment->customer->preferred_language === 'en'
+                    ? "Your appointment on {$appointment->starts_at->format('M d')} at {$appointment->starts_at->format('g:i A')} has been cancelled."
+                    : "Ihr Termin am {$appointment->starts_at->format('d.m.')} um {$appointment->starts_at->format('H:i')} Uhr wurde abgesagt.";
+                    
+                if ($reason) {
+                    $message .= $appointment->customer->preferred_language === 'en'
+                        ? " Reason: {$reason}"
+                        : " Grund: {$reason}";
+                }
+                
+                $this->sendSms(
+                    $appointment->customer->phone, 
+                    $message,
+                    $appointment->company_id,
+                    $appointment->customer_id,
+                    $appointment->id
+                );
+            }
+            
+            // Send push notification if available
+            if ($appointment->customer->push_token) {
+                $title = $appointment->customer->preferred_language === 'en'
+                    ? 'Appointment Cancelled'
+                    : 'Termin abgesagt';
+                    
+                $body = $appointment->customer->preferred_language === 'en'
+                    ? "Your appointment on {$appointment->starts_at->format('M d')} has been cancelled."
+                    : "Ihr Termin am {$appointment->starts_at->format('d.m.')} wurde abgesagt.";
+                    
+                $this->sendPushNotification(
+                    $appointment->customer->push_token,
+                    $title,
+                    $body,
+                    [
+                        'appointment_id' => $appointment->id,
+                        'type' => 'cancellation',
+                        'reason' => $reason
+                    ]
+                );
+            }
+            
+            Log::info('Appointment cancellation notifications sent', [
+                'appointment_id' => $appointment->id,
+                'customer_id' => $appointment->customer_id,
+                'channels' => ['email', 'sms', 'push']
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to send cancellation notifications', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+    
+    /**
+     * Send appointment rescheduled notification
+     */
+    public function sendAppointmentRescheduledNotification(
+        Appointment $appointment,
+        Carbon $oldStartTime,
+        Carbon $oldEndTime,
+        ?string $reason = null
+    ): void {
+        try {
+            // Dispatch email job
+            SendAppointmentEmailJob::dispatch(
+                $appointment,
+                'rescheduled',
+                $appointment->customer->preferred_language ?? 'de',
+                null, // cancellationReason
+                $reason, // rescheduleReason
+                $oldStartTime,
+                $oldEndTime
+            );
+            
+            // Send SMS if enabled
+            if ($appointment->customer->phone && $appointment->customer->sms_opt_in && $this->canSendSms($appointment)) {
+                $message = $appointment->customer->preferred_language === 'en'
+                    ? "Your appointment has been rescheduled from {$oldStartTime->format('M d, g:i A')} to {$appointment->starts_at->format('M d, g:i A')}."
+                    : "Ihr Termin wurde von {$oldStartTime->format('d.m., H:i')} Uhr auf {$appointment->starts_at->format('d.m., H:i')} Uhr verschoben.";
+                    
+                $this->sendSms(
+                    $appointment->customer->phone, 
+                    $message,
+                    $appointment->company_id,
+                    $appointment->customer_id,
+                    $appointment->id
+                );
+            }
+            
+            // Send push notification if available
+            if ($appointment->customer->push_token) {
+                $title = $appointment->customer->preferred_language === 'en'
+                    ? 'Appointment Rescheduled'
+                    : 'Termin verschoben';
+                    
+                $body = $appointment->customer->preferred_language === 'en'
+                    ? "New time: {$appointment->starts_at->format('M d, g:i A')}"
+                    : "Neue Zeit: {$appointment->starts_at->format('d.m., H:i')} Uhr";
+                    
+                $this->sendPushNotification(
+                    $appointment->customer->push_token,
+                    $title,
+                    $body,
+                    [
+                        'appointment_id' => $appointment->id,
+                        'type' => 'rescheduled',
+                        'old_time' => $oldStartTime->toIso8601String(),
+                        'new_time' => $appointment->starts_at->toIso8601String()
+                    ]
+                );
+            }
+            
+            Log::info('Appointment rescheduled notifications sent', [
+                'appointment_id' => $appointment->id,
+                'customer_id' => $appointment->customer_id,
+                'old_time' => $oldStartTime->format('Y-m-d H:i'),
+                'new_time' => $appointment->starts_at->format('Y-m-d H:i'),
+                'channels' => ['email', 'sms', 'push']
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to send rescheduled notifications', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
 }

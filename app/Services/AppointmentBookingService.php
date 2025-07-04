@@ -860,13 +860,34 @@ class AppointmentBookingService
     {
         $staff = Staff::find($staffId);
         
-        if (!$staff || !$staff->active) {
+        if (!$staff || !$staff->is_active) {
             throw new \InvalidArgumentException('Mitarbeiter nicht verfügbar');
+        }
+        
+        // Check if staff is bookable
+        if (!$staff->is_bookable) {
+            throw new \InvalidArgumentException('Mitarbeiter ist nicht buchbar');
         }
         
         // Check if staff offers this service
         if (!$staff->services->contains($service->id)) {
             throw new \InvalidArgumentException('Mitarbeiter bietet diese Leistung nicht an');
+        }
+        
+        // NEW: Check if staff can host the event type associated with this service
+        if ($service->calcom_event_type_id) {
+            if (!$staff->canHostEventType($service->calcom_event_type_id)) {
+                Log::warning('Staff cannot host event type for service', [
+                    'staff_id' => $staffId,
+                    'service_id' => $service->id,
+                    'event_type_id' => $service->calcom_event_type_id,
+                    'staff_name' => $staff->name
+                ]);
+                
+                // For now, only log a warning but don't block the booking
+                // TODO: Make this a hard requirement once all data is synced
+                // throw new \InvalidArgumentException('Mitarbeiter kann diesen Termin-Typ nicht durchführen');
+            }
         }
         
         return $staff;

@@ -1,15 +1,12 @@
 // Ultimate UI System - Complete implementation
 import Alpine from 'alpinejs';
-import persist from '@alpinejs/persist';
-import focus from '@alpinejs/focus';
 import Sortable from 'sortablejs';
 import Fuse from 'fuse.js';
 import hotkeys from 'hotkeys-js';
 import { createPopper } from '@popperjs/core';
 
-// Add Alpine plugins
-Alpine.plugin(persist);
-Alpine.plugin(focus);
+// Alpine plugins are already registered in app.js
+// Don't register them again here
 
 // Command Palette System
 class CommandPalette {

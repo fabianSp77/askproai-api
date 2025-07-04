@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/api/mcp-gateway/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>MCP Gateway API - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "MCP Gateway API";
+        var mkdocs_page_input_path = "api/mcp-gateway.md";
+        var mkdocs_page_url = "/mkdocs/api/mcp-gateway/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>MCP Gateway API</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="mcp-gateway-api">MCP Gateway API</h1>
+<p>The Model Context Protocol (MCP) Gateway provides a unified interface for all AskProAI services, enabling standardized communication, monitoring, and orchestration.</p>
+<h2 id="overview">Overview</h2>
+<p>The MCP Gateway acts as a central hub for:
+- Service discovery and registration
+- Request routing and load balancing
+- Monitoring and metrics collection
+- Circuit breaking and fault tolerance
+- Transaction coordination</p>
+<h2 id="architecture">Architecture</h2>
+<pre><code class="language-mermaid">graph TB
+    subgraph &quot;External Clients&quot;
+        API[REST API]
+        WEBHOOK[Webhooks]
+        MOBILE[Mobile App]
+    end
+
+    subgraph &quot;MCP Gateway&quot;
+        GATEWAY[Gateway Router]
+        REGISTRY[Service Registry]
+        METRICS[Metrics Collector]
+        BREAKER[Circuit Breaker]
+    end
+
+    subgraph &quot;MCP Servers&quot;
+        CALCOM[Cal.com MCP]
+        RETELL[Retell MCP]
+        DATABASE[Database MCP]
+        QUEUE[Queue MCP]
+        STRIPE[Stripe MCP]
+        WEBHOOK_MCP[Webhook MCP]
+    end
+
+    API --&gt; GATEWAY
+    WEBHOOK --&gt; GATEWAY
+    MOBILE --&gt; GATEWAY
+
+    GATEWAY --&gt; REGISTRY
+    GATEWAY --&gt; METRICS
+    GATEWAY --&gt; BREAKER
+
+    GATEWAY --&gt; CALCOM
+    GATEWAY --&gt; RETELL
+    GATEWAY --&gt; DATABASE
+    GATEWAY --&gt; QUEUE
+    GATEWAY --&gt; STRIPE
+    GATEWAY --&gt; WEBHOOK_MCP
+</code></pre>
+<h2 id="base-endpoint">Base Endpoint</h2>
+<pre><code>https://api.askproai.de/api/mcp/gateway
+</code></pre>
+<h2 id="authentication">Authentication</h2>
+<p>All requests require Bearer token authentication:</p>
+<pre><code class="language-http">Authorization: Bearer YOUR_API_TOKEN
+</code></pre>
+<h2 id="service-discovery">Service Discovery</h2>
+<h3 id="list-available-services">List Available Services</h3>
+<pre><code class="language-http">GET /api/mcp/gateway/services
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;services&quot;: [
+        {
+            &quot;name&quot;: &quot;calcom&quot;,
+            &quot;version&quot;: &quot;2.0.0&quot;,
+            &quot;status&quot;: &quot;healthy&quot;,
+            &quot;endpoints&quot;: [
+                &quot;checkAvailability&quot;,
+                &quot;createBooking&quot;,
+                &quot;updateBooking&quot;,
+                &quot;cancelBooking&quot;
+            ],
+            &quot;metrics&quot;: {
+                &quot;requests_per_minute&quot;: 156,
+                &quot;average_latency_ms&quot;: 87,
+                &quot;error_rate&quot;: 0.01
+            }
+        },
+        {
+            &quot;name&quot;: &quot;retell&quot;,
+            &quot;version&quot;: &quot;1.5.0&quot;,
+            &quot;status&quot;: &quot;healthy&quot;,
+            &quot;endpoints&quot;: [
+                &quot;processCall&quot;,
+                &quot;getTranscript&quot;,
+                &quot;updateAgent&quot;
+            ]
+        }
+    ]
+}
+</code></pre>
+<h2 id="service-invocation">Service Invocation</h2>
+<h3 id="generic-service-call">Generic Service Call</h3>
+<pre><code class="language-http">POST /api/mcp/gateway/invoke
+</code></pre>
+<p><strong>Request Body:</strong></p>
+<pre><code class="language-json">{
+    &quot;service&quot;: &quot;calcom&quot;,
+    &quot;method&quot;: &quot;checkAvailability&quot;,
+    &quot;params&quot;: {
+        &quot;eventTypeId&quot;: 2026361,
+        &quot;dateFrom&quot;: &quot;2025-06-26&quot;,
+        &quot;dateTo&quot;: &quot;2025-06-26&quot;,
+        &quot;timeZone&quot;: &quot;Europe/Berlin&quot;
+    },
+    &quot;options&quot;: {
+        &quot;timeout&quot;: 5000,
+        &quot;retries&quot;: 3
+    }
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;success&quot;: true,
+    &quot;data&quot;: {
+        &quot;slots&quot;: [
+            {
+                &quot;time&quot;: &quot;2025-06-26T09:00:00+02:00&quot;,
+                &quot;available&quot;: true
+            },
+            {
+                &quot;time&quot;: &quot;2025-06-26T10:00:00+02:00&quot;,
+                &quot;available&quot;: true
+            }
+        ]
+    },
+    &quot;metadata&quot;: {
+        &quot;service&quot;: &quot;calcom&quot;,
+        &quot;method&quot;: &quot;checkAvailability&quot;,
+        &quot;duration_ms&quot;: 124,
+        &quot;trace_id&quot;: &quot;mcp-trace-123456&quot;
+    }
+}
+</code></pre>
+<h2 id="service-specific-endpoints">Service-Specific Endpoints</h2>
+<h3 id="calcom-service">Cal.com Service</h3>
+<h4 id="check-availability">Check Availability</h4>
+<pre><code class="language-http">POST /api/mcp/gateway/calcom/availability
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;branch_id&quot;: &quot;uuid-here&quot;,
+    &quot;date&quot;: &quot;2025-06-26&quot;,
+    &quot;duration&quot;: 30
+}
+</code></pre>
+<h4 id="create-booking">Create Booking</h4>
+<pre><code class="language-http">POST /api/mcp/gateway/calcom/bookings
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;customer&quot;: {
+        &quot;name&quot;: &quot;Max Mustermann&quot;,
+        &quot;email&quot;: &quot;max@example.com&quot;,
+        &quot;phone&quot;: &quot;+4915123456789&quot;
+    },
+    &quot;appointment&quot;: {
+        &quot;branch_id&quot;: &quot;uuid-here&quot;,
+        &quot;service_id&quot;: &quot;uuid-here&quot;,
+        &quot;start&quot;: &quot;2025-06-26T10:00:00+02:00&quot;,
+        &quot;duration&quot;: 30
+    }
+}
+</code></pre>
+<h3 id="retell-service">Retell Service</h3>
+<h4 id="process-call">Process Call</h4>
+<pre><code class="language-http">POST /api/mcp/gateway/retell/calls
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;call_id&quot;: &quot;retell_call_123&quot;,
+    &quot;action&quot;: &quot;process&quot;
+}
+</code></pre>
+<h4 id="get-call-analysis">Get Call Analysis</h4>
+<pre><code class="language-http">GET /api/mcp/gateway/retell/calls/{call_id}/analysis
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;call_id&quot;: &quot;retell_call_123&quot;,
+    &quot;duration&quot;: 180,
+    &quot;intent&quot;: &quot;book_appointment&quot;,
+    &quot;customer_data&quot;: {
+        &quot;name&quot;: &quot;detected_name&quot;,
+        &quot;phone&quot;: &quot;detected_phone&quot;
+    },
+    &quot;appointment_request&quot;: {
+        &quot;service&quot;: &quot;Haarschnitt&quot;,
+        &quot;preferred_time&quot;: &quot;tomorrow morning&quot;
+    },
+    &quot;sentiment&quot;: &quot;positive&quot;
+}
+</code></pre>
+<h3 id="database-service">Database Service</h3>
+<h4 id="query-execution">Query Execution</h4>
+<pre><code class="language-http">POST /api/mcp/gateway/database/query
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;query&quot;: &quot;appointments.upcoming&quot;,
+    &quot;params&quot;: {
+        &quot;branch_id&quot;: &quot;uuid-here&quot;,
+        &quot;limit&quot;: 10
+    }
+}
+</code></pre>
+<p><strong>Note:</strong> Only predefined, safe queries are allowed.</p>
+<h3 id="queue-service">Queue Service</h3>
+<h4 id="job-status">Job Status</h4>
+<pre><code class="language-http">GET /api/mcp/gateway/queue/jobs/{job_id}
+</code></pre>
+<h4 id="queue-metrics">Queue Metrics</h4>
+<pre><code class="language-http">GET /api/mcp/gateway/queue/metrics
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;queues&quot;: {
+        &quot;default&quot;: {
+            &quot;size&quot;: 45,
+            &quot;processing&quot;: 5,
+            &quot;failed&quot;: 2,
+            &quot;throughput&quot;: 120
+        },
+        &quot;webhooks&quot;: {
+            &quot;size&quot;: 12,
+            &quot;processing&quot;: 3,
+            &quot;failed&quot;: 0,
+            &quot;throughput&quot;: 200
+        }
+    }
+}
+</code></pre>
+<h2 id="monitoring-health">Monitoring &amp; Health</h2>
+<h3 id="gateway-health-check">Gateway Health Check</h3>
+<pre><code class="language-http">GET /api/mcp/gateway/health
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;healthy&quot;,
+    &quot;timestamp&quot;: &quot;2025-06-25T14:30:00Z&quot;,
+    &quot;services&quot;: {
+        &quot;calcom&quot;: &quot;healthy&quot;,
+        &quot;retell&quot;: &quot;healthy&quot;,
+        &quot;database&quot;: &quot;healthy&quot;,
+        &quot;queue&quot;: &quot;healthy&quot;,
+        &quot;stripe&quot;: &quot;degraded&quot;,
+        &quot;webhook&quot;: &quot;healthy&quot;
+    },
+    &quot;metrics&quot;: {
+        &quot;uptime_seconds&quot;: 864000,
+        &quot;total_requests&quot;: 1234567,
+        &quot;active_connections&quot;: 42
+    }
+}
+</code></pre>
+<h3 id="service-metrics">Service Metrics</h3>
+<pre><code class="language-http">GET /api/mcp/gateway/metrics/{service}
+</code></pre>
+<h3 id="circuit-breaker-status">Circuit Breaker Status</h3>
+<pre><code class="language-http">GET /api/mcp/gateway/circuit-breakers
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;circuit_breakers&quot;: [
+        {
+            &quot;service&quot;: &quot;calcom&quot;,
+            &quot;state&quot;: &quot;closed&quot;,
+            &quot;failure_count&quot;: 0,
+            &quot;last_failure&quot;: null
+        },
+        {
+            &quot;service&quot;: &quot;stripe&quot;,
+            &quot;state&quot;: &quot;half_open&quot;,
+            &quot;failure_count&quot;: 3,
+            &quot;last_failure&quot;: &quot;2025-06-25T14:25:00Z&quot;,
+            &quot;next_attempt&quot;: &quot;2025-06-25T14:31:00Z&quot;
+        }
+    ]
+}
+</code></pre>
+<h2 id="error-handling">Error Handling</h2>
+<p>All errors follow a consistent format:</p>
+<pre><code class="language-json">{
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;SERVICE_UNAVAILABLE&quot;,
+        &quot;message&quot;: &quot;Cal.com service is currently unavailable&quot;,
+        &quot;service&quot;: &quot;calcom&quot;,
+        &quot;trace_id&quot;: &quot;mcp-trace-789&quot;,
+        &quot;details&quot;: {
+            &quot;circuit_breaker&quot;: &quot;open&quot;,
+            &quot;retry_after&quot;: 60
+        }
+    }
+}
+</code></pre>
+<h3 id="error-codes">Error Codes</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SERVICE_NOT_FOUND</code></td>
+<td>Requested service doesn't exist</td>
+</tr>
+<tr>
+<td><code>METHOD_NOT_FOUND</code></td>
+<td>Service method doesn't exist</td>
+</tr>
+<tr>
+<td><code>SERVICE_UNAVAILABLE</code></td>
+<td>Service is down or circuit breaker is open</td>
+</tr>
+<tr>
+<td><code>TIMEOUT</code></td>
+<td>Request exceeded timeout</td>
+</tr>
+<tr>
+<td><code>RATE_LIMITED</code></td>
+<td>Too many requests</td>
+</tr>
+<tr>
+<td><code>INVALID_PARAMS</code></td>
+<td>Invalid request parameters</td>
+</tr>
+<tr>
+<td><code>INTERNAL_ERROR</code></td>
+<td>Unexpected server error</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rate-limiting">Rate Limiting</h2>
+<p>The gateway enforces rate limits per API key:</p>
+<ul>
+<li><strong>Default</strong>: 1000 requests/minute</li>
+<li><strong>Burst</strong>: 50 requests/second</li>
+</ul>
+<p>Rate limit headers are included in responses:</p>
+<pre><code class="language-http">X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 950
+X-RateLimit-Reset: 1719325860
+</code></pre>
+<h2 id="distributed-tracing">Distributed Tracing</h2>
+<p>All requests include trace headers for debugging:</p>
+<pre><code class="language-http">X-Trace-Id: mcp-trace-123456
+X-Span-Id: span-789
+X-Parent-Span-Id: span-456
+</code></pre>
+<h2 id="websocket-support">WebSocket Support</h2>
+<p>For real-time updates:</p>
+<pre><code class="language-javascript">const ws = new WebSocket('wss://api.askproai.de/api/mcp/gateway/ws');
+
+ws.send(JSON.stringify({
+    type: 'subscribe',
+    services: ['calcom', 'retell'],
+    events: ['booking.created', 'call.ended']
+}));
+
+ws.onmessage = (event) =&gt; {
+    const data = JSON.parse(event.data);
+    console.log('Event received:', data);
+};
+</code></pre>
+<h2 id="best-practices">Best Practices</h2>
+<ol>
+<li><strong>Use Circuit Breakers</strong>: Check circuit breaker status before critical operations</li>
+<li><strong>Implement Retries</strong>: Use exponential backoff for transient failures</li>
+<li><strong>Monitor Metrics</strong>: Track service health and performance</li>
+<li><strong>Handle Timeouts</strong>: Set appropriate timeouts for your use case</li>
+<li><strong>Use Trace IDs</strong>: Include trace IDs in logs for debugging</li>
+</ol>
+<h2 id="sdk-examples">SDK Examples</h2>
+<h3 id="javascripttypescript">JavaScript/TypeScript</h3>
+<pre><code class="language-typescript">import { MCPGateway } from '@askproai/mcp-sdk';
+
+const gateway = new MCPGateway({
+    apiKey: 'YOUR_API_KEY',
+    baseUrl: 'https://api.askproai.de'
+});
+
+// Check availability
+const slots = await gateway.calcom.checkAvailability({
+    branchId: 'uuid-here',
+    date: '2025-06-26'
+});
+
+// Create booking
+const booking = await gateway.calcom.createBooking({
+    customer: { name: 'Max', email: 'max@example.com' },
+    slot: slots[0]
+});
+</code></pre>
+<h3 id="php">PHP</h3>
+<pre><code class="language-php">use AskProAI\MCPGateway;
+
+$gateway = new MCPGateway([
+    'api_key' =&gt; 'YOUR_API_KEY'
+]);
+
+$slots = $gateway-&gt;calcom-&gt;checkAvailability([
+    'branch_id' =&gt; 'uuid-here',
+    'date' =&gt; '2025-06-26'
+]);
+</code></pre>
+<hr />
+<p><em>Last updated: June 25, 2025</em></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

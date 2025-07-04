@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Cache</title>
+    <meta http-equiv="refresh" content="2;url=/admin/retell-ultimate-control-center">
+</head>
+<body>
+    <div style="text-align: center; padding: 50px; font-family: Arial;">
+        <h2>Clearing cache...</h2>
+        <p>You will be redirected to the Retell Control Center in 2 seconds.</p>
+        <p>Please press Ctrl+Shift+R when the page loads.</p>
+    </div>
+    <script>
+        // Force clear some caches
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => {
+                    caches.delete(name);
+                });
+            });
+        }
+        
+        // Clear Livewire cache
+        if (window.Livewire) {
+            delete window.Livewire;
+        }
+        
+        // Redirect after 2 seconds
+        setTimeout(() => {
+            window.location.href = '/admin/retell-ultimate-control-center';
+        }, 2000);
+    </script>
+</body>
+</html>

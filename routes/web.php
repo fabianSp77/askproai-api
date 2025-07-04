@@ -49,6 +49,23 @@ Route::get('/documentation', [App\Http\Controllers\DocumentationRedirectControll
 
 // API Login routes are now in routes/api.php
 
+// Retell Test Hub & Monitor Routes (available in all environments)
+Route::get('/retell-test', function () {
+    return view('retell-test-hub');
+})->name('retell.test.hub');
+
+Route::prefix('retell-monitor')->middleware(['web'])->group(function () {
+    Route::get('/', function() {
+        return view('basic-retell-monitor');
+    })->name('retell.monitor.index');
+    Route::get('/stats', [App\Http\Controllers\SimpleRetellMonitorController::class, 'stats'])
+        ->name('retell.monitor.stats');
+    Route::get('/calcom-status', [App\Http\Controllers\RetellMonitorController::class, 'calcomStatus'])
+        ->name('retell.monitor.calcom-status');
+    Route::get('/activity', [App\Http\Controllers\RetellMonitorController::class, 'activity'])
+        ->name('retell.monitor.activity');
+});
+
 // Include help center routes
 require __DIR__.'/help-center.php';
 
@@ -65,6 +82,22 @@ Route::get('/impressum', [App\Http\Controllers\PrivacyController::class, 'impres
 Route::get('/dashboard', function () {
     return redirect('/admin');
 })->middleware(['auth'])->name('dashboard');
+
+// Invoice download route
+Route::get('/invoice/{invoice}/download', function (App\Models\Invoice $invoice) {
+    // Check if user has access to this invoice
+    if (auth()->user()->company_id !== $invoice->company_id) {
+        abort(403);
+    }
+    
+    // For now, redirect to a placeholder
+    // TODO: Implement actual PDF generation
+    return response()->json([
+        'message' => 'Invoice download not yet implemented',
+        'invoice_id' => $invoice->id,
+        'invoice_number' => $invoice->number
+    ]);
+})->middleware(['auth'])->name('invoice.download');
 
 // Profile routes (requires auth)
 Route::view('profile', 'profile')
@@ -219,6 +252,9 @@ Route::prefix('portal')->group(function () {
     require __DIR__.'/portal.php';
 });
 
+// Business Portal Routes
+require __DIR__.'/business-portal.php';
+
 // Remove temporary debug route - let Livewire handle its own routes
 
 // Removed - let Livewire handle its own routes
@@ -228,3 +264,23 @@ Route::get('/test-livewire-simple', function() {
     return view('test-livewire-simple');
 })->middleware(['web']);
 Route::get('/test-ml-livewire-page', function() { return view('test-ml-livewire-page'); });
+
+// Debug route for Filament v3 issues
+Route::get('/filament-debug', function () {
+    return view('filament-debug');
+})->middleware('auth');
+
+// GDPR Routes
+Route::prefix('gdpr')->group(function () {
+    Route::post('/request-export', [App\Http\Controllers\GDPRController::class, 'requestDataExport'])
+        ->name('gdpr.request-export');
+    Route::post('/request-deletion', [App\Http\Controllers\GDPRController::class, 'requestDataDeletion'])
+        ->name('gdpr.request-deletion');
+    Route::get('/download/{token}', [App\Http\Controllers\GDPRController::class, 'downloadData'])
+        ->name('gdpr.download');
+    Route::get('/confirm-deletion/{token}', [App\Http\Controllers\GDPRController::class, 'confirmDeletion'])
+        ->name('gdpr.confirm-deletion');
+});
+
+Route::get('/privacy-tools', [App\Http\Controllers\GDPRController::class, 'privacyTools'])
+    ->name('privacy-tools');

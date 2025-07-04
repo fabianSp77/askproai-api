@@ -29,10 +29,14 @@ abstract class TestCase extends BaseTestCase
         
         // Configure SQLite for tests
         if (DB::getDriverName() === "sqlite") {
-            DB::statement("PRAGMA foreign_keys=OFF");
-            DB::statement("PRAGMA synchronous=OFF");
-            DB::statement("PRAGMA journal_mode=MEMORY");
-            DB::statement("PRAGMA temp_store=MEMORY");
+            try {
+                DB::unprepared("PRAGMA foreign_keys=OFF");
+                // Skip synchronous pragma as it can't be changed in transaction
+                DB::unprepared("PRAGMA journal_mode=MEMORY");
+                DB::unprepared("PRAGMA temp_store=MEMORY");
+            } catch (\Exception $e) {
+                // Ignore pragma errors in SQLite
+            }
         }
         
         try {
@@ -48,7 +52,11 @@ abstract class TestCase extends BaseTestCase
         
         // Re-enable foreign keys
         if (DB::getDriverName() === "sqlite") {
-            DB::statement("PRAGMA foreign_keys=ON");
+            try {
+                DB::unprepared("PRAGMA foreign_keys=ON");
+            } catch (\Exception $e) {
+                // Ignore pragma errors
+            }
         }
     }
     
@@ -57,7 +65,11 @@ abstract class TestCase extends BaseTestCase
         try {
             // Disable foreign keys for cleanup
             if (DB::getDriverName() === "sqlite") {
-                DB::statement("PRAGMA foreign_keys=OFF");
+                try {
+                    DB::unprepared("PRAGMA foreign_keys=OFF");
+                } catch (\Exception $e) {
+                    // Ignore pragma errors
+                }
             }
             
             // Clean up database using simplified method

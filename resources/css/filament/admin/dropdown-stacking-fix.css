@@ -1,0 +1,228 @@
+/* ========================================
+   DROPDOWN STACKING CONTEXT FIX
+   Fixes GitHub Issues #211 & #212
+   Based on Filament v3 Best Practices
+   ======================================== */
+
+/* ========================================
+   1. REMOVE STACKING CONTEXT FROM TABLE ROWS
+   ======================================== */
+
+/* Prevent table rows from creating new stacking contexts */
+.fi-ta-row {
+    position: static !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+    isolation: auto !important;
+    will-change: auto !important;
+}
+
+/* Special handling for hover states - use minimal stacking */
+.fi-ta-row:hover {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Remove stacking context from cells */
+.fi-ta-cell {
+    position: static !important;
+    transform: none !important;
+}
+
+/* Actions cell needs special treatment */
+.fi-ta-actions-cell {
+    position: static !important;
+    overflow: visible !important;
+}
+
+/* Actions container must be relative for dropdown positioning */
+.fi-ta-actions {
+    position: relative !important;
+    z-index: 10 !important;
+    overflow: visible !important;
+}
+
+/* ========================================
+   2. FORCE DROPDOWNS ABOVE ALL CONTENT
+   ======================================== */
+
+/* Global dropdown panel fixes */
+.fi-dropdown-panel {
+    /* Use fixed positioning to escape any container */
+    position: fixed !important;
+    z-index: 99999 !important; /* Extremely high to ensure visibility */
+    
+    /* Ensure dropdowns calculate position from viewport */
+    top: var(--dropdown-top, auto) !important;
+    left: var(--dropdown-left, auto) !important;
+    right: var(--dropdown-right, auto) !important;
+    bottom: var(--dropdown-bottom, auto) !important;
+}
+
+/* Specific fix for action dropdowns in tables */
+.fi-ta-actions .fi-dropdown-panel,
+.fi-ta-actions-group .fi-dropdown-panel,
+.fi-ac-dropdown .fi-dropdown-panel {
+    z-index: 99999 !important;
+    position: fixed !important;
+    margin-top: 0.5rem !important;
+}
+
+/* Ensure action buttons are above row content */
+.fi-ac-btn-group {
+    position: relative !important;
+    z-index: 20 !important;
+}
+
+/* ========================================
+   3. TABLE-SPECIFIC OVERFLOW FIXES
+   ======================================== */
+
+/* Allow overflow on all table containers */
+.fi-ta,
+.fi-ta-ctn,
+.fi-ta-content,
+.fi-ta-content-ctn,
+.fi-ta-table-ctn,
+.fi-ta-table-wrap {
+    overflow: visible !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* The table itself can scroll horizontally */
+.fi-ta-table {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    position: relative !important;
+}
+
+/* ========================================
+   4. BRANCH SELECTOR SPECIFIC FIXES
+   ======================================== */
+
+/* Branch selector dropdown container */
+.branch-selector-dropdown,
+[x-data*="branch"] {
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+/* Branch selector panel needs high z-index */
+.branch-selector-dropdown .fi-dropdown-panel,
+[x-data*="branch"] > div[x-show] {
+    position: absolute !important;
+    z-index: 99999 !important;
+    min-width: 18rem !important;
+    max-height: 24rem !important;
+    overflow-y: auto !important;
+}
+
+/* ========================================
+   5. SPECIAL ROW STATE HANDLING
+   ======================================== */
+
+/* Rows with special states should not create stacking context */
+.fi-ta-row.opacity-30,
+.fi-ta-row.opacity-50,
+.fi-ta-row.opacity-70 {
+    opacity: 1 !important;
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Selected/highlighted rows */
+.fi-ta-row.ring-2,
+.fi-ta-row.border-s-2 {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* ========================================
+   6. DROPDOWN ANIMATION FIXES
+   ======================================== */
+
+/* Ensure animations don't affect stacking */
+.fi-dropdown-panel[x-show] {
+    transform-origin: top right !important;
+}
+
+/* Disable problematic transitions on table rows */
+.fi-ta-row {
+    transition: background-color 0.2s ease !important;
+    /* Remove any transform transitions */
+    transition-property: background-color, border-color !important;
+}
+
+/* ========================================
+   7. RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 1024px) {
+    /* On tablets and smaller, use even higher z-index */
+    .fi-dropdown-panel {
+        z-index: 999999 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile dropdowns should be fullscreen overlays */
+    .fi-ac-dropdown .fi-dropdown-panel {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 90vw !important;
+        max-width: 400px !important;
+        max-height: 80vh !important;
+        z-index: 999999 !important;
+    }
+}
+
+/* ========================================
+   8. DARK MODE ADJUSTMENTS
+   ======================================== */
+
+.dark .fi-ta-row.opacity-30,
+.dark .fi-ta-row.opacity-50,
+.dark .fi-ta-row.opacity-70 {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ========================================
+   9. ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+
+/* Ensure dropdowns are keyboard navigable */
+.fi-dropdown-panel:focus-within {
+    z-index: 999999 !important;
+    outline: 2px solid var(--primary-600) !important;
+    outline-offset: 2px !important;
+}
+
+/* ========================================
+   10. FALLBACK FOR STUBBORN CASES
+   ======================================== */
+
+/* Nuclear option for dropdowns that still hide */
+.fi-dropdown-above-rows {
+    z-index: 2147483647 !important; /* Maximum possible z-index */
+    position: fixed !important;
+}
+
+/* Debug helper - uncomment to visualize stacking issues */
+/*
+.fi-ta-row {
+    outline: 2px solid red !important;
+}
+
+.fi-dropdown-panel {
+    outline: 2px solid green !important;
+    background: rgba(0, 255, 0, 0.1) !important;
+}
+
+.fi-ta-actions {
+    outline: 2px solid blue !important;
+}
+*/

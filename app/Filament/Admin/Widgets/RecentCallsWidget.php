@@ -50,15 +50,27 @@ class RecentCallsWidget extends Widget
                         $duration = Carbon::parse($call->start_timestamp)->diffInSeconds(Carbon::parse($call->end_timestamp));
                     }
                     
+                    // Get customer name with fallback to metadata
+                    $customerName = $call->customer?->name 
+                        ?? $call->extracted_name 
+                        ?? (isset($call->metadata['customer_data']['full_name']) ? $call->metadata['customer_data']['full_name'] : null);
+                    
+                    // Get urgency from multiple sources
+                    $urgency = $call->urgency_level 
+                        ?? (isset($call->metadata['customer_data']['urgency']) ? $call->metadata['customer_data']['urgency'] : null);
+                    
                     return [
                         'id' => $call->id,
                         'time' => Carbon::parse($call->created_at)->format('H:i'),
                         'phone' => $this->maskPhoneNumber($call->from_number ?? $call->caller ?? 'Unknown'),
+                        'customer_name' => $customerName,
                         'branch' => $call->branch?->name ?? 'Nicht zugeordnet',
                         'duration' => $this->formatDuration((int)$duration),
                         'status' => $this->getCallStatus($call),
                         'appointment_booked' => !is_null($call->appointment_id),
+                        'appointment_requested' => $call->appointment_requested ?? false,
                         'sentiment' => $call->sentiment ?? 'neutral',
+                        'urgency' => $urgency,
                     ];
                 })
                 ->toArray();

@@ -18,7 +18,7 @@ class GdprRequestResource extends Resource
     protected static ?string $model = GdprRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
-    protected static ?string $navigationGroup = 'Verwaltung';
+    protected static ?string $navigationGroup = 'System & Verwaltung';
     protected static ?string $navigationLabel = 'DSGVO-Anfragen';
     protected static ?int $navigationSort = 50;
 

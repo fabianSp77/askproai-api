@@ -16,9 +16,9 @@ class PhoneNumberResource extends Resource
 {
     protected static ?string $model = PhoneNumber::class;
     protected static ?string $navigationIcon = 'heroicon-o-phone';
-    protected static ?string $navigationGroup = 'Verwaltung';
+    protected static ?string $navigationGroup = 'Unternehmensstruktur';
     protected static ?string $navigationLabel = 'Telefonnummern';
-    protected static ?int $navigationSort = 90;
+    protected static ?int $navigationSort = 50;
 
     public static function canViewAny(): bool
     {

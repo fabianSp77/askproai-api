@@ -1,0 +1,147 @@
+name: Documentation Auto-Update
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check-docs:
+    name: Check Documentation Updates
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Benötigt für git log
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, json, bcmath
+          coverage: none
+      
+      - name: Install Dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          
+      - name: Check Documentation Freshness
+        id: check_docs
+        run: |
+          php artisan docs:check-updates --json > docs-report.json
+          HEALTH_SCORE=$(cat docs-report.json | jq -r '.health_score // 0')
+          echo "health_score=$HEALTH_SCORE" >> $GITHUB_OUTPUT
+          
+          if [ "$HEALTH_SCORE" -lt 50 ]; then
+            echo "❌ Documentation health critical: $HEALTH_SCORE%"
+            exit 1
+          elif [ "$HEALTH_SCORE" -lt 70 ]; then
+            echo "⚠️ Documentation health warning: $HEALTH_SCORE%"
+          else
+            echo "✅ Documentation health good: $HEALTH_SCORE%"
+          fi
+      
+      - name: Generate Update Suggestions
+        if: failure() || steps.check_docs.outputs.health_score < 70
+        run: |
+          php artisan docs:check-updates > update-suggestions.txt
+          
+      - name: Post PR Comment
+        if: github.event_name == 'pull_request' && (failure() || steps.check_docs.outputs.health_score < 70)
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const suggestions = fs.readFileSync('update-suggestions.txt', 'utf8');
+            const healthScore = '${{ steps.check_docs.outputs.health_score }}';
+            
+            const body = `## 📚 Documentation Health Check
+            
+            **Health Score: ${healthScore}%**
+            
+            ${healthScore < 50 ? '❌ **Critical**: Documentation needs immediate attention!' : 
+              healthScore < 70 ? '⚠️ **Warning**: Documentation updates recommended' : 
+              '✅ Documentation is up to date'}
+            
+            <details>
+            <summary>Update Suggestions</summary>
+            
+            \`\`\`
+            ${suggestions}
+            \`\`\`
+            </details>
+            
+            **Actions Required:**
+            1. Run \`php artisan docs:check-updates\` locally
+            2. Update affected documentation files
+            3. Commit changes with \`docs: update [component]\` message
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+      
+      - name: Create Documentation Update PR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.check_docs.outputs.health_score < 70
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Erstelle neuen Branch
+          BRANCH_NAME="docs/auto-update-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b $BRANCH_NAME
+          
+          # Führe Auto-Fix aus
+          php artisan docs:check-updates --auto-fix
+          
+          # Committe Änderungen
+          git add -A
+          git commit -m "docs: automatic documentation update" || exit 0
+          
+          # Push Branch
+          git push origin $BRANCH_NAME
+          
+          # Erstelle PR
+          gh pr create \
+            --title "📚 Automatic Documentation Update" \
+            --body "This PR was automatically created to update outdated documentation.
+            
+            Health Score: ${{ steps.check_docs.outputs.health_score }}%
+            
+            Please review the changes and merge if appropriate." \
+            --base main \
+            --head $BRANCH_NAME
+      
+      - name: Update README Badge
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          HEALTH_SCORE=${{ steps.check_docs.outputs.health_score }}
+          COLOR="red"
+          if [ "$HEALTH_SCORE" -ge 80 ]; then
+            COLOR="brightgreen"
+          elif [ "$HEALTH_SCORE" -ge 60 ]; then
+            COLOR="yellow"
+          elif [ "$HEALTH_SCORE" -ge 40 ]; then
+            COLOR="orange"
+          fi
+          
+          # Update README badge (wenn vorhanden)
+          # sed -i "s/docs-[0-9]*%25-[a-z]*/docs-${HEALTH_SCORE}%25-${COLOR}/g" README.md
+          
+      - name: Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation-report
+          path: |
+            docs-report.json
+            update-suggestions.txt

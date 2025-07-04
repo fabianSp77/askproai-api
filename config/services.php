@@ -66,6 +66,8 @@ return [
         'base_url' => env('RETELL_BASE_URL', env('RETELL_BASE', 'https://api.retellai.com')),
         'base' => env('RETELL_BASE', 'https://api.retellai.com'),
         'verify_ip' => env('RETELL_VERIFY_IP', false),
+        'default_company_id' => env('RETELL_DEFAULT_COMPANY_ID', 1),
+        'default_branch_id' => env('RETELL_DEFAULT_BRANCH_ID', 1),
     ],
 
     'stripe' => [
@@ -118,6 +120,33 @@ return [
             'auth_token' => env('TWILIO_AUTH_TOKEN'),
             'whatsapp_from' => env('TWILIO_WHATSAPP_FROM'),
         ],
+    ],
+
+    'twilio' => [
+        'sid' => env('TWILIO_ACCOUNT_SID'),
+        'token' => env('TWILIO_AUTH_TOKEN'),
+        'from' => env('TWILIO_PHONE_NUMBER'),
+        'whatsapp_from' => env('TWILIO_WHATSAPP_FROM', 'whatsapp:+14155238886'),
+        'sandbox_mode' => env('TWILIO_SANDBOX_MODE', false),
+        
+        // Webhook configuration
+        'webhook_url' => env('TWILIO_WEBHOOK_URL', env('APP_URL') . '/api/mcp/twilio/status-callback'),
+        
+        // Feature flags
+        'sms_enabled' => env('TWILIO_SMS_ENABLED', true),
+        'whatsapp_enabled' => env('TWILIO_WHATSAPP_ENABLED', true),
+        'voice_enabled' => env('TWILIO_VOICE_ENABLED', false),
+        
+        // Rate limiting
+        'rate_limit' => env('TWILIO_RATE_LIMIT', 1), // messages per second
+        
+        // Logging
+        'log_messages' => env('TWILIO_LOG_MESSAGES', true),
+    ],
+
+    'deepl' => [
+        'api_key' => env('DEEPL_API_KEY'),
+        'pro' => env('DEEPL_PRO', false), // true for Pro API, false for Free API
     ],
 
 ];

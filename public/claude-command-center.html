@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 AskProAI Claude Command Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3B82F6;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --dark: #1F2937;
+            --light: #F9FAFB;
+            --border: #E5E7EB;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            border-bottom: 2px solid var(--border);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .command-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .command-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        .command-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .command-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .command-category {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .category-daily { background: #DBEAFE; color: #1E40AF; }
+        .category-setup { background: #D1FAE5; color: #065F46; }
+        .category-debug { background: #FEE2E2; color: #991B1B; }
+        .category-analytics { background: #EDE9FE; color: #5B21B6; }
+        .category-deployment { background: #FEF3C7; color: #92400E; }
+
+        .command-description {
+            color: #6B7280;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .command-box {
+            background: #F3F4F6;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 15px;
+            position: relative;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 6px 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #2563EB;
+            transform: scale(1.05);
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+        }
+
+        .command-example {
+            background: #FEF3C7;
+            border: 1px solid #FCD34D;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .command-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .favorite-btn {
+            background: none;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .favorite-btn:hover {
+            border-color: #F59E0B;
+            color: #F59E0B;
+        }
+
+        .favorite-btn.favorited {
+            background: #FEF3C7;
+            border-color: #F59E0B;
+            color: #92400E;
+        }
+
+        .floating-favorites {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s;
+            font-size: 24px;
+        }
+
+        .floating-favorites:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .favorites-panel {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            width: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+        }
+
+        .favorites-panel.show {
+            display: block;
+        }
+
+        .favorites-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9CA3AF;
+            font-size: 18px;
+        }
+
+        .shortcut-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--dark);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .commands-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .favorites-panel {
+                width: calc(100% - 40px);
+                right: 20px;
+                left: 20px;
+            }
+        }
+
+        .highlight {
+            background: #FEF3C7;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>🚀 Claude Command Center</h1>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="Suche nach Befehlen... (z.B. 'setup', 'fix', 'deploy')">
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <span id="totalCommands">0</span> Befehle
+                </div>
+                <div class="stat">
+                    <span id="favoriteCount">0</span> ⭐
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="filters" id="filters">
+            <button class="filter-btn active" data-category="all">
+                🎯 Alle
+            </button>
+            <button class="filter-btn" data-category="daily">
+                🔥 Täglich
+            </button>
+            <button class="filter-btn" data-category="setup">
+                🚀 Setup
+            </button>
+            <button class="filter-btn" data-category="debug">
+                🔍 Debug
+            </button>
+            <button class="filter-btn" data-category="analytics">
+                📊 Analytics
+            </button>
+            <button class="filter-btn" data-category="deployment">
+                🚢 Deployment
+            </button>
+            <button class="filter-btn" data-category="emergency">
+                🚨 Notfall
+            </button>
+        </div>
+
+        <div class="commands-grid" id="commandsGrid">
+            <!-- Commands will be inserted here -->
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            Keine Befehle gefunden. Versuche einen anderen Suchbegriff.
+        </div>
+    </div>
+
+    <div class="floating-favorites" id="favoritesToggle">
+        ⭐
+    </div>
+
+    <div class="favorites-panel" id="favoritesPanel">
+        <div class="favorites-header">
+            <span>⭐ Meine Favoriten</span>
+            <button onclick="clearFavorites()" style="background: none; border: none; color: var(--danger); cursor: pointer;">Löschen</button>
+        </div>
+        <div id="favoritesList" style="padding: 15px;">
+            <!-- Favorites will be listed here -->
+        </div>
+    </div>
+
+    <div class="shortcut-hint">
+        <strong>Shortcuts:</strong> <kbd>/</kbd> Suche • <kbd>ESC</kbd> Clear • <kbd>1-9</kbd> Quick Copy
+    </div>
+
+    <script>
+        // Command Database
+        const commands = [
+            {
+                id: 'self-update',
+                title: 'Claude Self-Update',
+                category: 'daily',
+                icon: '🧠',
+                description: 'Claude auf neuesten Stand bringen',
+                command: 'Claude, führe einen Self-Update durch: Lies CLAUDE_CONTEXT_SUMMARY.md, BEST_PRACTICES_IMPLEMENTATION.md und alle heute geänderten Dateien. Bestätige dein Verständnis der neuen Features.',
+                example: 'Am Anfang jeder Session ausführen',
+                tags: ['update', 'context', 'session', 'start']
+            },
+            {
+                id: 'quick-setup',
+                title: '5-Minuten Onboarding',
+                category: 'setup',
+                icon: '🎯',
+                description: 'Neuen Kunden komplett einrichten',
+                command: 'Claude, richte einen neuen Kunden ein mit: Firmenname "[FIRMA]", Telefon "[TELEFON]", Email "[EMAIL]", Filiale "[FILIALE]"',
+                example: 'Claude, nutze ask-setup für: "Friseursalon Beauty Style", "+49 30 123 4567", "kontakt@beauty-style.de", "Hauptsalon"',
+                tags: ['setup', 'onboarding', 'kunde', 'neu', 'einrichten']
+            },
+            {
+                id: 'phone-debug',
+                title: 'Telefonnummer Debugging',
+                category: 'debug',
+                icon: '📞',
+                description: 'Phone Resolution testen',
+                command: 'Claude, teste warum die Telefonnummer [NUMMER] nicht richtig zugeordnet wird. Zeige mir den kompletten Flow.',
+                example: 'Claude, die Anrufe von +49 30 987 6543 kommen nicht an. Nutze ask-phone zum Debuggen.',
+                tags: ['phone', 'telefon', 'resolution', 'debug', 'test']
+            },
+            {
+                id: 'kpi-dashboard',
+                title: 'Business KPIs',
+                category: 'analytics',
+                icon: '📊',
+                description: 'KPI Dashboard anzeigen',
+                command: 'Claude, zeige mir die KPIs für Company ID [ID] in einem übersichtlichen Format. Ich brauche Anrufe, Termine und Conversion Rate.',
+                example: 'Claude, erstelle mir einen Wochenbericht mit allen KPIs für unseren Hauptkunden (Company 1).',
+                tags: ['kpi', 'dashboard', 'analytics', 'bericht', 'stats']
+            },
+            {
+                id: 'impact-analysis',
+                title: 'Deployment Impact Check',
+                category: 'deployment',
+                icon: '🔍',
+                description: 'Änderungen vor Deploy prüfen',
+                command: 'Claude, analysiere die Auswirkungen der letzten Änderungen bevor wir deployen. Gibt es Breaking Changes?',
+                example: 'Claude, wir wollen gleich live gehen. Mache einen ask-impact Check und sage mir ob es sicher ist.',
+                tags: ['deploy', 'impact', 'analysis', 'breaking', 'changes']
+            },
+            {
+                id: 'mcp-discover',
+                title: 'MCP Auto-Discovery',
+                category: 'daily',
+                icon: '🤖',
+                description: 'Besten MCP-Server finden',
+                command: 'Claude, finde den besten MCP-Server für: "[AUFGABE BESCHREIBUNG]"',
+                example: 'Claude, nutze MCP Discovery für: "Kunde anrufen lassen und automatisch Folgetermin buchen"',
+                tags: ['mcp', 'discovery', 'auto', 'server', 'task']
+            },
+            {
+                id: 'webhook-monitor',
+                title: 'Webhook Health Check',
+                category: 'debug',
+                icon: '🏥',
+                description: 'Webhooks überwachen',
+                command: 'Claude, überprüfe ob alle Webhooks funktionieren. Zeige mir Failed Webhooks der letzten Stunde.',
+                example: 'Claude, wir bekommen keine Anrufe mehr rein. Checke die Webhook Health!',
+                tags: ['webhook', 'health', 'monitor', 'check', 'failed']
+            },
+            {
+                id: 'emergency-fix',
+                title: 'Emergency Fix Combo',
+                category: 'emergency',
+                icon: '🚨',
+                description: 'Alles auf einmal fixen',
+                command: 'Claude, führe den Emergency Fix aus! Die App zeigt nur Fehler.',
+                example: 'Claude, ich bekomme "Access Denied" Fehler. Nutze ask-fix zum Reparieren!',
+                tags: ['emergency', 'fix', 'error', 'access', 'denied', 'notfall']
+            },
+            {
+                id: 'system-health',
+                title: 'System Health Check',
+                category: 'daily',
+                icon: '✅',
+                description: 'Kompletter Gesundheitscheck',
+                command: 'Claude, mache einen kompletten Health Check. Ich will wissen ob alles läuft.',
+                example: 'Claude, bevor ich ins Wochenende gehe: Ist das System gesund? Mache ask-health.',
+                tags: ['health', 'check', 'system', 'status', 'gesundheit']
+            },
+            {
+                id: 'data-flow',
+                title: 'Data Flow Debugging',
+                category: 'debug',
+                icon: '🔄',
+                description: 'Datenfluss verfolgen',
+                command: 'Claude, zeige mir den Datenfluss für Call ID "[CALL_ID]". Wo hängt es?',
+                example: 'Claude, der Anruf kam rein aber kein Termin wurde erstellt. Tracke den Flow!',
+                tags: ['flow', 'data', 'debug', 'trace', 'call']
+            },
+            {
+                id: 'deploy-check',
+                title: 'Deployment Vorbereitung',
+                category: 'deployment',
+                icon: '🚀',
+                description: 'Pre-Deploy Checks',
+                command: 'Claude, bereite das Deployment vor. Alle Tests, Impact Analysis und Quality Checks.',
+                example: 'Claude, wir wollen Montag deployen. Ist alles ready? Nutze ask-deploy!',
+                tags: ['deploy', 'deployment', 'prepare', 'check', 'ready']
+            },
+            {
+                id: 'recent-calls',
+                title: 'Letzte Anrufe',
+                category: 'analytics',
+                icon: '📞',
+                description: 'Call-Historie anzeigen',
+                command: 'Claude, zeige mir die letzten [ANZAHL] Anrufe mit Kundennamen und Firma.',
+                example: 'Claude, ich brauche alle Anrufe von heute für den Kunden "Zahnarztpraxis Dr. Müller".',
+                tags: ['calls', 'anrufe', 'history', 'recent', 'liste']
+            },
+            {
+                id: 'morning-routine',
+                title: 'Morgen-Routine',
+                category: 'daily',
+                icon: '☀️',
+                description: 'Täglicher Start-Check',
+                command: 'Claude, guten Morgen! Mache einen Health Check, zeige mir die KPIs von gestern und liste alle Failed Webhooks.',
+                example: 'Jeden Morgen als erstes ausführen',
+                tags: ['morning', 'routine', 'daily', 'start', 'morgen']
+            },
+            {
+                id: 'weekend-check',
+                title: 'Wochenend-Check',
+                category: 'daily',
+                icon: '🎉',
+                description: 'Vor dem Wochenende',
+                command: 'Claude, Wochenend-Check: System Health, offene Todos, kritische Errors der Woche.',
+                example: 'Freitags vor Feierabend',
+                tags: ['weekend', 'friday', 'check', 'wochenende']
+            },
+            {
+                id: 'problem-debug',
+                title: 'Problem Debugging Combo',
+                category: 'debug',
+                icon: '🔧',
+                description: 'Umfassendes Debugging',
+                command: 'Claude, Kunde beschwert sich dass keine Termine gebucht werden. Debugge: Phone Resolution für [NUMMER], Webhook Health, Data Flows der letzten Stunde.',
+                example: 'Bei Kundenbeschwerden',
+                tags: ['problem', 'debug', 'combo', 'komplett', 'beschwerde']
+            }
+        ];
+
+        // State
+        let favorites = JSON.parse(localStorage.getItem('claudeCommandFavorites') || '[]');
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCommands();
+            updateStats();
+            setupEventListeners();
+            setupKeyboardShortcuts();
+        });
+
+        // Render Commands
+        function renderCommands() {
+            const grid = document.getElementById('commandsGrid');
+            const noResults = document.getElementById('noResults');
+            
+            let filteredCommands = commands;
+            
+            // Apply category filter
+            if (currentFilter !== 'all') {
+                filteredCommands = filteredCommands.filter(cmd => cmd.category === currentFilter);
+            }
+            
+            // Apply search filter
+            if (searchTerm) {
+                filteredCommands = filteredCommands.filter(cmd => {
+                    const searchLower = searchTerm.toLowerCase();
+                    return cmd.title.toLowerCase().includes(searchLower) ||
+                           cmd.description.toLowerCase().includes(searchLower) ||
+                           cmd.command.toLowerCase().includes(searchLower) ||
+                           cmd.tags.some(tag => tag.toLowerCase().includes(searchLower));
+                });
+            }
+            
+            if (filteredCommands.length === 0) {
+                grid.style.display = 'none';
+                noResults.style.display = 'block';
+            } else {
+                grid.style.display = 'grid';
+                noResults.style.display = 'none';
+                grid.innerHTML = filteredCommands.map((cmd, index) => createCommandCard(cmd, index)).join('');
+            }
+            
+            updateStats();
+        }
+
+        // Create Command Card HTML
+        function createCommandCard(cmd, index) {
+            const isFavorite = favorites.includes(cmd.id);
+            const categoryColors = {
+                daily: 'category-daily',
+                setup: 'category-setup',
+                debug: 'category-debug',
+                analytics: 'category-analytics',
+                deployment: 'category-deployment',
+                emergency: 'category-emergency'
+            };
+            
+            return `
+                <div class="command-card" data-id="${cmd.id}">
+                    <div class="command-category ${categoryColors[cmd.category]}">${cmd.icon} ${getCategoryName(cmd.category)}</div>
+                    <div class="command-header">
+                        <h3 class="command-title">${cmd.title}</h3>
+                        ${index < 9 ? `<span style="color: #9CA3AF; font-size: 12px;">Shortcut: ${index + 1}</span>` : ''}
+                    </div>
+                    <p class="command-description">${highlightSearch(cmd.description)}</p>
+                    
+                    <div class="command-box">
+                        <button class="copy-btn" onclick="copyCommand('${cmd.id}')">📋 Copy</button>
+                        <div style="padding-right: 60px;">${highlightSearch(cmd.command)}</div>
+                    </div>
+                    
+                    ${cmd.example ? `<div class="command-example">💡 <strong>Beispiel:</strong> ${highlightSearch(cmd.example)}</div>` : ''}
+                    
+                    <div class="command-actions">
+                        <button class="favorite-btn ${isFavorite ? 'favorited' : ''}" onclick="toggleFavorite('${cmd.id}')">
+                            ${isFavorite ? '⭐ Favorit' : '☆ Favorit'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Highlight search terms
+        function highlightSearch(text) {
+            if (!searchTerm) return text;
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        // Get category display name
+        function getCategoryName(category) {
+            const names = {
+                daily: 'Täglich',
+                setup: 'Setup',
+                debug: 'Debug',
+                analytics: 'Analytics',
+                deployment: 'Deployment',
+                emergency: 'Notfall'
+            };
+            return names[category] || category;
+        }
+
+        // Copy Command
+        function copyCommand(cmdId) {
+            const cmd = commands.find(c => c.id === cmdId);
+            if (!cmd) return;
+            
+            navigator.clipboard.writeText(cmd.command).then(() => {
+                const btn = document.querySelector(`[data-id="${cmdId}"] .copy-btn`);
+                btn.textContent = '✅ Kopiert!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.textContent = '📋 Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+                
+                // Track recent usage
+                trackUsage(cmdId);
+            });
+        }
+
+        // Toggle Favorite
+        function toggleFavorite(cmdId) {
+            const index = favorites.indexOf(cmdId);
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(cmdId);
+            }
+            
+            localStorage.setItem('claudeCommandFavorites', JSON.stringify(favorites));
+            renderCommands();
+            renderFavorites();
+        }
+
+        // Clear all favorites
+        function clearFavorites() {
+            if (confirm('Wirklich alle Favoriten löschen?')) {
+                favorites = [];
+                localStorage.setItem('claudeCommandFavorites', JSON.stringify(favorites));
+                renderCommands();
+                renderFavorites();
+                document.getElementById('favoritesPanel').classList.remove('show');
+            }
+        }
+
+        // Render Favorites Panel
+        function renderFavorites() {
+            const list = document.getElementById('favoritesList');
+            const favoriteCommands = commands.filter(cmd => favorites.includes(cmd.id));
+            
+            if (favoriteCommands.length === 0) {
+                list.innerHTML = '<p style="color: #9CA3AF; text-align: center;">Noch keine Favoriten. Klicke auf ☆ bei einem Befehl.</p>';
+            } else {
+                list.innerHTML = favoriteCommands.map(cmd => `
+                    <div style="margin-bottom: 15px; padding: 15px; background: #F9FAFB; border-radius: 8px;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">${cmd.icon} ${cmd.title}</div>
+                        <button class="copy-btn" style="position: static; margin-top: 10px;" onclick="copyCommand('${cmd.id}')">📋 Copy</button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Track usage (for future features)
+        function trackUsage(cmdId) {
+            const usage = JSON.parse(localStorage.getItem('claudeCommandUsage') || '{}');
+            usage[cmdId] = (usage[cmdId] || 0) + 1;
+            usage.lastUsed = cmdId;
+            usage.lastUsedAt = new Date().toISOString();
+            localStorage.setItem('claudeCommandUsage', JSON.stringify(usage));
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalCommands').textContent = commands.length;
+            document.getElementById('favoriteCount').textContent = favorites.length;
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Search
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', (e) => {
+                searchTerm = e.target.value;
+                renderCommands();
+            });
+            
+            // Filters
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.category;
+                    renderCommands();
+                });
+            });
+            
+            // Favorites panel
+            document.getElementById('favoritesToggle').addEventListener('click', () => {
+                const panel = document.getElementById('favoritesPanel');
+                panel.classList.toggle('show');
+                if (panel.classList.contains('show')) {
+                    renderFavorites();
+                }
+            });
+            
+            // Close favorites panel when clicking outside
+            document.addEventListener('click', (e) => {
+                const panel = document.getElementById('favoritesPanel');
+                const toggle = document.getElementById('favoritesToggle');
+                if (!panel.contains(e.target) && !toggle.contains(e.target)) {
+                    panel.classList.remove('show');
+                }
+            });
+        }
+
+        // Keyboard Shortcuts
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Focus search with /
+                if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+                
+                // Clear search with ESC
+                if (e.key === 'Escape') {
+                    document.getElementById('searchInput').value = '';
+                    searchTerm = '';
+                    renderCommands();
+                }
+                
+                // Quick copy with number keys 1-9
+                if (e.key >= '1' && e.key <= '9' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    const index = parseInt(e.key) - 1;
+                    const visibleCommands = getVisibleCommands();
+                    if (visibleCommands[index]) {
+                        copyCommand(visibleCommands[index].id);
+                    }
+                }
+            });
+        }
+
+        // Get currently visible commands
+        function getVisibleCommands() {
+            let filtered = commands;
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(cmd => cmd.category === currentFilter);
+            }
+            if (searchTerm) {
+                filtered = filtered.filter(cmd => {
+                    const searchLower = searchTerm.toLowerCase();
+                    return cmd.title.toLowerCase().includes(searchLower) ||
+                           cmd.description.toLowerCase().includes(searchLower) ||
+                           cmd.command.toLowerCase().includes(searchLower) ||
+                           cmd.tags.some(tag => tag.toLowerCase().includes(searchLower));
+                });
+            }
+            return filtered;
+        }
+    </script>
+</body>
+</html>

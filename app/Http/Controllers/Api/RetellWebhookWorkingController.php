@@ -1,0 +1,283 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Call;
+use App\Models\Branch;
+use App\Scopes\TenantScope;
+use App\Helpers\RetellDataExtractor;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
+class RetellWebhookWorkingController extends Controller
+{
+    /**
+     * Funktionierender Webhook Handler
+     */
+    public function handle(Request $request)
+    {
+        $data = $request->all();
+        
+        // CRITICAL FIX: Handle nested structure from Retell
+        // Retell sends: { "event": "...", "call": { ... } }
+        if (isset($data['call']) && is_array($data['call'])) {
+            // Flatten the structure for compatibility
+            $callData = $data['call'];
+            $data = array_merge($callData, [
+                'event' => $data['event'] ?? $data['event_type'] ?? null,
+                'event_type' => $data['event'] ?? $data['event_type'] ?? null
+            ]);
+        }
+        
+        // Log eingehenden Webhook
+        Log::info('📞 Retell Webhook empfangen', [
+            'event' => $data['event'] ?? 'unknown',
+            'call_id' => $data['call_id'] ?? 'unknown',
+            'from' => $data['from_number'] ?? 'unknown',
+            'to' => $data['to_number'] ?? 'unknown'
+        ]);
+        
+        // Event-Typ ermitteln
+        $event = $data['event'] ?? $data['event_type'] ?? null;
+        
+        // Nur relevante Events verarbeiten
+        if (!in_array($event, ['call_started', 'call_ended', 'call_analyzed'])) {
+            return response()->json(['success' => true, 'message' => 'Event ignored']);
+        }
+        
+        try {
+            // Call-ID extrahieren - WICHTIG: Niemals neue IDs generieren!
+            $callId = $data['call_id'] ?? null;
+            
+            // Wenn keine Call-ID, versuche aus call-Objekt
+            if (!$callId && isset($data['call']['call_id'])) {
+                $callId = $data['call']['call_id'];
+            }
+            
+            if (!$callId) {
+                Log::error('Keine Call-ID im Webhook', ['data' => $data]);
+                return response()->json(['success' => false, 'error' => 'No call_id provided'], 400);
+            }
+            
+            // Prüfe ob Call bereits existiert
+            Log::info('Suche nach Call', ['call_id' => $callId]);
+            
+            $existingCall = Call::withoutGlobalScope(TenantScope::class)
+                ->withoutGlobalScope(\App\Models\Scopes\CompanyScope::class)
+                ->where('call_id', $callId)
+                ->first();
+                
+            Log::info('Call-Suche Ergebnis', [
+                'call_id' => $callId,
+                'found' => $existingCall ? 'YES' : 'NO',
+                'event' => $event
+            ]);
+                
+            if ($existingCall) {
+                // Update bei call_ended
+                if ($event === 'call_ended' || $event === 'call_analyzed') {
+                    // Extract all data using helper
+                    $updateData = RetellDataExtractor::extractUpdateData($data);
+                    
+                    // CRITICAL FIX: Special handling for metadata to preserve customer_data
+                    $preserveMetadata = null;
+                    if (isset($existingCall->metadata['customer_data'])) {
+                        $preserveMetadata = $existingCall->metadata;
+                        Log::info('📌 Preserving existing customer_data in metadata', [
+                            'call_id' => $callId,
+                            'has_customer_data' => true,
+                            'customer_name' => $preserveMetadata['customer_data']['full_name'] ?? 'unknown'
+                        ]);
+                    }
+                    
+                    // Update all fields
+                    foreach ($updateData as $field => $value) {
+                        if ($value !== null) {
+                            // Special handling for metadata field
+                            if ($field === 'metadata' && $preserveMetadata) {
+                                // Merge new metadata with existing, preserving customer_data
+                                $existingCall->$field = array_merge(
+                                    $value,  // New metadata from webhook
+                                    ['customer_data' => $preserveMetadata['customer_data']],  // Preserve customer_data
+                                    ['customer_data_collected' => $preserveMetadata['customer_data_collected'] ?? false],
+                                    ['data_collection_type' => $preserveMetadata['data_collection_type'] ?? null]
+                                );
+                                Log::info('✅ Metadata merged successfully', [
+                                    'call_id' => $callId,
+                                    'preserved_fields' => ['customer_data', 'customer_data_collected', 'data_collection_type']
+                                ]);
+                            } else {
+                                $existingCall->$field = $value;
+                            }
+                        }
+                    }
+                    
+                    // Ensure phone numbers are updated if they were missing
+                    if (!$existingCall->from_number || $existingCall->from_number === 'unknown') {
+                        $existingCall->from_number = $data['from_number'] ?? $data['from'] ?? $existingCall->from_number;
+                    }
+                    if (!$existingCall->to_number || $existingCall->to_number === 'unknown') {
+                        $existingCall->to_number = $data['to_number'] ?? $data['to'] ?? $existingCall->to_number;
+                    }
+                    
+                    $existingCall->save();
+                    
+                    Log::info('✅ Call aktualisiert', [
+                        'call_id' => $callId,
+                        'status' => $existingCall->call_status,
+                        'duration' => $existingCall->duration_sec
+                    ]);
+                }
+                
+                return response()->json(['success' => true, 'message' => 'Call updated']);
+            }
+            
+            // Branch finden - VEREINFACHT
+            $toNumber = $data['to_number'] ?? $data['to'] ?? $data['call']['to_number'] ?? null;
+            $branch = null;
+            
+            if ($toNumber) {
+                // Entferne alle nicht-numerischen Zeichen außer +
+                $cleanNumber = preg_replace('/[^0-9+]/', '', $toNumber);
+                
+                // Versuche verschiedene Varianten
+                $searchPatterns = [
+                    $cleanNumber,                        // Original
+                    substr($cleanNumber, -11),           // Letzte 11 Zeichen
+                    substr($cleanNumber, -10),           // Letzte 10 Zeichen
+                    '%' . substr($cleanNumber, -10) . '%' // LIKE Pattern
+                ];
+                
+                foreach ($searchPatterns as $pattern) {
+                    $branch = Branch::withoutGlobalScope(TenantScope::class)
+                        ->withoutGlobalScope(\App\Models\Scopes\CompanyScope::class)
+                        ->where('phone_number', 'LIKE', $pattern)
+                        ->first();
+                        
+                    if ($branch) {
+                        break;
+                    }
+                }
+            }
+            
+            // Fallback auf erste Branch
+            if (!$branch) {
+                Log::warning('Keine Branch für Nummer gefunden, verwende Default', [
+                    'phone' => $toNumber
+                ]);
+                
+                // Verwende direkte DB-Abfrage für Fallback
+                $defaultBranch = DB::table('branches')
+                    ->whereNotNull('company_id')
+                    ->orderBy('created_at', 'asc')
+                    ->first();
+                    
+                if ($defaultBranch) {
+                    $branch = Branch::withoutGlobalScope(TenantScope::class)
+                        ->withoutGlobalScope(\App\Models\Scopes\CompanyScope::class)
+                        ->find($defaultBranch->id);
+                }
+            }
+            
+            if (!$branch) {
+                // Absolute Notfall-Fallback
+                Log::error('Branch-Lookup komplett fehlgeschlagen', [
+                    'to_number' => $toNumber,
+                    'search_patterns' => $searchPatterns ?? []
+                ]);
+                
+                // Verwende die erste Company
+                $firstCompany = DB::table('companies')->first();
+                if (!$firstCompany) {
+                    throw new \Exception("Keine Company in Datenbank");
+                }
+                
+                // Erstelle temporäre Branch
+                $branch = new Branch();
+                $branch->id = '00000000-0000-0000-0000-000000000001';
+                $branch->company_id = $firstCompany->id;
+                $branch->name = 'System Default';
+                
+                Log::warning('Verwende System Default Branch');
+            }
+            
+            // Webhook-Event speichern (idempotent)
+            DB::table('webhook_events')->insertOrIgnore([
+                'event_type' => $event,
+                'event_id' => $callId,
+                'idempotency_key' => $callId . '_' . $event,
+                'payload' => json_encode($data),
+                'provider' => 'retell',
+                'status' => 'processed',
+                'processed_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
+            // CRITICAL FIX: Erstelle Call wenn er nicht existiert (egal bei welchem Event)
+            // Extract all available data
+            $callData = RetellDataExtractor::extractCallData($data);
+            
+            // Add company and branch info
+            $callData['company_id'] = $branch->company_id;
+            $callData['branch_id'] = $branch->id;
+            
+            Log::info('🔍 Creating new call with metadata', [
+                'call_id' => $callId,
+                'event' => $event,
+                'has_metadata' => isset($callData['metadata']),
+                'metadata_content' => $callData['metadata'] ?? []
+            ]);
+            
+            // Set appropriate status based on event
+            if ($event === 'call_started') {
+                $callData['call_status'] = 'in_progress';
+            } elseif ($event === 'call_ended') {
+                $callData['call_status'] = 'ended';
+            } else {
+                $callData['call_status'] = $callData['call_status'] ?? 'ended';
+            }
+            
+            // Create the call
+            $call = Call::withoutGlobalScope(TenantScope::class)
+                ->withoutGlobalScope(\App\Models\Scopes\CompanyScope::class)
+                ->create($callData);
+            
+            Log::info('✅ Call erfolgreich erstellt', [
+                'call_id' => $call->call_id,
+                'company' => $branch->company->name ?? 'Unknown',
+                'branch' => $branch->name,
+                'status' => $call->call_status,
+                'event' => $event,
+                'detected_language' => $call->detected_language ?? 'not detected',
+                'language_confidence' => $call->language_confidence ?? 0
+            ]);
+            
+            // Dispatch language mismatch detection job if language was detected
+            if ($call->detected_language) {
+                \App\Jobs\DetectLanguageMismatchJob::dispatch($call->id)
+                    ->onQueue('default')
+                    ->delay(now()->addSeconds(5));
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Call created successfully',
+                'call_id' => $call->call_id
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('❌ Fehler bei Webhook-Verarbeitung', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+}

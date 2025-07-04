@@ -1,0 +1,191 @@
+/* Modern Call Detail Page Styling */
+
+/* Glassmorphism Effects */
+.fi-in-entry-wrp {
+    backdrop-filter: blur(10px);
+}
+
+/* KPI Cards */
+.kpi-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    transition: all 0.3s ease;
+}
+
+.dark .kpi-card {
+    background: rgba(31, 41, 55, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.25);
+}
+
+/* Audio Player Enhancements */
+.audio-player-modern {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(249, 250, 251, 0.9) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .audio-player-modern {
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.9) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Waveform Styling */
+#waveform-simple {
+    position: relative;
+    overflow: hidden;
+}
+
+#waveform-simple::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        rgba(59, 130, 246, 0.05) 0%, 
+        rgba(147, 51, 234, 0.05) 100%);
+    pointer-events: none;
+}
+
+/* Transcript Section Improvements */
+.transcript-container {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .transcript-container {
+    background: rgba(31, 41, 55, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Analysis Cards */
+.analysis-card {
+    background: linear-gradient(135deg, rgba(249, 250, 251, 0.8) 0%, rgba(243, 244, 246, 0.8) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.dark .analysis-card {
+    background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 0.8) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.analysis-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Header Section */
+.call-detail-header {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .call-detail-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Compact Header Styles */
+.fi-section.bg-gradient-to-r {
+    padding: 1rem 0 !important;
+}
+
+.fi-section.bg-gradient-to-r .fi-in-entry-wrp-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(107 114 128);
+}
+
+.fi-section.bg-gradient-to-r .fi-in-entry {
+    font-size: 0.875rem;
+}
+
+/* Inline Label Adjustments */
+.fi-in-entry-wrp[wire\\:key*="inlineLabel"] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.fi-in-entry-wrp[wire\\:key*="inlineLabel"] .fi-in-entry-wrp-label {
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* Smooth Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fi-in-entry-wrp {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Gradient Text */
+.gradient-text {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Improved Buttons */
+.fi-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s, height 0.3s;
+}
+
+.fi-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+}

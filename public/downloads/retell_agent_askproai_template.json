@@ -1,0 +1,195 @@
+{
+  "agent_name": "AskProAI Terminbuchungs-Agent",
+  "voice_id": "elevenlabs-Matilda",
+  "voice_speed": 0.95,
+  "voice_temperature": 0.0,
+  "language": "de",
+  "responsiveness": 1.0,
+  "interruption_sensitivity": 0.7,
+  "enable_backchannel": true,
+  "backchannel_frequency": 0.8,
+  "backchannel_words": ["ja", "genau", "verstehe", "aha", "natürlich", "hmm", "okay"],
+  "reminder_trigger_ms": 10000,
+  "reminder_interval_ms": 5000,
+  "normalize_speech": false,
+  "ambient_sound": null,
+  "ambient_sound_volume": 1.0,
+  "backoff_seconds": 1,
+  "end_call_after_silence_ms": 10000,
+  "max_call_duration_ms": 600000,
+  "enable_voicemail_detection": true,
+  "voicemail_detection_timeout_ms": 3500,
+  "enable_waitlist_for_voicemail_detection": false,
+  "opt_out_sensitive_data_storage": false,
+  "pronunciation_dictionary": [
+    {
+      "word": "AskProAI",
+      "pronunciation": "Ask Pro A I"
+    }
+  ],
+  "response_engine": {
+    "type": "retell-llm",
+    "llm_id": null
+  },
+  "webhook_url": "https://api.askproai.de/api/retell/webhook",
+  "functions": [
+    {
+      "name": "check_availability",
+      "description": "Prüft verfügbare Termine für eine bestimmte Dienstleistung",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "service_type": {
+            "type": "string",
+            "description": "Die gewünschte Dienstleistung"
+          },
+          "preferred_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Gewünschtes Datum (YYYY-MM-DD)"
+          },
+          "preferred_time": {
+            "type": "string",
+            "description": "Bevorzugte Uhrzeit (HH:MM)"
+          }
+        },
+        "required": ["service_type", "preferred_date"]
+      },
+      "url": "https://api.askproai.de/api/functions/check-availability",
+      "method": "POST",
+      "speak_on_send": true,
+      "speak_on_receive": true
+    },
+    {
+      "name": "book_appointment",
+      "description": "Bucht einen Termin mit den angegebenen Details",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_name": {
+            "type": "string",
+            "description": "Vollständiger Name des Kunden"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Telefonnummer des Kunden"
+          },
+          "email": {
+            "type": "string",
+            "description": "E-Mail-Adresse des Kunden (optional)"
+          },
+          "service_type": {
+            "type": "string",
+            "description": "Gebuchte Dienstleistung"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Datum des Termins (YYYY-MM-DD)"
+          },
+          "time": {
+            "type": "string",
+            "description": "Uhrzeit des Termins (HH:MM)"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Zusätzliche Notizen oder Wünsche"
+          }
+        },
+        "required": ["customer_name", "phone", "service_type", "date", "time"]
+      },
+      "url": "https://api.askproai.de/api/functions/book-appointment",
+      "method": "POST",
+      "speak_on_send": false,
+      "speak_on_receive": true
+    },
+    {
+      "name": "get_business_info",
+      "description": "Liefert Informationen über das Geschäft",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "info_type": {
+            "type": "string",
+            "enum": ["hours", "location", "services", "prices"],
+            "description": "Art der gewünschten Information"
+          }
+        },
+        "required": ["info_type"]
+      },
+      "url": "https://api.askproai.de/api/functions/business-info",
+      "method": "POST",
+      "speak_on_send": false,
+      "speak_on_receive": true
+    },
+    {
+      "name": "cancel_appointment",
+      "description": "Storniert einen bestehenden Termin",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "description": "ID des Termins"
+          },
+          "customer_phone": {
+            "type": "string",
+            "description": "Telefonnummer des Kunden (alternativ zu ID)"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Datum des Termins (wenn keine ID)"
+          }
+        }
+      },
+      "url": "https://api.askproai.de/api/functions/cancel-appointment",
+      "method": "POST",
+      "speak_on_send": false,
+      "speak_on_receive": true
+    },
+    {
+      "name": "reschedule_appointment",
+      "description": "Verschiebt einen bestehenden Termin",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "description": "ID des Termins"
+          },
+          "new_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Neues Datum (YYYY-MM-DD)"
+          },
+          "new_time": {
+            "type": "string",
+            "description": "Neue Uhrzeit (HH:MM)"
+          }
+        },
+        "required": ["appointment_id", "new_date", "new_time"]
+      },
+      "url": "https://api.askproai.de/api/functions/reschedule-appointment",
+      "method": "POST",
+      "speak_on_send": false,
+      "speak_on_receive": true
+    }
+  ],
+  "custom_keywords": [
+    "Termin",
+    "Buchung",
+    "Appointment",
+    "vereinbaren",
+    "umbuchen",
+    "stornieren",
+    "absagen",
+    "verschieben"
+  ],
+  "boosted_keywords": [],
+  "metadata": {
+    "created_by": "AskProAI",
+    "version": "1.0",
+    "template": "appointment_booking_de"
+  }
+}

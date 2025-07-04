@@ -13,8 +13,8 @@ use Filament\Tables\Filters\SelectFilter;
 
 class ServiceResource extends Resource
 {
-    protected static ?string $navigationGroup = 'Verwaltung';
-    protected static ?int $navigationSort = 95;
+    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    protected static ?int $navigationSort = 40;
 
     public static function canViewAny(): bool
     {

@@ -20,33 +20,38 @@ class NavigationService
             'sort' => 100,
             'icon' => 'heroicon-o-calendar-days',
         ],
-        'staff_services' => [
-            'label' => 'Personal & Services',
-            'sort' => 200,
-            'icon' => 'heroicon-o-user-group',
-        ],
         'company_structure' => [
             'label' => 'Unternehmensstruktur',
-            'sort' => 300,
+            'sort' => 200,
             'icon' => 'heroicon-o-building-office',
+        ],
+        'integrations' => [
+            'label' => 'Integrationen',
+            'sort' => 250,
+            'icon' => 'heroicon-o-puzzle-piece',
         ],
         'setup_config' => [
             'label' => 'Einrichtung & Konfiguration',
-            'sort' => 400,
+            'sort' => 300,
             'icon' => 'heroicon-o-cog-6-tooth',
         ],
         'billing' => [
             'label' => 'Abrechnung',
-            'sort' => 500,
+            'sort' => 400,
             'icon' => 'heroicon-o-banknotes',
         ],
-        'system_monitoring' => [
-            'label' => 'System & Überwachung',
-            'sort' => 600,
-            'icon' => 'heroicon-o-cpu-chip',
+        'reports' => [
+            'label' => 'Berichte & Analysen',
+            'sort' => 500,
+            'icon' => 'heroicon-o-chart-bar',
         ],
-        'administration' => [
-            'label' => 'Verwaltung',
+        'system_admin' => [
+            'label' => 'System & Verwaltung',
+            'sort' => 600,
+            'icon' => 'heroicon-o-server-stack',
+        ],
+        'compliance' => [
+            'label' => 'Compliance & Sicherheit',
             'sort' => 700,
             'icon' => 'heroicon-o-shield-check',
         ],
@@ -60,64 +65,64 @@ class NavigationService
         'dashboard' => 'dashboard',
         'executive-dashboard' => 'dashboard',
         'operational-dashboard' => 'dashboard',
-        'operations-dashboard' => 'dashboard',
-        'roi-dashboard' => 'dashboard',
+        'optimized-operational-dashboard' => 'dashboard',
         
-        // Täglicher Betrieb
+        // Täglicher Betrieb (Daily Operations)
         'appointment' => 'daily_operations',
         'call' => 'daily_operations',
         'customer' => 'daily_operations',
-        'live-appointment-board' => 'daily_operations',
-        'live-call-monitor' => 'daily_operations',
+        'live-calls-widget' => 'daily_operations',
+        'compact-live-calls-widget' => 'daily_operations',
         
-        // Personal & Services
-        'staff' => 'staff_services',
-        'service' => 'staff_services',
-        'calcom-event-type' => 'staff_services',
-        'event-type-management' => 'staff_services',
-        'staff-event-assignment' => 'staff_services',
-        'staff-event-assignment-modern' => 'staff_services',
-        'working-hours' => 'staff_services',
-        
-        // Unternehmensstruktur
+        // Unternehmensstruktur (Company Structure)
         'company' => 'company_structure',
         'branch' => 'company_structure',
+        'staff' => 'company_structure',
+        'master-service' => 'company_structure',
         'phone-number' => 'company_structure',
-        'business-hours-template' => 'company_structure',
+        'calcom-event-type' => 'company_structure',
+        'working-hour' => 'company_structure',
+        'quick-setup-wizard-v2' => 'company_structure',
         
-        // Einrichtung & Konfiguration
-        'quick-setup-wizard' => 'setup_config',
-        'onboarding-wizard' => 'setup_config',
+        // Integrationen (Integrations)
+        'retell-ultimate-control-center' => 'integrations',
+        
+        // Einrichtung & Konfiguration (Setup & Configuration)
         'event-type-import-wizard' => 'setup_config',
-        'calcom-sync-status' => 'setup_config',
-        'calcom-api-test' => 'setup_config',
-        'calcom-live-test' => 'setup_config',
-        'calcom-complete-test' => 'setup_config',
-        'webhook-monitor' => 'setup_config',
+        'event-type-setup-wizard' => 'setup_config',
+        'notification-settings' => 'setup_config',
+        'integration-hub' => 'setup_config',
+        'calcom-booking-test' => 'setup_config',
         
-        // Abrechnung
+        // Abrechnung (Billing)
         'invoice' => 'billing',
-        'company-pricing' => 'billing',
-        'pricing-calculator' => 'billing',
-        'tax-configuration' => 'billing',
-        'customer-portal-management' => 'billing',
+        'billing-period' => 'billing',
+        'subscription' => 'billing',
+        'pricing-plan' => 'billing',
+        'service-addon' => 'billing',
+        'billing-alerts-management' => 'billing',
+        'customer-billing-dashboard' => 'billing',
         
-        // System & Überwachung
-        'system-health-simple' => 'system_monitoring',
-        'system-cockpit-simple' => 'system_monitoring',
-        'ultimate-system-cockpit' => 'system_monitoring',
-        'ultimate-system-cockpit-optimized' => 'system_monitoring',
-        'api-health-monitor' => 'system_monitoring',
-        'system-monitoring' => 'system_monitoring',
-        'system-improvements' => 'system_monitoring',
-        'event-analytics-dashboard' => 'system_monitoring',
+        // Berichte & Analysen (Reports & Analytics)
+        'reports-and-analytics' => 'reports',
+        'customer-insights-widget' => 'reports',
+        'agent-performance-widget' => 'reports',
+        'subscription-status-widget' => 'reports',
         
-        // Verwaltung
-        'user' => 'administration',
-        'tenant' => 'administration',
-        'gdpr-request' => 'administration',
-        'knowledge-base-manager' => 'administration',
-        'mcp-dashboard' => 'administration',
+        // System & Verwaltung (System & Administration)
+        'user' => 'system_admin',
+        'circuit-breaker-monitor' => 'system_admin',
+        'documentation-hub' => 'system_admin',
+        'documentation-health-widget' => 'system_admin',
+        'quick-docs' => 'system_admin',
+        'quick-docs-enhanced' => 'system_admin',
+        'system-monitoring-dashboard' => 'system_admin',
+        'mcp-dashboard' => 'system_admin',
+        
+        // Compliance & Sicherheit (Compliance & Security)
+        'gdpr-management' => 'compliance',
+        'gdpr-request' => 'compliance',
+        'two-factor-authentication' => 'compliance',
     ];
 
     /**
@@ -126,12 +131,13 @@ class NavigationService
     const GROUP_PERMISSIONS = [
         'dashboard' => null, // Available to all authenticated users
         'daily_operations' => null, // Available to all authenticated users
-        'staff_services' => 'manage_staff',
         'company_structure' => 'manage_company',
+        'integrations' => 'manage_settings',
         'setup_config' => 'manage_settings',
         'billing' => 'manage_billing',
-        'system_monitoring' => 'view_system_health',
-        'administration' => 'super_admin',
+        'reports' => 'view_reports',
+        'system_admin' => 'view_system_health',
+        'compliance' => 'manage_compliance',
     ];
 
     /**
@@ -196,59 +202,64 @@ class NavigationService
             'dashboard' => 1,
             'executive-dashboard' => 2,
             'operational-dashboard' => 3,
-            'operations-dashboard' => 4,
-            'roi-dashboard' => 5,
+            'optimized-operational-dashboard' => 4,
             
             // Daily operations
             'appointment' => 1,
             'call' => 2,
             'customer' => 3,
-            'live-appointment-board' => 10,
-            'live-call-monitor' => 11,
-            
-            // Staff & Services
-            'staff' => 1,
-            'service' => 2,
-            'calcom-event-type' => 3,
-            'event-type-management' => 4,
-            'working-hours' => 5,
-            'staff-event-assignment' => 10,
-            'staff-event-assignment-modern' => 11,
+            'live-calls-widget' => 10,
+            'compact-live-calls-widget' => 11,
             
             // Company structure
             'company' => 1,
             'branch' => 2,
-            'phone-number' => 3,
-            'business-hours-template' => 10,
+            'staff' => 3,
+            'master-service' => 4,
+            'phone-number' => 5,
+            'calcom-event-type' => 6,
+            'working-hour' => 7,
+            'quick-setup-wizard-v2' => 8,
+            
+            // Integrations
+            'retell-ultimate-control-center' => 1,
             
             // Setup & Config
-            'quick-setup-wizard' => 1,
-            'onboarding-wizard' => 2,
             'event-type-import-wizard' => 3,
-            'calcom-sync-status' => 10,
-            'webhook-monitor' => 20,
+            'event-type-setup-wizard' => 4,
+            'notification-settings' => 5,
+            'integration-hub' => 10,
+            'calcom-booking-test' => 20,
             
             // Billing
             'invoice' => 1,
-            'company-pricing' => 2,
-            'pricing-calculator' => 3,
-            'tax-configuration' => 4,
-            'customer-portal-management' => 10,
+            'billing-period' => 2,
+            'subscription' => 3,
+            'pricing-plan' => 4,
+            'service-addon' => 5,
+            'billing-alerts-management' => 10,
+            'customer-billing-dashboard' => 11,
             
-            // System monitoring
-            'system-health-simple' => 1,
-            'system-cockpit-simple' => 2,
-            'api-health-monitor' => 3,
-            'system-monitoring' => 10,
-            'system-improvements' => 11,
-            'event-analytics-dashboard' => 20,
+            // Reports
+            'reports-and-analytics' => 1,
+            'customer-insights-widget' => 10,
+            'agent-performance-widget' => 11,
+            'subscription-status-widget' => 12,
             
-            // Administration
+            // System administration
             'user' => 1,
-            'tenant' => 2,
-            'gdpr-request' => 3,
-            'knowledge-base-manager' => 10,
-            'mcp-dashboard' => 20,
+            'system-monitoring-dashboard' => 2,
+            'mcp-dashboard' => 3,
+            'circuit-breaker-monitor' => 10,
+            'documentation-hub' => 20,
+            'documentation-health-widget' => 21,
+            'quick-docs' => 22,
+            'quick-docs-enhanced' => 23,
+            
+            // Compliance
+            'gdpr-management' => 1,
+            'gdpr-request' => 2,
+            'two-factor-authentication' => 10,
         ];
         
         $key = strtolower(str_replace(['Resource', 'Page'], '', class_basename($resource)));

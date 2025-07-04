@@ -11,8 +11,11 @@ import './cookie-consent';
 // Import Company Integration Portal enhancements
 import './company-integration-portal-clean';
 
-// Import Alpine dropdown fixes
-import './alpine-dropdown-fix';
+// Import unified dropdown manager
+import './dropdown-manager';
+
+// Import autocomplete fixer
+import './autocomplete-fixer';
 
 // Import Ultimate Portal Interactions
 import './ultimate-portal-interactions';

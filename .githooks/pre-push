@@ -1,0 +1,143 @@
+#\!/bin/sh
+#
+# Pre-push hook for AskProAI
+# Prevents pushing code with poor documentation or failing tests
+#
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo "🚀 Running pre-push checks..."
+
+# 1. Run all tests
+echo -n "🧪 Running test suite... "
+if php artisan test --parallel > /tmp/test-output.txt 2>&1; then
+    echo -e "${GREEN}✓${NC}"
+    rm -f /tmp/test-output.txt
+else
+    echo -e "${RED}✗${NC}"
+    echo -e "${RED}Tests are failing\! Fix them before pushing.${NC}"
+    cat /tmp/test-output.txt
+    rm -f /tmp/test-output.txt
+    exit 1
+fi
+
+# 2. Check code coverage (if available)
+if command -v ./vendor/bin/phpunit >/dev/null 2>&1; then
+    echo -n "📊 Checking code coverage... "
+    COVERAGE=$(php artisan test --coverage-text 2>/dev/null  < /dev/null |  grep "Lines:" | awk '{print $2}' | sed 's/%//')
+    
+    if [ -n "$COVERAGE" ]; then
+        if [ "$COVERAGE" -lt "80" ]; then
+            echo -e "${YELLOW}⚠️  Coverage is ${COVERAGE}% (target: 80%)${NC}"
+        else
+            echo -e "${GREEN}✓ Coverage is ${COVERAGE}%${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Skipped (coverage not available)${NC}"
+    fi
+fi
+
+# 3. Documentation health check
+if [ -f "artisan" ] && php artisan list | grep -q "docs:check-updates"; then
+    echo -n "📚 Checking documentation health... "
+    php artisan docs:check-updates --json > /tmp/doc-health.json 2>/dev/null
+    
+    if [ $? -eq 0 ] && [ -f /tmp/doc-health.json ]; then
+        HEALTH_SCORE=$(cat /tmp/doc-health.json | grep -o '"health_score":[0-9]*' | cut -d: -f2)
+        
+        if [ -n "$HEALTH_SCORE" ]; then
+            if [ "$HEALTH_SCORE" -lt 50 ]; then
+                echo -e "${RED}✗ Documentation health is critical (${HEALTH_SCORE}%)${NC}"
+                echo -e "${RED}Update documentation before pushing\!${NC}"
+                rm -f /tmp/doc-health.json
+                exit 1
+            elif [ "$HEALTH_SCORE" -lt 80 ]; then
+                echo -e "${YELLOW}⚠️  Documentation health is ${HEALTH_SCORE}%${NC}"
+            else
+                echo -e "${GREEN}✓ Documentation health is ${HEALTH_SCORE}%${NC}"
+            fi
+        fi
+        
+        rm -f /tmp/doc-health.json
+    else
+        echo -e "${YELLOW}Skipped${NC}"
+    fi
+fi
+
+# 4. Security check
+echo -n "🔐 Security check... "
+SECURITY_ISSUES=0
+
+# Check for exposed credentials
+if git diff origin/main --name-only | xargs grep -l "password\|api_key\|secret" 2>/dev/null | grep -v ".env.example" > /tmp/security-files.txt; then
+    if [ -s /tmp/security-files.txt ]; then
+        SECURITY_ISSUES=1
+        echo -e "${RED}✗${NC}"
+        echo -e "${RED}Potential security issues in:${NC}"
+        cat /tmp/security-files.txt
+    fi
+    rm -f /tmp/security-files.txt
+fi
+
+if [ $SECURITY_ISSUES -eq 0 ]; then
+    echo -e "${GREEN}✓${NC}"
+fi
+
+# 5. Check for unresolved conflicts
+echo -n "🔀 Checking for merge conflicts... "
+if git grep -l "<<<<<<< HEAD\|=======" > /tmp/conflicts.txt 2>/dev/null; then
+    if [ -s /tmp/conflicts.txt ]; then
+        echo -e "${RED}✗${NC}"
+        echo -e "${RED}Unresolved merge conflicts found in:${NC}"
+        cat /tmp/conflicts.txt
+        rm -f /tmp/conflicts.txt
+        exit 1
+    fi
+fi
+echo -e "${GREEN}✓${NC}"
+rm -f /tmp/conflicts.txt
+
+# 6. Large file check
+echo -n "📏 Checking file sizes... "
+LARGE_FILES=$(git diff --stat origin/main | grep -E "[0-9]+ \+\+\+" | awk '$1 > 1000 {print $3}')
+if [ -n "$LARGE_FILES" ]; then
+    echo -e "${YELLOW}⚠️${NC}"
+    echo -e "${YELLOW}Large files detected:${NC}"
+    echo "$LARGE_FILES"
+else
+    echo -e "${GREEN}✓${NC}"
+fi
+
+# 7. Final code quality check
+echo -n "🎨 Final code quality check... "
+ERROR_COUNT=0
+
+# Run Pint
+if ./vendor/bin/pint --test > /dev/null 2>&1; then
+    echo -ne "${GREEN}✓${NC} "
+else
+    echo -ne "${RED}✗ (formatting)${NC} "
+    ERROR_COUNT=$((ERROR_COUNT + 1))
+fi
+
+# Run PHPStan
+if ./vendor/bin/phpstan analyse --no-progress > /dev/null 2>&1; then
+    echo -e "${GREEN}✓${NC}"
+else
+    echo -e "${RED}✗ (static analysis)${NC}"
+    ERROR_COUNT=$((ERROR_COUNT + 1))
+fi
+
+if [ $ERROR_COUNT -gt 0 ]; then
+    echo -e "${RED}Fix code quality issues before pushing\!${NC}"
+    echo "Run: composer quality"
+    exit 1
+fi
+
+echo ""
+echo -e "${GREEN}✅ All pre-push checks passed\! Ready to push.${NC}"

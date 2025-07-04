@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\WebhookEvent;
 use App\Services\WebhookProcessor;
+use App\Services\Webhooks\WebhookEventLogger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -44,7 +45,7 @@ class ProcessWebhookJob implements ShouldQueue
     /**
      * Execute the job
      */
-    public function handle(WebhookProcessor $processor): void
+    public function handle(WebhookProcessor $processor, WebhookEventLogger $eventLogger): void
     {
         $startTime = microtime(true);
         
@@ -55,6 +56,11 @@ class ProcessWebhookJob implements ShouldQueue
             'correlation_id' => $this->correlationId,
             'attempt' => $this->attempts(),
         ]);
+        
+        // Log retry attempt if this is not the first attempt
+        if ($this->attempts() > 1) {
+            $eventLogger->logRetry($this->webhookEvent, $this->attempts(), $this->tries);
+        }
         
         try {
             // Mark as processing

@@ -147,7 +147,7 @@ class VerifyNewFeatures extends Command
         
         $eventFiles = [
             'EventTypeImportWizard' => 'app/Filament/Admin/Pages/EventTypeImportWizard.php',
-            'StaffEventAssignment' => 'app/Filament/Admin/Pages/StaffEventAssignment.php',
+            'StaffEventAssignmentModern' => 'app/Filament/Admin/Pages/StaffEventAssignmentModern.php',
             'CalcomEventTypeResource' => 'app/Filament/Admin/Resources/CalcomEventTypeResource.php',
             'AvailabilityService' => 'app/Services/AvailabilityService.php',
         ];

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/features/retell-webhook-configuration/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Retell Webhook Configuration - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Retell Webhook Configuration";
+        var mkdocs_page_input_path = "features/retell-webhook-configuration.md";
+        var mkdocs_page_url = "/mkdocs/features/retell-webhook-configuration/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>Retell Webhook Configuration</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="retell-webhook-configuration">Retell Webhook Configuration</h1>
+<p>!!! success "New Feature"
+    The Retell Webhook Configuration interface allows direct management of Retell.ai webhooks and custom functions from within the AskProAI admin panel, eliminating the need to access the Retell.ai dashboard.</p>
+<h2 id="overview">🎯 Overview</h2>
+<p>The Retell Webhook Configuration page (<code>/admin/retell-webhook-configuration</code>) provides a comprehensive interface for managing all aspects of Retell.ai integration:</p>
+<ul>
+<li>Webhook URL configuration</li>
+<li>Custom function deployment</li>
+<li>Agent prompt management</li>
+<li>Real-time testing tools</li>
+<li>Configuration synchronization</li>
+</ul>
+<h2 id="key-features">🚀 Key Features</h2>
+<h3 id="1-webhook-management">1. Webhook Management</h3>
+<p>Configure webhook endpoints directly from the UI:</p>
+<pre><code class="language-yaml">Webhook URL: https://api.askproai.de/api/mcp/retell/custom-function
+Supported Events:
+  - call_started
+  - call_ended
+  - call_analyzed
+</code></pre>
+<h3 id="2-custom-function-editor">2. Custom Function Editor</h3>
+<p>Built-in editor for Retell.ai custom functions with syntax highlighting:</p>
+<pre><code class="language-javascript">// Example custom function
+{
+  &quot;name&quot;: &quot;collect_appointment_information&quot;,
+  &quot;description&quot;: &quot;Collects appointment booking details&quot;,
+  &quot;parameters&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;name&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;Customer name&quot; },
+      &quot;date&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;Appointment date&quot; },
+      &quot;time&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;Appointment time&quot; },
+      &quot;service&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;Service requested&quot; }
+    },
+    &quot;required&quot;: [&quot;name&quot;, &quot;date&quot;, &quot;time&quot;]
+  }
+}
+</code></pre>
+<h3 id="3-agent-configuration">3. Agent Configuration</h3>
+<p>Update agent prompts and settings without leaving AskProAI:</p>
+<ul>
+<li>System prompts</li>
+<li>Greeting messages</li>
+<li>Voice settings</li>
+<li>Language preferences</li>
+<li>Custom instructions</li>
+</ul>
+<h3 id="4-testing-tools">4. Testing Tools</h3>
+<p>Comprehensive testing interface:</p>
+<ul>
+<li><strong>Webhook Tester</strong>: Send test webhooks to verify configuration</li>
+<li><strong>Function Simulator</strong>: Test custom functions with sample data</li>
+<li><strong>Call Simulator</strong>: Simulate entire call flows</li>
+<li><strong>Debug Console</strong>: View real-time logs and responses</li>
+</ul>
+<h2 id="user-interface">📋 User Interface</h2>
+<h3 id="main-dashboard">Main Dashboard</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│ Retell Webhook Configuration                           ⚙️ 🔄  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ Company: AskProAI Demo Company                              │
+│ Status: ● Connected                                         │
+│                                                             │
+│ ┌─────────────────────┐ ┌─────────────────────┐           │
+│ │ Webhook Settings    │ │ Custom Functions    │           │
+│ ├─────────────────────┤ ├─────────────────────┤           │
+│ │ URL: ✓ Configured   │ │ Deployed: 3         │           │
+│ │ Events: 3 active    │ │ Last sync: 2 min    │           │
+│ │ [Configure]         │ │ [Manage]            │           │
+│ └─────────────────────┘ └─────────────────────┘           │
+│                                                             │
+│ ┌─────────────────────────────────────────────┐           │
+│ │ Agents (2)                                   │           │
+│ ├─────────────────────────────────────────────┤           │
+│ │ ▶ Main Reception Agent                       │           │
+│ │   ID: agent_abc123                           │           │
+│ │   Phone: +49 30 837 93 369                   │           │
+│ │   [Edit Prompt] [Test] [Deploy Functions]    │           │
+│ │                                               │           │
+│ │ ▶ Backup Agent                               │           │
+│ │   ID: agent_xyz789                           │           │
+│ │   Phone: +49 30 837 93 370                   │           │
+│ │   [Edit Prompt] [Test] [Deploy Functions]    │           │
+│ └─────────────────────────────────────────────┘           │
+│                                                             │
+│ [Test Webhook] [Sync All] [View Logs]                      │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="webhook-configuration-modal">Webhook Configuration Modal</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│ Configure Webhook                                      X    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ Webhook URL:                                                │
+│ ┌─────────────────────────────────────────────────────┐   │
+│ │ https://api.askproai.de/api/mcp/retell/custom-func │   │
+│ └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│ Events to Subscribe:                                        │
+│ ☑ call_started    - Triggered when call begins             │
+│ ☑ call_ended      - Triggered when call completes          │
+│ ☑ call_analyzed   - Triggered after call analysis          │
+│ ☐ call_transferred - Triggered on call transfer            │
+│                                                             │
+│ Authentication:                                             │
+│ ┌─────────────────────────────────────────────────────┐   │
+│ │ Secret: ••••••••••••••••••••••                     │   │
+│ └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│ Apply to Agents:                                            │
+│ ☑ All agents in company                                     │
+│ ☐ Selected agents only                                      │
+│                                                             │
+│ [Cancel]                              [Test] [Save &amp; Deploy] │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h2 id="implementation-details">🔧 Implementation Details</h2>
+<h3 id="mcp-server-integration">MCP Server Integration</h3>
+<p>All operations go through the MCP Gateway:</p>
+<pre><code class="language-php">// Frontend makes JSON-RPC call
+POST /api/mcp/gateway
+{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;retell_config.updateWebhook&quot;,
+    &quot;params&quot;: {
+        &quot;company_id&quot;: 1,
+        &quot;webhook_url&quot;: &quot;https://api.askproai.de/api/mcp/retell/custom-function&quot;,
+        &quot;events&quot;: [&quot;call_started&quot;, &quot;call_ended&quot;, &quot;call_analyzed&quot;],
+        &quot;agent_ids&quot;: [&quot;agent_abc123&quot;, &quot;agent_xyz789&quot;]
+    },
+    &quot;id&quot;: &quot;req_123&quot;
+}
+
+// MCP Server handles the update
+$result = $retellConfigMCP-&gt;updateWebhook($params);
+</code></pre>
+<h3 id="custom-function-deployment">Custom Function Deployment</h3>
+<pre><code class="language-php">// Deploy custom functions to agents
+$functions = [
+    'collect_appointment_information' =&gt; [...],
+    'change_appointment_details' =&gt; [...],
+    'cancel_appointment' =&gt; [...]
+];
+
+$result = $retellConfigMCP-&gt;deployCustomFunctions([
+    'company_id' =&gt; 1,
+    'agent_ids' =&gt; ['agent_abc123'],
+    'functions' =&gt; $functions
+]);
+</code></pre>
+<h3 id="testing-workflow">Testing Workflow</h3>
+<ol>
+<li><strong>Configure Webhook</strong>: Set URL and events</li>
+<li><strong>Deploy Functions</strong>: Push custom functions to agents</li>
+<li><strong>Test Webhook</strong>: Send test payload</li>
+<li><strong>Verify Response</strong>: Check logs and responses</li>
+<li><strong>Make Test Call</strong>: Verify end-to-end flow</li>
+</ol>
+<h2 id="monitoring-debugging">📊 Monitoring &amp; Debugging</h2>
+<h3 id="real-time-logs">Real-time Logs</h3>
+<p>View webhook activity in real-time:</p>
+<pre><code>[2025-06-23 14:32:15] Webhook received: call_ended
+[2025-06-23 14:32:15] Signature verified ✓
+[2025-06-23 14:32:15] Call ID: call_abc123
+[2025-06-23 14:32:16] Custom function data found ✓
+[2025-06-23 14:32:16] Creating appointment...
+[2025-06-23 14:32:17] Appointment created: #12345 ✓
+[2025-06-23 14:32:17] Webhook processed successfully
+</code></pre>
+<h3 id="debug-information">Debug Information</h3>
+<p>Access detailed debug information:</p>
+<ul>
+<li>Request/response payloads</li>
+<li>Timing information</li>
+<li>Error traces</li>
+<li>Cache contents</li>
+<li>Circuit breaker status</li>
+</ul>
+<h2 id="security">🔒 Security</h2>
+<h3 id="authentication-flow">Authentication Flow</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant UI as Admin UI
+    participant GW as MCP Gateway
+    participant RC as Retell Config MCP
+    participant RA as Retell API
+
+    UI-&gt;&gt;GW: Update webhook (with auth token)
+    GW-&gt;&gt;GW: Verify user permissions
+    GW-&gt;&gt;RC: Forward request
+    RC-&gt;&gt;RC: Validate company ownership
+    RC-&gt;&gt;RA: Update agent webhook
+    RA--&gt;&gt;RC: Confirmation
+    RC--&gt;&gt;GW: Success response
+    GW--&gt;&gt;UI: Update complete
+</code></pre>
+<h3 id="security-features">Security Features</h3>
+<ul>
+<li><strong>Multi-tenancy</strong>: Company-scoped access only</li>
+<li><strong>Permission Checks</strong>: Role-based access control</li>
+<li><strong>Signature Verification</strong>: HMAC-SHA256 validation</li>
+<li><strong>Audit Logging</strong>: All configuration changes logged</li>
+<li><strong>Encrypted Storage</strong>: API keys encrypted at rest</li>
+</ul>
+<h2 id="best-practices">🚀 Best Practices</h2>
+<ol>
+<li><strong>Always Test First</strong>: Use the test webhook feature before deploying</li>
+<li><strong>Monitor Logs</strong>: Check logs after configuration changes</li>
+<li><strong>Sync Regularly</strong>: Keep local config in sync with Retell</li>
+<li><strong>Document Prompts</strong>: Keep a changelog of prompt modifications</li>
+<li><strong>Backup Functions</strong>: Export custom functions before changes</li>
+</ol>
+<h2 id="troubleshooting">📝 Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<ol>
+<li><strong>Webhook Not Receiving Calls</strong></li>
+<li>Verify webhook URL is publicly accessible</li>
+<li>Check signature secret matches</li>
+<li>Ensure events are subscribed</li>
+<li>
+<p>Test with webhook tester</p>
+</li>
+<li>
+<p><strong>Custom Functions Not Working</strong></p>
+</li>
+<li>Verify function syntax</li>
+<li>Check required parameters</li>
+<li>Test with function simulator</li>
+<li>
+<p>Review agent logs</p>
+</li>
+<li>
+<p><strong>Configuration Not Syncing</strong></p>
+</li>
+<li>Check API key validity</li>
+<li>Verify network connectivity</li>
+<li>Review error logs</li>
+<li>Try manual sync</li>
+</ol>
+<h3 id="debug-commands">Debug Commands</h3>
+<pre><code class="language-bash"># Test webhook endpoint
+curl -X POST https://api.askproai.de/api/mcp/retell/custom-function \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;x-retell-signature: test_signature&quot; \
+  -d '{&quot;event&quot;: &quot;test&quot;, &quot;call_id&quot;: &quot;test_123&quot;}'
+
+# Check MCP server status
+php artisan mcp:status retell_config
+
+# View recent webhook logs
+tail -f storage/logs/webhooks.log | grep retell
+
+# Debug cache contents
+php artisan tinker
+&gt;&gt;&gt; Cache::get('retell:appointment:call_123')
+</code></pre>
+<h2 id="future-enhancements">🎯 Future Enhancements</h2>
+<ul>
+<li>[ ] Webhook replay functionality</li>
+<li>[ ] A/B testing for prompts</li>
+<li>[ ] Visual flow builder for custom functions</li>
+<li>[ ] Webhook performance analytics</li>
+<li>[ ] Automated testing suite</li>
+<li>[ ] Prompt versioning system</li>
+</ul>
+<hr />
+<p>!!! tip "Pro Tip"
+    Use the "Sync All" button after major Retell.ai updates to ensure your local configuration matches the remote state.</p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\Staff;
 use App\Models\Customer;
 use App\Models\CalcomEventType;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
@@ -443,8 +444,10 @@ class CalcomWebhookHandler extends BaseWebhookHandler
     protected function sendBookingConfirmation(Appointment $appointment): void
     {
         try {
-            // TODO: Implement email notification service
-            $this->logInfo('Booking confirmation would be sent', [
+            // Use NotificationService to send confirmation
+            app(NotificationService::class)->sendAppointmentConfirmation($appointment);
+            
+            $this->logInfo('Booking confirmation sent', [
                 'appointment_id' => $appointment->id,
                 'customer_email' => $appointment->customer->email ?? null
             ]);
@@ -465,11 +468,22 @@ class CalcomWebhookHandler extends BaseWebhookHandler
     protected function sendReschedulingNotification(Appointment $appointment, Carbon $oldStartTime): void
     {
         try {
-            // TODO: Implement email notification service
-            $this->logInfo('Rescheduling notification would be sent', [
+            // Calculate old end time based on appointment duration
+            $duration = $appointment->ends_at->diffInMinutes($appointment->starts_at);
+            $oldEndTime = $oldStartTime->copy()->addMinutes($duration);
+            
+            // Use NotificationService to send rescheduling notification
+            app(NotificationService::class)->sendAppointmentRescheduledNotification(
+                $appointment,
+                $oldStartTime,
+                $oldEndTime,
+                $appointment->metadata['reschedule_reason'] ?? null
+            );
+            
+            $this->logInfo('Rescheduling notification sent', [
                 'appointment_id' => $appointment->id,
                 'old_time' => $oldStartTime->toIso8601String(),
-                'new_time' => $appointment->scheduled_at->toIso8601String()
+                'new_time' => $appointment->starts_at->toIso8601String()
             ]);
         } catch (\Exception $e) {
             $this->logError('Failed to send rescheduling notification', [
@@ -487,9 +501,15 @@ class CalcomWebhookHandler extends BaseWebhookHandler
     protected function sendCancellationNotification(Appointment $appointment): void
     {
         try {
-            // TODO: Implement email notification service
-            $this->logInfo('Cancellation notification would be sent', [
-                'appointment_id' => $appointment->id
+            // Use NotificationService to send cancellation notification
+            app(NotificationService::class)->sendAppointmentCancelledNotification(
+                $appointment,
+                $appointment->metadata['cancellation_reason'] ?? null
+            );
+            
+            $this->logInfo('Cancellation notification sent', [
+                'appointment_id' => $appointment->id,
+                'customer_email' => $appointment->customer->email ?? null
             ]);
         } catch (\Exception $e) {
             $this->logError('Failed to send cancellation notification', [

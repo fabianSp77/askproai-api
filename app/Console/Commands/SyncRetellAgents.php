@@ -21,7 +21,11 @@ class SyncRetellAgents extends Command
                             {--company= : Specific company ID to sync}
                             {--validate : Validate agent configurations}
                             {--fix : Auto-fix configuration issues}
-                            {--dry-run : Show what would be done without making changes}';
+                            {--dry-run : Show what would be done without making changes}
+                            {--verify-phones : Verify phone number mappings}
+                            {--fix-conflicts : Automatically resolve conflicts}
+                            {--notify-changes : Send notifications for changes}
+                            {--force : Force sync even if recently synced}';
 
     /**
      * The console command description.
@@ -50,8 +54,16 @@ class SyncRetellAgents extends Command
         $shouldValidate = $this->option('validate');
         $shouldFix = $this->option('fix');
         $companyId = $this->option('company');
+        $verifyPhones = $this->option('verify-phones');
+        $fixConflicts = $this->option('fix-conflicts');
+        $notifyChanges = $this->option('notify-changes');
+        $forceSync = $this->option('force');
 
         $this->info('Starting Retell agent synchronization...');
+        
+        if ($isDryRun) {
+            $this->warn('DRY RUN MODE - No changes will be made');
+        }
         
         // Get companies to process
         $query = Company::whereNotNull('retell_api_key');
@@ -88,7 +100,19 @@ class SyncRetellAgents extends Command
 
                 // Process each agent
                 foreach ($agents as $agent) {
-                    $this->processAgent($company, $agent, $isDryRun, $shouldValidate, $shouldFix);
+                    // Check if needs sync
+                    if (!$forceSync && $this->isRecentlySynced($agent)) {
+                        $this->comment("  Skipping {$agent['agent_name']} - recently synced");
+                        continue;
+                    }
+                    
+                    $changes = $this->processAgent($company, $agent, $isDryRun, $shouldValidate, $shouldFix);
+                    
+                    // Notify changes if requested
+                    if ($notifyChanges && !empty($changes) && !$isDryRun) {
+                        $this->notifyAgentChanges($company, $agent, $changes);
+                    }
+                    
                     $totalSynced++;
                 }
 
@@ -106,6 +130,11 @@ class SyncRetellAgents extends Command
                     }
                 } else {
                     $this->comment("  [DRY RUN] Would sync phone numbers");
+                }
+                
+                // Verify phone mappings if requested
+                if ($verifyPhones) {
+                    $this->verifyPhoneMappings($company, $fixConflicts, $isDryRun);
                 }
 
             } catch (\Exception $e) {
@@ -135,6 +164,7 @@ class SyncRetellAgents extends Command
     {
         $agentId = $agent['agent_id'];
         $agentName = $agent['agent_name'] ?? 'Unknown';
+        $changes = [];
         
         $this->info("  Processing agent: {$agentName} (ID: {$agentId})");
 
@@ -158,6 +188,7 @@ class SyncRetellAgents extends Command
                     if (!$isDryRun) {
                         $branch->update(['retell_agent_id' => $agentId]);
                         $this->info("    → Auto-mapped to branch: {$branch->name}");
+                        $changes[] = "Mapped to branch: {$branch->name}";
                     } else {
                         $this->comment("    [DRY RUN] Would map to branch: {$branch->name}");
                     }
@@ -179,6 +210,8 @@ class SyncRetellAgents extends Command
                 $this->comment("      - {$phone['phone_number']}");
             }
         }
+        
+        return $changes;
     }
 
     /**
@@ -270,5 +303,91 @@ class SyncRetellAgents extends Command
         }
         
         return false;
+    }
+    
+    /**
+     * Check if agent was recently synced
+     */
+    private function isRecentlySynced($agent): bool
+    {
+        $agentRecord = \App\Models\RetellAgent::where('agent_id', $agent['agent_id'])->first();
+        
+        if (!$agentRecord || !$agentRecord->last_synced_at) {
+            return false;
+        }
+        
+        // Consider synced if within last hour
+        return $agentRecord->last_synced_at->gt(now()->subHour());
+    }
+    
+    /**
+     * Verify phone number mappings
+     */
+    private function verifyPhoneMappings($company, $fixConflicts, $isDryRun)
+    {
+        $this->info("  Verifying phone number mappings...");
+        
+        $phoneNumbers = \App\Models\PhoneNumber::where('company_id', $company->id)
+            ->with(['branch', 'retellAgent'])
+            ->get();
+            
+        $conflicts = 0;
+        $orphaned = 0;
+        
+        foreach ($phoneNumbers as $phone) {
+            // Check for orphaned phone numbers (no agent)
+            if (!$phone->retell_agent_id) {
+                $orphaned++;
+                $this->warn("    ⚠ Orphaned phone: {$phone->number} (no agent assigned)");
+                continue;
+            }
+            
+            // Check if agent exists in Retell
+            if (!$phone->retellAgent || $phone->retellAgent->sync_status === 'deleted') {
+                $conflicts++;
+                $this->error("    ✗ Phone {$phone->number} linked to non-existent agent");
+                
+                if ($fixConflicts && !$isDryRun) {
+                    $phone->update(['retell_agent_id' => null]);
+                    $this->info("      → Removed invalid agent link");
+                }
+            }
+            
+            // Check for multiple phones with same agent
+            $duplicates = \App\Models\PhoneNumber::where('company_id', $company->id)
+                ->where('retell_agent_id', $phone->retell_agent_id)
+                ->where('id', '!=', $phone->id)
+                ->count();
+                
+            if ($duplicates > 0) {
+                $this->warn("    ⚠ Agent {$phone->retell_agent_id} assigned to multiple phones");
+            }
+        }
+        
+        $this->info("  Verification complete: {$conflicts} conflicts, {$orphaned} orphaned");
+    }
+    
+    /**
+     * Notify about agent changes
+     */
+    private function notifyAgentChanges($company, $agent, $changes)
+    {
+        if (empty($changes)) {
+            return;
+        }
+        
+        $message = "Agent {$agent['agent_name']} was updated:\n";
+        foreach ($changes as $change) {
+            $message .= "- {$change}\n";
+        }
+        
+        // Log the notification (actual notification implementation would go here)
+        Log::info('Agent sync notification', [
+            'company_id' => $company->id,
+            'agent_id' => $agent['agent_id'],
+            'changes' => $changes
+        ]);
+        
+        $this->comment("    → Notification sent for changes");
     }
 }

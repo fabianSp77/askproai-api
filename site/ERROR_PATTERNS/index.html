@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/ERROR_PATTERNS/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Error Patterns - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Error Patterns";
+        var mkdocs_page_input_path = "ERROR_PATTERNS.md";
+        var mkdocs_page_url = "/mkdocs/ERROR_PATTERNS/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Error Patterns</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#error-code-system">🔥 Error Code System</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#prefixes">Prefixes:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#kritische-fehler-sofort-beheben">🔴 KRITISCHE FEHLER (Sofort beheben!)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#retell_001-no-calls-imported-es-werden-keine-anrufe-eingespielt">RETELL_001: "No calls imported" / "Es werden keine Anrufe eingespielt"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#db_001-access-denied-for-user-askproai_userlocalhost">DB_001: "Access denied for user 'askproai_user'@'localhost'"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#webhook_001-invalid-signature">WEBHOOK_001: "Invalid signature"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcom_001-event-type-not-found">CALCOM_001: "Event type not found"</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#haufige-fehler">🟡 HÄUFIGE FEHLER</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#auth_001-unauthenticated">AUTH_001: "Unauthenticated"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#queue_001-job-failed-after-x-attempts">QUEUE_001: "Job failed after X attempts"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#db_002-too-many-connections">DB_002: "Too many connections"</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#performance-issues">🟢 PERFORMANCE ISSUES</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#perf_001-slow-api-response-1s">PERF_001: "Slow API Response &gt; 1s"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#perf_002-n1-query-detected">PERF_002: "N+1 Query detected"</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#debug-commands">🔧 DEBUG COMMANDS</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#schnelle-diagnose">Schnelle Diagnose:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#test-connections">Test Connections:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#error-tracking-matrix">📊 Error Tracking Matrix</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#automation-scripts">🚀 Automation Scripts</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#auto-fix-commonsh">auto-fix-common.sh</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#contributing">📝 Contributing</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Betrieb &raquo;</li>
+      <li>Error Patterns</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="askproai-error-patterns-solutions">🚨 AskProAI Error Patterns &amp; Solutions</h1>
+<blockquote>
+<p><strong>Ziel</strong>: Jeder Fehler nur EINMAL lösen. Danach Copy-Paste Solution!</p>
+</blockquote>
+<h2 id="error-code-system">🔥 Error Code System</h2>
+<h3 id="prefixes">Prefixes:</h3>
+<ul>
+<li><strong>RETELL_XXX</strong> - Retell.ai Integration Errors</li>
+<li><strong>CALCOM_XXX</strong> - Cal.com Integration Errors  </li>
+<li><strong>WEBHOOK_XXX</strong> - Webhook Processing Errors</li>
+<li><strong>AUTH_XXX</strong> - Authentication/Authorization Errors</li>
+<li><strong>DB_XXX</strong> - Database Connection/Query Errors</li>
+<li><strong>QUEUE_XXX</strong> - Queue/Job Processing Errors</li>
+</ul>
+<hr />
+<h2 id="kritische-fehler-sofort-beheben">🔴 KRITISCHE FEHLER (Sofort beheben!)</h2>
+<h3 id="retell_001-no-calls-imported-es-werden-keine-anrufe-eingespielt">RETELL_001: "No calls imported" / "Es werden keine Anrufe eingespielt"</h3>
+<p><strong>Stack Pattern</strong>: <code>RetellService::fetchCalls() returns empty</code></p>
+<pre><code class="language-bash"># LÖSUNG:
+1. php artisan horizon                    # Queue Worker starten
+2. Admin Panel → &quot;Anrufe abrufen&quot; Button  # Manueller Import
+3. Prüfe: Company-&gt;retell_api_key nicht null
+</code></pre>
+<h3 id="db_001-access-denied-for-user-askproai_userlocalhost">DB_001: "Access denied for user 'askproai_user'@'localhost'"</h3>
+<p><strong>Stack Pattern</strong>: <code>SQLSTATE[HY000] [1045]</code></p>
+<pre><code class="language-bash"># LÖSUNG:
+rm -f bootstrap/cache/config.php
+php artisan config:cache
+sudo systemctl restart php8.3-fpm
+</code></pre>
+<h3 id="webhook_001-invalid-signature">WEBHOOK_001: "Invalid signature"</h3>
+<p><strong>Stack Pattern</strong>: <code>VerifyRetellSignature middleware rejection</code></p>
+<pre><code class="language-bash"># LÖSUNG:
+1. Check .env: RETELL_WEBHOOK_SECRET=key_xxx
+2. Verify webhook URL in Retell Dashboard
+3. Test: curl -X POST ... -H &quot;x-retell-signature: $(echo -n $payload | openssl dgst -sha256 -hmac $secret)&quot;
+</code></pre>
+<h3 id="calcom_001-event-type-not-found">CALCOM_001: "Event type not found"</h3>
+<p><strong>Stack Pattern</strong>: <code>CalcomV2Service::getEventType() returns 404</code></p>
+<pre><code class="language-bash"># LÖSUNG:
+1. Verify branch.calcom_event_type_id exists
+2. Check: CalcomEventType where id = X
+3. Re-sync: php artisan calcom:sync-event-types
+</code></pre>
+<hr />
+<h2 id="haufige-fehler">🟡 HÄUFIGE FEHLER</h2>
+<h3 id="auth_001-unauthenticated">AUTH_001: "Unauthenticated"</h3>
+<p><strong>Pattern</strong>: API calls without proper auth</p>
+<pre><code class="language-php">// LÖSUNG:
+// Add to request header:
+'Authorization' =&gt; 'Bearer ' . $user-&gt;createToken('api')-&gt;plainTextToken
+</code></pre>
+<h3 id="queue_001-job-failed-after-x-attempts">QUEUE_001: "Job failed after X attempts"</h3>
+<p><strong>Pattern</strong>: ProcessRetellCallEndedJob timeout</p>
+<pre><code class="language-bash"># LÖSUNG:
+1. Increase timeout in config/horizon.php
+2. Check Redis memory: redis-cli INFO memory
+3. Clear failed jobs: php artisan queue:flush
+</code></pre>
+<h3 id="db_002-too-many-connections">DB_002: "Too many connections"</h3>
+<p><strong>Pattern</strong>: <code>SQLSTATE[HY000] [1040]</code></p>
+<pre><code class="language-bash"># LÖSUNG:
+1. Check active connections: SHOW PROCESSLIST;
+2. Increase max_connections in my.cnf
+3. Enable connection pooling (see DatabaseServiceProvider)
+</code></pre>
+<hr />
+<h2 id="performance-issues">🟢 PERFORMANCE ISSUES</h2>
+<h3 id="perf_001-slow-api-response-1s">PERF_001: "Slow API Response &gt; 1s"</h3>
+<p><strong>Pattern</strong>: AppointmentController@index timeout</p>
+<pre><code class="language-php">// LÖSUNG:
+// Add eager loading:
+$appointments = Appointment::with(['customer', 'staff', 'service'])
+    -&gt;paginate(20);
+</code></pre>
+<h3 id="perf_002-n1-query-detected">PERF_002: "N+1 Query detected"</h3>
+<p><strong>Pattern</strong>: Multiple queries in loop</p>
+<pre><code class="language-php">// PROBLEM:
+foreach ($branches as $branch) {
+    $branch-&gt;appointments; // N+1!
+}
+
+// LÖSUNG:
+$branches = Branch::with('appointments')-&gt;get();
+</code></pre>
+<hr />
+<h2 id="debug-commands">🔧 DEBUG COMMANDS</h2>
+<h3 id="schnelle-diagnose">Schnelle Diagnose:</h3>
+<pre><code class="language-bash"># Letzte Fehler
+tail -n 100 storage/logs/laravel.log | grep ERROR
+
+# Webhook Issues
+tail -f storage/logs/laravel.log | grep -E &quot;(webhook|retell|calcom)&quot;
+
+# Performance Issues
+php artisan telescope:prune
+php artisan telescope
+# Visit: /telescope/queries
+</code></pre>
+<h3 id="test-connections">Test Connections:</h3>
+<pre><code class="language-bash"># Database
+php artisan tinker
+&gt;&gt;&gt; DB::connection()-&gt;getPdo();
+
+# Redis
+&gt;&gt;&gt; Redis::ping();
+
+# Retell API
+&gt;&gt;&gt; app(RetellV2Service::class)-&gt;testConnection();
+</code></pre>
+<hr />
+<h2 id="error-tracking-matrix">📊 Error Tracking Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>Error Code</th>
+<th>Frequency</th>
+<th>Avg Resolution Time</th>
+<th>Auto-fixable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DB_001</td>
+<td>Daily</td>
+<td>2 min</td>
+<td>✅ Script</td>
+</tr>
+<tr>
+<td>RETELL_001</td>
+<td>Weekly</td>
+<td>5 min</td>
+<td>✅ Button</td>
+</tr>
+<tr>
+<td>WEBHOOK_001</td>
+<td>Monthly</td>
+<td>15 min</td>
+<td>❌ Manual</td>
+</tr>
+<tr>
+<td>CALCOM_001</td>
+<td>Weekly</td>
+<td>10 min</td>
+<td>⚠️ Semi-auto</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="automation-scripts">🚀 Automation Scripts</h2>
+<h3 id="auto-fix-commonsh">auto-fix-common.sh</h3>
+<pre><code class="language-bash">#!/bin/bash
+case &quot;$1&quot; in
+  &quot;db-access&quot;)
+    rm -f bootstrap/cache/config.php
+    php artisan config:cache
+    sudo systemctl restart php8.3-fpm
+    echo &quot;✅ DB Access fixed&quot;
+    ;;
+  &quot;import-calls&quot;)
+    php artisan horizon
+    sleep 2
+    curl -X POST http://localhost/admin/retell/import
+    echo &quot;✅ Call import triggered&quot;
+    ;;
+esac
+</code></pre>
+<hr />
+<h2 id="contributing">📝 Contributing</h2>
+<p><strong>Neuen Fehler gefunden?</strong>
+1. Assign Error Code (nächste freie Nummer)
+2. Document Pattern (Stack trace)
+3. Add Solution (tested!)
+4. Update Frequency Matrix</p>
+<blockquote>
+<p>💡 <strong>Goal</strong>: Reduce average resolution time from 30-60min to &lt;5min!</p>
+</blockquote>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../EMERGENCY_RESPONSE_PLAYBOOK/" class="btn btn-neutral float-left" title="Emergency Response"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../TROUBLESHOOTING_DECISION_TREE/" class="btn btn-neutral float-right" title="Troubleshooting">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../EMERGENCY_RESPONSE_PLAYBOOK/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../TROUBLESHOOTING_DECISION_TREE/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

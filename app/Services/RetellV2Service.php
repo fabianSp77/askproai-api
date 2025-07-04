@@ -10,10 +10,10 @@ use App\Services\CircuitBreaker\CircuitBreaker;
 use App\Services\Logging\ProductionLogger;
 use App\Services\Security\SensitiveDataMasker;
 
-class RetellV2Service          //  Telefon- & Agent-API (AWS)
+class RetellV2Service  //  Telefon- & Agent-API (AWS)
 {
     use RetryableHttpClient;
-    
+
     private string $url;   // z. B. https://api.retellai.com
     private string $token;
     private CircuitBreaker $circuitBreaker;
@@ -24,14 +24,14 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     {
         // Check multiple config locations
         $this->url = rtrim(
-            config('retellai.base_url') ?? 
-            config('services.retell.base_url', 'https://api.retellai.com'), 
+            config('retellai.base_url') ??
+            config('services.retell.base_url', 'https://api.retellai.com'),
             '/'
         );
         $this->token = $apiKey ?? config('services.retell.api_key');
-        $this->circuitBreaker = new CircuitBreaker();
-        $this->logger = new ProductionLogger();
-        $this->masker = new SensitiveDataMasker();
+        $this->circuitBreaker = new CircuitBreaker;
+        $this->logger = new ProductionLogger;
+        $this->masker = new SensitiveDataMasker;
     }
 
     /**

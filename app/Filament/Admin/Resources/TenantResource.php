@@ -13,7 +13,7 @@ use Filament\Tables\Table;
 class TenantResource extends Resource
 {
     protected static ?string $model = Tenant::class;
-    protected static ?string $navigationGroup = 'Verwaltung';
+    protected static ?string $navigationGroup = 'System & Verwaltung';
     protected static ?string $navigationIcon = 'heroicon-o-building-library';
     protected static ?string $navigationLabel = 'Mandanten';
     protected static ?int $navigationSort = 40;

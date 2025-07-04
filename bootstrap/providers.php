@@ -11,7 +11,7 @@ return [
     App\Providers\EventServiceProvider::class,
     App\Providers\FortifyServiceProvider::class,
     App\Providers\FilamentBadgeServiceProvider::class,
-    App\Providers\FilamentColumnToggleServiceProvider::class,
+    App\Providers\FilamentSafeFixesServiceProvider::class,
     App\Providers\Filament\AdminPanelProvider::class,
     App\Providers\GdprServiceProvider::class,
     App\Providers\HorizonServiceProvider::class,

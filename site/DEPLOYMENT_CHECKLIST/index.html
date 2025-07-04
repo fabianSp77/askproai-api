@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/DEPLOYMENT_CHECKLIST/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Deployment Checklist - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Deployment Checklist";
+        var mkdocs_page_input_path = "DEPLOYMENT_CHECKLIST.md";
+        var mkdocs_page_url = "/mkdocs/DEPLOYMENT_CHECKLIST/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Deployment Checklist</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#quick-deploy-command">⏱️ Quick Deploy Command</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#pre-deployment-checklist">📋 PRE-DEPLOYMENT CHECKLIST</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-code-quality-gates-5-min">1️⃣ Code Quality Gates (5 min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-performance-check-2-min">2️⃣ Performance Check (2 min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-backup-current-state-3-min">3️⃣ Backup Current State (3 min)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#deployment-process">🔄 DEPLOYMENT PROCESS</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#phase-1-preparation-no-downtime">Phase 1: Preparation (No Downtime)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#phase-2-database-updates-30s-downtime">Phase 2: Database Updates (&lt; 30s Downtime)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#phase-3-service-restart-10s">Phase 3: Service Restart (&lt; 10s)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#post-deployment-validation">✅ POST-DEPLOYMENT VALIDATION</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#smoke-tests-2-min">🔍 Smoke Tests (2 min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#monitoring-checks-3-min">📊 Monitoring Checks (3 min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#business-validation-5-min">🎯 Business Validation (5 min)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rollback-procedure-2-min">🔴 ROLLBACK PROCEDURE (&lt; 2 min)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#immediate-rollback">Immediate Rollback:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#deployment-metrics">📈 DEPLOYMENT METRICS</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#emergency-contacts">🚨 EMERGENCY CONTACTS</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#automation-scripts">🤖 AUTOMATION SCRIPTS</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#deploysh">deploy.sh</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Betrieb &raquo;</li>
+      <li>Deployment Checklist</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="askproai-deployment-checklist">🚀 AskProAI Deployment Checklist</h1>
+<blockquote>
+<p><strong>Zero-Downtime Deployment in &lt; 10 Minuten</strong></p>
+</blockquote>
+<h2 id="quick-deploy-command">⏱️ Quick Deploy Command</h2>
+<pre><code class="language-bash">./deploy.sh production --safety-check
+</code></pre>
+<hr />
+<h2 id="pre-deployment-checklist">📋 PRE-DEPLOYMENT CHECKLIST</h2>
+<h3 id="1-code-quality-gates-5-min">1️⃣ <strong>Code Quality Gates</strong> (5 min)</h3>
+<pre><code class="language-bash"># ✅ All tests passing
+php artisan test --parallel
+
+# ✅ No linting errors  
+./vendor/bin/pint --test
+
+# ✅ No security vulnerabilities
+composer audit
+
+# ✅ Migration dry-run
+php artisan migrate:status
+php artisan migrate --pretend
+</code></pre>
+<h3 id="2-performance-check-2-min">2️⃣ <strong>Performance Check</strong> (2 min)</h3>
+<pre><code class="language-bash"># ✅ Build assets
+npm run build
+
+# ✅ Check bundle size &lt; 2MB
+du -sh public/build/
+
+# ✅ Database query analysis
+php artisan db:show --counts
+</code></pre>
+<h3 id="3-backup-current-state-3-min">3️⃣ <strong>Backup Current State</strong> (3 min)</h3>
+<pre><code class="language-bash"># ✅ Database backup
+php artisan backup:run --only-db
+
+# ✅ Config backup
+cp .env .env.backup.$(date +%Y%m%d_%H%M%S)
+
+# ✅ Note current version
+git rev-parse HEAD &gt; LAST_WORKING_VERSION
+</code></pre>
+<hr />
+<h2 id="deployment-process">🔄 DEPLOYMENT PROCESS</h2>
+<h3 id="phase-1-preparation-no-downtime">Phase 1: <strong>Preparation</strong> (No Downtime)</h3>
+<pre><code class="language-bash"># 1. Pull latest code
+git pull origin main
+
+# 2. Install dependencies
+composer install --no-dev --optimize-autoloader
+npm ci
+
+# 3. Build assets
+npm run build
+
+# 4. Cache optimization
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+</code></pre>
+<h3 id="phase-2-database-updates-30s-downtime">Phase 2: <strong>Database Updates</strong> (&lt; 30s Downtime)</h3>
+<pre><code class="language-bash"># 1. Enable maintenance mode with bypass
+php artisan down --secret=&quot;secret-key-here&quot;
+
+# 2. Run migrations
+php artisan migrate --force
+
+# 3. Clear caches
+php artisan optimize:clear
+</code></pre>
+<h3 id="phase-3-service-restart-10s">Phase 3: <strong>Service Restart</strong> (&lt; 10s)</h3>
+<pre><code class="language-bash"># 1. Restart services
+sudo systemctl reload php8.3-fpm
+php artisan horizon:terminate
+
+# 2. Disable maintenance
+php artisan up
+</code></pre>
+<hr />
+<h2 id="post-deployment-validation">✅ POST-DEPLOYMENT VALIDATION</h2>
+<h3 id="smoke-tests-2-min">🔍 <strong>Smoke Tests</strong> (2 min)</h3>
+<pre><code class="language-bash"># 1. Health check
+curl -f https://api.askproai.de/health || exit 1
+
+# 2. Critical endpoints
+curl -f https://api.askproai.de/api/v1/status
+curl -f https://api.askproai.de/api/retell/webhook -X POST
+
+# 3. Database connectivity
+php artisan tinker --execute=&quot;DB::select('SELECT 1')&quot;
+
+# 4. Queue processing
+php artisan queue:work --stop-when-empty
+</code></pre>
+<h3 id="monitoring-checks-3-min">📊 <strong>Monitoring Checks</strong> (3 min)</h3>
+<pre><code class="language-bash"># 1. Error rate normal?
+tail -n 100 storage/logs/laravel.log | grep -c ERROR
+# Expected: &lt; 5
+
+# 2. Response times OK?
+grep &quot;duration&quot; storage/logs/laravel.log | tail -20
+# Expected: &lt; 200ms avg
+
+# 3. Queue backlog?
+php artisan horizon:status
+# Expected: No failed jobs
+
+# 4. Memory usage stable?
+free -m
+# Expected: &lt; 80% used
+</code></pre>
+<h3 id="business-validation-5-min">🎯 <strong>Business Validation</strong> (5 min)</h3>
+<ul>
+<li>[ ] Test phone call → Creates appointment</li>
+<li>[ ] Admin panel loads correctly  </li>
+<li>[ ] Can create manual appointment</li>
+<li>[ ] Webhook receives test event</li>
+<li>[ ] Email notifications sent</li>
+</ul>
+<hr />
+<h2 id="rollback-procedure-2-min">🔴 ROLLBACK PROCEDURE (&lt; 2 min)</h2>
+<h3 id="immediate-rollback">Immediate Rollback:</h3>
+<pre><code class="language-bash"># 1. Enable maintenance
+php artisan down
+
+# 2. Revert code
+git reset --hard $(cat LAST_WORKING_VERSION)
+
+# 3. Restore database
+php artisan backup:restore --latest --only-db
+
+# 4. Restore config
+cp .env.backup.* .env
+
+# 5. Clear everything
+php artisan optimize:clear
+
+# 6. Restart services
+sudo systemctl restart php8.3-fpm
+php artisan horizon:terminate
+
+# 7. Disable maintenance
+php artisan up
+</code></pre>
+<hr />
+<h2 id="deployment-metrics">📈 DEPLOYMENT METRICS</h2>
+<p>Track these KPIs:
+- <strong>Deployment Duration</strong>: Target &lt; 10 min
+- <strong>Rollback Time</strong>: Target &lt; 2 min<br />
+- <strong>Post-Deploy Errors</strong>: Target &lt; 5 in first hour
+- <strong>Zero-Downtime Success</strong>: Target 95%</p>
+<hr />
+<h2 id="emergency-contacts">🚨 EMERGENCY CONTACTS</h2>
+<p><strong>If deployment fails:</strong>
+1. Check #deployments Slack channel
+2. Run rollback procedure
+3. Document issue in ERROR_PATTERNS.md</p>
+<p><strong>Escalation:</strong>
+- DevOps Lead: [Contact]
+- CTO: [Contact] (if customer impact)</p>
+<hr />
+<h2 id="automation-scripts">🤖 AUTOMATION SCRIPTS</h2>
+<h3 id="deploysh">deploy.sh</h3>
+<pre><code class="language-bash">#!/bin/bash
+set -e
+
+echo &quot;🚀 Starting deployment...&quot;
+
+# Pre-deployment checks
+./pre-deploy-check.sh || exit 1
+
+# Backup
+php artisan backup:run --only-db
+
+# Deploy
+git pull
+composer install --no-dev
+npm ci &amp;&amp; npm run build
+
+# Database
+php artisan down --secret=&quot;deploy-secret&quot;
+php artisan migrate --force
+php artisan up
+
+# Validate
+./post-deploy-validate.sh || ./rollback.sh
+
+echo &quot;✅ Deployment complete!&quot;
+</code></pre>
+<blockquote>
+<p>💡 <strong>Pro Tip</strong>: Run deployment during low-traffic hours (2-4 AM CET) for minimal impact</p>
+</blockquote>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../TROUBLESHOOTING_DECISION_TREE/" class="btn btn-neutral float-left" title="Troubleshooting"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../KPI_DASHBOARD_TEMPLATE/" class="btn btn-neutral float-right" title="KPI Dashboard">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../TROUBLESHOOTING_DECISION_TREE/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../KPI_DASHBOARD_TEMPLATE/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -86,7 +86,33 @@ class Call extends Model
         'tmp_call_id',
         'agent_version',
         'retell_cost',
-        'custom_sip_headers'
+        'custom_sip_headers',
+        // New fields from recent migration
+        'agent_name',
+        'urgency_level',
+        'no_show_count',
+        'reschedule_count',
+        'first_visit',
+        'insurance_type',
+        'insurance_company',
+        'custom_analysis_data',
+        'call_summary',
+        'llm_token_usage',
+        'user_sentiment',
+        'extracted_name',
+        'extracted_email',
+        'appointment_made',
+        'appointment_requested',
+        'reason_for_visit',
+        'versicherungsstatus',
+        'health_insurance_company',
+        'end_to_end_latency',
+        'customer_data_backup',
+        'customer_data_collected_at',
+        // Language detection
+        'detected_language',
+        'language_confidence',
+        'language_mismatch'
     ];
 
     protected $casts = [
@@ -107,14 +133,25 @@ class Call extends Model
         'cost_breakdown' => 'array',
         'llm_usage' => 'array',
         'retell_dynamic_variables' => 'array',
-        'retell_llm_dynamic_variables' => 'array',
         'custom_sip_headers' => 'array',
+        'custom_analysis_data' => 'array',
+        'llm_token_usage' => 'array',
         'start_timestamp' => 'datetime',
         'end_timestamp' => 'datetime',
         'opt_out_sensitive_data' => 'boolean',
         'call_successful' => 'boolean',
+        'first_visit' => 'boolean',
+        'appointment_made' => 'boolean',
+        'appointment_requested' => 'boolean',
         'agent_version' => 'integer',
-        'retell_cost' => 'decimal:4'
+        'no_show_count' => 'integer',
+        'reschedule_count' => 'integer',
+        'end_to_end_latency' => 'integer',
+        'retell_cost' => 'decimal:4',
+        'customer_data_backup' => 'array',
+        'customer_data_collected_at' => 'datetime',
+        'language_confidence' => 'decimal:2',
+        'language_mismatch' => 'boolean'
     ];
 
     /**
@@ -508,10 +545,58 @@ class Call extends Model
     }
     
     /**
+     * Phone number relationship
+     */
+    public function phoneNumber(): BelongsTo
+    {
+        return $this->belongsTo(PhoneNumber::class, 'to_number', 'number');
+    }
+    
+    /**
      * ML Prediction relationship
      */
     public function mlPrediction()
     {
         return $this->hasOne(MLCallPrediction::class);
+    }
+
+    /**
+     * Portal data relationship
+     */
+    public function callPortalData()
+    {
+        return $this->hasOne(CallPortalData::class);
+    }
+
+    /**
+     * Call notes relationship
+     */
+    public function callNotes()
+    {
+        return $this->hasMany(CallNote::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Call assignments relationship
+     */
+    public function callAssignments()
+    {
+        return $this->hasMany(CallAssignment::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Retell webhooks relationship
+     */
+    public function retellWebhooks()
+    {
+        return $this->hasMany(RetellWebhook::class, 'call_id', 'retell_call_id');
+    }
+
+    /**
+     * Call charge relationship
+     */
+    public function charge()
+    {
+        return $this->hasOne(CallCharge::class);
     }
 }

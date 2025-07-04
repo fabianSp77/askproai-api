@@ -5,148 +5,210 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Dashboard') - {{ auth('customer')->user()->company->name }}</title>
+    <title>{{ config('app.name', 'AskProAI') }} - Business Portal</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Styles -->
+    <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @livewireStyles
 </head>
 <body class="font-sans antialiased">
+    @include('portal.partials.admin-banner')
+    
     <div class="min-h-screen bg-gray-100">
         <!-- Navigation -->
-        <nav class="bg-white shadow">
+        <nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex">
                         <!-- Logo -->
-                        <div class="flex-shrink-0 flex items-center">
-                            <h1 class="text-xl font-semibold text-gray-800">
-                                {{ auth('customer')->user()->company->name }}
-                            </h1>
+                        <div class="shrink-0 flex items-center">
+                            <a href="{{ route('business.dashboard') }}" class="text-xl font-semibold">
+                                @if(Auth::guard('portal')->check())
+                                    {{ Auth::guard('portal')->user()->company->name }} Portal
+                                @elseif(session('admin_viewing_company'))
+                                    {{ session('admin_viewing_company') }} Portal
+                                @else
+                                    Business Portal
+                                @endif
+                            </a>
                         </div>
 
                         <!-- Navigation Links -->
                         <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                            <a href="{{ route('portal.dashboard') }}" 
-                               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition {{ request()->routeIs('portal.dashboard') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                            <x-nav-link :href="route('business.dashboard')" :active="request()->routeIs('business.dashboard')">
                                 Dashboard
-                            </a>
-                            <a href="{{ route('portal.appointments') }}" 
-                               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition {{ request()->routeIs('portal.appointments*') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                                Termine
-                            </a>
-                            <a href="{{ route('portal.invoices') }}" 
-                               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition {{ request()->routeIs('portal.invoices*') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                                Rechnungen
-                            </a>
-                            <a href="{{ route('portal.profile') }}" 
-                               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition {{ request()->routeIs('portal.profile*') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                                Profil
-                            </a>
-                            <a href="{{ route('portal.privacy') }}" 
-                               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition {{ request()->routeIs('portal.privacy*') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                                Datenschutz
-                            </a>
-                            <a href="{{ route('portal.knowledge.index') }}" 
-                               class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition {{ request()->routeIs('portal.knowledge.*') ? 'border-primary-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                                Wissensdatenbank
-                            </a>
+                            </x-nav-link>
+                            <x-nav-link :href="route('business.calls.index')" :active="request()->routeIs('business.calls.*')">
+                                Anrufe
+                            </x-nav-link>
+                            @if(session('is_admin_viewing') || (Auth::guard('portal')->check() && Auth::guard('portal')->user()->company && method_exists(Auth::guard('portal')->user()->company, 'hasModule') && Auth::guard('portal')->user()->company->hasModule('appointments')))
+                                <x-nav-link :href="route('business.appointments.index')" :active="request()->routeIs('business.appointments.*')">
+                                    Termine
+                                </x-nav-link>
+                            @endif
+                            @if(session('is_admin_viewing') || (Auth::guard('portal')->check() && Auth::guard('portal')->user()->hasPermission('billing.view')))
+                                <x-nav-link :href="route('business.billing.index')" :active="request()->routeIs('business.billing.*')">
+                                    Abrechnung
+                                </x-nav-link>
+                            @endif
+                            @if(session('is_admin_viewing') || (Auth::guard('portal')->check() && Auth::guard('portal')->user()->hasPermission('analytics.view_team')))
+                                <x-nav-link :href="route('business.analytics.index')" :active="request()->routeIs('business.analytics.*')">
+                                    Analysen
+                                </x-nav-link>
+                            @endif
+                            @if(session('is_admin_viewing') || (Auth::guard('portal')->check() && Auth::guard('portal')->user()->hasPermission('team.view')))
+                                <x-nav-link :href="route('business.team.index')" :active="request()->routeIs('business.team.*')">
+                                    Team
+                                </x-nav-link>
+                            @endif
                         </div>
                     </div>
 
-                    <!-- User Menu -->
+                    <!-- Settings Dropdown -->
                     <div class="hidden sm:flex sm:items-center sm:ml-6">
-                        <div class="ml-3 relative">
-                            <div class="flex items-center text-sm">
-                                <span class="text-gray-700 mr-4">
-                                    {{ auth('customer')->user()->full_name }}
-                                </span>
-                                <form method="POST" action="{{ route('portal.logout') }}">
-                                    @csrf
-                                    <button type="submit" class="text-gray-500 hover:text-gray-700">
-                                        Abmelden
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                        <x-dropdown align="right" width="48">
+                            <x-slot name="trigger">
+                                <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
+                                    <div>
+                                        @if(Auth::guard('portal')->check())
+                                            {{ Auth::guard('portal')->user()->name }}
+                                        @elseif(session('is_admin_viewing'))
+                                            Admin Access
+                                        @else
+                                            Guest
+                                        @endif
+                                    </div>
+                                    <div class="ml-1">
+                                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </button>
+                            </x-slot>
+
+                            <x-slot name="content">
+                                @if(!session('is_admin_viewing'))
+                                    <x-dropdown-link :href="route('business.settings.index')">
+                                        Einstellungen
+                                    </x-dropdown-link>
+                                @endif
+
+                                @if(session('is_admin_viewing'))
+                                    <!-- Admin Exit -->
+                                    <x-dropdown-link :href="route('business.admin.exit')">
+                                        Admin-Zugriff beenden
+                                    </x-dropdown-link>
+                                @elseif(Auth::guard('portal')->check())
+                                    <!-- Logout -->
+                                    <form method="POST" action="{{ route('business.logout') }}">
+                                        @csrf
+                                        <x-dropdown-link :href="route('business.logout')"
+                                                onclick="event.preventDefault();
+                                                            this.closest('form').submit();">
+                                            Abmelden
+                                        </x-dropdown-link>
+                                    </form>
+                                @endif
+                            </x-slot>
+                        </x-dropdown>
                     </div>
 
-                    <!-- Mobile menu button -->
+                    <!-- Hamburger -->
                     <div class="-mr-2 flex items-center sm:hidden">
-                        <button type="button" class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" aria-controls="mobile-menu" aria-expanded="false">
-                            <span class="sr-only">Menü öffnen</span>
-                            <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+                            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                                <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Mobile menu -->
-            <div class="sm:hidden" id="mobile-menu">
+            <!-- Responsive Navigation Menu -->
+            <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
                 <div class="pt-2 pb-3 space-y-1">
-                    <a href="{{ route('portal.dashboard') }}" 
-                       class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {{ request()->routeIs('portal.dashboard') ? 'bg-primary-50 border-primary-500 text-primary-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }}">
+                    <x-responsive-nav-link :href="route('business.dashboard')" :active="request()->routeIs('business.dashboard')">
                         Dashboard
-                    </a>
-                    <a href="{{ route('portal.appointments') }}" 
-                       class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {{ request()->routeIs('portal.appointments*') ? 'bg-primary-50 border-primary-500 text-primary-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }}">
-                        Termine
-                    </a>
-                    <a href="{{ route('portal.invoices') }}" 
-                       class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {{ request()->routeIs('portal.invoices*') ? 'bg-primary-50 border-primary-500 text-primary-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }}">
-                        Rechnungen
-                    </a>
-                    <a href="{{ route('portal.profile') }}" 
-                       class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {{ request()->routeIs('portal.profile*') ? 'bg-primary-50 border-primary-500 text-primary-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }}">
-                        Profil
-                    </a>
-                    <a href="{{ route('portal.privacy') }}" 
-                       class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {{ request()->routeIs('portal.privacy*') ? 'bg-primary-50 border-primary-500 text-primary-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }}">
-                        Datenschutz
-                    </a>
-                    <a href="{{ route('portal.knowledge.index') }}" 
-                       class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium {{ request()->routeIs('portal.knowledge.*') ? 'bg-primary-50 border-primary-500 text-primary-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }}">
-                        Wissensdatenbank
-                    </a>
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('business.calls.index')" :active="request()->routeIs('business.calls.*')">
+                        Anrufe
+                    </x-responsive-nav-link>
                 </div>
-                <div class="pt-4 pb-3 border-t border-gray-200">
-                    <div class="flex items-center px-4">
-                        <div>
-                            <div class="text-base font-medium text-gray-800">{{ auth('customer')->user()->full_name }}</div>
-                            <div class="text-sm font-medium text-gray-500">{{ auth('customer')->user()->email }}</div>
-                        </div>
+
+                <!-- Responsive Settings Options -->
+                <div class="pt-4 pb-1 border-t border-gray-200">
+                    <div class="px-4">
+                        @if(session('is_admin_viewing'))
+                            <div class="font-medium text-base text-gray-800">Admin Zugriff</div>
+                            <div class="font-medium text-sm text-gray-500">{{ session('admin_viewing_company') }}</div>
+                        @elseif(Auth::guard('portal')->check())
+                            <div class="font-medium text-base text-gray-800">{{ Auth::guard('portal')->user()->name }}</div>
+                            <div class="font-medium text-sm text-gray-500">{{ Auth::guard('portal')->user()->email }}</div>
+                        @endif
                     </div>
+
                     <div class="mt-3 space-y-1">
-                        <form method="POST" action="{{ route('portal.logout') }}">
-                            @csrf
-                            <button type="submit" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 w-full text-left">
-                                Abmelden
-                            </button>
-                        </form>
+                        @if(!session('is_admin_viewing'))
+                            <x-responsive-nav-link :href="route('business.settings.index')">
+                                Einstellungen
+                            </x-responsive-nav-link>
+                        @endif
+
+                        @if(session('is_admin_viewing'))
+                            <!-- Admin Exit -->
+                            <x-responsive-nav-link :href="route('business.admin.exit')">
+                                Admin-Zugriff beenden
+                            </x-responsive-nav-link>
+                        @elseif(Auth::guard('portal')->check())
+                            <!-- Logout -->
+                            <form method="POST" action="{{ route('business.logout') }}">
+                                @csrf
+                                <x-responsive-nav-link :href="route('business.logout')"
+                                        onclick="event.preventDefault();
+                                                    this.closest('form').submit();">
+                                    Abmelden
+                                </x-responsive-nav-link>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>
         </nav>
 
+        <!-- Page Heading -->
+        @if (isset($header))
+            <header class="bg-white shadow">
+                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    {{ $header }}
+                </div>
+            </header>
+        @endif
+
         <!-- Page Content -->
         <main>
-            @if(session('success'))
+            @if (session('success'))
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-                    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded relative" role="alert">
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                         <span class="block sm:inline">{{ session('success') }}</span>
                     </div>
                 </div>
             @endif
 
-            @if(session('error'))
+            @if (session('error'))
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-                    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded relative" role="alert">
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                         <span class="block sm:inline">{{ session('error') }}</span>
                     </div>
                 </div>
@@ -155,29 +217,5 @@
             @yield('content')
         </main>
     </div>
-
-    @livewireScripts
-    
-    <!-- Cookie Consent Banner -->
-    @if($showCookieBanner ?? false)
-        @include('components.cookie-consent-banner')
-    @endif
-    
-    <!-- Alpine.js for interactive components -->
-    <script src="//unpkg.com/alpinejs" defer></script>
-    
-    <script>
-        // Mobile menu toggle
-        const menuButton = document.querySelector('[aria-controls="mobile-menu"]');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        if (menuButton) {
-            menuButton.addEventListener('click', () => {
-                const expanded = menuButton.getAttribute('aria-expanded') === 'true';
-                menuButton.setAttribute('aria-expanded', !expanded);
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
-    </script>
 </body>
 </html>

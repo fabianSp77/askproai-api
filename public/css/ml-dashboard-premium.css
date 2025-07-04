@@ -1,0 +1,261 @@
+/* ML Dashboard Premium Styles */
+
+/* Gradient animations */
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Premium card hover effects */
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth transitions for all interactive elements */
+.fi-wi-stats-overview-stat,
+.fi-wi-stats-overview-stat .absolute,
+.fi-section {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced progress bars */
+.ml-progress-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.ml-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Pulse animation for live indicators */
+@keyframes pulse-ring {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.animate-pulse-ring {
+    position: relative;
+}
+
+.animate-pulse-ring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Chart enhancements */
+#performance-chart {
+    position: relative;
+    background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.05));
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+#performance-chart svg {
+    filter: drop-shadow(0 4px 6px rgba(99, 102, 241, 0.1));
+}
+
+/* Sentiment circle charts */
+.sentiment-circle {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.sentiment-circle circle {
+    transition: stroke-dasharray 1s ease-in-out;
+}
+
+/* Table row hover effects */
+.hover\:bg-gray-50:hover {
+    background: linear-gradient(to right, rgba(249, 250, 251, 0.5), rgba(249, 250, 251, 0.8));
+}
+
+.dark .hover\:bg-gray-800\/50:hover {
+    background: linear-gradient(to right, rgba(31, 41, 55, 0.3), rgba(31, 41, 55, 0.5));
+}
+
+/* Score visualization bars */
+.sentiment-score-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.sentiment-score-bar > div {
+    transition: width 0.5s ease-out;
+}
+
+/* Confidence indicators */
+.confidence-indicator {
+    position: relative;
+}
+
+.confidence-indicator::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    opacity: 0;
+    background: currentColor;
+    transition: opacity 0.3s;
+}
+
+.confidence-indicator:hover::after {
+    opacity: 0.2;
+}
+
+/* Tab animations */
+.fi-tabs-tab {
+    position: relative;
+}
+
+.fi-tabs-tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: currentColor;
+    transition: all 0.3s;
+    transform: translateX(-50%);
+}
+
+.fi-tabs-tab[aria-selected="true"]::after {
+    width: 100%;
+}
+
+/* Premium button styles */
+.fi-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.fi-btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Loading skeleton animation */
+@keyframes skeleton-loading {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
+}
+
+.skeleton-loading {
+    background: linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.05) 25%,
+        rgba(0, 0, 0, 0.1) 50%,
+        rgba(0, 0, 0, 0.05) 75%
+    );
+    background-size: 200px 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+/* Dark mode adjustments */
+.dark .skeleton-loading {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.05) 25%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.05) 75%
+    );
+    background-size: 200px 100%;
+}
+
+/* Pattern background enhancement */
+#ml-pattern {
+    opacity: 0.3;
+    animation: pattern-drift 20s ease-in-out infinite;
+}
+
+@keyframes pattern-drift {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .fi-wi-stats-overview-stat {
+        padding: 1rem;
+    }
+    
+    .fi-wi-stats-overview-stat .text-3xl {
+        font-size: 1.875rem;
+    }
+    
+    #performance-chart {
+        height: 150px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .fi-section {
+        break-inside: avoid;
+        box-shadow: none !important;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+}

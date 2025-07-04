@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell Custom Functions - Schritt-für-Schritt Anleitung</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            background-color: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        h3 {
+            color: #3498db;
+            margin-top: 20px;
+        }
+        .step {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .warning {
+            background-color: #fee;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #e8f8e8;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+        }
+        pre {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .json-code {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .checklist {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .checklist li {
+            padding: 5px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        .checklist li:before {
+            content: "☐";
+            position: absolute;
+            left: 0;
+            color: #3498db;
+            font-size: 20px;
+        }
+        .highlight {
+            background-color: yellow;
+            padding: 2px 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Retell Custom Functions - Schritt-für-Schritt Anleitung</h1>
+        
+        <div class="warning">
+            <strong>⚠️ WICHTIG:</strong> Diese Änderungen lösen das Problem, dass der Agent immer wieder nach der Telefonnummer fragt. Nach den Änderungen wird die Telefonnummer automatisch über die <code>call_id</code> ermittelt!
+        </div>
+
+        <h2>📋 Vorbereitung</h2>
+        <div class="step">
+            <ol>
+                <li>Öffne den Retell Agent Editor: <a href="https://api.askproai.de/admin/retell-agent-editor?agent_id=agent_9a8202a740cd3120d96fcfda1e" target="_blank" class="button">Agent Editor öffnen</a></li>
+                <li>Wähle die neueste Version (v33 oder höher)</li>
+                <li>Scrolle zu den Custom Functions</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <h2>📝 SCHRITT 1: Prompt Update</h2>
+        <div class="step">
+            <h3>Im Abschnitt "General Prompt"</h3>
+            <p>Suche nach <strong>"WICHTIGE ANWEISUNGEN:"</strong> oder <strong>"REGELN:"</strong> und füge DARUNTER diese Zeilen ein:</p>
+            <pre>- NIEMALS nach der Telefonnummer fragen - die Telefonnummer ist bereits über {{caller_phone_number}} verfügbar oder verwende call_id in den Funktionen
+- Bei allen Funktionsaufrufen IMMER die call_id mit {{call_id}} übergeben
+- Die Telefonnummer des Anrufers ist IMMER verfügbar, niemals danach fragen</pre>
+        </div>
+
+        <hr>
+
+        <h2>🔧 SCHRITT 2: Function "check_customer" anpassen</h2>
+        <div class="warning">
+            <strong>Diese Function MUSS als ERSTE im Gespräch aufgerufen werden!</strong>
+        </div>
+        <div class="step">
+            <h3>1. Klicke auf "check_customer" zum Bearbeiten</h3>
+            
+            <h3>2. Ändere die Description zu:</h3>
+            <pre>Prüfe ob ein Kunde im System existiert. MUSS IMMER zu Beginn des Gesprächs aufgerufen werden! Nutzt automatisch die Anrufer-Telefonnummer.</pre>
+            
+            <h3>3. Ändere die Parameters komplett zu:</h3>
+            <pre class="json-code">{
+  "type": "object",
+  "properties": {
+    "call_id": {
+      "type": "string",
+      "description": "Die Call ID - IMMER {{call_id}} verwenden"
+    }
+  },
+  "required": ["call_id"]
+}</pre>
+            
+            <h3>4. Speichere diese Function</h3>
+        </div>
+
+        <hr>
+
+        <h2>📅 SCHRITT 3: Function "collect_appointment_data" anpassen</h2>
+        <div class="step">
+            <h3>1. Klicke auf "collect_appointment_data" zum Bearbeiten</h3>
+            
+            <h3>2. Ändere die Description zu:</h3>
+            <pre>Sammelt alle Termindaten vom Anrufer und bucht den Termin. NIEMALS nach der Telefonnummer fragen! Die Telefonnummer wird automatisch ermittelt.</pre>
+            
+            <h3>3. Ändere die Parameters - <span class="highlight">WICHTIG: call_id als ERSTES Property:</span></h3>
+            <pre class="json-code">{
+  "type": "object",
+  "properties": {
+    "call_id": {
+      "type": "string",
+      "description": "Die Call ID - IMMER {{call_id}} verwenden"
+    },
+    "datum": {
+      "type": "string",
+      "description": "Datum des Termins (z.B. 'heute', 'morgen', 'übermorgen', '25.03.2024')"
+    },
+    "uhrzeit": {
+      "type": "string",
+      "description": "Gewünschte Uhrzeit im 24-Stunden-Format (z.B. '09:00', '14:30', '17:45')"
+    },
+    "name": {
+      "type": "string",
+      "description": "Vollständiger Name des Kunden"
+    },
+    "dienstleistung": {
+      "type": "string",
+      "description": "Gewünschte Dienstleistung oder Behandlung"
+    },
+    "email": {
+      "type": "string",
+      "description": "E-Mail-Adresse für Terminbestätigung (optional)"
+    },
+    "mitarbeiter_wunsch": {
+      "type": "string",
+      "description": "Bevorzugter Mitarbeiter (optional)"
+    },
+    "kundenpraeferenzen": {
+      "type": "string",
+      "description": "Zusätzliche Wünsche oder Anmerkungen (optional)"
+    }
+  },
+  "required": ["call_id", "datum", "uhrzeit", "name", "dienstleistung"]
+}</pre>
+            
+            <div class="warning">
+                <strong>4. ENTFERNE "telefonnummer" aus den required fields falls noch vorhanden</strong>
+            </div>
+            
+            <h3>5. Speichere diese Function</h3>
+        </div>
+
+        <hr>
+
+        <h2>❌ SCHRITT 4: Function "cancel_appointment" anpassen</h2>
+        <div class="step">
+            <h3>1. Klicke auf "cancel_appointment" zum Bearbeiten</h3>
+            
+            <h3>2. Description kann bleiben oder anpassen zu:</h3>
+            <pre>Einen bestehenden Termin stornieren. Die Telefonnummer wird automatisch ermittelt.</pre>
+            
+            <h3>3. Ändere die Parameters - <span class="highlight">call_id als ERSTES:</span></h3>
+            <pre class="json-code">{
+  "type": "object",
+  "properties": {
+    "call_id": {
+      "type": "string",
+      "description": "Die Call ID - IMMER {{call_id}} verwenden"
+    },
+    "appointment_date": {
+      "type": "string",
+      "description": "Datum des zu stornierenden Termins"
+    }
+  },
+  "required": ["call_id", "appointment_date"]
+}</pre>
+            
+            <div class="warning">
+                <strong>4. ENTFERNE "phone_number" falls vorhanden</strong>
+            </div>
+            
+            <h3>5. Speichere diese Function</h3>
+        </div>
+
+        <hr>
+
+        <h2>🔄 SCHRITT 5: Function "reschedule_appointment" anpassen</h2>
+        <div class="step">
+            <h3>1. Klicke auf "reschedule_appointment" zum Bearbeiten</h3>
+            
+            <h3>2. Description kann bleiben oder anpassen zu:</h3>
+            <pre>Einen bestehenden Termin verschieben. Die Telefonnummer wird automatisch ermittelt.</pre>
+            
+            <h3>3. Ändere die Parameters - <span class="highlight">call_id als ERSTES:</span></h3>
+            <pre class="json-code">{
+  "type": "object",
+  "properties": {
+    "call_id": {
+      "type": "string",
+      "description": "Die Call ID - IMMER {{call_id}} verwenden"
+    },
+    "old_date": {
+      "type": "string",
+      "description": "Aktuelles Datum des Termins"
+    },
+    "new_date": {
+      "type": "string",
+      "description": "Neues Datum für den Termin"
+    },
+    "new_time": {
+      "type": "string",
+      "description": "Neue Uhrzeit für den Termin"
+    }
+  },
+  "required": ["call_id", "old_date", "new_date", "new_time"]
+}</pre>
+            
+            <div class="warning">
+                <strong>4. ENTFERNE "phone_number" falls vorhanden</strong>
+            </div>
+            
+            <h3>5. Speichere diese Function</h3>
+        </div>
+
+        <hr>
+
+        <h2>📋 SCHRITT 6: Function "book_appointment" anpassen (falls vorhanden)</h2>
+        <div class="step">
+            <h3>1. Klicke auf "book_appointment" zum Bearbeiten</h3>
+            
+            <h3>2. Ändere die Parameters - call_id statt phone_number:</h3>
+            <pre class="json-code">{
+  "type": "object",
+  "properties": {
+    "call_id": {
+      "type": "string",
+      "description": "Die Call ID - IMMER {{call_id}} verwenden"
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "Name des Kunden"
+    },
+    "appointment_date": {
+      "type": "string",
+      "description": "Datum des Termins"
+    },
+    "appointment_time": {
+      "type": "string",
+      "description": "Uhrzeit des Termins"
+    },
+    "service_type": {
+      "type": "string",
+      "description": "Art der Dienstleistung"
+    }
+  },
+  "required": ["call_id", "customer_name", "appointment_date", "appointment_time", "service_type"]
+}</pre>
+            
+            <div class="warning">
+                <strong>3. ENTFERNE "phone_number" aus den required fields</strong>
+            </div>
+            
+            <h3>4. Speichere diese Function</h3>
+        </div>
+
+        <hr>
+
+        <h2>✅ SCHRITT 7: Finale Überprüfung</h2>
+        <div class="success">
+            <h3>Checkliste:</h3>
+            <ul class="checklist">
+                <li>Alle Änderungen mit "Save" oder "Update" Button gespeichert</li>
+                <li>KEINE Function hat mehr "telefonnummer" oder "phone_number" in den Parameters</li>
+                <li>ALLE relevanten Functions haben "call_id" als ersten Parameter</li>
+                <li>Prompt enthält die Anweisung "NIEMALS nach der Telefonnummer fragen"</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <h2>🎯 NACH DEN ÄNDERUNGEN</h2>
+        <div class="step">
+            <ol>
+                <li>Speichere den Agent</li>
+                <li>Sage mir Bescheid, damit ich die Konfiguration in unser System lade</li>
+                <li>Wir machen einen Testanruf</li>
+            </ol>
+        </div>
+
+        <h2>⚠️ WICHTIGE HINWEISE</h2>
+        <div class="warning">
+            <ul>
+                <li><strong>call_id IMMER mit {{call_id}}</strong> - die geschweiften Klammern sind wichtig!</li>
+                <li><strong>KEINE telefonnummer oder phone_number Parameter</strong> mehr verwenden</li>
+                <li><strong>check_customer MUSS als erste Function</strong> im Gespräch aufgerufen werden</li>
+                <li>Der Agent darf <strong>NIEMALS nach der Telefonnummer fragen</strong></li>
+            </ul>
+        </div>
+
+        <div class="success" style="margin-top: 30px; text-align: center;">
+            <h3>🎉 Nach diesen Änderungen wird der Agent nicht mehr nach der Telefonnummer fragen!</h3>
+        </div>
+    </div>
+</body>
+</html>

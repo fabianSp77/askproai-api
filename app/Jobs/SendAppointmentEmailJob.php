@@ -3,6 +3,9 @@
 namespace App\Jobs;
 
 use App\Mail\AppointmentConfirmationMail;
+use App\Mail\AppointmentCancellationMail;
+use App\Mail\AppointmentRescheduledMail;
+use App\Mail\AppointmentReminder;
 use App\Models\Appointment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -11,6 +14,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class SendAppointmentEmailJob implements ShouldQueue
 {
@@ -25,7 +29,11 @@ class SendAppointmentEmailJob implements ShouldQueue
     public function __construct(
         public Appointment $appointment,
         public string $emailType = 'confirmation',
-        public string $locale = 'de'
+        public string $locale = 'de',
+        public ?string $cancellationReason = null,
+        public ?string $rescheduleReason = null,
+        public ?Carbon $oldStartTime = null,
+        public ?Carbon $oldEndTime = null
     ) {
         $this->onQueue('emails');
     }
@@ -69,6 +77,10 @@ class SendAppointmentEmailJob implements ShouldQueue
                     $this->sendCancellationEmail();
                     break;
                     
+                case 'rescheduled':
+                    $this->sendRescheduledEmail();
+                    break;
+                    
                 default:
                     Log::error('Unknown email type', [
                         'type' => $this->emailType,
@@ -110,25 +122,92 @@ class SendAppointmentEmailJob implements ShouldQueue
     }
     
     /**
-     * Send reminder email (placeholder for future implementation)
+     * Send reminder email
      */
     protected function sendReminderEmail(): void
     {
-        // TODO: Implement reminder email
-        Log::info('Reminder email requested (not yet implemented)', [
+        Mail::to($this->appointment->customer->email)
+            ->send(new AppointmentReminder($this->appointment, $this->locale));
+            
+        Log::info('Appointment reminder email sent', [
             'appointment_id' => $this->appointment->id,
+            'customer_email' => $this->appointment->customer->email,
+            'locale' => $this->locale,
         ]);
+        
+        // Update appointment metadata based on time until appointment
+        $metadata = $this->appointment->metadata ?? [];
+        $hoursUntil = now()->diffInHours($this->appointment->starts_at);
+        
+        if ($hoursUntil <= 2) {
+            $metadata['reminder_2h_sent_at'] = now()->toDateTimeString();
+        } elseif ($hoursUntil <= 24) {
+            $metadata['reminder_24h_sent_at'] = now()->toDateTimeString();
+        }
+        
+        $this->appointment->update(['metadata' => $metadata]);
     }
     
     /**
-     * Send cancellation email (placeholder for future implementation)
+     * Send cancellation email
      */
     protected function sendCancellationEmail(): void
     {
-        // TODO: Implement cancellation email
-        Log::info('Cancellation email requested (not yet implemented)', [
+        Mail::to($this->appointment->customer->email)
+            ->send(new AppointmentCancellationMail(
+                $this->appointment, 
+                $this->cancellationReason,
+                $this->locale
+            ));
+            
+        Log::info('Appointment cancellation email sent', [
             'appointment_id' => $this->appointment->id,
+            'customer_email' => $this->appointment->customer->email,
+            'reason' => $this->cancellationReason,
+            'locale' => $this->locale,
         ]);
+        
+        // Update appointment metadata
+        $metadata = $this->appointment->metadata ?? [];
+        $metadata['cancellation_email_sent_at'] = now()->toDateTimeString();
+        $this->appointment->update(['metadata' => $metadata]);
+    }
+    
+    /**
+     * Send rescheduled email
+     */
+    protected function sendRescheduledEmail(): void
+    {
+        if (!$this->oldStartTime || !$this->oldEndTime) {
+            Log::error('Cannot send rescheduled email without old times', [
+                'appointment_id' => $this->appointment->id,
+            ]);
+            return;
+        }
+        
+        Mail::to($this->appointment->customer->email)
+            ->send(new AppointmentRescheduledMail(
+                $this->appointment,
+                $this->oldStartTime,
+                $this->oldEndTime,
+                $this->rescheduleReason,
+                $this->locale
+            ));
+            
+        Log::info('Appointment rescheduled email sent', [
+            'appointment_id' => $this->appointment->id,
+            'customer_email' => $this->appointment->customer->email,
+            'old_time' => $this->oldStartTime->format('Y-m-d H:i'),
+            'new_time' => $this->appointment->starts_at->format('Y-m-d H:i'),
+            'reason' => $this->rescheduleReason,
+            'locale' => $this->locale,
+        ]);
+        
+        // Update appointment metadata
+        $metadata = $this->appointment->metadata ?? [];
+        $metadata['rescheduled_email_sent_at'] = now()->toDateTimeString();
+        $metadata['rescheduled_from'] = $this->oldStartTime->format('Y-m-d H:i');
+        $this->appointment->update(['metadata' => $metadata]);
     }
     
     /**

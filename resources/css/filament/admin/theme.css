@@ -23,6 +23,18 @@
 @import './table-width-fix.css';
 @import './full-width-fix.css';
 @import './table-column-optimization.css';
+@import './call-detail.css';
+@import './branch-actions-fix.css';
+@import './user-menu-fixes.css';
+@import './professional-navigation.css';
+/* @import './billing-alerts-improvements.css'; -- Conflicts with theme */
+@import './askproai-theme.css';
+/* @import './checkbox-state-fix.css'; -- Removed to prevent conflicts with askproai-theme */
+@import './checkbox-fix-force.css'; /* Force checkbox visibility with high specificity */
+@import './wizard-progress-fix.css'; /* Fix wizard step connection lines */
+@import './wizard-form-fix.css'; /* Fix wizard form interactions */
+@import './wizard-v2-fixes.css'; /* Enhanced fixes for Quick Setup Wizard V2 */
+@import './call-detail-enterprise.css'; /* Enterprise call detail styling */
 
 :root {
     --color-primary-50: 254 252 232;
@@ -340,4 +352,18 @@ html.dark .fi-body {
         margin-left: 0 !important;
         width: 100% !important;
     }
+}
+
+/* Alpine.js cloak directive */
+[x-cloak] { 
+    display: none !important; 
+}
+
+/* Dropdown z-index fixes from old dropdown-fix-global */
+.fi-dropdown-panel {
+    z-index: 999999 !important;
+}
+
+.fi-ta-row {
+    position: static !important;
 }

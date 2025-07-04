@@ -24,7 +24,8 @@ class User extends Authenticatable implements FilamentUser
     protected $fillable = [
         'fname', 'lname', 'name', 'email', 'password', 'username', 'tenant_id', 'company_id',
         'date_created', 'date_updated', 'email_verified_at',
-        'two_factor_enforced', 'two_factor_method', 'two_factor_phone_number', 'two_factor_phone_verified'
+        'two_factor_enforced', 'two_factor_method', 'two_factor_phone_number', 'two_factor_phone_verified',
+        'interface_language', 'content_language', 'auto_translate_content'
     ];
     
     protected $appends = ['company_id'];
@@ -39,6 +40,7 @@ class User extends Authenticatable implements FilamentUser
         'two_factor_confirmed_at' => 'datetime',
         'two_factor_enforced' => 'boolean',
         'two_factor_phone_verified' => 'boolean',
+        'auto_translate_content' => 'boolean',
     ];
     
     public function tenant(): BelongsTo

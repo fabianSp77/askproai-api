@@ -1,3 +1,65 @@
+@php
+    // Extract data from the call record
+    // $record is already available from the modal context
+    $publicUrl = $shareUrl ?? '#';
+    
+    // Initialize all variables with defaults
+    $customerName = 'Unbekannter Anrufer';
+    $phoneNumber = 'Unbekannt';
+    $callDate = '';
+    $callTime = '';
+    $duration = '00:00';
+    $sentimentClass = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+    $sentimentEmoji = '😐';
+    $sentimentText = 'Neutral';
+    $emailSubject = '';
+    $whatsappMessage = '';
+    
+    if ($record) {
+        $customerName = $record->customer?->name 
+            ?? $record->extracted_name
+            ?? $record->metadata['customer_data']['full_name']
+            ?? 'Unbekannter Anrufer';
+            
+        $phoneNumber = $record->from_number ?? 'Unbekannt';
+        $callDate = $record->created_at->format('d.m.Y');
+        $callTime = $record->created_at->format('H:i');
+        $duration = $record->duration_sec ? gmdate('i:s', $record->duration_sec) : '00:00';
+        
+        // Get sentiment from ML prediction or analysis
+        $sentiment = $record->mlPrediction?->sentiment_label 
+            ?? $record->sentiment
+            ?? $record->analysis['sentiment'] 
+            ?? 'neutral';
+            
+        $sentimentClass = match(strtolower($sentiment)) {
+            'positive' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+            'negative' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+            default => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+        };
+        
+        $sentimentEmoji = match(strtolower($sentiment)) {
+            'positive' => '😊',
+            'negative' => '😔',
+            default => '😐'
+        };
+        
+        $sentimentText = match(strtolower($sentiment)) {
+            'positive' => 'Positiv',
+            'negative' => 'Negativ',
+            default => 'Neutral'
+        };
+        
+        $emailSubject = "Anrufaufzeichnung: $customerName - $callDate $callTime";
+        $whatsappMessage = "📞 Anrufaufzeichnung\n\n" .
+                          "👤 $customerName\n" .
+                          "📅 $callDate um $callTime Uhr\n" .
+                          "⏱ Dauer: $duration\n" .
+                          "🎭 Stimmung: $sentimentEmoji $sentimentText\n\n" .
+                          "🔗 $publicUrl";
+    }
+@endphp
+
 <div class="space-y-6">
     {{-- Preview Card --}}
     <div class="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 border border-purple-200 dark:border-gray-700">
@@ -8,40 +70,22 @@
                 </svg>
             </div>
             <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $record->customer?->name ?? 'Unbekannter Anrufer' }}</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $customerName }}</h3>
                 <div class="mt-2 grid grid-cols-2 gap-3 text-sm">
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Telefon:</span>
-                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $record->from_number }}</span>
+                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $phoneNumber }}</span>
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Dauer:</span>
-                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ gmdate('i:s', $record->duration_sec ?? 0) }}</span>
+                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $duration }}</span>
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Datum:</span>
-                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $record->start_timestamp?->format('d.m.Y H:i') ?? $record->created_at->format('d.m.Y H:i') }}</span>
+                        <span class="ml-2 font-medium text-gray-900 dark:text-white">{{ $callDate }} {{ $callTime }}</span>
                     </div>
                     <div>
                         <span class="text-gray-500 dark:text-gray-400">Stimmung:</span>
-                        @php
-                            $sentiment = $record->analysis['sentiment'] ?? 'neutral';
-                            $sentimentClass = match($sentiment) {
-                                'positive' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-                                'negative' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-                                default => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                            };
-                            $sentimentEmoji = match($sentiment) {
-                                'positive' => '😊',
-                                'negative' => '😞',
-                                default => '😐'
-                            };
-                            $sentimentText = match($sentiment) {
-                                'positive' => 'Positiv',
-                                'negative' => 'Negativ',
-                                default => 'Neutral'
-                            };
-                        @endphp
                         <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $sentimentClass }}">
                             {{ $sentimentEmoji }} {{ $sentimentText }}
                         </span>

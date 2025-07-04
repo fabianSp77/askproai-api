@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Portal Test Links</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a202c;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2d3748;
+            margin-top: 30px;
+        }
+        .link-group {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .link-group h3 {
+            margin-top: 0;
+            color: #4a5568;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+        }
+        a {
+            color: #3182ce;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-block;
+            padding: 5px 0;
+        }
+        a:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .status.working {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .status.broken {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        .status.new {
+            background: #bee3f8;
+            color: #2a4e7c;
+        }
+        .note {
+            background: #fffaf0;
+            border: 1px solid #feb2b2;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #7b341e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Business Portal Test Links</h1>
+        <p>Stand: 2025-07-03 | Base URL: https://api.askproai.de</p>
+        
+        <div class="note">
+            <strong>Hinweis:</strong> Du musst im Business Portal eingeloggt sein, um diese Links nutzen zu können.
+            Login unter: <a href="https://api.askproai.de/business/login">https://api.askproai.de/business/login</a>
+        </div>
+
+        <h2>🏢 Admin Panel (Filament)</h2>
+        <div class="link-group">
+            <h3>Dashboards mit neuen Widgets</h3>
+            <ul>
+                <li>
+                    <a href="https://api.askproai.de/admin">Admin Dashboard</a>
+                    <span class="status working">Funktioniert</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/admin/companies/1">Company Dashboard - AskProAI</a>
+                    <span class="status working">Widgets implementiert</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/admin/companies/4">Company Dashboard - Krückeberg</a>
+                    <span class="status working">Widgets implementiert</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/admin/branches/1">Branch Dashboard - AskProAI HQ</a>
+                    <span class="status working">Charts mit echten Daten</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/admin/calls">Call Dashboard</a>
+                    <span class="status working">Analytics Widget repariert</span>
+                </li>
+            </ul>
+        </div>
+
+        <h2>💼 Business Portal</h2>
+        
+        <div class="link-group">
+            <h3>Hauptbereiche</h3>
+            <ul>
+                <li>
+                    <a href="https://api.askproai.de/business">Portal Dashboard</a>
+                    <span class="status working">Funktioniert</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/business/calls">Anrufe</a>
+                    <span class="status working">Funktioniert</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/business/appointments">Termine</a>
+                    <span class="status working">Funktioniert</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/business/analytics">Analytics</a>
+                    <span class="status working">Funktioniert</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/business/team">Team</a>
+                    <span class="status broken">Bearbeiten-Button defekt</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="link-group">
+            <h3>Problemstellen</h3>
+            <ul>
+                <li>
+                    <a href="https://api.askproai.de/business/team">Team - Bearbeiten Button</a>
+                    <span class="status broken">Klick ohne Funktion</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/business/billing">Billing - Kosten Filter</a>
+                    <span class="status broken">Zeitraum-Filter zeigt falsche Kosten</span>
+                </li>
+            </ul>
+        </div>
+
+        <h2>🔧 Direkte Test-Links</h2>
+        
+        <div class="link-group">
+            <h3>Spezifische Anrufe</h3>
+            <ul>
+                <li>
+                    <a href="https://api.askproai.de/business/calls/227">Call #227 - Details</a>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/business/calls?filter[status]=new">Neue Anrufe</a>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/business/calls?filter[date_from]=2025-07-01&filter[date_to]=2025-07-03">Anrufe diese Woche</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="link-group">
+            <h3>API Endpoints (JSON)</h3>
+            <ul>
+                <li>
+                    <a href="https://api.askproai.de/api/retell/webhook-simple" target="_blank">Retell Webhook Endpoint</a>
+                    <span class="status working">POST only</span>
+                </li>
+                <li>
+                    <a href="https://api.askproai.de/api/metrics" target="_blank">Prometheus Metrics</a>
+                </li>
+            </ul>
+        </div>
+
+        <h2>📊 GitHub Issues</h2>
+        
+        <div class="link-group">
+            <h3>Aktuelle Issues</h3>
+            <ul>
+                <li>
+                    <a href="https://github.com/fabianSp77/askproai-api/issues/265" target="_blank">Issue #265 - Branch Dashboard Charts</a>
+                    <span class="status working">Behoben</span>
+                </li>
+                <li>
+                    <a href="https://github.com/fabianSp77/askproai-api/issues/266" target="_blank">Issue #266 - Company Dashboard</a>
+                    <span class="status working">Behoben</span>
+                </li>
+                <li>
+                    <a href="https://github.com/fabianSp77/askproai-api/issues/267" target="_blank">Issue #267 - Portal Team 500 Error</a>
+                    <span class="status working">Behoben</span>
+                </li>
+                <li>
+                    <a href="https://github.com/fabianSp77/askproai-api/issues/268" target="_blank">Issue #268 - Call Dashboard Zeros</a>
+                    <span class="status working">Behoben</span>
+                </li>
+            </ul>
+        </div>
+
+        <h2>🧪 Test-Szenarien</h2>
+        
+        <div class="link-group">
+            <h3>Zu testen</h3>
+            <ul>
+                <li>Branch Dashboard - Charts sollten echte Daten der letzten 7 Tage zeigen</li>
+                <li>Company Dashboard - 5 Statistik-Karten mit korrekten Werten</li>
+                <li>Call Analytics - Keine Nullwerte mehr</li>
+                <li>Team Bearbeiten - Button sollte zu Edit-Seite führen (noch nicht implementiert)</li>
+                <li>Kosten-Filter - Sollte korrekte Summen für Zeiträume zeigen</li>
+            </ul>
+        </div>
+
+        <h2>📋 Status-Dokumentation</h2>
+        
+        <div class="link-group">
+            <h3>✅ Heute erledigt (2025-07-03)</h3>
+            <ul>
+                <li><strong>Datenkonsistenz-Analyse:</strong> 144 von 146 Calls korrekt zugeordnet</li>
+                <li><strong>Dashboard-Widgets:</strong> Branch, Company und Call Dashboards implementiert</li>
+                <li><strong>Portal-Fehler:</strong> Team View 500 Error behoben</li>
+                <li><strong>Portal Controller:</strong> Appointment, Analytics, Call Controller erstellt</li>
+            </ul>
+        </div>
+
+        <div class="link-group" style="border-color: #fc8181;">
+            <h3>🔴 Offene Probleme für morgen</h3>
+            
+            <h4>1. Datenkonsistenz Calls ⚠️</h4>
+            <ul>
+                <li><strong>Problem:</strong> Unsicherheit bei Zuordnung von Calls zu Companies/Branches</li>
+                <li><strong>TODO:</strong> PhoneNumberResolver Service überprüfen</li>
+            </ul>
+            
+            <h4>2. Kosten-Anzeige im Business Portal 🐛</h4>
+            <ul>
+                <li><strong>Problem:</strong> Kosten in gefilterten Zeiträumen nicht korrekt</li>
+                <li><strong>TODO:</strong> PrepaidBillingService debuggen</li>
+            </ul>
+            
+            <h4>3. Team Bearbeiten-Button 🐛</h4>
+            <ul>
+                <li><strong>Problem:</strong> Klick ohne Funktion</li>
+                <li><strong>TODO:</strong> Route business.team.edit implementieren</li>
+            </ul>
+            
+            <h4>4. Retell Agent Krückeberg 📞</h4>
+            <ul>
+                <li><strong>Problem:</strong> 2 Funktionen im Testanruf defekt</li>
+                <li><strong>TODO:</strong> Agent-Konfiguration überprüfen</li>
+            </ul>
+            
+            <h4>5. Company-spezifische Anzeige 🎯</h4>
+            <ul>
+                <li><strong>Krückeberg:</strong> Nur Anrufdaten (keine Termine)</li>
+                <li><strong>AskProAI:</strong> Anrufdaten + Termindaten</li>
+                <li><strong>TODO:</strong> display_settings in companies table</li>
+            </ul>
+        </div>
+
+        <div class="link-group">
+            <h3>📌 TODO-Liste für morgen</h3>
+            
+            <h4>Priorität 1: Datenkonsistenz</h4>
+            <pre style="background: #f0f0f0; padding: 10px; border-radius: 4px;">
+# Call-Zuordnungs-Analyse
+php artisan analyze:call-assignment --detailed
+
+# Phone Number Resolution testen
+php test-phone-number-resolution.php</pre>
+            
+            <h4>Priorität 2: Business Portal Fixes</h4>
+            <ul>
+                <li>Team Edit Route: business.team.edit</li>
+                <li>View: portal/team/edit.blade.php</li>
+                <li>Controller: TeamController@edit, @update</li>
+                <li>PrepaidBillingService::calculateCosts() debuggen</li>
+            </ul>
+            
+            <h4>Priorität 3: Retell Agent</h4>
+            <pre style="background: #f0f0f0; padding: 10px; border-radius: 4px;">
+# Agent-Logs analysieren
+php analyze-retell-agent-logs.php --company=krueckeberg
+
+# Custom Functions testen
+php test-retell-custom-functions.php</pre>
+        </div>
+
+        <div class="link-group">
+            <h3>🏗️ Geplante Architektur-Verbesserungen</h3>
+            
+            <h4>Company Display Settings</h4>
+            <pre style="background: #f0f0f0; padding: 10px; border-radius: 4px;">
+// companies table
+display_settings = {
+    "show_appointments": true/false,
+    "show_calls": true,
+    "show_costs": true,
+    "show_team": true,
+    "modules": ["calls", "appointments", "billing"]
+}</pre>
+            
+            <h4>Portal Permission System</h4>
+            <ul>
+                <li>Granulare Permissions pro Modul</li>
+                <li>Company-spezifische Feature-Flags</li>
+                <li>Role-based Display Logic</li>
+            </ul>
+        </div>
+
+        <div class="note">
+            <h3>🚀 Nach allen Fixes</h3>
+            <pre style="background: #fff5f5; padding: 10px; border-radius: 4px;">
+# 1. Cache leeren
+php artisan optimize:clear
+
+# 2. Services neustarten
+sudo systemctl restart php8.3-fpm
+php artisan horizon:terminate
+
+# 3. Tests ausführen
+php artisan test --filter=Portal</pre>
+        </div>
+    </div>
+</body>
+</html>

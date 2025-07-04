@@ -1,0 +1,37 @@
+/* Minimal Dropdown Fix - Only targets dropdowns, doesn't break anything else */
+
+/* 1. Dropdowns above everything */
+.fi-dropdown-panel {
+    z-index: 999999 !important;
+    position: fixed !important;
+}
+
+/* 2. Fix table row stacking context */
+.fi-ta-row {
+    position: static !important;
+}
+
+/* 3. Dropdowns should be hidden by default */
+.fi-dropdown-panel {
+    display: none;
+}
+
+/* Show only when explicitly opened */
+.fi-dropdown-panel.fi-dropdown-open,
+.fi-dropdown-panel[x-show="isOpen"],
+.fi-dropdown-panel[style*="display: block"] {
+    display: block !important;
+}
+
+/* 4. Action dropdowns specifically */
+.fi-ta-actions .fi-dropdown-panel {
+    z-index: 999999 !important;
+}
+
+/* 5. Branch selector dropdown */
+.branch-selector-dropdown > div {
+    z-index: 999999 !important;
+    position: fixed !important;
+}
+
+/* That's it - minimal changes for maximum compatibility */

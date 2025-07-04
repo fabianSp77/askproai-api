@@ -7,9 +7,11 @@ use App\Models\Customer;
 use App\Models\Appointment;
 use App\Models\Call;
 use App\Models\RetellConfiguration;
+use App\Models\Branch;
 use App\Services\PhoneNumberResolver;
 use App\Services\AppointmentBookingService;
 use App\Services\CalcomV2Service;
+use App\Services\Retell\CustomFunctionHandler;
 use App\Exceptions\MCPException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
@@ -26,13 +28,18 @@ class RetellCustomFunctionMCPServer
 {
     protected PhoneNumberResolver $phoneResolver;
     protected AppointmentBookingService $bookingService;
+    protected CalcomV2Service $calcomService;
+    protected CustomFunctionHandler $customFunctionHandler;
     
     public function __construct(
         PhoneNumberResolver $phoneResolver,
-        AppointmentBookingService $bookingService
+        AppointmentBookingService $bookingService,
+        CalcomV2Service $calcomService
     ) {
         $this->phoneResolver = $phoneResolver;
         $this->bookingService = $bookingService;
+        $this->calcomService = $calcomService;
+        $this->customFunctionHandler = new CustomFunctionHandler($bookingService, $calcomService);
     }
     
     /**
@@ -393,10 +400,19 @@ class RetellCustomFunctionMCPServer
         $company = Company::withoutGlobalScope(\App\Scopes\TenantScope::class)->first();
         $branch = null;
         if ($company) {
+            // Get the branch with staff (Hauptfiliale)
             $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
                 ->where('company_id', $company->id)
-                ->where('is_active', true)
+                ->where('id', '35a66176-5376-11f0-b773-0ad77e7a9793')
                 ->first();
+            
+            // If not found, get any active branch
+            if (!$branch) {
+                $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                    ->where('company_id', $company->id)
+                    ->where('is_active', true)
+                    ->first();
+            }
         }
         
         return [
@@ -557,18 +573,118 @@ class RetellCustomFunctionMCPServer
      */
     protected function getAvailableSlots(string $branchId, string $date, ?string $serviceName): array
     {
-        // TODO: Implement actual availability check
-        // For now, return mock data
-        $slots = [];
-        $start = Carbon::parse($date)->setTime(9, 0);
-        $end = Carbon::parse($date)->setTime(17, 0);
-        
-        while ($start < $end) {
-            $slots[] = $start->format('Y-m-d H:i:s');
-            $start->addMinutes(30);
+        try {
+            // Parse the date using our German date parser
+            $parsedDate = $this->parseDate($date);
+            $dateObj = Carbon::parse($parsedDate);
+            
+            // Get staff members for this branch with the service
+            $staffMembers = \DB::table('staff')
+                ->where('branch_id', $branchId)
+                ->where('deleted_at', null)
+                ->pluck('id');
+            
+            if ($staffMembers->isEmpty()) {
+                Log::warning('No staff members found for branch', ['branch_id' => $branchId]);
+                return [];
+            }
+            
+            // Get working hours for the requested day
+            $dayOfWeek = $dateObj->dayOfWeek;
+            // Sunday is 0 in Carbon but 7 in our database
+            if ($dayOfWeek === 0) {
+                $dayOfWeek = 7;
+            }
+            
+            $workingHours = \DB::table('working_hours')
+                ->whereIn('staff_id', $staffMembers)
+                ->where('day_of_week', $dayOfWeek)
+                ->get();
+            
+            if ($workingHours->isEmpty()) {
+                Log::warning('No working hours for this day', [
+                    'branch_id' => $branchId,
+                    'day_of_week' => $dayOfWeek,
+                    'date' => $date
+                ]);
+                return [];
+            }
+            
+            $slots = [];
+            
+            foreach ($workingHours as $wh) {
+                // Get existing appointments for this staff member on this date
+                $existingAppointments = \DB::table('appointments')
+                    ->where('staff_id', $wh->staff_id)
+                    ->where('branch_id', $branchId)
+                    ->whereDate('starts_at', $dateObj->format('Y-m-d'))
+                    ->whereIn('status', ['scheduled', 'confirmed'])
+                    ->orderBy('starts_at')
+                    ->get(['starts_at', 'ends_at']);
+                
+                // Generate time slots
+                $start = Carbon::parse($date . ' ' . $wh->start);
+                $end = Carbon::parse($date . ' ' . $wh->end);
+                $slotDuration = 30; // 30-minute slots
+                
+                // If it's today, start from next available slot
+                if ($dateObj->isToday() && $start->isPast()) {
+                    $now = Carbon::now();
+                    $nextSlot = $now->copy()->addMinutes(30 - ($now->minute % 30))->second(0);
+                    if ($nextSlot->isAfter($start)) {
+                        $start = $nextSlot;
+                    }
+                }
+                
+                while ($start->copy()->addMinutes($slotDuration)->lte($end)) {
+                    $slotEnd = $start->copy()->addMinutes($slotDuration);
+                    
+                    // Check if this slot conflicts with existing appointments
+                    $isAvailable = true;
+                    foreach ($existingAppointments as $apt) {
+                        $aptStart = Carbon::parse($apt->starts_at);
+                        $aptEnd = Carbon::parse($apt->ends_at);
+                        
+                        // Check for overlap
+                        if (!($slotEnd->lte($aptStart) || $start->gte($aptEnd))) {
+                            $isAvailable = false;
+                            break;
+                        }
+                    }
+                    
+                    if ($isAvailable) {
+                        $slots[] = $start->format('Y-m-d H:i:s');
+                    }
+                    
+                    $start->addMinutes($slotDuration);
+                }
+            }
+            
+            // Remove duplicates and sort
+            $slots = array_unique($slots);
+            sort($slots);
+            
+            return array_values($slots);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to get available slots', [
+                'branch_id' => $branchId,
+                'date' => $date,
+                'error' => $e->getMessage()
+            ]);
+            
+            // Fallback to some default slots if there's an error
+            $fallbackSlots = [];
+            $start = Carbon::parse($date)->setTime(9, 0);
+            $end = Carbon::parse($date)->setTime(17, 0);
+            
+            while ($start < $end) {
+                $fallbackSlots[] = $start->format('Y-m-d H:i:s');
+                $start->addMinutes(30);
+            }
+            
+            return $fallbackSlots;
         }
-        
-        return $slots;
     }
     
     /**
@@ -588,6 +704,42 @@ class RetellCustomFunctionMCPServer
     }
     
     /**
+     * Handle generic function call from Retell.ai
+     * This is the main entry point for all custom functions
+     */
+    public function handleFunctionCall(string $functionName, array $parameters, ?string $callId = null): array
+    {
+        Log::info('MCP: Handling Retell custom function', [
+            'function' => $functionName,
+            'call_id' => $callId,
+            'has_parameters' => !empty($parameters)
+        ]);
+
+        // Add context information if available
+        if ($callId && !isset($parameters['call_id'])) {
+            $parameters['call_id'] = $callId;
+        }
+
+        // Resolve company/branch context from phone numbers if available
+        if (isset($parameters['to_number']) || isset($parameters['caller_number'])) {
+            $context = $this->resolveContext(
+                $parameters['caller_number'] ?? null,
+                $parameters['to_number'] ?? null
+            );
+
+            if ($context['company_id'] && !isset($parameters['company_id'])) {
+                $parameters['company_id'] = $context['company_id'];
+            }
+            if ($context['branch_id'] && !isset($parameters['branch_id'])) {
+                $parameters['branch_id'] = $context['branch_id'];
+            }
+        }
+
+        // Delegate to the custom function handler
+        return $this->customFunctionHandler->handleFunctionCall($functionName, $parameters, $callId);
+    }
+
+    /**
      * Health check
      */
     public function health(): array
@@ -595,6 +747,22 @@ class RetellCustomFunctionMCPServer
         return [
             'status' => 'healthy',
             'service' => 'RetellCustomFunctionMCPServer',
+            'handler' => 'CustomFunctionHandler',
+            'supported_functions' => [
+                'extract_appointment_details',
+                'identify_customer',
+                'determine_service',
+                'book_appointment',
+                'book_group_appointment',
+                'check_availability',
+                'get_business_hours',
+                'list_services',
+                'cancel_appointment',
+                'reschedule_appointment',
+                // Legacy functions still supported
+                'collect_appointment',
+                'change_appointment'
+            ],
             'timestamp' => now()->toIso8601String(),
         ];
     }

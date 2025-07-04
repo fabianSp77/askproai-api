@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/api/mobile/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Mobile API - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Mobile API";
+        var mkdocs_page_input_path = "api/mobile.md";
+        var mkdocs_page_url = "/mkdocs/api/mobile/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>Mobile API</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="mobile-api">Mobile API</h1>
+<p>The AskProAI Mobile API provides a comprehensive set of endpoints optimized for mobile applications, supporting both iOS and Android platforms with features like offline sync, push notifications, and optimized data transfer.</p>
+<h2 id="overview">Overview</h2>
+<p>The Mobile API is designed with mobile-first principles:
+- 📱 Optimized payload sizes
+- 🔄 Offline synchronization support
+- 📍 Location-based features
+- 🔔 Push notification integration
+- 🔐 Biometric authentication support
+- ⚡ Efficient pagination and caching</p>
+<h2 id="base-url">Base URL</h2>
+<pre><code>https://api.askproai.de/api/mobile/v1
+</code></pre>
+<h2 id="authentication">Authentication</h2>
+<h3 id="initial-authentication">Initial Authentication</h3>
+<pre><code class="language-http">POST /api/mobile/v1/auth/login
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;email&quot;: &quot;user@example.com&quot;,
+    &quot;password&quot;: &quot;secure_password&quot;,
+    &quot;device&quot;: {
+        &quot;id&quot;: &quot;device-uuid&quot;,
+        &quot;type&quot;: &quot;ios&quot;,
+        &quot;model&quot;: &quot;iPhone 14&quot;,
+        &quot;os_version&quot;: &quot;16.5&quot;,
+        &quot;app_version&quot;: &quot;1.2.0&quot;
+    }
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;user&quot;: {
+        &quot;id&quot;: &quot;user-uuid&quot;,
+        &quot;name&quot;: &quot;Max Mustermann&quot;,
+        &quot;email&quot;: &quot;user@example.com&quot;,
+        &quot;company_id&quot;: &quot;company-uuid&quot;
+    },
+    &quot;tokens&quot;: {
+        &quot;access_token&quot;: &quot;jwt-access-token&quot;,
+        &quot;refresh_token&quot;: &quot;jwt-refresh-token&quot;,
+        &quot;expires_in&quot;: 3600
+    },
+    &quot;permissions&quot;: [&quot;view_appointments&quot;, &quot;book_appointments&quot;, &quot;manage_customers&quot;]
+}
+</code></pre>
+<h3 id="biometric-authentication">Biometric Authentication</h3>
+<pre><code class="language-http">POST /api/mobile/v1/auth/biometric
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;device_id&quot;: &quot;device-uuid&quot;,
+    &quot;biometric_token&quot;: &quot;encrypted-biometric-data&quot;
+}
+</code></pre>
+<h3 id="token-refresh">Token Refresh</h3>
+<pre><code class="language-http">POST /api/mobile/v1/auth/refresh
+</code></pre>
+<h2 id="dashboard">Dashboard</h2>
+<h3 id="home-screen-data">Home Screen Data</h3>
+<pre><code class="language-http">GET /api/mobile/v1/dashboard
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;stats&quot;: {
+        &quot;today_appointments&quot;: 12,
+        &quot;pending_callbacks&quot;: 3,
+        &quot;new_customers&quot;: 5,
+        &quot;revenue_today&quot;: 450.00
+    },
+    &quot;upcoming_appointments&quot;: [
+        {
+            &quot;id&quot;: &quot;apt-uuid&quot;,
+            &quot;customer_name&quot;: &quot;Anna Schmidt&quot;,
+            &quot;service&quot;: &quot;Haarschnitt&quot;,
+            &quot;time&quot;: &quot;2025-06-26T10:00:00+02:00&quot;,
+            &quot;duration&quot;: 30,
+            &quot;staff_name&quot;: &quot;Maria&quot;
+        }
+    ],
+    &quot;recent_activities&quot;: [
+        {
+            &quot;type&quot;: &quot;new_booking&quot;,
+            &quot;description&quot;: &quot;New appointment booked&quot;,
+            &quot;time&quot;: &quot;2025-06-25T15:30:00+02:00&quot;
+        }
+    ]
+}
+</code></pre>
+<h2 id="appointments">Appointments</h2>
+<h3 id="list-appointments">List Appointments</h3>
+<pre><code class="language-http">GET /api/mobile/v1/appointments
+</code></pre>
+<p><strong>Query Parameters:</strong>
+- <code>date</code>: Filter by date (YYYY-MM-DD)
+- <code>status</code>: Filter by status (scheduled, completed, cancelled)
+- <code>page</code>: Page number
+- <code>per_page</code>: Items per page (default: 20)</p>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: &quot;apt-uuid&quot;,
+            &quot;customer&quot;: {
+                &quot;id&quot;: &quot;cust-uuid&quot;,
+                &quot;name&quot;: &quot;Max Mustermann&quot;,
+                &quot;phone&quot;: &quot;+4915123456789&quot;,
+                &quot;avatar_url&quot;: &quot;https://cdn.askproai.de/avatars/max.jpg&quot;
+            },
+            &quot;service&quot;: {
+                &quot;id&quot;: &quot;srv-uuid&quot;,
+                &quot;name&quot;: &quot;Haarschnitt Herren&quot;,
+                &quot;duration&quot;: 30,
+                &quot;price&quot;: 25.00
+            },
+            &quot;staff&quot;: {
+                &quot;id&quot;: &quot;staff-uuid&quot;,
+                &quot;name&quot;: &quot;Maria&quot;,
+                &quot;avatar_url&quot;: &quot;https://cdn.askproai.de/avatars/maria.jpg&quot;
+            },
+            &quot;scheduled_at&quot;: &quot;2025-06-26T10:00:00+02:00&quot;,
+            &quot;status&quot;: &quot;scheduled&quot;,
+            &quot;notes&quot;: &quot;Kunde bevorzugt kurze Haare&quot;
+        }
+    ],
+    &quot;meta&quot;: {
+        &quot;current_page&quot;: 1,
+        &quot;total_pages&quot;: 5,
+        &quot;total_items&quot;: 94,
+        &quot;has_more&quot;: true
+    }
+}
+</code></pre>
+<h3 id="create-quick-appointment">Create Quick Appointment</h3>
+<pre><code class="language-http">POST /api/mobile/v1/appointments/quick
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;customer_phone&quot;: &quot;+4915123456789&quot;,
+    &quot;service_id&quot;: &quot;srv-uuid&quot;,
+    &quot;datetime&quot;: &quot;2025-06-26T14:00:00+02:00&quot;,
+    &quot;notes&quot;: &quot;Walk-in customer&quot;
+}
+</code></pre>
+<h3 id="update-appointment-status">Update Appointment Status</h3>
+<pre><code class="language-http">PATCH /api/mobile/v1/appointments/{id}/status
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;status&quot;: &quot;completed&quot;,
+    &quot;completion_notes&quot;: &quot;Customer was satisfied&quot;
+}
+</code></pre>
+<h2 id="customers">Customers</h2>
+<h3 id="search-customers">Search Customers</h3>
+<pre><code class="language-http">GET /api/mobile/v1/customers/search
+</code></pre>
+<p><strong>Query Parameters:</strong>
+- <code>q</code>: Search query (name, phone, email)
+- <code>limit</code>: Max results (default: 10)</p>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;results&quot;: [
+        {
+            &quot;id&quot;: &quot;cust-uuid&quot;,
+            &quot;name&quot;: &quot;Anna Schmidt&quot;,
+            &quot;phone&quot;: &quot;+4915198765432&quot;,
+            &quot;email&quot;: &quot;anna@example.com&quot;,
+            &quot;last_visit&quot;: &quot;2025-06-20&quot;,
+            &quot;total_visits&quot;: 15,
+            &quot;favorite_services&quot;: [&quot;Haarschnitt&quot;, &quot;Färben&quot;],
+            &quot;notes&quot;: &quot;Allergisch gegen bestimmte Produkte&quot;
+        }
+    ]
+}
+</code></pre>
+<h3 id="customer-timeline">Customer Timeline</h3>
+<pre><code class="language-http">GET /api/mobile/v1/customers/{id}/timeline
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;customer&quot;: {
+        &quot;id&quot;: &quot;cust-uuid&quot;,
+        &quot;name&quot;: &quot;Anna Schmidt&quot;,
+        &quot;member_since&quot;: &quot;2024-01-15&quot;
+    },
+    &quot;timeline&quot;: [
+        {
+            &quot;date&quot;: &quot;2025-06-20&quot;,
+            &quot;type&quot;: &quot;appointment&quot;,
+            &quot;service&quot;: &quot;Haarschnitt&quot;,
+            &quot;staff&quot;: &quot;Maria&quot;,
+            &quot;price&quot;: 35.00,
+            &quot;rating&quot;: 5
+        },
+        {
+            &quot;date&quot;: &quot;2025-05-15&quot;,
+            &quot;type&quot;: &quot;call&quot;,
+            &quot;duration&quot;: 180,
+            &quot;outcome&quot;: &quot;booked_appointment&quot;
+        }
+    ]
+}
+</code></pre>
+<h2 id="calls">Calls</h2>
+<h3 id="recent-calls">Recent Calls</h3>
+<pre><code class="language-http">GET /api/mobile/v1/calls
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;calls&quot;: [
+        {
+            &quot;id&quot;: &quot;call-uuid&quot;,
+            &quot;from_number&quot;: &quot;+4915123456789&quot;,
+            &quot;customer_name&quot;: &quot;Max Mustermann&quot;,
+            &quot;duration&quot;: 120,
+            &quot;time&quot;: &quot;2025-06-25T14:30:00+02:00&quot;,
+            &quot;outcome&quot;: &quot;appointment_booked&quot;,
+            &quot;recording_url&quot;: &quot;https://secure.askproai.de/recordings/call-uuid.mp3&quot;
+        }
+    ]
+}
+</code></pre>
+<h3 id="call-details">Call Details</h3>
+<pre><code class="language-http">GET /api/mobile/v1/calls/{id}
+</code></pre>
+<p><strong>Response includes:</strong>
+- Full transcript
+- AI analysis
+- Detected intent
+- Customer sentiment
+- Action items</p>
+<h2 id="push-notifications">Push Notifications</h2>
+<h3 id="register-device">Register Device</h3>
+<pre><code class="language-http">POST /api/mobile/v1/devices/register
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;device_id&quot;: &quot;device-uuid&quot;,
+    &quot;push_token&quot;: &quot;firebase-or-apns-token&quot;,
+    &quot;platform&quot;: &quot;ios&quot;,
+    &quot;preferences&quot;: {
+        &quot;new_appointments&quot;: true,
+        &quot;cancellations&quot;: true,
+        &quot;reminders&quot;: true,
+        &quot;marketing&quot;: false
+    }
+}
+</code></pre>
+<h3 id="update-notification-settings">Update Notification Settings</h3>
+<pre><code class="language-http">PATCH /api/mobile/v1/devices/{device_id}/notifications
+</code></pre>
+<h2 id="offline-sync">Offline Sync</h2>
+<h3 id="sync-status">Sync Status</h3>
+<pre><code class="language-http">GET /api/mobile/v1/sync/status
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;last_sync&quot;: &quot;2025-06-25T16:00:00+02:00&quot;,
+    &quot;pending_changes&quot;: 3,
+    &quot;sync_version&quot;: 156
+}
+</code></pre>
+<h3 id="sync-data">Sync Data</h3>
+<pre><code class="language-http">POST /api/mobile/v1/sync
+</code></pre>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;last_sync_version&quot;: 155,
+    &quot;changes&quot;: [
+        {
+            &quot;type&quot;: &quot;appointment_update&quot;,
+            &quot;id&quot;: &quot;apt-uuid&quot;,
+            &quot;data&quot;: {
+                &quot;status&quot;: &quot;completed&quot;
+            },
+            &quot;timestamp&quot;: &quot;2025-06-25T15:45:00+02:00&quot;
+        }
+    ]
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;sync_version&quot;: 156,
+    &quot;changes&quot;: [
+        {
+            &quot;type&quot;: &quot;new_appointment&quot;,
+            &quot;data&quot;: { /* appointment data */ }
+        }
+    ],
+    &quot;conflicts&quot;: []
+}
+</code></pre>
+<h2 id="analytics">Analytics</h2>
+<h3 id="performance-metrics">Performance Metrics</h3>
+<pre><code class="language-http">GET /api/mobile/v1/analytics/performance
+</code></pre>
+<p><strong>Query Parameters:</strong>
+- <code>period</code>: day, week, month, year
+- <code>branch_id</code>: Filter by branch (optional)</p>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;period&quot;: &quot;week&quot;,
+    &quot;metrics&quot;: {
+        &quot;appointments&quot;: {
+            &quot;total&quot;: 156,
+            &quot;completed&quot;: 145,
+            &quot;cancelled&quot;: 8,
+            &quot;no_show&quot;: 3
+        },
+        &quot;revenue&quot;: {
+            &quot;total&quot;: 4580.00,
+            &quot;average_per_appointment&quot;: 31.59,
+            &quot;growth_percentage&quot;: 12.5
+        },
+        &quot;customers&quot;: {
+            &quot;new&quot;: 23,
+            &quot;returning&quot;: 133,
+            &quot;satisfaction_score&quot;: 4.8
+        }
+    },
+    &quot;chart_data&quot;: {
+        &quot;labels&quot;: [&quot;Mon&quot;, &quot;Tue&quot;, &quot;Wed&quot;, &quot;Thu&quot;, &quot;Fri&quot;, &quot;Sat&quot;, &quot;Sun&quot;],
+        &quot;appointments&quot;: [20, 22, 25, 24, 28, 32, 15],
+        &quot;revenue&quot;: [580, 640, 720, 695, 810, 925, 435]
+    }
+}
+</code></pre>
+<h2 id="location-services">Location Services</h2>
+<h3 id="nearby-branches">Nearby Branches</h3>
+<pre><code class="language-http">GET /api/mobile/v1/branches/nearby
+</code></pre>
+<p><strong>Query Parameters:</strong>
+- <code>lat</code>: Latitude
+- <code>lng</code>: Longitude
+- <code>radius</code>: Search radius in km (default: 10)</p>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;branches&quot;: [
+        {
+            &quot;id&quot;: &quot;branch-uuid&quot;,
+            &quot;name&quot;: &quot;AskProAI Berlin Mitte&quot;,
+            &quot;address&quot;: &quot;Friedrichstraße 123, 10117 Berlin&quot;,
+            &quot;distance&quot;: 1.2,
+            &quot;phone&quot;: &quot;+493012345678&quot;,
+            &quot;opening_hours&quot;: {
+                &quot;today&quot;: &quot;09:00-18:00&quot;,
+                &quot;is_open&quot;: true
+            },
+            &quot;services_available&quot;: [&quot;Haarschnitt&quot;, &quot;Färben&quot;, &quot;Styling&quot;]
+        }
+    ]
+}
+</code></pre>
+<h2 id="error-handling">Error Handling</h2>
+<h3 id="error-response-format">Error Response Format</h3>
+<pre><code class="language-json">{
+    &quot;error&quot;: {
+        &quot;code&quot;: &quot;VALIDATION_ERROR&quot;,
+        &quot;message&quot;: &quot;Invalid input data&quot;,
+        &quot;details&quot;: {
+            &quot;field&quot;: &quot;customer_phone&quot;,
+            &quot;issue&quot;: &quot;Invalid phone number format&quot;
+        }
+    }
+}
+</code></pre>
+<h3 id="common-error-codes">Common Error Codes</h3>
+<ul>
+<li><code>AUTHENTICATION_REQUIRED</code>: Missing or invalid token</li>
+<li><code>PERMISSION_DENIED</code>: Insufficient permissions</li>
+<li><code>RESOURCE_NOT_FOUND</code>: Requested resource doesn't exist</li>
+<li><code>VALIDATION_ERROR</code>: Input validation failed</li>
+<li><code>SYNC_CONFLICT</code>: Offline sync conflict</li>
+<li><code>RATE_LIMITED</code>: Too many requests</li>
+</ul>
+<h2 id="performance-guidelines">Performance Guidelines</h2>
+<h3 id="request-optimization">Request Optimization</h3>
+<ol>
+<li>Use field filtering: <code>?fields=id,name,phone</code></li>
+<li>Implement pagination for lists</li>
+<li>Cache responses with ETags</li>
+<li>Use compression (gzip)</li>
+<li>Batch multiple operations when possible</li>
+</ol>
+<h3 id="data-efficiency">Data Efficiency</h3>
+<pre><code class="language-http">GET /api/mobile/v1/appointments?fields=id,customer.name,scheduled_at&amp;slim=true
+</code></pre>
+<h3 id="image-handling">Image Handling</h3>
+<p>All images support responsive sizing:</p>
+<pre><code>https://cdn.askproai.de/avatars/user.jpg?w=100&amp;h=100&amp;q=85
+</code></pre>
+<h2 id="sdk-integration">SDK Integration</h2>
+<h3 id="ios-swift">iOS (Swift)</h3>
+<pre><code class="language-swift">import AskProAIKit
+
+let client = AskProAIClient(apiKey: &quot;your-api-key&quot;)
+
+// Fetch appointments
+client.appointments.list(date: Date()) { result in
+    switch result {
+    case .success(let appointments):
+        // Handle appointments
+    case .failure(let error):
+        // Handle error
+    }
+}
+</code></pre>
+<h3 id="android-kotlin">Android (Kotlin)</h3>
+<pre><code class="language-kotlin">val client = AskProAIClient.getInstance(context)
+
+// Fetch appointments
+client.appointments.list(date = LocalDate.now()) { appointments -&gt;
+    // Update UI
+}
+</code></pre>
+<h3 id="react-native">React Native</h3>
+<pre><code class="language-javascript">import { AskProAI } from '@askproai/mobile-sdk';
+
+const client = new AskProAI({ apiKey: 'your-api-key' });
+
+// Fetch appointments
+const appointments = await client.appointments.list({
+    date: new Date()
+});
+</code></pre>
+<hr />
+<p><em>Last updated: June 25, 2025</em></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -538,9 +538,7 @@
         @include('filament.admin.pages.partials.retell-control-center.agent-functions-viewer')
         
         {{-- Agent Editor Modal (old version) --}}
-        @if($showAgentEditor)
-            @include('filament.admin.pages.partials.retell-control-center.agent-editor')
-        @endif
+        @includeWhen($showAgentEditor, 'filament.admin.pages.partials.retell-control-center.agent-editor')
         
         {{-- Performance Dashboard Modal --}}
         @if($showPerformanceDashboard)
@@ -565,7 +563,7 @@
                     border-radius: 1rem;
                     overflow: hidden;
                     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-                " wire:click.stop>
+                " @click.stop>
                     @include('filament.admin.pages.partials.retell-control-center.agent-performance')
                 </div>
             </div>

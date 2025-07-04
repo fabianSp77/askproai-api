@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filament CSS Diagnostic</title>
+    <link rel="stylesheet" href="/css/filament/filament/app.css">
+    <link rel="stylesheet" href="/css/filament-hotfix.css">
+    <link rel="stylesheet" href="/build/assets/theme-7pLFGx1V.css">
+</head>
+<body>
+    <div class="fi-layout">
+        <aside class="fi-sidebar">
+            <div class="fi-sidebar-header">
+                <h1>Filament Diagnostic</h1>
+            </div>
+            <nav class="fi-sidebar-nav">
+                <ul>
+                    <li><a href="#">Menu Item 1</a></li>
+                    <li><a href="#">Menu Item 2</a></li>
+                    <li><a href="#">Menu Item 3</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <div class="fi-main">
+            <header class="fi-topbar">
+                <h2>Top Bar</h2>
+            </header>
+            <main class="fi-page">
+                <h1>CSS Loading Test</h1>
+                <p>If you can see this layout with sidebar on the left, CSS is working.</p>
+                
+                <h2>Loaded Stylesheets:</h2>
+                <ul id="stylesheets"></ul>
+                
+                <script>
+                    const sheets = Array.from(document.styleSheets);
+                    const list = document.getElementById('stylesheets');
+                    sheets.forEach(sheet => {
+                        if (sheet.href) {
+                            const li = document.createElement('li');
+                            li.textContent = sheet.href;
+                            list.appendChild(li);
+                        }
+                    });
+                </script>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

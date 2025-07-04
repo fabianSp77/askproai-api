@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Services\Security\ApiKeyService;
 
@@ -33,6 +34,11 @@ class Company extends Model
         'trial_ends_at',
         'subscription_status',
         'subscription_plan',
+        // Language settings
+        'default_language',
+        'supported_languages',
+        'auto_translate',
+        'translation_provider',
         // API Keys
         'retell_api_key',
         'retell_agent_id',
@@ -48,6 +54,12 @@ class Company extends Model
         'vat_id',
         'is_small_business',
         'small_business_threshold_date',
+        // Billing fields
+        'alert_preferences',
+        'billing_contact_email',
+        'billing_contact_phone',
+        'usage_budget',
+        'alerts_enabled',
         'tax_configuration',
         'invoice_prefix',
         'next_invoice_number',
@@ -69,9 +81,11 @@ class Company extends Model
         'tax_configuration' => 'array',
         'retell_default_settings' => 'array',
         'google_calendar_credentials' => 'encrypted:array',
+        'supported_languages' => 'array',
         'is_active' => 'boolean',
         'is_small_business' => 'boolean',
         'auto_invoice' => 'boolean',
+        'auto_translate' => 'boolean',
         'trial_ends_at' => 'datetime',
         'small_business_threshold_date' => 'date',
         'next_invoice_number' => 'integer',
@@ -131,6 +145,14 @@ class Company extends Model
     }
     
     /**
+     * Check if company needs appointment booking
+     */
+    public function needsAppointmentBooking(): bool
+    {
+        return $this->settings['needs_appointment_booking'] ?? true;
+    }
+    
+    /**
      * Get decrypted Retell API key
      */
     public function getRetellApiKeyAttribute($value)
@@ -141,9 +163,36 @@ class Company extends Model
         
         try {
             $apiKeyService = app(ApiKeyService::class);
-            return $apiKeyService->decrypt($value);
+            
+            // Check if it looks like an encrypted value
+            if ($apiKeyService->isEncrypted($value)) {
+                $decrypted = $apiKeyService->decrypt($value);
+                if ($decrypted) {
+                    \Log::debug('Retell API key decrypted successfully', [
+                        'company_id' => $this->id,
+                        'key_preview' => substr($decrypted, 0, 8) . '...'
+                    ]);
+                    return $decrypted;
+                }
+            }
+            
+            // If it looks like a plain API key, use it directly
+            if (str_starts_with($value, 'key_')) {
+                \Log::debug('Using plain Retell API key', [
+                    'company_id' => $this->id,
+                    'key_preview' => substr($value, 0, 8) . '...'
+                ]);
+                return $value;
+            }
+            
+            // Otherwise try to decrypt anyway
+            return $apiKeyService->decrypt($value) ?: $value;
         } catch (\Exception $e) {
-            // If decryption fails, assume it's not encrypted
+            \Log::warning('Failed to decrypt Retell API key, using as-is', [
+                'company_id' => $this->id,
+                'error' => $e->getMessage()
+            ]);
+            // If decryption fails, return the value as-is
             return $value;
         }
     }
@@ -159,9 +208,36 @@ class Company extends Model
         
         try {
             $apiKeyService = app(ApiKeyService::class);
-            return $apiKeyService->decrypt($value);
+            
+            // Check if it looks like an encrypted value
+            if ($apiKeyService->isEncrypted($value)) {
+                $decrypted = $apiKeyService->decrypt($value);
+                if ($decrypted) {
+                    \Log::debug('Cal.com API key decrypted successfully', [
+                        'company_id' => $this->id,
+                        'key_preview' => substr($decrypted, 0, 8) . '...'
+                    ]);
+                    return $decrypted;
+                }
+            }
+            
+            // If it looks like a plain UUID (Cal.com keys), use it directly
+            if (preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i', $value)) {
+                \Log::debug('Using plain Cal.com API key', [
+                    'company_id' => $this->id,
+                    'key_preview' => substr($value, 0, 8) . '...'
+                ]);
+                return $value;
+            }
+            
+            // Otherwise try to decrypt anyway
+            return $apiKeyService->decrypt($value) ?: $value;
         } catch (\Exception $e) {
-            // If decryption fails, assume it's not encrypted
+            \Log::warning('Failed to decrypt Cal.com API key, using as-is', [
+                'company_id' => $this->id,
+                'error' => $e->getMessage()
+            ]);
+            // If decryption fails, return the value as-is
             return $value;
         }
     }
@@ -224,6 +300,54 @@ class Company extends Model
     public function calls(): HasMany
     {
         return $this->hasMany(Call::class);
+    }
+
+    /**
+     * Get the prepaid balance for the company.
+     */
+    public function prepaidBalance(): HasOne
+    {
+        return $this->hasOne(PrepaidBalance::class);
+    }
+
+    /**
+     * Get the balance transactions for the company.
+     */
+    public function balanceTransactions(): HasMany
+    {
+        return $this->hasMany(BalanceTransaction::class);
+    }
+
+    /**
+     * Get the balance topups for the company.
+     */
+    public function balanceTopups(): HasMany
+    {
+        return $this->hasMany(BalanceTopup::class);
+    }
+
+    /**
+     * Get the billing rate for the company.
+     */
+    public function billingRate(): HasOne
+    {
+        return $this->hasOne(BillingRate::class);
+    }
+
+    /**
+     * Get the call charges for the company.
+     */
+    public function callCharges(): HasMany
+    {
+        return $this->hasMany(CallCharge::class);
+    }
+
+    /**
+     * Get the portal users for the company.
+     */
+    public function portalUsers(): HasMany
+    {
+        return $this->hasMany(PortalUser::class);
     }
 
     /**
@@ -351,6 +475,28 @@ class Company extends Model
     public function getRouteKeyName(): string
     {
         return 'id';
+    }
+    
+    /**
+     * Check if company has a specific module enabled
+     */
+    public function hasModule(string $module): bool
+    {
+        // By default, all companies have calls module
+        if ($module === 'calls') {
+            return true;
+        }
+        
+        // Check settings for other modules
+        $enabledModules = $this->getSetting('enabled_modules', [
+            'calls' => true,
+            'appointments' => true,
+            'customers' => true,
+            'billing' => true,
+            'analytics' => true,
+        ]);
+        
+        return $enabledModules[$module] ?? false;
     }
     
 

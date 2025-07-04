@@ -1,0 +1,69 @@
+/* ========================================
+   BRANCH DROPDOWN SPECIFIC FIX
+   Fixes GitHub Issue #213
+   ======================================== */
+
+/* Ensure branch dropdown has highest priority */
+.branch-selector-dropdown {
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+/* The dropdown panel must be absolutely positioned */
+.branch-selector-dropdown > div[x-show="open"] {
+    position: absolute !important;
+    z-index: 999999 !important;
+    /* Ensure it's not clipped by any parent */
+    overflow: visible !important;
+}
+
+/* Fix for Filament's header which might clip dropdowns */
+.fi-header,
+.fi-topbar {
+    overflow: visible !important;
+}
+
+/* Ensure the dropdown trigger button works */
+.branch-selector-dropdown button[aria-label] {
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* Override any transform that might affect positioning */
+.branch-selector-dropdown * {
+    transform: none !important;
+}
+
+/* Make sure dropdown is clickable */
+.branch-selector-dropdown [role="menu"] {
+    pointer-events: auto !important;
+    user-select: auto !important;
+}
+
+/* Buttons inside dropdown must be clickable */
+.branch-selector-dropdown button[role="menuitem"] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Fix for search input */
+.branch-selector-dropdown input[type="text"] {
+    pointer-events: auto !important;
+}
+
+/* Ensure animations don't break functionality */
+.branch-selector-dropdown [x-show] {
+    transition-property: opacity, transform !important;
+}
+
+/* Debug styles - uncomment to visualize issues */
+/*
+.branch-selector-dropdown {
+    border: 2px solid red !important;
+}
+
+.branch-selector-dropdown > div[x-show="open"] {
+    background: rgba(255, 0, 0, 0.1) !important;
+    border: 2px solid green !important;
+}
+*/

@@ -18,6 +18,11 @@ class SyncCalendarEventTypes extends Command
 
     public function handle()
     {
+        $this->error('This command needs to be updated - UnifiedEventType model has been removed.');
+        $this->info('Please use CalcomEventType model instead or use the EventTypeImportWizard in the admin panel.');
+        return 1;
+        
+        /* Original code commented out - needs migration to CalcomEventType model
         $this->info('Starting calendar event types synchronization...');
         
         $query = Branch::query();
@@ -126,5 +131,6 @@ class SyncCalendarEventTypes extends Command
         }
         
         return $synced;
+        */
     }
 }

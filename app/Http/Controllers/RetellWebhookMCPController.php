@@ -152,11 +152,38 @@ class RetellWebhookMCPController extends Controller
             ];
         }
         
-        // For now, let's skip the booking orchestrator and just use the webhook service result
-        // TODO: Re-enable booking orchestrator after fixing context resolution
-        // if ($event === 'call_ended' && $this->hasBookingData($payload)) {
-        //     return $this->processBookingThroughMCP($payload, $correlationId);
-        // }
+        // Check if we should use the booking orchestrator
+        if ($event === 'call_ended' && $this->hasBookingData($payload)) {
+            // Extract phone number from call data
+            $phoneNumber = $payload['call']['to_number'] ?? $payload['call']['to'] ?? null;
+            
+            if ($phoneNumber) {
+                // Resolve context from phone number first
+                $context = $this->contextResolver->resolveFromPhone($phoneNumber);
+                
+                if ($context['success']) {
+                    // Set tenant context before calling booking orchestrator
+                    $this->contextResolver->setTenantContext($context['company']['id']);
+                    
+                    try {
+                        // Now we can safely call the booking orchestrator with context established
+                        $bookingResult = $this->processBookingThroughMCP($payload, $correlationId);
+                        
+                        // Merge booking result with webhook result
+                        return array_merge($result, $bookingResult);
+                    } finally {
+                        // Always clear tenant context after processing
+                        $this->contextResolver->clearTenantContext();
+                    }
+                } else {
+                    Log::warning('MCP Retell: Failed to resolve context for booking orchestrator', [
+                        'phone' => $phoneNumber,
+                        'error' => $context['error'] ?? 'Unknown error',
+                        'correlation_id' => $correlationId
+                    ]);
+                }
+            }
+        }
         
         return $result;
     }
@@ -177,6 +204,12 @@ class RetellWebhookMCPController extends Controller
                 ...$payload
             ];
             
+            Log::info('MCP Retell: Processing booking through orchestrator', [
+                'correlation_id' => $correlationId,
+                'has_context' => !is_null($this->contextResolver->getCurrentContext()),
+                'call_id' => $bookingPayload['call_id']
+            ]);
+            
             // Let the booking orchestrator handle the complete flow
             $result = $this->bookingOrchestrator->handleWebhook($bookingPayload);
             
@@ -185,6 +218,11 @@ class RetellWebhookMCPController extends Controller
                     'error' => $result['error'] ?? 'Unknown error',
                     'correlation_id' => $correlationId
                 ]);
+            } else {
+                Log::info('MCP Retell: Booking processed successfully', [
+                    'correlation_id' => $correlationId,
+                    'appointment_created' => $result['appointment'] ?? false
+                ]);
             }
             
             return $result;
@@ -192,10 +230,17 @@ class RetellWebhookMCPController extends Controller
         } catch (\Exception $e) {
             Log::error('MCP Retell: Booking orchestration failed', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'correlation_id' => $correlationId
             ]);
             
-            throw $e;
+            // Return error but don't throw to prevent webhook retry
+            return [
+                'success' => false,
+                'error' => 'Booking orchestration failed',
+                'message' => $e->getMessage(),
+                'correlation_id' => $correlationId
+            ];
         }
     }
     

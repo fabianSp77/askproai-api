@@ -96,7 +96,7 @@ class AppointmentResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
     protected static ?string $navigationLabel = 'Termine';
     protected static ?string $navigationGroup = 'Täglicher Betrieb';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 20;
 
     public static function form(Form $form): Form
     {

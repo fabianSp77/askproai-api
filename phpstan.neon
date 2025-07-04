@@ -1,0 +1,59 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - app
+        - config
+        - database/factories
+        - database/seeders
+        - routes
+        - tests
+
+    excludePaths:
+        - app/Providers/TelescopeServiceProvider.php
+        - app/Helpers/features.php
+
+    ignoreErrors:
+        # Ignore some Laravel-specific magic
+        - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
+        - '#Call to an undefined method Illuminate\\Database\\Query\\Builder#'
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
+        - '#Method App\\Models\\[a-zA-Z]+::query\(\) should return#'
+
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: false
+    reportUnmatchedIgnoredErrors: true
+    treatPhpDocTypesAsCertain: false
+
+    # Strict rules for better code quality
+    checkAlwaysTrueCheckTypeFunctionCall: true
+    checkAlwaysTrueInstanceof: true
+    checkAlwaysTrueStrictComparison: true
+    checkExplicitMixedMissingReturn: true
+    checkFunctionNameCase: true
+    checkInternalClassCaseSensitivity: true
+    checkMissingClosureNativeReturnTypehintRule: true
+    checkMissingIterableValueType: true
+    checkModelProperties: true
+    checkNullables: true
+    checkOctaneCompatibility: true
+    checkPropertyNaming: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    
+    # Database and model analysis
+    databaseMigrationsPath:
+        - database/migrations
+    
+    # Parallel processing for faster analysis
+    parallel:
+        processTimeout: 600.0
+        maximumNumberOfProcesses: 4
+        minimumNumberOfJobsPerProcess: 2
+    
+    # Type coverage requirements
+    type_coverage:
+        return_type: 95
+        param_type: 95
+        property_type: 95

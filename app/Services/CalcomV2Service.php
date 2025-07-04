@@ -256,29 +256,47 @@ class CalcomV2Service
      */
     public function getEventTypes()
     {
-        return $this->circuitBreaker->call('calcom', function() {
-            $url = $this->baseUrlV1 . '/event-types';
-            
-            $response = $this->httpWithRetry()
-                ->withHeaders([
-                    'Content-Type' => 'application/json',
-                ])
-                ->get($url, ['apiKey' => $this->apiKey]);
+        try {
+            return $this->circuitBreaker->call('calcom', function() {
+                $url = $this->baseUrlV1 . '/event-types';
+                
+                $response = $this->httpWithRetry()
+                    ->withHeaders([
+                        'Content-Type' => 'application/json',
+                    ])
+                    ->get($url, ['apiKey' => $this->apiKey]);
 
-            if ($response->successful()) {
-                return $response->json();
-            }
+                if ($response->successful()) {
+                    $data = $response->json();
+                    // Cache the successful response
+                    \Cache::put('calcom_event_types_' . md5($this->apiKey), $data['event_types'] ?? [], 300);
+                    
+                    return [
+                        'success' => true,
+                        'data' => $data
+                    ];
+                }
 
-            throw new \Exception("Cal.com getEventTypes failed with status: " . $response->status());
-        }, function() {
-            // Fallback: Return cached event types if available
-            $cached = \Cache::get('calcom_event_types_' . md5($this->apiKey), []);
-            $this->logger->logError(new \Exception('Cal.com circuit open, using cached data'), [
-                'method' => 'getEventTypes',
-                'cached_count' => count($cached)
-            ]);
-            return ['event_types' => $cached];
-        });
+                throw new \Exception("Cal.com getEventTypes failed with status: " . $response->status());
+            }, function() {
+                // Fallback: Return cached event types if available
+                $cached = \Cache::get('calcom_event_types_' . md5($this->apiKey), []);
+                $this->logger->logError(new \Exception('Cal.com circuit open, using cached data'), [
+                    'method' => 'getEventTypes',
+                    'cached_count' => count($cached)
+                ]);
+                return [
+                    'success' => true,
+                    'data' => ['event_types' => $cached],
+                    'cached' => true
+                ];
+            });
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
     }
 
     /**
@@ -667,7 +685,7 @@ class CalcomV2Service
                 'end' => $endTime,
                 'timeZone' => $customerData['timeZone'] ?? 'Europe/Berlin',
                 'language' => 'de',
-                'metadata' => $customerData['metadata'] ?? [],
+                'metadata' => $customerData['metadata'] ?? new \stdClass(),
                 'responses' => $responses
             ];
 
@@ -695,6 +713,182 @@ class CalcomV2Service
         } catch (\Exception $e) {
             Log::error('Cal.com booking error', [
                 'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+    
+    /**
+     * Create a booking (wrapper for bookAppointment to match MCPBookingOrchestrator expectations)
+     * 
+     * @param array{
+     *   eventTypeId: int,
+     *   start: string,
+     *   end?: string,
+     *   duration?: int,
+     *   name: string,
+     *   email: string,
+     *   phone?: string,
+     *   timeZone?: string,
+     *   metadata?: array,
+     *   notes?: string
+     * } $data Booking data
+     * 
+     * @return array{
+     *   success: bool,
+     *   booking?: array{id: int, uid: string},
+     *   error?: string
+     * }
+     */
+    public function createBooking(array $data)
+    {
+        try {
+            // Calculate end time if not provided
+            $startTime = $data['start'];
+            $endTime = $data['end'] ?? null;
+            
+            if (!$endTime && isset($data['duration'])) {
+                $start = new \DateTime($startTime);
+                $start->add(new \DateInterval('PT' . $data['duration'] . 'M'));
+                $endTime = $start->format('c');
+            } elseif (!$endTime) {
+                // Default to 60 minutes if no duration specified
+                $start = new \DateTime($startTime);
+                $start->add(new \DateInterval('PT60M'));
+                $endTime = $start->format('c');
+            }
+            
+            // Call the existing bookAppointment method
+            $result = $this->bookAppointment(
+                $data['eventTypeId'],
+                $startTime,
+                $endTime,
+                [
+                    'name' => $data['name'],
+                    'email' => $data['email'],
+                    'phone' => $data['phone'] ?? null,
+                    'timeZone' => $data['timeZone'] ?? 'Europe/Berlin',
+                    'metadata' => $data['metadata'] ?? new \stdClass()
+                ],
+                $data['notes'] ?? null
+            );
+            
+            // Transform response to expected format
+            if ($result && isset($result['id'])) {
+                Log::info('Cal.com booking created successfully', [
+                    'booking_id' => $result['id'],
+                    'uid' => $result['uid'] ?? null
+                ]);
+                
+                return [
+                    'success' => true,
+                    'data' => [
+                        'id' => $result['id'],
+                        'uid' => $result['uid'] ?? null,
+                        'startTime' => $result['startTime'] ?? $startTime,
+                        'endTime' => $result['endTime'] ?? $endTime,
+                        'attendees' => $result['attendees'] ?? []
+                    ]
+                ];
+            }
+            
+            Log::warning('Cal.com booking failed - no booking ID returned', [
+                'response' => $result
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Booking failed - no booking ID returned'
+            ];
+            
+        } catch (\InvalidArgumentException $e) {
+            Log::error('Cal.com booking validation error', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Validation error: ' . $e->getMessage()
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('Cal.com booking error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Booking failed: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Get available time slots for an event type
+     * 
+     * @param int $eventTypeId
+     * @param string $startDate Format: Y-m-d
+     * @param string $endDate Format: Y-m-d
+     * @param string|null $timeZone
+     * @return array|null
+     */
+    public function getAvailableSlots($eventTypeId, $startDate, $endDate, $timeZone = null)
+    {
+        try {
+            $timeZone = $timeZone ?? 'Europe/Berlin';
+            
+            // Use V1 API for availability (V2 might have different endpoint)
+            $url = $this->baseUrlV1 . '/availability/event-type';
+            
+            $params = [
+                'apiKey' => $this->apiKey,
+                'eventTypeId' => $eventTypeId,
+                'startTime' => $startDate . 'T00:00:00Z',
+                'endTime' => $endDate . 'T23:59:59Z',
+                'timeZone' => $timeZone,
+            ];
+            
+            Log::info('Cal.com availability request', [
+                'url' => $url,
+                'params' => $params
+            ]);
+            
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->get($url, $params);
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                // Transform response to consistent format
+                $days = [];
+                if (isset($data['busy']) && isset($data['timeZone'])) {
+                    // V1 format with busy times
+                    // We need to calculate available slots from busy times
+                    // For now, return raw data
+                    return $data;
+                } elseif (isset($data['slots'])) {
+                    // Direct slots format
+                    return ['days' => [['day' => $startDate, 'slots' => $data['slots']]]];
+                } else {
+                    // Unknown format, return as is
+                    return $data;
+                }
+            }
+            
+            Log::warning('Cal.com availability request failed', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+            
+            return null;
+            
+        } catch (\Exception $e) {
+            Log::error('Cal.com availability error', [
+                'error' => $e->getMessage(),
+                'eventTypeId' => $eventTypeId
             ]);
             return null;
         }

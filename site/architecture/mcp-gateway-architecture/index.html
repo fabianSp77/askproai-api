@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/architecture/mcp-gateway-architecture/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>MCP Gateway Architecture - Complete Implementation Guide - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "MCP Gateway Architecture - Complete Implementation Guide";
+        var mkdocs_page_input_path = "architecture/mcp-gateway-architecture.md";
+        var mkdocs_page_url = "/mkdocs/architecture/mcp-gateway-architecture/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>MCP Gateway Architecture - Complete Implementation Guide</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="mcp-gateway-architecture-complete-implementation-guide">MCP Gateway Architecture - Complete Implementation Guide</h1>
+<p>!!! success "MCP-First Implementation Complete"
+    The MCP Gateway architecture has been fully implemented, providing a unified interface for all external service integrations without any direct API calls from the frontend.</p>
+<h2 id="overview">🎯 Overview</h2>
+<p>The MCP Gateway provides a centralized, protocol-based approach to managing all external service integrations. Instead of scattered API calls throughout the codebase, all external communications flow through specialized MCP servers using the JSON-RPC 2.0 protocol.</p>
+<h2 id="architecture-components">🏗️ Architecture Components</h2>
+<h3 id="core-gateway-infrastructure">Core Gateway Infrastructure</h3>
+<pre><code class="language-mermaid">flowchart TB
+    subgraph &quot;Frontend Layer&quot;
+        UI[Filament UI Pages]
+        JS[JavaScript Components]
+    end
+
+    subgraph &quot;MCP Gateway Layer&quot;
+        GW[MCPGateway&lt;br/&gt;Central Router]
+
+        subgraph &quot;MCP Servers&quot;
+            RC[RetellConfigurationMCPServer]
+            RF[RetellCustomFunctionMCPServer]
+            AM[AppointmentManagementMCPServer]
+            WH[WebhookMCPServer]
+            CM[CalcomMCPServer]
+            DB[DatabaseMCPServer]
+            QM[QueueMCPServer]
+        end
+    end
+
+    subgraph &quot;External Services&quot;
+        RA[Retell.ai API]
+        CA[Cal.com API]
+        RD[Redis Cache]
+        MY[MySQL Database]
+        HZ[Laravel Horizon]
+    end
+
+    UI --&gt;|JSON-RPC 2.0| GW
+    JS --&gt;|/api/mcp/*| GW
+
+    GW --&gt; RC
+    GW --&gt; RF
+    GW --&gt; AM
+    GW --&gt; WH
+    GW --&gt; CM
+    GW --&gt; DB
+    GW --&gt; QM
+
+    RC &lt;--&gt; RA
+    RF &lt;--&gt; RD
+    AM &lt;--&gt; RD
+    WH --&gt; CM
+    WH --&gt; DB
+    CM &lt;--&gt; CA
+    DB &lt;--&gt; MY
+    QM &lt;--&gt; HZ
+
+    style GW fill:#667eea,stroke:#fff,stroke-width:4px,color:#fff
+    style RC fill:#48bb78,stroke:#333,stroke-width:2px
+    style RF fill:#4299e1,stroke:#333,stroke-width:2px
+    style AM fill:#ed8936,stroke:#333,stroke-width:2px
+</code></pre>
+<h2 id="mcpgateway-central-router">📡 MCPGateway - Central Router</h2>
+<p>The MCPGateway (<code>/app/Services/MCP/MCPGateway.php</code>) serves as the central routing point for all MCP communications.</p>
+<h3 id="key-features">Key Features</h3>
+<ol>
+<li><strong>Service Discovery</strong>: Automatically discovers and registers all MCP servers</li>
+<li><strong>Protocol Validation</strong>: Ensures all requests follow JSON-RPC 2.0 specification</li>
+<li><strong>Error Handling</strong>: Standardized error responses with proper codes</li>
+<li><strong>Health Monitoring</strong>: Built-in health checks for all servers</li>
+<li><strong>Circuit Breaker</strong>: Prevents cascading failures</li>
+</ol>
+<h3 id="implementation-details">Implementation Details</h3>
+<pre><code class="language-php">class MCPGateway
+{
+    private array $servers = [];
+    private array $circuitBreakers = [];
+
+    public function __construct()
+    {
+        $this-&gt;registerServers();
+        $this-&gt;initializeCircuitBreakers();
+    }
+
+    public function process(array $request): array
+    {
+        // Validate JSON-RPC 2.0 format
+        $this-&gt;validateRequest($request);
+
+        // Extract method: &quot;server.method&quot;
+        [$serverName, $methodName] = $this-&gt;parseMethod($request['method']);
+
+        // Check circuit breaker
+        if ($this-&gt;isCircuitOpen($serverName)) {
+            return $this-&gt;errorResponse(
+                $request['id'] ?? null,
+                -32603,
+                &quot;Service temporarily unavailable&quot;
+            );
+        }
+
+        // Route to appropriate server
+        try {
+            $server = $this-&gt;servers[$serverName] ?? null;
+            if (!$server) {
+                throw new \Exception(&quot;Unknown server: {$serverName}&quot;);
+            }
+
+            $result = $server-&gt;$methodName($request['params'] ?? []);
+
+            return [
+                'jsonrpc' =&gt; '2.0',
+                'result' =&gt; $result,
+                'id' =&gt; $request['id'] ?? null
+            ];
+
+        } catch (\Exception $e) {
+            $this-&gt;recordFailure($serverName);
+            throw $e;
+        }
+    }
+}
+</code></pre>
+<h3 id="available-endpoints">Available Endpoints</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/api/mcp/gateway</code></td>
+<td>Main gateway endpoint for all MCP requests</td>
+</tr>
+<tr>
+<td><code>/api/mcp/health</code></td>
+<td>Health status of all MCP servers</td>
+</tr>
+<tr>
+<td><code>/api/mcp/metrics</code></td>
+<td>Prometheus-compatible metrics</td>
+</tr>
+</tbody>
+</table>
+<h2 id="retellconfigurationmcpserver">🔧 RetellConfigurationMCPServer</h2>
+<p>Manages all Retell.ai configuration through the UI without direct API calls.</p>
+<h3 id="features">Features</h3>
+<ul>
+<li><strong>Webhook Management</strong>: Configure webhook URLs and events</li>
+<li><strong>Custom Function Deployment</strong>: Deploy and update custom functions</li>
+<li><strong>Agent Configuration</strong>: Update agent prompts and settings</li>
+<li><strong>Testing Tools</strong>: Built-in webhook testing capabilities</li>
+</ul>
+<h3 id="key-methods">Key Methods</h3>
+<pre><code class="language-php">class RetellConfigurationMCPServer extends BaseMCPServer
+{
+    // Get current webhook configuration
+    public function getWebhook(array $params): array
+    {
+        $company = Company::findOrFail($params['company_id']);
+        $retellService = new RetellV2Service($company);
+
+        $agents = $retellService-&gt;getAgents();
+        return [
+            'agents' =&gt; $agents,
+            'webhook_url' =&gt; config('app.url') . '/api/mcp/retell/custom-function'
+        ];
+    }
+
+    // Update webhook configuration
+    public function updateWebhook(array $params): array
+    {
+        $validation = $this-&gt;validateWebhookUpdate($params);
+        if (!$validation['valid']) {
+            throw new \Exception($validation['error']);
+        }
+
+        // Update each agent
+        foreach ($params['agent_ids'] as $agentId) {
+            $this-&gt;updateAgentWebhook($agentId, $params);
+        }
+
+        return ['success' =&gt; true, 'updated_count' =&gt; count($params['agent_ids'])];
+    }
+
+    // Deploy custom functions
+    public function deployCustomFunctions(array $params): array
+    {
+        $functions = $this-&gt;getCustomFunctionDefinitions();
+        $deployed = [];
+
+        foreach ($params['agent_ids'] as $agentId) {
+            $result = $this-&gt;deployToAgent($agentId, $functions);
+            $deployed[] = [
+                'agent_id' =&gt; $agentId,
+                'success' =&gt; $result['success'],
+                'functions' =&gt; array_keys($functions)
+            ];
+        }
+
+        return ['deployed' =&gt; $deployed];
+    }
+}
+</code></pre>
+<h3 id="database-schema">Database Schema</h3>
+<pre><code class="language-sql">CREATE TABLE retell_configurations (
+    id BIGINT UNSIGNED PRIMARY KEY,
+    company_id BIGINT UNSIGNED NOT NULL,
+    agent_id VARCHAR(255) NOT NULL,
+    webhook_url VARCHAR(512),
+    custom_functions JSON,
+    prompt_template TEXT,
+    settings JSON,
+    last_synced_at TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+
+    INDEX idx_company_agent (company_id, agent_id),
+    FOREIGN KEY (company_id) REFERENCES companies(id)
+);
+</code></pre>
+<h2 id="retellcustomfunctionmcpserver">📞 RetellCustomFunctionMCPServer</h2>
+<p>Handles all Retell.ai custom function calls for appointment management.</p>
+<h3 id="custom-functions-implemented">Custom Functions Implemented</h3>
+<ol>
+<li><strong>collect_appointment_information</strong></li>
+<li>Collects appointment details from caller</li>
+<li>Validates required fields</li>
+<li>
+<p>Stores in cache for webhook processing</p>
+</li>
+<li>
+<p><strong>change_appointment_details</strong></p>
+</li>
+<li>Allows modification of existing appointments</li>
+<li>Verifies caller identity via phone number</li>
+<li>
+<p>Updates appointment in real-time</p>
+</li>
+<li>
+<p><strong>cancel_appointment</strong></p>
+</li>
+<li>Cancels appointments securely</li>
+<li>Sends confirmation</li>
+<li>Updates availability immediately</li>
+</ol>
+<h3 id="data-flow">Data Flow</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant Caller
+    participant Retell as Retell.ai
+    participant CF as Custom Function MCP
+    participant Cache as Redis Cache
+    participant WH as Webhook MCP
+    participant Cal as Cal.com
+
+    Caller-&gt;&gt;Retell: &quot;I'd like to book an appointment&quot;
+    Retell-&gt;&gt;CF: collect_appointment_information()
+    CF-&gt;&gt;CF: Validate inputs
+    CF-&gt;&gt;Cache: Store appointment data
+    Note over Cache: Key: retell:appointment:{call_id}
+    CF--&gt;&gt;Retell: &quot;Appointment collected&quot;
+
+    Retell-&gt;&gt;Caller: &quot;Your appointment is confirmed&quot;
+    Retell-&gt;&gt;WH: call_ended webhook
+    WH-&gt;&gt;Cache: Retrieve appointment data
+    Cache--&gt;&gt;WH: Appointment details
+    WH-&gt;&gt;Cal: Create booking
+    Cal--&gt;&gt;WH: Booking confirmed
+    WH-&gt;&gt;WH: Create local records
+</code></pre>
+<h3 id="cache-key-strategy">Cache Key Strategy</h3>
+<pre><code class="language-php">// Standardized cache keys for data flow
+$cacheKey = &quot;retell:appointment:{$callId}&quot;;
+$ttl = 3600; // 1 hour
+
+// Store appointment data
+Cache::put($cacheKey, [
+    'customer_name' =&gt; $params['name'],
+    'appointment_date' =&gt; $params['date'],
+    'appointment_time' =&gt; $params['time'],
+    'service_type' =&gt; $params['service'],
+    'notes' =&gt; $params['notes'] ?? null,
+    'collected_at' =&gt; now()-&gt;toIso8601String()
+], $ttl);
+</code></pre>
+<h2 id="appointmentmanagementmcpserver">🗓️ AppointmentManagementMCPServer</h2>
+<p>Provides phone-based appointment management capabilities.</p>
+<h3 id="features_1">Features</h3>
+<ul>
+<li><strong>Find Appointments</strong>: Look up appointments by phone number</li>
+<li><strong>Reschedule</strong>: Change appointment dates/times</li>
+<li><strong>Cancel</strong>: Cancel with proper notifications</li>
+<li><strong>Multi-language</strong>: Supports caller's preferred language</li>
+</ul>
+<h3 id="security-model">Security Model</h3>
+<pre><code class="language-php">class AppointmentManagementMCPServer extends BaseMCPServer
+{
+    public function findAppointments(array $params): array
+    {
+        // Verify phone number ownership
+        $phoneNumber = $this-&gt;normalizePhoneNumber($params['phone']);
+        $customer = Customer::where('phone', $phoneNumber)-&gt;first();
+
+        if (!$customer) {
+            return ['appointments' =&gt; [], 'message' =&gt; 'No appointments found'];
+        }
+
+        // Get upcoming appointments
+        $appointments = Appointment::where('customer_id', $customer-&gt;id)
+            -&gt;where('starts_at', '&gt;', now())
+            -&gt;orderBy('starts_at')
+            -&gt;limit(5)
+            -&gt;get();
+
+        return [
+            'appointments' =&gt; $appointments-&gt;map(fn($apt) =&gt; [
+                'id' =&gt; $apt-&gt;id,
+                'date' =&gt; $apt-&gt;starts_at-&gt;format('Y-m-d'),
+                'time' =&gt; $apt-&gt;starts_at-&gt;format('H:i'),
+                'service' =&gt; $apt-&gt;service-&gt;name,
+                'duration' =&gt; $apt-&gt;duration_minutes
+            ]),
+            'customer_name' =&gt; $customer-&gt;name
+        ];
+    }
+}
+</code></pre>
+<h2 id="implementation-status">🚀 Implementation Status</h2>
+<h3 id="completed-components">Completed Components ✅</h3>
+<ol>
+<li><strong>MCPGateway Infrastructure</strong></li>
+<li>Central routing implemented</li>
+<li>Circuit breaker pattern active</li>
+<li>Health monitoring operational</li>
+<li>
+<p>Error handling standardized</p>
+</li>
+<li>
+<p><strong>RetellConfigurationMCPServer</strong></p>
+</li>
+<li>Webhook management UI complete</li>
+<li>Custom function deployment working</li>
+<li>Agent configuration accessible</li>
+<li>
+<p>Test tools integrated</p>
+</li>
+<li>
+<p><strong>RetellCustomFunctionMCPServer</strong></p>
+</li>
+<li>All three functions implemented</li>
+<li>Cache integration working</li>
+<li>Error handling robust</li>
+<li>
+<p>Multi-language ready</p>
+</li>
+<li>
+<p><strong>AppointmentManagementMCPServer</strong></p>
+</li>
+<li>Phone-based lookup working</li>
+<li>Security verification active</li>
+<li>Rescheduling implemented</li>
+<li>Cancellation flow complete</li>
+</ol>
+<h3 id="ui-integration">UI Integration</h3>
+<p>The Filament admin panel includes dedicated pages for MCP management:</p>
+<ol>
+<li><strong>Retell Webhook Configuration</strong> (<code>/admin/retell-webhook-configuration</code>)</li>
+<li>Visual webhook status</li>
+<li>One-click deployment</li>
+<li>Test webhook functionality</li>
+<li>
+<p>Custom function editor</p>
+</li>
+<li>
+<p><strong>Company Integration Portal</strong> (<code>/admin/company-integration-portal</code>)</p>
+</li>
+<li>Unified configuration view</li>
+<li>Service status monitoring</li>
+<li>Quick actions for common tasks</li>
+</ol>
+<h2 id="monitoring-debugging">📊 Monitoring &amp; Debugging</h2>
+<h3 id="available-metrics">Available Metrics</h3>
+<pre><code class="language-yaml"># Prometheus metrics at /api/metrics
+mcp_gateway_requests_total{server=&quot;retell_config&quot;,method=&quot;updateWebhook&quot;}
+mcp_gateway_request_duration_seconds{server=&quot;retell_custom&quot;,method=&quot;collect_appointment&quot;}
+mcp_gateway_errors_total{server=&quot;appointment_mgmt&quot;,error=&quot;not_found&quot;}
+mcp_circuit_breaker_state{server=&quot;retell_config&quot;,state=&quot;closed&quot;}
+</code></pre>
+<h3 id="debug-commands">Debug Commands</h3>
+<pre><code class="language-bash"># Test MCP Gateway health
+curl -X POST https://api.askproai.de/api/mcp/health
+
+# Test webhook configuration
+php artisan mcp:test-webhook --company=1
+
+# Debug cache flow
+php artisan mcp:debug-cache --call-id=abc123
+
+# Monitor circuit breakers
+php artisan mcp:circuit-status
+</code></pre>
+<h3 id="logging">Logging</h3>
+<p>All MCP operations are logged with correlation IDs:</p>
+<pre><code class="language-php">Log::channel('mcp-external')-&gt;info('MCP Request', [
+    'correlation_id' =&gt; $correlationId,
+    'server' =&gt; $serverName,
+    'method' =&gt; $methodName,
+    'duration_ms' =&gt; $duration,
+    'status' =&gt; $status
+]);
+</code></pre>
+<h2 id="security-considerations">🔒 Security Considerations</h2>
+<ol>
+<li><strong>Authentication</strong>: All MCP requests require valid auth tokens</li>
+<li><strong>Authorization</strong>: Company-scoped access control</li>
+<li><strong>Validation</strong>: Input validation at every layer</li>
+<li><strong>Encryption</strong>: Sensitive data encrypted in transit and at rest</li>
+<li><strong>Rate Limiting</strong>: Per-company rate limits enforced</li>
+</ol>
+<h2 id="benefits-of-mcp-first-architecture">🎯 Benefits of MCP-First Architecture</h2>
+<ol>
+<li><strong>No Direct API Calls</strong>: Frontend never knows about external APIs</li>
+<li><strong>Unified Protocol</strong>: All communication via JSON-RPC 2.0</li>
+<li><strong>Better Testing</strong>: Mock MCP servers for all scenarios</li>
+<li><strong>Easier Maintenance</strong>: Changes isolated to MCP layer</li>
+<li><strong>Enhanced Security</strong>: Single authentication point</li>
+<li><strong>Improved Monitoring</strong>: Centralized metrics and logging</li>
+</ol>
+<h2 id="related-documentation">📚 Related Documentation</h2>
+<ul>
+<li><a href="/api/mcp.md">MCP Protocol Specification</a></li>
+<li><a href="/integrations/retell.md">Retell Integration Guide</a></li>
+<li><a href="/integrations/calcom.md">Cal.com Integration</a></li>
+<li><a href="/architecture/security.md">Security Architecture</a></li>
+</ul>
+<hr />
+<p>!!! tip "Best Practices"
+    Always use the MCP Gateway for external service integrations. Never make direct API calls from controllers or UI components.</p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

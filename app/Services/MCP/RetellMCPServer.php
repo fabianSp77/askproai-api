@@ -4,6 +4,7 @@ namespace App\Services\MCP;
 
 use App\Services\RetellService;
 use App\Services\RetellV2Service;
+use App\Services\Context7Service;
 use App\Models\Company;
 use App\Models\Call;
 use App\Models\Branch;
@@ -16,6 +17,7 @@ use App\Helpers\SafeQueryHelper;
 class RetellMCPServer
 {
     protected array $config;
+    protected ?Context7Service $context7Service = null;
     
     public function __construct()
     {
@@ -25,6 +27,13 @@ class RetellMCPServer
                 'prefix' => 'mcp:retell'
             ]
         ];
+        
+        // Initialize Context7 service for documentation help
+        try {
+            $this->context7Service = app(Context7Service::class);
+        } catch (\Exception $e) {
+            Log::warning('Context7Service not available in RetellMCPServer');
+        }
     }
     
     /**
@@ -169,6 +178,9 @@ class RetellMCPServer
                 }
             }
             
+            // Store raw API data without transformation
+            // This ensures the data matches exactly what's in Retell.ai
+            
             // Store or update in database
             $retellAgent = \App\Models\RetellAgent::withoutGlobalScopes()->updateOrCreate(
                 [
@@ -177,10 +189,14 @@ class RetellMCPServer
                 ],
                 [
                     'name' => $agentDetails['agent_name'] ?? 'Unknown Agent',
-                    'configuration' => $agentDetails,
+                    'configuration' => $agentDetails, // Store raw API response
                     'is_active' => ($agentDetails['status'] ?? 'inactive') === 'active',
                     'last_synced_at' => now(),
-                    'sync_status' => 'synced'
+                    'sync_status' => 'synced',
+                    // Update version fields if present
+                    'version' => $agentDetails['version'] ?? null,
+                    'version_title' => $agentDetails['version_title'] ?? null,
+                    'is_published' => $agentDetails['is_published'] ?? false
                 ]
             );
             
@@ -2373,5 +2389,347 @@ class RetellMCPServer
             
             return ['error' => 'Failed to push configuration', 'message' => $e->getMessage()];
         }
+    }
+    
+    /**
+     * Get help documentation from Context7 for Retell.ai issues
+     */
+    public function getHelpDocumentation(array $params): array
+    {
+        $issue = $params['issue'] ?? null;
+        $error = $params['error'] ?? null;
+        
+        if (!$issue && !$error) {
+            return ['error' => 'Please provide an issue or error to get help for'];
+        }
+        
+        if (!$this->context7Service) {
+            return ['error' => 'Context7 documentation service not available'];
+        }
+        
+        try {
+            // Search for relevant documentation
+            $query = $issue ?? $error;
+            
+            // Get Retell.ai documentation
+            $retellDocs = $this->context7Service->getLibraryDocs(
+                '/context7/docs_retellai_com',
+                $query,
+                10000
+            );
+            
+            // Search for specific code examples
+            $examples = $this->context7Service->searchCodeExamples(
+                '/context7/docs_retellai_com',
+                $query
+            );
+            
+            // Get Laravel documentation if it's a Laravel-related issue
+            $laravelDocs = null;
+            if (str_contains(strtolower($query), 'laravel') || 
+                str_contains(strtolower($query), 'webhook') ||
+                str_contains(strtolower($query), 'signature')) {
+                $laravelDocs = $this->context7Service->getLibraryDocs(
+                    '/context7/laravel',
+                    'webhook signature verification',
+                    5000
+                );
+            }
+            
+            return [
+                'success' => true,
+                'issue' => $query,
+                'documentation' => [
+                    'retell' => $retellDocs['content'] ?? 'No Retell.ai documentation found',
+                    'laravel' => $laravelDocs ? ($laravelDocs['content'] ?? null) : null
+                ],
+                'code_examples' => $examples,
+                'suggestions' => $this->generateSuggestions($query, $error)
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell getHelpDocumentation error', [
+                'issue' => $issue,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Failed to get documentation',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Generate suggestions based on the issue
+     */
+    protected function generateSuggestions(string $issue, ?string $error): array
+    {
+        $suggestions = [];
+        
+        // Common Retell.ai issues and solutions
+        if (str_contains(strtolower($issue), 'webhook') || str_contains(strtolower($issue), 'signature')) {
+            $suggestions[] = 'Ensure webhook URL is correctly configured in Retell.ai dashboard';
+            $suggestions[] = 'Verify that x-retell-signature header is being sent';
+            $suggestions[] = 'Check that you are using the API key (not a separate secret) for signature verification';
+            $suggestions[] = 'Use php artisan retell:test-webhook to test webhook connectivity';
+        }
+        
+        if (str_contains(strtolower($issue), 'agent') || str_contains(strtolower($issue), 'not found')) {
+            $suggestions[] = 'Verify agent ID is correct in your configuration';
+            $suggestions[] = 'Check if agent exists in Retell.ai dashboard';
+            $suggestions[] = 'Run php artisan retell:sync-agents to sync agent data';
+            $suggestions[] = 'Ensure API key has permissions to access the agent';
+        }
+        
+        if (str_contains(strtolower($issue), 'api') || str_contains(strtolower($issue), 'unauthorized')) {
+            $suggestions[] = 'Verify API key is correctly set in .env file';
+            $suggestions[] = 'Check if API key is encrypted - use decrypt() if needed';
+            $suggestions[] = 'Ensure API key has not expired or been revoked';
+            $suggestions[] = 'Test connection with php artisan retell:test-connection';
+        }
+        
+        if (str_contains(strtolower($issue), 'call') || str_contains(strtolower($issue), 'import')) {
+            $suggestions[] = 'Use RetellV2Service for API v2 endpoints';
+            $suggestions[] = 'Check if calls exist in Retell.ai dashboard first';
+            $suggestions[] = 'Verify phone number format matches Retell.ai format';
+            $suggestions[] = 'Run php artisan retell:import-calls --limit=10 to test import';
+        }
+        
+        return $suggestions;
+    }
+    
+    /**
+     * Troubleshoot Retell.ai integration issues
+     */
+    public function troubleshoot(array $params): array
+    {
+        $companyId = $params['company_id'] ?? null;
+        
+        if (!$companyId) {
+            return ['error' => 'Company ID is required'];
+        }
+        
+        $issues = [];
+        $checks = [];
+        
+        try {
+            $company = Company::find($companyId);
+            if (!$company) {
+                $issues[] = 'Company not found';
+                return ['success' => false, 'issues' => $issues];
+            }
+            
+            // Check 1: API Key
+            $checks['api_key'] = [
+                'name' => 'API Key Configuration',
+                'status' => false,
+                'message' => ''
+            ];
+            
+            if (!$company->retell_api_key) {
+                $checks['api_key']['message'] = 'No Retell API key configured';
+                $issues[] = 'Missing Retell API key';
+            } else {
+                $checks['api_key']['status'] = true;
+                $checks['api_key']['message'] = 'API key is configured';
+            }
+            
+            // Check 2: API Connection
+            if ($checks['api_key']['status']) {
+                $connectionResult = $this->testConnection(['company_id' => $companyId]);
+                $checks['api_connection'] = [
+                    'name' => 'API Connection',
+                    'status' => $connectionResult['connected'] ?? false,
+                    'message' => $connectionResult['message'] ?? 'Connection test completed'
+                ];
+                
+                if (!$checks['api_connection']['status']) {
+                    $issues[] = 'Cannot connect to Retell.ai API';
+                }
+            }
+            
+            // Check 3: Agent Configuration
+            $checks['agent_config'] = [
+                'name' => 'Agent Configuration',
+                'status' => false,
+                'message' => ''
+            ];
+            
+            if (!$company->retell_agent_id) {
+                $checks['agent_config']['message'] = 'No default agent ID configured';
+                $issues[] = 'Missing default agent ID';
+            } else {
+                // Try to fetch agent
+                $agentResult = $this->getAgent(['company_id' => $companyId]);
+                if (isset($agentResult['agent'])) {
+                    $checks['agent_config']['status'] = true;
+                    $checks['agent_config']['message'] = 'Agent found: ' . ($agentResult['agent']['agent_name'] ?? 'Unknown');
+                } else {
+                    $checks['agent_config']['message'] = 'Agent not found or inaccessible';
+                    $issues[] = 'Configured agent not found';
+                }
+            }
+            
+            // Check 4: Webhook Configuration
+            $checks['webhook'] = [
+                'name' => 'Webhook Configuration',
+                'status' => false,
+                'message' => ''
+            ];
+            
+            $webhookUrl = config('app.url') . '/api/retell/webhook';
+            $webhookTest = $this->testWebhookEndpoint(['webhook_url' => $webhookUrl]);
+            
+            if ($webhookTest['success'] ?? false) {
+                $checks['webhook']['status'] = true;
+                $checks['webhook']['message'] = 'Webhook endpoint is reachable';
+            } else {
+                $checks['webhook']['message'] = 'Webhook endpoint test failed: ' . ($webhookTest['error'] ?? 'Unknown error');
+                $issues[] = 'Webhook endpoint not reachable';
+            }
+            
+            // Check 5: Recent Calls
+            $checks['recent_calls'] = [
+                'name' => 'Recent Call Import',
+                'status' => false,
+                'message' => ''
+            ];
+            
+            $recentCalls = Call::where('company_id', $companyId)
+                ->where('created_at', '>=', now()->subDays(7))
+                ->count();
+                
+            if ($recentCalls > 0) {
+                $checks['recent_calls']['status'] = true;
+                $checks['recent_calls']['message'] = $recentCalls . ' calls imported in last 7 days';
+            } else {
+                $checks['recent_calls']['message'] = 'No calls imported in last 7 days';
+                $issues[] = 'No recent call imports';
+            }
+            
+            // Get documentation help if there are issues
+            $documentation = null;
+            if (!empty($issues)) {
+                $issueString = implode(', ', $issues);
+                $documentation = $this->getHelpDocumentation(['issue' => $issueString]);
+            }
+            
+            return [
+                'success' => empty($issues),
+                'checks' => $checks,
+                'issues' => $issues,
+                'documentation' => $documentation,
+                'summary' => [
+                    'total_checks' => count($checks),
+                    'passed' => count(array_filter($checks, fn($c) => $c['status'])),
+                    'failed' => count(array_filter($checks, fn($c) => !$c['status']))
+                ]
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('MCP Retell troubleshoot error', [
+                'company_id' => $companyId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'error' => 'Troubleshooting failed',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Transform flat agent configuration to nested structure for UI consistency
+     */
+    protected function transformAgentConfiguration(array $agentDetails): array
+    {
+        // Start with the original data
+        $transformed = $agentDetails;
+        
+        // Create voice_settings object
+        $transformed['voice_settings'] = [
+            'voice_id' => $agentDetails['voice_id'] ?? '',
+            'voice_model' => $agentDetails['voice_model'] ?? '',
+            'voice_temperature' => $agentDetails['voice_temperature'] ?? 0.2,
+            'voice_speed' => $agentDetails['voice_speed'] ?? 1.0,
+            'volume' => $agentDetails['volume'] ?? 1.0,
+            'stability' => $agentDetails['stability'] ?? 0.5,
+            'similarity_boost' => $agentDetails['similarity_boost'] ?? 0.75
+        ];
+        
+        // Create conversation_settings object
+        $transformed['conversation_settings'] = [
+            'language' => $agentDetails['language'] ?? 'en-US',
+            'enable_backchannel' => $agentDetails['enable_backchannel'] ?? true,
+            'interruption_sensitivity' => $agentDetails['interruption_sensitivity'] ?? 1,
+            'responsiveness' => $agentDetails['responsiveness'] ?? 1,
+            'boosted_keywords' => $agentDetails['boosted_keywords'] ?? [],
+            'reminder_trigger_ms' => $agentDetails['reminder_trigger_ms'] ?? 10000,
+            'reminder_max_count' => $agentDetails['reminder_max_count'] ?? 1,
+            'normalize_for_speech' => $agentDetails['normalize_for_speech'] ?? true,
+            'pronunciation_guide' => $agentDetails['pronunciation_guide'] ?? [],
+            'opt_out_sensitive_data_storage' => $agentDetails['opt_out_sensitive_data_storage'] ?? false
+        ];
+        
+        // Create audio_settings object
+        $transformed['audio_settings'] = [
+            'ambient_sound' => $agentDetails['ambient_sound'] ?? null,
+            'ambient_sound_volume' => $agentDetails['ambient_sound_volume'] ?? 0.5,
+            'backchannel_frequency' => $agentDetails['backchannel_frequency'] ?? 0.8,
+            'backchannel_words' => $agentDetails['backchannel_words'] ?? []
+        ];
+        
+        // Create analysis_settings object
+        $transformed['analysis_settings'] = [
+            'track_user_sentiment' => $agentDetails['track_user_sentiment'] ?? false,
+            'track_agent_sentiment' => $agentDetails['track_agent_sentiment'] ?? false,
+            'detect_keywords' => $agentDetails['detect_keywords'] ?? [],
+            'custom_keywords' => $agentDetails['custom_keywords'] ?? []
+        ];
+        
+        // Create end_call_settings object
+        $transformed['end_call_settings'] = [
+            'end_call_after_silence_ms' => $agentDetails['end_call_after_silence_ms'] ?? 30000,
+            'max_call_duration_ms' => $agentDetails['max_call_duration_ms'] ?? 3600000,
+            'end_call_phrases' => $agentDetails['end_call_phrases'] ?? []
+        ];
+        
+        // Create voicemail_settings object
+        $transformed['voicemail_settings'] = [
+            'enable_voicemail_detection' => $agentDetails['enable_voicemail_detection'] ?? false,
+            'voicemail_message' => $agentDetails['voicemail_message'] ?? '',
+            'voicemail_detection_timeout_ms' => $agentDetails['voicemail_detection_timeout_ms'] ?? 5000
+        ];
+        
+        // Create webhook_settings object
+        $transformed['webhook_settings'] = [
+            'webhook_url' => $agentDetails['webhook_url'] ?? '',
+            'enable_webhook_for_analysis' => $agentDetails['enable_webhook_for_analysis'] ?? true,
+            'enable_webhook_for_transcripts' => $agentDetails['enable_webhook_for_transcripts'] ?? true
+        ];
+        
+        // Create llm_settings object if response_engine is retell-llm
+        if (isset($agentDetails['response_engine']['type']) && 
+            $agentDetails['response_engine']['type'] === 'retell-llm') {
+            
+            $transformed['llm_settings'] = [
+                'llm_id' => $agentDetails['response_engine']['llm_id'] ?? '',
+                'model' => $agentDetails['response_engine']['model'] ?? 'gpt-4',
+                'temperature' => $agentDetails['response_engine']['temperature'] ?? 0.7,
+                'max_tokens' => $agentDetails['response_engine']['max_tokens'] ?? 150,
+                'system_prompt' => $agentDetails['response_engine']['system_prompt'] ?? ''
+            ];
+            
+            // Include LLM configuration if available
+            if (isset($agentDetails['llm_configuration'])) {
+                $transformed['llm_settings']['configuration'] = $agentDetails['llm_configuration'];
+            }
+        }
+        
+        return $transformed;
     }
 }

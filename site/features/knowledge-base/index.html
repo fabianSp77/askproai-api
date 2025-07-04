@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/features/knowledge-base/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Knowledge Base System - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Knowledge Base System";
+        var mkdocs_page_input_path = "features/knowledge-base.md";
+        var mkdocs_page_url = "/mkdocs/features/knowledge-base/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>Knowledge Base System</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="knowledge-base-system">Knowledge Base System</h1>
+<p>The AskProAI Knowledge Base is a comprehensive documentation and content management system designed to provide intelligent, searchable documentation for both internal teams and customers.</p>
+<h2 id="overview">Overview</h2>
+<p>The Knowledge Base system provides:
+- 📚 Structured documentation with categories and tags
+- 🔍 Full-text search with relevance scoring
+- 📝 Markdown-based content with live preview
+- 🔄 Version control and revision history
+- 📊 Analytics and usage tracking
+- 🤖 AI-powered content suggestions
+- 📱 API access for programmatic content</p>
+<h2 id="architecture">Architecture</h2>
+<pre><code class="language-mermaid">graph TB
+    subgraph &quot;Content Creation&quot;
+        EDITOR[Markdown Editor]
+        PREVIEW[Live Preview]
+        MEDIA[Media Manager]
+    end
+
+    subgraph &quot;Content Storage&quot;
+        DOCS[Documents]
+        VERSIONS[Version History]
+        SEARCH[Search Index]
+        TAGS[Tags &amp; Categories]
+    end
+
+    subgraph &quot;Content Delivery&quot;
+        WEB[Web Portal]
+        API[REST API]
+        EXPORT[PDF/EPUB Export]
+    end
+
+    subgraph &quot;Analytics&quot;
+        VIEWS[Page Views]
+        SEARCHES[Search Terms]
+        FEEDBACK[User Feedback]
+    end
+
+    EDITOR --&gt; DOCS
+    DOCS --&gt; VERSIONS
+    DOCS --&gt; SEARCH
+    DOCS --&gt; TAGS
+
+    DOCS --&gt; WEB
+    DOCS --&gt; API
+    DOCS --&gt; EXPORT
+
+    WEB --&gt; VIEWS
+    WEB --&gt; SEARCHES
+    WEB --&gt; FEEDBACK
+</code></pre>
+<h2 id="database-schema">Database Schema</h2>
+<h3 id="core-tables">Core Tables</h3>
+<pre><code class="language-sql">knowledge_documents
+├── id (UUID)
+├── company_id (UUID)
+├── category_id (UUID)
+├── title (VARCHAR)
+├── slug (VARCHAR, unique)
+├── content (LONGTEXT)
+├── type (ENUM: guide, api, faq, tutorial)
+├── status (ENUM: draft, published, archived)
+├── view_count (INT)
+├── created_by (UUID)
+├── updated_by (UUID)
+├── published_at (DATETIME)
+└── timestamps
+
+knowledge_categories
+├── id (UUID)
+├── company_id (UUID)
+├── parent_id (UUID, nullable)
+├── name (VARCHAR)
+├── slug (VARCHAR)
+├── description (TEXT)
+├── icon (VARCHAR)
+├── order (INT)
+└── timestamps
+
+knowledge_tags
+├── id (UUID)
+├── name (VARCHAR)
+├── slug (VARCHAR)
+├── color (VARCHAR)
+└── timestamps
+
+knowledge_versions
+├── id (UUID)
+├── document_id (UUID)
+├── version_number (INT)
+├── content (LONGTEXT)
+├── change_summary (TEXT)
+├── created_by (UUID)
+└── created_at
+
+knowledge_search_index
+├── id (UUID)
+├── document_id (UUID)
+├── content (TEXT)
+├── weight (INT)
+└── FULLTEXT INDEX
+</code></pre>
+<h2 id="features">Features</h2>
+<h3 id="1-content-management">1. Content Management</h3>
+<h4 id="document-types">Document Types</h4>
+<ul>
+<li><strong>Guides</strong>: Step-by-step tutorials and how-tos</li>
+<li><strong>API Documentation</strong>: Technical API references</li>
+<li><strong>FAQs</strong>: Frequently asked questions</li>
+<li><strong>Tutorials</strong>: Interactive learning content</li>
+</ul>
+<h4 id="markdown-support">Markdown Support</h4>
+<pre><code class="language-markdown"># Enhanced Markdown Features
+
+- **Bold** and *italic* text
+- [Links](https://example.com)
+- `inline code` and code blocks
+- Tables, lists, and blockquotes
+- Mermaid diagrams
+- Custom callouts and alerts
+</code></pre>
+<h4 id="media-management">Media Management</h4>
+<ul>
+<li>Image upload with automatic optimization</li>
+<li>Video embedding (YouTube, Vimeo)</li>
+<li>File attachments (PDF, ZIP)</li>
+<li>CDN integration for fast delivery</li>
+</ul>
+<h3 id="2-search-capabilities">2. Search Capabilities</h3>
+<h4 id="full-text-search">Full-Text Search</h4>
+<pre><code class="language-php">// Search example
+$results = KnowledgeDocument::search('appointment booking')
+    -&gt;where('status', 'published')
+    -&gt;withHighlight()
+    -&gt;paginate(10);
+</code></pre>
+<h4 id="search-features">Search Features</h4>
+<ul>
+<li>Fuzzy matching for typos</li>
+<li>Synonym support</li>
+<li>Language-specific stemming</li>
+<li>Relevance scoring</li>
+<li>Search suggestions</li>
+</ul>
+<h3 id="3-version-control">3. Version Control</h3>
+<p>Every document change is tracked:
+- Complete revision history
+- Diff view between versions
+- Rollback capability
+- Change summaries
+- Author attribution</p>
+<h3 id="4-analytics-insights">4. Analytics &amp; Insights</h3>
+<h4 id="tracked-metrics">Tracked Metrics</h4>
+<ul>
+<li>Page views and unique visitors</li>
+<li>Search queries and click-through rates</li>
+<li>Time on page</li>
+<li>Feedback scores</li>
+<li>Popular content identification</li>
+</ul>
+<h4 id="analytics-dashboard">Analytics Dashboard</h4>
+<pre><code class="language-sql">-- Top viewed documents
+SELECT 
+    d.title,
+    d.view_count,
+    COUNT(DISTINCT a.user_id) as unique_viewers,
+    AVG(a.time_on_page) as avg_reading_time
+FROM knowledge_documents d
+JOIN knowledge_analytics a ON d.id = a.document_id
+WHERE a.created_at &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)
+GROUP BY d.id
+ORDER BY d.view_count DESC
+LIMIT 10;
+</code></pre>
+<h3 id="5-ai-powered-features">5. AI-Powered Features</h3>
+<h4 id="content-suggestions">Content Suggestions</h4>
+<ul>
+<li>Related articles recommendation</li>
+<li>Auto-tagging based on content</li>
+<li>Content gap analysis</li>
+<li>SEO optimization suggestions</li>
+</ul>
+<h4 id="smart-search">Smart Search</h4>
+<ul>
+<li>Natural language queries</li>
+<li>Intent detection</li>
+<li>Contextual results</li>
+<li>Learning from user behavior</li>
+</ul>
+<h3 id="6-access-control">6. Access Control</h3>
+<h4 id="permission-levels">Permission Levels</h4>
+<ul>
+<li><strong>Public</strong>: Available to everyone</li>
+<li><strong>Authenticated</strong>: Requires login</li>
+<li><strong>Company</strong>: Company-specific content</li>
+<li><strong>Internal</strong>: Staff only</li>
+</ul>
+<h4 id="api-access">API Access</h4>
+<pre><code class="language-php">// API authentication
+$response = Http::withToken($apiKey)
+    -&gt;get('/api/knowledge/documents', [
+        'category' =&gt; 'api-docs',
+        'status' =&gt; 'published'
+    ]);
+</code></pre>
+<h2 id="integration-points">Integration Points</h2>
+<h3 id="1-customer-portal">1. Customer Portal</h3>
+<ul>
+<li>Embedded documentation</li>
+<li>Contextual help tooltips</li>
+<li>Search integration</li>
+<li>Single sign-on</li>
+</ul>
+<h3 id="2-admin-panel">2. Admin Panel</h3>
+<ul>
+<li>Content editor in Filament</li>
+<li>Analytics dashboard</li>
+<li>Bulk operations</li>
+<li>Import/Export tools</li>
+</ul>
+<h3 id="3-ai-phone-system">3. AI Phone System</h3>
+<ul>
+<li>Real-time documentation lookup</li>
+<li>Answer generation from KB</li>
+<li>FAQ integration</li>
+<li>Knowledge base training</li>
+</ul>
+<h3 id="4-mobile-app">4. Mobile App</h3>
+<ul>
+<li>Offline documentation sync</li>
+<li>Push notifications for updates</li>
+<li>Bookmarking and favorites</li>
+<li>Native search</li>
+</ul>
+<h2 id="api-endpoints">API Endpoints</h2>
+<h3 id="documents">Documents</h3>
+<pre><code class="language-http"># List documents
+GET /api/knowledge/documents
+GET /api/knowledge/documents/{slug}
+
+# Search
+GET /api/knowledge/search?q=appointment
+
+# Categories
+GET /api/knowledge/categories
+GET /api/knowledge/categories/{slug}/documents
+
+# Analytics
+POST /api/knowledge/analytics/track
+GET /api/knowledge/analytics/popular
+</code></pre>
+<h3 id="example-response">Example Response</h3>
+<pre><code class="language-json">{
+    &quot;data&quot;: {
+        &quot;id&quot;: &quot;uuid-here&quot;,
+        &quot;title&quot;: &quot;How to Book an Appointment&quot;,
+        &quot;slug&quot;: &quot;how-to-book-appointment&quot;,
+        &quot;content&quot;: &quot;# Booking Guide\n\nFollow these steps...&quot;,
+        &quot;category&quot;: {
+            &quot;name&quot;: &quot;Getting Started&quot;,
+            &quot;slug&quot;: &quot;getting-started&quot;
+        },
+        &quot;tags&quot;: [&quot;booking&quot;, &quot;appointments&quot;, &quot;guide&quot;],
+        &quot;view_count&quot;: 1523,
+        &quot;estimated_reading_time&quot;: 3,
+        &quot;last_updated&quot;: &quot;2025-06-20T10:30:00Z&quot;
+    }
+}
+</code></pre>
+<h2 id="content-notebooks">Content Notebooks</h2>
+<h3 id="interactive-documentation">Interactive Documentation</h3>
+<pre><code class="language-php">// Notebook structure
+knowledge_notebooks
+├── id (UUID)
+├── title (VARCHAR)
+├── description (TEXT)
+├── is_public (BOOLEAN)
+└── timestamps
+
+knowledge_notebook_entries
+├── id (UUID)
+├── notebook_id (UUID)
+├── type (ENUM: markdown, code, query, chart)
+├── content (TEXT)
+├── output (TEXT, nullable)
+├── order (INT)
+└── timestamps
+</code></pre>
+<h3 id="use-cases">Use Cases</h3>
+<ul>
+<li>Interactive tutorials</li>
+<li>Code playgrounds</li>
+<li>API testing environments</li>
+<li>Data visualization</li>
+<li>Training materials</li>
+</ul>
+<h2 id="best-practices">Best Practices</h2>
+<h3 id="1-content-structure">1. Content Structure</h3>
+<ul>
+<li>Use clear, descriptive titles</li>
+<li>Implement consistent categorization</li>
+<li>Add relevant tags</li>
+<li>Include meta descriptions</li>
+<li>Use semantic headings</li>
+</ul>
+<h3 id="2-seo-optimization">2. SEO Optimization</h3>
+<ul>
+<li>Unique slugs for each document</li>
+<li>Proper meta tags</li>
+<li>Structured data markup</li>
+<li>XML sitemap generation</li>
+<li>Canonical URLs</li>
+</ul>
+<h3 id="3-performance">3. Performance</h3>
+<ul>
+<li>Enable caching for popular content</li>
+<li>Use CDN for media files</li>
+<li>Implement lazy loading</li>
+<li>Optimize search indexes</li>
+<li>Monitor query performance</li>
+</ul>
+<h3 id="4-maintenance">4. Maintenance</h3>
+<ul>
+<li>Regular content audits</li>
+<li>Update outdated information</li>
+<li>Fix broken links</li>
+<li>Archive obsolete content</li>
+<li>Monitor search queries for gaps</li>
+</ul>
+<h2 id="configuration">Configuration</h2>
+<h3 id="environment-variables">Environment Variables</h3>
+<pre><code class="language-env"># Knowledge Base Configuration
+KNOWLEDGE_BASE_ENABLED=true
+KNOWLEDGE_SEARCH_DRIVER=elasticsearch
+KNOWLEDGE_CACHE_TTL=3600
+KNOWLEDGE_CDN_URL=https://cdn.askproai.de
+KNOWLEDGE_AI_SUGGESTIONS=true
+</code></pre>
+<h3 id="search-configuration">Search Configuration</h3>
+<pre><code class="language-php">// config/knowledge.php
+return [
+    'search' =&gt; [
+        'driver' =&gt; env('KNOWLEDGE_SEARCH_DRIVER', 'database'),
+        'elasticsearch' =&gt; [
+            'hosts' =&gt; [env('ELASTICSEARCH_HOST', 'localhost:9200')],
+            'index' =&gt; 'knowledge_docs'
+        ],
+        'fuzzy_threshold' =&gt; 0.7,
+        'highlight' =&gt; [
+            'pre_tag' =&gt; '&lt;mark&gt;',
+            'post_tag' =&gt; '&lt;/mark&gt;'
+        ]
+    ]
+];
+</code></pre>
+<h2 id="roadmap">Roadmap</h2>
+<h3 id="planned-features">Planned Features</h3>
+<ul>
+<li>[ ] Multi-language support</li>
+<li>[ ] Video tutorials with transcription</li>
+<li>[ ] Community contributions</li>
+<li>[ ] AI-powered content generation</li>
+<li>[ ] Advanced analytics with heatmaps</li>
+<li>[ ] Integration with support tickets</li>
+<li>[ ] Automated content quality checks</li>
+</ul>
+<hr />
+<p><em>Last updated: June 25, 2025</em></p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

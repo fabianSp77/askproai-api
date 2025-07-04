@@ -1,0 +1,105 @@
+[
+    {
+        "url": "https:\/\/api.askproai.de\/api\/retell\/collect-appointment",
+        "name": "collect_appointment_data",
+        "description": "NEVER ask for phone number. Use this to book an appointment after gathering details.",
+        "speak_during_execution": true,
+        "speak_after_execution": true,
+        "properties": {
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string",
+                        "description": "Call ID (always pass '{{call_id}}')"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Customer name"
+                    },
+                    "datum": {
+                        "type": "string",
+                        "description": "Date (e.g., 'heute', 'morgen', '25.06.2025')"
+                    },
+                    "uhrzeit": {
+                        "type": "string",
+                        "description": "Time in 24h format (e.g., '14:00', '09:30')"
+                    },
+                    "dienstleistung": {
+                        "type": "string",
+                        "description": "Service requested (default: 'Beratung')"
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "Email for confirmation (optional)"
+                    }
+                },
+                "required": [
+                    "call_id",
+                    "name",
+                    "datum",
+                    "uhrzeit"
+                ]
+            }
+        }
+    },
+    {
+        "url": "https:\/\/api.askproai.de\/api\/retell\/check-customer",
+        "name": "check_customer",
+        "description": "Check if customer exists. Call at conversation start.",
+        "speak_during_execution": false,
+        "speak_after_execution": false,
+        "properties": {
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "call_id": {
+                        "type": "string",
+                        "description": "Call ID (always pass '{{call_id}}')"
+                    }
+                },
+                "required": [
+                    "call_id"
+                ]
+            }
+        }
+    },
+    {
+        "url": "https:\/\/api.askproai.de\/api\/retell\/check-availability",
+        "name": "check_availability",
+        "description": "Check available appointment slots for a specific date and time",
+        "speak_during_execution": true,
+        "speak_after_execution": true,
+        "properties": {
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "description": "Date to check (e.g., 'heute', 'morgen', '25.06.2025')"
+                    },
+                    "time": {
+                        "type": "string",
+                        "description": "Preferred time (optional, e.g., '09:00', '14:30')"
+                    }
+                },
+                "required": [
+                    "date"
+                ]
+            }
+        }
+    },
+    {
+        "url": "https:\/\/api.askproai.de\/api\/retell\/current-time-berlin",
+        "name": "current_time_berlin",
+        "description": "Get current time in Berlin timezone",
+        "speak_during_execution": false,
+        "speak_after_execution": false,
+        "properties": {
+            "parameters": {
+                "type": "object",
+                "properties": []
+            }
+        }
+    }
+]

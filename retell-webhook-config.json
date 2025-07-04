@@ -1,0 +1,108 @@
+{
+  "webhook_configuration": {
+    "endpoint": "https://api.askproai.de/api/retell/webhook",
+    "authentication": {
+      "type": "signature",
+      "header": "x-retell-signature",
+      "secret": "YOUR_WEBHOOK_SECRET_FROM_ENV"
+    },
+    "events": {
+      "call_started": {
+        "enabled": true,
+        "description": "Triggered when a call begins",
+        "payload_example": {
+          "event_type": "call_started",
+          "call_id": "call_123456",
+          "agent_id": "agent_abc123",
+          "from_number": "+4930123456789",
+          "to_number": "+4930987654321",
+          "direction": "inbound",
+          "timestamp": "2025-06-25T14:30:00Z"
+        }
+      },
+      "call_ended": {
+        "enabled": true,
+        "description": "Triggered when a call ends",
+        "payload_example": {
+          "event_type": "call_ended",
+          "call_id": "call_123456",
+          "agent_id": "agent_abc123",
+          "duration_seconds": 180,
+          "recording_url": "https://api.retellai.com/recordings/rec_123456",
+          "transcript": "Full conversation transcript...",
+          "summary": "Customer booked appointment for dental cleaning on Monday at 2 PM",
+          "custom_analysis": {
+            "customer_name": "Max Mustermann",
+            "service_requested": "Zahnreinigung",
+            "appointment_date": "2025-01-20",
+            "appointment_time": "14:00"
+          },
+          "timestamp": "2025-06-25T14:33:00Z"
+        }
+      },
+      "call_analyzed": {
+        "enabled": true,
+        "description": "Triggered after post-call analysis",
+        "payload_example": {
+          "event_type": "call_analyzed",
+          "call_id": "call_123456",
+          "analysis": {
+            "intent": "appointment_booking",
+            "success": true,
+            "extracted_data": {
+              "customer_info": {
+                "first_name": "Max",
+                "last_name": "Mustermann",
+                "phone": "+4930123456789",
+                "email": "max@example.com"
+              },
+              "appointment_details": {
+                "service": "Zahnreinigung",
+                "date": "2025-01-20",
+                "time": "14:00",
+                "staff": "Dr. Schmidt"
+              }
+            },
+            "sentiment": "positive",
+            "issues_detected": []
+          }
+        }
+      },
+      "function_called": {
+        "enabled": true,
+        "description": "Triggered when agent calls a function",
+        "payload_example": {
+          "event_type": "function_called",
+          "call_id": "call_123456",
+          "function_name": "book_appointment",
+          "parameters": {
+            "customer_first_name": "Max",
+            "customer_last_name": "Mustermann",
+            "service_id": "service_dental_cleaning",
+            "appointment_datetime": "2025-01-20T14:00:00+01:00"
+          },
+          "response": {
+            "success": true,
+            "booking_id": "apt_789012",
+            "confirmation_number": "ASK-2025-789"
+          }
+        }
+      }
+    },
+    "security": {
+      "signature_validation": true,
+      "ip_whitelist": [],
+      "rate_limit": "100 requests per minute",
+      "retry_policy": {
+        "max_retries": 3,
+        "backoff_multiplier": 2,
+        "initial_delay_ms": 1000
+      }
+    },
+    "error_handling": {
+      "on_webhook_failure": "queue_for_retry",
+      "dead_letter_queue": true,
+      "alert_on_consecutive_failures": 5
+    }
+  }
+}

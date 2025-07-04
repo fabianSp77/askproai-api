@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/EMERGENCY_RESPONSE_PLAYBOOK/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Emergency Response - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Emergency Response";
+        var mkdocs_page_input_path = "EMERGENCY_RESPONSE_PLAYBOOK.md";
+        var mkdocs_page_url = "/mkdocs/EMERGENCY_RESPONSE_PLAYBOOK/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Emergency Response</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#quick-emergency-command">⚡ QUICK EMERGENCY COMMAND</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#emergency-response-flow">📈 Emergency Response Flow</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#notfall-kategorien">🚦 NOTFALL-KATEGORIEN</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#grun-performance-probleme-fix-5-min">🟢 GRÜN: Performance-Probleme (Fix: &lt; 5 Min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#gelb-teilausfalle-fix-15-min">🟡 GELB: Teilausfälle (Fix: &lt; 15 Min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#rot-totalausfall-fix-2-min">🔴 ROT: Totalausfall (Fix: &lt; 2 Min)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#grune-zone-performance-probleme">🟢 GRÜNE ZONE: Performance-Probleme</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#diagnose-flowchart">Diagnose-Flowchart</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#problem-system-reagiert-langsam">Problem: "System reagiert langsam"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#problem-einzelne-anrufe-schlagen-fehl">Problem: "Einzelne Anrufe schlagen fehl"</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#gelbe-zone-teilausfalle">🟡 GELBE ZONE: Teilausfälle</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#problem-retellai-nicht-erreichbar">Problem: "Retell.ai nicht erreichbar"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#problem-calcom-sync-ausgefallen">Problem: "Cal.com Sync ausgefallen"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#problem-webhooks-kommen-nicht-an">Problem: "Webhooks kommen nicht an"</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#rote-zone-totalausfall">🔴 ROTE ZONE: Totalausfall</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-manahmen-reihenfolge-beachten">SOFORT-MAßNAHMEN (Reihenfolge beachten!)</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#1-status-page-aktualisieren-30-sek">1️⃣ Status-Page aktualisieren (30 Sek)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#2-failover-aktivieren-60-sek">2️⃣ Failover aktivieren (60 Sek)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#3-emergency-mode-aktivieren-30-sek">3️⃣ Emergency Mode aktivieren (30 Sek)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#rollback-bei-code-problemen">ROLLBACK bei Code-Problemen</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#datenbank-notfall">DATENBANK-NOTFALL</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#eskalations-kette">📞 ESKALATIONS-KETTE</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#level-1-devops-on-call-0-5-min">Level 1: DevOps On-Call (0-5 Min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#level-2-team-lead-5-15-min">Level 2: Team Lead (5-15 Min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#level-3-cto-15-min">Level 3: CTO (15+ Min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#level-4-netcup-support-server-hardware">Level 4: Netcup Support (Server-Hardware)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#automatisierte-recovery-scripts">🔧 AUTOMATISIERTE RECOVERY SCRIPTS</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#emergency-responsesh">emergency-response.sh</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#quick-restoresh">quick-restore.sh</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#post-incident-checklist">📊 POST-INCIDENT CHECKLIST</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-verification-5-min">1. Verification (5 Min)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-customer-communication">2. Customer Communication</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-incident-report">3. Incident Report</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-preventive-measures">4. Preventive Measures</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#praventive-manahmen">🛡️ PRÄVENTIVE MAßNAHMEN</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#tagliche-checks-cron">Tägliche Checks (Cron)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#wochentliche-disaster-recovery-tests">Wöchentliche Disaster Recovery Tests</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#monatliches-backup-verify">Monatliches Backup-Verify</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#notfall-kontakte-wallet-card">💡 NOTFALL-KONTAKTE WALLET CARD</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Betrieb &raquo;</li>
+      <li>Emergency Response</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="emergency-response-playbook-247-notfall-prozeduren">🚨 EMERGENCY RESPONSE PLAYBOOK - 24/7 Notfall-Prozeduren</h1>
+<blockquote>
+<p><strong>KRITISCH</strong>: Bei Totalausfall SOFORT zur <a href="#rote-zone-totalausfall">🔴 ROTE ZONE</a></p>
+</blockquote>
+<h2 id="quick-emergency-command">⚡ QUICK EMERGENCY COMMAND</h2>
+<pre><code class="language-bash"># Ein-Befehl-Notfall-Diagnose
+./emergency-response.sh --auto-fix
+</code></pre>
+<h2 id="emergency-response-flow">📈 Emergency Response Flow</h2>
+<pre><code class="language-mermaid">flowchart TD
+    Start([NOTFALL!]) --&gt; Assess{&quot;Schweregrad&lt;br/&gt;bewerten&quot;}
+
+    Assess --&gt;|Performance| Green[🟢 GRÜN&lt;br/&gt;&lt; 5 Min Fix]
+    Assess --&gt;|Teilausfall| Yellow[🟡 GELB&lt;br/&gt;&lt; 15 Min Fix]
+    Assess --&gt;|Totalausfall| Red[🔴 ROT&lt;br/&gt;&lt; 2 Min Fix]
+
+    Green --&gt; GreenFix[&quot;1. Performance Check&lt;br/&gt;2. Cache leeren&lt;br/&gt;3. Queue prüfen&quot;]
+    Yellow --&gt; YellowFix[&quot;1. API Status&lt;br/&gt;2. Fallback aktivieren&lt;br/&gt;3. Circuit Breaker&quot;]
+    Red --&gt; RedFix[&quot;1. Status Page&lt;br/&gt;2. DNS Failover&lt;br/&gt;3. Emergency Mode&quot;]
+
+    GreenFix --&gt; Monitor1[Monitoring]
+    YellowFix --&gt; Monitor2[Monitoring]
+    RedFix --&gt; Monitor3[Monitoring]
+
+    Monitor1 --&gt; PostIncident[Post-Incident&lt;br/&gt;Analyse]
+    Monitor2 --&gt; PostIncident
+    Monitor3 --&gt; PostIncident
+
+    PostIncident --&gt; Report[Incident&lt;br/&gt;Report]
+
+    style Start fill:#ff5252,color:#fff
+    style Red fill:#f44336,color:#fff
+    style Yellow fill:#ffeb3b
+    style Green fill:#4caf50,color:#fff
+    style PostIncident fill:#2196f3,color:#fff
+</code></pre>
+<hr />
+<h2 id="notfall-kategorien">🚦 NOTFALL-KATEGORIEN</h2>
+<h3 id="grun-performance-probleme-fix-5-min">🟢 GRÜN: Performance-Probleme (Fix: &lt; 5 Min)</h3>
+<ul>
+<li>Langsame Responses</li>
+<li>Einzelne fehlgeschlagene Calls</li>
+<li>Email-Verzögerungen</li>
+</ul>
+<h3 id="gelb-teilausfalle-fix-15-min">🟡 GELB: Teilausfälle (Fix: &lt; 15 Min)</h3>
+<ul>
+<li>Retell API Down</li>
+<li>Cal.com Sync-Fehler</li>
+<li>Webhook-Ausfälle</li>
+</ul>
+<h3 id="rot-totalausfall-fix-2-min">🔴 ROT: Totalausfall (Fix: &lt; 2 Min)</h3>
+<ul>
+<li>Keine Anrufe möglich</li>
+<li>Datenbank nicht erreichbar</li>
+<li>Kompletter Service Down</li>
+</ul>
+<hr />
+<h2 id="grune-zone-performance-probleme">🟢 GRÜNE ZONE: Performance-Probleme</h2>
+<h3 id="diagnose-flowchart">Diagnose-Flowchart</h3>
+<pre><code class="language-mermaid">flowchart LR
+    Slow[System langsam] --&gt; Check1{&quot;CPU Last?&quot;}
+    Check1 --&gt;|&gt; 80%| CPU[&quot;top -b -n 1&lt;br/&gt;Prozesse beenden&quot;]
+    Check1 --&gt;|Normal| Check2{&quot;RAM voll?&quot;}
+
+    Check2 --&gt;|&gt; 90%| RAM[&quot;free -h&lt;br/&gt;Cache leeren&quot;]
+    Check2 --&gt;|Normal| Check3{&quot;DB langsam?&quot;}
+
+    Check3 --&gt;|Ja| DB[&quot;SHOW PROCESSLIST&lt;br/&gt;Slow Query Log&quot;]
+    Check3 --&gt;|Nein| Check4{&quot;Redis voll?&quot;}
+
+    Check4 --&gt;|Ja| Redis[&quot;redis-cli INFO&lt;br/&gt;FLUSHDB&quot;]
+    Check4 --&gt;|Nein| Queue[&quot;Queue Backlog&lt;br/&gt;prüfen&quot;]
+
+    CPU --&gt; Fixed[&quot;✅ Behoben&quot;]
+    RAM --&gt; Fixed
+    DB --&gt; Fixed
+    Redis --&gt; Fixed
+    Queue --&gt; Fixed
+
+    style Slow fill:#ffeb3b
+    style Fixed fill:#4caf50,color:#fff
+</code></pre>
+<h3 id="problem-system-reagiert-langsam">Problem: "System reagiert langsam"</h3>
+<pre><code class="language-bash"># 1. Quick Performance Check
+php artisan performance:emergency-check
+
+# 2. Cache leeren
+php artisan optimize:clear
+redis-cli FLUSHDB
+
+# 3. Queue-Backlog prüfen
+php artisan horizon:status
+php artisan queue:clear webhooks
+
+# 4. Database Connections resetten
+php artisan db:reconnect
+</code></pre>
+<h3 id="problem-einzelne-anrufe-schlagen-fehl">Problem: "Einzelne Anrufe schlagen fehl"</h3>
+<pre><code class="language-bash"># Letzte Fehler anzeigen
+tail -n 50 storage/logs/laravel.log | grep -E &quot;ERROR|CRITICAL&quot;
+
+# Betroffene Company identifizieren
+php artisan calls:show-failed --last-hour
+
+# Company-spezifischer Fix
+php artisan company:reset-integration --id=X
+</code></pre>
+<hr />
+<h2 id="gelbe-zone-teilausfalle">🟡 GELBE ZONE: Teilausfälle</h2>
+<h3 id="problem-retellai-nicht-erreichbar">Problem: "Retell.ai nicht erreichbar"</h3>
+<pre><code class="language-bash"># 1. Status prüfen
+curl -s https://api.retellai.com/health || echo &quot;RETELL DOWN&quot;
+
+# 2. Fallback aktivieren
+php artisan config:set retell.fallback_mode=true
+php artisan cache:clear
+
+# 3. Calls queuen für später
+php artisan retell:enable-queue-mode
+
+# 4. Kunden-Notification
+php artisan notify:customers --message=&quot;Temporäre Wartung, Anrufe in 15 Min wieder möglich&quot;
+</code></pre>
+<h3 id="problem-calcom-sync-ausgefallen">Problem: "Cal.com Sync ausgefallen"</h3>
+<pre><code class="language-bash"># 1. Circuit Breaker Status
+php artisan circuit-breaker:status calcom
+
+# 2. Circuit Breaker Reset
+php artisan circuit-breaker:reset calcom --force
+
+# 3. Manual Sync
+php artisan calcom:emergency-sync --next-hours=24
+
+# 4. Local Cache aktivieren
+php artisan config:set calcom.use_cache_fallback=true
+</code></pre>
+<h3 id="problem-webhooks-kommen-nicht-an">Problem: "Webhooks kommen nicht an"</h3>
+<pre><code class="language-bash"># 1. Webhook-Queue Status
+php artisan webhook:queue-status
+
+# 2. Signature-Verification temporär deaktivieren
+php artisan config:set webhook.verify_signature=false
+php artisan cache:clear
+
+# 3. Webhook-Replay für letzte Stunde
+php artisan webhook:replay --since=&quot;1 hour ago&quot;
+
+# 4. Alternative Webhook-URL
+php artisan webhook:set-fallback-url https://backup.askproai.de/webhook
+</code></pre>
+<hr />
+<h2 id="rote-zone-totalausfall">🔴 ROTE ZONE: Totalausfall</h2>
+<h3 id="sofort-manahmen-reihenfolge-beachten">SOFORT-MAßNAHMEN (Reihenfolge beachten!)</h3>
+<pre><code class="language-mermaid">flowchart TD
+    Alert[&quot;🔴 TOTALAUSFALL&lt;br/&gt;ERKANNT&quot;] --&gt; Step1[&quot;1️⃣ Status Page&lt;br/&gt;aktualisieren&lt;br/&gt;(30 Sek)&quot;]
+    Step1 --&gt; Step2[&quot;2️⃣ DNS Failover&lt;br/&gt;aktivieren&lt;br/&gt;(60 Sek)&quot;]
+    Step2 --&gt; Step3[&quot;3️⃣ Emergency Mode&lt;br/&gt;starten&lt;br/&gt;(30 Sek)&quot;]
+    Step3 --&gt; Check{&quot;System&lt;br/&gt;erreichbar?&quot;}
+
+    Check --&gt;|Ja| Verify[&quot;Basisfunktionen&lt;br/&gt;testen&quot;]
+    Check --&gt;|Nein| Rollback[&quot;Code Rollback&lt;br/&gt;durchführen&quot;]
+
+    Verify --&gt; Monitor[&quot;Monitoring&lt;br/&gt;aktivieren&quot;]
+    Rollback --&gt; Restart[&quot;Services&lt;br/&gt;neu starten&quot;]
+    Restart --&gt; Monitor
+
+    Monitor --&gt; Stable{&quot;Stabil?&quot;}
+    Stable --&gt;|Ja| PostMortem[&quot;Post-Mortem&lt;br/&gt;einplanen&quot;]
+    Stable --&gt;|Nein| Escalate[&quot;CTO&lt;br/&gt;alarmieren&quot;]
+
+    style Alert fill:#f44336,color:#fff
+    style Step1 fill:#ff5722,color:#fff
+    style Step2 fill:#ff5722,color:#fff
+    style Step3 fill:#ff5722,color:#fff
+    style Escalate fill:#d32f2f,color:#fff
+    style PostMortem fill:#2196f3,color:#fff
+</code></pre>
+<h4 id="1-status-page-aktualisieren-30-sek">1️⃣ <strong>Status-Page aktualisieren</strong> (30 Sek)</h4>
+<pre><code class="language-bash">curl -X POST https://api.statuspage.io/v1/incidents \
+  -H &quot;Authorization: OAuth YOUR_TOKEN&quot; \
+  -d '{&quot;incident&quot;:{&quot;name&quot;:&quot;Service-Unterbrechung&quot;,&quot;status&quot;:&quot;investigating&quot;}}'
+</code></pre>
+<h4 id="2-failover-aktivieren-60-sek">2️⃣ <strong>Failover aktivieren</strong> (60 Sek)</h4>
+<pre><code class="language-bash"># DNS auf Backup-Server umschalten
+./dns-failover.sh --target=backup-server
+
+# Oder manuell bei Netcup:
+# 1. Login: https://www.customercontrolpanel.de
+# 2. Domains → askproai.de → DNS
+# 3. A-Record ändern zu: 185.243.112.224 (Backup)
+</code></pre>
+<h4 id="3-emergency-mode-aktivieren-30-sek">3️⃣ <strong>Emergency Mode aktivieren</strong> (30 Sek)</h4>
+<pre><code class="language-bash"># Auf Backup-Server
+ssh emergency@backup.askproai.de
+sudo ./activate-emergency-mode.sh
+
+# Minimaler Service läuft mit:
+# - Static Landing Page
+# - Queue für eingehende Calls
+# - Auto-Response &quot;Rückruf in 30 Min&quot;
+</code></pre>
+<h3 id="rollback-bei-code-problemen">ROLLBACK bei Code-Problemen</h3>
+<pre><code class="language-bash"># 1. Letzten funktionierenden Stand
+cd /var/www/api-gateway
+git log --oneline -10  # Finde letzten stabilen Commit
+
+# 2. Hard Reset
+git reset --hard STABLE_COMMIT_HASH
+
+# 3. Dependencies restaurieren
+composer install
+npm ci
+
+# 4. Services neu starten
+sudo systemctl restart php8.3-fpm
+php artisan horizon:terminate
+php artisan up
+</code></pre>
+<h3 id="datenbank-notfall">DATENBANK-NOTFALL</h3>
+<pre><code class="language-bash"># 1. Connection testen
+mysql -u root -p'V9LGz2tdR5gpDQz' -e &quot;SELECT 1&quot;
+
+# 2. Bei Fehler: Failover zu Backup-DB
+php artisan config:set database.default=mysql_backup
+php artisan config:cache
+
+# 3. Letzte Backup restaurieren
+mysql -u root -p'V9LGz2tdR5gpDQz' askproai_db &lt; /backups/latest.sql
+
+# 4. Consistency Check
+php artisan db:verify-integrity
+</code></pre>
+<hr />
+<h2 id="eskalations-kette">📞 ESKALATIONS-KETTE</h2>
+<pre><code class="language-mermaid">flowchart TD
+    Incident[Incident&lt;br/&gt;erkannt] --&gt; Timer{&quot;Zeit seit&lt;br/&gt;Erkennung&quot;}
+
+    Timer --&gt;|0-5 Min| L1[&quot;Level 1&lt;br/&gt;DevOps On-Call&lt;br/&gt;+49 176 XXXXX&quot;]
+    Timer --&gt;|5-15 Min| L2[&quot;Level 2&lt;br/&gt;Team Lead&lt;br/&gt;+49 171 XXXXX&quot;]
+    Timer --&gt;|15+ Min| L3[&quot;Level 3&lt;br/&gt;CTO&lt;br/&gt;+49 170 XXXXX&quot;]
+    Timer --&gt;|Hardware| L4[&quot;Level 4&lt;br/&gt;Netcup Support&lt;br/&gt;+49 2432 9139-10&quot;]
+
+    L1 --&gt; Response1{&quot;Gelöst?&quot;}
+    L2 --&gt; Response2{&quot;Gelöst?&quot;}
+    L3 --&gt; Response3{&quot;Gelöst?&quot;}
+    L4 --&gt; Response4{&quot;Gelöst?&quot;}
+
+    Response1 --&gt;|Nein| L2
+    Response2 --&gt;|Nein| L3
+    Response3 --&gt;|Nein| L4
+
+    Response1 --&gt;|Ja| PostIncident[&quot;Post-Incident&lt;br/&gt;Prozess&quot;]
+    Response2 --&gt;|Ja| PostIncident
+    Response3 --&gt;|Ja| PostIncident
+    Response4 --&gt;|Ja| PostIncident
+
+    style Incident fill:#ff5252,color:#fff
+    style L1 fill:#ffeb3b
+    style L2 fill:#ff9800,color:#fff
+    style L3 fill:#ff5722,color:#fff
+    style L4 fill:#d32f2f,color:#fff
+    style PostIncident fill:#4caf50,color:#fff
+</code></pre>
+<h3 id="level-1-devops-on-call-0-5-min">Level 1: DevOps On-Call (0-5 Min)</h3>
+<pre><code>WhatsApp: +49 176 DEVOPS-ONCALL
+Automatisch via: ./alert-oncall.sh
+</code></pre>
+<h3 id="level-2-team-lead-5-15-min">Level 2: Team Lead (5-15 Min)</h3>
+<pre><code>Mobile: +49 171 TEAMLEAD
+Slack: @teamlead-emergency
+</code></pre>
+<h3 id="level-3-cto-15-min">Level 3: CTO (15+ Min)</h3>
+<pre><code>Mobile: +49 170 CTO-MOBILE
+Email: cto-emergency@askproai.de
+</code></pre>
+<h3 id="level-4-netcup-support-server-hardware">Level 4: Netcup Support (Server-Hardware)</h3>
+<pre><code>Hotline: +49 2432 9139-10
+Ticket: https://www.customercontrolpanel.de
+Login: hosting215275
+</code></pre>
+<hr />
+<h2 id="automatisierte-recovery-scripts">🔧 AUTOMATISIERTE RECOVERY SCRIPTS</h2>
+<h3 id="emergency-responsesh"><code>emergency-response.sh</code></h3>
+<pre><code class="language-bash">#!/bin/bash
+set -e
+
+echo &quot;🚨 EMERGENCY RESPONSE AKTIVIERT&quot;
+
+# Auto-Diagnose
+echo &quot;1️⃣ Checking Services...&quot;
+systemctl is-active mysql || sudo systemctl start mysql
+systemctl is-active redis || sudo systemctl start redis
+systemctl is-active php8.3-fpm || sudo systemctl start php8.3-fpm
+
+echo &quot;2️⃣ Checking APIs...&quot;
+curl -f https://api.retellai.com/health || echo &quot;⚠️ Retell Down&quot;
+curl -f https://api.cal.com/health || echo &quot;⚠️ Cal.com Down&quot;
+
+echo &quot;3️⃣ Auto-Fixing Common Issues...&quot;
+php artisan optimize:clear
+php artisan horizon:terminate &amp;&amp; php artisan horizon &amp;
+php artisan config:cache
+
+echo &quot;4️⃣ Running Health Check...&quot;
+php artisan health:check
+
+echo &quot;✅ Emergency Response Complete!&quot;
+</code></pre>
+<h3 id="quick-restoresh"><code>quick-restore.sh</code></h3>
+<pre><code class="language-bash">#!/bin/bash
+# Schnell-Wiederherstellung in &lt; 2 Min
+
+# 1. Code auf letzten stabilen Stand
+git reset --hard $(cat LAST_STABLE_VERSION)
+
+# 2. Services neu starten
+sudo systemctl restart mysql redis php8.3-fpm
+
+# 3. Caches leeren
+php artisan optimize:clear
+redis-cli FLUSHALL
+
+# 4. Basis-Check
+curl -f https://api.askproai.de/health
+</code></pre>
+<hr />
+<h2 id="post-incident-checklist">📊 POST-INCIDENT CHECKLIST</h2>
+<p>Nach Behebung IMMER durchführen:</p>
+<h3 id="1-verification-5-min">1. Verification (5 Min)</h3>
+<pre><code class="language-bash">php artisan askpro:post-incident-check
+</code></pre>
+<h3 id="2-customer-communication">2. Customer Communication</h3>
+<pre><code class="language-bash"># Email an betroffene Kunden
+php artisan notify:incident-resolved --affected-last-hour
+</code></pre>
+<h3 id="3-incident-report">3. Incident Report</h3>
+<pre><code class="language-bash"># Automatischer Report
+php artisan incident:generate-report --output=incident-$(date +%Y%m%d).md
+</code></pre>
+<h3 id="4-preventive-measures">4. Preventive Measures</h3>
+<ul>
+<li>[ ] Root Cause analysieren</li>
+<li>[ ] Monitoring verbessern</li>
+<li>[ ] Runbook aktualisieren</li>
+<li>[ ] Team-Briefing planen</li>
+</ul>
+<hr />
+<h2 id="praventive-manahmen">🛡️ PRÄVENTIVE MAßNAHMEN</h2>
+<h3 id="tagliche-checks-cron">Tägliche Checks (Cron)</h3>
+<pre><code class="language-cron"># Automated Emergency Preparedness
+0 */6 * * * /var/www/api-gateway/emergency-preparedness-check.sh
+</code></pre>
+<h3 id="wochentliche-disaster-recovery-tests">Wöchentliche Disaster Recovery Tests</h3>
+<pre><code class="language-bash"># Jeden Montag 3 Uhr
+0 3 * * 1 /var/www/api-gateway/disaster-recovery-test.sh
+</code></pre>
+<h3 id="monatliches-backup-verify">Monatliches Backup-Verify</h3>
+<pre><code class="language-bash"># Backup-Integrität prüfen
+php artisan backup:verify --all --notify-slack
+</code></pre>
+<hr />
+<h2 id="notfall-kontakte-wallet-card">💡 NOTFALL-KONTAKTE WALLET CARD</h2>
+<pre><code>🚨 ASKPROAI NOTFALL 🚨
+─────────────────────
+DevOps:  +49 176 XXX
+Backup:  +49 171 XXX  
+CTO:     +49 170 XXX
+─────────────────────
+Server:  Netcup #215275
+Support: +49 2432 9139-10
+─────────────────────
+Status:  status.askproai.de
+Backup:  185.243.112.224
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>WICHTIG</strong>: Dieses Playbook monatlich reviewen und aktualisieren!</p>
+</blockquote>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../CUSTOMER_SUCCESS_RUNBOOK/" class="btn btn-neutral float-left" title="Customer Success"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../ERROR_PATTERNS/" class="btn btn-neutral float-right" title="Error Patterns">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../CUSTOMER_SUCCESS_RUNBOOK/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../ERROR_PATTERNS/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

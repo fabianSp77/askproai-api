@@ -312,85 +312,169 @@ class RetellAgentProvisioner
      */
     private function getAgentFunctions(Branch $branch): array
     {
-        return [
-            [
-                'name' => 'check_availability',
-                'description' => 'Verfügbarkeit für einen Service prüfen',
-                'parameters' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'service_id' => [
-                            'type' => 'integer',
-                            'description' => 'ID des gewünschten Services',
-                        ],
-                        'date' => [
-                            'type' => 'string',
-                            'description' => 'Gewünschtes Datum (YYYY-MM-DD)',
-                        ],
-                        'staff_id' => [
-                            'type' => 'integer',
-                            'description' => 'ID des gewünschten Mitarbeiters (optional)',
-                        ],
+        // Importiere Custom Function Definitions
+        $functions = [];
+        
+        // 1. Extract Appointment Details Function
+        $functions[] = \App\Services\Retell\CustomFunctions\ExtractAppointmentDetailsFunction::getDefinition();
+        
+        // 2. Identify Customer Function
+        $functions[] = \App\Services\Retell\CustomFunctions\IdentifyCustomerFunction::getDefinition();
+        
+        // 3. Determine Service Function  
+        $functions[] = \App\Services\Retell\CustomFunctions\DetermineServiceFunction::getDefinition();
+        
+        // 4. Appointment Booking Function
+        $functions[] = \App\Services\Retell\CustomFunctions\AppointmentBookingFunction::getDefinition();
+        
+        // 5. Group Booking Function (falls aktiviert)
+        if ($branch->getSetting('enable_group_bookings', false)) {
+            $functions[] = \App\Services\Retell\CustomFunctions\GroupBookingFunction::getDefinition();
+        }
+        
+        // Zusätzliche Standard-Functions
+        $functions[] = [
+            'name' => 'check_availability',
+            'description' => 'Prüft verfügbare Zeitslots für einen Service an einem bestimmten Tag',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'service_id' => [
+                        'type' => 'integer',
+                        'description' => 'ID des gewünschten Services',
                     ],
-                    'required' => ['service_id', 'date'],
-                ],
-            ],
-            [
-                'name' => 'book_appointment',
-                'description' => 'Termin buchen',
-                'parameters' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'customer_name' => [
-                            'type' => 'string',
-                            'description' => 'Name des Kunden',
-                        ],
-                        'customer_phone' => [
-                            'type' => 'string',
-                            'description' => 'Telefonnummer des Kunden',
-                        ],
-                        'customer_email' => [
-                            'type' => 'string',
-                            'description' => 'E-Mail des Kunden (optional)',
-                        ],
-                        'service_id' => [
-                            'type' => 'integer',
-                            'description' => 'ID des Services',
-                        ],
-                        'staff_id' => [
-                            'type' => 'integer',
-                            'description' => 'ID des Mitarbeiters',
-                        ],
-                        'date' => [
-                            'type' => 'string',
-                            'description' => 'Datum (YYYY-MM-DD)',
-                        ],
-                        'time' => [
-                            'type' => 'string',
-                            'description' => 'Uhrzeit (HH:MM)',
-                        ],
-                        'notes' => [
-                            'type' => 'string',
-                            'description' => 'Zusätzliche Notizen',
-                        ],
+                    'service_name' => [
+                        'type' => 'string',
+                        'description' => 'Name des Services (falls ID unbekannt)',
                     ],
-                    'required' => ['customer_name', 'customer_phone', 'service_id', 'date', 'time'],
-                ],
-            ],
-            [
-                'name' => 'get_business_hours',
-                'description' => 'Öffnungszeiten abrufen',
-                'parameters' => [
-                    'type' => 'object',
-                    'properties' => [
-                        'date' => [
-                            'type' => 'string',
-                            'description' => 'Datum für Öffnungszeiten (optional)',
-                        ],
+                    'date' => [
+                        'type' => 'string',
+                        'description' => 'Gewünschtes Datum (YYYY-MM-DD)',
+                    ],
+                    'time_preference' => [
+                        'type' => 'string',
+                        'description' => 'Zeitpräferenz (morning/afternoon/evening)',
+                    ],
+                    'staff_id' => [
+                        'type' => 'integer',
+                        'description' => 'ID des gewünschten Mitarbeiters (optional)',
+                    ],
+                    'branch_id' => [
+                        'type' => 'string',
+                        'description' => 'ID der Filiale',
                     ],
                 ],
+                'required' => ['date', 'branch_id'],
             ],
         ];
+        
+        $functions[] = [
+            'name' => 'get_business_hours',
+            'description' => 'Öffnungszeiten der Filiale abrufen',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'date' => [
+                        'type' => 'string',
+                        'description' => 'Datum für Öffnungszeiten (optional)',
+                    ],
+                    'branch_id' => [
+                        'type' => 'string',
+                        'description' => 'ID der Filiale',
+                    ],
+                ],
+                'required' => ['branch_id'],
+            ],
+        ];
+        
+        $functions[] = [
+            'name' => 'list_services',
+            'description' => 'Listet alle verfügbaren Services der Filiale auf',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'category' => [
+                        'type' => 'string',
+                        'description' => 'Service-Kategorie (optional)',
+                    ],
+                    'price_range' => [
+                        'type' => 'string',
+                        'description' => 'Preisbereich (low/medium/high)',
+                    ],
+                    'branch_id' => [
+                        'type' => 'string',
+                        'description' => 'ID der Filiale',
+                    ],
+                ],
+                'required' => ['branch_id'],
+            ],
+        ];
+        
+        $functions[] = [
+            'name' => 'cancel_appointment',
+            'description' => 'Storniert einen existierenden Termin',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'appointment_id' => [
+                        'type' => 'integer',
+                        'description' => 'ID des Termins',
+                    ],
+                    'customer_phone' => [
+                        'type' => 'string',
+                        'description' => 'Telefonnummer zur Verifizierung',
+                    ],
+                    'reason' => [
+                        'type' => 'string',
+                        'description' => 'Stornierungsgrund (optional)',
+                    ],
+                ],
+                'required' => ['appointment_id', 'customer_phone'],
+            ],
+        ];
+        
+        $functions[] = [
+            'name' => 'reschedule_appointment',
+            'description' => 'Verschiebt einen existierenden Termin',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'appointment_id' => [
+                        'type' => 'integer',
+                        'description' => 'ID des Termins',
+                    ],
+                    'customer_phone' => [
+                        'type' => 'string',
+                        'description' => 'Telefonnummer zur Verifizierung',
+                    ],
+                    'new_date' => [
+                        'type' => 'string',
+                        'description' => 'Neues Datum (YYYY-MM-DD)',
+                    ],
+                    'new_time' => [
+                        'type' => 'string',
+                        'description' => 'Neue Uhrzeit (HH:MM)',
+                    ],
+                ],
+                'required' => ['appointment_id', 'customer_phone', 'new_date', 'new_time'],
+            ],
+        ];
+        
+        // Füge branch_id zu allen Functions hinzu, die es noch nicht haben
+        foreach ($functions as &$function) {
+            if (!isset($function['parameters']['properties']['branch_id'])) {
+                $function['parameters']['properties']['branch_id'] = [
+                    'type' => 'string',
+                    'description' => 'ID der Filiale (UUID)',
+                ];
+                // Füge branch_id zu required hinzu, falls nicht vorhanden
+                if (!in_array('branch_id', $function['parameters']['required'] ?? [])) {
+                    $function['parameters']['required'][] = 'branch_id';
+                }
+            }
+        }
+        
+        return $functions;
     }
     
     /**

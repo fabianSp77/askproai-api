@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell.ai Konfigurations-Anleitung | AskProAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 1.2em;
+        }
+
+        .progress-container {
+            margin-top: 30px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            padding: 5px;
+            position: relative;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+            height: 30px;
+            border-radius: 8px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            width: 20%;
+        }
+
+        .step-indicators {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .step-indicator {
+            text-align: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .step-indicator::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background: #e2e8f0;
+            z-index: -1;
+        }
+
+        .step-indicator:last-child::after {
+            display: none;
+        }
+
+        .step-indicator.active .step-number {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .step-indicator.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .step-label {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .step-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .step-section.active {
+            display: block;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            background: #eff6ff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #1e40af;
+            font-size: 1.8em;
+        }
+
+        .explanation {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .code-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .code-block.before {
+            border: 2px solid #ef4444;
+        }
+
+        .code-block.after {
+            border: 2px solid #10b981;
+        }
+
+        .code-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: white;
+            padding: 0 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .code-label.before {
+            color: #ef4444;
+        }
+
+        .code-label.after {
+            color: #10b981;
+        }
+
+        pre {
+            margin: 0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .highlight-remove {
+            background: rgba(239, 68, 68, 0.2);
+            text-decoration: line-through;
+            color: #fca5a5;
+        }
+
+        .highlight-add {
+            background: rgba(16, 185, 129, 0.2);
+            color: #86efac;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .copy-button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .copy-button.copied {
+            background: #10b981;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f1f5f9;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .checklist {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .checklist-item label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: start;
+            gap: 10px;
+        }
+
+        .warning-icon {
+            font-size: 24px;
+            color: #f59e0b;
+        }
+
+        .success-box {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: start;
+            gap: 10px;
+        }
+
+        .success-icon {
+            font-size: 24px;
+            color: #10b981;
+        }
+
+        @media (max-width: 768px) {
+            .code-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .step-indicators {
+                flex-wrap: wrap;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .json-key { color: #93c5fd; }
+        .json-string { color: #86efac; }
+        .json-number { color: #fbbf24; }
+        .json-boolean { color: #c084fc; }
+        .json-null { color: #f87171; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Retell.ai Agent Konfiguration</h1>
+            <p class="subtitle">Schritt-für-Schritt Anleitung zur Optimierung Ihres Agents</p>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar">20%</div>
+            </div>
+            
+            <div class="step-indicators">
+                <div class="step-indicator active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Datentypen</div>
+                </div>
+                <div class="step-indicator" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Functions</div>
+                </div>
+                <div class="step-indicator" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Prompt</div>
+                </div>
+                <div class="step-indicator" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Response</div>
+                </div>
+                <div class="step-indicator" data-step="5">
+                    <div class="step-number">5</div>
+                    <div class="step-label">Fertig</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Schritt 1: Post-Call Analysis -->
+        <section class="step-section active" id="step1">
+            <div class="step-header">
+                <div class="step-icon">📊</div>
+                <h2>Schritt 1: Post-Call Analysis Datentypen korrigieren</h2>
+            </div>
+            
+            <div class="explanation">
+                <strong>Warum?</strong> Die Felder für Datum und Uhrzeit sind als "number" definiert, aber wir speichern Text wie "25.06.2024" und "14:30". Das führt zu Fehlern!
+            </div>
+
+            <div class="code-comparison">
+                <div class="code-block before">
+                    <span class="code-label before">❌ AKTUELL (Fehlerhaft)</span>
+                    <button class="copy-button" onclick="copyCode(this)">Kopieren</button>
+                    <pre><code>{
+  <span class="highlight-remove">"type": "number",</span>
+  "name": "Uhrzeit_Termin",
+  "description": "Die Uhrzeit wann der Termin startet."
+},
+{
+  <span class="highlight-remove">"type": "number",</span>
+  "name": "Datum_Termin",
+  "description": "Das Datum für den gebuchten Termin."
+},
+{
+  <span class="highlight-remove">"type": "number",</span>
+  "name": "Telefonnummer_Anrufer",
+  "description": "Die Telefonnummer des Anrufers."
+}</code></pre>
+                </div>
+
+                <div class="code-block after">
+                    <span class="code-label after">✅ KORREKT</span>
+                    <button class="copy-button" onclick="copyCode(this)">Kopieren</button>
+                    <pre><code>{
+  <span class="highlight-add">"type": "string",</span>
+  "name": "Uhrzeit_Termin",
+  "description": "Die Uhrzeit wann der Termin startet."
+},
+{
+  <span class="highlight-add">"type": "string",</span>
+  "name": "Datum_Termin",
+  "description": "Das Datum für den gebuchten Termin."
+},
+{
+  <span class="highlight-add">"type": "string",</span>
+  "name": "Telefonnummer_Anrufer",
+  "description": "Die Telefonnummer des Anrufers."
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="check1-1">
+                    <label for="check1-1">Alle "number" Typen bei Datum/Uhrzeit/Telefonnummer auf "string" geändert</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check1-2">
+                    <label for="check1-2">Änderungen im Retell.ai Dashboard gespeichert</label>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="nextStep()">
+                    Weiter zu Functions
+                    <span>→</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Schritt 2: Functions hinzufügen -->
+        <section class="step-section" id="step2">
+            <div class="step-header">
+                <div class="step-icon">🛠️</div>
+                <h2>Schritt 2: Neue Functions hinzufügen</h2>
+            </div>
+            
+            <div class="explanation">
+                <strong>Warum?</strong> Aktuell kann der Agent nur neue Termine sammeln. Mit zusätzlichen Functions kann er auch bestehende Kunden erkennen, Termine stornieren und verschieben.
+            </div>
+
+            <div class="warning-box">
+                <span class="warning-icon">⚠️</span>
+                <div>
+                    <strong>Wichtig:</strong> Die Functions müssen in der exakt gleichen Reihenfolge wie hier gezeigt hinzugefügt werden!
+                </div>
+            </div>
+
+            <h3 style="margin: 20px 0;">Function 1: Kunde prüfen</h3>
+            <div class="code-block after">
+                <span class="code-label after">➕ NEU HINZUFÜGEN</span>
+                <button class="copy-button" onclick="copyCode(this)">Kopieren</button>
+                <pre><code>{
+  "name": "check_customer",
+  "type": "custom",
+  "description": "Prüft ob der Anrufer bereits Kunde ist und lädt seine Daten",
+  "url": "https://api.askproai.de/api/functions/check-customer",
+  "method": "POST",
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "parameter_type": "json",
+  "speak_during_execution": false,
+  "speak_after_execution": false,
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "telefonnummer": {
+        "type": "string",
+        "description": "Telefonnummer des Anrufers"
+      }
+    },
+    "required": ["telefonnummer"]
+  },
+  "response_variables": [
+    {
+      "variable_key": "is_customer",
+      "path": "$.exists"
+    },
+    {
+      "variable_key": "customer_name",
+      "path": "$.name"
+    },
+    {
+      "variable_key": "last_appointment",
+      "path": "$.last_appointment"
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <h3 style="margin: 20px 0;">Function 2: Verfügbarkeit prüfen</h3>
+            <div class="code-block after">
+                <span class="code-label after">➕ NEU HINZUFÜGEN</span>
+                <button class="copy-button" onclick="copyCode(this)">Kopieren</button>
+                <pre><code>{
+  "name": "check_availability",
+  "type": "custom",
+  "description": "Prüft verfügbare Termine ohne zu buchen",
+  "url": "https://api.askproai.de/api/functions/check-availability",
+  "method": "POST",
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "parameter_type": "json",
+  "speak_during_execution": true,
+  "speak_after_execution": true,
+  "execution_message_description": "Ich prüfe die Verfügbarkeit",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "datum": {
+        "type": "string",
+        "description": "Gewünschtes Datum (TT.MM.JJJJ)"
+      },
+      "dienstleistung": {
+        "type": "string",
+        "description": "Art der Dienstleistung"
+      },
+      "mitarbeiter_wunsch": {
+        "type": "string",
+        "description": "Bevorzugter Mitarbeiter (optional)"
+      }
+    },
+    "required": ["datum", "dienstleistung"]
+  },
+  "response_variables": [
+    {
+      "variable_key": "available_slots",
+      "path": "$.slots"
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <h3 style="margin: 20px 0;">Function 3: Termin stornieren</h3>
+            <div class="code-block after">
+                <span class="code-label after">➕ NEU HINZUFÜGEN</span>
+                <button class="copy-button" onclick="copyCode(this)">Kopieren</button>
+                <pre><code>{
+  "name": "cancel_appointment",
+  "type": "custom",
+  "description": "Storniert einen bestehenden Termin nach Telefonnummer-Verifikation",
+  "url": "https://api.askproai.de/api/functions/cancel-appointment",
+  "method": "POST",
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "parameter_type": "json",
+  "speak_during_execution": true,
+  "speak_after_execution": true,
+  "execution_message_description": "Ich storniere Ihren Termin",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "telefonnummer": {
+        "type": "string",
+        "description": "Telefonnummer zur Verifikation"
+      },
+      "datum": {
+        "type": "string",
+        "description": "Datum des zu stornierenden Termins (optional)"
+      }
+    },
+    "required": ["telefonnummer"]
+  },
+  "response_variables": [
+    {
+      "variable_key": "cancellation_success",
+      "path": "$.success"
+    },
+    {
+      "variable_key": "cancellation_message",
+      "path": "$.message"
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <h3 style="margin: 20px 0;">Function 4: Termin verschieben</h3>
+            <div class="code-block after">
+                <span class="code-label after">➕ NEU HINZUFÜGEN</span>
+                <button class="copy-button" onclick="copyCode(this)">Kopieren</button>
+                <pre><code>{
+  "name": "reschedule_appointment",
+  "type": "custom",
+  "description": "Verschiebt einen bestehenden Termin",
+  "url": "https://api.askproai.de/api/functions/reschedule-appointment",
+  "method": "POST",
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "parameter_type": "json",
+  "speak_during_execution": true,
+  "speak_after_execution": true,
+  "execution_message_description": "Ich verschiebe Ihren Termin",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "telefonnummer": {
+        "type": "string",
+        "description": "Telefonnummer zur Verifikation"
+      },
+      "alter_termin_datum": {
+        "type": "string",
+        "description": "Datum des alten Termins"
+      },
+      "neues_datum": {
+        "type": "string",
+        "description": "Neues Datum (TT.MM.JJJJ)"
+      },
+      "neue_uhrzeit": {
+        "type": "string",
+        "description": "Neue Uhrzeit (HH:MM)"
+      }
+    },
+    "required": ["telefonnummer", "neues_datum", "neue_uhrzeit"]
+  },
+  "response_variables": [
+    {
+      "variable_key": "reschedule_success",
+      "path": "$.success"
+    },
+    {
+      "variable_key": "new_appointment_id",
+      "path": "$.appointment_id"
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="check2-1">
+                    <label for="check2-1">Function "check_customer" hinzugefügt</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check2-2">
+                    <label for="check2-2">Function "check_availability" hinzugefügt</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check2-3">
+                    <label for="check2-3">Function "cancel_appointment" hinzugefügt</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check2-4">
+                    <label for="check2-4">Function "reschedule_appointment" hinzugefügt</label>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="previousStep()">
+                    <span>←</span>
+                    Zurück
+                </button>
+                <button class="btn btn-primary" onclick="nextStep()">
+                    Weiter zum Prompt
+                    <span>→</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Schritt 3: Prompt optimieren -->
+        <section class="step-section" id="step3">
+            <div class="step-header">
+                <div class="step-icon">💬</div>
+                <h2>Schritt 3: Prompt optimieren</h2>
+            </div>
+            
+            <div class="explanation">
+                <strong>Warum?</strong> Der aktuelle Prompt ist zu lang, hat Redundanzen und nutzt die neuen Functions nicht. Hier ist eine optimierte Version.
+            </div>
+
+            <h3 style="margin: 20px 0;">Optimierter Prompt (gekürzt & strukturiert)</h3>
+            <div class="code-block after">
+                <span class="code-label after">📝 NEUER PROMPT</span>
+                <button class="copy-button" onclick="copyCode(this)">Gesamten Prompt kopieren</button>
+                <pre><code>## Systemvariablen
+{{caller_phone_number}} - Telefonnummer des Anrufers
+{{current_time_berlin}} - Aktuelle Zeit in Berlin
+{{current_date}} - Aktuelles Datum
+{{current_time}} - Aktuelle Uhrzeit
+{{weekday}} - Wochentag auf Deutsch
+{{company_name}} - Firmenname
+
+# Rolle
+Du bist Clara, der KI-Telefonassistent für Ask-Pro-AI. Du hilfst bei Terminbuchungen und beantwortest Fragen zu unseren KI-Telefonassistenten.
+
+## Gesprächsbeginn
+1. ZUERST: Rufe check_customer({{caller_phone_number}}) auf
+2. Bei Bestandskunden: "Guten [Tag], Herr/Frau [Name], schön wieder von Ihnen zu hören!"
+3. Bei Neukunden: "Guten [Tag], Ask-Pro-AI, mein Name ist Clara. Wie kann ich Ihnen helfen?"
+
+## Hauptaufgaben
+
+### Terminbuchung (Neukunde)
+1. Name erfragen
+2. E-Mail nur wenn Bestätigung gewünscht
+3. check_availability() für Terminvorschläge
+4. collect_appointment_data() zum Buchen
+
+### Termin stornieren
+1. "Möchten Sie den Termin verschieben oder komplett absagen?"
+2. Bei Verschieben → reschedule_appointment()
+3. Bei Absagen → cancel_appointment()
+4. IMMER Telefonnummer zur Verifikation nutzen
+
+### Termin verschieben
+1. check_availability() für neue Termine
+2. reschedule_appointment() mit allen Daten
+
+## Wichtige Regeln
+- NIE nach Telefonnummer fragen wenn {{caller_phone_number}} vorhanden
+- IMMER "Sie" verwenden
+- Kurze, klare Sätze
+- Bei Stornierung IMMER fragen ob verschieben gewünscht
+
+## Preise & Leistungen
+- KI-Telefonassistent: 0,45€ pro Minute
+- 24/7 verfügbar in allen Sprachen
+- Termine werden automatisch im Kalender eingetragen
+- Vollständig anpassbar (Stimme, Geschwindigkeit, Funktionen)
+
+## Gesprächsende
+1. "Kann ich noch etwas für Sie tun?"
+2. Wenn nein → end_call()
+
+## Zeitangaben aussprechen
+- "15:30" → "fünfzehn Uhr dreißig"
+- "25.06." → "fünfundzwanzigster Juni"</code></pre>
+            </div>
+
+            <div class="success-box">
+                <span class="success-icon">✅</span>
+                <div>
+                    <strong>Vorteile des neuen Prompts:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>60% kürzer als vorher</li>
+                        <li>Keine Redundanzen mehr</li>
+                        <li>Klare Anweisungen für neue Functions</li>
+                        <li>Strukturierte Workflows</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="check3-1">
+                    <label for="check3-1">Alten Prompt komplett ersetzt</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check3-2">
+                    <label for="check3-2">Neue Function-Workflows verstanden</label>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="previousStep()">
+                    <span>←</span>
+                    Zurück
+                </button>
+                <button class="btn btn-primary" onclick="nextStep()">
+                    Weiter zu Response
+                    <span>→</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Schritt 4: Response Variables -->
+        <section class="step-section" id="step4">
+            <div class="step-header">
+                <div class="step-icon">🔄</div>
+                <h2>Schritt 4: Response Variables nutzen</h2>
+            </div>
+            
+            <div class="explanation">
+                <strong>Warum?</strong> Die Functions liefern Daten zurück. Der Agent muss wissen, wie er diese nutzen soll.
+            </div>
+
+            <h3 style="margin: 20px 0;">Prompt-Ergänzung für Response Handling</h3>
+            <div class="code-block after">
+                <span class="code-label after">➕ ZUM PROMPT HINZUFÜGEN</span>
+                <button class="copy-button" onclick="copyCode(this)">Kopieren</button>
+                <pre><code>## Response-Verarbeitung
+
+### Nach check_customer:
+- Wenn is_customer = true: "Herr/Frau {{customer_name}}, schön wieder von Ihnen zu hören!"
+- Wenn last_appointment vorhanden: "Ich sehe, Sie hatten zuletzt am {{last_appointment}} einen Termin."
+
+### Nach check_availability:
+- "Ich habe folgende Termine frei: {{available_slots}}"
+- Slots durchgehen und anbieten
+
+### Nach collect_appointment_data:
+- Wenn success = true: "Perfekt! Ihr Termin ist gebucht. Ihre Referenznummer ist {{termin_referenz}}."
+- Wenn success = false: "{{message}}" (enthält Fehlergrund)
+
+### Nach cancel_appointment:
+- Wenn cancellation_success = true: "Ihr Termin wurde erfolgreich storniert."
+- Wenn cancellation_success = false: "{{cancellation_message}}"
+
+### Nach reschedule_appointment:
+- Wenn reschedule_success = true: "Ihr Termin wurde erfolgreich verschoben. Neue Buchungsnummer: {{new_appointment_id}}."
+- Wenn reschedule_success = false: "Die Verschiebung war nicht möglich. Bitte wählen Sie einen anderen Termin."</code></pre>
+            </div>
+
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="check4-1">
+                    <label for="check4-1">Response-Verarbeitung zum Prompt hinzugefügt</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check4-2">
+                    <label for="check4-2">Alle Variablen-Namen korrekt übernommen</label>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="previousStep()">
+                    <span>←</span>
+                    Zurück
+                </button>
+                <button class="btn btn-primary" onclick="nextStep()">
+                    Abschließen
+                    <span>→</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Schritt 5: Zusammenfassung -->
+        <section class="step-section" id="step5">
+            <div class="step-header">
+                <div class="step-icon">🎉</div>
+                <h2>Fertig! Ihre Konfiguration ist optimiert</h2>
+            </div>
+            
+            <div class="success-box">
+                <span class="success-icon">🚀</span>
+                <div>
+                    <strong>Was Sie erreicht haben:</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>✅ Korrekte Datentypen für Post-Call Analysis</li>
+                        <li>✅ 4 neue Functions für vollständigen Workflow</li>
+                        <li>✅ Optimierter, kürzerer Prompt</li>
+                        <li>✅ Response-Handling implementiert</li>
+                        <li>✅ Bestandskunden-Erkennung aktiv</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 style="margin: 20px 0;">Nächste Schritte</h3>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="check5-1">
+                    <label for="check5-1">Agent im Retell.ai Dashboard speichern</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check5-2">
+                    <label for="check5-2">Test-Anruf durchführen</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check5-3">
+                    <label for="check5-3">Alle Workflows testen (Buchung, Stornierung, Verschiebung)</label>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <span class="warning-icon">💡</span>
+                <div>
+                    <strong>Tipp:</strong> Testen Sie zuerst mit einer Test-Telefonnummer, bevor Sie live gehen!
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="previousStep()">
+                    <span>←</span>
+                    Zurück
+                </button>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <span>🖨️</span>
+                    Anleitung drucken
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressBar').textContent = Math.round(progress) + '%';
+            
+            // Update step indicators
+            document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
+                if (index + 1 < currentStep) {
+                    indicator.classList.add('completed');
+                    indicator.classList.remove('active');
+                } else if (index + 1 === currentStep) {
+                    indicator.classList.add('active');
+                    indicator.classList.remove('completed');
+                } else {
+                    indicator.classList.remove('active', 'completed');
+                }
+            });
+            
+            // Show/hide sections
+            document.querySelectorAll('.step-section').forEach((section, index) => {
+                if (index + 1 === currentStep) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateProgress();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateProgress();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function copyCode(button) {
+            const codeBlock = button.parentElement.querySelector('code');
+            const text = codeBlock.textContent || codeBlock.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                button.textContent = 'Kopiert! ✓';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = 'Kopieren';
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Fehler beim Kopieren:', err);
+                alert('Kopieren fehlgeschlagen. Bitte manuell kopieren.');
+            });
+        }
+
+        // Checkbox progress tracking
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const stepSection = this.closest('.step-section');
+                const checkboxes = stepSection.querySelectorAll('input[type="checkbox"]');
+                const checkedCount = stepSection.querySelectorAll('input[type="checkbox"]:checked').length;
+                
+                if (checkedCount === checkboxes.length) {
+                    // All checkboxes in this step are checked
+                    const nextButton = stepSection.querySelector('.btn-primary');
+                    if (nextButton) {
+                        nextButton.style.animation = 'pulse 1s infinite';
+                    }
+                }
+            });
+        });
+
+        // Pulse animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>

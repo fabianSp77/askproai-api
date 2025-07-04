@@ -134,15 +134,26 @@ class MCPBookingOrchestrator
                 throw new \Exception('No phone number in call data');
             }
             
-            // Resolve context from phone number
-            $context = $this->contextResolver->resolveFromPhone($phoneNumber);
+            // Check if we already have context (set by controller)
+            $currentContext = $this->contextResolver->getCurrentContext();
             
-            if (!$context['success']) {
-                throw new \Exception($context['error'] ?? 'Failed to resolve context');
+            if ($currentContext && $currentContext['success']) {
+                $context = $currentContext;
+                Log::info('MCP BookingOrchestrator: Using existing context', [
+                    'company_id' => $context['company']['id'],
+                    'correlation_id' => $correlationId
+                ]);
+            } else {
+                // Resolve context from phone number if not already set
+                $context = $this->contextResolver->resolveFromPhone($phoneNumber);
+                
+                if (!$context['success']) {
+                    throw new \Exception($context['error'] ?? 'Failed to resolve context');
+                }
+                
+                // Set tenant context
+                $this->contextResolver->setTenantContext($context['company']['id']);
             }
-            
-            // Set tenant context
-            $this->contextResolver->setTenantContext($context['company']['id']);
             
             // Create or update call record
             $call = $this->createCallRecord($callData, $context, $correlationId);
@@ -255,15 +266,25 @@ class MCPBookingOrchestrator
             ];
         }
         
-        // Resolve context
-        $context = $this->contextResolver->resolveFromPhone($phoneNumber);
+        // Check if we already have context
+        $currentContext = $this->contextResolver->getCurrentContext();
         
-        if (!$context['success']) {
-            return [
-                'success' => false,
-                'error' => $context['error'] ?? 'Failed to resolve context',
-                'correlation_id' => $correlationId
-            ];
+        if ($currentContext && $currentContext['success']) {
+            $context = $currentContext;
+        } else {
+            // Resolve context from phone number
+            $context = $this->contextResolver->resolveFromPhone($phoneNumber);
+            
+            if (!$context['success']) {
+                return [
+                    'success' => false,
+                    'error' => $context['error'] ?? 'Failed to resolve context',
+                    'correlation_id' => $correlationId
+                ];
+            }
+            
+            // Set tenant context
+            $this->contextResolver->setTenantContext($context['company']['id']);
         }
         
         // Process booking
@@ -283,18 +304,28 @@ class MCPBookingOrchestrator
             return $cached;
         }
         
+        // First check business hours
+        $businessHoursCheck = $this->checkBusinessHours($params);
+        if (!$businessHoursCheck['available']) {
+            return [
+                'success' => false,
+                'available' => false,
+                'message' => $businessHoursCheck['message'],
+                'alternatives' => $businessHoursCheck['alternatives'] ?? []
+            ];
+        }
+        
         // Use circuit breaker for Cal.com API call
         $result = $this->circuitBreaker->call(
             'calcom_availability',
             function () use ($params) {
-                return $this->calcomService->getAvailability(
+                // CalcomV2Service uses checkAvailability method
+                return $this->calcomService->checkAvailability(
                     $params['event_type_id'],
                     $params['date_from'],
-                    $params['date_to'],
                     $params['timezone'] ?? 'Europe/Berlin'
                 );
-            },
-            $this->config['circuit_breaker']
+            }
         );
         
         // Cache successful results
@@ -402,8 +433,7 @@ class MCPBookingOrchestrator
                                 'source' => 'phone_ai'
                             ]
                         ]);
-                    },
-                    $this->config['circuit_breaker']
+                    }
                 );
                 
                 if ($calcomBooking['success'] ?? false) {
@@ -606,6 +636,169 @@ class MCPBookingOrchestrator
             default:
                 return true;
         }
+    }
+    
+    /**
+     * Check if requested time is within business hours
+     */
+    protected function checkBusinessHours(array $params): array
+    {
+        try {
+            // Get the requested date/time
+            // If we have a time in the params, use it; otherwise assume the date_from includes time
+            if (isset($params['time'])) {
+                $requestedTime = Carbon::parse($params['date_from'] . ' ' . $params['time'], $params['timezone'] ?? 'Europe/Berlin');
+            } else {
+                // Try to parse as is - it might be a full datetime or just a date
+                $requestedTime = Carbon::parse($params['date_from'], $params['timezone'] ?? 'Europe/Berlin');
+            }
+            
+            // Get branch business hours from context
+            $context = $this->contextResolver->getCurrentContext();
+            if (!$context || !isset($context['branch'])) {
+                // If no context, we can't check business hours - allow the request
+                return ['available' => true];
+            }
+            
+            $branchId = $context['branch']['id'];
+            $branch = \App\Models\Branch::find($branchId);
+            
+            if (!$branch || !$branch->business_hours) {
+                // No business hours configured - allow the request
+                return ['available' => true];
+            }
+            
+            $businessHours = is_string($branch->business_hours) 
+                ? json_decode($branch->business_hours, true) 
+                : $branch->business_hours;
+            
+            // Get the day of week (monday, tuesday, etc.)
+            $dayOfWeek = strtolower($requestedTime->format('l'));
+            
+            // Find business hours for this day
+            $dayHours = null;
+            foreach ($businessHours as $hours) {
+                if (strtolower($hours['day']) === $dayOfWeek && ($hours['enabled'] ?? false)) {
+                    $dayHours = $hours;
+                    break;
+                }
+            }
+            
+            if (!$dayHours) {
+                // Business is closed on this day
+                return [
+                    'available' => false,
+                    'message' => "Leider haben wir {$this->getDayNameInGerman($dayOfWeek)}s geschlossen. Unsere Öffnungszeiten sind Montag bis Freitag von 9:00 bis 18:00 Uhr.",
+                    'alternatives' => $this->suggestAlternativeDays($requestedTime, $businessHours)
+                ];
+            }
+            
+            // Check if the requested time is within business hours
+            $requestedHour = $requestedTime->format('H:i');
+            $openTime = $dayHours['open'];
+            $closeTime = $dayHours['close'];
+            
+            if ($requestedHour < $openTime) {
+                return [
+                    'available' => false,
+                    'message' => "Leider ist {$requestedHour} Uhr vor unseren Öffnungszeiten. Wir öffnen um {$openTime} Uhr. Möchten Sie stattdessen einen Termin um {$openTime} Uhr oder später buchen?",
+                    'alternatives' => $this->suggestTimesForDay($requestedTime, $openTime, $closeTime)
+                ];
+            }
+            
+            if ($requestedHour >= $closeTime) {
+                return [
+                    'available' => false,
+                    'message' => "Leider ist {$requestedHour} Uhr nach unseren Öffnungszeiten. Wir schließen um {$closeTime} Uhr. Möchten Sie einen Termin für einen anderen Tag vereinbaren?",
+                    'alternatives' => $this->suggestAlternativeDays($requestedTime->addDay(), $businessHours)
+                ];
+            }
+            
+            // Time is within business hours
+            return ['available' => true];
+            
+        } catch (\Exception $e) {
+            Log::error('Error checking business hours', [
+                'error' => $e->getMessage(),
+                'params' => $params
+            ]);
+            
+            // On error, allow the request to proceed
+            return ['available' => true];
+        }
+    }
+    
+    /**
+     * Get German day name
+     */
+    protected function getDayNameInGerman(string $englishDay): string
+    {
+        $days = [
+            'monday' => 'montag',
+            'tuesday' => 'dienstag',
+            'wednesday' => 'mittwoch',
+            'thursday' => 'donnerstag',
+            'friday' => 'freitag',
+            'saturday' => 'samstag',
+            'sunday' => 'sonntag'
+        ];
+        
+        return $days[strtolower($englishDay)] ?? $englishDay;
+    }
+    
+    /**
+     * Suggest alternative times for the same day
+     */
+    protected function suggestTimesForDay(Carbon $date, string $openTime, string $closeTime): array
+    {
+        $suggestions = [];
+        $suggestedTime = Carbon::parse($date->format('Y-m-d') . ' ' . $openTime);
+        
+        // Suggest 3 times starting from opening time
+        for ($i = 0; $i < 3; $i++) {
+            if ($suggestedTime->format('H:i') < $closeTime) {
+                $suggestions[] = [
+                    'date' => $suggestedTime->format('Y-m-d'),
+                    'time' => $suggestedTime->format('H:i'),
+                    'datetime' => $suggestedTime->toIso8601String()
+                ];
+                $suggestedTime->addHour();
+            }
+        }
+        
+        return $suggestions;
+    }
+    
+    /**
+     * Suggest alternative days when business is open
+     */
+    protected function suggestAlternativeDays(Carbon $startDate, array $businessHours): array
+    {
+        $suggestions = [];
+        $date = $startDate->copy();
+        $maxDays = 7;
+        $found = 0;
+        
+        for ($i = 0; $i < $maxDays && $found < 3; $i++) {
+            $dayOfWeek = strtolower($date->format('l'));
+            
+            foreach ($businessHours as $hours) {
+                if (strtolower($hours['day']) === $dayOfWeek && ($hours['enabled'] ?? false)) {
+                    $suggestions[] = [
+                        'date' => $date->format('Y-m-d'),
+                        'time' => $hours['open'],
+                        'datetime' => Carbon::parse($date->format('Y-m-d') . ' ' . $hours['open'])->toIso8601String(),
+                        'day_name' => $this->getDayNameInGerman($dayOfWeek)
+                    ];
+                    $found++;
+                    break;
+                }
+            }
+            
+            $date->addDay();
+        }
+        
+        return $suggestions;
     }
     
     /**

@@ -1,0 +1,117 @@
+/* Call Detail Page Styles */
+
+/* Smooth transitions for all interactive elements */
+.call-detail-page * {
+    @apply transition-colors duration-200;
+}
+
+/* Enhanced metric cards */
+.metric-card {
+    @apply relative overflow-hidden;
+}
+
+.metric-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br opacity-5;
+}
+
+/* Transcript sentiment highlighting animations */
+.sentiment-sentence {
+    @apply relative;
+}
+
+.sentiment-sentence::before {
+    content: '';
+    @apply absolute left-0 top-0 bottom-0 w-1 transition-all duration-300;
+}
+
+.sentiment-sentence:hover::before {
+    @apply w-2;
+}
+
+.sentiment-sentence[data-sentiment="positive"]::before {
+    @apply bg-green-500;
+}
+
+.sentiment-sentence[data-sentiment="negative"]::before {
+    @apply bg-red-500;
+}
+
+.sentiment-sentence[data-sentiment="neutral"]::before {
+    @apply bg-gray-400;
+}
+
+/* Audio player enhancements */
+.audio-player-container {
+    @apply bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6;
+}
+
+/* Quick action cards hover effects */
+.quick-action-card {
+    @apply transform transition-all duration-200;
+}
+
+.quick-action-card:hover {
+    @apply -translate-y-0.5 shadow-lg;
+}
+
+/* Section headers with gradient underlines */
+.section-header {
+    @apply relative pb-2;
+}
+
+.section-header::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5;
+    background: linear-gradient(to right, rgb(var(--primary-500)), transparent);
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 1280px) {
+    .metric-grid {
+        @apply grid-cols-1 md:grid-cols-2;
+    }
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+    .metric-card {
+        @apply border-gray-700;
+    }
+    
+    .sentiment-sentence {
+        @apply border-opacity-60;
+    }
+}
+
+/* Loading states */
+.loading-shimmer {
+    @apply relative overflow-hidden bg-gray-200 dark:bg-gray-700;
+}
+
+.loading-shimmer::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .call-detail-page {
+        @apply text-black bg-white;
+    }
+    
+    .section-container {
+        @apply break-inside-avoid;
+    }
+}

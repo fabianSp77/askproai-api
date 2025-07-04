@@ -15,18 +15,19 @@ use Filament\Forms\Components\Wizard;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Forms\Components\ToggleButtons;
 
 class CompanyResource extends Resource
 {
-    protected static ?string $navigationGroup = 'Verwaltung';
-    protected static ?int $navigationSort = 80;
+    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    protected static ?int $navigationSort = 10;
 
     public static function canViewAny(): bool
     {
         $user = auth()->user();
         
-        // Super admin can view all
-        if ($user->hasRole('super_admin')) {
+        // Super admin can view all (check both variants)
+        if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
         
@@ -38,8 +39,8 @@ class CompanyResource extends Resource
     {
         $user = auth()->user();
         
-        // Super admin can view all
-        if ($user->hasRole('super_admin')) {
+        // Super admin can view all (check both variants)
+        if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
         
@@ -56,8 +57,8 @@ class CompanyResource extends Resource
     {
         $user = auth()->user();
         
-        // Super admin can edit all
-        if ($user->hasRole('super_admin')) {
+        // Super admin can edit all (check both variants)
+        if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
         
@@ -74,8 +75,8 @@ class CompanyResource extends Resource
     {
         $user = auth()->user();
         
-        // Only super admins can create new companies
-        return $user->hasRole('super_admin') || $user->can('create_company');
+        // Only super admins can create new companies (check both variants)
+        return $user->hasRole('super_admin') || $user->hasRole('Super Admin') || $user->can('create_company');
     }
 
     use HasConsistentNavigation;
@@ -143,8 +144,48 @@ class CompanyResource extends Resource
                 Wizard\Step::make('Kalender & Integration')
                     ->icon('heroicon-o-calendar-days')
                     ->schema([
+                        // Appointment booking toggle
+                        Forms\Components\ToggleButtons::make('settings.needs_appointment_booking')
+                            ->label('Benötigt Ihr Unternehmen Terminbuchungen?')
+                            ->options([
+                                true => 'Ja, wir vereinbaren Termine',
+                                false => 'Nein, keine Terminbuchung'
+                            ])
+                            ->icons([
+                                true => 'heroicon-o-calendar-days',
+                                false => 'heroicon-o-x-circle'
+                            ])
+                            ->colors([
+                                true => 'success',
+                                false => 'warning'
+                            ])
+                            ->inline()
+                            ->default(true)
+                            ->reactive()
+                            ->helperText('Deaktivieren Sie dies, wenn Ihr Unternehmen keine Termine vereinbart')
+                            ->afterStateUpdated(function ($state, $set) {
+                                if (!$state) {
+                                    // Clear Cal.com fields when appointment booking is disabled
+                                    $set('calcom_api_key', null);
+                                    $set('calcom_team_slug', null);
+                                    $set('calcom_user_id', null);
+                                }
+                            }),
+                            
+                        // Info box when appointment booking is disabled
+                        Forms\Components\Placeholder::make('no_appointment_info')
+                            ->label('')
+                            ->content(new \Illuminate\Support\HtmlString('
+                                <div class="p-4 bg-amber-50 rounded-lg">
+                                    <p class="text-amber-800">ℹ️ Terminbuchungsfunktionen sind deaktiviert.</p>
+                                    <p class="text-amber-700 text-sm mt-1">Sie können diese Einstellung jederzeit in den Unternehmenseinstellungen ändern.</p>
+                                </div>
+                            '))
+                            ->visible(fn($get) => $get('settings.needs_appointment_booking') === false),
+                            
                         Forms\Components\Section::make('Cal.com Master-Konfiguration')
                             ->description('Diese Einstellungen werden an alle Filialen vererbt (können aber überschrieben werden)')
+                            ->visible(fn($get) => $get('settings.needs_appointment_booking') !== false)
                             ->schema([
                                 Forms\Components\Grid::make(2)->schema([
                                     Forms\Components\TextInput::make('calcom_api_key')
@@ -200,6 +241,7 @@ class CompanyResource extends Resource
                             
                         Forms\Components\Section::make('🎯 Event-Types-Verwaltung')
                             ->collapsed()
+                            ->visible(fn($get) => $get('settings.needs_appointment_booking') !== false)
                             ->schema([
                                 Forms\Components\Placeholder::make('event_types_info')
                                     ->label('')

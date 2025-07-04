@@ -27,6 +27,11 @@ use Carbon\Carbon;
 class ProcessRetellWebhookJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, CompanyAwareJob;
+    
+    /**
+     * The resolved branch ID
+     */
+    protected ?int $branchId = null;
 
     /**
      * The number of times the job may be attempted.
@@ -88,36 +93,22 @@ class ProcessRetellWebhookJob implements ShouldQueue
         WebhookProcessor $webhookProcessor,
         EnhancedWebhookDeduplicationService $deduplicationService
     ): void {
-        // Resolve company context first
+        // Resolve company and branch context using PhoneNumberResolver
         $payload = $this->webhookEvent->payload;
         $callData = $payload['call'] ?? $payload;
         
-        // Try to resolve company from phone number
-        if (isset($callData['to_number'])) {
-            $phoneNumber = PhoneNumber::withoutGlobalScopes()
-                ->where('number', $callData['to_number'])
-                ->where('is_active', true)
-                ->first();
-                
-            if ($phoneNumber && $phoneNumber->branch_id) {
-                $branch = Branch::withoutGlobalScopes()->find($phoneNumber->branch_id);
-                if ($branch) {
-                    $this->companyId = $branch->company_id;
-                }
-            }
-            
-            if (!$this->companyId) {
-                // Try direct branch lookup
-                $branch = Branch::withoutGlobalScopes()
-                    ->where('phone_number', $callData['to_number'])
-                    ->where('is_active', true)
-                    ->first();
-                    
-                if ($branch) {
-                    $this->companyId = $branch->company_id;
-                }
-            }
-        }
+        // Use PhoneNumberResolver for comprehensive resolution
+        $phoneResolver = app(\App\Services\PhoneNumberResolver::class);
+        $context = $phoneResolver->resolveFromWebhook([
+            'to' => $callData['to_number'] ?? null,
+            'from' => $callData['from_number'] ?? null,
+            'agent_id' => $callData['agent_id'] ?? null,
+            'metadata' => $callData['metadata'] ?? []
+        ]);
+        
+        // Store resolved context for use in processing
+        $this->companyId = $context['company_id'] ?? $this->webhookEvent->company_id;
+        $this->branchId = $context['branch_id'] ?? null;
         
         // Apply company context
         $this->applyCompanyContext();
@@ -229,6 +220,8 @@ class ProcessRetellWebhookJob implements ShouldQueue
         
         Log::info('Processing call_ended event', [
             'call_id' => $callId,
+            'company_id' => $this->companyId,
+            'branch_id' => $this->branchId,
             'correlation_id' => $this->correlationId
         ]);
         
@@ -237,8 +230,16 @@ class ProcessRetellWebhookJob implements ShouldQueue
             $call = Call::where('retell_call_id', $callId)->first();
             
             if (!$call) {
-                // Create new call record
+                // Create new call record with resolved context
                 $call = $this->createCallFromPayload($payload);
+            } else {
+                // Update company_id and branch_id if not set
+                if (!$call->company_id || !$call->branch_id) {
+                    $call->update([
+                        'company_id' => $call->company_id ?? $this->companyId,
+                        'branch_id' => $call->branch_id ?? $this->branchId
+                    ]);
+                }
             }
             
             // Update call with end data
@@ -295,13 +296,17 @@ class ProcessRetellWebhookJob implements ShouldQueue
         
         Log::info('Processing call_started event', [
             'call_id' => $callId,
+            'company_id' => $this->companyId,
+            'branch_id' => $this->branchId,
             'correlation_id' => $this->correlationId
         ]);
         
-        // Create or update call record
+        // Create or update call record with resolved context
         $call = Call::updateOrCreate(
             ['retell_call_id' => $callId],
             [
+                'company_id' => $this->companyId,
+                'branch_id' => $this->branchId,
                 'from_number' => $callData['from_number'] ?? null,
                 'to_number' => $callData['to_number'] ?? null,
                 'direction' => $callData['direction'] ?? 'inbound',
@@ -315,8 +320,8 @@ class ProcessRetellWebhookJob implements ShouldQueue
             ]
         );
         
-        // Try to identify company and customer
-        $this->identifyCallContext($call);
+        // Try to identify customer
+        $this->identifyCustomer($call);
     }
 
     /**
@@ -396,6 +401,8 @@ class ProcessRetellWebhookJob implements ShouldQueue
         
         $call = Call::create([
             'retell_call_id' => $callData['call_id'],
+            'company_id' => $this->companyId,
+            'branch_id' => $this->branchId,
             'from_number' => $callData['from_number'] ?? null,
             'to_number' => $callData['to_number'] ?? null,
             'direction' => $callData['direction'] ?? 'inbound',
@@ -408,40 +415,19 @@ class ProcessRetellWebhookJob implements ShouldQueue
             'status' => 'completed',
         ]);
         
-        // Try to identify company and customer
-        $this->identifyCallContext($call);
+        // Try to identify customer
+        $this->identifyCustomer($call);
         
         return $call;
     }
 
     /**
-     * Identify company and customer for the call
+     * Identify customer for the call
      */
-    protected function identifyCallContext(Call $call): void
+    protected function identifyCustomer(Call $call): void
     {
-        // Find branch by phone number
-        $branch = Branch::where('phone_number', $call->to_number)
-            ->where('is_active', true)
-            ->first();
-        
-        if ($branch) {
-            $call->branch_id = $branch->id;
-            $call->company_id = $branch->company_id;
-        } else {
-            // Fallback to company phone number
-            $company = Company::where('phone_number', $call->to_number)->first();
-            if ($company) {
-                $call->company_id = $company->id;
-                // Use main branch
-                $mainBranch = $company->branches()->where('is_main', true)->first();
-                if ($mainBranch) {
-                    $call->branch_id = $mainBranch->id;
-                }
-            }
-        }
-        
         // Find or create customer
-        if ($call->from_number) {
+        if ($call->from_number && $call->company_id) {
             $customer = Customer::firstOrCreate(
                 [
                     'phone' => $call->from_number,
@@ -450,15 +436,15 @@ class ProcessRetellWebhookJob implements ShouldQueue
                 [
                     'first_name' => 'Unknown',
                     'last_name' => 'Customer',
+                    'branch_id' => $call->branch_id,
                     'source' => 'phone_call',
                     'created_via' => 'retell_webhook'
                 ]
             );
             
             $call->customer_id = $customer->id;
+            $call->save();
         }
-        
-        $call->save();
     }
 
     /**

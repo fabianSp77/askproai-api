@@ -3,58 +3,126 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
-use \App\Models\CalcomEventType;
+use App\Models\Company;
+use App\Models\CalcomEventType;
+use App\Services\CalcomV2Service;
+use Illuminate\Support\Facades\Log;
 
 class SyncCalcomEventTypes extends Command
 {
-    protected $signature   = 'calcom:sync-eventtypes';
-    protected $description = 'Lädt alle Event-Typen aus Cal.com & speichert sie lokal';
+    protected $signature = 'calcom:sync-event-types 
+                            {--company= : Company ID to sync for}
+                            {--deactivate-missing : Deactivate event types not found in Cal.com}
+                            {--dry-run : Show what would be changed without making changes}';
+                            
+    protected $description = 'Sync Cal.com event types and optionally deactivate missing ones';
 
-    public function handle(): int
+    public function handle()
     {
-        $apiKey = config('calcom.api_key');
-        $team   = config('calcom.team_slug');   // ← askproai
-        $user   = config('calcom.user_slug');   // ← leer
-        $base   = rtrim(config('calcom.base_url'), '/');
+        $this->info('🔄 Starting Cal.com Event Types synchronization...');
 
-        if (! $apiKey) {
-            $this->error('❌  CALCOM_API_KEY fehlt in .env');
-            return self::FAILURE;
+        $companyId = $this->option('company');
+        
+        if ($companyId) {
+            $companies = Company::where('id', $companyId)->get();
+        } else {
+            $companies = Company::whereNotNull('calcom_api_key')->get();
         }
 
-        /* ----------- URL zusammenbauen ---------------------------------- */
-        $query = 'apiKey=' . $apiKey;
-        if ($team)      $query .= '&teamUsername=' . $team;
-        elseif ($user)  $query .= '&userUsername=' . $user;
+        foreach ($companies as $company) {
+            $this->info("\n📊 Processing company: {$company->name}");
+            
+            if (!$company->calcom_api_key) {
+                $this->warn("  No Cal.com API key configured, skipping...");
+                continue;
+            }
 
-        $url  = "{$base}/v1/event-types?{$query}";
+            $calcomService = new CalcomV2Service(decrypt($company->calcom_api_key));
+            
+            // Fetch event types from Cal.com
+            $response = $calcomService->getEventTypes();
+            
+            if (!$response || !$response['success']) {
+                $this->error("  Failed to fetch event types from Cal.com");
+                continue;
+            }
 
-        /* ----------- API-Call ------------------------------------------- */
-        $resp = Http::acceptJson()->get($url);
+            $eventTypes = $response['data']['event_types'] ?? [];
+            $calcomEventTypeIds = collect($eventTypes)->pluck('id')->map(fn($id) => (string)$id)->toArray();
+            
+            $this->info("  Found " . count($eventTypes) . " event types in Cal.com");
 
-        if (! $resp->successful()) {
-            $this->error("Cal.com API-Fehler: {$resp->status()} {$resp->body()}");
-            return self::FAILURE;
+            // Import/update event types
+            $imported = 0;
+            $updated = 0;
+            
+            foreach ($eventTypes as $eventType) {
+                $existing = CalcomEventType::where('company_id', $company->id)
+                    ->where('calcom_event_type_id', (string)$eventType['id'])
+                    ->first();
+                    
+                if ($existing) {
+                    if (!$this->option('dry-run')) {
+                        $existing->update([
+                            'name' => $eventType['title'],
+                            'slug' => $eventType['slug'],
+                            'description' => $eventType['description'] ?? null,
+                            'duration_minutes' => $eventType['length'],
+                            'metadata' => json_encode($eventType),
+                            'is_active' => true, // Reactivate if it was deactivated
+                        ]);
+                    }
+                    $updated++;
+                    $this->info("    ✅ Updated: {$eventType['title']}");
+                } else {
+                    if (!$this->option('dry-run')) {
+                        CalcomEventType::create([
+                            'company_id' => $company->id,
+                            'calcom_event_type_id' => (string)$eventType['id'],
+                            'calcom_numeric_event_type_id' => $eventType['id'],
+                            'name' => $eventType['title'],
+                            'slug' => $eventType['slug'],
+                            'description' => $eventType['description'] ?? null,
+                            'duration_minutes' => $eventType['length'],
+                            'metadata' => json_encode($eventType),
+                            'is_active' => true,
+                        ]);
+                    }
+                    $imported++;
+                    $this->info("    ➕ Imported: {$eventType['title']}");
+                }
+            }
+
+            // Handle missing event types
+            if ($this->option('deactivate-missing')) {
+                $localEventTypes = CalcomEventType::where('company_id', $company->id)
+                    ->where('is_active', true)
+                    ->get();
+                    
+                $deactivated = 0;
+                
+                foreach ($localEventTypes as $localEventType) {
+                    if (!in_array($localEventType->calcom_event_type_id, $calcomEventTypeIds)) {
+                        if (!$this->option('dry-run')) {
+                            $localEventType->update(['is_active' => false]);
+                        }
+                        $deactivated++;
+                        $this->warn("    🔴 Deactivated (not in Cal.com): {$localEventType->name}");
+                    }
+                }
+                
+                $this->info("  Deactivated {$deactivated} missing event types");
+            }
+
+            $this->info("  Summary: {$imported} imported, {$updated} updated");
         }
 
-        /* ----------- Datenarray holt Cal im Feld  event_types ----------- */
-        $items = $resp->json()['event_types'] ?? [];
-
-        $count = 0;
-        foreach ($items as $et) {
-            CalcomEventType::updateOrCreate(
-                ['calcom_id' => $et['id']],
-                [
-                    'title'  => $et['title']  ?? $et['name'] ?? '—',
-                    'active' => !($et['hidden'] ?? false),
-              'staff_id' =>  \App\Models\CalcomEventType::where('calcom_id', $et['id'])->value('staff_id') ?: null,
-                ]
-            );
-            $count++;
+        $this->info("\n✨ Synchronization complete!");
+        
+        if ($this->option('dry-run')) {
+            $this->warn("This was a dry run. No changes were made.");
         }
-
-        $this->info("✓ Synchronisiert: {$count} Event-Typen");
-        return self::SUCCESS;
+        
+        return 0;
     }
 }

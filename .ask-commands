@@ -1,0 +1,63 @@
+{
+    "categories": {
+        "daily": {
+            "name": "Täglich genutzt",
+            "icon": "🔥",
+            "commands": {
+                "mcp-discover": {
+                    "cmd": "php artisan mcp:discover \"$1\"",
+                    "desc": "Besten MCP-Server für Aufgabe finden",
+                    "example": "mcp-discover \"kunde anlegen\""
+                },
+                "fix-common": {
+                    "cmd": "rm -f bootstrap/cache/config.php && php artisan config:cache && php artisan horizon",
+                    "desc": "Häufigste Probleme beheben"
+                },
+                "db": {
+                    "cmd": "mysql -u askproai_user -p'lkZ57Dju9EDjrMxn' askproai_db",
+                    "desc": "Datenbank-Zugriff"
+                }
+            }
+        },
+        "productivity": {
+            "name": "Produktivitäts-Booster",
+            "icon": "💎",
+            "commands": {
+                "claude-update": {
+                    "cmd": "echo 'Claude, lies CLAUDE_CONTEXT_SUMMARY.md und update dein Wissen'",
+                    "desc": "Claude auf neuesten Stand bringen"
+                },
+                "full-check": {
+                    "cmd": "php artisan health:check && php artisan mcp:health && php artisan docs:health && composer quality",
+                    "desc": "Kompletter System-Check"
+                }
+            }
+        },
+        "emergency": {
+            "name": "Notfall-Befehle",
+            "icon": "🚨",
+            "commands": {
+                "system-down": {
+                    "cmd": "tail -n 1000 storage/logs/laravel.log | grep ERROR",
+                    "desc": "Error Logs checken"
+                },
+                "restart-all": {
+                    "cmd": "sudo systemctl restart php8.3-fpm && sudo systemctl restart nginx && php artisan horizon:terminate",
+                    "desc": "Alle Services neu starten"
+                }
+            }
+        }
+    },
+    "aliases": {
+        "mcp": "php artisan mcp:discover",
+        "impact": "php artisan analyze:impact --git",
+        "quality": "composer quality",
+        "flows": "php artisan dataflow:list"
+    },
+    "snippets": {
+        "new-service-with-mcp": {
+            "lang": "php",
+            "code": "use App\\Traits\\UsesMCPServers;\n\nclass MyService {\n    use UsesMCPServers;\n    \n    public function doSomething($data) {\n        return $this->executeMCPTask('task description', $data);\n    }\n}"
+        }
+    }
+}

@@ -27,7 +27,10 @@ class RetellWebhookHandler extends BaseWebhookHandler
             'call_ended',
             'call_analyzed',
             'call_inbound',
-            'call_outbound'
+            'call_outbound',
+            'phone_number_updated',
+            'agent_updated',
+            'agent_deleted'
         ];
     }
     
@@ -47,11 +50,15 @@ class RetellWebhookHandler extends BaseWebhookHandler
             'call_id' => $callData['call_id'] ?? null
         ]);
         
+        // Resolve company and branch context
+        $context = $this->resolveContext($callData);
+        
         // Create or update call record (disable tenant scope for webhook processing)
         $call = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)->updateOrCreate(
             ['retell_call_id' => $callData['call_id']],
             [
-                'company_id' => $this->resolveCompanyId($callData),
+                'company_id' => $context['company_id'],
+                'branch_id' => $context['branch_id'],
                 'from_number' => $callData['from_number'] ?? null,
                 'to_number' => $callData['to_number'] ?? null,
                 'direction' => $callData['direction'] ?? 'inbound',
@@ -98,9 +105,13 @@ class RetellWebhookHandler extends BaseWebhookHandler
                 ->first();
             
             if (!$call) {
+                // Resolve company and branch context
+                $context = $this->resolveContext($callData);
+                
                 $call = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)->create([
                     'retell_call_id' => $callData['call_id'],
-                    'company_id' => $this->resolveCompanyId($callData),
+                    'company_id' => $context['company_id'],
+                    'branch_id' => $context['branch_id'],
                     'from_number' => $callData['from_number'] ?? null,
                     'to_number' => $callData['to_number'] ?? null,
                     'direction' => $callData['direction'] ?? 'inbound',
@@ -127,7 +138,15 @@ class RetellWebhookHandler extends BaseWebhookHandler
             ]);
             
             // Process appointment booking if needed
-            $bookingResult = $this->processAppointmentBooking($call, $callData);
+            $bookingResult = null;
+            if ($call->company && $call->company->needsAppointmentBooking()) {
+                $bookingResult = $this->processAppointmentBooking($call, $callData);
+            } else {
+                $this->logInfo('Skipping appointment booking for company without booking needs', [
+                    'company_id' => $call->company_id,
+                    'call_id' => $call->id
+                ]);
+            }
             
             // Refresh additional call data
             $this->refreshCallData($call, $callData);
@@ -570,6 +589,18 @@ class RetellWebhookHandler extends BaseWebhookHandler
      */
     protected function resolveCompanyId(array $callData): ?int
     {
+        $context = $this->resolveContext($callData);
+        return $context['company_id'];
+    }
+    
+    /**
+     * Resolve full context (company and branch) from call data
+     *
+     * @param array $callData
+     * @return array
+     */
+    protected function resolveContext(array $callData): array
+    {
         // Use PhoneNumberResolver for comprehensive resolution
         $phoneResolver = app(PhoneNumberResolver::class);
         $context = $phoneResolver->resolveFromWebhook([
@@ -579,25 +610,35 @@ class RetellWebhookHandler extends BaseWebhookHandler
             'metadata' => $callData['metadata'] ?? []
         ]);
         
-        if ($context['company_id']) {
-            return $context['company_id'];
+        if (!$context['company_id']) {
+            // Log warning if we can't resolve company
+            Log::warning('Could not resolve company from call data', [
+                'to_number' => $callData['to_number'] ?? null,
+                'agent_id' => $callData['agent_id'] ?? null,
+                'resolution_confidence' => $context['confidence'] ?? 0
+            ]);
+            
+            // In production, we should not fallback to a random company
+            // This should be handled by proper configuration
+            if (app()->environment('production')) {
+                throw new \Exception('Unable to determine company from call data');
+            }
+            
+            // Only in development/testing
+            $context['company_id'] = Company::first()->id ?? null;
         }
         
-        // Log warning if we can't resolve company
-        Log::warning('Could not resolve company from call data', [
-            'to_number' => $callData['to_number'] ?? null,
-            'agent_id' => $callData['agent_id'] ?? null,
-            'resolution_confidence' => $context['confidence'] ?? 0
-        ]);
-        
-        // In production, we should not fallback to a random company
-        // This should be handled by proper configuration
-        if (app()->environment('production')) {
-            throw new \Exception('Unable to determine company from call data');
+        // Log successful resolution
+        if ($context['branch_id']) {
+            Log::info('Successfully resolved company and branch context', [
+                'company_id' => $context['company_id'],
+                'branch_id' => $context['branch_id'],
+                'method' => $context['resolution_method'] ?? 'unknown',
+                'confidence' => $context['confidence'] ?? 0
+            ]);
         }
         
-        // Only in development/testing
-        return Company::first()->id ?? null;
+        return $context;
     }
     
     /**
@@ -710,5 +751,298 @@ class RetellWebhookHandler extends BaseWebhookHandler
         }
         
         return implode(', ', $formatted);
+    }
+    
+    /**
+     * Handle phone_number_updated event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handlePhoneNumberUpdated(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $payload = $webhookEvent->payload;
+        $phoneData = $payload['phone_number'] ?? [];
+        
+        $this->logInfo('Processing phone_number_updated event', [
+            'phone_number' => $phoneData['phone_number'] ?? null,
+            'agent_id' => $phoneData['agent_id'] ?? null,
+            'previous_agent_id' => $phoneData['previous_agent_id'] ?? null
+        ]);
+        
+        // Find phone number record
+        $phoneNumber = \App\Models\PhoneNumber::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('number', $phoneData['phone_number'])
+            ->orWhere('retell_phone_id', $phoneData['phone_id'] ?? null)
+            ->first();
+            
+        if (!$phoneNumber) {
+            $this->logWarning('Phone number not found in database', [
+                'phone_number' => $phoneData['phone_number']
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Phone number not found'
+            ];
+        }
+        
+        // Update phone number with new agent
+        $oldAgentId = $phoneNumber->retell_agent_id;
+        $phoneNumber->update([
+            'retell_agent_id' => $phoneData['agent_id'],
+            'retell_agent_version' => $phoneData['agent_version'] ?? null,
+            'metadata' => array_merge($phoneNumber->metadata ?? [], [
+                'last_agent_change' => now()->toISOString(),
+                'previous_agent_id' => $oldAgentId
+            ])
+        ]);
+        
+        // Sync the new agent if not already present
+        if ($phoneData['agent_id']) {
+            $this->syncAgentConfiguration($phoneData['agent_id'], $phoneNumber->company_id);
+        }
+        
+        // Clear cache
+        Cache::forget('phone_agent_status_' . $phoneNumber->company_id);
+        
+        // Log the change
+        \Log::info('Phone number agent updated', [
+            'phone_id' => $phoneNumber->id,
+            'phone_number' => $phoneNumber->number,
+            'old_agent_id' => $oldAgentId,
+            'new_agent_id' => $phoneData['agent_id'],
+            'correlation_id' => $correlationId
+        ]);
+        
+        // Send notification to admins
+        $this->notifyAdminsOfPhoneChange($phoneNumber, $oldAgentId, $phoneData['agent_id']);
+        
+        return [
+            'success' => true,
+            'message' => 'Phone number updated successfully',
+            'phone_id' => $phoneNumber->id
+        ];
+    }
+    
+    /**
+     * Handle agent_updated event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleAgentUpdated(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $payload = $webhookEvent->payload;
+        $agentData = $payload['agent'] ?? [];
+        
+        $this->logInfo('Processing agent_updated event', [
+            'agent_id' => $agentData['agent_id'] ?? null,
+            'agent_name' => $agentData['agent_name'] ?? null
+        ]);
+        
+        // Find all agents with this ID across companies
+        $agents = \App\Models\RetellAgent::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('agent_id', $agentData['agent_id'])
+            ->get();
+            
+        if ($agents->isEmpty()) {
+            $this->logWarning('No agents found for agent_id', [
+                'agent_id' => $agentData['agent_id']
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => 'No local agents to update'
+            ];
+        }
+        
+        // Update each agent record
+        foreach ($agents as $agent) {
+            $agent->update([
+                'name' => $agentData['agent_name'] ?? $agent->name,
+                'configuration' => $agentData,
+                'last_synced_at' => now(),
+                'sync_status' => 'synced',
+                'version' => $agentData['version'] ?? null,
+                'is_published' => $agentData['is_published'] ?? false
+            ]);
+            
+            // Clear cache for the company
+            Cache::forget('phone_agent_status_' . $agent->company_id);
+        }
+        
+        $this->logInfo('Agent configuration updated', [
+            'agent_id' => $agentData['agent_id'],
+            'updated_count' => $agents->count(),
+            'correlation_id' => $correlationId
+        ]);
+        
+        return [
+            'success' => true,
+            'message' => "Agent updated in {$agents->count()} companies",
+            'agent_id' => $agentData['agent_id']
+        ];
+    }
+    
+    /**
+     * Handle agent_deleted event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleAgentDeleted(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $payload = $webhookEvent->payload;
+        $agentId = $payload['agent_id'] ?? null;
+        
+        $this->logInfo('Processing agent_deleted event', [
+            'agent_id' => $agentId
+        ]);
+        
+        if (!$agentId) {
+            return [
+                'success' => false,
+                'message' => 'Missing agent_id'
+            ];
+        }
+        
+        // Find all phone numbers using this agent
+        $phoneNumbers = \App\Models\PhoneNumber::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('retell_agent_id', $agentId)
+            ->get();
+            
+        // Remove agent from phone numbers
+        foreach ($phoneNumbers as $phone) {
+            $phone->update([
+                'retell_agent_id' => null,
+                'metadata' => array_merge($phone->metadata ?? [], [
+                    'agent_deleted_at' => now()->toISOString(),
+                    'deleted_agent_id' => $agentId
+                ])
+            ]);
+            
+            // Notify admins
+            $this->notifyAdminsOfAgentDeletion($phone, $agentId);
+        }
+        
+        // Mark agents as deleted (soft delete)
+        \App\Models\RetellAgent::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('agent_id', $agentId)
+            ->update([
+                'is_active' => false,
+                'sync_status' => 'deleted',
+                'metadata' => \DB::raw("JSON_SET(COALESCE(metadata, '{}'), '$.deleted_at', '" . now()->toISOString() . "')")
+            ]);
+        
+        $this->logInfo('Agent deletion processed', [
+            'agent_id' => $agentId,
+            'affected_phones' => $phoneNumbers->count(),
+            'correlation_id' => $correlationId
+        ]);
+        
+        return [
+            'success' => true,
+            'message' => "Agent deleted, removed from {$phoneNumbers->count()} phone numbers",
+            'agent_id' => $agentId
+        ];
+    }
+    
+    /**
+     * Sync agent configuration from Retell
+     *
+     * @param string $agentId
+     * @param string $companyId
+     * @return void
+     */
+    protected function syncAgentConfiguration(string $agentId, string $companyId): void
+    {
+        try {
+            $agent = \App\Models\RetellAgent::firstOrCreate(
+                [
+                    'agent_id' => $agentId,
+                    'company_id' => $companyId
+                ],
+                [
+                    'name' => 'Syncing...',
+                    'sync_status' => 'pending'
+                ]
+            );
+            
+            // Trigger sync
+            $agent->syncFromRetell();
+            
+        } catch (\Exception $e) {
+            $this->logError('Failed to sync agent configuration', [
+                'agent_id' => $agentId,
+                'company_id' => $companyId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Notify admins of phone number agent change
+     *
+     * @param \App\Models\PhoneNumber $phoneNumber
+     * @param string|null $oldAgentId
+     * @param string|null $newAgentId
+     * @return void
+     */
+    protected function notifyAdminsOfPhoneChange($phoneNumber, $oldAgentId, $newAgentId): void
+    {
+        $admins = \App\Models\User::where('company_id', $phoneNumber->company_id)
+            ->where('is_admin', true)
+            ->get();
+            
+        foreach ($admins as $admin) {
+            try {
+                // For now, just log the notification - implement actual notification later
+                \Log::info('Phone agent changed notification', [
+                    'user_id' => $admin->id,
+                    'phone_number' => $phoneNumber->number,
+                    'old_agent_id' => $oldAgentId,
+                    'new_agent_id' => $newAgentId,
+                    'branch' => $phoneNumber->branch->name ?? 'N/A'
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to send phone agent change notification', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+    }
+    
+    /**
+     * Notify admins of agent deletion
+     *
+     * @param \App\Models\PhoneNumber $phoneNumber
+     * @param string $agentId
+     * @return void
+     */
+    protected function notifyAdminsOfAgentDeletion($phoneNumber, $agentId): void
+    {
+        $admins = \App\Models\User::where('company_id', $phoneNumber->company_id)
+            ->where('is_admin', true)
+            ->get();
+            
+        foreach ($admins as $admin) {
+            try {
+                // For now, just log the notification - implement actual notification later
+                \Log::info('Agent deleted notification', [
+                    'user_id' => $admin->id,
+                    'phone_number' => $phoneNumber->number,
+                    'agent_id' => $agentId,
+                    'branch' => $phoneNumber->branch->name ?? 'N/A'
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Failed to send agent deleted notification', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
     }
 }

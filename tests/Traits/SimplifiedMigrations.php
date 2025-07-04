@@ -41,6 +41,13 @@ trait SimplifiedMigrations
         $this->createFailedJobsTable();
         $this->createCacheTable();
         $this->createJobsTable();
+        
+        // Billing tables
+        $this->createBillingPeriodsTable();
+        $this->createSubscriptionsTable();
+        $this->createInvoicesTable();
+        $this->createBillingAlertConfigsTable();
+        $this->createBillingAlertsTable();
     }
     
     /**
@@ -49,6 +56,7 @@ trait SimplifiedMigrations
     protected function dropSimplifiedTables(): void
     {
         $tables = [
+            'billing_alerts', 'billing_alert_configs', 'invoices', 'subscriptions', 'billing_periods',
             'appointments', 'calls', 'phone_numbers', 'services', 'staff', 
             'customers', 'branches', 'companies', 'users',
             'password_reset_tokens', 'personal_access_tokens',
@@ -94,6 +102,7 @@ trait SimplifiedMigrations
                     name VARCHAR(255) NOT NULL,
                     slug VARCHAR(255) NULL,
                     is_active BOOLEAN DEFAULT 1,
+                    alerts_enabled BOOLEAN DEFAULT 1,
                     retell_api_key TEXT NULL,
                     retell_agent_id VARCHAR(255) NULL,
                     calcom_api_key TEXT NULL,
@@ -317,6 +326,125 @@ trait SimplifiedMigrations
                     reserved_at INTEGER NULL,
                     available_at INTEGER NOT NULL,
                     created_at INTEGER NOT NULL
+                )
+            ');
+        }
+    }
+    
+    private function createBillingPeriodsTable(): void
+    {
+        if (!Schema::hasTable('billing_periods')) {
+            DB::statement('
+                CREATE TABLE billing_periods (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    company_id INTEGER NOT NULL,
+                    branch_id INTEGER NULL,
+                    subscription_id INTEGER NULL,
+                    start_date DATE NOT NULL,
+                    end_date DATE NOT NULL,
+                    status VARCHAR(50) DEFAULT "pending",
+                    included_minutes INTEGER DEFAULT 0,
+                    used_minutes INTEGER DEFAULT 0,
+                    total_minutes INTEGER DEFAULT 0,
+                    overage_minutes INTEGER DEFAULT 0,
+                    base_fee DECIMAL(10,2) DEFAULT 0,
+                    price_per_minute DECIMAL(10,4) DEFAULT 0,
+                    overage_cost DECIMAL(10,2) DEFAULT 0,
+                    total_cost DECIMAL(10,2) DEFAULT 0,
+                    total_revenue DECIMAL(10,2) DEFAULT 0,
+                    margin DECIMAL(10,2) DEFAULT 0,
+                    margin_percentage DECIMAL(5,2) DEFAULT 0,
+                    currency VARCHAR(3) DEFAULT "EUR",
+                    is_invoiced BOOLEAN DEFAULT 0,
+                    invoiced_at TIMESTAMP NULL,
+                    invoice_id INTEGER NULL,
+                    stripe_invoice_id VARCHAR(255) NULL,
+                    stripe_invoice_created_at TIMESTAMP NULL,
+                    is_prorated BOOLEAN DEFAULT 0,
+                    proration_factor DECIMAL(5,4) DEFAULT 1.0,
+                    metadata JSON NULL,
+                    created_at TIMESTAMP NULL,
+                    updated_at TIMESTAMP NULL
+                )
+            ');
+        }
+    }
+    
+    private function createSubscriptionsTable(): void
+    {
+        if (!Schema::hasTable('subscriptions')) {
+            DB::statement('
+                CREATE TABLE subscriptions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    company_id INTEGER NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    stripe_subscription_id VARCHAR(255) NULL,
+                    status VARCHAR(50) DEFAULT "active",
+                    created_at TIMESTAMP NULL,
+                    updated_at TIMESTAMP NULL
+                )
+            ');
+        }
+    }
+    
+    private function createInvoicesTable(): void
+    {
+        if (!Schema::hasTable('invoices')) {
+            DB::statement('
+                CREATE TABLE invoices (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    company_id INTEGER NOT NULL,
+                    number VARCHAR(255) NOT NULL,
+                    status VARCHAR(50) DEFAULT "draft",
+                    total DECIMAL(10,2) DEFAULT 0,
+                    created_at TIMESTAMP NULL,
+                    updated_at TIMESTAMP NULL
+                )
+            ');
+        }
+    }
+    
+    private function createBillingAlertConfigsTable(): void
+    {
+        if (!Schema::hasTable('billing_alert_configs')) {
+            DB::statement('
+                CREATE TABLE billing_alert_configs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    company_id INTEGER NOT NULL,
+                    alert_type VARCHAR(50) NOT NULL,
+                    is_enabled BOOLEAN DEFAULT 1,
+                    notification_channels JSON NULL,
+                    notify_primary_contact BOOLEAN DEFAULT 1,
+                    notify_billing_contact BOOLEAN DEFAULT 1,
+                    thresholds JSON NULL,
+                    advance_days INTEGER NULL,
+                    metadata JSON NULL,
+                    created_at TIMESTAMP NULL,
+                    updated_at TIMESTAMP NULL
+                )
+            ');
+        }
+    }
+    
+    private function createBillingAlertsTable(): void
+    {
+        if (!Schema::hasTable('billing_alerts')) {
+            DB::statement('
+                CREATE TABLE billing_alerts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    company_id INTEGER NOT NULL,
+                    config_id INTEGER NULL,
+                    severity VARCHAR(50) DEFAULT "info",
+                    alert_type VARCHAR(50) NOT NULL,
+                    title VARCHAR(255) NOT NULL,
+                    message TEXT NULL,
+                    status VARCHAR(50) DEFAULT "pending",
+                    sent_at TIMESTAMP NULL,
+                    acknowledged_at TIMESTAMP NULL,
+                    acknowledged_by INTEGER NULL,
+                    data JSON NULL,
+                    created_at TIMESTAMP NULL,
+                    updated_at TIMESTAMP NULL
                 )
             ');
         }

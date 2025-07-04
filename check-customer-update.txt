@@ -1,0 +1,8 @@
+// Add this to RetellCustomFunctionsController::checkCustomer() at the beginning:
+$callId = $request->input('call_id');
+if ($callId) {
+    $call = Call::where('call_id', $callId)->first();
+    if ($call && $call->from_number) {
+        $phoneNumber = $call->from_number;
+    }
+}

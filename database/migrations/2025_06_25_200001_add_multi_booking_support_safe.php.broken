@@ -1,0 +1,275 @@
+<?php
+
+use App\Database\SafeMigration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends SafeMigration
+{
+    /**
+     * Run the migrations safely with transaction support
+     */
+    protected function safeUp(): void
+    {
+        // Erweitere appointments Tabelle
+        if (Schema::hasTable('appointments')) {
+            Schema::table('appointments', function (Blueprint $table) {
+                if (!Schema::hasColumn('appointments', 'parent_appointment_id')) {
+                    $table->unsignedBigInteger('parent_appointment_id')->nullable()->after('id');
+                }
+                if (!Schema::hasColumn('appointments', 'recurrence_rule')) {
+                    $table->json('recurrence_rule')->nullable()->after('metadata');
+                }
+                if (!Schema::hasColumn('appointments', 'series_id')) {
+                    $table->uuid('series_id')->nullable()->after('recurrence_rule');
+                }
+                if (!Schema::hasColumn('appointments', 'group_booking_id')) {
+                    $table->uuid('group_booking_id')->nullable()->after('series_id');
+                }
+                if (!Schema::hasColumn('appointments', 'booking_type')) {
+                    $table->enum('booking_type', ['single', 'recurring', 'group', 'package'])->default('single')->after('status');
+                }
+                if (!Schema::hasColumn('appointments', 'recurrence_count')) {
+                    $table->integer('recurrence_count')->default(0)->after('booking_type');
+                }
+                if (!Schema::hasColumn('appointments', 'recurrence_end_date')) {
+                    $table->date('recurrence_end_date')->nullable()->after('recurrence_count');
+                }
+            });
+            
+            // Add indexes separately to avoid transaction issues
+            DB::statement('CREATE INDEX IF NOT EXISTS idx_appointments_parent_appointment_id ON appointments(parent_appointment_id)');
+            DB::statement('CREATE INDEX IF NOT EXISTS idx_appointments_series_id ON appointments(series_id)');
+            DB::statement('CREATE INDEX IF NOT EXISTS idx_appointments_group_booking_id ON appointments(group_booking_id)');
+            DB::statement('CREATE INDEX IF NOT EXISTS idx_appointments_booking_type ON appointments(booking_type)');
+            
+            // Add foreign key constraint if not exists
+            if (!$this->foreignKeyExists('appointments', 'appointments_parent_appointment_id_foreign')) {
+                Schema::table('appointments', function (Blueprint $table) {
+                    $table->foreign('parent_appointment_id')->references('id')->on('appointments')->onDelete('cascade');
+                });
+            }
+        }
+        
+        // Erweitere customers Tabelle
+        if (Schema::hasTable('customers')) {
+            Schema::table('customers', function (Blueprint $table) {
+                if (!Schema::hasColumn('customers', 'preference_data')) {
+                    $table->json('preference_data')->nullable()->after('metadata');
+                }
+                if (!Schema::hasColumn('customers', 'last_seen_at')) {
+                    $table->timestamp('last_seen_at')->nullable()->after('updated_at');
+                }
+                if (!Schema::hasColumn('customers', 'loyalty_points')) {
+                    $table->integer('loyalty_points')->default(0)->after('last_seen_at');
+                }
+                if (!Schema::hasColumn('customers', 'custom_attributes')) {
+                    $table->json('custom_attributes')->nullable()->after('loyalty_points');
+                }
+                if (!Schema::hasColumn('customers', 'vip_status')) {
+                    $table->enum('vip_status', ['none', 'bronze', 'silver', 'gold', 'platinum'])->default('none')->after('custom_attributes');
+                }
+                if (!Schema::hasColumn('customers', 'total_appointments')) {
+                    $table->integer('total_appointments')->default(0)->after('vip_status');
+                }
+                if (!Schema::hasColumn('customers', 'no_show_count')) {
+                    $table->integer('no_show_count')->default(0)->after('total_appointments');
+                }
+            });
+            
+            // Add indexes separately
+            DB::statement('CREATE INDEX IF NOT EXISTS idx_customers_vip_status ON customers(vip_status)');
+            DB::statement('CREATE INDEX IF NOT EXISTS idx_customers_loyalty_points ON customers(loyalty_points)');
+            DB::statement('CREATE INDEX IF NOT EXISTS idx_customers_last_seen_at ON customers(last_seen_at)');
+        }
+        
+        // Neue Tabelle: appointment_series
+        if (!Schema::hasTable('appointment_series')) {
+            Schema::create('appointment_series', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('company_id');
+                $table->uuid('series_id')->unique();
+                $table->unsignedBigInteger('customer_id');
+                $table->unsignedBigInteger('branch_id');
+                $table->unsignedBigInteger('staff_id')->nullable();
+                $table->json('recurrence_pattern');
+                $table->integer('total_appointments');
+                $table->integer('completed_appointments')->default(0);
+                $table->integer('cancelled_appointments')->default(0);
+                $table->dateTime('series_start_date');
+                $table->dateTime('series_end_date');
+                $table->text('notes')->nullable();
+                $table->json('metadata')->nullable();
+                $table->timestamps();
+                
+                $table->index('company_id');
+                $table->index('series_id');
+                $table->index('customer_id');
+                $table->index('branch_id');
+                
+                $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+                $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+                $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
+                $table->foreign('staff_id')->references('id')->on('staff')->onDelete('set null');
+            });
+        }
+        
+        // Neue Tabelle: customer_preferences
+        if (!Schema::hasTable('customer_preferences')) {
+            Schema::create('customer_preferences', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('customer_id');
+                $table->unsignedBigInteger('company_id');
+                $table->string('preference_type');
+                $table->string('preference_key');
+                $table->text('preference_value');
+                $table->integer('usage_count')->default(0);
+                $table->timestamp('last_used_at')->nullable();
+                $table->timestamps();
+                
+                $table->unique(['customer_id', 'preference_type', 'preference_key']);
+                $table->index('company_id');
+                $table->index('preference_type');
+                
+                $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+                $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            });
+        }
+        
+        // Neue Tabelle: customer_interactions
+        if (!Schema::hasTable('customer_interactions')) {
+            Schema::create('customer_interactions', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('customer_id');
+                $table->unsignedBigInteger('company_id');
+                $table->enum('interaction_type', ['call', 'booking', 'cancellation', 'no_show', 'feedback', 'complaint']);
+                $table->string('channel')->default('phone');
+                $table->json('interaction_data')->nullable();
+                $table->integer('sentiment_score')->nullable();
+                $table->text('notes')->nullable();
+                $table->timestamp('interaction_at');
+                $table->timestamps();
+                
+                $table->index(['customer_id', 'interaction_at']);
+                $table->index(['company_id', 'interaction_type']);
+                
+                $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+                $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            });
+        }
+        
+        // Neue Tabelle: group_bookings
+        if (!Schema::hasTable('group_bookings')) {
+            Schema::create('group_bookings', function (Blueprint $table) {
+                $table->id();
+                $table->uuid('group_id')->unique();
+                $table->unsignedBigInteger('company_id');
+                $table->unsignedBigInteger('primary_customer_id');
+                $table->unsignedBigInteger('branch_id');
+                $table->integer('total_participants');
+                $table->json('participant_details')->nullable();
+                $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
+                $table->text('special_requirements')->nullable();
+                $table->json('metadata')->nullable();
+                $table->timestamps();
+                
+                $table->index('group_id');
+                $table->index('company_id');
+                $table->index('primary_customer_id');
+                $table->index('status');
+                
+                $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+                $table->foreign('primary_customer_id')->references('id')->on('customers')->onDelete('cascade');
+                $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
+            });
+        }
+    }
+
+    /**
+     * Reverse the migrations safely
+     */
+    protected function safeDown(): void
+    {
+        // Drop new tables
+        Schema::dropIfExists('group_bookings');
+        Schema::dropIfExists('customer_interactions');
+        Schema::dropIfExists('customer_preferences');
+        Schema::dropIfExists('appointment_series');
+        
+        // Remove columns from appointments
+        if (Schema::hasTable('appointments')) {
+            Schema::table('appointments', function (Blueprint $table) {
+                $table->dropForeign(['parent_appointment_id']);
+                $table->dropColumn([
+                    'parent_appointment_id',
+                    'recurrence_rule',
+                    'series_id',
+                    'group_booking_id',
+                    'booking_type',
+                    'recurrence_count',
+                    'recurrence_end_date'
+                ]);
+            });
+        }
+        
+        // Remove columns from customers
+        if (Schema::hasTable('customers')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->dropColumn([
+                    'preference_data',
+                    'last_seen_at',
+                    'loyalty_points',
+                    'custom_attributes',
+                    'vip_status',
+                    'total_appointments',
+                    'no_show_count'
+                ]);
+            });
+        }
+    }
+    
+    /**
+     * Check if foreign key exists
+     */
+    /**
+     * Reverse the migrations safely
+     */
+    protected function safeDown(): void
+    {
+        // Remove foreign key constraints
+        if ($this->foreignKeyExists('appointments', 'appointments_parent_appointment_id_foreign')) {
+            Schema::table('appointments', function (Blueprint $table) {
+                $table->dropForeign(['parent_appointment_id']);
+            });
+        }
+        
+        // Remove columns from appointments table
+        Schema::table('appointments', function (Blueprint $table) {
+            $table->dropColumn([
+                'parent_appointment_id',
+                'recurrence_rule',
+                'series_id',
+                'group_booking_id',
+                'booking_type',
+                'recurrence_count',
+                'recurrence_end_date'
+            ]);
+        });
+        
+        // Drop tables
+        Schema::dropIfExists('appointment_series');
+        Schema::dropIfExists('customer_preferences');
+    }
+    
+    private function foreignKeyExists($table, $foreign): bool
+    {
+        $exists = DB::select(
+            "SELECT COUNT(*) as count FROM information_schema.KEY_COLUMN_USAGE 
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?",
+            [DB::getDatabaseName(), $table, $foreign]
+        );
+        
+        return $exists[0]->count > 0;
+    }
+}

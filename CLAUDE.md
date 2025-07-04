@@ -12,29 +12,67 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📑 Inhaltsverzeichnis
 
-### 🆘 AKTUELLE BLOCKER (Stand: 2025-06-28)
+### 🆘 AKTUELLE BLOCKER (Stand: 2025-06-29)
+- **Retell Ultimate Control Center** - Mehrere fehlende Methoden und Livewire v3 Issues
+  - Details: [RETELL_ULTIMATE_CONTROL_CENTER_ISSUES_2025-06-29.md](./RETELL_ULTIMATE_CONTROL_CENTER_ISSUES_2025-06-29.md)
+  - Problem: testCall() und viewAgentFunctions() nicht implementiert
+  - Lösung: Methoden implementieren und Livewire Syntax korrigieren
+
+- **Call Data Completeness** - Wichtige Business-Daten fehlen in Anrufen
+  - Details: [CALL_DATA_COMPLETENESS_REPORT_2025-06-29.md](./CALL_DATA_COMPLETENESS_REPORT_2025-06-29.md)
+  - Problem: Dynamic Variables enthalten nur Twilio Metadaten
+  - Lösung: Retell Agent für Datenextraktion konfigurieren
+
 - **Multi-Branch Implementation Issue** - Branch Selector verursacht Livewire/Blade Fehler
   - Details: [MULTI_BRANCH_IMPLEMENTATION_STATUS_2025-06-27.md](./MULTI_BRANCH_IMPLEMENTATION_STATUS_2025-06-27.md)
   - Problem: Global Branch Selector Dropdown funktioniert nicht
   - Workaround: Branch Selector als separate Page verfügbar
 
-### 🚨 KRITISCH: Retell.ai Integration nach Context Reset
-**Problem**: Retell Integration funktioniert nicht mehr nach Context Reset
-**Lösung**: 
-```bash
-# Quick Fix - Führe diese Befehle aus:
-./retell-quick-setup.sh
+### 🚨 KRITISCH: Retell.ai Integration Status (Stand: 2025-07-02)
 
-# Oder manuell:
-php retell-health-check.php  # Prüft und repariert automatisch
-php sync-retell-agent.php    # Synchronisiert Agent-Konfiguration
-php fetch-retell-calls.php   # Importiert Anrufe
+**✅ VOLLSTÄNDIG BEHOBEN am 2025-07-02 22:40 Uhr**
+
+**Gelöste Probleme**:
+- ✅ Webhook-Struktur-Änderung behoben (nested "call" object handling)
+- ✅ Timestamp-Format flexibel (ISO 8601 + numeric milliseconds)
+- ✅ TenantScope Webhook-Bypass implementiert
+- ✅ Zeitzonenkonvertierung (UTC → Berlin Zeit)
+- ✅ Branch-Zuordnung funktioniert
+
+**KRITISCHE DATEIEN (NICHT ÄNDERN OHNE FIX-DOKUMENTATION ZU LESEN!)**:
+- `app/Http/Controllers/Api/RetellWebhookWorkingController.php`
+- `app/Helpers/RetellDataExtractor.php`
+- `app/Scopes/TenantScope.php`
+
+**Webhook URL in Retell.ai Dashboard**:
+```
+https://api.askproai.de/api/retell/webhook-simple
 ```
 
-**Wichtige Dokumentationen**:
-- [RETELL_COMPLETE_SYSTEM_DOCUMENTATION_2025-06-29.md](./RETELL_COMPLETE_SYSTEM_DOCUMENTATION_2025-06-29.md) - Vollständige Systemdokumentation
-- [RETELL_INTEGRATION_COMPLETE_2025-06-29.md](./RETELL_INTEGRATION_COMPLETE_2025-06-29.md) - Integration Status
-- [RETELL_INTEGRATION_CRITICAL.md](./RETELL_INTEGRATION_CRITICAL.md) - Kritische Infos
+**Automatische Prozesse (via Cron)**:
+```bash
+# Anrufe importieren (alle 15 Minuten)
+*/15 * * * * /usr/bin/php /var/www/api-gateway/manual-retell-import.php
+
+# Alte in_progress Anrufe bereinigen (alle 5 Minuten)
+*/5 * * * * /usr/bin/php /var/www/api-gateway/cleanup-stale-calls.php
+```
+
+**Quick Test bei Problemen**:
+```bash
+# Test mit aktueller Retell-Struktur
+php test-retell-real-data.php
+
+# Horizon Status
+php artisan horizon:status
+
+# Logs prüfen
+tail -f storage/logs/laravel.log | grep -i retell
+```
+
+**Dokumentation**: 
+- **HAUPTDOKU**: [RETELL_WEBHOOK_FIX_2025-07-02.md](./RETELL_WEBHOOK_FIX_2025-07-02.md)
+- Legacy: [RETELL_INTEGRATION_CRITICAL.md](./RETELL_INTEGRATION_CRITICAL.md)
 
 ### 🔴 Kritisch (Täglich benötigt)
 - [Essential Commands](#essential-commands)
@@ -187,66 +225,39 @@ php artisan docs:health
 git config core.hooksPath .githooks
 ```
 
-## Workflow für neue Aufgaben
+## Claude-Regeln für die Aufgabenbearbeitung
 
-Verwende diesen erweiterten Workflow bei der Bearbeitung neuer Aufgaben:
+Bei der Bearbeitung von Aufgaben befolge diese Regeln:
 
-### 1. **Analyse Phase**
-- Gründliche Analyse der Aufgabenstellung
-- Code-Base Recherche mit relevanten Tools
-- Identifikation betroffener Komponenten und Dependencies
-- Dokumentation existierender Patterns und Constraints
-- **MCP-Server Evaluation**: Prüfe verfügbare MCP-Server für optimale Unterstützung:
-  - **Interne MCP-Server**: DatabaseMCP, CalcomMCP, RetellMCP, etc. (siehe unten)
-  - **Externe MCP-Server**: Context7 für Dokumentationen, taskmaster_ai für Task Management
-  - **Auswahl-Kriterien**: Wähle MCP-Server basierend auf Aufgabentyp und benötigten Funktionen
+### 1. **Problemanalyse und Planung**
+- Denke zunächst über das Problem nach, suche in der Codebasis nach relevanten Dateien und schreibe einen Plan in `tasks/todo.md`
 
-### 2. **Planning Phase**
-- Erstelle detaillierten Plan mit klaren Deliverables
-- Identifiziere potenzielle Risiken und Edge Cases
-- Definiere Success Metrics
-- Dokumentiere in `tasks/todo.md`
-- **Task Management MCP nutzen**: 
-  - Verwende `TodoWrite`/`TodoRead` für einfache Aufgabenverwaltung
-  - Aktiviere `taskmaster_ai` MCP für komplexe Projekte (`MCP_TASKMASTER_ENABLED=true`)
-  - Erstelle detaillierte Schritt-für-Schritt-Pläne mit Abhängigkeiten
+### 2. **Aufgabenliste erstellen**
+- Der Plan sollte eine Liste mit Aufgaben enthalten, die du abhaken kannst, sobald du sie erledigt hast
 
-### 3. **Specification Phase**
-- Erstelle technische Spezifikation basierend auf dem Plan
-- Definiere Interfaces, Datenstrukturen und APIs
-- Spezifiziere Error Handling und Logging-Strategie
-- Hinterfrage und validiere die Spezifikation
-- **API/Library Documentation via Context7**:
-  - Nutze `mcp__context7__resolve-library-id` für Library-Suche
-  - Hole aktuelle Docs mit `mcp__context7__get-library-docs`
-  - Besonders wichtig bei: Laravel, Filament, Cal.com, Retell.ai APIs
+### 3. **Genehmigung einholen**
+- Bevor du mit der Arbeit beginnst, melde dich bei mir, damit ich den Plan überprüfen kann
 
-### 4. **Validation Phase**
-- Überprüfe Spezifikation gegen bestehende Code-Base
-- Recherchiere Best Practices und aktuelle Dokumentationen
-- Identifiziere potenzielle Konflikte oder Breaking Changes
-- Optimiere basierend auf Findings
+### 4. **Schrittweise Umsetzung**
+- Beginne dann mit der Bearbeitung der Aufgaben und markiere sie nach und nach als erledigt
 
-### 5. **Implementation Phase**
-- Arbeite To-Do-Liste schrittweise ab
-- Implementiere umfassendes Logging mit Correlation IDs
-- Schreibe Tests parallel zur Implementierung
-- Erstelle sinnvolle, atomare Commits
+### 5. **Detaillierte Erläuterungen**
+- Bitte erläutere mir bei jedem Schritt detailliert, welche Änderungen du vorgenommen hast
 
-### 6. **Review & Documentation**
-- Code Review mit Fokus auf:
-  - Security (Multi-Tenancy, Input Validation)
-  - Performance (Query Optimization, Caching)
-  - Error Handling (Graceful Degradation)
-  - Maintainability (Clean Code, SOLID)
-- Aktualisiere Dokumentation
-- Füge Debugging-Informationen in `todo.md` hinzu
+### 6. **Einfachheit ist alles**
+- Gestalte alle Aufgaben und Codeänderungen so einfach wie möglich
+- Wir möchten massive oder komplexe Änderungen vermeiden
+- Jede Änderung sollte sich so wenig wie möglich auf den Code auswirken
+- Einfachheit ist alles
 
-### 7. **Deployment Preparation**
-- Erstelle Deployment Checklist
-- Definiere Rollback-Strategie
-- Plane Monitoring und Alerting
-- Dokumentiere Known Issues und Workarounds
+### 7. **Überprüfung und Zusammenfassung**
+- Füge abschließend einen Überprüfungsbereich in die Datei `todo.md` ein, der eine Zusammenfassung der vorgenommenen Änderungen und alle anderen relevanten Informationen enthält
+
+### 8. **MCP-Server und Tools nutzen**
+- **Context7 für Dokumentation**: Nutze `mcp__context7__resolve-library-id` und `mcp__context7__get-library-docs` für aktuelle Library-Dokumentation (Laravel, Filament, etc.)
+- **Interne MCP-Server**: Verwende projektspezifische MCP-Server wie DatabaseMCP, CalcomMCP, RetellMCP für API-Integrationen
+- **Task Management**: Nutze `TodoWrite`/`TodoRead` Tools für Aufgabenverwaltung
+- **Best Practice**: Evaluiere zu Beginn jeder Aufgabe verfügbare MCP-Server und kombiniere sie für optimale Ergebnisse
 
 ## MCP-Server Übersicht und Verwendung
 
@@ -707,20 +718,38 @@ Event types are synced from Cal.com. Use the sync command or import wizard in ad
 
 ### Troubleshooting Retell.ai Integration
 
+#### 🚨 Quick Recovery (Stand: 2025-06-29)
+Falls Retell.ai nicht funktioniert, führe diese Befehle aus:
+```bash
+# 1. Automatischer Health Check & Repair
+php retell-health-check.php
+
+# 2. Manuelle Call-Imports (wenn nötig)
+php import-retell-calls-manual.php
+
+# 3. Agent-Sync erzwingen
+php sync-retell-agent.php
+```
+
 #### Problem: "Es werden keine Anrufe eingespielt"
 
 **Quick Fix:**
 1. Ensure Horizon is running: `php artisan horizon`
-2. Click "Anrufe abrufen" button in the admin panel
-3. Check if calls are imported
+2. Run `php retell-health-check.php` for automatic fixes
+3. Check if calls are imported in admin panel
 
 **Root Causes & Solutions:**
 
-1. **Missing Webhook Registration**
-   - Register webhook URL in Retell.ai dashboard: `https://yourdomain.com/api/retell/webhook`
+1. **API v2 Endpoint Update (WICHTIG!)**
+   - Retell API hat auf v2 umgestellt
+   - Fix bereits in `RetellV2Service.php` implementiert
+   - Endpoint: `/v2/list-calls` statt `/list-calls`
+
+2. **Missing Webhook Registration**
+   - Register webhook URL in Retell.ai dashboard: `https://api.askproai.de/api/retell/webhook`
    - Enable events: `call_ended`, `call_started`, `call_analyzed`
 
-2. **Missing API Keys**
+3. **Missing API Keys**
    ```bash
    # Check if company has API key
    php artisan tinker
@@ -732,21 +761,18 @@ Event types are synced from Cal.com. Use the sync command or import wizard in ad
    >>> $c->save();
    ```
 
-3. **Manual Import**
-   ```bash
-   # Import all recent calls
-   php fix-retell-import.php
-   
-   # Or use the UI button "Anrufe abrufen"
-   ```
+4. **Phone Number Resolution**
+   - System nutzt `PhoneNumberResolver` Service
+   - Mapping: Phone Number → Branch → Company
+   - Jeder Call MUSS eine company_id haben
 
-4. **Debugging**
+5. **Debugging**
    ```bash
    # Check webhook logs
    tail -f storage/logs/laravel.log | grep -i retell
    
    # Test API connection
-   php test-retell-api.php
+   php retell-health-check.php
    
    # Check queue processing
    php artisan queue:work --queue=webhooks --tries=1
@@ -757,10 +783,21 @@ Event types are synced from Cal.com. Use the sync command or import wizard in ad
 
 **Required .env Variables:**
 ```
-RETELL_TOKEN=key_xxx
-RETELL_WEBHOOK_SECRET=key_xxx
+RETELL_TOKEN=key_e973c8962e09d6a34b3b1cf386
+RETELL_WEBHOOK_SECRET=Hqj8iGCaWxGXdoKCqQQFaHsUjFKHFjUO
 RETELL_BASE=https://api.retellai.com
 ```
+
+#### Problem: "Metriken zeigen 0"
+- Feld heißt `duration_sec` nicht `duration_seconds`
+- Fix: `php fix-metrics-display-final.php`
+- Bei Livewire: `withoutGlobalScope(\App\Scopes\TenantScope::class)` verwenden
+
+#### Problem: "Kein Activate Button"
+- Activate Buttons wurden hinzugefügt zu:
+  - Agent Cards im Dashboard
+  - Agent Editor Page
+- Hard Refresh (Ctrl+F5) nach Updates nötig
 
 ## UI/UX Development & Testing
 

@@ -6,7 +6,7 @@
         versionMode: 'edit', // edit, create_new, duplicate
         showVersionDialog: false,
         voiceSearchTerm: '',
-        selectedVoice: @entangle('editingAgent.voice_id').defer,
+        selectedVoice: @entangle('editingAgent.voice_id'),
         
         voices: [
             // English Voices
@@ -65,7 +65,7 @@
         display: flex;
         flex-direction: column;
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    " wire:click.stop>
+    " @click.stop>
         
         {{-- Header --}}
         <div style="
@@ -228,7 +228,7 @@
                             </label>
                             <input 
                                 type="text"
-                                wire:model.defer="editingAgent.agent_name"
+                                wire:model="editingAgent.agent_name"
                                 placeholder="e.g., Customer Service Agent"
                                 style="
                                     width: 100%;
@@ -251,7 +251,7 @@
                                 Description
                             </label>
                             <textarea 
-                                wire:model.defer="editingAgent.description"
+                                wire:model="editingAgent.description"
                                 placeholder="Describe what this agent does..."
                                 style="
                                     width: 100%;
@@ -277,7 +277,7 @@
                             </label>
                             <input 
                                 type="text"
-                                wire:model.defer="editingAgent.begin_message"
+                                wire:model="editingAgent.begin_message"
                                 placeholder="e.g., Hello! Thank you for calling. How can I help you today?"
                                 style="
                                     width: 100%;
@@ -303,7 +303,7 @@
                                 Status
                             </label>
                             <select 
-                                wire:model.defer="editingAgent.status"
+                                wire:model="editingAgent.status"
                                 style="
                                     width: 100%;
                                     height: 40px;
@@ -418,7 +418,7 @@
                             </label>
                             <input 
                                 type="range"
-                                wire:model.defer="editingAgent.voice_speed"
+                                wire:model="editingAgent.voice_speed"
                                 min="0.5"
                                 max="2"
                                 step="0.1"
@@ -436,7 +436,7 @@
                             </label>
                             <input 
                                 type="range"
-                                wire:model.defer="editingAgent.voice_temperature"
+                                wire:model="editingAgent.voice_temperature"
                                 min="0"
                                 max="1"
                                 step="0.1"
@@ -464,7 +464,7 @@
                     </div>
                     
                     <textarea 
-                        wire:model.defer="editingAgent.prompt"
+                        wire:model="editingAgent.prompt"
                         placeholder="You are a helpful customer service agent..."
                         style="
                             width: 100%;
@@ -560,7 +560,7 @@
                                 <label style="display: flex; align-items: center; cursor: pointer;">
                                     <input 
                                         type="checkbox"
-                                        wire:model.defer="editingAgent.interruption_enabled"
+                                        wire:model="editingAgent.interruption_enabled"
                                         style="
                                             width: 1rem;
                                             height: 1rem;
@@ -580,7 +580,7 @@
                                     </label>
                                     <input 
                                         type="number"
-                                        wire:model.defer="editingAgent.interruption_threshold"
+                                        wire:model="editingAgent.interruption_threshold"
                                         min="100"
                                         max="2000"
                                         step="100"
@@ -614,7 +614,7 @@
                                 <label style="display: flex; align-items: center; cursor: pointer;">
                                     <input 
                                         type="checkbox"
-                                        wire:model.defer="editingAgent.end_call_after_silence"
+                                        wire:model="editingAgent.end_call_after_silence"
                                         style="
                                             width: 1rem;
                                             height: 1rem;
@@ -634,7 +634,7 @@
                                     </label>
                                     <input 
                                         type="number"
-                                        wire:model.defer="editingAgent.silence_timeout"
+                                        wire:model="editingAgent.silence_timeout"
                                         min="5"
                                         max="60"
                                         step="5"
@@ -657,7 +657,7 @@
                                     </label>
                                     <input 
                                         type="number"
-                                        wire:model.defer="editingAgent.max_duration"
+                                        wire:model="editingAgent.max_duration"
                                         min="1"
                                         max="60"
                                         step="1"
@@ -683,7 +683,7 @@
                             </label>
                             <input 
                                 type="url"
-                                wire:model.defer="editingAgent.webhook_url"
+                                wire:model="editingAgent.webhook_url"
                                 placeholder="https://api.askproai.de/api/retell/webhook"
                                 style="
                                     width: 100%;
@@ -906,7 +906,7 @@
             </label>
             <input 
                 type="text"
-                wire:model.defer="newVersionName"
+                wire:model="newVersionName"
                 placeholder="e.g., V2"
                 style="
                     width: 100%;

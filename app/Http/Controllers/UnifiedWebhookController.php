@@ -59,6 +59,9 @@ class UnifiedWebhookController extends Controller
             $idempotencyKey = \App\Models\WebhookEvent::generateIdempotencyKey($provider, $payload);
             $eventId = $this->extractEventId($provider, $payload);
             
+            // Resolve company context for webhook
+            $companyId = $this->resolveCompanyId($provider, $payload);
+            
             // Create webhook event record for async processing
             $webhookEvent = \App\Models\WebhookEvent::create([
                 'provider' => $provider,
@@ -70,6 +73,7 @@ class UnifiedWebhookController extends Controller
                 'correlation_id' => $correlationId,
                 'status' => \App\Models\WebhookEvent::STATUS_PENDING,
                 'received_at' => now(),
+                'company_id' => $companyId,
             ]);
             
             // Dispatch to appropriate queue based on provider and priority
@@ -210,6 +214,72 @@ class UnifiedWebhookController extends Controller
             'stripe' => $payload['id'] ?? \Illuminate\Support\Str::uuid(),
             default => \Illuminate\Support\Str::uuid()
         };
+    }
+    
+    /**
+     * Resolve company ID from webhook payload
+     */
+    private function resolveCompanyId(string $provider, array $payload): ?int
+    {
+        try {
+            // First check if company_id is directly in payload
+            if (isset($payload['company_id'])) {
+                return (int) $payload['company_id'];
+            }
+            
+            // Check metadata
+            if (isset($payload['metadata']['company_id'])) {
+                return (int) $payload['metadata']['company_id'];
+            }
+            
+            // For Retell, try to resolve from phone number
+            if ($provider === 'retell') {
+                $phoneNumber = null;
+                
+                // Check different payload structures
+                if (isset($payload['call']['to_number'])) {
+                    $phoneNumber = $payload['call']['to_number'];
+                } elseif (isset($payload['call_inbound']['to_number'])) {
+                    $phoneNumber = $payload['call_inbound']['to_number'];
+                } elseif (isset($payload['to_number'])) {
+                    $phoneNumber = $payload['to_number'];
+                }
+                
+                if ($phoneNumber) {
+                    // Use service to resolve company from phone number
+                    $resolver = app(\App\Services\PhoneNumberResolver::class);
+                    $result = $resolver->resolvePhoneNumber($phoneNumber);
+                    
+                    if ($result && isset($result['company_id'])) {
+                        return $result['company_id'];
+                    }
+                }
+            }
+            
+            // For Cal.com, try to resolve from event type
+            if ($provider === 'calcom' && isset($payload['payload']['eventTypeId'])) {
+                $eventType = \App\Models\CalcomEventType::where('calcom_id', $payload['payload']['eventTypeId'])->first();
+                if ($eventType) {
+                    return $eventType->company_id;
+                }
+            }
+            
+            // Default to company 1 if we can't resolve
+            \Log::warning('Unable to resolve company ID for webhook', [
+                'provider' => $provider,
+                'event_type' => $payload['event'] ?? 'unknown'
+            ]);
+            
+            return 1; // Default company
+            
+        } catch (\Exception $e) {
+            \Log::error('Error resolving company ID for webhook', [
+                'provider' => $provider,
+                'error' => $e->getMessage()
+            ]);
+            
+            return 1; // Default company
+        }
     }
     
     /**

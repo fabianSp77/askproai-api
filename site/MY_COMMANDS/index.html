@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/MY_COMMANDS/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Meine Commands - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Meine Commands";
+        var mkdocs_page_input_path = "MY_COMMANDS.md";
+        var mkdocs_page_url = "/mkdocs/MY_COMMANDS/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Meine Commands</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#top-10-taglich-genutzt">🔥 TOP 10 - Täglich genutzt</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-mcp-auto-discovery-neu-2025">1. MCP Auto-Discovery (NEU 2025!)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-quick-debug-combo">2. Quick Debug Combo</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-datenbank-zugriff">3. Datenbank-Zugriff</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-impact-analysis-vor-deployment">4. Impact Analysis vor Deployment</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#5-code-quality-check">5. Code Quality Check</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#6-retell-calls-import">6. Retell Calls Import</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#7-documentation-health">7. Documentation Health</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#8-test-mit-coverage">8. Test mit Coverage</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#9-data-flow-debugging">9. Data Flow Debugging</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#10-cache-clear-all">10. Cache Clear All</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#extrem-gut-produktivitats-booster">💎 EXTREM GUT - Produktivitäts-Booster</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#claude-self-update">Claude Self-Update</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#full-system-check">Full System Check</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#smart-migration">Smart Migration</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#debug-mode-combo">Debug Mode Combo</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#git-productivity">Git Productivity</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#projekt-spezifisch">🎯 PROJEKT-SPEZIFISCH</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#webhook-test">Webhook Test</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#calcom-sync">Calcom Sync</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#performance-check">Performance Check</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#entwicklung">🛠️ ENTWICKLUNG</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#neuer-service-mit-mcp">Neuer Service mit MCP</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#filament-resource">Filament Resource</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#test-einzeln">Test Einzeln</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#notfall">🚨 NOTFALL</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#system-down">System Down</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#rollback">Rollback</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#eigene-befehle-hinzufugen">📝 EIGENE BEFEHLE HINZUFÜGEN</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Power User &raquo;</li>
+      <li>Meine Commands</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="meine-wichtigsten-befehle-askproai">🚀 Meine wichtigsten Befehle - AskProAI</h1>
+<blockquote>
+<p><strong>Zweck</strong>: Sammlung der besten und häufigsten Befehle
+<strong>Tipp</strong>: Nutze Cmd+F für schnelle Suche!</p>
+<p>⭐ <strong>NEU</strong>: Siehe auch <a href="../TOP_10_COMMANDS/">TOP_10_COMMANDS.md</a> für die absoluten Power-Befehle!</p>
+</blockquote>
+<h2 id="top-10-taglich-genutzt">🔥 TOP 10 - Täglich genutzt</h2>
+<h3 id="1-mcp-auto-discovery-neu-2025">1. MCP Auto-Discovery (NEU 2025!)</h3>
+<pre><code class="language-bash"># Besten MCP-Server für Aufgabe finden
+php artisan mcp:discover &quot;kunde anlegen&quot;
+php artisan mcp:discover &quot;termin buchen&quot; --execute
+</code></pre>
+<h3 id="2-quick-debug-combo">2. Quick Debug Combo</h3>
+<pre><code class="language-bash"># Wenn etwas nicht funktioniert
+rm -f bootstrap/cache/config.php &amp;&amp; php artisan config:cache &amp;&amp; php artisan horizon
+</code></pre>
+<h3 id="3-datenbank-zugriff">3. Datenbank-Zugriff</h3>
+<pre><code class="language-bash">mysql -u askproai_user -p'lkZ57Dju9EDjrMxn' askproai_db
+</code></pre>
+<h3 id="4-impact-analysis-vor-deployment">4. Impact Analysis vor Deployment</h3>
+<pre><code class="language-bash">php artisan analyze:impact --git
+php artisan analyze:component App\\Services\\BookingService
+</code></pre>
+<h3 id="5-code-quality-check">5. Code Quality Check</h3>
+<pre><code class="language-bash">composer quality  # Alles auf einmal
+</code></pre>
+<h3 id="6-retell-calls-import">6. Retell Calls Import</h3>
+<pre><code class="language-bash">php artisan horizon  # Erst Queue starten
+# Dann im Admin: &quot;Anrufe abrufen&quot; Button
+</code></pre>
+<h3 id="7-documentation-health">7. Documentation Health</h3>
+<pre><code class="language-bash">php artisan docs:check-updates --auto-fix
+</code></pre>
+<h3 id="8-test-mit-coverage">8. Test mit Coverage</h3>
+<pre><code class="language-bash">php artisan test --parallel --coverage
+</code></pre>
+<h3 id="9-data-flow-debugging">9. Data Flow Debugging</h3>
+<pre><code class="language-bash">php artisan dataflow:list
+php artisan dataflow:diagram &lt;correlation-id&gt;
+</code></pre>
+<h3 id="10-cache-clear-all">10. Cache Clear All</h3>
+<pre><code class="language-bash">php artisan optimize:clear
+</code></pre>
+<h2 id="extrem-gut-produktivitats-booster">💎 EXTREM GUT - Produktivitäts-Booster</h2>
+<h3 id="claude-self-update">Claude Self-Update</h3>
+<pre><code class="language-bash"># Claude auf neuesten Stand bringen
+echo &quot;Claude, lies CLAUDE_CONTEXT_SUMMARY.md und update dein Wissen über die Best Practices 2025&quot;
+</code></pre>
+<h3 id="full-system-check">Full System Check</h3>
+<pre><code class="language-bash"># Einmal alles prüfen
+php artisan health:check &amp;&amp; \
+php artisan mcp:health &amp;&amp; \
+php artisan docs:health &amp;&amp; \
+composer quality
+</code></pre>
+<h3 id="smart-migration">Smart Migration</h3>
+<pre><code class="language-bash"># Migration mit Impact Analysis
+php artisan migrate:smart --analyze
+php artisan migrate:smart --online  # Zero downtime
+</code></pre>
+<h3 id="debug-mode-combo">Debug Mode Combo</h3>
+<pre><code class="language-bash"># Für tiefes Debugging
+export BOOKING_DEBUG=true &amp;&amp; \
+export LOG_LEVEL=debug &amp;&amp; \
+tail -f storage/logs/laravel.log | grep -E &quot;(ERROR|WARNING|correlation_id)&quot;
+</code></pre>
+<h3 id="git-productivity">Git Productivity</h3>
+<pre><code class="language-bash"># Schneller Feature Branch
+git checkout -b feature/$(date +%Y%m%d)-description
+
+# Smart Commit mit Auto-Checks
+git add . &amp;&amp; git commit -m &quot;feat: neue funktion&quot; # Hooks machen den Rest!
+</code></pre>
+<h2 id="projekt-spezifisch">🎯 PROJEKT-SPEZIFISCH</h2>
+<h3 id="webhook-test">Webhook Test</h3>
+<pre><code class="language-bash"># Retell Webhook testen
+curl -X POST http://localhost:8000/api/retell/webhook \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;x-retell-signature: test&quot; \
+  -d '{&quot;event_type&quot;:&quot;call_ended&quot;,&quot;call_id&quot;:&quot;test-123&quot;}'
+</code></pre>
+<h3 id="calcom-sync">Calcom Sync</h3>
+<pre><code class="language-bash"># Event Types synchronisieren
+php artisan calcom:sync-event-types
+php artisan circuit-breaker:reset calcom  # Bei Problemen
+</code></pre>
+<h3 id="performance-check">Performance Check</h3>
+<pre><code class="language-bash"># Langsame Queries finden
+mysql -u askproai_user -p'lkZ57Dju9EDjrMxn' askproai_db -e &quot;
+SELECT query_time, sql_text 
+FROM mysql.slow_log 
+WHERE query_time &gt; 1 
+ORDER BY query_time DESC 
+LIMIT 10;&quot;
+</code></pre>
+<h2 id="entwicklung">🛠️ ENTWICKLUNG</h2>
+<h3 id="neuer-service-mit-mcp">Neuer Service mit MCP</h3>
+<pre><code class="language-php">// In jeden neuen Service!
+use App\Traits\UsesMCPServers;
+
+class MyService {
+    use UsesMCPServers;
+
+    public function doSomething($data) {
+        return $this-&gt;executeMCPTask('task description', $data);
+    }
+}
+</code></pre>
+<h3 id="filament-resource">Filament Resource</h3>
+<pre><code class="language-bash"># Komplett generieren
+php artisan make:filament-resource Customer --generate --view
+</code></pre>
+<h3 id="test-einzeln">Test Einzeln</h3>
+<pre><code class="language-bash"># Nur einen Test
+php artisan test --filter=BookingFlowTest::test_can_book_appointment
+</code></pre>
+<h2 id="notfall">🚨 NOTFALL</h2>
+<h3 id="system-down">System Down</h3>
+<pre><code class="language-bash"># 1. Logs checken
+tail -n 1000 storage/logs/laravel.log | grep ERROR
+
+# 2. Services neu starten
+sudo systemctl restart php8.3-fpm
+sudo systemctl restart nginx
+php artisan horizon:terminate
+
+# 3. Cache leeren
+php artisan optimize:clear
+</code></pre>
+<h3 id="rollback">Rollback</h3>
+<pre><code class="language-bash"># Code rollback
+git reset --hard HEAD~1
+
+# Database rollback
+php artisan migrate:rollback --step=1
+
+# Deploy vorherige Version
+./deploy.sh rollback
+</code></pre>
+<h2 id="eigene-befehle-hinzufugen">📝 EIGENE BEFEHLE HINZUFÜGEN</h2>
+<pre><code class="language-bash"># Befehl hier einfügen mit Beschreibung
+# Kategorie: [TOP10|EXTREM_GUT|PROJEKT|ENTWICKLUNG|NOTFALL]
+# Datum: YYYY-MM-DD
+# Beispiel:
+
+### Mein Super Befehl
+\```bash
+# Beschreibung was er macht
+dein-befehl --parameter
+\```
+</code></pre>
+<hr />
+<p>💡 <strong>Tipp</strong>: Erstelle Bash Aliases für die häufigsten Befehle in ~/.bashrc:</p>
+<pre><code class="language-bash">alias mcp-find='php artisan mcp:discover'
+alias quality='composer quality'
+alias impact='php artisan analyze:impact --git'
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../CLAUDE_BEFEHLE_FUER_DICH/" class="btn btn-neutral float-left" title="Claude Befehle für dich"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../BEST_PRACTICES_IMPLEMENTATION/" class="btn btn-neutral float-right" title="Implementation Guide">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../CLAUDE_BEFEHLE_FUER_DICH/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../BEST_PRACTICES_IMPLEMENTATION/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

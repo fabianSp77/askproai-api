@@ -35,15 +35,16 @@ class KnowledgeServiceProvider extends ServiceProvider
         );
         
         // Schedule file watcher if enabled
-        if (config('knowledge.auto_index.enabled', false)) {
-            $this->app->booted(function () {
-                $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
-                $schedule->call(function () {
-                    $watcher = app(FileWatcherService::class);
-                    $watcher->checkForChanges();
-                    $watcher->setLastCheck();
-                })->everyMinute()->name('knowledge:watch')->withoutOverlapping();
-            });
-        }
+        // MOVED TO Console/Kernel.php - This was causing scheduler to only load 1 task
+        // if (config('knowledge.auto_index.enabled', false)) {
+        //     $this->app->booted(function () {
+        //         $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+        //         $schedule->call(function () {
+        //             $watcher = app(FileWatcherService::class);
+        //             $watcher->checkForChanges();
+        //             $watcher->setLastCheck();
+        //         })->everyMinute()->name('knowledge:watch')->withoutOverlapping();
+        //     });
+        // }
     }
 }

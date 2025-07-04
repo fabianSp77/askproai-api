@@ -152,8 +152,12 @@ class ProcessRetellCallEndedJob implements ShouldQueue
     
     protected function storeWebhookRecord(): void
     {
+        $callId = $this->data['call']['call_id'] ?? $this->data['call_id'] ?? uniqid('retell_');
+        
         RetellWebhook::create([
             'event_type' => $this->data['event'] ?? 'call_ended',
+            'event_id' => $callId,
+            'idempotency_key' => $callId . '_' . ($this->data['event'] ?? 'call_ended'),
             'payload' => $this->data,
             'provider' => 'retell',
             'processed_at' => now()
@@ -364,6 +368,16 @@ class ProcessRetellCallEndedJob implements ShouldQueue
     
     protected function processAppointmentBooking(Call $call): void
     {
+        // SICHERHEITSPRÜFUNG: Company benötigt Terminbuchung?
+        if (!$call->company || !$call->company->needsAppointmentBooking()) {
+            Log::info('Skipping appointment booking for company without booking needs', [
+                'call_id' => $call->id,
+                'company_id' => $call->company_id,
+                'company_name' => $call->company->name ?? 'Unknown'
+            ]);
+            return;
+        }
+        
         try {
             $callData = $this->data['call'] ?? $this->data;
             
@@ -603,14 +617,17 @@ class ProcessRetellCallEndedJob implements ShouldQueue
         if (is_numeric($timestamp)) {
             // Check if it's milliseconds (larger than reasonable seconds timestamp)
             if ($timestamp > 9999999999) {
-                return \Carbon\Carbon::createFromTimestampMs($timestamp);
+                // Retell sends UTC timestamps, convert to Berlin time (+2 hours for CEST)
+                return \Carbon\Carbon::createFromTimestampMs($timestamp)->addHours(2);
             }
-            return \Carbon\Carbon::createFromTimestamp($timestamp);
+            // Retell sends UTC timestamps, convert to Berlin time (+2 hours for CEST)
+            return \Carbon\Carbon::createFromTimestamp($timestamp)->addHours(2);
         }
         
         // Try to parse as string (ISO 8601 or other formats)
         try {
-            return \Carbon\Carbon::parse($timestamp);
+            // Assume UTC and convert to Berlin time
+            return \Carbon\Carbon::parse($timestamp)->addHours(2);
         } catch (\Exception $e) {
             Log::warning('Failed to parse timestamp', [
                 'timestamp' => $timestamp,

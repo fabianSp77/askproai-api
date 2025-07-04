@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/INTEGRATION_HEALTH_MONITOR/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Health Monitor - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Health Monitor";
+        var mkdocs_page_input_path = "INTEGRATION_HEALTH_MONITOR.md";
+        var mkdocs_page_url = "/mkdocs/INTEGRATION_HEALTH_MONITOR/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Health Monitor</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#quick-status-check">🚦 QUICK STATUS CHECK</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#system-health-flow">📈 System Health Flow</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#live-status-dashboard">📊 LIVE STATUS DASHBOARD</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#gesamtsystem-status">🎯 Gesamtsystem-Status</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#integration-status-matrix">🔌 Integration Status Matrix</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#alert-konfiguration">🔔 ALERT KONFIGURATION</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#alert-flow-diagram">Alert Flow Diagram</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alert-channels">📱 Alert Channels</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alert-rules">🚨 Alert Rules</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#kritisch-sofort-alarm">KRITISCH (Sofort-Alarm)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#warnung-team-notification">WARNUNG (Team-Notification)</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#metriken-monitoring">📈 METRIKEN &amp; MONITORING</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#real-time-metriken">Real-time Metriken</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#service-spezifische-checks">Service-spezifische Checks</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#retellai-health">🤖 Retell.ai Health</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#calcom-health">📅 Cal.com Health</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#database-health">💾 Database Health</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#auto-healing-mechanismen">🔧 AUTO-HEALING MECHANISMEN</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#circuit-breaker-state-machine">Circuit Breaker State Machine</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#1-circuit-breaker-pattern">1. Circuit Breaker Pattern</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-automatische-recovery-actions">2. Automatische Recovery Actions</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-self-healing-scripts">3. Self-Healing Scripts</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#health-dashboard-html">📊 HEALTH DASHBOARD HTML</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#incident-response">🚨 INCIDENT RESPONSE</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#automatisches-incident-management">Automatisches Incident Management</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#post-incident-process">Post-Incident Process</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#mobile-alerts-app">📱 MOBILE ALERTS APP</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#troubleshooting-guide">🔍 TROUBLESHOOTING GUIDE</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#service-spezifische-diagnose">Service-spezifische Diagnose</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#retellai-nicht-erreichbar">"Retell.ai nicht erreichbar"</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#calcom-langsam">"Cal.com langsam"</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#database-overload">"Database Overload"</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#proaktive-wartung">🎯 PROAKTIVE WARTUNG</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#tagliche-health-checks-automated">Tägliche Health Checks (Automated)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#wochentliche-performance-review">Wöchentliche Performance Review</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Monitoring &raquo;</li>
+      <li>Health Monitor</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="integration-health-monitor-real-time-status-alerts">🏥 Integration Health Monitor - Real-time Status &amp; Alerts</h1>
+<blockquote>
+<p><strong>Live Dashboard</strong>: https://app.askproai.de/health</p>
+</blockquote>
+<h2 id="quick-status-check">🚦 QUICK STATUS CHECK</h2>
+<pre><code class="language-bash"># Ein-Befehl Gesundheits-Check
+php artisan health:check --all
+
+# Output:
+✅ Retell.ai    : HEALTHY (45ms)
+⚠️  Cal.com      : DEGRADED (850ms)
+✅ Database     : HEALTHY (12ms)
+✅ Redis        : HEALTHY (3ms)
+✅ Email (SMTP) : HEALTHY (125ms)
+</code></pre>
+<h2 id="system-health-flow">📈 System Health Flow</h2>
+<pre><code class="language-mermaid">flowchart TB
+    subgraph Monitoring[&quot;Health Monitoring&quot;]
+        Metrics[&quot;Metrics&lt;br/&gt;Collection&quot;]
+        Checks[&quot;Health&lt;br/&gt;Checks&quot;]
+        Alerts[&quot;Alert&lt;br/&gt;Engine&quot;]
+    end
+
+    subgraph Services[&quot;Services&quot;]
+        Retell[&quot;Retell.ai&lt;br/&gt;🟢 45ms&quot;]
+        Calcom[&quot;Cal.com&lt;br/&gt;🟡 850ms&quot;]
+        DB[&quot;Database&lt;br/&gt;🟢 12ms&quot;]
+        Redis[&quot;Redis&lt;br/&gt;🟢 3ms&quot;]
+    end
+
+    subgraph Actions[&quot;Automated Actions&quot;]
+        CB[&quot;Circuit&lt;br/&gt;Breaker&quot;]
+        Heal[&quot;Self&lt;br/&gt;Healing&quot;]
+        Notify[&quot;Alert&lt;br/&gt;Channels&quot;]
+    end
+
+    Services --&gt; Metrics
+    Metrics --&gt; Checks
+    Checks --&gt; Alerts
+
+    Alerts --&gt;|&quot;Threshold&quot;| CB
+    Alerts --&gt;|&quot;Pattern&quot;| Heal
+    Alerts --&gt;|&quot;Critical&quot;| Notify
+
+    CB --&gt; Services
+    Heal --&gt; Services
+
+    style Retell fill:#d4edda,stroke:#28a745
+    style Calcom fill:#fff3cd,stroke:#ffc107
+    style DB fill:#d4edda,stroke:#28a745
+    style Redis fill:#d4edda,stroke:#28a745
+</code></pre>
+<hr />
+<h2 id="live-status-dashboard">📊 LIVE STATUS DASHBOARD</h2>
+<h3 id="gesamtsystem-status">🎯 Gesamtsystem-Status</h3>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│ ASKPROAI SYSTEM HEALTH: 98.5% ████████████████████░ │
+├─────────────────────────────────────────────────────┤
+│ Uptime: 45d 13h 27m | Last Incident: 72h ago       │
+│ Active Calls: 47 | Queue Depth: 12 | Error Rate: 0.3% │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="integration-status-matrix">🔌 Integration Status Matrix</h3>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Status</th>
+<th>Latenz</th>
+<th>Uptime (30d)</th>
+<th>Circuit Breaker</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Retell.ai</strong></td>
+<td>🟢 OK</td>
+<td>45ms</td>
+<td>99.97%</td>
+<td>CLOSED</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>Cal.com</strong></td>
+<td>🟡 SLOW</td>
+<td>850ms</td>
+<td>98.2%</td>
+<td>HALF-OPEN</td>
+<td><a href="#calcom-optimize">Optimize</a></td>
+</tr>
+<tr>
+<td><strong>MySQL</strong></td>
+<td>🟢 OK</td>
+<td>12ms</td>
+<td>99.99%</td>
+<td>CLOSED</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>🟢 OK</td>
+<td>3ms</td>
+<td>100%</td>
+<td>CLOSED</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>SMTP</strong></td>
+<td>🟢 OK</td>
+<td>125ms</td>
+<td>99.5%</td>
+<td>CLOSED</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>Webhook Queue</strong></td>
+<td>🟢 OK</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+<td>12 pending</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="alert-konfiguration">🔔 ALERT KONFIGURATION</h2>
+<h3 id="alert-flow-diagram">Alert Flow Diagram</h3>
+<pre><code class="language-mermaid">stateDiagram-v2
+    [*] --&gt; Monitoring: System läuft
+
+    Monitoring --&gt; Threshold: Metrik überschreitet Schwellwert
+    Threshold --&gt; Evaluation: Alert Rule prüfen
+
+    Evaluation --&gt; Minor: Severity = Low
+    Evaluation --&gt; Major: Severity = Warning  
+    Evaluation --&gt; Critical: Severity = Critical
+
+    Minor --&gt; Log: Log only
+    Major --&gt; Slack: Slack Notification
+    Critical --&gt; AllChannels: Alle Kanäle
+
+    AllChannels --&gt; SMS: SMS Alert
+    AllChannels --&gt; Email: Email Alert
+    AllChannels --&gt; PagerDuty: PagerDuty
+    AllChannels --&gt; Slack2: Slack Alert
+
+    Log --&gt; Recovery
+    Slack --&gt; Recovery
+    SMS --&gt; Incident
+    Email --&gt; Incident
+    PagerDuty --&gt; Incident
+    Slack2 --&gt; Incident
+
+    Incident --&gt; WarRoom: War Room eröffnet
+    WarRoom --&gt; Resolution: Problem gelöst
+    Resolution --&gt; PostMortem: Post-Mortem
+    PostMortem --&gt; Recovery
+
+    Recovery --&gt; Monitoring: Zurück zu Normal
+
+    note right of Critical
+        Beispiele:
+        - Service Down
+        - Error Rate &gt; 10%
+        - Database Offline
+    end note
+
+    note right of Major
+        Beispiele:
+        - Hohe Latenz
+        - Memory &gt; 80%
+        - Queue Backlog
+    end note
+</code></pre>
+<h3 id="alert-channels">📱 Alert Channels</h3>
+<pre><code class="language-yaml">alerts:
+  channels:
+    - type: slack
+      webhook: ${SLACK_WEBHOOK_URL}
+      severity: [critical, warning]
+
+    - type: email
+      to: [ops@askproai.de, cto@askproai.de]
+      severity: [critical]
+
+    - type: sms
+      to: [+49176EMERGENCY]
+      severity: [critical]
+      provider: twilio
+
+    - type: pagerduty
+      api_key: ${PAGERDUTY_KEY}
+      severity: [critical]
+</code></pre>
+<h3 id="alert-rules">🚨 Alert Rules</h3>
+<h4 id="kritisch-sofort-alarm">KRITISCH (Sofort-Alarm)</h4>
+<pre><code class="language-yaml">critical_alerts:
+  - name: &quot;Service Komplett-Ausfall&quot;
+    condition: &quot;service.status == DOWN for 1 minute&quot;
+    services: [retell, calcom, database]
+    action: 
+      - notify: all_channels
+      - auto_failover: true
+      - create_incident: true
+
+  - name: &quot;Error Rate Spike&quot;
+    condition: &quot;error_rate &gt; 10% for 2 minutes&quot;
+    action:
+      - notify: [slack, email]
+      - enable_debug_mode: true
+
+  - name: &quot;Queue Überlauf&quot;
+    condition: &quot;queue_depth &gt; 1000&quot;
+    action:
+      - notify: [slack]
+      - scale_workers: true
+</code></pre>
+<h4 id="warnung-team-notification">WARNUNG (Team-Notification)</h4>
+<pre><code class="language-yaml">warning_alerts:
+  - name: &quot;Hohe Latenz&quot;
+    condition: &quot;latency &gt; 500ms for 5 minutes&quot;
+    services: [calcom, retell]
+    action:
+      - notify: [slack]
+      - log_performance_trace: true
+
+  - name: &quot;Memory Usage&quot;
+    condition: &quot;memory &gt; 80%&quot;
+    action:
+      - notify: [slack]
+      - trigger_gc: true
+
+  - name: &quot;Niedrige Conversion&quot;
+    condition: &quot;conversion_rate &lt; 40% for 1 hour&quot;
+    action:
+      - notify: [slack]
+      - suggest_optimization: true
+</code></pre>
+<hr />
+<h2 id="metriken-monitoring">📈 METRIKEN &amp; MONITORING</h2>
+<h3 id="real-time-metriken">Real-time Metriken</h3>
+<pre><code class="language-bash"># Live Metrics Stream
+php artisan metrics:stream
+
+# Output:
+┌─ LIVE METRICS ──────────────────────────────┐
+│ Requests/sec: 127                           │
+│ Avg Response: 187ms                         │
+│ Active Users: 342                           │
+│ CPU Usage: 42%                              │
+│ Memory: 2.1GB/4GB                           │
+│ Disk I/O: 12MB/s                            │
+└─────────────────────────────────────────────┘
+</code></pre>
+<h3 id="service-spezifische-checks">Service-spezifische Checks</h3>
+<h4 id="retellai-health">🤖 Retell.ai Health</h4>
+<pre><code class="language-bash"># Detaillierter Retell Check
+php artisan health:retell --detailed
+
+# Checks:
+✓ API Erreichbarkeit
+✓ Agent Status (alle aktiv)
+✓ Webhook Delivery Rate: 99.8%
+✓ Call Success Rate: 94%
+✓ Credit Balance: 12,453€
+</code></pre>
+<h4 id="calcom-health">📅 Cal.com Health</h4>
+<pre><code class="language-bash"># Cal.com Integration Check
+php artisan health:calcom --detailed
+
+# Checks:
+✓ API v2 Erreichbarkeit
+⚠ Response Zeit: 850ms (Ziel: &lt;500ms)
+✓ Event Types synced: 45/45
+✓ Availability Cache: Valid
+✓ Booking Success: 98.2%
+</code></pre>
+<h4 id="database-health">💾 Database Health</h4>
+<pre><code class="language-bash"># Database Performance Check
+php artisan health:database --detailed
+
+# Checks:
+✓ Connection Pool: 23/100 used
+✓ Slow Queries: 2 (threshold: 5)
+✓ Replication Lag: 0ms
+✓ Table Locks: 0
+✓ Index Usage: 97%
+</code></pre>
+<hr />
+<h2 id="auto-healing-mechanismen">🔧 AUTO-HEALING MECHANISMEN</h2>
+<h3 id="circuit-breaker-state-machine">Circuit Breaker State Machine</h3>
+<pre><code class="language-mermaid">stateDiagram-v2
+    [*] --&gt; Closed: Start
+
+    Closed --&gt; Open: Failures ≥ Threshold
+    Closed --&gt; Closed: Success
+
+    Open --&gt; HalfOpen: After Timeout
+    Open --&gt; Open: Requests Rejected
+
+    HalfOpen --&gt; Closed: Success Threshold Met
+    HalfOpen --&gt; Open: Any Failure
+
+    note right of Closed
+        Normal Operation
+        All requests pass through
+    end note
+
+    note right of Open
+        Service Protected
+        Fast fail all requests
+        Wait for timeout
+    end note
+
+    note right of HalfOpen
+        Testing Phase
+        Limited requests allowed
+        Monitor success rate
+    end note
+</code></pre>
+<h3 id="1-circuit-breaker-pattern">1. Circuit Breaker Pattern</h3>
+<pre><code class="language-php">// Automatische Konfiguration
+'circuit_breaker' =&gt; [
+    'failure_threshold' =&gt; 5,      // Fehler bis Open
+    'success_threshold' =&gt; 2,      // Erfolge bis Close
+    'timeout' =&gt; 60,              // Sekunden im Open State
+    'half_open_max_requests' =&gt; 3, // Test-Requests
+]
+</code></pre>
+<h3 id="2-automatische-recovery-actions">2. Automatische Recovery Actions</h3>
+<pre><code class="language-yaml">auto_recovery:
+  - trigger: &quot;retell_api_timeout&quot;
+    actions:
+      - increase_timeout: 10s
+      - retry_with_backoff: true
+      - switch_to_queue_mode: true
+
+  - trigger: &quot;calcom_slow_response&quot;
+    actions:
+      - enable_cache_mode: true
+      - reduce_sync_frequency: true
+      - notify_team: true
+
+  - trigger: &quot;database_connection_lost&quot;
+    actions:
+      - reconnect_attempt: 3
+      - switch_to_read_replica: true
+      - enable_emergency_cache: true
+</code></pre>
+<h3 id="3-self-healing-scripts">3. Self-Healing Scripts</h3>
+<pre><code class="language-bash"># Auto-Fix Common Issues
+./health-monitor/auto-heal.sh
+
+# Aktionen:
+- Cache leeren bei Memory &gt; 90%
+- Queue Workers neustarten bei Stau
+- Zombie Processes killen
+- Stuck Locks aufräumen
+- Failed Jobs retry
+</code></pre>
+<hr />
+<h2 id="health-dashboard-html">📊 HEALTH DASHBOARD HTML</h2>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;AskProAI Health Monitor&lt;/title&gt;
+    &lt;script src=&quot;https://cdn.jsdelivr.net/npm/chart.js&quot;&gt;&lt;/script&gt;
+    &lt;style&gt;
+        .service-card {
+            display: inline-block;
+            width: 200px;
+            margin: 10px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .healthy { background: #10b981; color: white; }
+        .warning { background: #f59e0b; color: white; }
+        .critical { background: #ef4444; color: white; }
+        .metric { font-size: 36px; font-weight: bold; }
+        .label { font-size: 14px; opacity: 0.8; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;🏥 AskProAI Health Monitor&lt;/h1&gt;
+
+    &lt;div id=&quot;services&quot;&gt;
+        &lt;div class=&quot;service-card healthy&quot;&gt;
+            &lt;div class=&quot;label&quot;&gt;Retell.ai&lt;/div&gt;
+            &lt;div class=&quot;metric&quot;&gt;45ms&lt;/div&gt;
+            &lt;div class=&quot;label&quot;&gt;99.97% Uptime&lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class=&quot;service-card warning&quot;&gt;
+            &lt;div class=&quot;label&quot;&gt;Cal.com&lt;/div&gt;
+            &lt;div class=&quot;metric&quot;&gt;850ms&lt;/div&gt;
+            &lt;div class=&quot;label&quot;&gt;98.2% Uptime&lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;canvas id=&quot;latencyChart&quot;&gt;&lt;/canvas&gt;
+
+    &lt;script&gt;
+    // WebSocket für Live-Updates
+    const ws = new WebSocket('wss://api.askproai.de/health/stream');
+
+    ws.onmessage = (event) =&gt; {
+        const data = JSON.parse(event.data);
+        updateServiceCards(data.services);
+        updateLatencyChart(data.latency);
+    };
+
+    // Auto-Refresh alle 5 Sekunden
+    setInterval(() =&gt; {
+        fetch('/api/health/status')
+            .then(res =&gt; res.json())
+            .then(data =&gt; updateDashboard(data));
+    }, 5000);
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<hr />
+<h2 id="incident-response">🚨 INCIDENT RESPONSE</h2>
+<h3 id="automatisches-incident-management">Automatisches Incident Management</h3>
+<pre><code class="language-bash"># Incident wird automatisch erstellt bei:
+- Service Down &gt; 1 Minute
+- Error Rate &gt; 10%
+- Multiple Alerts gleichzeitig
+
+# Incident Response Flow:
+1. Alert triggered
+2. Incident created (ID: INC-2024-001)
+3. On-Call Engineer notified
+4. War Room Slack Channel created
+5. Status Page updated
+6. Customer notification (wenn &gt; 5 Min)
+</code></pre>
+<h3 id="post-incident-process">Post-Incident Process</h3>
+<pre><code class="language-bash"># Nach Behebung automatisch:
+php artisan incident:close --id=INC-2024-001
+
+# Generiert:
+- Incident Timeline
+- Root Cause Analysis Template
+- Action Items
+- Metrics Report
+- Customer Communication
+</code></pre>
+<hr />
+<h2 id="mobile-alerts-app">📱 MOBILE ALERTS APP</h2>
+<pre><code class="language-javascript">// Push Notification Config
+{
+  &quot;alert&quot;: {
+    &quot;title&quot;: &quot;⚠️ Cal.com Degraded&quot;,
+    &quot;body&quot;: &quot;Response time 850ms (threshold: 500ms)&quot;,
+    &quot;sound&quot;: &quot;critical.wav&quot;,
+    &quot;badge&quot;: 1
+  },
+  &quot;data&quot;: {
+    &quot;type&quot;: &quot;service_degraded&quot;,
+    &quot;service&quot;: &quot;calcom&quot;,
+    &quot;metric&quot;: &quot;latency&quot;,
+    &quot;value&quot;: 850,
+    &quot;threshold&quot;: 500,
+    &quot;actions&quot;: [&quot;view_details&quot;, &quot;acknowledge&quot;, &quot;escalate&quot;]
+  }
+}
+</code></pre>
+<hr />
+<h2 id="troubleshooting-guide">🔍 TROUBLESHOOTING GUIDE</h2>
+<h3 id="service-spezifische-diagnose">Service-spezifische Diagnose</h3>
+<h4 id="retellai-nicht-erreichbar">"Retell.ai nicht erreichbar"</h4>
+<pre><code class="language-bash"># 1. API Status prüfen
+curl -I https://api.retellai.com/health
+
+# 2. Failover aktivieren
+php artisan config:set retell.failover=true
+
+# 3. Alternative Route
+php artisan retell:use-backup-endpoint
+</code></pre>
+<h4 id="calcom-langsam">"Cal.com langsam"</h4>
+<pre><code class="language-bash"># 1. Cache-Status prüfen
+php artisan calcom:cache-status
+
+# 2. Parallel Requests reduzieren
+php artisan config:set calcom.max_concurrent=5
+
+# 3. Read-Replica aktivieren
+php artisan calcom:use-read-replica
+</code></pre>
+<h4 id="database-overload">"Database Overload"</h4>
+<pre><code class="language-bash"># 1. Aktive Connections anzeigen
+mysql -e &quot;SHOW PROCESSLIST&quot;
+
+# 2. Slow Queries killen
+php artisan db:kill-slow-queries --threshold=10
+
+# 3. Emergency Mode
+php artisan db:emergency-mode --read-only
+</code></pre>
+<hr />
+<h2 id="proaktive-wartung">🎯 PROAKTIVE WARTUNG</h2>
+<h3 id="tagliche-health-checks-automated">Tägliche Health Checks (Automated)</h3>
+<pre><code class="language-cron"># Crontab
+0 6 * * * /usr/bin/php /var/www/api-gateway/artisan health:daily-check
+0 */4 * * * /usr/bin/php /var/www/api-gateway/artisan health:quick-check
+*/5 * * * * /usr/bin/php /var/www/api-gateway/artisan metrics:collect
+</code></pre>
+<h3 id="wochentliche-performance-review">Wöchentliche Performance Review</h3>
+<pre><code class="language-bash"># Automatischer Report jeden Montag
+php artisan health:weekly-report --email=team@askproai.de
+
+# Inhalt:
+- Service Uptime Statistiken
+- Performance Trends
+- Error Rate Analysis
+- Capacity Planning
+- Optimization Empfehlungen
+</code></pre>
+<blockquote>
+<p>💡 <strong>Dashboard URL</strong>: https://app.askproai.de/health
+📱 <strong>Mobile App</strong>: AskProAI Health (iOS/Android)</p>
+</blockquote>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../KPI_DASHBOARD_TEMPLATE/" class="btn btn-neutral float-left" title="KPI Dashboard"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../PHONE_TO_APPOINTMENT_FLOW/" class="btn btn-neutral float-right" title="Phone to Appointment Flow">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../KPI_DASHBOARD_TEMPLATE/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../PHONE_TO_APPOINTMENT_FLOW/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

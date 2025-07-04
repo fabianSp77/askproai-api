@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/TROUBLESHOOTING_DECISION_TREE/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Troubleshooting - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Troubleshooting";
+        var mkdocs_page_input_path = "TROUBLESHOOTING_DECISION_TREE.md";
+        var mkdocs_page_url = "/mkdocs/TROUBLESHOOTING_DECISION_TREE/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Troubleshooting</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#start-hier">🎯 START HIER</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#anruf-probleme">📞 ANRUF-PROBLEME</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#diagnose-flow-keine-anrufe-kommen-an">🔍 Diagnose-Flow: "Keine Anrufe kommen an"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#keine-anrufe-kommen-an">❓ "Keine Anrufe kommen an"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ai-versteht-kunden-nicht">❓ "AI versteht Kunden nicht"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#anrufe-brechen-ab">❓ "Anrufe brechen ab"</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#termin-probleme">📅 TERMIN-PROBLEME</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#diagnose-flow-keine-termine-verfugbar">🔍 Diagnose-Flow: "Keine Termine verfügbar"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#keine-termine-verfugbar">❓ "Keine Termine verfügbar"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#doppelte-termine">❓ "Doppelte Termine"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#falscher-mitarbeiter-zugewiesen">❓ "Falscher Mitarbeiter zugewiesen"</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#system-probleme">💻 SYSTEM-PROBLEME</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#dashboard-ladt-nicht">❓ "Dashboard lädt nicht"</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#emails-kommen-nicht-an">❓ "Emails kommen nicht an"</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#kunden-probleme">🧑‍💼 KUNDEN-PROBLEME</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#kunde-kann-sich-nicht-einloggen">❓ "Kunde kann sich nicht einloggen"</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#fix-anleitungen">🔧 FIX-ANLEITUNGEN</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-agent-inactive">Fix: Agent Inactive</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-phone-mapping">Fix: Phone Mapping</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-webhook-config">Fix: Webhook Config</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-language-settings">Fix: Language Settings</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-prompt-quality">Fix: Prompt Quality</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-voice-settings">Fix: Voice Settings</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-timeout">Fix: Timeout</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-webhook-performance">Fix: Webhook Performance</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-calcom-sync">Fix: Cal.com Sync</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-availability">Fix: Availability</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-deduplication">Fix: Deduplication</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-cache">Fix: Cache</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-queue">Fix: Queue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fix-smtp">Fix: SMTP</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#eskalation">🚨 ESKALATION</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#wenn-nichts-hilft">Wenn nichts hilft:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#interaktive-web-version">📱 INTERAKTIVE WEB-VERSION</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Betrieb &raquo;</li>
+      <li>Troubleshooting</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="troubleshooting-decision-tree-problem-losung-in-max-5-klicks">🔍 Troubleshooting Decision Tree - Problem → Lösung in max. 5 Klicks</h1>
+<blockquote>
+<p><strong>Interaktiv</strong>: Klicke auf [Check] Buttons für automatische Diagnose!</p>
+</blockquote>
+<h2 id="start-hier">🎯 START HIER</h2>
+<pre><code class="language-mermaid">flowchart TD
+    Start([&quot;Problem mit&lt;br/&gt;AskProAI?&quot;]) --&gt; Type{&quot;Was funktioniert&lt;br/&gt;nicht?&quot;}
+
+    Type --&gt;|&quot;Keine Anrufe&quot;| Calls[&quot;📞 Anruf-Probleme&lt;br/&gt;3 Quick Checks&quot;]
+    Type --&gt;|&quot;Termine fehlerhaft&quot;| Appointments[&quot;📅 Termin-Probleme&lt;br/&gt;4 Quick Checks&quot;]
+    Type --&gt;|&quot;System down&quot;| System[&quot;💻 System-Probleme&lt;br/&gt;2 Quick Checks&quot;]
+    Type --&gt;|&quot;Kunde meldet&quot;| Customer[&quot;🧑‍💼 Kunden-Probleme&lt;br/&gt;2 Quick Checks&quot;]
+
+    Calls --&gt; CallDiag[&quot;Diagnose&lt;br/&gt;starten&quot;]
+    Appointments --&gt; AppDiag[&quot;Diagnose&lt;br/&gt;starten&quot;]
+    System --&gt; SysDiag[&quot;Diagnose&lt;br/&gt;starten&quot;]
+    Customer --&gt; CustDiag[&quot;Diagnose&lt;br/&gt;starten&quot;]
+
+    CallDiag --&gt; Solution1[&quot;✅ Gelöst&quot;]
+    AppDiag --&gt; Solution2[&quot;✅ Gelöst&quot;]
+    SysDiag --&gt; Solution3[&quot;✅ Gelöst&quot;]
+    CustDiag --&gt; Solution4[&quot;✅ Gelöst&quot;]
+
+    style Start fill:#f9fafb,stroke:#6b7280
+    style Type fill:#fef3c7,stroke:#f59e0b
+    style Calls fill:#dbeafe,stroke:#3b82f6
+    style Appointments fill:#dbeafe,stroke:#3b82f6
+    style System fill:#dbeafe,stroke:#3b82f6
+    style Customer fill:#dbeafe,stroke:#3b82f6
+    style Solution1 fill:#d1fae5,stroke:#10b981
+    style Solution2 fill:#d1fae5,stroke:#10b981
+    style Solution3 fill:#d1fae5,stroke:#10b981
+    style Solution4 fill:#d1fae5,stroke:#10b981
+</code></pre>
+<hr />
+<h2 id="anruf-probleme">📞 ANRUF-PROBLEME</h2>
+<h3 id="diagnose-flow-keine-anrufe-kommen-an">🔍 Diagnose-Flow: "Keine Anrufe kommen an"</h3>
+<pre><code class="language-mermaid">flowchart TD
+    Start[&quot;Keine Anrufe&lt;br/&gt;kommen an&quot;] --&gt; Check1{&quot;Check 1:&lt;br/&gt;Agent Status&quot;}
+
+    Check1 --&gt;|&quot;OK&quot;| Check2{&quot;Check 2:&lt;br/&gt;Phone Mapping&quot;}
+    Check1 --&gt;|&quot;Inaktiv&quot;| Fix1[&quot;Fix: Agent&lt;br/&gt;aktivieren&quot;]
+
+    Check2 --&gt;|&quot;OK&quot;| Check3{&quot;Check 3:&lt;br/&gt;Webhook Config&quot;}
+    Check2 --&gt;|&quot;Fehlt&quot;| Fix2[&quot;Fix: Phone&lt;br/&gt;zuordnen&quot;]
+
+    Check3 --&gt;|&quot;OK&quot;| Escalate[&quot;🚨 Eskalation&lt;br/&gt;nötig&quot;]
+    Check3 --&gt;|&quot;Falsch&quot;| Fix3[&quot;Fix: Webhook&lt;br/&gt;korrigieren&quot;]
+
+    Fix1 --&gt; Success[&quot;✅ Problem&lt;br/&gt;gelöst&quot;]
+    Fix2 --&gt; Success
+    Fix3 --&gt; Success
+
+    style Start fill:#fee2e2,stroke:#dc2626
+    style Check1 fill:#fef3c7,stroke:#f59e0b
+    style Check2 fill:#fef3c7,stroke:#f59e0b
+    style Check3 fill:#fef3c7,stroke:#f59e0b
+    style Fix1 fill:#dbeafe,stroke:#3b82f6
+    style Fix2 fill:#dbeafe,stroke:#3b82f6
+    style Fix3 fill:#dbeafe,stroke:#3b82f6
+    style Success fill:#d1fae5,stroke:#10b981
+    style Escalate fill:#fca5a5,stroke:#ef4444
+</code></pre>
+<h3 id="keine-anrufe-kommen-an">❓ "Keine Anrufe kommen an"</h3>
+<pre><code class="language-bash"># [Check 1] Retell Agent Status
+php artisan retell:check-agent --company-id=X
+</code></pre>
+<p>↓ <strong>Agent inaktiv?</strong> → <a href="#fix-agent-inactive">Fix</a><br />
+↓ <strong>Agent aktiv?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 2] Telefonnummer-Mapping
+php artisan phone:check-mapping --number=&quot;+49...&quot;
+</code></pre>
+<p>↓ <strong>Nicht gemapped?</strong> → <a href="#fix-phone-mapping">Fix</a><br />
+↓ <strong>Korrekt gemapped?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 3] Webhook-Konfiguration
+php artisan retell:verify-webhook
+</code></pre>
+<p>↓ <strong>Webhook falsch?</strong> → <a href="#fix-webhook-config">Fix</a><br />
+↓ <strong>Alles OK?</strong> → <a href="#escalation">Eskalation</a></p>
+<h3 id="ai-versteht-kunden-nicht">❓ "AI versteht Kunden nicht"</h3>
+<pre><code class="language-bash"># [Check 1] Sprach-Einstellungen
+php artisan retell:check-language --company-id=X
+</code></pre>
+<p>↓ <strong>Falsche Sprache?</strong> → <a href="#fix-language">Fix</a><br />
+↓ <strong>Sprache OK?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 2] Prompt-Qualität
+php artisan ai:analyze-prompt --company-id=X
+</code></pre>
+<p>↓ <strong>Score &lt; 70%?</strong> → <a href="#fix-prompt">Fix</a><br />
+↓ <strong>Prompt OK?</strong> → <a href="#fix-voice-settings">Fix</a></p>
+<h3 id="anrufe-brechen-ab">❓ "Anrufe brechen ab"</h3>
+<pre><code class="language-bash"># [Check 1] Timeout-Settings
+php artisan config:get retell.call_timeout
+</code></pre>
+<p>↓ <strong>&lt; 300 Sekunden?</strong> → <a href="#fix-timeout">Fix</a><br />
+↓ <strong>Timeout OK?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 2] Webhook-Performance
+php artisan webhook:measure-response-time
+</code></pre>
+<p>↓ <strong>&gt; 500ms?</strong> → <a href="#fix-webhook-performance">Fix</a><br />
+↓ <strong>Performance OK?</strong> → <a href="#fix-memory-limit">Fix</a></p>
+<hr />
+<h2 id="termin-probleme">📅 TERMIN-PROBLEME</h2>
+<h3 id="diagnose-flow-keine-termine-verfugbar">🔍 Diagnose-Flow: "Keine Termine verfügbar"</h3>
+<pre><code class="language-mermaid">flowchart TD
+    Start[&quot;Keine Termine&lt;br/&gt;verfügbar&quot;] --&gt; Check1{&quot;Check 1:&lt;br/&gt;Cal.com Sync&quot;}
+
+    Check1 --&gt;|&quot;Failed&quot;| Fix1[&quot;Fix: Force&lt;br/&gt;Sync&quot;]
+    Check1 --&gt;|&quot;OK&quot;| Check2{&quot;Check 2:&lt;br/&gt;Verfügbarkeit&quot;}
+
+    Check2 --&gt;|&quot;Keine Slots&quot;| Fix2[&quot;Fix: Working&lt;br/&gt;Hours prüfen&quot;]
+    Check2 --&gt;|&quot;Slots da&quot;| Check3{&quot;Check 3:&lt;br/&gt;Event Type&quot;}
+
+    Check3 --&gt;|&quot;Nicht gemapped&quot;| Fix3[&quot;Fix: Event Type&lt;br/&gt;zuordnen&quot;]
+    Check3 --&gt;|&quot;OK&quot;| Fix4[&quot;Fix: Timezone&lt;br/&gt;prüfen&quot;]
+
+    Fix1 --&gt; Verify[&quot;Verifizieren&quot;]
+    Fix2 --&gt; Verify
+    Fix3 --&gt; Verify
+    Fix4 --&gt; Verify
+
+    Verify --&gt; Success[&quot;✅ Termine&lt;br/&gt;verfügbar&quot;]
+
+    style Start fill:#fee2e2,stroke:#dc2626
+    style Check1 fill:#fef3c7,stroke:#f59e0b
+    style Check2 fill:#fef3c7,stroke:#f59e0b
+    style Check3 fill:#fef3c7,stroke:#f59e0b
+    style Fix1 fill:#dbeafe,stroke:#3b82f6
+    style Fix2 fill:#dbeafe,stroke:#3b82f6
+    style Fix3 fill:#dbeafe,stroke:#3b82f6
+    style Fix4 fill:#dbeafe,stroke:#3b82f6
+    style Success fill:#d1fae5,stroke:#10b981
+</code></pre>
+<h3 id="keine-termine-verfugbar">❓ "Keine Termine verfügbar"</h3>
+<pre><code class="language-bash"># [Check 1] Cal.com Sync Status
+php artisan calcom:check-sync --company-id=X
+</code></pre>
+<p>↓ <strong>Sync failed?</strong> → <a href="#fix-calcom-sync">Fix</a><br />
+↓ <strong>Sync OK?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 2] Verfügbarkeit prüfen
+php artisan availability:check --branch-id=X --next-days=7
+</code></pre>
+<p>↓ <strong>Keine Slots?</strong> → <a href="#fix-availability">Fix</a><br />
+↓ <strong>Slots vorhanden?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 3] Event Type Mapping
+php artisan branch:check-event-type --branch-id=X
+</code></pre>
+<p>↓ <strong>Nicht gemapped?</strong> → <a href="#fix-event-type">Fix</a><br />
+↓ <strong>Alles OK?</strong> → <a href="#fix-timezone">Fix</a></p>
+<h3 id="doppelte-termine">❓ "Doppelte Termine"</h3>
+<pre><code class="language-bash"># [Check 1] Webhook-Deduplizierung
+php artisan webhook:check-duplicates --last-hour
+</code></pre>
+<p>↓ <strong>Duplicates gefunden?</strong> → <a href="#fix-deduplication">Fix</a><br />
+↓ <strong>Keine Duplicates?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 2] Queue-Status
+php artisan queue:failed | grep appointment
+</code></pre>
+<p>↓ <strong>Failed Jobs?</strong> → <a href="#fix-failed-jobs">Fix</a><br />
+↓ <strong>Queue OK?</strong> → <a href="#fix-race-condition">Fix</a></p>
+<h3 id="falscher-mitarbeiter-zugewiesen">❓ "Falscher Mitarbeiter zugewiesen"</h3>
+<pre><code class="language-bash"># [Check 1] Staff-Service Mapping
+php artisan staff:check-assignments --branch-id=X
+</code></pre>
+<p>↓ <strong>Falsche Zuordnung?</strong> → <a href="#fix-staff-assignment">Fix</a><br />
+↓ <strong>Mapping OK?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 2] Service-Einstellungen
+php artisan service:validate --branch-id=X
+</code></pre>
+<p>↓ <strong>Services falsch?</strong> → <a href="#fix-service-config">Fix</a><br />
+↓ <strong>Alles OK?</strong> → <a href="#fix-routing-logic">Fix</a></p>
+<hr />
+<h2 id="system-probleme">💻 SYSTEM-PROBLEME</h2>
+<h3 id="dashboard-ladt-nicht">❓ "Dashboard lädt nicht"</h3>
+<pre><code class="language-bash"># [Check 1] Server-Status
+php artisan system:health-check
+</code></pre>
+<p>↓ <strong>Services down?</strong> → <a href="#fix-services">Fix</a><br />
+↓ <strong>Alles läuft?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 2] Cache-Probleme
+php artisan cache:check-corruption
+</code></pre>
+<p>↓ <strong>Cache corrupt?</strong> → <a href="#fix-cache">Fix</a><br />
+↓ <strong>Cache OK?</strong> → <a href="#fix-permissions">Fix</a></p>
+<h3 id="emails-kommen-nicht-an">❓ "Emails kommen nicht an"</h3>
+<pre><code class="language-bash"># [Check 1] Queue läuft?
+php artisan queue:monitor emails
+</code></pre>
+<p>↓ <strong>Queue stopped?</strong> → <a href="#fix-queue">Fix</a><br />
+↓ <strong>Queue läuft?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 2] SMTP-Verbindung
+php artisan email:test-smtp
+</code></pre>
+<p>↓ <strong>SMTP failed?</strong> → <a href="#fix-smtp">Fix</a><br />
+↓ <strong>SMTP OK?</strong> → <a href="#fix-spam-filter">Fix</a></p>
+<hr />
+<h2 id="kunden-probleme">🧑‍💼 KUNDEN-PROBLEME</h2>
+<h3 id="kunde-kann-sich-nicht-einloggen">❓ "Kunde kann sich nicht einloggen"</h3>
+<pre><code class="language-bash"># [Check 1] Account-Status
+php artisan customer:check --email=kunde@example.de
+</code></pre>
+<p>↓ <strong>Account locked?</strong> → <a href="#fix-account-locked">Fix</a><br />
+↓ <strong>Account OK?</strong> → Weiter</p>
+<pre><code class="language-bash"># [Check 2] Password-Reset
+php artisan customer:can-reset-password --email=kunde@example.de
+</code></pre>
+<p>↓ <strong>Reset blocked?</strong> → <a href="#fix-password-reset">Fix</a><br />
+↓ <strong>Reset OK?</strong> → <a href="#fix-session">Fix</a></p>
+<hr />
+<h2 id="fix-anleitungen">🔧 FIX-ANLEITUNGEN</h2>
+<h3 id="fix-agent-inactive"><a id="fix-agent-inactive"></a><strong>Fix: Agent Inactive</strong></h3>
+<pre><code class="language-bash"># Agent aktivieren
+php artisan retell:activate-agent --company-id=X
+# Oder in Retell Dashboard: Agent → Status → Active
+</code></pre>
+<h3 id="fix-phone-mapping"><a id="fix-phone-mapping"></a><strong>Fix: Phone Mapping</strong></h3>
+<pre><code class="language-bash"># Telefonnummer zu Branch mappen
+php artisan phone:assign --number=&quot;+49...&quot; --branch-id=X
+# Verification
+php artisan phone:verify-mapping --number=&quot;+49...&quot;
+</code></pre>
+<h3 id="fix-webhook-config"><a id="fix-webhook-config"></a><strong>Fix: Webhook Config</strong></h3>
+<pre><code class="language-bash"># Webhook-URL setzen
+php artisan retell:set-webhook-url --url=&quot;https://api.askproai.de/api/retell/webhook&quot;
+# In Retell Dashboard verifizieren
+</code></pre>
+<h3 id="fix-language-settings"><a id="fix-language"></a><strong>Fix: Language Settings</strong></h3>
+<pre><code class="language-json">// In Retell Agent Settings:
+{
+  &quot;language&quot;: &quot;de-DE&quot;,
+  &quot;voice&quot;: &quot;de-DE-KatjaNeural&quot;
+}
+</code></pre>
+<h3 id="fix-prompt-quality"><a id="fix-prompt"></a><strong>Fix: Prompt Quality</strong></h3>
+<pre><code class="language-bash"># Optimierten Prompt laden
+php artisan ai:load-optimized-prompt --company-id=X --industry=medical
+# Custom anpassen in Retell Dashboard
+</code></pre>
+<h3 id="fix-voice-settings"><a id="fix-voice-settings"></a><strong>Fix: Voice Settings</strong></h3>
+<pre><code class="language-json">{
+  &quot;voice_settings&quot;: {
+    &quot;speed&quot;: 0.9,
+    &quot;pitch&quot;: 1.0,
+    &quot;stability&quot;: 0.85
+  }
+}
+</code></pre>
+<h3 id="fix-timeout"><a id="fix-timeout"></a><strong>Fix: Timeout</strong></h3>
+<pre><code class="language-bash">php artisan config:set retell.call_timeout=600
+php artisan cache:clear
+</code></pre>
+<h3 id="fix-webhook-performance"><a id="fix-webhook-performance"></a><strong>Fix: Webhook Performance</strong></h3>
+<pre><code class="language-bash"># Webhook-Queue aktivieren
+php artisan config:set webhook.async=true
+php artisan queue:restart
+</code></pre>
+<h3 id="fix-calcom-sync"><a id="fix-calcom-sync"></a><strong>Fix: Cal.com Sync</strong></h3>
+<pre><code class="language-bash"># Force Sync
+php artisan calcom:force-sync --company-id=X
+# Circuit Breaker reset
+php artisan circuit-breaker:reset calcom
+</code></pre>
+<h3 id="fix-availability"><a id="fix-availability"></a><strong>Fix: Availability</strong></h3>
+<pre><code class="language-bash"># Working Hours prüfen
+php artisan branch:show-hours --branch-id=X
+# Manuelle Slots hinzufügen
+php artisan availability:add-slots --branch-id=X --next-days=7
+</code></pre>
+<h3 id="fix-deduplication"><a id="fix-deduplication"></a><strong>Fix: Deduplication</strong></h3>
+<pre><code class="language-bash"># Dedup-Window erhöhen
+php artisan config:set webhook.deduplication_window=10
+# Duplicates entfernen
+php artisan appointments:remove-duplicates --confirm
+</code></pre>
+<h3 id="fix-cache"><a id="fix-cache"></a><strong>Fix: Cache</strong></h3>
+<pre><code class="language-bash"># Kompletter Cache-Reset
+php artisan optimize:clear
+redis-cli FLUSHALL
+php artisan config:cache
+php artisan route:cache
+</code></pre>
+<h3 id="fix-queue"><a id="fix-queue"></a><strong>Fix: Queue</strong></h3>
+<pre><code class="language-bash"># Queue neu starten
+php artisan queue:restart
+php artisan horizon:terminate
+php artisan horizon
+</code></pre>
+<h3 id="fix-smtp"><a id="fix-smtp"></a><strong>Fix: SMTP</strong></h3>
+<pre><code class="language-bash"># Backup SMTP aktivieren
+php artisan config:set mail.mailer=backup_smtp
+# Test-Mail senden
+php artisan email:test --to=test@askproai.de
+</code></pre>
+<hr />
+<h2 id="eskalation">🚨 <a id="escalation"></a>ESKALATION</h2>
+<h3 id="wenn-nichts-hilft">Wenn nichts hilft:</h3>
+<ol>
+<li>
+<p><strong>Sammle Infos</strong>:
+   <code>bash
+   php artisan debug:collect-info --output=debug-info.zip</code></p>
+</li>
+<li>
+<p><strong>Erstelle Ticket</strong>:
+   <code>bash
+   php artisan support:create-ticket --priority=high --attach=debug-info.zip</code></p>
+</li>
+<li>
+<p><strong>Notfall-Kontakt</strong>:</p>
+</li>
+<li>Tech Support: +49 30 TECH-HELP</li>
+<li>WhatsApp: +49 176 EMERGENCY</li>
+<li>Email: urgent@askproai.de</li>
+</ol>
+<hr />
+<h2 id="interaktive-web-version">📱 INTERAKTIVE WEB-VERSION</h2>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;AskProAI Troubleshooting&lt;/title&gt;
+    &lt;style&gt;
+        .decision-node {
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 8px;
+            cursor: pointer;
+        }
+        .decision-node:hover {
+            border-color: #3b82f6;
+        }
+        .check-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .solution {
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;🔍 Was funktioniert nicht?&lt;/h1&gt;
+
+    &lt;div id=&quot;decision-tree&quot;&gt;
+        &lt;div class=&quot;decision-node&quot; onclick=&quot;showCallProblems()&quot;&gt;
+            📞 Anruf-Probleme
+        &lt;/div&gt;
+        &lt;div class=&quot;decision-node&quot; onclick=&quot;showAppointmentProblems()&quot;&gt;
+            📅 Termin-Probleme
+        &lt;/div&gt;
+        &lt;div class=&quot;decision-node&quot; onclick=&quot;showSystemProblems()&quot;&gt;
+            💻 System-Probleme
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div id=&quot;problem-detail&quot; style=&quot;display:none;&quot;&gt;
+        &lt;!-- Dynamisch gefüllt --&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;
+    async function runCheck(command) {
+        const response = await fetch('/api/troubleshoot', {
+            method: 'POST',
+            body: JSON.stringify({ command }),
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return await response.json();
+    }
+
+    function showCallProblems() {
+        document.getElementById('problem-detail').innerHTML = `
+            &lt;h2&gt;Was genau ist das Problem?&lt;/h2&gt;
+            &lt;button class=&quot;check-button&quot; onclick=&quot;diagnose('no-calls')&quot;&gt;
+                Keine Anrufe kommen an
+            &lt;/button&gt;
+            &lt;button class=&quot;check-button&quot; onclick=&quot;diagnose('ai-understanding')&quot;&gt;
+                AI versteht Kunden nicht
+            &lt;/button&gt;
+        `;
+        document.getElementById('problem-detail').style.display = 'block';
+    }
+
+    async function diagnose(problem) {
+        // Führt automatische Checks durch
+        const result = await runCheck(`diagnose:${problem}`);
+        showSolution(result);
+    }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<blockquote>
+<p>💡 <strong>Pro-Tipp</strong>: Speichere häufige Probleme als Bookmarks für 1-Klick-Lösung!</p>
+</blockquote>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../ERROR_PATTERNS/" class="btn btn-neutral float-left" title="Error Patterns"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../DEPLOYMENT_CHECKLIST/" class="btn btn-neutral float-right" title="Deployment Checklist">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../ERROR_PATTERNS/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../DEPLOYMENT_CHECKLIST/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

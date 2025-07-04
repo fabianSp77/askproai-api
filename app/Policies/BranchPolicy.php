@@ -87,7 +87,22 @@ class BranchPolicy
      */
     public function delete(User $user, Branch $branch): bool
     {
-        return $user->can('delete_branch');
+        // Super admin can always delete
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('delete_branch')) {
+            return true;
+        }
+        
+        // Company admin can delete branches from their own company
+        if ($user->hasRole('company_admin') && $user->company_id === $branch->company_id) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -95,7 +110,22 @@ class BranchPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_branch');
+        // Super admin can always delete
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('delete_any_branch')) {
+            return true;
+        }
+        
+        // Company admin can bulk delete branches from their own company
+        if ($user->hasRole('company_admin') && $user->company_id) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**

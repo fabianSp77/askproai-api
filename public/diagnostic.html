@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Filament Diagnostic</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Filament CSS/JS Diagnostic</h1>
+    
+    <div class="section">
+        <h2>CSS Files Check</h2>
+        <div id="css-check"></div>
+    </div>
+    
+    <div class="section">
+        <h2>JavaScript Files Check</h2>
+        <div id="js-check"></div>
+    </div>
+    
+    <div class="section">
+        <h2>DOM Structure Check</h2>
+        <div id="dom-check"></div>
+    </div>
+    
+    <div class="section">
+        <h2>CSS Classes Found</h2>
+        <div id="css-classes"></div>
+    </div>
+
+    <script>
+        // Check CSS files
+        const cssFiles = [
+            '/css/filament/filament/app.css',
+            '/css/filament-emergency-fix.css',
+            '/build/assets/theme-Bv4sGxoL.css',
+            '/build/assets/app-CckQ_wQO.css'
+        ];
+        
+        const cssCheck = document.getElementById('css-check');
+        cssFiles.forEach(file => {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = file + '?v=' + Date.now();
+            
+            fetch(file)
+                .then(response => {
+                    const status = response.ok ? 
+                        `<span class="success">✓ ${file} (${response.status})</span>` : 
+                        `<span class="error">✗ ${file} (${response.status})</span>`;
+                    cssCheck.innerHTML += status + '<br>';
+                    
+                    return response.text();
+                })
+                .then(text => {
+                    // Check for key classes
+                    const hasBody = text.includes('fi-body');
+                    const hasSidebar = text.includes('fi-sidebar');
+                    const hasMain = text.includes('fi-main');
+                    
+                    if (hasBody || hasSidebar || hasMain) {
+                        cssCheck.innerHTML += `<small>Found classes in ${file}: `;
+                        if (hasBody) cssCheck.innerHTML += 'fi-body ';
+                        if (hasSidebar) cssCheck.innerHTML += 'fi-sidebar ';
+                        if (hasMain) cssCheck.innerHTML += 'fi-main ';
+                        cssCheck.innerHTML += '</small><br>';
+                    }
+                })
+                .catch(err => {
+                    cssCheck.innerHTML += `<span class="error">✗ ${file} - ${err}</span><br>`;
+                });
+        });
+        
+        // Check JS files
+        const jsFiles = [
+            '/build/assets/app-filament-compatible-BZgsekZf.js',
+            '/build/assets/filament-v3-fixes-DHxgdmDH.js',
+            '/js/filament/filament/app.js'
+        ];
+        
+        const jsCheck = document.getElementById('js-check');
+        jsFiles.forEach(file => {
+            fetch(file)
+                .then(response => {
+                    const status = response.ok ? 
+                        `<span class="success">✓ ${file} (${response.status})</span>` : 
+                        `<span class="error">✗ ${file} (${response.status})</span>`;
+                    jsCheck.innerHTML += status + '<br>';
+                })
+                .catch(err => {
+                    jsCheck.innerHTML += `<span class="error">✗ ${file} - ${response.status})</span><br>`;
+                });
+        });
+        
+        // DOM Check
+        setTimeout(() => {
+            const domCheck = document.getElementById('dom-check');
+            domCheck.innerHTML = '<p>Please open the Admin panel in another tab to check DOM structure.</p>';
+            domCheck.innerHTML += '<p>Then run this in console on admin page:</p>';
+            domCheck.innerHTML += '<pre>document.querySelectorAll(".fi-body, .fi-sidebar, .fi-main").forEach(el => console.log(el.className, el))</pre>';
+        }, 1000);
+    </script>
+</body>
+</html>

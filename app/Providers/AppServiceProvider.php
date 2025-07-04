@@ -129,6 +129,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\MCP\CompanyMCPServer::class);
         $this->app->singleton(\App\Services\MCP\AppointmentMCPServer::class);
         $this->app->singleton(\App\Services\MCP\CustomerMCPServer::class);
+        $this->app->singleton(\App\Services\MCP\Context7MCPServer::class);
+
+        // Context7 Service
+        $this->app->singleton(\App\Services\Context7Service::class);
 
         // Register Branch Context Manager
         $this->app->singleton(\App\Services\BranchContextManager::class);

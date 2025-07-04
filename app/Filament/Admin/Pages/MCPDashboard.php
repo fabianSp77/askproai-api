@@ -14,7 +14,7 @@ class MCPDashboard extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-server-stack';
     protected static ?string $navigationLabel = 'MCP System Monitor';
-    protected static ?string $navigationGroup = 'System & Überwachung';
+    protected static ?string $navigationGroup = 'System & Verwaltung';
     protected static ?int $navigationSort = 100;
     protected static string $view = 'filament.admin.pages.mcp-dashboard';
     protected static ?string $slug = 'mcp-dashboard';

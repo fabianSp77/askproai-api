@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/CLAUDE_CONTEXT_SUMMARY/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Context Summary - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Context Summary";
+        var mkdocs_page_input_path = "CLAUDE_CONTEXT_SUMMARY.md";
+        var mkdocs_page_url = "/mkdocs/CLAUDE_CONTEXT_SUMMARY/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Context Summary</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#project-overview">🎯 Project Overview</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#new-best-practices-2025-implementation">🚀 NEW: Best Practices 2025 Implementation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#whats-already-implemented">✅ What's Already Implemented</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#available-mcp-servers">🛠️ Available MCP Servers</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#internal-project-specific">Internal (Project-Specific)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#external-claude-tools">External (Claude Tools)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#data-flow-architecture">📊 Data Flow Architecture</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#common-issues-quick-fixes">🔥 Common Issues &amp; Quick Fixes</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#top-3-problems">Top 3 Problems</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#development-workflow">🎨 Development Workflow</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#before-any-task">Before ANY Task</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#during-development">During Development</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#before-committing">Before Committing</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#key-file-locations">📁 Key File Locations</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#critical-credentials">🚨 Critical Credentials</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#current-focus-areas">🎯 Current Focus Areas</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#quick-commands-reference">📝 Quick Commands Reference</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#essential-links">🔗 Essential Links</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Hauptdokumentation &raquo;</li>
+      <li>Context Summary</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="claude-context-summary-askproai">🧠 Claude Context Summary - AskProAI</h1>
+<blockquote>
+<p><strong>Purpose</strong>: Immediate context for Claude at session start
+<strong>Last Updated</strong>: 2025-06-28
+<strong>Reading Time</strong>: &lt; 3 minutes</p>
+</blockquote>
+<h2 id="project-overview">🎯 Project Overview</h2>
+<p>AskProAI is an AI-powered appointment booking platform that connects phone calls (Retell.ai) to calendar systems (Cal.com). Multi-tenant SaaS for German service businesses.</p>
+<h2 id="new-best-practices-2025-implementation">🚀 NEW: Best Practices 2025 Implementation</h2>
+<h3 id="whats-already-implemented">✅ What's Already Implemented</h3>
+<ol>
+<li><strong>Automatic MCP Server Discovery</strong></li>
+<li><code>MCPAutoDiscoveryService</code> - Finds best MCP server for any task</li>
+<li><code>UsesMCPServers</code> trait - Add to any service for auto-MCP</li>
+<li>
+<p>Command: <code>php artisan mcp:discover "your task"</code></p>
+</li>
+<li>
+<p><strong>Complete Data Flow Tracking</strong></p>
+</li>
+<li><code>DataFlowLogger</code> - Tracks all external API calls</li>
+<li>Correlation IDs for end-to-end debugging</li>
+<li>Auto-generates sequence diagrams</li>
+<li>
+<p>Command: <code>php artisan dataflow:list</code></p>
+</li>
+<li>
+<p><strong>System Self-Understanding</strong></p>
+</li>
+<li><code>SystemUnderstandingService</code> - Analyzes existing code</li>
+<li><code>ImpactAnalyzer</code> - Predicts deployment risks</li>
+<li>Prevents breaking changes automatically</li>
+<li>
+<p>Command: <code>php artisan analyze:impact</code></p>
+</li>
+<li>
+<p><strong>Code Quality Automation</strong></p>
+</li>
+<li>Laravel Pint (formatting) - <code>composer pint</code></li>
+<li>PHPStan Level 8 (analysis) - <code>composer stan</code></li>
+<li>Git hooks for pre-commit checks</li>
+<li>Documentation auto-update reminders</li>
+</ol>
+<h2 id="available-mcp-servers">🛠️ Available MCP Servers</h2>
+<h3 id="internal-project-specific">Internal (Project-Specific)</h3>
+<pre><code>CalcomMCPServer         - Calendar operations
+RetellMCPServer         - AI phone integration
+DatabaseMCPServer       - Safe DB queries
+WebhookMCPServer        - Event processing
+QueueMCPServer          - Job management
+StripeMCPServer         - Payments
+KnowledgeMCPServer      - Knowledge base
+AppointmentMCPServer    - Bookings
+CustomerMCPServer       - CRM operations
+CompanyMCPServer        - Multi-tenant
+BranchMCPServer         - Locations
+RetellConfigurationMCP  - AI config
+RetellCustomFunctionMCP - Custom AI
+AppointmentManagementMCP- Advanced booking
+SentryMCPServer         - Error tracking
+</code></pre>
+<h3 id="external-claude-tools">External (Claude Tools)</h3>
+<ul>
+<li><code>mcp__context7__resolve-library-id</code> - Find library docs</li>
+<li><code>mcp__context7__get-library-docs</code> - Get API documentation</li>
+<li><code>TodoWrite</code> / <code>TodoRead</code> - Task management</li>
+<li><code>sequential_thinking</code> - Problem solving (active)</li>
+<li><code>taskmaster_ai</code> - Complex projects (set MCP_TASKMASTER_ENABLED=true)</li>
+</ul>
+<h2 id="data-flow-architecture">📊 Data Flow Architecture</h2>
+<pre><code>[Customer Phone] → [Retell.ai] → [Webhook] → [AskProAI]
+                                                ↓
+[Cal.com] ← [Appointment] ← [Processing] ← [Queue Job]
+</code></pre>
+<p><strong>Key Points:</strong>
+- All flows tracked with correlation IDs
+- Every external call logged in <code>api_call_logs</code>
+- Webhook deduplication via <code>webhook_events</code>
+- Circuit breakers on all external services</p>
+<h2 id="common-issues-quick-fixes">🔥 Common Issues &amp; Quick Fixes</h2>
+<h3 id="top-3-problems">Top 3 Problems</h3>
+<ol>
+<li>
+<p><strong>"No calls imported"</strong>
+   <code>bash
+   php artisan horizon  # Start queue
+   # Then click "Anrufe abrufen" in admin</code></p>
+</li>
+<li>
+<p><strong>"Database access denied"</strong>
+   <code>bash
+   rm -f bootstrap/cache/config.php
+   php artisan config:cache</code></p>
+</li>
+<li>
+<p><strong>"Webhook signature invalid"</strong>
+   <code>bash
+   # Check .env: RETELL_WEBHOOK_SECRET
+   # Verify in Retell dashboard</code></p>
+</li>
+</ol>
+<h2 id="development-workflow">🎨 Development Workflow</h2>
+<h3 id="before-any-task">Before ANY Task</h3>
+<pre><code class="language-bash"># 1. Discover best MCP server
+php artisan mcp:discover &quot;describe your task&quot;
+
+# 2. Understand existing code
+php artisan analyze:component ComponentName
+
+# 3. Start data flow tracking
+php artisan dataflow:start
+</code></pre>
+<h3 id="during-development">During Development</h3>
+<ul>
+<li>Use <code>$this-&gt;executeMCPTask()</code> in services with UsesMCPServers trait</li>
+<li>Track external calls with DataFlowLogger</li>
+<li>Check impact with <code>php artisan analyze:impact</code></li>
+</ul>
+<h3 id="before-committing">Before Committing</h3>
+<pre><code class="language-bash"># Quality checks (automatic via git hooks)
+composer quality  # Runs all checks
+
+# Documentation check
+php artisan docs:check-updates
+</code></pre>
+<h2 id="key-file-locations">📁 Key File Locations</h2>
+<pre><code>/app/Services/MCP/          - All MCP servers
+/app/Services/Analysis/     - Code analyzers
+/app/Services/DataFlow/     - Flow tracking
+/app/Traits/UsesMCPServers.php - Auto-MCP trait
+/.githooks/                 - Git automation
+/CLAUDE.md                  - Full documentation
+/ERROR_PATTERNS.md          - Error solutions
+/BEST_PRACTICES_IMPLEMENTATION.md - New features
+</code></pre>
+<h2 id="critical-credentials">🚨 Critical Credentials</h2>
+<pre><code class="language-bash"># Database
+mysql -u askproai_user -p'lkZ57Dju9EDjrMxn' askproai_db
+
+# SSH
+ssh hosting215275@hosting215275.ae83d.netcup.net
+</code></pre>
+<h2 id="current-focus-areas">🎯 Current Focus Areas</h2>
+<ol>
+<li><strong>Maximum MCP utilization</strong> - Always check MCP servers first</li>
+<li><strong>Data flow transparency</strong> - Track every external call</li>
+<li><strong>Zero breaking changes</strong> - Analyze before modifying</li>
+<li><strong>Automatic quality</strong> - Let tools catch errors</li>
+</ol>
+<h2 id="quick-commands-reference">📝 Quick Commands Reference</h2>
+<pre><code class="language-bash"># MCP Operations
+php artisan mcp:discover &quot;task description&quot;
+php artisan mcp:health
+php artisan mcp:list
+
+# Data Flow Analysis
+php artisan dataflow:list
+php artisan dataflow:diagram &lt;correlation-id&gt;
+
+# Code Analysis
+php artisan analyze:impact --git
+php artisan analyze:component App\\Services\\BookingService
+
+# Documentation
+php artisan docs:check-updates --auto-fix
+php artisan docs:health
+
+# Quality
+composer quality       # All checks
+composer pint         # Format
+composer stan         # Analyze
+composer test         # Tests
+</code></pre>
+<h2 id="essential-links">🔗 Essential Links</h2>
+<ul>
+<li><strong>Main Docs</strong>: <a href="../CLAUDE/">CLAUDE.md</a></li>
+<li><strong>Quick Ref</strong>: <a href="../CLAUDE_QUICK_REFERENCE/">CLAUDE_QUICK_REFERENCE.md</a></li>
+<li><strong>Errors</strong>: <a href="../ERROR_PATTERNS/">ERROR_PATTERNS.md</a></li>
+<li><strong>Best Practices</strong>: <a href="../BEST_PRACTICES_IMPLEMENTATION/">BEST_PRACTICES_IMPLEMENTATION.md</a></li>
+<li><strong>5-Min Setup</strong>: <a href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-MINUTEN_ONBOARDING_PLAYBOOK.md</a></li>
+</ul>
+<hr />
+<p>💡 <strong>Remember</strong>: The system now automatically discovers MCP servers, tracks data flows, and prevents breaking changes. Focus on building features - the tools handle the rest!</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../CLAUDE_QUICK_REFERENCE/" class="btn btn-neutral float-left" title="Quick Reference"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../TOP_10_COMMANDS/" class="btn btn-neutral float-right" title="Top 10 Commands">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../CLAUDE_QUICK_REFERENCE/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../TOP_10_COMMANDS/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

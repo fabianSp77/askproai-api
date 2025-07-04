@@ -1,0 +1,231 @@
+{
+  "custom_functions": [
+    {
+      "name": "current_time_berlin",
+      "description": "Gibt die aktuelle Uhrzeit und das Datum in Berlin zurück",
+      "endpoint": "https://api.askproai.de/retell/functions/current-time-berlin",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [],
+      "response_fields": [
+        "current_time",
+        "current_date",
+        "weekday",
+        "is_business_hours",
+        "formatted"
+      ]
+    },
+    {
+      "name": "check_customer",
+      "description": "Prüft ob ein Kunde bereits existiert anhand der Telefonnummer",
+      "endpoint": "https://api.askproai.de/retell/functions/check-customer",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "phone_number",
+          "type": "string",
+          "description": "Telefonnummer (verwende immer {{caller_phone_number}})",
+          "required": true,
+          "default": "{{caller_phone_number}}"
+        }
+      ],
+      "response_fields": [
+        "exists",
+        "customer_id",
+        "name",
+        "phone_number"
+      ]
+    },
+    {
+      "name": "check_availability",
+      "description": "Prüft verfügbare Termine für ein bestimmtes Datum",
+      "endpoint": "https://api.askproai.de/retell/functions/check-availability",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "date",
+          "type": "string",
+          "description": "Datum im Format DD.MM.YYYY oder YYYY-MM-DD",
+          "required": true
+        },
+        {
+          "name": "service_type",
+          "type": "string",
+          "description": "Art der Dienstleistung",
+          "required": false,
+          "default": "Beratung"
+        }
+      ],
+      "response_fields": [
+        "success",
+        "slots",
+        "message"
+      ]
+    },
+    {
+      "name": "collect_appointment_data",
+      "description": "Sammelt alle Termindaten und bucht den Termin",
+      "endpoint": "https://api.askproai.de/retell/functions/collect-appointment",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "telefonnummer",
+          "type": "string",
+          "description": "Telefonnummer des Kunden (verwende {{caller_phone_number}})",
+          "required": true,
+          "default": "{{caller_phone_number}}"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Name des Kunden",
+          "required": true
+        },
+        {
+          "name": "datum",
+          "type": "string",
+          "description": "Termin-Datum im Format DD.MM.YYYY",
+          "required": true
+        },
+        {
+          "name": "uhrzeit",
+          "type": "string",
+          "description": "Termin-Uhrzeit im Format HH:MM",
+          "required": true
+        },
+        {
+          "name": "dienstleistung",
+          "type": "string",
+          "description": "Gewünschte Dienstleistung",
+          "required": true
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "description": "E-Mail-Adresse (optional)",
+          "required": false
+        },
+        {
+          "name": "kundenpraeferenzen",
+          "type": "string",
+          "description": "Besondere Wünsche oder Präferenzen",
+          "required": false
+        },
+        {
+          "name": "mitarbeiter_wunsch",
+          "type": "string",
+          "description": "Gewünschter Mitarbeiter",
+          "required": false
+        }
+      ],
+      "response_fields": [
+        "success",
+        "message",
+        "appointment_id",
+        "reference_id",
+        "confirmation_status",
+        "next_steps"
+      ]
+    },
+    {
+      "name": "cancel_appointment",
+      "description": "Storniert einen bestehenden Termin",
+      "endpoint": "https://api.askproai.de/retell/functions/cancel-appointment",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "phone_number",
+          "type": "string",
+          "description": "Telefonnummer des Kunden",
+          "required": true,
+          "default": "{{caller_phone_number}}"
+        },
+        {
+          "name": "appointment_date",
+          "type": "string",
+          "description": "Datum des zu stornierenden Termins",
+          "required": true
+        }
+      ],
+      "response_fields": [
+        "success",
+        "message"
+      ]
+    },
+    {
+      "name": "reschedule_appointment",
+      "description": "Verschiebt einen bestehenden Termin",
+      "endpoint": "https://api.askproai.de/retell/functions/reschedule-appointment",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "parameters": [
+        {
+          "name": "phone_number",
+          "type": "string",
+          "description": "Telefonnummer des Kunden",
+          "required": true,
+          "default": "{{caller_phone_number}}"
+        },
+        {
+          "name": "new_date",
+          "type": "string",
+          "description": "Neues Datum im Format DD.MM.YYYY",
+          "required": true
+        },
+        {
+          "name": "new_time",
+          "type": "string",
+          "description": "Neue Uhrzeit im Format HH:MM",
+          "required": true
+        }
+      ],
+      "response_fields": [
+        "success",
+        "message"
+      ]
+    }
+  ],
+  "dynamic_variables": {
+    "caller_phone_number": {
+      "description": "Die Telefonnummer des Anrufers",
+      "source": "call_metadata",
+      "always_available": true
+    },
+    "company_name": {
+      "description": "Name des Unternehmens",
+      "source": "company_settings",
+      "always_available": true
+    },
+    "current_date": {
+      "description": "Aktuelles Datum",
+      "source": "system",
+      "always_available": true
+    },
+    "current_time": {
+      "description": "Aktuelle Uhrzeit",
+      "source": "system",
+      "always_available": true
+    },
+    "weekday": {
+      "description": "Aktueller Wochentag",
+      "source": "system",
+      "always_available": true
+    }
+  }
+}

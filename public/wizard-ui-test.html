@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wizard UI Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f3f4f6;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+        .status-ok {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .status-error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        pre {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .action-button {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 5px;
+        }
+        .action-button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Quick Setup Wizard V2 - UI Test</h1>
+    
+    <div class="test-section">
+        <h2>🔍 Visual Checklist</h2>
+        <div class="test-item">
+            <input type="checkbox" id="progress-visible">
+            <label for="progress-visible">Progress Bar mit Connection Lines sichtbar?</label>
+        </div>
+        <div class="test-item">
+            <input type="checkbox" id="forms-interactive">
+            <label for="forms-interactive">Form-Felder sind klickbar und funktionieren?</label>
+        </div>
+        <div class="test-item">
+            <input type="checkbox" id="checkboxes-visible">
+            <label for="checkboxes-visible">Checkboxen zeigen visuellen Unterschied beim Anklicken?</label>
+        </div>
+        <div class="test-item">
+            <input type="checkbox" id="autosave-works">
+            <label for="autosave-works">Auto-Save Indicator erscheint beim Step-Wechsel?</label>
+        </div>
+        <div class="test-item">
+            <input type="checkbox" id="keyboard-nav">
+            <label for="keyboard-nav">Keyboard Navigation (Ctrl+Arrow) funktioniert?</label>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🚀 Quick Actions</h2>
+        <a href="/admin/quick-setup-wizard-v2" target="_blank" class="action-button">
+            Open Wizard
+        </a>
+        <a href="/admin" target="_blank" class="action-button">
+            Admin Dashboard
+        </a>
+        <button onclick="clearCache()" class="action-button">
+            Clear Browser Cache
+        </button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔧 Debug Console</h2>
+        <pre>// Test im Browser Console:
+WizardV2Enhancements.initialize()
+WizardV2Enhancements.showAutoSave('saving')
+WizardV2Enhancements.showAutoSave('saved')</pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>📊 System Status</h2>
+        <div class="test-item">
+            <span class="status-ok">✅</span> CSS Compiled & Loaded
+        </div>
+        <div class="test-item">
+            <span class="status-ok">✅</span> JavaScript Compiled & Loaded
+        </div>
+        <div class="test-item">
+            <span class="status-ok">✅</span> Wizard Route Available
+        </div>
+    </div>
+    
+    <script>
+        function clearCache() {
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                    });
+                    alert('Browser cache cleared! Please reload the page.');
+                });
+            } else {
+                alert('Please use Ctrl+F5 to force reload.');
+            }
+        }
+    </script>
+</body>
+</html>

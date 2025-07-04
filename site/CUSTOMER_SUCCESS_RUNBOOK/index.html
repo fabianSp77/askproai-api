@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/CUSTOMER_SUCCESS_RUNBOOK/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Customer Success - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Customer Success";
+        var mkdocs_page_input_path = "CUSTOMER_SUCCESS_RUNBOOK.md";
+        var mkdocs_page_url = "/mkdocs/CUSTOMER_SUCCESS_RUNBOOK/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Customer Success</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#quick-diagnose-tool">🔍 Quick-Diagnose Tool</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-1-ai-versteht-unseren-dialektakzent-nicht">🚨 PROBLEM #1: "AI versteht unseren Dialekt/Akzent nicht"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#erfolgskontrolle">✅ Erfolgskontrolle:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-2-termine-werden-doppelt-gebucht">🚨 PROBLEM #2: "Termine werden doppelt gebucht"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome_1">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung_1">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#notfall-fix">🚨 NOTFALL-FIX:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-3-kunde-bekommt-keine-bestatigungs-email">🚨 PROBLEM #3: "Kunde bekommt keine Bestätigungs-Email"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome_2">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung_2">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#alternative-email-provider-aktivieren">📧 Alternative Email-Provider aktivieren:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-4-anrufe-werden-nicht-erfasstangezeigt">🚨 PROBLEM #4: "Anrufe werden nicht erfasst/angezeigt"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome_3">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung_3">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#auto-import-aktivieren">🔄 Auto-Import aktivieren:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-5-falscher-mitarbeiter-wird-zugewiesen">🚨 PROBLEM #5: "Falscher Mitarbeiter wird zugewiesen"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome_4">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung_4">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-6-ai-spricht-zu-schnelllangsam">🚨 PROBLEM #6: "AI spricht zu schnell/langsam"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome_5">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung_5">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#copy-paste-prompt-erganzung">Copy-Paste Prompt-Ergänzung:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-7-kunde-kann-termin-nicht-stornieren">🚨 PROBLEM #7: "Kunde kann Termin nicht stornieren"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome_6">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung_6">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#backend-handler-aktivieren">Backend-Handler aktivieren:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-8-keine-termine-in-den-nachsten-tagen-verfugbar">🚨 PROBLEM #8: "Keine Termine in den nächsten Tagen verfügbar"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome_7">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung_7">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-9-ai-legt-mittendrin-auf">🚨 PROBLEM #9: "AI legt mittendrin auf"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome_8">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung_8">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#retell-settings-anpassen">Retell Settings anpassen:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#problem-10-kunde-versteht-ai-bestatigung-nicht">🚨 PROBLEM #10: "Kunde versteht AI-Bestätigung nicht"</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#symptome_9">Symptome:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sofort-losung_9">🔧 SOFORT-LÖSUNG:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sms-bestatigung-aktivieren">SMS-Bestätigung aktivieren:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#success-metrics-dashboard">📊 Success Metrics Dashboard</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#proaktive-manahmen">🚀 Proaktive Maßnahmen</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#taglicher-health-check">Täglicher Health-Check:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#wochentliches-review">Wöchentliches Review:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#monatliches-update">Monatliches Update:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#eskalation">🆘 Eskalation</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Betrieb &raquo;</li>
+      <li>Customer Success</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="customer-success-runbook-top-10-probleme-instant-losungen">🎯 Customer Success Runbook - Top 10 Probleme &amp; Instant-Lösungen</h1>
+<blockquote>
+<p><strong>Ziel</strong>: Jedes Kundenproblem in &lt; 2 Minuten lösen!</p>
+</blockquote>
+<h2 id="quick-diagnose-tool">🔍 Quick-Diagnose Tool</h2>
+<pre><code class="language-bash"># Ein Befehl für Gesamt-Diagnose
+php artisan askpro:diagnose --company-id=X
+</code></pre>
+<hr />
+<h2 id="problem-1-ai-versteht-unseren-dialektakzent-nicht">🚨 PROBLEM #1: "AI versteht unseren Dialekt/Akzent nicht"</h2>
+<h3 id="symptome">Symptome:</h3>
+<ul>
+<li>Kunden beschweren sich über Verständnisprobleme</li>
+<li>AI fragt ständig nach</li>
+<li>Hohe Abbruchrate</li>
+</ul>
+<h3 id="sofort-losung">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code class="language-bash"># 1. Dialekt-optimierten Prompt aktivieren
+php artisan retell:update-prompt --company-id=X --template=dialect-robust
+
+# 2. In Retell Dashboard anpassen:
+</code></pre>
+<pre><code>VERSTEHEN: Höre geduldig zu, auch bei Dialekt.
+Bei Unklarheiten sage: &quot;Entschuldigung, könnten Sie das bitte wiederholen?&quot;
+DIALEKT-WÖRTER:
+- &quot;Samstag&quot; = &quot;Sonnabend&quot; 
+- &quot;Viertel drei&quot; = &quot;14:15 Uhr&quot;
+- &quot;Heuer&quot; = &quot;Dieses Jahr&quot;
+</code></pre>
+<h3 id="erfolgskontrolle">✅ Erfolgskontrolle:</h3>
+<ul>
+<li>Testanruf mit Dialekt-Sprecher</li>
+<li>Completion Rate &gt; 80%</li>
+</ul>
+<hr />
+<h2 id="problem-2-termine-werden-doppelt-gebucht">🚨 PROBLEM #2: "Termine werden doppelt gebucht"</h2>
+<h3 id="symptome_1">Symptome:</h3>
+<ul>
+<li>Zwei Kunden zur gleichen Zeit</li>
+<li>Cal.com zeigt andere Termine als DB</li>
+</ul>
+<h3 id="sofort-losung_1">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code class="language-bash"># 1. Webhook-Deduplication prüfen
+php artisan webhook:check-duplicates --last-hour
+
+# 2. Force-Sync durchführen
+php artisan calcom:force-sync --company-id=X
+
+# 3. Deduplication verstärken
+php artisan config:set webhook.deduplication_window=10
+php artisan cache:clear
+</code></pre>
+<h3 id="notfall-fix">🚨 NOTFALL-FIX:</h3>
+<pre><code class="language-bash"># Sofort alle Webhooks pausieren
+php artisan webhook:pause --duration=5
+
+# Duplicates bereinigen
+php artisan appointments:remove-duplicates --dry-run
+php artisan appointments:remove-duplicates --confirm
+</code></pre>
+<hr />
+<h2 id="problem-3-kunde-bekommt-keine-bestatigungs-email">🚨 PROBLEM #3: "Kunde bekommt keine Bestätigungs-Email"</h2>
+<h3 id="symptome_2">Symptome:</h3>
+<ul>
+<li>Termin wird erstellt</li>
+<li>Keine Email im Postfach (auch nicht Spam)</li>
+</ul>
+<h3 id="sofort-losung_2">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code class="language-bash"># 1. Email-Queue Status
+php artisan queue:monitor emails
+
+# 2. Stuck Emails neu senden
+php artisan email:retry-failed --last-day
+
+# 3. Test-Email senden
+php artisan email:test --to=kunde@example.de
+
+# 4. SMTP prüfen
+php artisan email:verify-smtp
+</code></pre>
+<h3 id="alternative-email-provider-aktivieren">📧 Alternative Email-Provider aktivieren:</h3>
+<pre><code class="language-bash"># Auf Backup-SMTP umschalten
+php artisan config:set mail.mailer=backup_smtp
+php artisan queue:restart
+</code></pre>
+<hr />
+<h2 id="problem-4-anrufe-werden-nicht-erfasstangezeigt">🚨 PROBLEM #4: "Anrufe werden nicht erfasst/angezeigt"</h2>
+<h3 id="symptome_3">Symptome:</h3>
+<ul>
+<li>Kunde ruft an, aber kein Eintrag</li>
+<li>Retell Dashboard zeigt Calls</li>
+</ul>
+<h3 id="sofort-losung_3">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code class="language-bash"># 1. Horizon läuft?
+php artisan horizon:status
+# Wenn nicht: 
+sudo supervisorctl start horizon
+
+# 2. Manueller Import
+php artisan retell:import-calls --last-hour
+
+# 3. Webhook-URL prüfen
+php artisan retell:verify-webhook
+</code></pre>
+<h3 id="auto-import-aktivieren">🔄 Auto-Import aktivieren:</h3>
+<pre><code class="language-bash"># Cron für automatischen Import
+php artisan schedule:run-now --command=retell:import-calls
+</code></pre>
+<hr />
+<h2 id="problem-5-falscher-mitarbeiter-wird-zugewiesen">🚨 PROBLEM #5: "Falscher Mitarbeiter wird zugewiesen"</h2>
+<h3 id="symptome_4">Symptome:</h3>
+<ul>
+<li>Termin bei Mitarbeiter A statt B</li>
+<li>Branch-Zuordnung falsch</li>
+</ul>
+<h3 id="sofort-losung_4">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code class="language-bash"># 1. Staff-Assignment prüfen
+php artisan staff:show-assignments --branch-id=X
+
+# 2. Neu-Mapping
+php artisan staff:reassign --from=A --to=B --future-only
+
+# 3. Service-Zuordnung fixen
+php artisan services:sync-staff --branch-id=X
+</code></pre>
+<hr />
+<h2 id="problem-6-ai-spricht-zu-schnelllangsam">🚨 PROBLEM #6: "AI spricht zu schnell/langsam"</h2>
+<h3 id="symptome_5">Symptome:</h3>
+<ul>
+<li>Ältere Kunden verstehen AI nicht</li>
+<li>Beschwerden über Sprechtempo</li>
+</ul>
+<h3 id="sofort-losung_5">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code class="language-json">// In Retell Agent Settings:
+{
+  &quot;voice_settings&quot;: {
+    &quot;speed&quot;: 0.9,  // Langsamer (Standard: 1.0)
+    &quot;pitch&quot;: 1.0,
+    &quot;stability&quot;: 0.8
+  }
+}
+</code></pre>
+<h3 id="copy-paste-prompt-erganzung">Copy-Paste Prompt-Ergänzung:</h3>
+<pre><code>SPRECHWEISE: Spreche langsam und deutlich.
+Mache Pausen zwischen Sätzen.
+Wiederhole wichtige Informationen.
+</code></pre>
+<hr />
+<h2 id="problem-7-kunde-kann-termin-nicht-stornieren">🚨 PROBLEM #7: "Kunde kann Termin nicht stornieren"</h2>
+<h3 id="symptome_6">Symptome:</h3>
+<ul>
+<li>Anrufer will absagen</li>
+<li>AI versteht Stornierung nicht</li>
+</ul>
+<h3 id="sofort-losung_6">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code># Prompt-Ergänzung für Stornierung:
+STORNIERUNG: 
+- Bei &quot;absagen&quot;, &quot;stornieren&quot;, &quot;verschieben&quot; → 
+- Frage: &quot;Möchten Sie den Termin absagen oder verschieben?&quot;
+- Bei Absage: &quot;Ihr Termin wird storniert. Sie erhalten eine Bestätigung.&quot;
+- Leite zu Webhook: cancel_appointment
+</code></pre>
+<h3 id="backend-handler-aktivieren">Backend-Handler aktivieren:</h3>
+<pre><code class="language-bash">php artisan config:set retell.enable_cancellation=true
+php artisan cache:clear
+</code></pre>
+<hr />
+<h2 id="problem-8-keine-termine-in-den-nachsten-tagen-verfugbar">🚨 PROBLEM #8: "Keine Termine in den nächsten Tagen verfügbar"</h2>
+<h3 id="symptome_7">Symptome:</h3>
+<ul>
+<li>Cal.com zeigt freie Slots</li>
+<li>AI sagt "keine Termine"</li>
+</ul>
+<h3 id="sofort-losung_7">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code class="language-bash"># 1. Availability-Cache leeren
+php artisan cache:forget availability:*
+
+# 2. Timezone-Check
+php artisan timezone:verify --company-id=X
+
+# 3. Working Hours prüfen
+php artisan branch:show-hours --branch-id=X
+
+# 4. Force Refresh
+php artisan calcom:refresh-availability --next-days=7
+</code></pre>
+<hr />
+<h2 id="problem-9-ai-legt-mittendrin-auf">🚨 PROBLEM #9: "AI legt mittendrin auf"</h2>
+<h3 id="symptome_8">Symptome:</h3>
+<ul>
+<li>Gespräch bricht ab</li>
+<li>Timeout-Fehler in Logs</li>
+</ul>
+<h3 id="sofort-losung_8">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code class="language-bash"># 1. Timeout erhöhen
+php artisan config:set retell.call_timeout=300
+
+# 2. Webhook-Response-Zeit prüfen
+php artisan webhook:measure-performance
+
+# 3. Memory-Limit Check
+php artisan system:check-resources
+</code></pre>
+<h3 id="retell-settings-anpassen">Retell Settings anpassen:</h3>
+<pre><code class="language-json">{
+  &quot;max_call_duration&quot;: 600,  // 10 Minuten
+  &quot;idle_timeout&quot;: 30         // 30 Sekunden Stille
+}
+</code></pre>
+<hr />
+<h2 id="problem-10-kunde-versteht-ai-bestatigung-nicht">🚨 PROBLEM #10: "Kunde versteht AI-Bestätigung nicht"</h2>
+<h3 id="symptome_9">Symptome:</h3>
+<ul>
+<li>Kunde unsicher ob Termin gebucht</li>
+<li>Nachfragen per Email/Telefon</li>
+</ul>
+<h3 id="sofort-losung_9">🔧 SOFORT-LÖSUNG:</h3>
+<pre><code># Klarere Bestätigung im Prompt:
+BESTÄTIGUNG: Wiederhole IMMER:
+&quot;Ich bestätige Ihren Termin am [TAG], den [DATUM] um [UHRZEIT] Uhr 
+bei [MITARBEITER] für [SERVICE]. 
+Sie erhalten gleich eine Bestätigung per Email an [EMAIL].&quot;
+</code></pre>
+<h3 id="sms-bestatigung-aktivieren">SMS-Bestätigung aktivieren:</h3>
+<pre><code class="language-bash">php artisan config:set notifications.sms.enabled=true
+php artisan config:set notifications.sms.provider=twilio
+</code></pre>
+<hr />
+<h2 id="success-metrics-dashboard">📊 Success Metrics Dashboard</h2>
+<pre><code class="language-bash"># Customer Success Score anzeigen
+php artisan metrics:customer-success --company-id=X
+
+# Ausgabe:
+📊 Customer Success Metrics:
+- Call Completion Rate: 87%
+- Email Delivery Rate: 98%
+- No-Show Rate: 12%
+- Customer Satisfaction: 4.2/5
+- Avg Resolution Time: 1.8 min
+</code></pre>
+<hr />
+<h2 id="proaktive-manahmen">🚀 Proaktive Maßnahmen</h2>
+<h3 id="taglicher-health-check">Täglicher Health-Check:</h3>
+<pre><code class="language-bash"># Als Cron-Job einrichten
+0 9 * * * php artisan askpro:daily-health-check --notify-slack
+</code></pre>
+<h3 id="wochentliches-review">Wöchentliches Review:</h3>
+<pre><code class="language-bash"># Automatischer Report
+php artisan report:customer-success --week --email=support@company.de
+</code></pre>
+<h3 id="monatliches-update">Monatliches Update:</h3>
+<pre><code class="language-bash"># AI-Prompts optimieren basierend auf Daten
+php artisan ai:optimize-prompts --based-on-last-month
+</code></pre>
+<hr />
+<h2 id="eskalation">🆘 Eskalation</h2>
+<p><strong>Problem nicht in Liste?</strong>
+1. Tier 1: Support Chat (2 Min Response)
+2. Tier 2: Phone Support (+49 30 123456)
+3. Tier 3: Remote Access Session
+4. Tier 4: On-Site Support (wenn kritisch)</p>
+<blockquote>
+<p>💡 <strong>Remember</strong>: Ein glücklicher Kunde = Ein erfolgreicher Kunde!</p>
+</blockquote>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../features/multi-tenancy/" class="btn btn-neutral float-left" title="Multi-Tenancy"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../EMERGENCY_RESPONSE_PLAYBOOK/" class="btn btn-neutral float-right" title="Emergency Response">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../features/multi-tenancy/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../EMERGENCY_RESPONSE_PLAYBOOK/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

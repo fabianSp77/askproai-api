@@ -1,0 +1,194 @@
+/* ========================================
+   UNIVERSAL DROPDOWN FIX - 100% WORKING
+   Fixes all dropdown issues portal-wide
+   ======================================== */
+
+/* ========================================
+   1. NUCLEAR Z-INDEX SOLUTION
+   ======================================== */
+
+/* All dropdowns must be on top */
+.fi-dropdown-panel,
+.fi-ac-dropdown .fi-dropdown-panel,
+.fi-ta-actions .fi-dropdown-panel,
+[role="menu"],
+[x-show][x-transition],
+.branch-selector-dropdown > div,
+.fi-user-menu .fi-dropdown-panel {
+    z-index: 2147483647 !important; /* Maximum possible z-index */
+    position: fixed !important;
+    isolation: isolate !important;
+}
+
+/* ========================================
+   2. REMOVE ALL STACKING CONTEXTS
+   ======================================== */
+
+/* Remove transforms ONLY from table elements that create stacking contexts */
+.fi-ta-row,
+.fi-ta-cell {
+    transform: none !important;
+}
+
+/* Remove filters that create stacking contexts */
+.fi-ta-row,
+.fi-ta-cell,
+.fi-ta-content,
+.fi-page-content {
+    filter: none !important;
+    backdrop-filter: none !important;
+    opacity: 1 !important;
+    mix-blend-mode: normal !important;
+    isolation: auto !important;
+}
+
+/* ========================================
+   3. FORCE OVERFLOW VISIBLE
+   ======================================== */
+
+/* Only allow overflow on table containers */
+.fi-ta-content {
+    overflow: visible !important;
+}
+
+/* Tables can still scroll horizontally */
+.fi-ta-table-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* ========================================
+   4. DROPDOWN VISIBILITY FIXES
+   ======================================== */
+
+/* Ensure dropdowns are always clickable */
+.fi-dropdown-panel {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* ========================================
+   5. BUTTON & TRIGGER FIXES
+   ======================================== */
+
+/* Dropdown triggers need proper z-index */
+[aria-expanded],
+[x-on\:click*="toggle"],
+button[aria-label*="Filiale"] {
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+/* ========================================
+   6. ALPINE.JS SPECIFIC FIXES
+   ======================================== */
+
+/* Ensure Alpine transitions don't break z-index */
+[x-show] {
+    transition-property: opacity, transform !important;
+}
+
+/* Remove problematic transitions */
+[x-transition\:enter],
+[x-transition\:leave] {
+    transition-duration: 150ms !important;
+}
+
+/* ========================================
+   7. DARK MODE SUPPORT
+   ======================================== */
+
+.dark .fi-dropdown-panel {
+    background-color: rgb(31 41 55) !important;
+    border-color: rgb(55 65 81) !important;
+}
+
+/* ========================================
+   8. MOBILE OPTIMIZATIONS
+   ======================================== */
+
+@media (max-width: 768px) {
+    .fi-dropdown-panel {
+        position: fixed !important;
+        max-width: calc(100vw - 2rem) !important;
+        max-height: calc(100vh - 4rem) !important;
+    }
+}
+
+/* ========================================
+   9. SPECIFIC COMPONENT FIXES
+   ======================================== */
+
+/* Branch Selector */
+.branch-selector-dropdown [role="menu"] {
+    z-index: 2147483647 !important;
+    position: fixed !important;
+}
+
+/* Action Groups in Tables */
+.fi-ta-actions .fi-ac-dropdown {
+    position: static !important;
+}
+
+.fi-ta-actions .fi-dropdown-panel {
+    position: fixed !important;
+}
+
+/* User Menu */
+.fi-user-menu {
+    position: relative !important;
+}
+
+/* ========================================
+   10. VISIBILITY UTILITIES
+   ======================================== */
+
+/* Force show dropdowns */
+.dropdown-force-show {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Hide dropdowns */
+.dropdown-force-hide {
+    display: none !important;
+}
+
+/* ========================================
+   11. DEBUG STYLES
+   ======================================== */
+
+/* Uncomment to debug dropdown issues */
+/*
+.fi-dropdown-panel {
+    outline: 3px solid red !important;
+    background: rgba(255, 0, 0, 0.1) !important;
+}
+
+[aria-expanded="true"] {
+    outline: 3px solid green !important;
+}
+
+.fi-ta-row {
+    outline: 1px dashed blue !important;
+}
+*/
+
+/* ========================================
+   12. LAST RESORT FIXES
+   ======================================== */
+
+/* Respect hidden state - only override when actually shown */
+.fi-dropdown-panel.hidden {
+    display: none !important;
+}
+
+/* But ensure visible dropdowns are truly visible */
+.fi-dropdown-panel:not(.hidden):not([style*="display: none"]) {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Remove global pointer-events - this was blocking all clicks! */

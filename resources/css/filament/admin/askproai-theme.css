@@ -1,0 +1,553 @@
+/* ================================================
+   AskProAI Master Theme - State Management Solution
+   ================================================
+   
+   This is the single source of truth for all UI states
+   and theme customizations in the AskProAI portal.
+   
+   Principles:
+   1. CSS Custom Properties for dynamic theming
+   2. Semantic color tokens
+   3. Consistent state visualization
+   4. Mobile-first responsive design
+   5. Accessibility-first approach
+   ================================================ */
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* ================================================
+   CSS Custom Properties - Design Tokens
+   ================================================ */
+@layer base {
+  :root {
+    /* ===== Color Palette ===== */
+    /* Primary Colors (Amber/Yellow theme) */
+    --color-primary-50: 254 252 232;
+    --color-primary-100: 254 249 195;
+    --color-primary-200: 254 240 138;
+    --color-primary-300: 253 224 71;
+    --color-primary-400: 250 204 21;
+    --color-primary-500: 234 179 8;
+    --color-primary-600: 202 138 4;
+    --color-primary-700: 161 98 7;
+    --color-primary-800: 133 77 14;
+    --color-primary-900: 113 63 18;
+    --color-primary-950: 66 32 6;
+    
+    /* ===== State Colors ===== */
+    /* Active States */
+    --state-active-bg: rgb(var(--color-primary-50));
+    --state-active-border: rgb(var(--color-primary-500));
+    --state-active-text: rgb(var(--color-primary-700));
+    --state-active-icon: rgb(var(--color-primary-600));
+    
+    /* Hover States */
+    --state-hover-bg: rgb(249 250 251);
+    --state-hover-border: rgb(209 213 219);
+    --state-hover-text: rgb(17 24 39);
+    --state-hover-scale: 1.02;
+    
+    /* Focus States */
+    --state-focus-ring: rgb(var(--color-primary-500) / 0.2);
+    --state-focus-border: rgb(var(--color-primary-500));
+    --state-focus-offset: 2px;
+    --state-focus-width: 2px;
+    
+    /* Checked States (Checkboxes/Radios) */
+    --state-checked-bg: rgb(var(--color-primary-500));
+    --state-checked-border: rgb(var(--color-primary-600));
+    --state-checked-icon: rgb(255 255 255);
+    
+    /* Disabled States */
+    --state-disabled-bg: rgb(243 244 246);
+    --state-disabled-text: rgb(156 163 175);
+    --state-disabled-opacity: 0.6;
+    
+    /* ===== Z-Index Scale ===== */
+    --z-base: 1;
+    --z-dropdown: 50;
+    --z-sticky: 100;
+    --z-fixed: 200;
+    --z-modal-backdrop: 300;
+    --z-modal: 400;
+    --z-popover: 500;
+    --z-tooltip: 600;
+    --z-notification: 700;
+    --z-max: 999;
+    
+    /* ===== Transitions ===== */
+    --transition-fast: 150ms ease-in-out;
+    --transition-normal: 200ms ease-in-out;
+    --transition-slow: 300ms ease-in-out;
+    
+    /* ===== Spacing ===== */
+    --focus-ring-offset: 2px;
+    --dropdown-offset: 8px;
+    
+    /* ===== Border Radius ===== */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-full: 9999px;
+  }
+  
+  /* Dark Mode Overrides */
+  .dark {
+    /* Dark mode colors */
+    --state-active-bg: rgb(var(--color-primary-950));
+    --state-active-border: rgb(var(--color-primary-400));
+    --state-active-text: rgb(var(--color-primary-300));
+    --state-active-icon: rgb(var(--color-primary-400));
+    
+    --state-hover-bg: rgb(31 41 55);
+    --state-hover-border: rgb(75 85 99);
+    --state-hover-text: rgb(243 244 246);
+    
+    --state-focus-ring: rgb(var(--color-primary-400) / 0.3);
+    --state-focus-border: rgb(var(--color-primary-400));
+    
+    --state-checked-bg: rgb(var(--color-primary-400));
+    --state-checked-border: rgb(var(--color-primary-500));
+    
+    --state-disabled-bg: rgb(31 41 55);
+    --state-disabled-text: rgb(107 114 128);
+  }
+}
+
+/* ================================================
+   Component Styles - Form Controls
+   ================================================ */
+@layer components {
+  /* ===== Checkboxes & Radio Buttons ===== */
+  /* Filament checkbox styling with proper visibility */
+  .fi-input[type="checkbox"],
+  .fi-checkbox-input,
+  input[type="checkbox"][class*="fi-"] {
+    /* Base styles - ensure visibility */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    
+    /* Size and shape */
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: var(--radius-sm);
+    
+    /* Default unchecked state */
+    background-color: rgb(255 255 255);
+    border: 2px solid rgb(209 213 219);
+    position: relative;
+    cursor: pointer;
+    
+    /* Smooth transitions */
+    transition: all var(--transition-fast);
+    
+    /* Checkmark icon for checked state */
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      width: 0.625rem;
+      height: 0.375rem;
+      border-left: 2px solid var(--state-checked-icon);
+      border-bottom: 2px solid var(--state-checked-icon);
+      transform-origin: center;
+      transition: transform var(--transition-fast);
+    }
+    
+    /* Checked state */
+    &:checked {
+      background-color: var(--state-checked-bg);
+      border-color: var(--state-checked-border);
+      
+      &::after {
+        transform: translate(-50%, -60%) rotate(-45deg) scale(1);
+      }
+    }
+    
+    /* Focus states */
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 var(--state-focus-offset) var(--state-focus-ring);
+    }
+    
+    /* Hover states */
+    &:hover:not(:disabled) {
+      border-color: rgb(156 163 175);
+      
+      &:checked {
+        background-color: rgb(var(--color-primary-600));
+        border-color: rgb(var(--color-primary-600));
+      }
+    }
+    
+    /* Disabled states */
+    &:disabled {
+      opacity: var(--state-disabled-opacity);
+      cursor: not-allowed;
+      background-color: var(--state-disabled-bg);
+    }
+  }
+  
+  /* Radio buttons */
+  .fi-input[type="radio"],
+  .fi-radio-input,
+  input[type="radio"][class*="fi-"] {
+    /* Same base styles as checkboxes */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: var(--radius-full);
+    background-color: rgb(255 255 255);
+    border: 2px solid rgb(209 213 219);
+    position: relative;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    
+    /* Radio button inner circle */
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background-color: var(--state-checked-icon);
+      transition: transform var(--transition-fast);
+    }
+    
+    /* Checked state */
+    &:checked {
+      background-color: var(--state-checked-bg);
+      border-color: var(--state-checked-border);
+      
+      &::after {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+    
+    /* States same as checkbox */
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 var(--state-focus-offset) var(--state-focus-ring);
+    }
+    
+    &:hover:not(:disabled) {
+      border-color: rgb(156 163 175);
+      
+      &:checked {
+        background-color: rgb(var(--color-primary-600));
+        border-color: rgb(var(--color-primary-600));
+      }
+    }
+    
+    &:disabled {
+      opacity: var(--state-disabled-opacity);
+      cursor: not-allowed;
+      background-color: var(--state-disabled-bg);
+    }
+  }
+  
+  /* Dark mode adjustments */
+  .dark {
+    .fi-input[type="checkbox"],
+    .fi-checkbox-input,
+    input[type="checkbox"][class*="fi-"],
+    .fi-input[type="radio"],
+    .fi-radio-input,
+    input[type="radio"][class*="fi-"] {
+      &:not(:checked) {
+        background-color: rgb(31 41 55);
+        border-color: rgb(75 85 99);
+      }
+      
+      &:hover:not(:disabled):not(:checked) {
+        border-color: rgb(107 114 128);
+        background-color: rgb(55 65 81);
+      }
+    }
+  }
+  
+  /* ===== Select Dropdowns ===== */
+  .fi-select {
+    /* Active/Open state */
+    &[aria-expanded="true"],
+    &.open {
+      border-color: var(--state-active-border);
+      background-color: var(--state-active-bg);
+      
+      /* Dropdown icon rotation */
+      .fi-select-suffix-icon {
+        transform: rotate(180deg);
+      }
+    }
+    
+    /* Focus state */
+    &:focus-within {
+      outline: none;
+      box-shadow: 0 0 0 var(--state-focus-width) var(--state-focus-ring);
+      border-color: var(--state-focus-border);
+    }
+  }
+  
+  /* ===== Navigation Items ===== */
+  .fi-sidebar-item {
+    position: relative;
+    transition: all var(--transition-fast);
+    
+    /* Hover state */
+    &:hover:not(.fi-active) {
+      background-color: var(--state-hover-bg);
+      
+      .fi-sidebar-item-label {
+        color: var(--state-hover-text);
+      }
+    }
+    
+    /* Active state */
+    &.fi-active,
+    &[aria-current="page"] {
+      background-color: var(--state-active-bg);
+      
+      /* Active indicator bar */
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background-color: var(--state-active-border);
+      }
+      
+      .fi-sidebar-item-label {
+        color: var(--state-active-text);
+        font-weight: 600;
+      }
+      
+      .fi-sidebar-item-icon {
+        color: var(--state-active-icon);
+      }
+    }
+    
+    /* Focus state */
+    &:focus-visible {
+      outline: var(--state-focus-width) solid var(--state-focus-border);
+      outline-offset: -2px;
+    }
+  }
+  
+  /* ===== Dropdown Panels ===== */
+  .fi-dropdown-panel {
+    /* Ensure proper z-index without going crazy */
+    z-index: var(--z-dropdown) !important;
+    
+    /* Smooth animations */
+    &[x-show] {
+      transition: opacity var(--transition-fast), transform var(--transition-fast);
+    }
+    
+    /* Remove any display overrides */
+    &:not(.hidden) {
+      /* Let Alpine/Livewire handle visibility */
+    }
+  }
+  
+  /* ===== Action Buttons in Tables ===== */
+  .fi-ta-actions {
+    /* Ensure dropdowns can overflow */
+    position: static;
+    overflow: visible;
+    
+    .fi-dropdown-trigger {
+      /* Active state */
+      &[aria-expanded="true"] {
+        background-color: var(--state-active-bg);
+        color: var(--state-active-text);
+      }
+      
+      /* Focus state */
+      &:focus-visible {
+        outline: var(--state-focus-width) solid var(--state-focus-border);
+        outline-offset: var(--focus-ring-offset);
+      }
+    }
+  }
+  
+  /* ===== Toggle Switches ===== */
+  .fi-toggle {
+    /* Track styling */
+    .fi-toggle-track {
+      transition: background-color var(--transition-fast);
+      
+      /* Off state */
+      background-color: rgb(209 213 219);
+      
+      /* On state */
+      &[data-checked] {
+        background-color: var(--state-checked-bg);
+      }
+    }
+    
+    /* Thumb styling */
+    .fi-toggle-thumb {
+      transition: transform var(--transition-fast);
+    }
+    
+    /* Focus state */
+    &:focus-within .fi-toggle-track {
+      box-shadow: 0 0 0 var(--state-focus-width) var(--state-focus-ring) !important;
+    }
+  }
+}
+
+/* ================================================
+   Utility Classes
+   ================================================ */
+@layer utilities {
+  /* State utilities */
+  .state-active {
+    background-color: var(--state-active-bg) !important;
+    border-color: var(--state-active-border) !important;
+    color: var(--state-active-text) !important;
+  }
+  
+  .state-hover {
+    background-color: var(--state-hover-bg) !important;
+    border-color: var(--state-hover-border) !important;
+    color: var(--state-hover-text) !important;
+  }
+  
+  /* Interactive animations */
+  .interactive-scale {
+    transition: transform var(--transition-fast);
+    
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+  
+  .interactive-lift {
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+    }
+  }
+  
+  /* Focus utilities */
+  .focus-ring {
+    &:focus-visible {
+      outline: var(--state-focus-width) solid var(--state-focus-border);
+      outline-offset: var(--focus-ring-offset);
+    }
+  }
+  
+  .focus-ring-inset {
+    &:focus-visible {
+      outline: var(--state-focus-width) solid var(--state-focus-border);
+      outline-offset: calc(var(--focus-ring-offset) * -1);
+    }
+  }
+}
+
+/* ================================================
+   Fixes for Known Issues
+   ================================================ */
+@layer components {
+  /* Fix table row stacking context */
+  .fi-ta-row {
+    position: static !important;
+    transform: none !important;
+  }
+  
+  /* Ensure table actions overflow correctly */
+  .fi-ta-table {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+  }
+  
+  /* Apply transitions only where needed (no global rules) */
+  .fi-input,
+  .fi-select,
+  .fi-btn,
+  .fi-link,
+  .fi-sidebar-item,
+  .fi-dropdown-trigger,
+  .fi-toggle-track,
+  .fi-toggle-thumb,
+  [x-show],
+  [x-transition] {
+    transition: all var(--transition-fast);
+  }
+}
+
+/* ================================================
+   Dark Mode Specific Fixes
+   ================================================ */
+@media (prefers-color-scheme: dark) {
+  .dark\:placeholder-gray-400::placeholder {
+    color: rgb(156 163 175) !important;
+  }
+  
+  .dark\:text-gray-400 {
+    color: rgb(156 163 175) !important;
+  }
+}
+
+/* ================================================
+   Print Styles
+   ================================================ */
+@media print {
+  /* Hide interactive elements */
+  .fi-dropdown-panel,
+  .fi-modal,
+  .fi-notification {
+    display: none !important;
+  }
+  
+  /* Show active states clearly */
+  .fi-active,
+  [aria-current="page"],
+  input:checked {
+    font-weight: bold !important;
+    text-decoration: underline !important;
+  }
+}
+
+/* ================================================
+   Accessibility Enhancements
+   ================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --state-focus-width: 3px;
+    --state-active-border: rgb(0 0 0);
+    --state-checked-bg: rgb(0 0 0);
+  }
+  
+  .dark {
+    --state-active-border: rgb(255 255 255);
+    --state-checked-bg: rgb(255 255 255);
+  }
+}

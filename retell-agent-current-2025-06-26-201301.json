@@ -1,0 +1,122 @@
+{
+    "agent_id": "agent_9a8202a740cd3120d96fcfda1e",
+    "channel": "voice",
+    "last_modification_timestamp": 1750938178978,
+    "agent_name": "Online: Assistent f\u00fcr Fabian Spitzer Rechtliches\/V33",
+    "response_engine": {
+        "type": "retell-llm",
+        "llm_id": "llm_f3209286ed1caf6a75906d2645b9",
+        "version": 30
+    },
+    "webhook_url": "https:\/\/api.askproai.de\/api\/retell\/webhook",
+    "language": "de-DE",
+    "opt_out_sensitive_data_storage": false,
+    "end_call_after_silence_ms": 50000,
+    "post_call_analysis_data": [
+        {
+            "type": "boolean",
+            "name": "call_successful",
+            "description": "Whether the call objectives were met (appointment made, rescheduled, or cancelled)"
+        },
+        {
+            "type": "boolean",
+            "name": "appointment_made",
+            "description": "Whether a new appointment was successfully scheduled"
+        },
+        {
+            "type": "string",
+            "name": "appointment_date_time",
+            "description": "The scheduled appointment date and time in format YYYY-MM-DD HH:MM"
+        },
+        {
+            "type": "string",
+            "name": "caller_full_name",
+            "description": "Full name of the caller"
+        },
+        {
+            "type": "string",
+            "name": "caller_phone",
+            "description": "Phone number of the caller"
+        },
+        {
+            "type": "string",
+            "name": "patient_full_name",
+            "description": "Full name of the patient (may differ from caller)"
+        },
+        {
+            "type": "string",
+            "name": "patient_birth_date",
+            "description": "Birth date of the patient in format YYYY-MM-DD"
+        },
+        {
+            "type": "string",
+            "name": "insurance_type",
+            "description": "Type of insurance: 'gesetzlich' or 'privat'"
+        },
+        {
+            "type": "string",
+            "name": "health_insurance_company",
+            "description": "Name of the health insurance company"
+        },
+        {
+            "type": "string",
+            "name": "reason_for_visit",
+            "description": "Primary reason or symptoms for the appointment"
+        },
+        {
+            "type": "boolean",
+            "name": "first_visit",
+            "description": "Whether this is the patient's first visit"
+        },
+        {
+            "type": "string",
+            "name": "urgency_level",
+            "description": "Urgency: 'routine', 'soon', 'urgent'"
+        },
+        {
+            "type": "string",
+            "name": "additional_notes",
+            "description": "Any additional information or special requests"
+        },
+        {
+            "type": "string",
+            "name": "no_show_count",
+            "description": "Number of previous no-shows for this patient"
+        },
+        {
+            "type": "string",
+            "name": "reschedule_count",
+            "description": "Number of times this appointment was rescheduled"
+        }
+    ],
+    "version": 30,
+    "is_published": false,
+    "version_title": "Online: Assistent f\u00fcr Fabian Spitzer Rechtliches\/V33",
+    "post_call_analysis_model": "gpt-4o",
+    "voice_id": "custom_voice_191b11197fd8c3e92dab972a5a",
+    "voice_model": "eleven_turbo_v2_5",
+    "voice_temperature": 0.2,
+    "voice_speed": 1.08,
+    "volume": 1,
+    "enable_backchannel": true,
+    "backchannel_frequency": 0.2,
+    "backchannel_words": [
+        "mhm",
+        "ach",
+        "so",
+        "aha",
+        "okay",
+        "richtig",
+        "verstehe",
+        "na klar"
+    ],
+    "max_call_duration_ms": 300000,
+    "interruption_sensitivity": 0.44,
+    "ambient_sound_volume": 0.48,
+    "responsiveness": 1,
+    "pronunciation_dictionary": [],
+    "normalize_for_speech": true,
+    "enable_voicemail_detection": false,
+    "user_dtmf_options": [],
+    "denoising_mode": "noise-and-background-speech-cancellation"
+}

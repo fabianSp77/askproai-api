@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 AskProAI Command Intelligence</title>
+    <meta name="description" content="State-of-the-art Command Management für AskProAI">
+    <meta name="theme-color" content="#3B82F6">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AskProAI Cmd">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --dark: #1F2937;
+            --gray-800: #374151;
+            --gray-600: #4B5563;
+            --gray-400: #9CA3AF;
+            --gray-200: #E5E7EB;
+            --light: #F9FAFB;
+            --white: #FFFFFF;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --dark: #F9FAFB;
+            --light: #111827;
+            --white: #1F2937;
+            --gray-200: #374151;
+            --gray-400: #6B7280;
+            --gray-600: #9CA3AF;
+            --gray-800: #E5E7EB;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-screen.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--gray-200);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Header */
+        header {
+            background: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Command Palette */
+        .command-palette-trigger {
+            position: relative;
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .command-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            font-size: 16px;
+            background: var(--white);
+            transition: all 0.2s;
+            cursor: text;
+        }
+
+        .command-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .command-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            pointer-events: none;
+        }
+
+        .shortcut-hint {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--gray-200);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--gray-600);
+            font-family: monospace;
+        }
+
+        /* Command Palette Modal */
+        .command-palette {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 700px;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+            max-height: 70vh;
+        }
+
+        .command-palette.show {
+            display: block;
+            animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        .command-results {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .command-result {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.1s;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .command-result:hover,
+        .command-result.selected {
+            background: var(--light);
+        }
+
+        .command-result-icon {
+            font-size: 20px;
+            width: 32px;
+            text-align: center;
+        }
+
+        .command-result-content {
+            flex: 1;
+        }
+
+        .command-result-title {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .command-result-desc {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .command-result-shortcut {
+            font-size: 12px;
+            color: var(--gray-400);
+            font-family: monospace;
+        }
+
+        /* AI Suggestions */
+        .ai-suggestions {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-icon {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        main {
+            margin-top: 80px;
+            padding: 20px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .quick-action {
+            background: var(--white);
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .quick-action:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .quick-action-icon {
+            font-size: 32px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light);
+            border-radius: 12px;
+        }
+
+        .quick-action-content h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .quick-action-content p {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        /* Analytics Dashboard */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .stat-change {
+            font-size: 14px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--danger);
+        }
+
+        /* Workflow Builder */
+        .workflow-section {
+            background: var(--white);
+            border: 1px solid var(--gray-200);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .workflow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .workflow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .workflow-step {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--light);
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .workflow-step::after {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 100%;
+            width: 2px;
+            height: 16px;
+            background: var(--gray-200);
+        }
+
+        .workflow-step:last-child::after {
+            display: none;
+        }
+
+        .workflow-step-number {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100%;
+            background: var(--white);
+            box-shadow: var(--shadow-xl);
+            transition: right 0.3s ease;
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        .settings-panel.show {
+            right: 0;
+        }
+
+        .settings-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .settings-content {
+            padding: 20px;
+        }
+
+        .setting-group {
+            margin-bottom: 24px;
+        }
+
+        .setting-group h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gray-600);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: var(--gray-200);
+            border-radius: 24px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: var(--primary);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+
+        /* FAB */
+        .fab-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.2s;
+            border: none;
+            font-size: 24px;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .fab-menu {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .fab-menu.show {
+            display: flex;
+        }
+
+        .fab-action {
+            background: var(--white);
+            color: var(--dark);
+            padding: 8px 16px;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            white-space: nowrap;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .fab-action:hover {
+            transform: translateX(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 2000;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--dark);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: all;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+            }
+
+            .command-palette-trigger {
+                order: 2;
+                flex-basis: 100%;
+                max-width: none;
+            }
+
+            .settings-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Keyboard Shortcut Modal */
+        .shortcuts-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            display: none;
+            z-index: 1002;
+        }
+
+        .shortcuts-modal.show {
+            display: block;
+        }
+
+        .shortcuts-list {
+            margin-top: 20px;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .shortcut-key {
+            background: var(--gray-200);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        /* Backdrop */
+        .backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .backdrop.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span>🚀</span>
+                <span>AskProAI Command Intelligence</span>
+            </div>
+            
+            <div class="command-palette-trigger">
+                <span class="command-icon">⌘</span>
+                <input 
+                    type="text" 
+                    class="command-input" 
+                    id="commandInput"
+                    placeholder="Befehle suchen oder natürliche Sprache eingeben..."
+                    autocomplete="off"
+                >
+                <span class="shortcut-hint">Cmd+K</span>
+            </div>
+
+            <div style="display: flex; gap: 12px;">
+                <button class="fab" style="width: 40px; height: 40px; font-size: 20px;" onclick="toggleTheme()">
+                    🌓
+                </button>
+                <button class="fab" style="width: 40px; height: 40px; font-size: 20px;" onclick="toggleSettings()">
+                    ⚙️
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Command Palette -->
+    <div class="command-palette" id="commandPalette">
+        <div class="ai-suggestions" id="aiSuggestions" style="display: none;">
+            <span class="ai-icon">✨</span>
+            <span>KI schlägt vor: "ask-setup" für neue Kunden einrichten</span>
+        </div>
+        <div class="command-results" id="commandResults">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Quick Actions -->
+        <section class="quick-actions" id="quickActions">
+            <div class="quick-action" onclick="executeCommand('quick-setup')">
+                <div class="quick-action-icon">🎯</div>
+                <div class="quick-action-content">
+                    <h3>Quick Setup</h3>
+                    <p>Neuen Kunden in 5 Min</p>
+                </div>
+            </div>
+            <div class="quick-action" onclick="executeCommand('health-check')">
+                <div class="quick-action-icon">✅</div>
+                <div class="quick-action-content">
+                    <h3>Health Check</h3>
+                    <p>System Status prüfen</p>
+                </div>
+            </div>
+            <div class="quick-action" onclick="executeCommand('emergency-fix')">
+                <div class="quick-action-icon">🚨</div>
+                <div class="quick-action-content">
+                    <h3>Emergency Fix</h3>
+                    <p>Schnelle Problemlösung</p>
+                </div>
+            </div>
+            <div class="quick-action" onclick="showWorkflowBuilder()">
+                <div class="quick-action-icon">🔄</div>
+                <div class="quick-action-content">
+                    <h3>Workflow Builder</h3>
+                    <p>Commands verketten</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Dashboard -->
+        <section class="analytics-grid">
+            <div class="stat-card">
+                <div class="stat-label">Commands heute</div>
+                <div class="stat-value" id="commandsToday">42</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span>12% vs gestern</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Erfolgsrate</div>
+                <div class="stat-value">98%</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span>2% diese Woche</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Zeitersparnis</div>
+                <div class="stat-value">3.2h</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span>heute gespart</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Team Nutzer</div>
+                <div class="stat-value">5</div>
+                <div class="stat-change">
+                    <span>→</span>
+                    <span>Online jetzt</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Workflow Section -->
+        <section class="workflow-section" id="workflowSection" style="display: none;">
+            <div class="workflow-header">
+                <h2>Workflow Builder</h2>
+                <button class="fab" style="width: auto; height: auto; padding: 8px 16px; border-radius: 8px; font-size: 14px;" onclick="saveWorkflow()">
+                    💾 Workflow speichern
+                </button>
+            </div>
+            <div class="workflow-steps" id="workflowSteps">
+                <div class="workflow-step">
+                    <div class="workflow-step-number">1</div>
+                    <div style="flex: 1;">
+                        <select style="width: 100%; padding: 8px; border: 1px solid var(--gray-200); border-radius: 8px;">
+                            <option>ask-setup - Neuen Kunden einrichten</option>
+                            <option>ask-phone - Phone Resolution testen</option>
+                            <option>ask-health - System Health Check</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button onclick="addWorkflowStep()" style="margin-top: 16px; padding: 8px 16px; background: var(--light); border: 2px dashed var(--gray-400); border-radius: 8px; cursor: pointer;">
+                + Schritt hinzufügen
+            </button>
+        </section>
+    </main>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2>Einstellungen</h2>
+            <button onclick="toggleSettings()" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+        </div>
+        <div class="settings-content">
+            <div class="setting-group">
+                <h3>Erscheinungsbild</h3>
+                <div class="toggle">
+                    <span>Dark Mode</span>
+                    <div class="toggle-switch" id="darkModeToggle" onclick="toggleTheme()"></div>
+                </div>
+                <div class="toggle">
+                    <span>Kompakte Ansicht</span>
+                    <div class="toggle-switch" id="compactViewToggle"></div>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h3>KI-Features</h3>
+                <div class="toggle">
+                    <span>KI-Vorschläge</span>
+                    <div class="toggle-switch active" id="aiSuggestionsToggle"></div>
+                </div>
+                <div class="toggle">
+                    <span>Auto-Complete</span>
+                    <div class="toggle-switch active" id="autoCompleteToggle"></div>
+                </div>
+                <div class="toggle">
+                    <span>Natürliche Sprache</span>
+                    <div class="toggle-switch active" id="nlpToggle"></div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Benachrichtigungen</h3>
+                <div class="toggle">
+                    <span>Push Notifications</span>
+                    <div class="toggle-switch" id="pushToggle" onclick="togglePushNotifications()"></div>
+                </div>
+                <div class="toggle">
+                    <span>Sound-Effekte</span>
+                    <div class="toggle-switch" id="soundToggle"></div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>Shortcuts</h3>
+                <button onclick="showShortcuts()" style="width: 100%; padding: 12px; background: var(--light); border: 1px solid var(--gray-200); border-radius: 8px; cursor: pointer;">
+                    ⌨️ Alle Shortcuts anzeigen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAB Container -->
+    <div class="fab-container">
+        <button class="fab" id="mainFab" onclick="toggleFabMenu()">
+            +
+        </button>
+        <div class="fab-menu" id="fabMenu">
+            <div class="fab-action" onclick="startVoiceCommand()">🎤 Voice Command</div>
+            <div class="fab-action" onclick="showFavorites()">⭐ Favoriten</div>
+            <div class="fab-action" onclick="exportCommands()">📥 Export</div>
+            <div class="fab-action" onclick="showHelp()">❓ Hilfe</div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Backdrop -->
+    <div class="backdrop" id="backdrop" onclick="closeModals()"></div>
+
+    <!-- Shortcuts Modal -->
+    <div class="shortcuts-modal" id="shortcutsModal">
+        <h2>Keyboard Shortcuts</h2>
+        <div class="shortcuts-list">
+            <div class="shortcut-item">
+                <span>Command Palette</span>
+                <span class="shortcut-key">Cmd+K</span>
+            </div>
+            <div class="shortcut-item">
+                <span>Quick Setup</span>
+                <span class="shortcut-key">Cmd+S</span>
+            </div>
+            <div class="shortcut-item">
+                <span>Health Check</span>
+                <span class="shortcut-key">Cmd+H</span>
+            </div>
+            <div class="shortcut-item">
+                <span>Emergency Fix</span>
+                <span class="shortcut-key">Cmd+E</span>
+            </div>
+            <div class="shortcut-item">
+                <span>Voice Command</span>
+                <span class="shortcut-key">Cmd+Shift+V</span>
+            </div>
+            <div class="shortcut-item">
+                <span>Export</span>
+                <span class="shortcut-key">Cmd+Shift+E</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        const state = {
+            commands: [],
+            favorites: JSON.parse(localStorage.getItem('favorites') || '[]'),
+            recentCommands: JSON.parse(localStorage.getItem('recentCommands') || '[]'),
+            settings: JSON.parse(localStorage.getItem('settings') || '{}'),
+            currentTheme: localStorage.getItem('theme') || 'light',
+            commandHistory: [],
+            workflowSteps: 1
+        };
+
+        // Command Database
+        const commandDB = [
+            {
+                id: 'quick-setup',
+                title: '5-Minuten Onboarding',
+                icon: '🎯',
+                category: 'setup',
+                description: 'Neuen Kunden komplett einrichten',
+                command: 'Claude, richte einen neuen Kunden ein mit: Firmenname "[FIRMA]", Telefon "[TELEFON]", Email "[EMAIL]", Filiale "[FILIALE]"',
+                nlp: ['neuer kunde', 'kunde einrichten', 'onboarding', 'setup'],
+                shortcut: 'Cmd+S'
+            },
+            {
+                id: 'health-check',
+                title: 'System Health Check',
+                icon: '✅',
+                category: 'monitoring',
+                description: 'Kompletter System-Gesundheitscheck',
+                command: 'Claude, mache einen kompletten Health Check. Ich will wissen ob alles läuft.',
+                nlp: ['health', 'gesundheit', 'system check', 'läuft alles'],
+                shortcut: 'Cmd+H'
+            },
+            {
+                id: 'emergency-fix',
+                title: 'Emergency Fix',
+                icon: '🚨',
+                category: 'troubleshooting',
+                description: 'Schnelle Problemlösung',
+                command: 'Claude, führe den Emergency Fix aus! Die App zeigt nur Fehler.',
+                nlp: ['fehler', 'problem', 'geht nicht', 'kaputt', 'fix', 'reparieren'],
+                shortcut: 'Cmd+E'
+            },
+            {
+                id: 'kpi-dashboard',
+                title: 'Business KPIs',
+                icon: '📊',
+                category: 'analytics',
+                description: 'KPI Dashboard anzeigen',
+                command: 'Claude, zeige mir die KPIs für Company ID [ID] in einem übersichtlichen Format.',
+                nlp: ['kpi', 'dashboard', 'statistik', 'zahlen', 'bericht'],
+                shortcut: null
+            },
+            {
+                id: 'phone-debug',
+                title: 'Phone Resolution Debug',
+                icon: '📞',
+                category: 'debugging',
+                description: 'Telefonnummer-Zuordnung testen',
+                command: 'Claude, teste warum die Telefonnummer [NUMMER] nicht richtig zugeordnet wird.',
+                nlp: ['telefon', 'phone', 'nummer', 'anruf', 'resolution'],
+                shortcut: null
+            }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            registerServiceWorker();
+            setupEventListeners();
+            loadTheme();
+            
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hide');
+            }, 500);
+        });
+
+        // App Initialization
+        function initializeApp() {
+            state.commands = commandDB;
+            updateAnalytics();
+            checkForUpdates();
+        }
+
+        // Service Worker Registration
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.register('/service-worker.js');
+                    console.log('Service Worker registered:', registration);
+                } catch (error) {
+                    console.log('Service Worker registration failed:', error);
+                }
+            }
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            const commandInput = document.getElementById('commandInput');
+            
+            // Command Palette
+            commandInput.addEventListener('focus', () => showCommandPalette());
+            commandInput.addEventListener('input', (e) => handleCommandInput(e.target.value));
+            commandInput.addEventListener('keydown', handleCommandKeydown);
+            
+            // Global Keyboard Shortcuts
+            document.addEventListener('keydown', handleGlobalKeydown);
+            
+            // Click outside to close
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.command-palette-trigger') && !e.target.closest('.command-palette')) {
+                    hideCommandPalette();
+                }
+            });
+        }
+
+        // Command Palette Functions
+        function showCommandPalette() {
+            document.getElementById('commandPalette').classList.add('show');
+            updateCommandResults('');
+        }
+
+        function hideCommandPalette() {
+            document.getElementById('commandPalette').classList.remove('show');
+        }
+
+        function handleCommandInput(query) {
+            // Check for natural language
+            if (state.settings.nlpEnabled !== false) {
+                const nlpResult = processNaturalLanguage(query);
+                if (nlpResult) {
+                    showAISuggestion(nlpResult);
+                }
+            }
+            
+            updateCommandResults(query);
+        }
+
+        function updateCommandResults(query) {
+            const results = searchCommands(query);
+            const container = document.getElementById('commandResults');
+            
+            container.innerHTML = results.map((cmd, index) => `
+                <div class="command-result ${index === 0 ? 'selected' : ''}" onclick="selectCommand('${cmd.id}')">
+                    <div class="command-result-icon">${cmd.icon}</div>
+                    <div class="command-result-content">
+                        <div class="command-result-title">${cmd.title}</div>
+                        <div class="command-result-desc">${cmd.description}</div>
+                    </div>
+                    ${cmd.shortcut ? `<div class="command-result-shortcut">${cmd.shortcut}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function searchCommands(query) {
+            if (!query) return state.commands.slice(0, 5);
+            
+            const q = query.toLowerCase();
+            return state.commands.filter(cmd => 
+                cmd.title.toLowerCase().includes(q) ||
+                cmd.description.toLowerCase().includes(q) ||
+                cmd.nlp.some(term => term.includes(q))
+            );
+        }
+
+        function processNaturalLanguage(query) {
+            const q = query.toLowerCase();
+            
+            // NLP Patterns
+            if (q.includes('neuer kunde') || q.includes('kunde einrichten')) {
+                return { command: 'quick-setup', confidence: 0.9 };
+            }
+            if (q.includes('läuft alles') || q.includes('system ok')) {
+                return { command: 'health-check', confidence: 0.85 };
+            }
+            if (q.includes('fehler') || q.includes('geht nicht')) {
+                return { command: 'emergency-fix', confidence: 0.8 };
+            }
+            
+            return null;
+        }
+
+        function showAISuggestion(result) {
+            const suggestions = document.getElementById('aiSuggestions');
+            const cmd = state.commands.find(c => c.id === result.command);
+            
+            if (cmd) {
+                suggestions.innerHTML = `
+                    <span class="ai-icon">✨</span>
+                    <span>KI schlägt vor: "${cmd.title}" (${Math.round(result.confidence * 100)}% Konfidenz)</span>
+                `;
+                suggestions.style.display = 'flex';
+            }
+        }
+
+        function selectCommand(commandId) {
+            const cmd = state.commands.find(c => c.id === commandId);
+            if (cmd) {
+                copyToClipboard(cmd.command);
+                addToHistory(cmd);
+                hideCommandPalette();
+                showToast(`Command "${cmd.title}" kopiert!`, 'success');
+                updateAnalytics();
+            }
+        }
+
+        function executeCommand(commandId) {
+            const cmd = state.commands.find(c => c.id === commandId);
+            if (cmd) {
+                selectCommand(commandId);
+            }
+        }
+
+        // Keyboard Handlers
+        function handleCommandKeydown(e) {
+            if (e.key === 'Enter') {
+                const selected = document.querySelector('.command-result.selected');
+                if (selected) {
+                    selected.click();
+                }
+            } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                navigateResults(e.key === 'ArrowDown' ? 1 : -1);
+            } else if (e.key === 'Escape') {
+                hideCommandPalette();
+                document.getElementById('commandInput').blur();
+            }
+        }
+
+        function handleGlobalKeydown(e) {
+            // Cmd+K - Command Palette
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('commandInput').focus();
+            }
+            
+            // Other shortcuts
+            if (e.metaKey || e.ctrlKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        executeCommand('quick-setup');
+                        break;
+                    case 'h':
+                        e.preventDefault();
+                        executeCommand('health-check');
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        executeCommand('emergency-fix');
+                        break;
+                }
+                
+                // With Shift
+                if (e.shiftKey) {
+                    switch(e.key) {
+                        case 'V':
+                            e.preventDefault();
+                            startVoiceCommand();
+                            break;
+                        case 'E':
+                            e.preventDefault();
+                            exportCommands();
+                            break;
+                    }
+                }
+            }
+        }
+
+        function navigateResults(direction) {
+            const results = document.querySelectorAll('.command-result');
+            const current = Array.from(results).findIndex(r => r.classList.contains('selected'));
+            
+            results[current]?.classList.remove('selected');
+            
+            let next = current + direction;
+            if (next < 0) next = results.length - 1;
+            if (next >= results.length) next = 0;
+            
+            results[next]?.classList.add('selected');
+            results[next]?.scrollIntoView({ block: 'nearest' });
+        }
+
+        // Utility Functions
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                return false;
+            }
+        }
+
+        function addToHistory(command) {
+            state.commandHistory.unshift({
+                command: command,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Keep last 50
+            state.commandHistory = state.commandHistory.slice(0, 50);
+            
+            // Update recent commands
+            state.recentCommands = state.recentCommands.filter(id => id !== command.id);
+            state.recentCommands.unshift(command.id);
+            state.recentCommands = state.recentCommands.slice(0, 10);
+            
+            localStorage.setItem('recentCommands', JSON.stringify(state.recentCommands));
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Theme Management
+        function loadTheme() {
+            if (state.currentTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.getElementById('darkModeToggle')?.classList.add('active');
+            }
+        }
+
+        function toggleTheme() {
+            state.currentTheme = state.currentTheme === 'light' ? 'dark' : 'light';
+            
+            if (state.currentTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                document.getElementById('darkModeToggle')?.classList.add('active');
+            } else {
+                document.body.removeAttribute('data-theme');
+                document.getElementById('darkModeToggle')?.classList.remove('active');
+            }
+            
+            localStorage.setItem('theme', state.currentTheme);
+        }
+
+        // Settings
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            const backdrop = document.getElementById('backdrop');
+            
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                backdrop.classList.remove('show');
+            } else {
+                panel.classList.add('show');
+                backdrop.classList.add('show');
+            }
+        }
+
+        // FAB Menu
+        function toggleFabMenu() {
+            const menu = document.getElementById('fabMenu');
+            const fab = document.getElementById('mainFab');
+            
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+                fab.style.transform = 'rotate(0deg)';
+            } else {
+                menu.classList.add('show');
+                fab.style.transform = 'rotate(45deg)';
+            }
+        }
+
+        // Voice Commands
+        async function startVoiceCommand() {
+            if (!('webkitSpeechRecognition' in window)) {
+                showToast('Voice Commands nicht unterstützt', 'error');
+                return;
+            }
+            
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'de-DE';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onstart = () => {
+                showToast('Spreche jetzt...', 'info');
+            };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('commandInput').value = transcript;
+                handleCommandInput(transcript);
+                showCommandPalette();
+            };
+            
+            recognition.onerror = (event) => {
+                showToast('Voice Command fehlgeschlagen', 'error');
+            };
+            
+            recognition.start();
+        }
+
+        // Workflow Builder
+        function showWorkflowBuilder() {
+            document.getElementById('workflowSection').style.display = 'block';
+            document.getElementById('quickActions').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function addWorkflowStep() {
+            state.workflowSteps++;
+            const container = document.getElementById('workflowSteps');
+            
+            const step = document.createElement('div');
+            step.className = 'workflow-step';
+            step.innerHTML = `
+                <div class="workflow-step-number">${state.workflowSteps}</div>
+                <div style="flex: 1;">
+                    <select style="width: 100%; padding: 8px; border: 1px solid var(--gray-200); border-radius: 8px;">
+                        ${state.commands.map(cmd => 
+                            `<option value="${cmd.id}">${cmd.title}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; color: var(--danger); cursor: pointer; font-size: 20px;">×</button>
+            `;
+            
+            container.appendChild(step);
+        }
+
+        function saveWorkflow() {
+            showToast('Workflow gespeichert!', 'success');
+        }
+
+        // Analytics
+        function updateAnalytics() {
+            // Simulate real-time updates
+            const commandsToday = document.getElementById('commandsToday');
+            if (commandsToday) {
+                const current = parseInt(commandsToday.textContent);
+                commandsToday.textContent = current + 1;
+            }
+        }
+
+        // Export
+        function exportCommands() {
+            const data = {
+                commands: state.commandHistory,
+                favorites: state.favorites,
+                exported: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `askproai-commands-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            showToast('Commands exportiert!', 'success');
+        }
+
+        // Push Notifications
+        async function togglePushNotifications() {
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    showToast('Push Notifications aktiviert', 'success');
+                } else if (Notification.permission !== 'denied') {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        showToast('Push Notifications aktiviert', 'success');
+                    }
+                }
+            }
+        }
+
+        // Helper Functions
+        function showShortcuts() {
+            document.getElementById('shortcutsModal').classList.add('show');
+            document.getElementById('backdrop').classList.add('show');
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.shortcuts-modal').forEach(m => m.classList.remove('show'));
+            document.getElementById('backdrop').classList.remove('show');
+        }
+
+        function showFavorites() {
+            showToast('Favoriten-Feature kommt bald!', 'info');
+        }
+
+        function showHelp() {
+            window.open('https://api.askproai.de/mkdocs/', '_blank');
+        }
+
+        function checkForUpdates() {
+            // Simulate checking for updates
+            console.log('Checking for updates...');
+        }
+
+        // Install PWA prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install button
+            showToast('App kann installiert werden! Klicke auf +', 'info');
+        });
+    </script>
+
+    <!-- PWA Installation -->
+    <script>
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            navigator.serviceWorker.ready.then(registration => {
+                console.log('Service Worker is ready');
+            });
+        }
+    </script>
+</body>
+</html>

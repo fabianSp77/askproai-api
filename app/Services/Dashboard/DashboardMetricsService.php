@@ -5,6 +5,7 @@ namespace App\Services\Dashboard;
 use App\Models\Appointment;
 use App\Models\Call;
 use App\Models\Customer;
+use App\Models\PhoneNumber;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -22,6 +23,16 @@ class DashboardMetricsService
     const CACHE_TTL_LIVE = 60;      // 1 Minute für Live-KPIs
     const CACHE_TTL_HOURLY = 300;   // 5 Minuten für stündliche Trends
     const CACHE_TTL_DAILY = 3600;   // 1 Stunde für tägliche Aggregationen
+    
+    /**
+     * Company ID for filtering
+     */
+    protected ?int $companyId = null;
+    
+    /**
+     * Company phone numbers cache
+     */
+    protected ?array $companyPhoneNumbers = null;
 
     /**
      * Berechnet alle KPIs für die Termine-Seite
@@ -34,11 +45,12 @@ class DashboardMetricsService
             try {
                 $dateRange = $this->getDateRange($filters);
                 $previousRange = $this->getPreviousDateRange($dateRange);
+                $companyId = $filters['company_id'] ?? null;
                 
                 return [
                     'revenue' => $this->calculateAppointmentRevenue($dateRange, $previousRange),
                     'occupancy' => $this->calculateOccupancy($dateRange, $previousRange),
-                    'conversion' => $this->calculateConversionRate($dateRange, $previousRange),
+                    'conversion' => $this->calculateConversionRate($dateRange, $previousRange, $companyId),
                     'no_show_rate' => $this->calculateNoShowRate($dateRange, $previousRange),
                     'avg_duration' => $this->calculateAvgDuration($dateRange, $previousRange),
                     'revenue_per_appointment' => $this->calculateRevenuePerAppointment($dateRange, $previousRange),
@@ -61,14 +73,15 @@ class DashboardMetricsService
             try {
                 $dateRange = $this->getDateRange($filters);
                 $previousRange = $this->getPreviousDateRange($dateRange);
+                $companyId = $filters['company_id'] ?? null;
                 
                 return [
-                    'total_calls' => $this->calculateTotalCalls($dateRange, $previousRange),
-                    'avg_duration' => $this->calculateCallAvgDuration($dateRange, $previousRange),
-                    'success_rate' => $this->calculateCallSuccessRate($dateRange, $previousRange),
-                    'sentiment_positive' => $this->calculatePositiveSentiment($dateRange, $previousRange),
-                    'avg_cost' => $this->calculateAvgCallCost($dateRange, $previousRange),
-                    'roi' => $this->calculateCallROI($dateRange, $previousRange),
+                    'total_calls' => $this->calculateTotalCalls($dateRange, $previousRange, $companyId),
+                    'avg_duration' => $this->calculateCallAvgDuration($dateRange, $previousRange, $companyId),
+                    'success_rate' => $this->calculateCallSuccessRate($dateRange, $previousRange, $companyId),
+                    'sentiment_positive' => $this->calculatePositiveSentiment($dateRange, $previousRange, $companyId),
+                    'avg_cost' => $this->calculateAvgCallCost($dateRange, $previousRange, $companyId),
+                    'roi' => $this->calculateCallROI($dateRange, $previousRange, $companyId),
                 ];
             } catch (\Exception $e) {
                 Log::error('Call KPIs calculation failed', ['error' => $e->getMessage(), 'filters' => $filters]);
@@ -177,9 +190,20 @@ class DashboardMetricsService
         ];
     }
 
-    private function calculateConversionRate(array $dateRange, array $previousRange): array
+    private function calculateConversionRate(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $callsWithIntent = Call::whereBetween('created_at', $dateRange)
+        $query = Call::query();
+        
+        if ($companyId) {
+            $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+            if (!empty($phoneNumbers)) {
+                $query->whereIn('to_number', $phoneNumbers);
+            }
+            $query->where('company_id', $companyId);
+        }
+        
+        $callsWithIntent = $query->clone()
+            ->whereBetween('created_at', $dateRange)
             ->where(function($q) {
                 $q->whereJsonContains('analysis->intent', 'booking')
                   ->orWhere('duration_sec', '>', 30); // Mindestdauer als Intent-Indikator
@@ -188,12 +212,22 @@ class DashboardMetricsService
 
         $appointmentsFromCalls = Appointment::whereNotNull('call_id')
             ->whereBetween('created_at', $dateRange)
+            ->when($companyId, function($q) use ($companyId) {
+                $q->whereHas('call', function($callQuery) use ($companyId) {
+                    $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+                    if (!empty($phoneNumbers)) {
+                        $callQuery->whereIn('to_number', $phoneNumbers);
+                    }
+                    $callQuery->where('company_id', $companyId);
+                });
+            })
             ->count();
 
         $current = $callsWithIntent > 0 ? ($appointmentsFromCalls / $callsWithIntent) * 100 : 0;
 
         // Previous period
-        $prevCallsWithIntent = Call::whereBetween('created_at', $previousRange)
+        $prevCallsWithIntent = $query->clone()
+            ->whereBetween('created_at', $previousRange)
             ->where(function($q) {
                 $q->whereJsonContains('analysis->intent', 'booking')
                   ->orWhere('duration_sec', '>', 30);
@@ -202,6 +236,15 @@ class DashboardMetricsService
 
         $prevAppointmentsFromCalls = Appointment::whereNotNull('call_id')
             ->whereBetween('created_at', $previousRange)
+            ->when($companyId, function($q) use ($companyId) {
+                $q->whereHas('call', function($callQuery) use ($companyId) {
+                    $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+                    if (!empty($phoneNumbers)) {
+                        $callQuery->whereIn('to_number', $phoneNumbers);
+                    }
+                    $callQuery->where('company_id', $companyId);
+                });
+            })
             ->count();
 
         $previous = $prevCallsWithIntent > 0 ? ($prevAppointmentsFromCalls / $prevCallsWithIntent) * 100 : 0;
@@ -300,10 +343,20 @@ class DashboardMetricsService
     // CALL KPI CALCULATIONS
     // ========================================================================
 
-    private function calculateTotalCalls(array $dateRange, array $previousRange): array
+    private function calculateTotalCalls(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $current = Call::whereBetween('created_at', $dateRange)->count();
-        $previous = Call::whereBetween('created_at', $previousRange)->count();
+        $query = Call::query();
+        
+        if ($companyId) {
+            $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+            if (!empty($phoneNumbers)) {
+                $query->whereIn('to_number', $phoneNumbers);
+            }
+            $query->where('company_id', $companyId);
+        }
+        
+        $current = $query->clone()->whereBetween('created_at', $dateRange)->count();
+        $previous = $query->clone()->whereBetween('created_at', $previousRange)->count();
 
         return [
             'value' => $current,
@@ -314,13 +367,25 @@ class DashboardMetricsService
         ];
     }
 
-    private function calculateCallAvgDuration(array $dateRange, array $previousRange): array
+    private function calculateCallAvgDuration(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $current = Call::whereBetween('created_at', $dateRange)
+        $query = Call::query();
+        
+        if ($companyId) {
+            $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+            if (!empty($phoneNumbers)) {
+                $query->whereIn('to_number', $phoneNumbers);
+            }
+            $query->where('company_id', $companyId);
+        }
+        
+        $current = $query->clone()
+            ->whereBetween('created_at', $dateRange)
             ->whereNotNull('duration_sec')
             ->avg('duration_sec') ?? 0;
 
-        $previous = Call::whereBetween('created_at', $previousRange)
+        $previous = $query->clone()
+            ->whereBetween('created_at', $previousRange)
             ->whereNotNull('duration_sec')
             ->avg('duration_sec') ?? 0;
 
@@ -333,18 +398,30 @@ class DashboardMetricsService
         ];
     }
 
-    private function calculateCallSuccessRate(array $dateRange, array $previousRange): array
+    private function calculateCallSuccessRate(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $totalCalls = Call::whereBetween('created_at', $dateRange)->count();
-        $successfulCalls = Call::whereBetween('created_at', $dateRange)
+        $query = Call::query();
+        
+        if ($companyId) {
+            $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+            if (!empty($phoneNumbers)) {
+                $query->whereIn('to_number', $phoneNumbers);
+            }
+            $query->where('company_id', $companyId);
+        }
+        
+        $totalCalls = $query->clone()->whereBetween('created_at', $dateRange)->count();
+        $successfulCalls = $query->clone()
+            ->whereBetween('created_at', $dateRange)
             ->whereHas('appointment')
             ->count();
 
         $current = $totalCalls > 0 ? ($successfulCalls / $totalCalls) * 100 : 0;
 
         // Previous period
-        $prevTotalCalls = Call::whereBetween('created_at', $previousRange)->count();
-        $prevSuccessfulCalls = Call::whereBetween('created_at', $previousRange)
+        $prevTotalCalls = $query->clone()->whereBetween('created_at', $previousRange)->count();
+        $prevSuccessfulCalls = $query->clone()
+            ->whereBetween('created_at', $previousRange)
             ->whereHas('appointment')
             ->count();
 
@@ -359,24 +436,38 @@ class DashboardMetricsService
         ];
     }
 
-    private function calculatePositiveSentiment(array $dateRange, array $previousRange): array
+    private function calculatePositiveSentiment(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $totalCalls = Call::whereBetween('created_at', $dateRange)
+        $query = Call::query();
+        
+        if ($companyId) {
+            $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+            if (!empty($phoneNumbers)) {
+                $query->whereIn('to_number', $phoneNumbers);
+            }
+            $query->where('company_id', $companyId);
+        }
+        
+        $totalCalls = $query->clone()
+            ->whereBetween('created_at', $dateRange)
             ->whereJsonContains('analysis->sentiment', ['positive', 'negative', 'neutral'])
             ->count();
         
-        $positiveCalls = Call::whereBetween('created_at', $dateRange)
+        $positiveCalls = $query->clone()
+            ->whereBetween('created_at', $dateRange)
             ->whereJsonContains('analysis->sentiment', 'positive')
             ->count();
 
         $current = $totalCalls > 0 ? ($positiveCalls / $totalCalls) * 100 : 0;
 
         // Previous period
-        $prevTotalCalls = Call::whereBetween('created_at', $previousRange)
+        $prevTotalCalls = $query->clone()
+            ->whereBetween('created_at', $previousRange)
             ->whereJsonContains('analysis->sentiment', ['positive', 'negative', 'neutral'])
             ->count();
         
-        $prevPositiveCalls = Call::whereBetween('created_at', $previousRange)
+        $prevPositiveCalls = $query->clone()
+            ->whereBetween('created_at', $previousRange)
             ->whereJsonContains('analysis->sentiment', 'positive')
             ->count();
 
@@ -391,13 +482,25 @@ class DashboardMetricsService
         ];
     }
 
-    private function calculateAvgCallCost(array $dateRange, array $previousRange): array
+    private function calculateAvgCallCost(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $current = Call::whereBetween('created_at', $dateRange)
+        $query = Call::query();
+        
+        if ($companyId) {
+            $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+            if (!empty($phoneNumbers)) {
+                $query->whereIn('to_number', $phoneNumbers);
+            }
+            $query->where('company_id', $companyId);
+        }
+        
+        $current = $query->clone()
+            ->whereBetween('created_at', $dateRange)
             ->whereNotNull('cost')
             ->avg('cost') ?? 0;
 
-        $previous = Call::whereBetween('created_at', $previousRange)
+        $previous = $query->clone()
+            ->whereBetween('created_at', $previousRange)
             ->whereNotNull('cost')
             ->avg('cost') ?? 0;
 
@@ -410,10 +513,21 @@ class DashboardMetricsService
         ];
     }
 
-    private function calculateCallROI(array $dateRange, array $previousRange): array
+    private function calculateCallROI(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
         // ROI = (Termin-Wert - Call-Kosten) / Call-Kosten * 100
-        $callCosts = Call::whereBetween('created_at', $dateRange)
+        $query = Call::query();
+        
+        if ($companyId) {
+            $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+            if (!empty($phoneNumbers)) {
+                $query->whereIn('to_number', $phoneNumbers);
+            }
+            $query->where('company_id', $companyId);
+        }
+        
+        $callCosts = $query->clone()
+            ->whereBetween('created_at', $dateRange)
             ->whereHas('appointment')
             ->sum('cost') ?? 0;
 
@@ -421,12 +535,22 @@ class DashboardMetricsService
             ->join('services', 'appointments.service_id', '=', 'services.id')
             ->whereNotNull('appointments.call_id')
             ->whereBetween('appointments.created_at', $dateRange)
+            ->when($companyId, function($q) use ($companyId) {
+                $q->whereHas('call', function($callQuery) use ($companyId) {
+                    $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+                    if (!empty($phoneNumbers)) {
+                        $callQuery->whereIn('to_number', $phoneNumbers);
+                    }
+                    $callQuery->where('company_id', $companyId);
+                });
+            })
             ->sum('services.price') ?? 0;
 
         $current = $callCosts > 0 ? (($appointmentRevenue - $callCosts) / $callCosts) * 100 : 0;
 
         // Previous period
-        $prevCallCosts = Call::whereBetween('created_at', $previousRange)
+        $prevCallCosts = $query->clone()
+            ->whereBetween('created_at', $previousRange)
             ->whereHas('appointment')
             ->sum('cost') ?? 0;
 
@@ -434,6 +558,15 @@ class DashboardMetricsService
             ->join('services', 'appointments.service_id', '=', 'services.id')
             ->whereNotNull('appointments.call_id')
             ->whereBetween('appointments.created_at', $previousRange)
+            ->when($companyId, function($q) use ($companyId) {
+                $q->whereHas('call', function($callQuery) use ($companyId) {
+                    $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
+                    if (!empty($phoneNumbers)) {
+                        $callQuery->whereIn('to_number', $phoneNumbers);
+                    }
+                    $callQuery->where('company_id', $companyId);
+                });
+            })
             ->sum('services.price') ?? 0;
 
         $previous = $prevCallCosts > 0 ? (($prevAppointmentRevenue - $prevCallCosts) / $prevCallCosts) * 100 : 0;
@@ -650,6 +783,21 @@ class DashboardMetricsService
     // ========================================================================
     // HELPER METHODS
     // ========================================================================
+    
+    /**
+     * Get company phone numbers for filtering
+     */
+    private function getCompanyPhoneNumbers(?int $companyId): array
+    {
+        if (!$companyId) {
+            return [];
+        }
+        
+        return PhoneNumber::where('company_id', $companyId)
+            ->where('is_active', true)
+            ->pluck('number')
+            ->toArray();
+    }
 
     private function getDateRange(array $filters): array
     {
@@ -837,7 +985,13 @@ class DashboardMetricsService
         $cacheKey = "operational_metrics_{$company->id}_" . ($branch?->id ?? 'all');
         
         return Cache::remember($cacheKey, 300, function () use ($company, $branch) {
+            // Get company phone numbers for filtering
+            $phoneNumbers = $this->getCompanyPhoneNumbers($company->id);
+            
             $query = Call::where('company_id', $company->id);
+            if (!empty($phoneNumbers)) {
+                $query->whereIn('to_number', $phoneNumbers);
+            }
             if ($branch) {
                 $query->where('branch_id', $branch->id);
             }

@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Branch;
-use App\Models\UnifiedEventType;
+// use App\Models\UnifiedEventType; // Model removed - use CalcomEventType instead
 use App\Services\Calendar\CalcomCalendarService;
 
 class ImportCalcomEventTypes extends Command
@@ -15,6 +15,11 @@ class ImportCalcomEventTypes extends Command
 
     public function handle()
     {
+        $this->error('This command needs to be updated - UnifiedEventType model has been removed.');
+        $this->info('Please use CalcomEventType model instead or use the EventTypeImportWizard in the admin panel.');
+        return 1;
+        
+        /* Original code commented out - needs migration to CalcomEventType model
         $branchOption = $this->option('branch');
         
         if ($branchOption === 'all') {
@@ -78,5 +83,6 @@ class ImportCalcomEventTypes extends Command
         
         $this->info('Import completed!');
         return 0;
+        */
     }
 }

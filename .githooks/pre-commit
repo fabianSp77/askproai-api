@@ -1,0 +1,202 @@
+#!/bin/sh
+#
+# Pre-commit hook for AskProAI
+# Runs code quality checks before allowing commits
+#
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo "🔍 Running pre-commit checks..."
+
+# Function to check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Get list of staged PHP files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.php$' | paste -sd ' ')
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "✅ No PHP files to check"
+    exit 0
+fi
+
+echo "📋 Checking $(echo $STAGED_FILES | wc -w) PHP files..."
+
+# 1. PHP Syntax Check
+echo -n "🔧 PHP Syntax Check... "
+SYNTAX_ERRORS=0
+for FILE in $STAGED_FILES; do
+    if [ -f "$FILE" ]; then
+        php -l "$FILE" > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            SYNTAX_ERRORS=1
+            echo -e "${RED}✗${NC}"
+            echo -e "${RED}Syntax error in $FILE${NC}"
+            php -l "$FILE"
+        fi
+    fi
+done
+
+if [ $SYNTAX_ERRORS -eq 0 ]; then
+    echo -e "${GREEN}✓${NC}"
+fi
+
+# 2. Laravel Pint (Code Style)
+if command_exists ./vendor/bin/pint; then
+    echo -n "🎨 Laravel Pint... "
+    ./vendor/bin/pint --test $STAGED_FILES > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}✗${NC}"
+        echo -e "${YELLOW}Code style issues found. Run 'composer pint' to fix.${NC}"
+        ./vendor/bin/pint --test $STAGED_FILES
+        exit 1
+    else
+        echo -e "${GREEN}✓${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠️  Laravel Pint not installed${NC}"
+fi
+
+# 3. PHPStan (Static Analysis)
+if command_exists ./vendor/bin/phpstan && [ -f phpstan.neon ]; then
+    echo -n "🔍 PHPStan Analysis... "
+    ./vendor/bin/phpstan analyse $STAGED_FILES --no-progress --no-ansi > /tmp/phpstan-output.txt 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}✗${NC}"
+        echo -e "${RED}Static analysis errors found:${NC}"
+        cat /tmp/phpstan-output.txt
+        rm /tmp/phpstan-output.txt
+        exit 1
+    else
+        echo -e "${GREEN}✓${NC}"
+        rm /tmp/phpstan-output.txt
+    fi
+else
+    echo -e "${YELLOW}⚠️  PHPStan not installed${NC}"
+fi
+
+# 4. Check for debug statements
+echo -n "🐛 Debug Statement Check... "
+DEBUG_FOUND=0
+for FILE in $STAGED_FILES; do
+    if [ -f "$FILE" ]; then
+        # Check for common debug statements
+        if grep -E "(dd\(|dump\(|var_dump\(|print_r\(|die\(|exit\(|ray\()" "$FILE" > /dev/null; then
+            DEBUG_FOUND=1
+            echo -e "${RED}✗${NC}"
+            echo -e "${RED}Debug statements found in $FILE:${NC}"
+            grep -n -E "(dd\(|dump\(|var_dump\(|print_r\(|die\(|exit\(|ray\()" "$FILE"
+        fi
+    fi
+done
+
+if [ $DEBUG_FOUND -eq 0 ]; then
+    echo -e "${GREEN}✓${NC}"
+else
+    exit 1
+fi
+
+# 5. Check for sensitive data
+echo -n "🔐 Security Check... "
+SECURITY_ISSUES=0
+for FILE in $STAGED_FILES; do
+    if [ -f "$FILE" ]; then
+        # Check for hardcoded credentials or API keys
+        if grep -E "(password\s*=\s*['\"][^'\"]+['\"]|api_key\s*=\s*['\"][^'\"]+['\"]|secret\s*=\s*['\"][^'\"]+['\"])" "$FILE" > /dev/null; then
+            SECURITY_ISSUES=1
+            echo -e "${RED}✗${NC}"
+            echo -e "${RED}Potential hardcoded credentials in $FILE${NC}"
+            grep -n -E "(password\s*=\s*['\"][^'\"]+['\"]|api_key\s*=\s*['\"][^'\"]+['\"]|secret\s*=\s*['\"][^'\"]+['\"])" "$FILE"
+        fi
+    fi
+done
+
+if [ $SECURITY_ISSUES -eq 0 ]; then
+    echo -e "${GREEN}✓${NC}"
+else
+    echo -e "${YELLOW}Please use environment variables for sensitive data${NC}"
+    exit 1
+fi
+
+# 6. Run tests for changed files
+if command_exists ./vendor/bin/phpunit || command_exists php; then
+    echo -n "🧪 Running tests... "
+    
+    # Find test files related to changed files
+    TEST_FILES=""
+    for FILE in $STAGED_FILES; do
+        # Convert app/Services/Foo.php to tests/Unit/Services/FooTest.php
+        TEST_FILE=$(echo "$FILE" | sed 's/^app\//tests\/Unit\//' | sed 's/\.php$/Test.php/')
+        if [ -f "$TEST_FILE" ]; then
+            TEST_FILES="$TEST_FILES $TEST_FILE"
+        fi
+        
+        # Also check for Feature tests
+        TEST_FILE=$(echo "$FILE" | sed 's/^app\//tests\/Feature\//' | sed 's/\.php$/Test.php/')
+        if [ -f "$TEST_FILE" ]; then
+            TEST_FILES="$TEST_FILES $TEST_FILE"
+        fi
+    done
+    
+    if [ -n "$TEST_FILES" ]; then
+        php artisan test $TEST_FILES --stop-on-failure > /tmp/test-output.txt 2>&1
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}✗${NC}"
+            echo -e "${RED}Tests failed:${NC}"
+            cat /tmp/test-output.txt
+            rm /tmp/test-output.txt
+            exit 1
+        else
+            echo -e "${GREEN}✓${NC}"
+            rm /tmp/test-output.txt
+        fi
+    else
+        echo -e "${YELLOW}No tests found for changed files${NC}"
+    fi
+fi
+
+# 7. Check file size
+echo -n "📏 File Size Check... "
+LARGE_FILES=0
+for FILE in $STAGED_FILES; do
+    if [ -f "$FILE" ]; then
+        SIZE=$(wc -c < "$FILE")
+        if [ $SIZE -gt 1048576 ]; then  # 1MB
+            LARGE_FILES=1
+            echo -e "${RED}✗${NC}"
+            echo -e "${RED}File $FILE is larger than 1MB ($(($SIZE / 1024))KB)${NC}"
+        fi
+    fi
+done
+
+if [ $LARGE_FILES -eq 0 ]; then
+    echo -e "${GREEN}✓${NC}"
+fi
+
+# 8. Documentation check for new services
+echo -n "📚 Documentation Check... "
+DOC_ISSUES=0
+for FILE in $STAGED_FILES; do
+    if echo "$FILE" | grep -E "(Services|MCP)" > /dev/null; then
+        # Check if class has proper PHPDoc
+        if [ -f "$FILE" ]; then
+            if ! grep -E "^/\*\*" "$FILE" > /dev/null; then
+                DOC_ISSUES=1
+                echo -e "${YELLOW}⚠️${NC}"
+                echo -e "${YELLOW}Missing PHPDoc in $FILE${NC}"
+            fi
+        fi
+    fi
+done
+
+if [ $DOC_ISSUES -eq 0 ]; then
+    echo -e "${GREEN}✓${NC}"
+fi
+
+echo ""
+echo "✅ All pre-commit checks passed!"

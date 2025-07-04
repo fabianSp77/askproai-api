@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/5-MINUTEN_ONBOARDING_PLAYBOOK/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>5-Minuten Onboarding - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "5-Minuten Onboarding";
+        var mkdocs_page_input_path = "5-MINUTEN_ONBOARDING_PLAYBOOK.md";
+        var mkdocs_page_url = "/mkdocs/5-MINUTEN_ONBOARDING_PLAYBOOK/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">5-Minuten Onboarding</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#zeitplan">⏱️ Zeitplan</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#onboarding-prozess-ubersicht">📊 Onboarding-Prozess Übersicht</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#schritt-1-branche-wahlen-30-sek">📋 SCHRITT 1: Branche wählen (30 Sek)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#branchen-entscheidungsbaum">Branchen-Entscheidungsbaum</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#medizin-arzt-zahnarzt-physiotherapie">🏥 Medizin (Arzt, Zahnarzt, Physiotherapie)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#beauty-friseur-kosmetik-nails">💇 Beauty (Friseur, Kosmetik, Nails)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#handwerk-installateur-elektriker-kfz">🔧 Handwerk (Installateur, Elektriker, KFZ)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#schritt-2-basis-setup-90-sek">📋 SCHRITT 2: Basis-Setup (90 Sek)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#quick-setup-command">Quick Setup Command:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#was-passiert-automatisch">✅ Was passiert automatisch:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#schritt-3-ai-agent-prompt-60-sek">📋 SCHRITT 3: AI-Agent Prompt (60 Sek)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#medizin-template">🏥 Medizin Template:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#beauty-template">💇 Beauty Template:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#copy-paste-in-retell-dashboard">🛠️ Copy-Paste in Retell Dashboard:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#schritt-4-test-anruf-60-sek">📋 SCHRITT 4: Test-Anruf (60 Sek)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#test-skript-fur-ersten-anruf">📞 Test-Skript für ersten Anruf:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#erfolgs-checkliste">✅ Erfolgs-Checkliste:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#fehler-quick-fixes">🚨 Fehler? Quick-Fixes:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#schritt-5-live-schalten-30-sek">🎯 SCHRITT 5: Live schalten (30 Sek)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#final-checklist">✅ Final Checklist:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#kunde-informieren">📱 Kunde informieren:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#notfall-support">🆘 Notfall-Support</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#weiterfuhrende-ressourcen">🎓 Weiterführende Ressourcen</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Schnellstart &raquo;</li>
+      <li>5-Minuten Onboarding</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="5-minuten-onboarding-playbook-fur-askproai">🚀 5-Minuten Onboarding Playbook für AskProAI</h1>
+<blockquote>
+<p><strong>Ziel</strong>: Neuer Kunde ist in 5 Minuten live und empfängt Termine!</p>
+</blockquote>
+<h2 id="zeitplan">⏱️ Zeitplan</h2>
+<ul>
+<li><strong>Minute 1-2</strong>: Branche wählen &amp; Account anlegen</li>
+<li><strong>Minute 3-4</strong>: AI-Agent konfigurieren &amp; testen</li>
+<li><strong>Minute 5</strong>: Live schalten &amp; ersten Testanruf</li>
+</ul>
+<h2 id="onboarding-prozess-ubersicht">📊 Onboarding-Prozess Übersicht</h2>
+<pre><code class="language-mermaid">flowchart LR
+    Start([Neuer Kunde]) --&gt; Branch{Branche wählen}
+    Branch --&gt;|Medizin| MedTemplate[Medizin-Template&lt;br/&gt;30 Min Slots&lt;br/&gt;DSGVO-konform]
+    Branch --&gt;|Beauty| BeautyTemplate[Beauty-Template&lt;br/&gt;60 Min Slots&lt;br/&gt;Preisliste]
+    Branch --&gt;|Handwerk| HandwerkTemplate[Handwerk-Template&lt;br/&gt;2h Slots&lt;br/&gt;Notdienst]
+
+    MedTemplate --&gt; Setup[Quick Setup&lt;br/&gt;90 Sek]
+    BeautyTemplate --&gt; Setup
+    HandwerkTemplate --&gt; Setup
+
+    Setup --&gt; AI[AI-Agent&lt;br/&gt;konfigurieren]
+    AI --&gt; Test[Test-Anruf&lt;br/&gt;durchführen]
+    Test --&gt; Live[Live schalten]
+    Live --&gt; Success([✅ Fertig!&lt;br/&gt;5 Min total])
+
+    style Start fill:#e1f5e1
+    style Success fill:#4caf50,color:#fff
+    style Branch fill:#fff3cd
+    style Setup fill:#cfe2ff
+    style AI fill:#cfe2ff
+    style Test fill:#cfe2ff
+    style Live fill:#cfe2ff
+</code></pre>
+<hr />
+<h2 id="schritt-1-branche-wahlen-30-sek">📋 SCHRITT 1: Branche wählen (30 Sek)</h2>
+<h3 id="branchen-entscheidungsbaum">Branchen-Entscheidungsbaum</h3>
+<pre><code class="language-mermaid">flowchart TD
+    Q1{&quot;Terminbasiertes&lt;br/&gt;Geschäft?&quot;}
+    Q1 --&gt;|Ja| Q2{&quot;Medizinischer&lt;br/&gt;Bereich?&quot;}
+    Q1 --&gt;|Nein| NotSupported[Noch nicht&lt;br/&gt;unterstützt]
+
+    Q2 --&gt;|Ja| Medical[🏥 Medizin-Template]
+    Q2 --&gt;|Nein| Q3{&quot;Beauty/&lt;br/&gt;Wellness?&quot;}
+
+    Q3 --&gt;|Ja| Beauty[💇 Beauty-Template]
+    Q3 --&gt;|Nein| Q4{&quot;Handwerk/&lt;br/&gt;Service?&quot;}
+
+    Q4 --&gt;|Ja| Handwerk[🔧 Handwerk-Template]
+    Q4 --&gt;|Nein| Custom[Individuell&lt;br/&gt;konfigurieren]
+
+    Medical --&gt; Features1[✓ DSGVO-konform&lt;br/&gt;✓ Rezept-Hinweise&lt;br/&gt;✓ 24h Vorlauf]
+    Beauty --&gt; Features2[✓ Preisliste&lt;br/&gt;✓ Instagram&lt;br/&gt;✓ 2h Vorlauf]
+    Handwerk --&gt; Features3[✓ Notdienst&lt;br/&gt;✓ WhatsApp&lt;br/&gt;✓ Anfahrt]
+
+    style Q1 fill:#fff3cd
+    style Q2 fill:#fff3cd
+    style Q3 fill:#fff3cd
+    style Q4 fill:#fff3cd
+    style Medical fill:#e3f2fd
+    style Beauty fill:#fce4ec
+    style Handwerk fill:#e8f5e9
+    style NotSupported fill:#ffebee
+</code></pre>
+<h3 id="medizin-arzt-zahnarzt-physiotherapie">🏥 <strong>Medizin</strong> (Arzt, Zahnarzt, Physiotherapie)</h3>
+<pre><code class="language-bash">./setup-customer.sh --template=&quot;medical&quot; --company=&quot;$FIRMENNAME&quot;
+</code></pre>
+<p><strong>Voreinstellungen</strong>:
+- Terminlänge: 30 Min
+- Vorlaufzeit: 24 Stunden
+- DSGVO-konform
+- Rezept-Hinweise aktiviert</p>
+<h3 id="beauty-friseur-kosmetik-nails">💇 <strong>Beauty</strong> (Friseur, Kosmetik, Nails)</h3>
+<pre><code class="language-bash">./setup-customer.sh --template=&quot;beauty&quot; --company=&quot;$FIRMENNAME&quot;
+</code></pre>
+<p><strong>Voreinstellungen</strong>:
+- Terminlänge: 60 Min
+- Vorlaufzeit: 2 Stunden
+- Preisliste integriert
+- Instagram-Verlinkung</p>
+<h3 id="handwerk-installateur-elektriker-kfz">🔧 <strong>Handwerk</strong> (Installateur, Elektriker, KFZ)</h3>
+<pre><code class="language-bash">./setup-customer.sh --template=&quot;craftsman&quot; --company=&quot;$FIRMENNAME&quot;
+</code></pre>
+<p><strong>Voreinstellungen</strong>:
+- Terminlänge: 2 Stunden
+- Notdienst-Routing
+- Anfahrtskosten-Hinweis
+- WhatsApp-Integration</p>
+<hr />
+<h2 id="schritt-2-basis-setup-90-sek">📋 SCHRITT 2: Basis-Setup (90 Sek)</h2>
+<h3 id="quick-setup-command">Quick Setup Command:</h3>
+<pre><code class="language-bash"># Alles in einem Befehl!
+php artisan askpro:quick-setup \
+  --company=&quot;Zahnarztpraxis Dr. Schmidt&quot; \
+  --phone=&quot;+49 30 12345678&quot; \
+  --email=&quot;info@dr-schmidt.de&quot; \
+  --branch=&quot;Hauptpraxis Berlin&quot;
+</code></pre>
+<h3 id="was-passiert-automatisch">✅ Was passiert automatisch:</h3>
+<ul>
+<li>[x] Company wird angelegt</li>
+<li>[x] Branch wird erstellt  </li>
+<li>[x] Telefonnummer wird verknüpft</li>
+<li>[x] Retell Agent wird provisioniert</li>
+<li>[x] Cal.com Event Type wird erstellt</li>
+<li>[x] Email-Templates werden geladen</li>
+</ul>
+<hr />
+<h2 id="schritt-3-ai-agent-prompt-60-sek">📋 SCHRITT 3: AI-Agent Prompt (60 Sek)</h2>
+<h3 id="medizin-template">🏥 <strong>Medizin Template</strong>:</h3>
+<pre><code>Du bist die freundliche Empfangskraft der {{company_name}}.
+
+WICHTIG:
+- Begrüße mit: &quot;Praxis {{company_name}}, guten Tag!&quot;
+- Frage nach Versichertenstatus (Gesetzlich/Privat)
+- Biete nur Termine ab morgen an
+- Weise auf Terminabsage 24h vorher hin
+- Beende mit: &quot;Vielen Dank und auf Wiederhören!&quot;
+
+SERVICES:
+- Erstberatung (30 Min)
+- Kontrolltermin (15 Min)
+- Behandlung (45 Min)
+</code></pre>
+<h3 id="beauty-template">💇 <strong>Beauty Template</strong>:</h3>
+<pre><code>Du bist die Rezeption von {{company_name}}.
+
+BEGRÜSSUNG: &quot;{{company_name}}, schönen guten Tag!&quot;
+
+WICHTIG:
+- Frage nach gewünschter Behandlung
+- Erwähne Preise bei Nachfrage
+- Biete Zusatzservices an (z.B. Maniküre)
+- Instagram: @{{instagram_handle}}
+
+SERVICES:
+- Haarschnitt Damen (45 Min) - 45€
+- Haarschnitt Herren (30 Min) - 25€
+- Farbe &amp; Schnitt (120 Min) - 120€
+</code></pre>
+<h3 id="copy-paste-in-retell-dashboard">🛠️ <strong>Copy-Paste in Retell Dashboard</strong>:</h3>
+<ol>
+<li>Gehe zu: https://dashboard.retellai.com/agents</li>
+<li>Klicke auf deinen Agent</li>
+<li>Füge Prompt ein → Save</li>
+</ol>
+<hr />
+<h2 id="schritt-4-test-anruf-60-sek">📋 SCHRITT 4: Test-Anruf (60 Sek)</h2>
+<h3 id="test-skript-fur-ersten-anruf">📞 <strong>Test-Skript für ersten Anruf</strong>:</h3>
+<pre><code>1. Wähle: {{phone_number}}
+2. Sage: &quot;Ich möchte einen Termin vereinbaren&quot;
+3. Antworte auf Fragen (Service, Datum, Zeit)
+4. Bestätige mit &quot;Ja, passt perfekt&quot;
+5. Lege auf
+</code></pre>
+<h3 id="erfolgs-checkliste">✅ <strong>Erfolgs-Checkliste</strong>:</h3>
+<ul>
+<li>[ ] AI hat freundlich begrüßt</li>
+<li>[ ] Verfügbare Termine wurden angeboten</li>
+<li>[ ] Kundendaten wurden korrekt erfasst</li>
+<li>[ ] Termin erscheint im Admin-Panel</li>
+<li>[ ] Bestätigungs-Email wurde versendet</li>
+</ul>
+<h3 id="fehler-quick-fixes">🚨 <strong>Fehler? Quick-Fixes</strong>:</h3>
+<pre><code class="language-mermaid">flowchart TD
+    Problem{&quot;Welches&lt;br/&gt;Problem?&quot;}
+    Problem --&gt;|AI antwortet nicht| AI[&quot;AI-Problem&quot;]
+    Problem --&gt;|Keine Termine| Cal[&quot;Calendar-Problem&quot;]
+    Problem --&gt;|Email fehlt| Email[&quot;Email-Problem&quot;]
+    Problem --&gt;|Anderes| Other[&quot;Siehe ERROR_PATTERNS.md&quot;]
+
+    AI --&gt; AI1[&quot;php artisan horizon&quot;]
+    AI1 --&gt; AI2[&quot;php artisan retell:test-connection&quot;]
+    AI2 --&gt; AI3{&quot;Gelöst?&quot;}
+    AI3 --&gt;|Nein| Support1[&quot;WhatsApp Support:&lt;br/&gt;+49 176 12345678&quot;]
+    AI3 --&gt;|Ja| Fixed1[&quot;✅ Behoben&quot;]
+
+    Cal --&gt; Cal1[&quot;php artisan calcom:sync-availability&quot;]
+    Cal1 --&gt; Cal2{&quot;Gelöst?&quot;}
+    Cal2 --&gt;|Nein| Support2[&quot;Support kontaktieren&quot;]
+    Cal2 --&gt;|Ja| Fixed2[&quot;✅ Behoben&quot;]
+
+    Email --&gt; Email1[&quot;php artisan queue:work --queue=emails&quot;]
+    Email1 --&gt; Email2{&quot;Gelöst?&quot;}
+    Email2 --&gt;|Nein| Support3[&quot;SMTP prüfen&quot;]
+    Email2 --&gt;|Ja| Fixed3[&quot;✅ Behoben&quot;]
+
+    style Problem fill:#fff3cd
+    style AI fill:#ffebee
+    style Cal fill:#ffebee
+    style Email fill:#ffebee
+    style Fixed1 fill:#c8e6c9
+    style Fixed2 fill:#c8e6c9
+    style Fixed3 fill:#c8e6c9
+    style Support1 fill:#ff9800,color:#fff
+    style Support2 fill:#ff9800,color:#fff
+    style Support3 fill:#ff9800,color:#fff
+</code></pre>
+<pre><code class="language-bash"># AI antwortet nicht?
+php artisan horizon
+php artisan retell:test-connection
+
+# Keine Termine verfügbar?
+php artisan calcom:sync-availability
+
+# Email kommt nicht?
+php artisan queue:work --queue=emails
+</code></pre>
+<hr />
+<h2 id="schritt-5-live-schalten-30-sek">🎯 SCHRITT 5: Live schalten (30 Sek)</h2>
+<h3 id="final-checklist">✅ <strong>Final Checklist</strong>:</h3>
+<pre><code class="language-bash"># Automatischer Go-Live Check
+php artisan askpro:preflight-check
+
+# Ausgabe sollte sein:
+✅ Retell Agent: Active
+✅ Phone Number: Connected  
+✅ Cal.com: Synced
+✅ Email: Configured
+✅ Webhooks: Verified
+
+🚀 READY FOR PRODUCTION!
+</code></pre>
+<h3 id="kunde-informieren">📱 <strong>Kunde informieren</strong>:</h3>
+<pre><code>Lieber Kunde,
+
+Ihre AI-Telefonassistentin ist jetzt aktiv! 🎉
+
+✅ Telefonnummer: {{phone_number}}
+✅ Verfügbar: 24/7
+✅ Admin-Panel: https://app.askproai.de
+
+Erste Schritte:
+1. Machen Sie einen Testanruf
+2. Prüfen Sie den Termin im Admin-Panel
+3. Passen Sie bei Bedarf den AI-Text an
+
+Bei Fragen: support@askproai.de oder 0800-ASKPRO-AI
+
+Viel Erfolg!
+Ihr AskProAI Team
+</code></pre>
+<hr />
+<h2 id="notfall-support">🆘 Notfall-Support</h2>
+<p><strong>Problem nicht gelöst?</strong>
+1. WhatsApp Hotline: +49 176 12345678
+2. Email: urgent@askproai.de
+3. Remote-Support: https://askproai.de/screenshare</p>
+<p><strong>Häufigste Probleme</strong>:
+- "Webhook failed" → Siehe ERROR_PATTERNS.md Code WEBHOOK_001
+- "Keine Anrufe" → Siehe ERROR_PATTERNS.md Code RETELL_001
+- "DB Error" → Siehe ERROR_PATTERNS.md Code DB_001</p>
+<hr />
+<h2 id="weiterfuhrende-ressourcen">🎓 Weiterführende Ressourcen</h2>
+<p>Nach erfolgreichem Onboarding:
+- <strong>Erweiterte Konfiguration</strong>: ADVANCED_CONFIG.md
+- <strong>Multi-Branch Setup</strong>: MULTI_LOCATION_GUIDE.md
+- <strong>Custom Prompts</strong>: AI_PROMPT_ENGINEERING.md
+- <strong>Analytics Setup</strong>: KPI_DASHBOARD_TEMPLATE.md</p>
+<blockquote>
+<p>💡 <strong>Pro-Tipp</strong>: Speichern Sie dieses Playbook als PDF für Ihre Kunden!</p>
+</blockquote>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../DEVELOPMENT_PROCESS_2025/" class="btn btn-neutral float-left" title="Development Process"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../architecture/overview/" class="btn btn-neutral float-right" title="Übersicht">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../DEVELOPMENT_PROCESS_2025/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../architecture/overview/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -6,6 +6,8 @@ use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Branch;
+use App\Models\Staff;
+use App\Models\Company;
 use App\Services\CalcomV2Service;
 use App\Services\NotificationService;
 use App\Exceptions\MCPException;
@@ -26,6 +28,231 @@ class AppointmentManagementMCPServer
     public function __construct(NotificationService $notificationService)
     {
         $this->notificationService = $notificationService;
+    }
+    
+    /**
+     * Create a new appointment
+     * 
+     * @param array $params
+     * @return array
+     */
+    public function create(array $params): array
+    {
+        Log::info('AppointmentManagementMCPServer: Create appointment request', $params);
+        
+        try {
+            DB::beginTransaction();
+            
+            // Extract and normalize phone number
+            $phoneNumber = $this->normalizePhoneNumber($params['phone_number'] ?? '');
+            
+            // Find or create customer
+            $customer = Customer::withoutGlobalScopes()
+                ->where('phone', $phoneNumber)
+                ->orWhere('phone', 'LIKE', '%' . substr($phoneNumber, -10))
+                ->first();
+                
+            if (!$customer) {
+                // Create new customer
+                $customer = Customer::create([
+                    'name' => $params['customer_name'] ?? 'Unknown',
+                    'phone' => $phoneNumber,
+                    'email' => $params['email'] ?? null,
+                    'company_id' => Company::withoutGlobalScopes()->first()->id, // Default company
+                    'source' => 'phone_ai'
+                ]);
+                
+                Log::info('Created new customer', ['customer_id' => $customer->id]);
+            }
+            
+            // Parse datetime
+            $startTime = null;
+            if (isset($params['datetime'])) {
+                $startTime = Carbon::parse($params['datetime']);
+            } elseif (isset($params['date']) && isset($params['time'])) {
+                $germanDate = $params['date'];
+                $time = $params['time'];
+                $startTime = $this->parseGermanDateTime($germanDate, $time);
+            }
+            
+            if (!$startTime) {
+                throw new MCPException('Kein gültiges Datum angegeben');
+            }
+            
+            // Get branch - use branch with ID 1 for appointments (numeric ID compatibility)
+            $branch = Branch::withoutGlobalScopes()->where('id', '1')->first();
+            if (!$branch) {
+                // Fallback to first active branch
+                $branch = Branch::withoutGlobalScopes()->where('active', true)->first();
+                if (!$branch) {
+                    throw new MCPException('Keine aktive Filiale gefunden');
+                }
+            }
+            
+            // For appointments table, we need numeric branch_id
+            $branchIdForAppointment = is_numeric($branch->id) ? $branch->id : 1;
+            
+            // Get service
+            $service = null;
+            if (isset($params['service_name'])) {
+                $service = Service::withoutGlobalScopes()
+                    ->where('active', true)
+                    ->where('name', 'LIKE', '%' . $params['service_name'] . '%')
+                    ->first();
+            }
+            if (!$service) {
+                $service = Service::withoutGlobalScopes()->where('active', true)->first();
+            }
+            
+            // Calculate end time - use 30 minutes for Cal.com event type 2563193
+            $duration = 30; // Fixed 30 minutes to match Cal.com event type
+            $endTime = $startTime->copy()->addMinutes($duration);
+            
+            // Get staff preference
+            $staff = null;
+            if (isset($params['staff_preference'])) {
+                $staff = Staff::withoutGlobalScopes()
+                    ->where('active', true)
+                    ->where('name', 'LIKE', '%' . $params['staff_preference'] . '%')
+                    ->first();
+            }
+            if (!$staff) {
+                // Get default staff
+                $staff = Staff::withoutGlobalScopes()
+                    ->where('active', true)
+                    ->where('branch_id', $branch->id)
+                    ->first();
+            }
+            
+            // Check if Cal.com is configured
+            $company = Company::find($branch->company_id);
+            if (!$company->calcom_api_key || !$branch->calcom_event_type_id) {
+                Log::error('Cal.com not configured', [
+                    'company_id' => $branch->company_id,
+                    'branch_id' => $branch->id,
+                    'has_api_key' => (bool)$company->calcom_api_key,
+                    'has_event_type' => (bool)$branch->calcom_event_type_id
+                ]);
+                
+                throw new MCPException(
+                    'Das Buchungssystem ist momentan nicht verfügbar. Bitte versuchen Sie es später erneut.'
+                );
+            }
+            
+            // First try to create Cal.com booking
+            $calcomBookingId = null;
+            try {
+                // Decrypt API key if needed
+                $apiKey = $company->calcom_api_key;
+                try {
+                    $apiKey = decrypt($apiKey);
+                } catch (\Exception $e) {
+                    // API key might not be encrypted
+                }
+                
+                $calcomService = new CalcomV2Service($apiKey);
+                
+                $calcomResult = $calcomService->createBooking([
+                    'eventTypeId' => $branch->calcom_event_type_id,
+                    'start' => $startTime->toIso8601String(),
+                    'end' => $endTime->toIso8601String(),
+                    'name' => $customer->name,
+                    'email' => $customer->email ?? 'noreply@askproai.de',
+                    'phone' => $customer->phone,
+                    'notes' => $params['notes'] ?? ''
+                ]);
+                
+                if (isset($calcomResult['data']['id'])) {
+                    $calcomBookingId = $calcomResult['data']['id'];
+                    Log::info('Cal.com booking created successfully', [
+                        'booking_id' => $calcomBookingId
+                    ]);
+                } else {
+                    throw new \Exception('No booking ID returned from Cal.com');
+                }
+                
+            } catch (\Exception $e) {
+                Log::error('Failed to create Cal.com booking', [
+                    'error' => $e->getMessage()
+                ]);
+                
+                // Don't create appointment if Cal.com booking fails
+                throw new MCPException(
+                    'Der Termin konnte nicht gebucht werden. Bitte versuchen Sie es später erneut.'
+                );
+            }
+            
+            // Only create appointment if Cal.com booking was successful
+            $appointment = Appointment::create([
+                'company_id' => $branch->company_id,
+                'branch_id' => $branchIdForAppointment,
+                'customer_id' => $customer->id,
+                'staff_id' => $staff ? $staff->id : null,
+                'service_id' => $service ? $service->id : null,
+                'starts_at' => $startTime,
+                'ends_at' => $endTime,
+                'status' => 'scheduled',
+                'source' => $params['source'] ?? 'phone_ai',
+                'notes' => $params['notes'] ?? $params['preferences'] ?? null,
+                'calcom_v2_booking_id' => $calcomBookingId,
+                'metadata' => [
+                    'booked_via' => 'phone_ai',
+                    'preferences' => $params['preferences'] ?? null,
+                    'calcom_booking_id' => $calcomBookingId
+                ]
+            ]);
+            
+            // Send confirmation notification
+            try {
+                $this->notificationService->sendAppointmentConfirmation($appointment);
+            } catch (\Exception $e) {
+                Log::warning('Failed to send confirmation', [
+                    'appointment_id' => $appointment->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
+            DB::commit();
+            
+            Log::info('Appointment created successfully', [
+                'appointment_id' => $appointment->id,
+                'customer_id' => $customer->id,
+                'datetime' => $startTime->format('Y-m-d H:i')
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => 'Termin erfolgreich gebucht',
+                'appointment' => [
+                    'id' => $appointment->id,
+                    'datetime' => $startTime->format('d.m.Y H:i'),
+                    'service' => $service ? $service->name : 'Termin',
+                    'staff' => $staff ? $staff->name : null,
+                    'branch' => $branch->name,
+                    'duration_minutes' => $duration
+                ],
+                'customer' => [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'phone' => $customer->phone
+                ]
+            ];
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Failed to create appointment', [
+                'params' => $params,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($e instanceof MCPException) {
+                throw $e;
+            }
+            
+            throw new MCPException('Fehler beim Erstellen des Termins: ' . $e->getMessage());
+        }
     }
     
     /**
@@ -113,7 +340,7 @@ class AppointmentManagementMCPServer
             if (!$findResult['found'] || empty($findResult['appointments'])) {
                 throw new MCPException(
                     'Kein anstehender Termin gefunden',
-                    MCPException::APPOINTMENT_NOT_FOUND
+                    0
                 );
             }
             
@@ -130,7 +357,7 @@ class AppointmentManagementMCPServer
             if (!$appointmentData) {
                 throw new MCPException(
                     'Termin nicht gefunden',
-                    MCPException::APPOINTMENT_NOT_FOUND
+                    0
                 );
             }
             
@@ -141,7 +368,7 @@ class AppointmentManagementMCPServer
             if (!$this->canModifyAppointment($appointment)) {
                 throw new MCPException(
                     'Termin kann nicht mehr geändert werden (zu kurzfristig)',
-                    MCPException::VALIDATION_FAILED
+                    0
                 );
             }
             
@@ -152,7 +379,7 @@ class AppointmentManagementMCPServer
             if ($newDateTime->isPast()) {
                 throw new MCPException(
                     'Neuer Termin liegt in der Vergangenheit',
-                    MCPException::VALIDATION_FAILED
+                    0
                 );
             }
             
@@ -252,7 +479,7 @@ class AppointmentManagementMCPServer
             
             throw new MCPException(
                 'Fehler beim Ändern des Termins',
-                MCPException::INTERNAL_ERROR,
+                0,
                 ['error' => $e->getMessage()]
             );
         }
@@ -279,7 +506,7 @@ class AppointmentManagementMCPServer
             if (!$findResult['found'] || empty($findResult['appointments'])) {
                 throw new MCPException(
                     'Kein anstehender Termin gefunden',
-                    MCPException::APPOINTMENT_NOT_FOUND
+                    0
                 );
             }
             
@@ -296,7 +523,7 @@ class AppointmentManagementMCPServer
             if (!$appointmentData) {
                 throw new MCPException(
                     'Termin nicht gefunden',
-                    MCPException::APPOINTMENT_NOT_FOUND
+                    0
                 );
             }
             
@@ -307,7 +534,7 @@ class AppointmentManagementMCPServer
             if (!$this->canModifyAppointment($appointment)) {
                 throw new MCPException(
                     'Termin kann nicht mehr storniert werden (zu kurzfristig)',
-                    MCPException::VALIDATION_FAILED
+                    0
                 );
             }
             
@@ -377,7 +604,7 @@ class AppointmentManagementMCPServer
             
             throw new MCPException(
                 'Fehler beim Stornieren des Termins',
-                MCPException::INTERNAL_ERROR,
+                0,
                 ['error' => $e->getMessage()]
             );
         }
@@ -402,7 +629,7 @@ class AppointmentManagementMCPServer
         if (!$findResult['found'] || empty($findResult['appointments'])) {
             throw new MCPException(
                 'Kein offener Termin gefunden',
-                MCPException::APPOINTMENT_NOT_FOUND
+                0
             );
         }
         
@@ -421,7 +648,7 @@ class AppointmentManagementMCPServer
         if (!$appointmentData) {
             throw new MCPException(
                 'Kein anstehender Termin gefunden',
-                MCPException::APPOINTMENT_NOT_FOUND
+                0
             );
         }
         
@@ -574,6 +801,42 @@ class AppointmentManagementMCPServer
     }
     
     /**
+     * Parse German date and time strings
+     */
+    protected function parseGermanDateTime(string $date, string $time): Carbon
+    {
+        $date = strtolower(trim($date));
+        $now = Carbon::now('Europe/Berlin');
+        
+        // Handle relative dates
+        switch ($date) {
+            case 'heute':
+                $carbonDate = $now->copy();
+                break;
+            case 'morgen':
+                $carbonDate = $now->copy()->addDay();
+                break;
+            case 'übermorgen':
+                $carbonDate = $now->copy()->addDays(2);
+                break;
+            default:
+                // Try to parse as regular date
+                return $this->parseDateTime($date, $time);
+        }
+        
+        // Parse time
+        $time = trim(str_replace(['Uhr', 'uhr'], '', $time));
+        
+        if (preg_match('/^(\d{1,2}):(\d{2})$/', $time, $matches)) {
+            $carbonDate->setTime((int)$matches[1], (int)$matches[2]);
+        } elseif (preg_match('/^(\d{1,2})$/', $time, $matches)) {
+            $carbonDate->setTime((int)$matches[1], 0);
+        }
+        
+        return $carbonDate;
+    }
+    
+    /**
      * Parse date and time into Carbon instance
      */
     protected function parseDateTime(string $date, string $time): Carbon
@@ -589,13 +852,13 @@ class AppointmentManagementMCPServer
             } else {
                 throw new MCPException(
                     "Ungültiges Datumsformat: {$date}",
-                    MCPException::INVALID_PARAMS
+                    0
                 );
             }
         } catch (\Exception $e) {
             throw new MCPException(
                 "Ungültiges Datum: {$date}",
-                MCPException::INVALID_PARAMS
+                0
             );
         }
         
@@ -610,13 +873,13 @@ class AppointmentManagementMCPServer
             } else {
                 throw new MCPException(
                     "Ungültiges Zeitformat: {$time}",
-                    MCPException::INVALID_PARAMS
+                    0
                 );
             }
         } catch (\Exception $e) {
             throw new MCPException(
                 "Ungültige Zeit: {$time}",
-                MCPException::INVALID_PARAMS
+                0
             );
         }
         
@@ -648,9 +911,7 @@ class AppointmentManagementMCPServer
     {
         foreach ($required as $param) {
             if (!isset($params[$param]) || empty($params[$param])) {
-                throw MCPException::validationError([
-                    $param => ["The {$param} field is required."]
-                ]);
+                throw new MCPException("The {$param} field is required.");
             }
         }
     }

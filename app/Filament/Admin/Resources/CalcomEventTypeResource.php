@@ -23,11 +23,11 @@ class CalcomEventTypeResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     
-    protected static ?string $navigationGroup = 'Personal & Services';
+    protected static ?string $navigationGroup = 'Integrationen';
     
-    protected static ?string $navigationLabel = 'Event-Type Verwaltung';
+    protected static ?string $navigationLabel = 'Cal.com Event-Types';
     
-    protected static ?int $navigationSort = 210;
+    protected static ?int $navigationSort = 30;
 
     public static function form(Form $form): Form
     {

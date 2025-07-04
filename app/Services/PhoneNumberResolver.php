@@ -265,7 +265,7 @@ class PhoneNumberResolver
             // 2. Check branch main phone number (only active branches)
             $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
                 ->where(function($query) use ($normalized, $phoneNumber) {
-                    $query->where('phone', $normalized)
+                    $query->where('phone_number', $normalized)
                           ->orWhere('phone_number', $phoneNumber);
                 })
                 ->where('is_active', true)

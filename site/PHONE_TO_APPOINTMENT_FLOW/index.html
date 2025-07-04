@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/PHONE_TO_APPOINTMENT_FLOW/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Phone to Appointment Flow - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Phone to Appointment Flow";
+        var mkdocs_page_input_path = "PHONE_TO_APPOINTMENT_FLOW.md";
+        var mkdocs_page_url = "/mkdocs/PHONE_TO_APPOINTMENT_FLOW/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Phone to Appointment Flow</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#gesamt-flow-ubersicht">🎯 GESAMT-FLOW ÜBERSICHT</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#detaillierte-phase-analyse">🔍 DETAILLIERTE PHASE-ANALYSE</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-anruf-phase-0-3-sekunden">1️⃣ ANRUF-PHASE (0-3 Sekunden)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-ai-dialog-phase-3-180-sekunden">2️⃣ AI-DIALOG PHASE (3-180 Sekunden)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-webhook-phase-100ms">3️⃣ WEBHOOK PHASE (&lt; 100ms)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-processing-phase-1-5-sekunden">4️⃣ PROCESSING PHASE (1-5 Sekunden)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#5-booking-phase-2-10-sekunden">5️⃣ BOOKING PHASE (2-10 Sekunden)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#fehler-punkte-losungen">🚨 FEHLER-PUNKTE &amp; LÖSUNGEN</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#kritische-fehler-punkte">🔴 Kritische Fehler-Punkte</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#quick-fix-matrix">🛠️ Quick-Fix Matrix</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#performance-metriken">📊 PERFORMANCE METRIKEN</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#interaktive-debug-console">🎮 INTERAKTIVE DEBUG-CONSOLE</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Monitoring &raquo;</li>
+      <li>Phone to Appointment Flow</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="telefon-zu-termin-interaktiver-datenfluss">📞➡️📅 Telefon zu Termin - Interaktiver Datenfluss</h1>
+<blockquote>
+<p><strong>Klickbar</strong>: Jede Box kann angeklickt werden für Details &amp; Debugging!</p>
+</blockquote>
+<h2 id="gesamt-flow-ubersicht">🎯 GESAMT-FLOW ÜBERSICHT</h2>
+<pre><code class="language-mermaid">flowchart TB
+    subgraph &quot;1️⃣ ANRUF-PHASE&quot;
+        Phone[&quot;📞 Kunde ruft an&lt;br/&gt;+49 30 12345678&quot;]
+        Phone --&gt;|&quot;DNS Lookup&lt;br/&gt;~50ms&quot;| Carrier[&quot;Telekom/Vodafone&lt;br/&gt;Carrier&quot;]
+        Carrier --&gt;|&quot;SIP Forward&lt;br/&gt;~200ms&quot;| Retell[&quot;Retell.ai&lt;br/&gt;Cloud&quot;]
+    end
+
+    subgraph &quot;2️⃣ AI-DIALOG PHASE&quot;
+        Retell --&gt;|&quot;Agent Load&lt;br/&gt;~100ms&quot;| Agent[&quot;AI Agent #123&lt;br/&gt;Aktiv&quot;]
+        Agent --&gt;|&quot;Begrüßung&quot;| Dialog[&quot;Gespräch&lt;br/&gt;2-3 Min&quot;]
+        Dialog --&gt;|&quot;NLP Processing&quot;| Intent[&quot;Intent erkannt:&lt;br/&gt;Termin buchen&quot;]
+        Intent --&gt;|&quot;Daten extrahiert&quot;| Data[&quot;Name: Schmidt&lt;br/&gt;Service: Zahnreinigung&lt;br/&gt;Datum: 15.01.2024&quot;]
+    end
+
+    subgraph &quot;3️⃣ WEBHOOK PHASE&quot;
+        Data --&gt;|&quot;POST /api/retell/webhook&lt;br/&gt;~50ms&quot;| Webhook[&quot;Webhook&lt;br/&gt;Controller&quot;]
+        Webhook --&gt;|&quot;HMAC-SHA256&quot;| Valid{&quot;Signature&lt;br/&gt;valid?&quot;}
+        Valid --&gt;|&quot;Nein&quot;| Reject[&quot;🚫 401&lt;br/&gt;Unauthorized&quot;]
+        Valid --&gt;|&quot;Ja&quot;| Queue[&quot;Laravel Queue&lt;br/&gt;webhooks&quot;]
+    end
+
+    subgraph &quot;4️⃣ PROCESSING PHASE&quot;
+        Queue --&gt;|&quot;Async Job&quot;| Process[&quot;ProcessRetellCallEndedJob&lt;br/&gt;~2s&quot;]
+        Process --&gt;|&quot;Phone Lookup&quot;| Branch[&quot;Branch gefunden:&lt;br/&gt;Hauptpraxis Berlin&quot;]
+        Branch --&gt;|&quot;Match/Create&quot;| Customer[&quot;Customer:&lt;br/&gt;ID #4567&quot;]
+        Customer --&gt;|&quot;API Call&quot;| Calcom[&quot;Cal.com&lt;br/&gt;Availability Check&quot;]
+    end
+
+    subgraph &quot;5️⃣ BOOKING PHASE&quot;
+        Calcom --&gt;|&quot;Slots?&quot;| Book{&quot;Slot&lt;br/&gt;verfügbar?&quot;}
+        Book --&gt;|&quot;Ja&quot;| Create[&quot;Appointment&lt;br/&gt;erstellt&quot;]
+        Book --&gt;|&quot;Nein&quot;| Alternative[&quot;Alternative&lt;br/&gt;vorschlagen&quot;]
+        Create --&gt;|&quot;Success&quot;| Confirm[&quot;✅ Bestätigung&lt;br/&gt;Email + SMS&quot;]
+        Alternative --&gt;|&quot;Retry&quot;| Calcom
+    end
+
+    style Phone fill:#e3f2fd,stroke:#1976d2
+    style Agent fill:#e8f5e9,stroke:#388e3c
+    style Webhook fill:#fff3e0,stroke:#f57c00
+    style Create fill:#e8f5e9,stroke:#388e3c
+    style Reject fill:#ffebee,stroke:#d32f2f
+    style Valid fill:#fff9c4,stroke:#fbc02d
+    style Book fill:#fff9c4,stroke:#fbc02d
+</code></pre>
+<hr />
+<h2 id="detaillierte-phase-analyse">🔍 DETAILLIERTE PHASE-ANALYSE</h2>
+<h3 id="1-anruf-phase-0-3-sekunden">1️⃣ <strong>ANRUF-PHASE</strong> (0-3 Sekunden)</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant K as Kunde
+    participant T as Telekom
+    participant R as Retell.ai
+    participant A as AskProAI
+
+    K-&gt;&gt;T: Wählt +49 30 12345678
+    Note over T: DNS/Number Lookup
+    T-&gt;&gt;R: SIP INVITE
+    R-&gt;&gt;R: Load Agent Config
+    R-&gt;&gt;A: Webhook: call_started
+    R-&gt;&gt;K: &quot;Guten Tag, Praxis...&quot;
+</code></pre>
+<p><strong>🐛 Debug-Punkte:</strong></p>
+<pre><code class="language-bash"># Check 1: Telefonnummer aktiv?
+curl https://api.retellai.com/v1/phone-number/check \
+  -H &quot;Authorization: Bearer $RETELL_KEY&quot;
+
+# Check 2: Agent zugewiesen?
+php artisan phone:check-agent --number=&quot;+49301234567&quot;
+
+# Check 3: Webhook empfangen?
+tail -f storage/logs/webhook.log | grep call_started
+</code></pre>
+<h3 id="2-ai-dialog-phase-3-180-sekunden">2️⃣ <strong>AI-DIALOG PHASE</strong> (3-180 Sekunden)</h3>
+<pre><code class="language-mermaid">stateDiagram-v2
+    [*] --&gt; Begrüßung: Anruf angenommen
+
+    Begrüßung --&gt; NameAbfrage: &quot;Guten Tag, Praxis...&quot;
+    NameAbfrage --&gt; ServiceAbfrage: Name erhalten
+    ServiceAbfrage --&gt; TerminAbfrage: Service gewählt
+    TerminAbfrage --&gt; ZeitAbfrage: Datum genannt
+    ZeitAbfrage --&gt; Bestätigung: Zeit gewählt
+    Bestätigung --&gt; [*]: Termin bestätigt
+
+    NameAbfrage --&gt; NameAbfrage: Nicht verstanden
+    ServiceAbfrage --&gt; ServiceAbfrage: Unklar
+    TerminAbfrage --&gt; TerminAbfrage: Nachfrage
+
+    note right of Begrüßung
+        Dauer: 2-3 Sek
+        &quot;Praxis Dr. Schmidt,
+        guten Tag!&quot;
+    end note
+
+    note right of ServiceAbfrage
+        Services:
+        - Zahnreinigung
+        - Kontrolle
+        - Behandlung
+    end note
+
+    note right of Bestätigung
+        &quot;Perfekt! Termin für
+        Zahnreinigung am 15.01.
+        um 10:00 Uhr&quot;
+    end note
+</code></pre>
+<p><strong>💬 Prompt-Template:</strong></p>
+<pre><code class="language-javascript">{
+  &quot;greeting&quot;: &quot;{{company_name}}, guten Tag! Wie kann ich Ihnen helfen?&quot;,
+  &quot;name_request&quot;: &quot;Darf ich nach Ihrem Namen fragen?&quot;,
+  &quot;service_request&quot;: &quot;Welche Behandlung wünschen Sie?&quot;,
+  &quot;date_request&quot;: &quot;Wann hätten Sie gerne einen Termin?&quot;,
+  &quot;confirmation&quot;: &quot;Ich bestätige: {{service}} am {{date}} um {{time}} Uhr.&quot;
+}
+</code></pre>
+<p><strong>🐛 Debug-Commands:</strong></p>
+<pre><code class="language-bash"># Live-Transcript anzeigen
+php artisan retell:live-transcript --call-id=XXX
+
+# Intent-Analyse
+php artisan ai:analyze-intent --call-id=XXX
+
+# Slot-Extraction prüfen
+php artisan ai:check-slots --call-id=XXX
+</code></pre>
+<h3 id="3-webhook-phase-100ms">3️⃣ <strong>WEBHOOK PHASE</strong> (&lt; 100ms)</h3>
+<pre><code class="language-mermaid">graph TD
+    subgraph &quot;Webhook Security&quot;
+        Request[POST /api/retell/webhook] --&gt;|Header| Signature[x-retell-signature]
+        Signature --&gt;|HMAC-SHA256| Verify{Valid?}
+        Verify --&gt;|Yes| Parse[Parse JSON]
+        Verify --&gt;|No| Block[🛡️ Block]
+        Parse --&gt;|Extract| CallData[call_id, transcript, etc.]
+    end
+</code></pre>
+<p><strong>📦 Webhook Payload:</strong></p>
+<pre><code class="language-json">{
+  &quot;event_type&quot;: &quot;call_ended&quot;,
+  &quot;call_id&quot;: &quot;9b6a7d8e-5f4c-3b2a-1d0e&quot;,
+  &quot;phone_number&quot;: &quot;+49301234567&quot;,
+  &quot;transcript&quot;: &quot;Kunde möchte Termin...&quot;,
+  &quot;custom_data&quot;: {
+    &quot;name&quot;: &quot;Schmidt&quot;,
+    &quot;service&quot;: &quot;Zahnreinigung&quot;,
+    &quot;preferred_date&quot;: &quot;2024-01-15&quot;,
+    &quot;preferred_time&quot;: &quot;morning&quot;
+  }
+}
+</code></pre>
+<p><strong>🐛 Webhook-Debugging:</strong></p>
+<pre><code class="language-bash"># Webhook-Log
+tail -f storage/logs/webhooks.log
+
+# Replay Webhook
+php artisan webhook:replay --id=XXX
+
+# Signature testen
+php artisan webhook:test-signature --payload='{}' --secret=$SECRET
+</code></pre>
+<h3 id="4-processing-phase-1-5-sekunden">4️⃣ <strong>PROCESSING PHASE</strong> (1-5 Sekunden)</h3>
+<pre><code class="language-mermaid">flowchart LR
+    subgraph &quot;1. Phone Resolution&quot;
+        Phone[&quot;+49301234567&quot;] --&gt;|&quot;DB Query&quot;| PN[&quot;phone_numbers&lt;br/&gt;id: 123&quot;]
+        PN --&gt;|&quot;belongs_to&quot;| Branch[&quot;branches&lt;br/&gt;id: 456&lt;br/&gt;name: Hauptpraxis&quot;]
+    end
+
+    subgraph &quot;2. Configuration&quot;
+        Branch --&gt;|&quot;has&quot;| Config[&quot;cal.com Event Type&lt;br/&gt;id: 2026361&quot;]
+        Branch --&gt;|&quot;has_many&quot;| Services[&quot;services&lt;br/&gt;- Zahnreinigung&lt;br/&gt;- Kontrolle&quot;]
+        Branch --&gt;|&quot;has_many&quot;| Staff[&quot;staff&lt;br/&gt;- Dr. Schmidt&lt;br/&gt;- Dr. Müller&quot;]
+    end
+
+    subgraph &quot;3. Customer&quot;
+        Phone2[&quot;Caller Phone&quot;] --&gt;|&quot;firstOrCreate&quot;| Customer[&quot;customers&lt;br/&gt;id: 789&lt;br/&gt;name: Schmidt&quot;]
+        Customer --&gt;|&quot;has_many&quot;| History[&quot;appointments&lt;br/&gt;count: 3&quot;]
+    end
+
+    Config -.-&gt;|&quot;API Key&quot;| CalcomAPI[&quot;Cal.com API&lt;br/&gt;Ready&quot;]
+    Services -.-&gt;|&quot;Match&quot;| SelectedService[&quot;Service:&lt;br/&gt;Zahnreinigung&quot;]
+    Staff -.-&gt;|&quot;Available&quot;| SelectedStaff[&quot;Staff:&lt;br/&gt;Dr. Schmidt&quot;]
+
+    style Phone fill:#e3f2fd
+    style Branch fill:#c8e6c9
+    style Customer fill:#fff9c4
+    style CalcomAPI fill:#d1c4e9
+</code></pre>
+<p><strong>🔄 Resolution Flow:</strong></p>
+<pre><code class="language-php">// 1. Phone → Branch
+$phoneNumber = PhoneNumber::where('number', $phone)-&gt;first();
+$branch = $phoneNumber-&gt;branch;
+
+// 2. Branch → Cal.com
+$eventTypeId = $branch-&gt;calcom_event_type_id;
+
+// 3. Customer Resolution
+$customer = Customer::firstOrCreate(
+    ['phone' =&gt; $normalizedPhone],
+    ['name' =&gt; $extractedName]
+);
+</code></pre>
+<p><strong>🐛 Processing Debug:</strong></p>
+<pre><code class="language-bash"># Branch Resolution Test
+php artisan phone:resolve --number=&quot;+49301234567&quot;
+
+# Customer Lookup
+php artisan customer:find --phone=&quot;+49301234567&quot;
+
+# Service Mapping
+php artisan branch:services --branch-id=X
+</code></pre>
+<h3 id="5-booking-phase-2-10-sekunden">5️⃣ <strong>BOOKING PHASE</strong> (2-10 Sekunden)</h3>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant A as AskProAI
+    participant C as Cal.com API
+    participant D as Database
+    participant E as Email Queue
+
+    A-&gt;&gt;C: GET /availability
+    C--&gt;&gt;A: Available Slots
+    A-&gt;&gt;A: Match with Request
+    A-&gt;&gt;C: POST /bookings
+    C--&gt;&gt;A: Booking Confirmed
+    A-&gt;&gt;D: Create Appointment
+    A-&gt;&gt;E: Queue Confirmation
+    E-&gt;&gt;Customer: 📧 Email
+</code></pre>
+<p><strong>📅 Availability Check:</strong></p>
+<pre><code class="language-javascript">// Request to Cal.com
+GET https://api.cal.com/v2/availability
+{
+  &quot;eventTypeId&quot;: 12345,
+  &quot;dateFrom&quot;: &quot;2024-01-15&quot;,
+  &quot;dateTo&quot;: &quot;2024-01-22&quot;,
+  &quot;timeZone&quot;: &quot;Europe/Berlin&quot;
+}
+
+// Response
+{
+  &quot;slots&quot;: {
+    &quot;2024-01-15&quot;: [&quot;09:00&quot;, &quot;09:30&quot;, &quot;10:00&quot;],
+    &quot;2024-01-16&quot;: [&quot;14:00&quot;, &quot;14:30&quot;, &quot;15:00&quot;]
+  }
+}
+</code></pre>
+<p><strong>🐛 Booking Debug:</strong></p>
+<pre><code class="language-bash"># Availability prüfen
+php artisan calcom:check-availability --event-type=X --date=2024-01-15
+
+# Booking simulieren
+php artisan booking:simulate --dry-run
+
+# Email-Queue Status
+php artisan queue:monitor emails
+</code></pre>
+<hr />
+<h2 id="fehler-punkte-losungen">🚨 FEHLER-PUNKTE &amp; LÖSUNGEN</h2>
+<h3 id="kritische-fehler-punkte">🔴 <strong>Kritische Fehler-Punkte</strong></h3>
+<pre><code class="language-mermaid">graph LR
+    subgraph &quot;Häufige Fehler&quot;
+        E1[❌ Phone nicht gefunden] --&gt;|Fix| F1[Phone Mapping prüfen]
+        E2[❌ Keine Slots] --&gt;|Fix| F2[Working Hours check]
+        E3[❌ Webhook timeout] --&gt;|Fix| F3[Async Processing]
+        E4[❌ Customer duplicate] --&gt;|Fix| F4[Phone normalization]
+    end
+</code></pre>
+<h3 id="quick-fix-matrix">🛠️ <strong>Quick-Fix Matrix</strong></h3>
+<table>
+<thead>
+<tr>
+<th>Fehler</th>
+<th>Check-Command</th>
+<th>Fix-Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phone not mapped</td>
+<td><code>php artisan phone:check</code></td>
+<td><code>php artisan phone:assign</code></td>
+</tr>
+<tr>
+<td>No availability</td>
+<td><code>php artisan availability:debug</code></td>
+<td><code>php artisan calcom:sync</code></td>
+</tr>
+<tr>
+<td>Webhook fails</td>
+<td><code>tail -f storage/logs/webhook.log</code></td>
+<td><code>php artisan webhook:retry</code></td>
+</tr>
+<tr>
+<td>Email not sent</td>
+<td><code>php artisan queue:failed</code></td>
+<td><code>php artisan queue:retry all</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="performance-metriken">📊 PERFORMANCE METRIKEN</h2>
+<pre><code class="language-mermaid">gantt
+    title Durchschnittliche Latenz pro Phase
+    dateFormat X
+    axisFormat %Lms
+
+    section Anruf
+    DNS Lookup          :0, 50
+    SIP Setup          :50, 200
+    Agent Load         :200, 100
+
+    section Dialog
+    Begrüßung          :300, 500
+    Gespräch           :800, 120000
+
+    section Backend
+    Webhook            :120800, 50
+    Processing         :120850, 2000
+    Cal.com API        :122850, 1500
+    Booking            :124350, 500
+    Email Queue        :124850, 100
+</code></pre>
+<p><strong>⚡ Optimierungs-Ziele:</strong>
+- Webhook Response: &lt; 100ms
+- Branch Resolution: &lt; 50ms<br />
+- Cal.com API: &lt; 1000ms
+- Total Time: &lt; 3 Min</p>
+<hr />
+<h2 id="interaktive-debug-console">🎮 INTERAKTIVE DEBUG-CONSOLE</h2>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;AskProAI Flow Debugger&lt;/title&gt;
+    &lt;style&gt;
+        .phase { 
+            border: 2px solid #ccc; 
+            padding: 10px; 
+            margin: 10px;
+            cursor: pointer;
+        }
+        .phase:hover { border-color: #3b82f6; }
+        .active { background: #e3f2fd; }
+        .error { background: #ffebee; }
+        .success { background: #e8f5e9; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;🔍 Live Call Flow Debugger&lt;/h1&gt;
+
+    &lt;input type=&quot;text&quot; id=&quot;callId&quot; placeholder=&quot;Call ID eingeben&quot;&gt;
+    &lt;button onclick=&quot;debugCall()&quot;&gt;Debug starten&lt;/button&gt;
+
+    &lt;div id=&quot;flow&quot;&gt;
+        &lt;div class=&quot;phase&quot; id=&quot;phase-1&quot;&gt;1️⃣ Anruf empfangen&lt;/div&gt;
+        &lt;div class=&quot;phase&quot; id=&quot;phase-2&quot;&gt;2️⃣ AI Dialog&lt;/div&gt;
+        &lt;div class=&quot;phase&quot; id=&quot;phase-3&quot;&gt;3️⃣ Webhook&lt;/div&gt;
+        &lt;div class=&quot;phase&quot; id=&quot;phase-4&quot;&gt;4️⃣ Processing&lt;/div&gt;
+        &lt;div class=&quot;phase&quot; id=&quot;phase-5&quot;&gt;5️⃣ Booking&lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div id=&quot;details&quot;&gt;&lt;/div&gt;
+
+    &lt;script&gt;
+    async function debugCall() {
+        const callId = document.getElementById('callId').value;
+        const response = await fetch(`/api/debug/call/${callId}`);
+        const data = await response.json();
+
+        // Zeige Status jeder Phase
+        data.phases.forEach((phase, i) =&gt; {
+            const el = document.getElementById(`phase-${i+1}`);
+            el.className = 'phase ' + phase.status;
+            el.onclick = () =&gt; showDetails(phase);
+        });
+    }
+
+    function showDetails(phase) {
+        document.getElementById('details').innerHTML = `
+            &lt;h3&gt;${phase.name}&lt;/h3&gt;
+            &lt;pre&gt;${JSON.stringify(phase.data, null, 2)}&lt;/pre&gt;
+            &lt;button onclick=&quot;runFix('${phase.fix}')&quot;&gt;Auto-Fix&lt;/button&gt;
+        `;
+    }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<blockquote>
+<p>💡 <strong>Live-Debug</strong>: https://app.askproai.de/debug/flow</p>
+</blockquote>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../INTEGRATION_HEALTH_MONITOR/" class="btn btn-neutral float-left" title="Health Monitor"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../INTEGRATION_HEALTH_MONITOR/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

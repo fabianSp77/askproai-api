@@ -79,6 +79,10 @@ class MCPGateway
             'whatsapp' => fn() => class_exists(WhatsAppBusinessMCPServer::class) 
                 ? app(WhatsAppBusinessMCPServer::class) 
                 : null,
+                
+            'twilio' => fn() => class_exists(TwilioMCPServer::class) 
+                ? app(TwilioMCPServer::class) 
+                : null,
         ];
         
         Log::info('MCP Gateway factories registered', [

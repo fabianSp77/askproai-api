@@ -83,6 +83,12 @@ return [
     'migrations' => 'migrations',
 
     'redis' => [
+        
+        'client' => env('REDIS_CLIENT', 'phpredis'),
+        
+        'options' => [
+            'prefix' => env('REDIS_PREFIX', ''),
+        ],
 
         'client' => env('REDIS_CLIENT', 'phpredis'),
 

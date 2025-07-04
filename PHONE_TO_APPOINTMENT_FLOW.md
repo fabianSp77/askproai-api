@@ -122,12 +122,18 @@ php artisan ai:check-slots --call-id=XXX
 graph TD
     subgraph "Webhook Security"
         Request[POST /api/retell/webhook] -->|Header| Signature[x-retell-signature]
-        Signature -->|HMAC-SHA256| Verify{Valid?}
+        Signature -->|Format: v=ts,d=sig| Extract[Extract Parts]
+        Extract -->|HMAC-SHA256| Verify{Valid?}
         Verify -->|Yes| Parse[Parse JSON]
         Verify -->|No| Block[🛡️ Block]
         Parse -->|Extract| CallData[call_id, transcript, etc.]
     end
 ```
+
+⚠️ **WICHTIG**: 
+- Retell verwendet API Key als Webhook Secret (gleicher Wert!)
+- Signature Format: `v=timestamp,d=hmac_sha256_signature`
+- Bei Fehlern: `php trigger-simple-webhook.php` zum Testen
 
 **📦 Webhook Payload:**
 ```json

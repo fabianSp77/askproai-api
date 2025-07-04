@@ -363,6 +363,32 @@ $currentStatusColor = $statusColors[$performanceStatus] ?? $statusColors['good']
                 Test
             </button>
             
+            {{-- Activate/Deactivate Button --}}
+            @if(!($agent['is_active'] ?? false))
+                <button wire:click.stop="activateAgent('{{ $agent['agent_id'] ?? '' }}')"
+                        style="
+                            display: inline-flex;
+                            align-items: center;
+                            padding: 6px 12px;
+                            font-size: 13px;
+                            font-weight: 500;
+                            border-radius: 6px;
+                            background-color: #d1fae5;
+                            color: #065f46;
+                            border: none;
+                            cursor: pointer;
+                            transition: all 0.15s ease;
+                        "
+                        onmouseover="this.style.backgroundColor='#a7f3d0'"
+                        onmouseout="this.style.backgroundColor='#d1fae5'"
+                        title="Activate this agent">
+                    <svg style="width: 14px; height: 14px; margin-right: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Activate
+                </button>
+            @endif
+            
             {{-- Edit Button --}}
             <button wire:click.stop="openAgentEditor('{{ $agent['agent_id'] ?? '' }}')"
                     style="

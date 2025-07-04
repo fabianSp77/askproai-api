@@ -108,6 +108,59 @@ class Staff extends Model
             ])
             ->withTimestamps();
     }
+    
+    /**
+     * Check if staff can host a specific event type
+     * 
+     * @param int|string $eventTypeId Can be internal ID or Cal.com ID
+     * @return bool
+     */
+    public function canHostEventType($eventTypeId): bool
+    {
+        // Check by internal ID first
+        if (is_numeric($eventTypeId)) {
+            return $this->eventTypes()
+                ->where('calcom_event_types.id', $eventTypeId)
+                ->exists();
+        }
+        
+        // Check by Cal.com event type ID
+        return $this->eventTypes()
+            ->where('calcom_event_type_id', $eventTypeId)
+            ->exists();
+    }
+    
+    /**
+     * Get event types this staff can host
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getHostableEventTypes()
+    {
+        return $this->eventTypes()
+            ->where('calcom_event_types.is_active', true)
+            ->get();
+    }
+    
+    /**
+     * Check if staff has any event type assignments
+     * 
+     * @return bool
+     */
+    public function hasEventTypeAssignments(): bool
+    {
+        return $this->eventTypes()->exists();
+    }
+    
+    /**
+     * Check if staff is administrative (no event type assignments)
+     * 
+     * @return bool
+     */
+    public function isAdministrative(): bool
+    {
+        return !$this->is_bookable || !$this->hasEventTypeAssignments();
+    }
 
     // Scope für aktive Mitarbeiter
     public function scopeActive($query)

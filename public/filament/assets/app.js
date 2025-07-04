@@ -1,0 +1,1 @@
+/var/www/api-gateway/public/js/filament/filament/app.js

@@ -78,4 +78,47 @@ document.addEventListener('DOMContentLoaded', () => {
             el.setAttribute('x-data', 'simpleDropdown()');
         }
     });
+    
+    // Fix for Filament user dropdown specifically
+    const userDropdown = document.querySelector('.fi-user-dropdown');
+    if (userDropdown) {
+        // Add click-outside listener
+        document.addEventListener('click', (e) => {
+            if (!userDropdown.contains(e.target)) {
+                // Close the dropdown
+                const panel = userDropdown.querySelector('.fi-dropdown-panel');
+                if (panel && !panel.classList.contains('invisible')) {
+                    panel.classList.add('invisible');
+                    panel.classList.remove('visible');
+                    
+                    // Update button state
+                    const button = userDropdown.querySelector('button[aria-expanded="true"]');
+                    if (button) {
+                        button.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            }
+        });
+        
+        // Fix toggle button
+        const toggleButton = userDropdown.querySelector('button');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const panel = userDropdown.querySelector('.fi-dropdown-panel');
+                if (panel) {
+                    const isOpen = !panel.classList.contains('invisible');
+                    if (isOpen) {
+                        panel.classList.add('invisible');
+                        panel.classList.remove('visible');
+                        toggleButton.setAttribute('aria-expanded', 'false');
+                    } else {
+                        panel.classList.remove('invisible');
+                        panel.classList.add('visible');
+                        toggleButton.setAttribute('aria-expanded', 'true');
+                    }
+                }
+            });
+        }
+    }
 });

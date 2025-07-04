@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/DEVELOPMENT_PROCESS_2025/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Development Process - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Development Process";
+        var mkdocs_page_input_path = "DEVELOPMENT_PROCESS_2025.md";
+        var mkdocs_page_url = "/mkdocs/DEVELOPMENT_PROCESS_2025/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Development Process</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#process-overview">📋 Process Overview</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-task-reception">1. 🎯 Task Reception</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-discovery-phase">2. 🔍 Discovery Phase</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-analysis-phase">3. 📊 Analysis Phase</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-implementation-phase">4. 💻 Implementation Phase</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#5-quality-assurance">5. ✅ Quality Assurance</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#6-documentation">6. 📝 Documentation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#7-deployment">7. 🚀 Deployment</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#continuous-improvement-loop">🔄 Continuous Improvement Loop</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#daily">Daily</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#weekly">Weekly</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#monthly">Monthly</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#success-metrics">🎯 Success Metrics</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#code-quality">Code Quality</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#performance">Performance</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#documentation">Documentation</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#tool-integration">🛠️ Tool Integration</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#ide-setup">IDE Setup</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#phpstorm">PHPStorm</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#learning-resources">📚 Learning Resources</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#internal">Internal</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#external-via-context7">External (via Context7)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#emergency-procedures">🚨 Emergency Procedures</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#production-issue">Production Issue</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#performance-degradation">Performance Degradation</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#pro-tips">💡 Pro Tips</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-let-mcp-do-the-work">1. Let MCP Do the Work</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-track-everything">2. Track Everything</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-document-as-you-go">3. Document as You Go</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-test-smart">4. Test Smart</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#results">🎉 Results</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Best Practices 2025 &raquo;</li>
+      <li>Development Process</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="development-process-2025-askproai">🚀 Development Process 2025 - AskProAI</h1>
+<blockquote>
+<p><strong>Goal</strong>: Zero bugs, maximum efficiency, automated quality
+<strong>Philosophy</strong>: Let tools handle the repetitive work, focus on creativity</p>
+</blockquote>
+<h2 id="process-overview">📋 Process Overview</h2>
+<h3 id="1-task-reception">1. 🎯 Task Reception</h3>
+<p><strong>Tools</strong>: TodoWrite, TaskMaster MCP (if enabled)</p>
+<pre><code class="language-bash"># Document task immediately
+TodoWrite: Create task with clear acceptance criteria
+
+# For complex projects
+export MCP_TASKMASTER_ENABLED=true
+# Use taskmaster_ai MCP for detailed planning
+</code></pre>
+<h3 id="2-discovery-phase">2. 🔍 Discovery Phase</h3>
+<p><strong>Tools</strong>: MCP Auto-Discovery, System Understanding</p>
+<pre><code class="language-bash"># Find best MCP server for task
+php artisan mcp:discover &quot;implement user authentication&quot;
+
+# Understand existing implementations
+php artisan analyze:understand App\\Services\\AuthService
+
+# Check what already exists
+php artisan analyze:component --search=&quot;authentication&quot;
+</code></pre>
+<h3 id="3-analysis-phase">3. 📊 Analysis Phase</h3>
+<p><strong>Tools</strong>: Impact Analyzer, Data Flow Logger</p>
+<pre><code class="language-bash"># Start data flow tracking
+php artisan dataflow:start
+
+# Analyze potential impact
+php artisan analyze:impact --component=AuthService
+
+# Check for breaking changes
+php artisan analyze:impact --breaking-only
+</code></pre>
+<h3 id="4-implementation-phase">4. 💻 Implementation Phase</h3>
+<p><strong>Automatic Features</strong>:
+- MCP servers auto-selected via UsesMCPServers trait
+- Data flows tracked automatically
+- Correlation IDs generated for debugging</p>
+<pre><code class="language-php">// Example: Service with automatic MCP
+use App\Traits\UsesMCPServers;
+
+class BookingService
+{
+    use UsesMCPServers;
+
+    public function createAppointment($data)
+    {
+        // Automatically uses best MCP server!
+        return $this-&gt;executeMCPTask('create appointment', $data);
+    }
+}
+</code></pre>
+<h3 id="5-quality-assurance">5. ✅ Quality Assurance</h3>
+<p><strong>Git Hooks Handle</strong>:
+- Pre-commit: Syntax, formatting, security checks
+- Commit-msg: Conventional commits enforcement
+- Post-commit: Documentation reminders
+- Pre-push: Full test suite, coverage check</p>
+<pre><code class="language-bash"># Manual quality check
+composer quality
+
+# Individual checks
+composer pint        # Format
+composer stan        # Analyze
+composer test        # Test
+</code></pre>
+<h3 id="6-documentation">6. 📝 Documentation</h3>
+<p><strong>Automatic Triggers</strong>:
+- Service changes → Update ERROR_PATTERNS.md
+- MCP updates → Update CLAUDE.md
+- API changes → Update PHONE_TO_APPOINTMENT_FLOW.md
+- Migrations → Update DEPLOYMENT_CHECKLIST.md</p>
+<pre><code class="language-bash"># Check documentation health
+php artisan docs:check-updates
+
+# Auto-fix timestamps
+php artisan docs:check-updates --auto-fix
+</code></pre>
+<h3 id="7-deployment">7. 🚀 Deployment</h3>
+<p><strong>Pre-deployment Checks</strong>:</p>
+<pre><code class="language-bash"># Run impact analysis
+php artisan analyze:impact --git
+
+# Check all systems
+php artisan health:check
+
+# Verify documentation
+php artisan docs:health
+</code></pre>
+<h2 id="continuous-improvement-loop">🔄 Continuous Improvement Loop</h2>
+<h3 id="daily">Daily</h3>
+<ol>
+<li>Review error patterns from ERROR_PATTERNS.md</li>
+<li>Check MCP health: <code>php artisan mcp:health</code></li>
+<li>Monitor data flows: <code>php artisan dataflow:list --today</code></li>
+</ol>
+<h3 id="weekly">Weekly</h3>
+<ol>
+<li>Analyze slowest API calls</li>
+<li>Review documentation gaps</li>
+<li>Update error patterns catalog</li>
+<li>Check for new MCP opportunities</li>
+</ol>
+<h3 id="monthly">Monthly</h3>
+<ol>
+<li>Dependency updates with impact analysis</li>
+<li>Performance baseline updates</li>
+<li>Security audit: <code>php artisan askproai:security-audit</code></li>
+<li>Documentation completeness review</li>
+</ol>
+<h2 id="success-metrics">🎯 Success Metrics</h2>
+<h3 id="code-quality">Code Quality</h3>
+<ul>
+<li><strong>Zero</strong> linting errors (enforced by git hooks)</li>
+<li><strong>Level 8</strong> PHPStan compliance</li>
+<li><strong>80%+</strong> test coverage</li>
+<li><strong>100%</strong> conventional commits</li>
+</ul>
+<h3 id="performance">Performance</h3>
+<ul>
+<li>API response &lt; 200ms (p95)</li>
+<li>Zero N+1 queries</li>
+<li>All external calls tracked</li>
+<li>Circuit breakers on all integrations</li>
+</ul>
+<h3 id="documentation">Documentation</h3>
+<ul>
+<li><strong>100%</strong> of new features documented</li>
+<li>Error patterns updated within 24h</li>
+<li>MCP usage documented in code</li>
+<li>Data flows visualized</li>
+</ul>
+<h2 id="tool-integration">🛠️ Tool Integration</h2>
+<h3 id="ide-setup">IDE Setup</h3>
+<pre><code class="language-json">// .vscode/settings.json
+{
+    &quot;php.validate.executablePath&quot;: &quot;/usr/bin/php&quot;,
+    &quot;phpcs.standard&quot;: &quot;PSR12&quot;,
+    &quot;editor.formatOnSave&quot;: true,
+    &quot;files.autoSave&quot;: &quot;afterDelay&quot;
+}
+</code></pre>
+<h3 id="phpstorm">PHPStorm</h3>
+<ul>
+<li>Enable Laravel plugin</li>
+<li>Configure Pest PHP support</li>
+<li>Set up Database tools</li>
+<li>Enable MCP server completion</li>
+</ul>
+<h2 id="learning-resources">📚 Learning Resources</h2>
+<h3 id="internal">Internal</h3>
+<ul>
+<li><a href="../BEST_PRACTICES_IMPLEMENTATION/">BEST_PRACTICES_IMPLEMENTATION.md</a></li>
+<li><a href="../ERROR_PATTERNS/">ERROR_PATTERNS.md</a></li>
+<li><a href="./CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md</a></li>
+</ul>
+<h3 id="external-via-context7">External (via Context7)</h3>
+<pre><code class="language-bash"># Get latest Laravel docs
+mcp__context7__get-library-docs --library=&quot;laravel/framework&quot; --topic=&quot;testing&quot;
+
+# Filament admin panel docs
+mcp__context7__get-library-docs --library=&quot;filament/filament&quot; --topic=&quot;resources&quot;
+</code></pre>
+<h2 id="emergency-procedures">🚨 Emergency Procedures</h2>
+<h3 id="production-issue">Production Issue</h3>
+<ol>
+<li>Check ERROR_PATTERNS.md for known solutions</li>
+<li>Enable debug mode: <code>BOOKING_DEBUG=true</code></li>
+<li>Track issue flow: <code>php artisan dataflow:trace &lt;correlation-id&gt;</code></li>
+<li>Apply fix with impact analysis</li>
+<li>Update ERROR_PATTERNS.md</li>
+</ol>
+<h3 id="performance-degradation">Performance Degradation</h3>
+<ol>
+<li>Check slow query log</li>
+<li>Run: <code>php artisan performance:analyze</code></li>
+<li>Review data flow bottlenecks</li>
+<li>Apply optimizations</li>
+<li>Update performance baselines</li>
+</ol>
+<h2 id="pro-tips">💡 Pro Tips</h2>
+<h3 id="1-let-mcp-do-the-work">1. Let MCP Do the Work</h3>
+<p>Instead of writing boilerplate, use:</p>
+<pre><code class="language-php">$this-&gt;executeMCPTask('what you want to do', $params);
+</code></pre>
+<h3 id="2-track-everything">2. Track Everything</h3>
+<p>Every external call should have:
+- Correlation ID
+- Duration tracking
+- Error handling
+- Retry logic</p>
+<h3 id="3-document-as-you-go">3. Document as You Go</h3>
+<p>Git hooks remind you, but proactive is better:
+- Add error codes immediately
+- Update flow diagrams
+- Document MCP usage</p>
+<h3 id="4-test-smart">4. Test Smart</h3>
+<ul>
+<li>Unit tests for logic</li>
+<li>Integration tests for MCP</li>
+<li>E2E tests for critical paths</li>
+<li>Performance tests for bottlenecks</li>
+</ul>
+<h2 id="results">🎉 Results</h2>
+<p>Following this process delivers:
+- <strong>50% less debugging time</strong> (correlation IDs)
+- <strong>80% fewer production issues</strong> (impact analysis)
+- <strong>100% documentation coverage</strong> (automated checks)
+- <strong>Zero manual quality checks</strong> (git hooks)</p>
+<hr />
+<p><strong>Remember</strong>: The best code is code you don't have to write. Use MCP servers, follow patterns, let tools handle quality. Focus on solving business problems! 🚀</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../BEST_PRACTICES_IMPLEMENTATION/" class="btn btn-neutral float-left" title="Implementation Guide"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../5-MINUTEN_ONBOARDING_PLAYBOOK/" class="btn btn-neutral float-right" title="5-Minuten Onboarding">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../BEST_PRACTICES_IMPLEMENTATION/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../5-MINUTEN_ONBOARDING_PLAYBOOK/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

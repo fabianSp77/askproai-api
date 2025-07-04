@@ -174,6 +174,7 @@ class ListCalls extends ListRecords
             \App\Filament\Admin\Widgets\CallLiveStatusWidget::class,
             \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
             \App\Filament\Admin\Widgets\CallKpiWidget::class,
+            \App\Filament\Admin\Resources\CallResource\Widgets\CallAnalyticsWidget::class,
         ];
     }
 }

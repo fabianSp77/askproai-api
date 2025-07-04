@@ -21,6 +21,9 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\ViewField;
 use Filament\Support\Enums\MaxWidth;
+use Filament\Forms\Components\ToggleButtons;
+use Filament\Forms\Get;
+use Illuminate\Support\HtmlString;
 
 class BranchResource extends Resource
 {
@@ -29,8 +32,8 @@ class BranchResource extends Resource
     protected static ?string $model = Branch::class;
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
     protected static ?string $navigationLabel = 'Filialen';
-    protected static ?string $navigationGroup = 'Verwaltung';
-    protected static ?int $navigationSort = 85;
+    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    protected static ?int $navigationSort = 20;
     
     protected static ?string $pluralLabel = 'Filialen';
     
@@ -101,6 +104,37 @@ class BranchResource extends Resource
         
         // Company admins can create branches for their company
         return $user->company_id !== null && $user->hasRole('company_admin');
+    }
+    
+    public static function canDelete($record): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can delete all
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        if ($user->can('delete_branch')) {
+            return true;
+        }
+        
+        // Company admins can delete branches from their own company
+        return $user->company_id === $record->company_id && $user->hasRole('company_admin');
+    }
+    
+    public static function canDeleteAny(): bool
+    {
+        $user = auth()->user();
+        
+        // Super admin can delete
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Check specific permission
+        return $user->can('delete_any_branch') || ($user->hasRole('company_admin') && $user->company_id !== null);
     }
 
     public static function form(Form $form): Form
@@ -343,7 +377,80 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                         Tabs\Tab::make('Kalender-Integration')
                             ->icon('heroicon-o-calendar')
                             ->schema([
+                                // Appointment booking configuration
+                                Section::make('Terminbuchung')
+                                    ->schema([
+                                        Forms\Components\Radio::make('appointment_booking_mode')
+                                            ->label('Terminbuchungseinstellungen')
+                                            ->options([
+                                                'inherit' => 'Unternehmenseinstellung verwenden',
+                                                'override' => 'Eigene Einstellung für diese Filiale',
+                                            ])
+                                            ->default('inherit')
+                                            ->live()
+                                            ->reactive()
+                                            ->helperText(function($record) {
+                                                if ($record && $record->company) {
+                                                    $companyNeedsAppointments = $record->company->settings['needs_appointment_booking'] ?? true;
+                                                    return $companyNeedsAppointments 
+                                                        ? '✅ Unternehmen hat Terminbuchung aktiviert' 
+                                                        : '❌ Unternehmen hat Terminbuchung deaktiviert';
+                                                }
+                                                return '';
+                                            }),
+                                            
+                                        Forms\Components\ToggleButtons::make('settings.needs_appointment_booking')
+                                            ->label('Benötigt diese Filiale Terminbuchungen?')
+                                            ->options([
+                                                true => 'Ja, wir vereinbaren Termine',
+                                                false => 'Nein, keine Terminbuchung'
+                                            ])
+                                            ->icons([
+                                                true => 'heroicon-o-calendar-days',
+                                                false => 'heroicon-o-x-circle'
+                                            ])
+                                            ->colors([
+                                                true => 'success',
+                                                false => 'warning'
+                                            ])
+                                            ->inline()
+                                            ->default(true)
+                                            ->reactive()
+                                            ->visible(fn(Forms\Get $get) => $get('appointment_booking_mode') === 'override'),
+                                    ]),
+                                    
+                                // Info box when appointment booking is disabled
+                                Forms\Components\Placeholder::make('no_appointment_info')
+                                    ->label('')
+                                    ->content(new \Illuminate\Support\HtmlString('
+                                        <div class="p-4 bg-amber-50 rounded-lg">
+                                            <p class="text-amber-800">ℹ️ Terminbuchungsfunktionen sind für diese Filiale deaktiviert.</p>
+                                            <p class="text-amber-700 text-sm mt-1">Kalendereinstellungen werden nicht benötigt.</p>
+                                        </div>
+                                    '))
+                                    ->visible(function(Forms\Get $get, $record) {
+                                        if ($get('appointment_booking_mode') === 'override') {
+                                            return $get('settings.needs_appointment_booking') === false;
+                                        }
+                                        // Check company setting when inheriting
+                                        if ($record && $record->company) {
+                                            return ($record->company->settings['needs_appointment_booking'] ?? true) === false;
+                                        }
+                                        return false;
+                                    }),
+                                
                                 Section::make('Kalendermodus')
+                                    ->visible(function(Forms\Get $get, $record) {
+                                        // Show only if appointment booking is enabled
+                                        if ($get('appointment_booking_mode') === 'override') {
+                                            return $get('settings.needs_appointment_booking') !== false;
+                                        }
+                                        // Check company setting when inheriting
+                                        if ($record && $record->company) {
+                                            return ($record->company->settings['needs_appointment_booking'] ?? true) !== false;
+                                        }
+                                        return true;
+                                    })
                                     ->schema([
                                         Forms\Components\Radio::make('calendar_mode')
                                             ->label('Kalenderverwaltung')
@@ -357,6 +464,21 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                     ]),
 
                                 Section::make('Cal.com Konfiguration')
+                                    ->visible(function(Forms\Get $get, $record) {
+                                        // Show only if appointment booking is enabled AND calendar mode is override
+                                        if ($get('calendar_mode') !== 'override') {
+                                            return false;
+                                        }
+                                        
+                                        if ($get('appointment_booking_mode') === 'override') {
+                                            return $get('settings.needs_appointment_booking') !== false;
+                                        }
+                                        // Check company setting when inheriting
+                                        if ($record && $record->company) {
+                                            return ($record->company->settings['needs_appointment_booking'] ?? true) !== false;
+                                        }
+                                        return true;
+                                    })
                                     ->schema([
                                         Forms\Components\TextInput::make('calcom_api_key')
                                             ->label('Cal.com API-Schlüssel')
@@ -473,7 +595,8 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                 Tables\Filters\SelectFilter::make('company')
                     ->relationship('company', 'name')
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->visible(fn ($livewire): bool => !$livewire instanceof \Filament\Resources\Pages\CreateRecord),
                 
                 Tables\Filters\TernaryFilter::make('active')
                     ->label('Status')
@@ -492,30 +615,17 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
-                    Tables\Actions\EditAction::make(),
-                    Tables\Actions\Action::make('test')
-                        ->label('Testen')
-                        ->icon('heroicon-o-beaker')
-                        ->color('success')
-                        ->action(function (Branch $record) {
-                            $results = $record->testIntegrations();
-                            
-                            $message = collect($results)
-                                ->map(fn ($result, $service) => 
-                                    $service . ': ' . ($result['success'] ? '✓' : '✗')
-                                )
-                                ->join(', ');
-                            
-                            Notification::make()
-                                ->title('Integrations-Test')
-                                ->body($message)
-                                ->success()
-                                ->send();
-                        }),
-                    Tables\Actions\DeleteAction::make(),
-                ]),
+                Tables\Actions\ViewAction::make()
+                    ->iconButton(),
+                Tables\Actions\EditAction::make()
+                    ->iconButton(),
+                Tables\Actions\DeleteAction::make()
+                    ->iconButton()
+                    ->requiresConfirmation()
+                    ->modalHeading('Filiale löschen')
+                    ->modalDescription('Sind Sie sicher, dass Sie diese Filiale löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.')
+                    ->modalSubmitActionLabel('Ja, löschen')
+                    ->successNotificationTitle('Filiale gelöscht'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

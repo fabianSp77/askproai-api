@@ -25,7 +25,7 @@ class Kernel extends HttpKernel
         // \App\Http\Middleware\EnsureTenantContext::class, // Add tenant context globally
         // \App\Http\Middleware\ThreatDetectionMiddleware::class, // Add threat detection
         // \App\Http\Middleware\MonitoringMiddleware::class, // Performance and security monitoring
-        Middleware\MetricsMiddleware::class, // Prometheus metrics collection
+        // Middleware\MetricsMiddleware::class, // Prometheus metrics collection - temporarily disabled
     ];
 
     /* -------------------------------------------------------------------- *
@@ -64,7 +64,7 @@ class Kernel extends HttpKernel
     /* -------------------------------------------------------------------- *
      | 2) **Hier** gehören Route-Aliase hin – funktioniert ab Laravel 8-11  |
      * -------------------------------------------------------------------- */
-    protected $middlewareAliases = [
+    protected $routeMiddleware = [
         // ✨ unsere neue Signatur-Prüfung
         'calcom.signature' => Middleware\VerifyCalcomSignature::class,
         'tenant.context' => Middleware\EnsureTenantContext::class,
@@ -84,6 +84,11 @@ class Kernel extends HttpKernel
         'validate.company.context' => Middleware\ValidateCompanyContext::class,
         'cache.response' => Middleware\CacheResponse::class,
         'branch.context' => Middleware\BranchContextMiddleware::class,
+        'check.appointment.booking' => Middleware\CheckAppointmentBookingRequired::class,
+        
+        // Portal Middleware
+        'portal.auth' => Middleware\PortalAuthenticate::class,
+        'portal.permission' => Middleware\PortalPermission::class,
 
         // ── Laravel-Standard ──────────────────────────────────────────────
         'auth' => Middleware\Authenticate::class,

@@ -1,0 +1,196 @@
+#\!/bin/sh
+#
+# Post-commit hook for AskProAI
+# Checks if documentation needs updating after commits
+#
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo "📚 Checking documentation status..."
+
+# Get the last commit details
+LAST_COMMIT=$(git log -1 --pretty=format:"%H")
+COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
+COMMIT_TYPE=$(echo "$COMMIT_MESSAGE"  < /dev/null |  sed -E 's/^([a-z]+)(\(.+\))?\!?: .*/\1/')
+
+# Files changed in last commit
+CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r "$LAST_COMMIT")
+
+# Flags for what needs checking
+CHECK_SERVICES=0
+CHECK_MCP=0
+CHECK_API=0
+CHECK_CONFIG=0
+CHECK_MIGRATIONS=0
+CHECK_BEST_PRACTICES=0
+
+# Analyze changed files
+for FILE in $CHANGED_FILES; do
+    # Service changes
+    if echo "$FILE" | grep -q "app/Services/"; then
+        CHECK_SERVICES=1
+    fi
+    
+    # MCP Server changes
+    if echo "$FILE" | grep -q "app/Services/MCP/"; then
+        CHECK_MCP=1
+    fi
+    
+    # API route changes
+    if echo "$FILE" | grep -q "routes/"; then
+        CHECK_API=1
+    fi
+    
+    # Controller changes (API endpoints)
+    if echo "$FILE" | grep -q "app/Http/Controllers/"; then
+        CHECK_API=1
+    fi
+    
+    # Configuration changes
+    if echo "$FILE" | grep -q "config/\|\.env\.example"; then
+        CHECK_CONFIG=1
+    fi
+    
+    # Migration changes
+    if echo "$FILE" | grep -q "database/migrations/"; then
+        CHECK_MIGRATIONS=1
+    fi
+    
+    # Best practices changes (NEW 2025)
+    if echo "$FILE" | grep -q "app/Services/MCP/MCPAutoDiscoveryService\|app/Services/Analysis/\|app/Services/DataFlow/\|app/Traits/UsesMCPServers"; then
+        CHECK_BEST_PRACTICES=1
+    fi
+done
+
+# Build documentation check message
+DOCS_TO_CHECK=""
+
+if [ $CHECK_SERVICES -eq 1 ]; then
+    DOCS_TO_CHECK="$DOCS_TO_CHECK
+  - ERROR_PATTERNS.md
+  - TROUBLESHOOTING_DECISION_TREE.md"
+fi
+
+if [ $CHECK_MCP -eq 1 ]; then
+    DOCS_TO_CHECK="$DOCS_TO_CHECK
+  - CLAUDE.md (MCP-Sektion)
+  - INTEGRATION_HEALTH_MONITOR.md"
+fi
+
+if [ $CHECK_API -eq 1 ]; then
+    DOCS_TO_CHECK="$DOCS_TO_CHECK
+  - PHONE_TO_APPOINTMENT_FLOW.md
+  - ERROR_PATTERNS.md
+  - API documentation"
+fi
+
+if [ $CHECK_CONFIG -eq 1 ]; then
+    DOCS_TO_CHECK="$DOCS_TO_CHECK
+  - DEPLOYMENT_CHECKLIST.md
+  - CLAUDE.md (Environment Configuration)"
+fi
+
+if [ $CHECK_MIGRATIONS -eq 1 ]; then
+    DOCS_TO_CHECK="$DOCS_TO_CHECK
+  - DEPLOYMENT_CHECKLIST.md
+  - Database documentation"
+fi
+
+if [ $CHECK_BEST_PRACTICES -eq 1 ]; then
+    DOCS_TO_CHECK="$DOCS_TO_CHECK
+  - BEST_PRACTICES_IMPLEMENTATION.md
+  - CLAUDE_CONTEXT_SUMMARY.md
+  - DEVELOPMENT_PROCESS_2025.md"
+fi
+
+# Only show message if documentation might need updating
+if [ -n "$DOCS_TO_CHECK" ]; then
+    echo -e "${YELLOW}📚 Documentation may need updating\!${NC}"
+    echo ""
+    echo "Based on your changes, consider updating:"
+    echo "$DOCS_TO_CHECK"
+    echo ""
+    echo -e "${BLUE}💡 Tip:${NC} Run 'php artisan docs:check-updates' for detailed analysis"
+    
+    # For feature commits, strongly suggest documentation
+    if [ "$COMMIT_TYPE" = "feat" ]; then
+        echo ""
+        echo -e "${YELLOW}⚠️  New feature detected\!${NC}"
+        echo "Please ensure all documentation is updated before pushing."
+    fi
+fi
+
+# Check if the system understanding service should analyze changes
+if [ $CHECK_SERVICES -eq 1 ] || [ $CHECK_MCP -eq 1 ]; then
+    echo ""
+    echo -e "${BLUE}🔍 System Understanding:${NC}"
+    echo "Consider running impact analysis for these changes:"
+    echo "  php artisan analyze:impact"
+fi
+
+# Remind about MCP server usage
+if [ "$COMMIT_TYPE" = "feat" ] && [ $CHECK_SERVICES -eq 1 ]; then
+    echo ""
+    echo -e "${BLUE}🤖 MCP Server Reminder:${NC}"
+    echo "Did you consider using MCP servers for external integrations?"
+    echo "The system can automatically discover appropriate MCP servers."
+fi
+
+# Success message
+echo ""
+echo -e "${GREEN}✓ Commit successful\!${NC} $COMMIT_MESSAGE"
+
+# Run documentation health check if available
+if [ -f "artisan" ] && php artisan list | grep -q "docs:check-updates"; then
+    echo ""
+    echo "Running documentation health check..."
+    php artisan docs:check-updates --json > /tmp/doc-health.json 2>/dev/null
+    
+    if [ $? -eq 0 ] && [ -f /tmp/doc-health.json ]; then
+        HEALTH_SCORE=$(cat /tmp/doc-health.json | grep -o '"health_score":[0-9]*' | cut -d: -f2)
+        
+        if [ -n "$HEALTH_SCORE" ]; then
+            if [ "$HEALTH_SCORE" -lt 60 ]; then
+                echo -e "${RED}📊 Documentation Health: ${HEALTH_SCORE}% - Critical${NC}"
+            elif [ "$HEALTH_SCORE" -lt 80 ]; then
+                echo -e "${YELLOW}📊 Documentation Health: ${HEALTH_SCORE}% - Needs Attention${NC}"
+            else
+                echo -e "${GREEN}📊 Documentation Health: ${HEALTH_SCORE}% - Good${NC}"
+            fi
+        fi
+        
+        rm -f /tmp/doc-health.json
+    fi
+fi
+
+# NEW 2025: Check if Claude context documents need updating
+CONTEXT_DOCS_CHANGED=0
+for FILE in $CHANGED_FILES; do
+    if echo "$FILE" | grep -q "CLAUDE\.md\|CLAUDE_CONTEXT_SUMMARY\.md\|CLAUDE_QUICK_REFERENCE\.md\|ERROR_PATTERNS\.md\|BEST_PRACTICES_IMPLEMENTATION\.md"; then
+        CONTEXT_DOCS_CHANGED=1
+        break
+    fi
+done
+
+if [ $CONTEXT_DOCS_CHANGED -eq 1 ]; then
+    echo ""
+    echo -e "${GREEN}🧠 Claude Context Updated!${NC}"
+    echo "Context documents have been modified. Claude will have the latest information"
+    echo "in the next session. Consider running:"
+    echo "  php artisan docs:validate-context"
+fi
+
+# Check for new best practices implementation
+if [ $CHECK_BEST_PRACTICES -eq 1 ] || [ "$COMMIT_TYPE" = "feat" ]; then
+    echo ""
+    echo -e "${BLUE}🚀 Best Practices Reminder:${NC}"
+    echo "• Use MCPAutoDiscoveryService for automatic MCP selection"
+    echo "• Track data flows with DataFlowLogger"
+    echo "• Run impact analysis before major changes"
+    echo "• Let git hooks handle quality checks"
+fi

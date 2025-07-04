@@ -22,6 +22,21 @@ class RetellWebhookStrategy implements WebhookStrategy
             return false;
         }
         
+        // Retell signature format: v=timestamp,d=signature
+        // Example: v=1751207567675,d=1468b13b1163a38b19b92fe712b2909113a4c85f4de1916be9e00ceee605bcde
+        if (preg_match('/v=(\d+),d=([a-f0-9]+)/', $signature, $matches)) {
+            $timestamp = $matches[1];
+            $providedSignature = $matches[2];
+            
+            $payload = $request->getContent();
+            // Retell signs with payload + timestamp (not timestamp + payload)
+            $signedContent = $payload . $timestamp;
+            $expectedSignature = hash_hmac('sha256', $signedContent, $secret);
+            
+            return hash_equals($expectedSignature, $providedSignature);
+        }
+        
+        // Fallback to old format for backward compatibility
         $payload = $request->getContent();
         $timestamp = $request->header('x-retell-timestamp', '');
         $signedContent = $timestamp . $payload;
@@ -45,6 +60,7 @@ class RetellWebhookStrategy implements WebhookStrategy
         
         match($event) {
             'call_started' => $this->dispatchWithCompany(ProcessRetellCallStartedJob::class, $payload, $companyId),
+            'call_inbound' => $this->processCallInbound($payload, $companyId),
             'call_ended' => $this->dispatchWithCompany(ProcessRetellCallEndedJob::class, $payload, $companyId),
             'call_analyzed' => $this->processCallAnalyzed($payload),
             default => Log::warning('Unknown Retell event', ['event' => $event])
@@ -55,6 +71,40 @@ class RetellWebhookStrategy implements WebhookStrategy
     {
         // Future: Process call analysis results
         Log::info('Call analyzed event received', ['payload' => $payload]);
+    }
+    
+    /**
+     * Process inbound call webhook
+     * This is sent when an incoming call is received
+     */
+    private function processCallInbound(array $payload, ?int $companyId): void
+    {
+        Log::info('Processing call_inbound event', [
+            'payload' => $payload,
+            'company_id' => $companyId
+        ]);
+        
+        // Transform call_inbound to call_started format for existing job
+        $transformedPayload = [
+            'event' => 'call_started',
+            'call' => [
+                'call_id' => 'inbound_' . uniqid(),
+                'call_type' => 'inbound',
+                'from_number' => $payload['call_inbound']['from_number'] ?? null,
+                'to_number' => $payload['call_inbound']['to_number'] ?? null,
+                'direction' => 'inbound',
+                'call_status' => 'ongoing',
+                'agent_id' => $payload['call_inbound']['agent_id'] ?? null,
+                'agent_version' => $payload['call_inbound']['agent_version'] ?? null,
+                'start_timestamp' => time() * 1000,
+                'metadata' => [
+                    'original_event' => 'call_inbound'
+                ]
+            ]
+        ];
+        
+        // Use existing call started job with transformed payload
+        $this->dispatchWithCompany(ProcessRetellCallStartedJob::class, $transformedPayload, $companyId);
     }
     
     public function getSource(): string

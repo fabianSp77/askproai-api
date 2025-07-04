@@ -1,0 +1,69 @@
+site_name: AskProAI Dokumentation
+site_url: https://api.askproai.de/mkdocs
+site_description: Komplette Dokumentation für AskProAI - AI Phone Assistant & Appointment Booking
+
+docs_dir: docs_build
+site_dir: public/mkdocs
+
+theme:
+  name: material
+  language: de
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Dunkler Modus
+    - scheme: slate
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Heller Modus
+
+nav:
+  - Start: index.md
+  - Schnellstart:
+    - 5-Minuten Onboarding: 5-MINUTEN_ONBOARDING_PLAYBOOK.md
+    - Quick Reference: CLAUDE_QUICK_REFERENCE.md
+  - Betrieb:
+    - Customer Success: CUSTOMER_SUCCESS_RUNBOOK.md
+    - Emergency Response: EMERGENCY_RESPONSE_PLAYBOOK.md
+    - Error Patterns: ERROR_PATTERNS.md
+  - Entwicklung:
+    - Projekt Übersicht: CLAUDE.md
+    - Deployment: DEPLOYMENT_CHECKLIST.md
+    - Troubleshooting: TROUBLESHOOTING_DECISION_TREE.md
+  - Monitoring:
+    - KPI Dashboard: KPI_DASHBOARD_TEMPLATE.md
+    - Health Monitor: INTEGRATION_HEALTH_MONITOR.md
+  - Architektur:
+    - Datenfluss: PHONE_TO_APPOINTMENT_FLOW.md
+
+plugins:
+  - search:
+      lang: de
+
+# Vereinfachte Markdown Extensions (nur die wichtigsten)
+markdown_extensions:
+  - admonition
+  - footnotes
+  - meta
+  - toc:
+      permalink: true
+  - tables
+  - attr_list
+  - def_list
+
+# Info: Für vollständige Material Features installiere:
+# pip install mkdocs-material pymdown-extensions mkdocs-mermaid2

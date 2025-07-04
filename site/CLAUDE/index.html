@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/CLAUDE/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Projekt Übersicht - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Projekt \u00dcbersicht";
+        var mkdocs_page_input_path = "CLAUDE.md";
+        var mkdocs_page_url = "/mkdocs/CLAUDE/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Projekt Übersicht</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#inhaltsverzeichnis">📑 Inhaltsverzeichnis</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#kritisch-taglich-benotigt">🔴 Kritisch (Täglich benötigt)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#wichtig-regelmaig-benotigt">🟡 Wichtig (Regelmäßig benötigt)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#referenz-bei-bedarf">🟢 Referenz (Bei Bedarf)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#archiv-historie">📋 Archiv &amp; Historie</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#database-credentials">🔴 Database Credentials</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#project-overview">Project Overview</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#core-value-proposition">Core Value Proposition</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#target-industries">Target Industries</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#automatische-dokumentations-aktualisierung">🔄 Automatische Dokumentations-Aktualisierung</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#wann-wird-gepruft">Wann wird geprüft?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#automatische-prufung">Automatische Prüfung:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#git-hooks-aktivieren">Git Hooks aktivieren:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#workflow-fur-neue-aufgaben">Workflow für neue Aufgaben</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#1-analyse-phase">1. Analyse Phase</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-planning-phase">2. Planning Phase</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-specification-phase">3. Specification Phase</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-validation-phase">4. Validation Phase</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#5-implementation-phase">5. Implementation Phase</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#6-review-documentation">6. Review &amp; Documentation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#7-deployment-preparation">7. Deployment Preparation</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#mcp-server-ubersicht-und-verwendung">MCP-Server Übersicht und Verwendung</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#verfugbare-mcp-server-im-projekt">Verfügbare MCP-Server im Projekt</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#interne-mcp-server-bereits-implementiert">Interne MCP-Server (bereits implementiert)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#externe-mcp-server-konfigurierbar">Externe MCP-Server (konfigurierbar)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#claude-spezifische-mcp-tools">Claude-spezifische MCP-Tools</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#mcp-server-verwendungsrichtlinien">MCP-Server Verwendungsrichtlinien</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#wann-welchen-mcp-server-nutzen">Wann welchen MCP-Server nutzen:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#mcp-server-aktivieren">MCP-Server aktivieren:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#essential-commands">Essential Commands</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#development-setup">Development Setup</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#running-tests">Running Tests</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#queue-management">Queue Management</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#cache-management">Cache Management</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#database-commands">Database Commands</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#architecture-overview">Architecture Overview</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#core-domain-model">Core Domain Model</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#service-layer-architecture">Service Layer Architecture</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#repository-pattern-implementation">Repository Pattern Implementation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#multi-tenancy-implementation">Multi-Tenancy Implementation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#integration-flow-end-to-end-appointment-booking">Integration Flow (End-to-End Appointment Booking)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#key-design-patterns">Key Design Patterns</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#critical-implementation-details">Critical Implementation Details</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#webhook-security">Webhook Security</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#event-type-management">Event Type Management</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#api-versioning">API Versioning</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#queue-processing">Queue Processing</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#filament-admin-panel">Filament Admin Panel</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#environment-configuration">Environment Configuration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#database-considerations">Database Considerations</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#migration-strategy">Migration Strategy</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#key-tables">Key Tables</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#testing-approach">Testing Approach</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#comprehensive-test-suite">Comprehensive Test Suite</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#test-database">Test Database</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#running-test-suites">Running Test Suites</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#debugging-troubleshooting">Debugging &amp; Troubleshooting</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#booking-flow-debugging">Booking Flow Debugging</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#1-enable-debug-logging">1. Enable Debug Logging</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#2-check-correlation-ids">2. Check Correlation IDs</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#3-common-issues-solutions">3. Common Issues &amp; Solutions</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#performance-monitoring">Performance Monitoring</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#common-development-tasks">Common Development Tasks</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#adding-a-new-integration">Adding a New Integration</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#creating-a-new-filament-resource">Creating a New Filament Resource</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#adding-a-calcom-event-type">Adding a Cal.com Event Type</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#troubleshooting-retellai-integration">Troubleshooting Retell.ai Integration</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#problem-es-werden-keine-anrufe-eingespielt">Problem: "Es werden keine Anrufe eingespielt"</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#uiux-development-testing">UI/UX Development &amp; Testing</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#screenshot-workflow-for-claude">Screenshot Workflow for Claude</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#automated-screenshot-testing">Automated Screenshot Testing</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ui-testing-tools">UI Testing Tools</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#when-claude-should-request-screenshots">When Claude Should Request Screenshots</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#design-system-reference">Design System Reference</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#performance-considerations">Performance Considerations</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#performance-benchmarks-targets">🎯 Performance Benchmarks &amp; Targets</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#response-time-targets">Response Time Targets:</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#resource-limits">Resource Limits:</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#throughput-targets">Throughput Targets:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#performance-monitoring_1">🚨 Performance Monitoring:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#caching-strategy">Caching Strategy</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#query-optimization">Query Optimization</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#queue-configuration">Queue Configuration</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#business-logic-workflow">Business Logic &amp; Workflow</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#tenant-hierarchy">Tenant Hierarchy</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#key-business-rules">Key Business Rules</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#appointment-status-no-show-policies">Appointment Status &amp; No-Show Policies</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#webhook-signature-verification">Webhook Signature Verification</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#current-limitations-todos">Current Limitations &amp; TODOs</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#mvp-scope">MVP Scope</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#known-issues">Known Issues</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#planned-features">Planned Features</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#uiux-access-levels">UI/UX Access Levels</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#admin-dashboard-filament-admin">Admin Dashboard (Filament - /admin)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#customer-self-service">Customer Self-Service</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#mandant-self-service-features">Mandant Self-Service Features</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#security-monitoring">Security &amp; Monitoring</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#security-layer-components">Security Layer Components</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#1-encryption-service">1. Encryption Service</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#2-adaptive-rate-limiting">2. Adaptive Rate Limiting</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#3-threat-detection">3. Threat Detection</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#4-security-middleware">4. Security Middleware</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#monitoring-stack">Monitoring Stack</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#security-commands">Security Commands</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#security-dashboard">Security Dashboard</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#metrics-endpoint">Metrics Endpoint</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#backup-strategy">Backup Strategy</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#security-best-practices">Security Best Practices</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#documentation-access-security">Documentation Access &amp; Security</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#protected-documentation-locations">Protected Documentation Locations</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#access-credentials">Access Credentials</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#documentation-build-process">Documentation Build Process</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#security-audit-history">Security Audit History</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#performance-optimization">Performance Optimization</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#caching-layers">Caching Layers</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#performance-commands">Performance Commands</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#database-optimization">Database Optimization</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#emergency-procedures">Emergency Procedures</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#automatische-dokumentations-aktualisierung_1">🔄 Automatische Dokumentations-Aktualisierung</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#ubersicht">Übersicht</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#komponenten">Komponenten</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#1-git-hooks-automatische-prufung">1. Git Hooks (Automatische Prüfung)</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#2-laravel-commands">2. Laravel Commands</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#3-automatische-erkennung-bei">3. Automatische Erkennung bei</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#workflow-fur-neue-features">Workflow für neue Features</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#dashboard-widget">Dashboard Widget</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#gesundheits-metriken">Gesundheits-Metriken</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#cicd-integration">CI/CD Integration</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#archivierte-historische-informationen">📋 Archivierte Historische Informationen</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Hauptdokumentation &raquo;</li>
+      <li>Projekt Übersicht</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="claudemd">CLAUDE.md</h1>
+<blockquote>
+<p>🚀 <strong>Quick Access</strong>: <a href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a> | <a href="../ERROR_PATTERNS/">Error Patterns</a> | <a href="../DEPLOYMENT_CHECKLIST/">Deployment</a> | <a href="#database-credentials">DB Access</a> | <a href="#mcp-server-übersicht-und-verwendung">MCP Servers</a></p>
+<p>🆕 <strong>Business-Critical</strong>: <a href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Min Onboarding</a> | <a href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a> | <a href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a></p>
+<p>📊 <strong>Analytics &amp; Monitoring</strong>: <a href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a> | <a href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a> | <a href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a> | <a href="../PHONE_TO_APPOINTMENT_FLOW/">Data Flow</a></p>
+</blockquote>
+<p>This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.</p>
+<h2 id="inhaltsverzeichnis">📑 Inhaltsverzeichnis</h2>
+<h3 id="kritisch-taglich-benotigt">🔴 Kritisch (Täglich benötigt)</h3>
+<ul>
+<li><a href="#essential-commands">Essential Commands</a></li>
+<li><a href="#database-credentials">Database Credentials</a></li>
+<li><a href="#common-issues--solutions">Common Issues &amp; Solutions</a></li>
+<li><a href="#troubleshooting-retellai-integration">Troubleshooting Retell.ai</a></li>
+</ul>
+<h3 id="wichtig-regelmaig-benotigt">🟡 Wichtig (Regelmäßig benötigt)</h3>
+<ul>
+<li><a href="#workflow-für-neue-aufgaben">Workflow für neue Aufgaben</a></li>
+<li><a href="#mcp-server-übersicht-und-verwendung">MCP-Server Übersicht</a></li>
+<li><a href="#testing-approach">Testing Approach</a></li>
+<li><a href="#environment-configuration">Environment Configuration</a></li>
+</ul>
+<h3 id="referenz-bei-bedarf">🟢 Referenz (Bei Bedarf)</h3>
+<ul>
+<li><a href="#project-overview">Project Overview</a></li>
+<li><a href="#architecture-overview">Architecture Overview</a></li>
+<li><a href="#business-logic--workflow">Business Logic &amp; Workflow</a></li>
+<li><a href="#security--monitoring">Security &amp; Monitoring</a></li>
+<li><a href="#performance-considerations">Performance Considerations</a></li>
+</ul>
+<h3 id="archiv-historie">📋 Archiv &amp; Historie</h3>
+<ul>
+<li><a href="#kritische-verständnispunkte-juni-2025">Kritische Verständnispunkte (Juni 2025)</a></li>
+<li><a href="#kritische-blocker-stand-2025-06-17">Kritische Blocker (Stand 2025-06-17)</a></li>
+</ul>
+<hr />
+<h2 id="database-credentials">🔴 Database Credentials</h2>
+<pre><code class="language-bash"># MySQL/MariaDB Access (Verifiziert am 2025-06-18)
+# Application User (verwendet von Laravel)
+mysql -u askproai_user -p'lkZ57Dju9EDjrMxn' askproai_db
+
+# Root User
+mysql -u root -p'V9LGz2tdR5gpDQz'
+
+# Connection Details
+Host: 127.0.0.1
+Port: 3306
+Database: askproai_db
+</code></pre>
+<p><strong>SSH Access</strong>:</p>
+<pre><code class="language-bash">ssh hosting215275@hosting215275.ae83d.netcup.net
+ssh root@hosting215275.ae83d.netcup.net
+</code></pre>
+<hr />
+<h2 id="project-overview">Project Overview</h2>
+<p>AskProAI is an AI-powered SaaS platform that automatically answers incoming customer calls and independently schedules appointments. Through the integration of phone AI (Retell.ai) and online calendar system (Cal.com), it creates a seamless end-to-end solution for appointment bookings, relieving service companies from manual appointment management.</p>
+<h3 id="core-value-proposition">Core Value Proposition</h3>
+<ul>
+<li><strong>24/7 Availability</strong>: AI answers calls round the clock, never missing a potential appointment</li>
+<li><strong>Automatic Booking</strong>: Converts phone conversations directly into calendar appointments</li>
+<li><strong>Multi-tenant Architecture</strong>: Supports multiple independent businesses with data isolation</li>
+<li><strong>Multi-location Support</strong>: Manages companies with multiple branches/locations</li>
+<li><strong>German Market Focus</strong>: Optimized for German-speaking businesses and customers</li>
+</ul>
+<h3 id="target-industries">Target Industries</h3>
+<ul>
+<li>Medical practices (doctors, therapists, physiotherapists)</li>
+<li>Beauty salons and barbershops</li>
+<li>Veterinary clinics</li>
+<li>Legal offices and consultancies</li>
+<li>Any appointment-based service business</li>
+</ul>
+<h2 id="automatische-dokumentations-aktualisierung">🔄 Automatische Dokumentations-Aktualisierung</h2>
+<h3 id="wann-wird-gepruft">Wann wird geprüft?</h3>
+<p>Bei jeder Änderung von:
+- <strong>Services</strong> → ERROR_PATTERNS.md, TROUBLESHOOTING_DECISION_TREE.md
+- <strong>MCP-Server</strong> → CLAUDE.md (MCP-Sektion), INTEGRATION_HEALTH_MONITOR.md
+- <strong>API-Routes</strong> → PHONE_TO_APPOINTMENT_FLOW.md, ERROR_PATTERNS.md
+- <strong>Konfiguration</strong> → DEPLOYMENT_CHECKLIST.md, CLAUDE.md
+- <strong>Migrationen</strong> → DEPLOYMENT_CHECKLIST.md</p>
+<h3 id="automatische-prufung">Automatische Prüfung:</h3>
+<pre><code class="language-bash"># Nach jedem Commit automatisch
+git commit -m &quot;feat: Neues Feature&quot;
+# → 🔍 Prüfe ob Dokumentation aktualisiert werden muss...
+
+# Manuell prüfen
+php artisan docs:check-updates
+
+# Dokumentations-Gesundheit anzeigen
+php artisan docs:health
+</code></pre>
+<h3 id="git-hooks-aktivieren">Git Hooks aktivieren:</h3>
+<pre><code class="language-bash"># Einmalig einrichten
+git config core.hooksPath .githooks
+</code></pre>
+<h2 id="workflow-fur-neue-aufgaben">Workflow für neue Aufgaben</h2>
+<p>Verwende diesen erweiterten Workflow bei der Bearbeitung neuer Aufgaben:</p>
+<h3 id="1-analyse-phase">1. <strong>Analyse Phase</strong></h3>
+<ul>
+<li>Gründliche Analyse der Aufgabenstellung</li>
+<li>Code-Base Recherche mit relevanten Tools</li>
+<li>Identifikation betroffener Komponenten und Dependencies</li>
+<li>Dokumentation existierender Patterns und Constraints</li>
+<li><strong>MCP-Server Evaluation</strong>: Prüfe verfügbare MCP-Server für optimale Unterstützung:</li>
+<li><strong>Interne MCP-Server</strong>: DatabaseMCP, CalcomMCP, RetellMCP, etc. (siehe unten)</li>
+<li><strong>Externe MCP-Server</strong>: Context7 für Dokumentationen, taskmaster_ai für Task Management</li>
+<li><strong>Auswahl-Kriterien</strong>: Wähle MCP-Server basierend auf Aufgabentyp und benötigten Funktionen</li>
+</ul>
+<h3 id="2-planning-phase">2. <strong>Planning Phase</strong></h3>
+<ul>
+<li>Erstelle detaillierten Plan mit klaren Deliverables</li>
+<li>Identifiziere potenzielle Risiken und Edge Cases</li>
+<li>Definiere Success Metrics</li>
+<li>Dokumentiere in <code>tasks/todo.md</code></li>
+<li><strong>Task Management MCP nutzen</strong>: </li>
+<li>Verwende <code>TodoWrite</code>/<code>TodoRead</code> für einfache Aufgabenverwaltung</li>
+<li>Aktiviere <code>taskmaster_ai</code> MCP für komplexe Projekte (<code>MCP_TASKMASTER_ENABLED=true</code>)</li>
+<li>Erstelle detaillierte Schritt-für-Schritt-Pläne mit Abhängigkeiten</li>
+</ul>
+<h3 id="3-specification-phase">3. <strong>Specification Phase</strong></h3>
+<ul>
+<li>Erstelle technische Spezifikation basierend auf dem Plan</li>
+<li>Definiere Interfaces, Datenstrukturen und APIs</li>
+<li>Spezifiziere Error Handling und Logging-Strategie</li>
+<li>Hinterfrage und validiere die Spezifikation</li>
+<li><strong>API/Library Documentation via Context7</strong>:</li>
+<li>Nutze <code>mcp__context7__resolve-library-id</code> für Library-Suche</li>
+<li>Hole aktuelle Docs mit <code>mcp__context7__get-library-docs</code></li>
+<li>Besonders wichtig bei: Laravel, Filament, Cal.com, Retell.ai APIs</li>
+</ul>
+<h3 id="4-validation-phase">4. <strong>Validation Phase</strong></h3>
+<ul>
+<li>Überprüfe Spezifikation gegen bestehende Code-Base</li>
+<li>Recherchiere Best Practices und aktuelle Dokumentationen</li>
+<li>Identifiziere potenzielle Konflikte oder Breaking Changes</li>
+<li>Optimiere basierend auf Findings</li>
+</ul>
+<h3 id="5-implementation-phase">5. <strong>Implementation Phase</strong></h3>
+<ul>
+<li>Arbeite To-Do-Liste schrittweise ab</li>
+<li>Implementiere umfassendes Logging mit Correlation IDs</li>
+<li>Schreibe Tests parallel zur Implementierung</li>
+<li>Erstelle sinnvolle, atomare Commits</li>
+</ul>
+<h3 id="6-review-documentation">6. <strong>Review &amp; Documentation</strong></h3>
+<ul>
+<li>Code Review mit Fokus auf:</li>
+<li>Security (Multi-Tenancy, Input Validation)</li>
+<li>Performance (Query Optimization, Caching)</li>
+<li>Error Handling (Graceful Degradation)</li>
+<li>Maintainability (Clean Code, SOLID)</li>
+<li>Aktualisiere Dokumentation</li>
+<li>Füge Debugging-Informationen in <code>todo.md</code> hinzu</li>
+</ul>
+<h3 id="7-deployment-preparation">7. <strong>Deployment Preparation</strong></h3>
+<ul>
+<li>Erstelle Deployment Checklist</li>
+<li>Definiere Rollback-Strategie</li>
+<li>Plane Monitoring und Alerting</li>
+<li>Dokumentiere Known Issues und Workarounds</li>
+</ul>
+<h2 id="mcp-server-ubersicht-und-verwendung">MCP-Server Übersicht und Verwendung</h2>
+<h3 id="verfugbare-mcp-server-im-projekt">Verfügbare MCP-Server im Projekt</h3>
+<h4 id="interne-mcp-server-bereits-implementiert">Interne MCP-Server (bereits implementiert)</h4>
+<ol>
+<li><strong>CalcomMCPServer</strong> - Cal.com Integration für Kalenderfunktionen</li>
+<li><strong>RetellMCPServer</strong> - Retell.ai Integration für AI-Telefonie</li>
+<li><strong>DatabaseMCPServer</strong> - Sichere Datenbankoperationen</li>
+<li><strong>WebhookMCPServer</strong> - Webhook-Verarbeitung</li>
+<li><strong>QueueMCPServer</strong> - Queue-Management und Job-Status</li>
+<li><strong>StripeMCPServer</strong> - Payment-Processing</li>
+<li><strong>KnowledgeMCPServer</strong> - Knowledge Base Management</li>
+<li><strong>AppointmentMCPServer</strong> - Terminverwaltung</li>
+<li><strong>CustomerMCPServer</strong> - Kundenverwaltung</li>
+<li><strong>CompanyMCPServer</strong> - Multi-Tenant Management</li>
+<li><strong>BranchMCPServer</strong> - Filialverwaltung</li>
+<li><strong>RetellConfigurationMCPServer</strong> - Retell Agent Konfiguration</li>
+<li><strong>RetellCustomFunctionMCPServer</strong> - Custom AI Funktionen</li>
+<li><strong>AppointmentManagementMCPServer</strong> - Erweiterte Terminworkflows</li>
+<li><strong>SentryMCPServer</strong> - Error Tracking</li>
+</ol>
+<h4 id="externe-mcp-server-konfigurierbar">Externe MCP-Server (konfigurierbar)</h4>
+<ul>
+<li><strong>sequential_thinking</strong> - Schrittweise Problemlösung (standardmäßig aktiv)</li>
+<li><strong>postgres</strong> - Datenbankzugriff (mapped auf MySQL/MariaDB)</li>
+<li><strong>effect_docs</strong> - Dokumentationsgenerierung</li>
+<li><strong>taskmaster_ai</strong> - Erweiterte Aufgabenverwaltung (standardmäßig deaktiviert)</li>
+</ul>
+<h4 id="claude-spezifische-mcp-tools">Claude-spezifische MCP-Tools</h4>
+<ul>
+<li><strong>mcp__context7__resolve-library-id</strong> - Library-Namen zu Context7 IDs auflösen</li>
+<li><strong>mcp__context7__get-library-docs</strong> - Aktuelle Library-Dokumentation abrufen</li>
+</ul>
+<h3 id="mcp-server-verwendungsrichtlinien">MCP-Server Verwendungsrichtlinien</h3>
+<h4 id="wann-welchen-mcp-server-nutzen">Wann welchen MCP-Server nutzen:</h4>
+<p><strong>Für API-Integrationen und Dokumentation:</strong>
+- Nutze Context7 MCP für externe Library-Dokumentation (Laravel, Filament, etc.)
+- Verwende interne MCP-Server für projektspezifische APIs</p>
+<p><strong>Für Task Management:</strong>
+- Einfache Aufgaben: <code>TodoWrite</code>/<code>TodoRead</code> Tools
+- Komplexe Projekte: Aktiviere <code>taskmaster_ai</code> MCP
+- Detaillierte Planung mit Abhängigkeiten und Meilensteinen</p>
+<p><strong>Für Datenoperationen:</strong>
+- DatabaseMCPServer für sichere Queries
+- WebhookMCPServer für Event-Verarbeitung
+- QueueMCPServer für asynchrone Jobs</p>
+<p><strong>Best Practices:</strong>
+1. <strong>Evaluiere zu Beginn jeder Aufgabe</strong> verfügbare MCP-Server
+2. <strong>Kombiniere mehrere MCP-Server</strong> für optimale Ergebnisse
+3. <strong>Dokumentiere MCP-Nutzung</strong> in Implementierungsnotizen
+4. <strong>Prüfe externe MCP-Optionen</strong> bei neuen Anforderungen</p>
+<h3 id="mcp-server-aktivieren">MCP-Server aktivieren:</h3>
+<pre><code class="language-bash"># Externe MCP-Server in .env aktivieren
+MCP_TASKMASTER_ENABLED=true
+MCP_EFFECT_DOCS_ENABLED=true
+
+# MCP-Status prüfen
+php artisan mcp:status
+
+# MCP-Health Check
+php artisan mcp:health
+</code></pre>
+<h2 id="essential-commands">Essential Commands</h2>
+<h3 id="development-setup">Development Setup</h3>
+<pre><code class="language-bash">composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --force  # Production requires --force
+npm run dev
+php artisan serve
+</code></pre>
+<h3 id="running-tests">Running Tests</h3>
+<pre><code class="language-bash">php artisan test                    # Run all tests
+php artisan test --filter TestName  # Run specific test
+./vendor/bin/phpunit tests/Feature  # Run feature tests only
+</code></pre>
+<h3 id="queue-management">Queue Management</h3>
+<pre><code class="language-bash">php artisan horizon          # Start Horizon queue worker
+php artisan horizon:status   # Check Horizon status
+php artisan queue:work       # Alternative queue worker
+</code></pre>
+<h3 id="cache-management">Cache Management</h3>
+<pre><code class="language-bash">php artisan optimize:clear   # Clear all caches
+php artisan cache:clear      # Clear application cache
+php artisan config:clear     # Clear config cache
+php artisan route:clear      # Clear route cache
+</code></pre>
+<h3 id="database-commands">Database Commands</h3>
+<pre><code class="language-bash">php artisan migrate --force                          # Run migrations in production
+php artisan make:migration create_example_table      # Create new migration
+php artisan tinker                                  # Interactive shell
+</code></pre>
+<h2 id="architecture-overview">Architecture Overview</h2>
+<h3 id="core-domain-model">Core Domain Model</h3>
+<pre><code>Company (Tenant)
+     Branches (Locations)
+     Staff (Employees)
+     Services (Offerings)
+     Customers
+     Appointments
+</code></pre>
+<h3 id="service-layer-architecture">Service Layer Architecture</h3>
+<p>The application uses a service-oriented architecture with key services:
+- <code>CalcomService</code> / <code>CalcomV2Service</code> - Calendar API integration
+- <code>RetellService</code> / <code>RetellV2Service</code> - AI phone service integration
+- <code>CalcomEventTypeSyncService</code> - Event type synchronization
+- <code>CallDataRefresher</code> - Call data updates
+- Calendar providers follow strategy pattern (BaseCalendarService)</p>
+<p><strong>Core Business Services:</strong>
+- <code>AppointmentService</code> - Appointment lifecycle management
+- <code>CustomerService</code> - Customer management and duplicate detection
+- <code>CallService</code> - Call processing and analysis</p>
+<h3 id="repository-pattern-implementation">Repository Pattern Implementation</h3>
+<p>The application uses the Repository Pattern for data access:
+- <code>BaseRepository</code> - Abstract base class with common CRUD operations
+- <code>AppointmentRepository</code> - Appointment-specific queries and filters
+- <code>CustomerRepository</code> - Customer lookup and duplicate detection
+- <code>CallRepository</code> - Call data access and statistics
+- Repositories handle all database queries, services contain business logic</p>
+<h3 id="multi-tenancy-implementation">Multi-Tenancy Implementation</h3>
+<ul>
+<li>Global scope <code>TenantScope</code> automatically filters data by company</li>
+<li>Tenant identification via subdomain or request headers</li>
+<li>All models with <code>company_id</code> are automatically scoped</li>
+</ul>
+<h3 id="integration-flow-end-to-end-appointment-booking">Integration Flow (End-to-End Appointment Booking)</h3>
+<ol>
+<li><strong>Call Reception</strong>: Customer calls → Retell.ai AI agent answers with company greeting</li>
+<li><strong>Dialog &amp; Data Capture</strong>: AI conducts conversation, extracts appointment details (date, time, service, customer info)</li>
+<li><strong>Webhook Processing</strong>: Retell.ai sends call data to AskProAI webhook (<code>/api/retell/webhook</code>)</li>
+<li><strong>Customer Management</strong>: System checks/creates customer record based on phone number</li>
+<li><strong>Availability Check</strong>: Validates requested time slot (Cal.com integration planned)</li>
+<li><strong>Appointment Creation</strong>: Books appointment in database and Cal.com calendar</li>
+<li><strong>Confirmation</strong>: AI confirms booking verbally, system sends email confirmation</li>
+</ol>
+<h3 id="key-design-patterns">Key Design Patterns</h3>
+<ul>
+<li><strong>Repository Pattern</strong>: Data access abstraction (though not fully implemented)</li>
+<li><strong>Service Pattern</strong>: Business logic encapsulation</li>
+<li><strong>Policy Pattern</strong>: Authorization rules</li>
+<li><strong>Factory Pattern</strong>: Calendar provider instantiation</li>
+<li><strong>Observer Pattern</strong>: Model events and listeners</li>
+<li><strong>Middleware Pattern</strong>: Webhook signature verification</li>
+</ul>
+<h2 id="critical-implementation-details">Critical Implementation Details</h2>
+<h3 id="webhook-security">Webhook Security</h3>
+<p>All webhooks use signature verification middleware:
+- <code>VerifyCalcomSignature</code> - Cal.com webhooks
+- <code>VerifyRetellSignature</code> - Retell.ai webhooks</p>
+<h3 id="event-type-management">Event Type Management</h3>
+<p>The system is transitioning from <code>staff_service_assignments</code> to <code>staff_event_types</code> table. Both exist currently but <code>staff_event_types</code> is the target structure with enhanced features.</p>
+<h3 id="api-versioning">API Versioning</h3>
+<ul>
+<li>Cal.com: Transitioning from v1 to v2 API (both currently in use)</li>
+<li>Use <code>CalcomV2Service</code> for new implementations</li>
+<li>Legacy <code>CalcomService</code> still handles some operations</li>
+</ul>
+<h3 id="queue-processing">Queue Processing</h3>
+<ul>
+<li>Uses Laravel Horizon for queue management</li>
+<li>Critical jobs: <code>ProcessRetellCallJob</code>, <code>RefreshCallDataJob</code></li>
+<li>Webhooks should be processed asynchronously to prevent timeouts</li>
+</ul>
+<h3 id="filament-admin-panel">Filament Admin Panel</h3>
+<ul>
+<li>Main admin interface at <code>/admin</code></li>
+<li>Resources follow naming convention: <code>{Model}Resource</code></li>
+<li>Custom pages in <code>app/Filament/Admin/Pages/</code></li>
+<li>Relation managers for nested resource management</li>
+</ul>
+<h2 id="environment-configuration">Environment Configuration</h2>
+<p>Key environment variables that must be set:</p>
+<pre><code># Database
+DB_CONNECTION=mysql
+DB_DATABASE=askproai
+
+# Cal.com Integration
+DEFAULT_CALCOM_API_KEY=
+DEFAULT_CALCOM_TEAM_SLUG=
+
+# Retell.ai Integration
+DEFAULT_RETELL_API_KEY=
+DEFAULT_RETELL_AGENT_ID=
+
+# Email
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.udag.de
+MAIL_FROM_ADDRESS=
+
+# Queue
+QUEUE_CONNECTION=redis
+REDIS_HOST=127.0.0.1
+</code></pre>
+<h2 id="database-considerations">Database Considerations</h2>
+<h3 id="migration-strategy">Migration Strategy</h3>
+<ul>
+<li>Always backup before running migrations in production</li>
+<li>Use <code>--force</code> flag in production environment</li>
+<li>Check for data migrations after schema changes</li>
+</ul>
+<h3 id="key-tables">Key Tables</h3>
+<ul>
+<li><code>companies</code> - Tenant organizations</li>
+<li><code>branches</code> - Physical locations</li>
+<li><code>staff</code> - Employees</li>
+<li><code>appointments</code> - Core booking data</li>
+<li><code>calls</code> - Phone call records from Retell.ai</li>
+<li><code>calcom_event_types</code> - Calendar event templates</li>
+<li><code>staff_event_types</code> - Staff-to-event assignments (new structure)</li>
+</ul>
+<h2 id="testing-approach">Testing Approach</h2>
+<h3 id="comprehensive-test-suite">Comprehensive Test Suite</h3>
+<p>The application includes a full test suite covering all layers:</p>
+<p><strong>Unit Tests</strong> (<code>tests/Unit/</code>)
+- Repository classes with full CRUD coverage
+- Model relationships and scopes
+- Helper functions and utilities</p>
+<p><strong>Integration Tests</strong> (<code>tests/Integration/</code>)
+- Service layer with event dispatching
+- External API mocking (Cal.com, Retell.ai)
+- Transaction handling and rollbacks
+- Business rule validation</p>
+<p><strong>Feature Tests</strong> (<code>tests/Feature/</code>)
+- API endpoint testing with authentication
+- Webhook processing (<code>tests/Feature/Webhook/</code>)
+- Request validation and error handling
+- Multi-tenancy isolation</p>
+<p><strong>E2E Tests</strong> (<code>tests/E2E/</code>)
+- Complete business workflows
+- Phone-to-appointment flow
+- Customer lifecycle management
+- Appointment management flow</p>
+<h3 id="test-database">Test Database</h3>
+<p>Uses SQLite in-memory database (configured in <code>phpunit.xml</code>)</p>
+<h3 id="running-test-suites">Running Test Suites</h3>
+<pre><code class="language-bash"># Run all tests
+php artisan test
+
+# Run specific test suite
+php artisan test --testsuite=Unit
+php artisan test --testsuite=Integration
+php artisan test --testsuite=Feature
+php artisan test --testsuite=E2E
+
+# Run with coverage
+php artisan test --coverage
+
+# Run tests in parallel
+php artisan test --parallel
+</code></pre>
+<h2 id="debugging-troubleshooting">Debugging &amp; Troubleshooting</h2>
+<h3 id="booking-flow-debugging">Booking Flow Debugging</h3>
+<h4 id="1-enable-debug-logging">1. Enable Debug Logging</h4>
+<pre><code class="language-bash"># Set in .env
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+BOOKING_DEBUG=true
+</code></pre>
+<h4 id="2-check-correlation-ids">2. Check Correlation IDs</h4>
+<pre><code class="language-sql">-- Find all logs for a failed booking
+SELECT * FROM api_call_logs 
+WHERE correlation_id = 'YOUR-CORRELATION-ID'
+ORDER BY created_at;
+
+-- Check webhook processing
+SELECT * FROM webhook_events 
+WHERE payload-&gt;&gt;'$.call_id' = 'YOUR-CALL-ID';
+</code></pre>
+<h4 id="3-common-issues-solutions">3. Common Issues &amp; Solutions</h4>
+<p><strong>Issue: "Time slot no longer available"</strong></p>
+<pre><code class="language-sql">-- Check for stuck locks
+SELECT * FROM appointment_locks 
+WHERE expires_at &lt; NOW() 
+AND branch_id = 'YOUR-BRANCH-ID';
+
+-- Clean expired locks
+DELETE FROM appointment_locks WHERE expires_at &lt; NOW();
+</code></pre>
+<p><strong>Issue: "Cal.com sync failed"</strong></p>
+<pre><code class="language-bash"># Check circuit breaker status
+php artisan circuit-breaker:status
+
+# Reset circuit breaker
+php artisan circuit-breaker:reset calcom
+
+# Manually retry sync
+php artisan appointments:sync-failed
+</code></pre>
+<p><strong>Issue: "Webhook not processing"</strong></p>
+<pre><code class="language-php">// Check webhook signature
+curl -X POST https://api.askproai.de/api/webhook \
+  -H &quot;x-retell-signature: YOUR_SIGNATURE&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;event_type&quot;:&quot;call_ended&quot;,&quot;call_id&quot;:&quot;test&quot;}'
+</code></pre>
+<p><strong>Issue: "Database Access Denied" after deployment</strong>
+This error typically occurs when Laravel's cached configuration contains incorrect database credentials.</p>
+<p><strong>Symptoms:</strong>
+- Error: <code>Access denied for user 'askproai_user'@'localhost' (using password: YES)</code>
+- Occurs after deployment or environment changes
+- Application was working before, suddenly stops</p>
+<p><strong>Root Cause:</strong>
+Laravel's config cache (<code>bootstrap/cache/config.php</code>) may contain incorrect values from:
+1. <code>.env.production</code> template files with placeholder values
+2. Old cached values from previous deployments
+3. Environment file precedence issues</p>
+<p><strong>Solution:</strong></p>
+<pre><code class="language-bash"># 1. Delete the cached config file
+rm -f bootstrap/cache/config.php
+
+# 2. Check for .env.production files that might override .env
+ls -la .env*
+
+# 3. Rename any .env.production files to prevent loading
+mv .env.production .env.production.template
+
+# 4. Recreate config cache with correct values
+php artisan config:cache
+
+# 5. Restart PHP-FPM to ensure changes take effect
+sudo systemctl restart php8.3-fpm
+</code></pre>
+<p><strong>Prevention:</strong>
+- Never commit <code>.env.production</code> files with actual credentials
+- Use <code>.env.production.template</code> for template files
+- Always clear config cache after deployment: <code>php artisan optimize:clear</code>
+- Verify database credentials in <code>.env</code> before caching config</p>
+<h3 id="performance-monitoring">Performance Monitoring</h3>
+<pre><code class="language-sql">-- Slow queries
+SELECT 
+    query_time,
+    lock_time,
+    rows_sent,
+    rows_examined,
+    sql_text
+FROM mysql.slow_log
+WHERE query_time &gt; 1
+ORDER BY query_time DESC
+LIMIT 10;
+
+-- API performance
+SELECT 
+    service,
+    AVG(duration_ms) as avg_ms,
+    MAX(duration_ms) as max_ms,
+    COUNT(*) as total_calls
+FROM api_call_logs
+WHERE created_at &gt;= NOW() - INTERVAL 1 HOUR
+GROUP BY service;
+</code></pre>
+<h2 id="common-development-tasks">Common Development Tasks</h2>
+<h3 id="adding-a-new-integration">Adding a New Integration</h3>
+<ol>
+<li>Create service class in <code>app/Services/</code></li>
+<li>Add configuration to <code>config/services.php</code></li>
+<li>Create webhook controller if needed</li>
+<li>Add webhook route with signature verification</li>
+<li>Create job for async processing</li>
+<li>Add circuit breaker configuration</li>
+<li>Implement logging with correlation IDs</li>
+<li>Write integration tests</li>
+</ol>
+<h3 id="creating-a-new-filament-resource">Creating a New Filament Resource</h3>
+<pre><code class="language-bash">php artisan make:filament-resource ModelName --generate
+</code></pre>
+<h3 id="adding-a-calcom-event-type">Adding a Cal.com Event Type</h3>
+<p>Event types are synced from Cal.com. Use the sync command or import wizard in admin panel.</p>
+<h3 id="troubleshooting-retellai-integration">Troubleshooting Retell.ai Integration</h3>
+<h4 id="problem-es-werden-keine-anrufe-eingespielt">Problem: "Es werden keine Anrufe eingespielt"</h4>
+<p><strong>Quick Fix:</strong>
+1. Ensure Horizon is running: <code>php artisan horizon</code>
+2. Click "Anrufe abrufen" button in the admin panel
+3. Check if calls are imported</p>
+<p><strong>Root Causes &amp; Solutions:</strong></p>
+<ol>
+<li><strong>Missing Webhook Registration</strong></li>
+<li>Register webhook URL in Retell.ai dashboard: <code>https://yourdomain.com/api/retell/webhook</code></li>
+<li>
+<p>Enable events: <code>call_ended</code>, <code>call_started</code>, <code>call_analyzed</code></p>
+</li>
+<li>
+<p><strong>Missing API Keys</strong>
+   ```bash
+   # Check if company has API key
+   php artisan tinker</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>Company::first()-&gt;retell_api_key</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+</ol>
+<p># If empty, update from .env</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>$c = Company::first();
+$c-&gt;retell_api_key = config('services.retell.api_key');
+$c-&gt;save();
+   ```</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<ol>
+<li><strong>Manual Import</strong>
+   ```bash
+   # Import all recent calls
+   php fix-retell-import.php</li>
+</ol>
+<p># Or use the UI button "Anrufe abrufen"
+   ```</p>
+<ol>
+<li><strong>Debugging</strong>
+   ```bash
+   # Check webhook logs
+   tail -f storage/logs/laravel.log | grep -i retell</li>
+</ol>
+<p># Test API connection
+   php test-retell-api.php</p>
+<p># Check queue processing
+   php artisan queue:work --queue=webhooks --tries=1
+   ```</p>
+<p><strong>Webhook Flow:</strong>
+<code>Retell Call</code> → <code>POST /api/retell/webhook</code> → <code>Signature Verify</code> → <code>ProcessRetellCallEndedJob</code> → <code>Call Record</code></p>
+<p><strong>Required .env Variables:</strong></p>
+<pre><code>RETELL_TOKEN=key_xxx
+RETELL_WEBHOOK_SECRET=key_xxx
+RETELL_BASE=https://api.retellai.com
+</code></pre>
+<h2 id="uiux-development-testing">UI/UX Development &amp; Testing</h2>
+<h3 id="screenshot-workflow-for-claude">Screenshot Workflow for Claude</h3>
+<p>When working on UI/UX features, provide screenshots to Claude for analysis:</p>
+<ol>
+<li><strong>Capture Screenshots</strong>:
+   ```bash
+   # macOS: Cmd+Shift+4 (selection) or Cmd+Shift+3 (full screen)
+   # Save to: ~/Desktop/askproai-screenshots/</li>
+</ol>
+<p># Linux: Use gnome-screenshot or similar
+   gnome-screenshot -a -f ~/askproai-screenshot.png
+   ```</p>
+<ol>
+<li><strong>Provide Context</strong>:</li>
+<li>Current page/route (e.g., <code>/admin/appointments</code>)</li>
+<li>User role logged in (Admin, Staff, etc.)</li>
+<li>What feature/issue to analyze</li>
+<li>
+<p>Browser/device info if relevant</p>
+</li>
+<li>
+<p><strong>Common UI Areas to Screenshot</strong>:</p>
+</li>
+<li>Dashboard widgets and stats</li>
+<li>Form layouts and validation states</li>
+<li>Table views with filters</li>
+<li>Mobile responsive views</li>
+<li>Error states and notifications</li>
+<li>Multi-step wizards (each step)</li>
+</ol>
+<h3 id="automated-screenshot-testing">Automated Screenshot Testing</h3>
+<pre><code class="language-bash"># Capture UI state after changes
+php artisan ui:capture --all
+php artisan ui:capture --route=/admin/appointments --compare
+
+# Post-deployment verification
+./scripts/post-deploy-ui-check.sh
+
+# Enable UI test mode in browser
+# Add ?ui_test=1 to any admin URL to activate markers
+</code></pre>
+<h3 id="ui-testing-tools">UI Testing Tools</h3>
+<ol>
+<li><strong>Browser Console Tool</strong>: Load <code>/js/askproai-ui-tester.js</code></li>
+<li><strong>Filament Trait</strong>: Add <code>HasUITesting</code> to resources</li>
+<li><strong>Capture Trait</strong>: Use <code>CapturesUIState</code> in controllers</li>
+</ol>
+<h3 id="when-claude-should-request-screenshots">When Claude Should Request Screenshots</h3>
+<p>After making changes to:
+- Filament resources (tables, forms, filters)
+- Dashboard widgets
+- Email templates
+- Responsive layouts
+- Error states
+- Multi-step processes</p>
+<p><strong>Example Request</strong>:
+"I've updated the AppointmentResource form. Please run <code>php artisan ui:capture --route=/admin/appointments/create</code> and provide the screenshot so I can verify the layout changes."</p>
+<h3 id="design-system-reference">Design System Reference</h3>
+<ul>
+<li><strong>Primary Colors</strong>: Blue (#3B82F6), Gray (#6B7280)</li>
+<li><strong>Framework</strong>: Filament 3.x (based on Tailwind CSS)</li>
+<li><strong>Icons</strong>: Heroicons</li>
+<li><strong>Components</strong>: Filament's built-in components</li>
+<li><strong>Responsive Breakpoints</strong>: sm:640px, md:768px, lg:1024px, xl:1280px</li>
+</ul>
+<h2 id="performance-considerations">Performance Considerations</h2>
+<h3 id="performance-benchmarks-targets">🎯 Performance Benchmarks &amp; Targets</h3>
+<h4 id="response-time-targets">Response Time Targets:</h4>
+<ul>
+<li><strong>API Endpoints</strong>: &lt; 200ms (p95)</li>
+<li><strong>Webhook Processing</strong>: &lt; 500ms </li>
+<li><strong>Admin Dashboard</strong>: &lt; 1s page load</li>
+<li><strong>Database Queries</strong>: &lt; 100ms per query</li>
+<li><strong>Queue Job Processing</strong>: &lt; 30s per job</li>
+</ul>
+<h4 id="resource-limits">Resource Limits:</h4>
+<ul>
+<li><strong>Memory Usage</strong>: &lt; 512MB per request</li>
+<li><strong>CPU Usage</strong>: &lt; 80% sustained</li>
+<li><strong>Database Connections</strong>: &lt; 100 concurrent</li>
+<li><strong>Redis Memory</strong>: &lt; 2GB</li>
+<li><strong>Disk I/O</strong>: &lt; 100 MB/s</li>
+</ul>
+<h4 id="throughput-targets">Throughput Targets:</h4>
+<ul>
+<li><strong>API Requests</strong>: 1000 req/min</li>
+<li><strong>Webhook Events</strong>: 500/min</li>
+<li><strong>Concurrent Users</strong>: 100</li>
+<li><strong>Calls per Hour</strong>: 1000</li>
+<li><strong>Appointments per Day</strong>: 5000</li>
+</ul>
+<h3 id="performance-monitoring_1">🚨 Performance Monitoring:</h3>
+<pre><code class="language-bash"># Check current performance
+php artisan performance:analyze
+
+# Slow query log
+tail -f storage/logs/slow-queries.log
+
+# Real-time metrics
+php artisan horizon:metrics
+</code></pre>
+<h3 id="caching-strategy">Caching Strategy</h3>
+<ul>
+<li>Event types cached for 5 minutes</li>
+<li>Company settings cached indefinitely (clear on update)</li>
+<li>API responses cached for 1 minute</li>
+<li>Clear cache after configuration changes</li>
+</ul>
+<h3 id="query-optimization">Query Optimization</h3>
+<ul>
+<li><strong>MUST</strong> use eager loading for relationships</li>
+<li><strong>MUST</strong> implement query scopes for common filters</li>
+<li><strong>MUST</strong> add indexes for: company_id, created_at, phone_number</li>
+<li><strong>AVOID</strong> whereRaw() - use query builder instead</li>
+<li><strong>LIMIT</strong> results to 50 per page max</li>
+</ul>
+<h3 id="queue-configuration">Queue Configuration</h3>
+<ul>
+<li>Horizon configured for multiple queues</li>
+<li>High priority: webhooks (timeout: 60s)</li>
+<li>Default: general processing (timeout: 300s)</li>
+<li>Low priority: maintenance tasks (timeout: 900s)</li>
+</ul>
+<h2 id="business-logic-workflow">Business Logic &amp; Workflow</h2>
+<h3 id="tenant-hierarchy">Tenant Hierarchy</h3>
+<pre><code>Platform (AskProAI)
+├── Company (Tenant/Mandant)
+│   ├── Branches (Filialen/Standorte)
+│   │   ├── Staff (Mitarbeiter)
+│   │   ├── Services (Dienstleistungen)
+│   │   └── Working Hours
+│   ├── Customers (Kunden)
+│   └── Appointments (Termine)
+</code></pre>
+<h3 id="key-business-rules">Key Business Rules</h3>
+<ul>
+<li>Each company can have multiple branches with independent calendars</li>
+<li>Staff can be assigned to branches and offer specific services</li>
+<li>Appointments link customers, staff, services, and time slots</li>
+<li>All data is tenant-isolated via company_id</li>
+</ul>
+<h3 id="appointment-status-no-show-policies">Appointment Status &amp; No-Show Policies</h3>
+<p><strong>Current Implementation:</strong>
+- Appointment statuses: <code>scheduled</code>, <code>confirmed</code>, <code>completed</code>, <code>cancelled</code>, <code>no_show</code>
+- No automatic no-show marking implemented yet
+- No automatic customer blocking for repeated no-shows</p>
+<p><strong>TODO/Planned:</strong>
+- Auto-mark as no-show if appointment time + buffer passed without check-in
+- Track no-show count per customer for potential blocking
+- Company-configurable no-show policies (warnings, blocks after X no-shows)</p>
+<h3 id="webhook-signature-verification">Webhook Signature Verification</h3>
+<p>All incoming webhooks MUST be verified:
+- Retell.ai: Uses <code>VerifyRetellSignature</code> middleware
+- Cal.com: Uses <code>VerifyCalcomSignature</code> middleware
+- Reject unverified requests immediately</p>
+<h2 id="current-limitations-todos">Current Limitations &amp; TODOs</h2>
+<h3 id="mvp-scope">MVP Scope</h3>
+<ul>
+<li>Basic appointment booking via phone works</li>
+<li>No automatic cancellation/rescheduling yet</li>
+<li>Limited error handling in AI conversations</li>
+<li>Email templates are basic (German only)</li>
+</ul>
+<h3 id="known-issues">Known Issues</h3>
+<ul>
+<li>Transitioning from <code>staff_service_assignments</code> to <code>staff_event_types</code> table</li>
+<li>Mixed Cal.com API v1/v2 usage (standardize on v2)</li>
+<li>White-label branding not fully implemented</li>
+<li>SMS/WhatsApp notifications planned but not implemented</li>
+</ul>
+<h3 id="planned-features">Planned Features</h3>
+<ul>
+<li>Multi-language support (30+ languages via Retell.ai)</li>
+<li>Google Calendar fallback integration</li>
+<li>CRM integrations (Pipedrive, Salesforce)</li>
+<li>Advanced analytics dashboard</li>
+<li>Mobile app API endpoints (partially implemented)</li>
+</ul>
+<h2 id="uiux-access-levels">UI/UX Access Levels</h2>
+<h3 id="admin-dashboard-filament-admin">Admin Dashboard (Filament - <code>/admin</code>)</h3>
+<p><strong>Available to Company Admins:</strong>
+- View/manage appointments, customers, staff, services
+- Configure company settings, branches, working hours
+- View call logs and transcripts
+- Manual appointment creation/editing
+- Basic reporting (appointment counts, call statistics)</p>
+<p><strong>Super Admin Only:</strong>
+- Company (tenant) management
+- System-wide settings
+- API status monitoring
+- Queue/Horizon management</p>
+<h3 id="customer-self-service">Customer Self-Service</h3>
+<p><strong>Currently Implemented:</strong>
+- Phone-based booking via AI (Retell.ai)
+- Email confirmations for appointments</p>
+<p><strong>NOT Yet Available for Customers:</strong>
+- Web portal for appointment management
+- Self-service cancellation/rescheduling
+- SMS notifications
+- WhatsApp integration
+- Mobile app</p>
+<h3 id="mandant-self-service-features">Mandant Self-Service Features</h3>
+<p><strong>Already Available:</strong>
+- Onboarding wizard (initial setup)
+- Service configuration
+- Staff management
+- Working hours setup
+- Basic email template customization (planned)</p>
+<p><strong>Still Admin/Backend Only:</strong>
+- Retell.ai agent configuration (must be done in Retell.ai directly)
+- Cal.com event type mapping
+- Webhook configuration
+- API key management
+- Advanced analytics
+- Billing/subscription management</p>
+<h2 id="security-monitoring">Security &amp; Monitoring</h2>
+<h3 id="security-layer-components">Security Layer Components</h3>
+<p>The platform implements a comprehensive security layer with the following components:</p>
+<h4 id="1-encryption-service">1. <strong>Encryption Service</strong></h4>
+<ul>
+<li>Automatic encryption of sensitive fields (API keys, passwords)</li>
+<li>Uses AES-256-CBC encryption</li>
+<li>Transparent encryption/decryption via model observers</li>
+</ul>
+<h4 id="2-adaptive-rate-limiting">2. <strong>Adaptive Rate Limiting</strong></h4>
+<ul>
+<li>Configurable per-endpoint limits</li>
+<li>User-based and IP-based tracking</li>
+<li>Automatic throttling with exponential backoff</li>
+<li>Real-time monitoring of rate limit violations</li>
+</ul>
+<h4 id="3-threat-detection">3. <strong>Threat Detection</strong></h4>
+<ul>
+<li>SQL injection pattern detection</li>
+<li>XSS attempt blocking</li>
+<li>Path traversal prevention</li>
+<li>Command injection protection</li>
+<li>Automatic alerting for critical threats</li>
+</ul>
+<h4 id="4-security-middleware">4. <strong>Security Middleware</strong></h4>
+<ul>
+<li><code>ThreatDetectionMiddleware</code> - Blocks malicious requests</li>
+<li><code>AdaptiveRateLimitMiddleware</code> - Enforces rate limits</li>
+<li><code>MetricsMiddleware</code> - Collects performance metrics</li>
+</ul>
+<h3 id="monitoring-stack">Monitoring Stack</h3>
+<pre><code class="language-bash"># Start monitoring services
+docker-compose -f docker-compose.observability.yml up -d
+
+# Access dashboards
+# Prometheus: http://localhost:9090
+# Grafana: http://localhost:3000 (admin/admin)
+# Alertmanager: http://localhost:9093
+</code></pre>
+<h3 id="security-commands">Security Commands</h3>
+<pre><code class="language-bash"># Run security audit
+php artisan askproai:security-audit
+
+# Create system backup
+php artisan askproai:backup --type=full --encrypt --compress
+
+# Smart migrations with zero downtime
+php artisan migrate:smart --analyze
+php artisan migrate:smart --online
+</code></pre>
+<h3 id="security-dashboard">Security Dashboard</h3>
+<p>Access the security dashboard at <code>/admin/security-dashboard</code> (super admin only) to view:
+- Real-time threat statistics
+- Rate limiting metrics
+- System vulnerabilities
+- Backup status
+- Recent security events</p>
+<h3 id="metrics-endpoint">Metrics Endpoint</h3>
+<p>Prometheus metrics available at <code>/api/metrics</code> including:
+- HTTP request durations
+- Queue sizes
+- Active calls
+- Security threat counters
+- Rate limit violations</p>
+<h3 id="backup-strategy">Backup Strategy</h3>
+<ul>
+<li><strong>Full Backup</strong>: Complete system backup (daily)</li>
+<li><strong>Incremental Backup</strong>: Changed files only (hourly)</li>
+<li><strong>Critical Backup</strong>: Essential data only (every 6 hours)</li>
+<li>All backups are encrypted and compressed</li>
+<li>30-day retention policy by default</li>
+</ul>
+<h3 id="security-best-practices">Security Best Practices</h3>
+<ol>
+<li><strong>Never commit sensitive data</strong> - Use environment variables</li>
+<li><strong>Verify all webhooks</strong> - Signature verification is mandatory</li>
+<li><strong>Monitor rate limits</strong> - Review Grafana dashboards regularly</li>
+<li><strong>Regular backups</strong> - Ensure backup jobs are running</li>
+<li><strong>Update dependencies</strong> - Run <code>composer update</code> monthly</li>
+<li><strong>Review security logs</strong> - Check <code>/storage/logs/security.log</code></li>
+</ol>
+<h3 id="documentation-access-security">Documentation Access &amp; Security</h3>
+<h4 id="protected-documentation-locations">Protected Documentation Locations</h4>
+<p>All documentation is now password-protected using Basic Authentication:</p>
+<ol>
+<li><strong>Main Documentation</strong>: <code>/public/documentation/</code></li>
+<li>Protected by <code>.htaccess</code> with Basic Auth</li>
+<li>
+<p>Credentials stored in <code>/var/www/api-gateway/.htpasswd</code></p>
+</li>
+<li>
+<p><strong>MkDocs Documentation</strong>: <code>/public/mkdocs/</code></p>
+</li>
+<li>Accessible at: https://api.askproai.de/mkdocs/</li>
+<li>
+<p>Generated from <code>/docs_mkdocs/</code> source files</p>
+</li>
+<li>
+<p><strong>API Documentation</strong>: <code>/public/docs/api/swagger/</code></p>
+</li>
+<li>Swagger/OpenAPI documentation</li>
+<li>
+<p>Contains API endpoint specifications</p>
+</li>
+<li>
+<p><strong>Legacy Locations</strong> (secured):</p>
+</li>
+<li><code>/public/admin_old/</code> - Old admin docs (access denied)</li>
+<li><code>/storage/documentation-backups/</code> - Moved backups (non-public)</li>
+</ol>
+<h4 id="access-credentials">Access Credentials</h4>
+<ul>
+<li><strong>Auth File</strong>: <code>/var/www/api-gateway/.htpasswd</code></li>
+<li><strong>Auth Type</strong>: Basic Authentication</li>
+<li><strong>How to access</strong>: Use browser prompt or curl with credentials:
+  <code>bash
+  curl -u username:password https://api.askproai.de/documentation/</code></li>
+</ul>
+<h4 id="documentation-build-process">Documentation Build Process</h4>
+<pre><code class="language-bash"># Build MkDocs documentation
+cd /var/www/api-gateway
+mkdocs build
+
+# Documentation source: /docs_mkdocs/
+# Output directory: /public/mkdocs/
+</code></pre>
+<h4 id="security-audit-history">Security Audit History</h4>
+<ul>
+<li><strong>2025-06-25</strong>: Major security audit completed</li>
+<li>Removed hardcoded credentials from config files</li>
+<li>Added .htaccess protection to all doc directories</li>
+<li>Moved backup directories out of public access</li>
+<li>Full report: <code>DOCUMENTATION_SECURITY_AUDIT_2025-06-25.md</code></li>
+</ul>
+<h3 id="performance-optimization">Performance Optimization</h3>
+<h4 id="caching-layers">Caching Layers</h4>
+<ul>
+<li><strong>Application Cache</strong>: Redis-based caching for frequently accessed data</li>
+<li><strong>Query Cache</strong>: Automatic caching of expensive database queries</li>
+<li><strong>Response Cache</strong>: API response caching with TTL</li>
+<li><strong>View Cache</strong>: Compiled Blade template caching</li>
+</ul>
+<h4 id="performance-commands">Performance Commands</h4>
+<pre><code class="language-bash"># Cache optimization
+php artisan cache:table          # Create cache database table
+php artisan route:cache          # Cache routes for faster loading
+php artisan config:cache         # Cache configuration
+php artisan view:cache           # Cache compiled views
+
+# Performance monitoring
+php artisan performance:analyze   # Analyze slow queries
+php artisan performance:report    # Generate performance report
+
+# Queue optimization
+php artisan horizon:snapshot      # Create queue metrics snapshot
+php artisan queue:monitor        # Monitor queue performance
+</code></pre>
+<h4 id="database-optimization">Database Optimization</h4>
+<ul>
+<li>Eager loading relationships to prevent N+1 queries</li>
+<li>Query optimization with proper indexes</li>
+<li>Database query profiling in development</li>
+<li>Connection pooling for high traffic</li>
+</ul>
+<h3 id="emergency-procedures">Emergency Procedures</h3>
+<pre><code class="language-bash"># Block suspicious IP
+php artisan security:block-ip 192.168.1.1
+
+# Emergency backup
+php artisan askproai:backup --type=critical --encrypt
+
+# Clear all caches (if compromised)
+php artisan optimize:clear
+
+# Rotate API keys
+php artisan security:rotate-keys
+</code></pre>
+<h2 id="automatische-dokumentations-aktualisierung_1">🔄 Automatische Dokumentations-Aktualisierung</h2>
+<h3 id="ubersicht">Übersicht</h3>
+<p>Das System stellt sicher, dass die Dokumentation bei Code-Änderungen automatisch aktualisiert wird. Es überwacht alle Commits und informiert Entwickler proaktiv über notwendige Updates.</p>
+<h3 id="komponenten">Komponenten</h3>
+<h4 id="1-git-hooks-automatische-prufung">1. Git Hooks (Automatische Prüfung)</h4>
+<ul>
+<li><strong>Post-Commit</strong>: Prüft nach jedem Commit ob Dokumentation betroffen ist</li>
+<li><strong>Pre-Push</strong>: Blockiert Push bei kritischer Dokumentation (&lt;50% Health)</li>
+<li><strong>Commit-Message</strong>: Erzwingt Conventional Commits Format</li>
+</ul>
+<h4 id="2-laravel-commands">2. Laravel Commands</h4>
+<pre><code class="language-bash"># Dokumentations-Gesundheit prüfen
+php artisan docs:check-updates
+
+# Mit automatischen Fixes
+php artisan docs:check-updates --auto-fix
+
+# JSON Output für Automation
+php artisan docs:check-updates --json
+</code></pre>
+<h4 id="3-automatische-erkennung-bei">3. Automatische Erkennung bei</h4>
+<ul>
+<li><strong>Neue Features</strong> (<code>feat:</code> Commits)</li>
+<li><strong>Service-Änderungen</strong> (<code>app/Services/</code>)</li>
+<li><strong>MCP-Server Updates</strong> (<code>app/Services/MCP/</code>)</li>
+<li><strong>API-Änderungen</strong> (<code>routes/</code>, Controller)</li>
+<li><strong>Datenbank-Änderungen</strong> (Migrations)</li>
+<li><strong>Konfigurationsänderungen</strong> (<code>config/</code>, <code>.env.example</code>)</li>
+</ul>
+<h3 id="workflow-fur-neue-features">Workflow für neue Features</h3>
+<ol>
+<li><strong>Entwickle dein Feature</strong></li>
+</ol>
+<pre><code class="language-bash"># Beispiel: Neuer Service
+echo &quot;&lt;?php // New Service&quot; &gt; app/Services/MyNewService.php
+git add app/Services/MyNewService.php
+git commit -m &quot;feat: add my new service&quot;
+</code></pre>
+<ol>
+<li><strong>Automatische Benachrichtigung</strong></li>
+</ol>
+<pre><code>📚 Dokumentation muss möglicherweise aktualisiert werden!
+Gründe:
+  - Service-Klassen geändert
+💡 Tipp: Führe 'php artisan docs:check-updates' aus
+</code></pre>
+<ol>
+<li><strong>Prüfe betroffene Dokumentation</strong></li>
+</ol>
+<pre><code class="language-bash">php artisan docs:check-updates
+</code></pre>
+<ol>
+<li><strong>Update Dokumentation</strong></li>
+<li>System zeigt genau welche Dateien aktualisiert werden müssen</li>
+<li>Bei <code>--auto-fix</code> werden Timestamps automatisch aktualisiert</li>
+</ol>
+<h3 id="dashboard-widget">Dashboard Widget</h3>
+<ul>
+<li>Verfügbar im Admin-Panel unter <code>/admin</code></li>
+<li>Zeigt Dokumentations-Gesundheit in Echtzeit</li>
+<li>Nur für Admins sichtbar</li>
+<li>Quick Actions für häufige Befehle</li>
+</ul>
+<h3 id="setup">Setup</h3>
+<pre><code class="language-bash"># Einmalige Installation
+./scripts/setup-doc-hooks.sh
+
+# Git Hooks sind bereits aktiviert für dieses Projekt
+git config core.hooksPath .githooks
+</code></pre>
+<h3 id="gesundheits-metriken">Gesundheits-Metriken</h3>
+<ul>
+<li><strong>80-100%</strong>: 🟢 Dokumentation aktuell</li>
+<li><strong>60-79%</strong>: 🟡 Kleinere Updates empfohlen  </li>
+<li><strong>40-59%</strong>: 🟠 Dringende Updates nötig</li>
+<li><strong>0-39%</strong>: 🔴 Kritisch - Push wird blockiert</li>
+</ul>
+<h3 id="cicd-integration">CI/CD Integration</h3>
+<p>GitHub Actions Workflow prüft bei jedem PR:
+- Dokumentations-Gesundheit
+- Erstellt automatisch Update-PRs
+- Kommentiert PRs mit Status</p>
+<h2 id="archivierte-historische-informationen">📋 Archivierte Historische Informationen</h2>
+<blockquote>
+<p>ℹ️ <strong>Hinweis</strong>: Historische Blocker und veraltete Informationen wurden archiviert in: <a href="./docs/archive/BLOCKER_JUNI_2025.md"><code>docs/archive/BLOCKER_JUNI_2025.md</code></a></p>
+</blockquote>
+<p>Für aktuelle Blocker und Issues, siehe das GitHub Issue Tracking oder die aktuelle Projektdokumentation.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="Start"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../CLAUDE_QUICK_REFERENCE/" class="btn btn-neutral float-right" title="Quick Reference">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../CLAUDE_QUICK_REFERENCE/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

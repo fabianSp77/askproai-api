@@ -3,6 +3,8 @@
 namespace App\Filament\Admin\Resources\BranchResource\Pages;
 
 use App\Filament\Admin\Resources\BranchResource;
+use App\Filament\Admin\Resources\BranchResource\Widgets\BranchStatsWidget;
+use App\Filament\Admin\Resources\BranchResource\Widgets\BranchDetailsWidget;
 use App\Services\IntegrationTestService;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
@@ -22,6 +24,20 @@ use Filament\Support\Enums\IconPosition;
 class ViewBranch extends ViewRecord
 {
     protected static string $resource = BranchResource::class;
+    
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            BranchStatsWidget::class,
+        ];
+    }
+    
+    protected function getFooterWidgets(): array
+    {
+        return [
+            BranchDetailsWidget::class,
+        ];
+    }
 
     protected function getHeaderActions(): array
     {
@@ -29,6 +45,15 @@ class ViewBranch extends ViewRecord
             Actions\EditAction::make()
                 ->label('Bearbeiten')
                 ->icon('heroicon-o-pencil-square'),
+            
+            Actions\DeleteAction::make()
+                ->label('Löschen')
+                ->icon('heroicon-o-trash')
+                ->requiresConfirmation()
+                ->modalHeading('Filiale löschen')
+                ->modalDescription('Sind Sie sicher, dass Sie diese Filiale löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.')
+                ->modalSubmitActionLabel('Ja, löschen')
+                ->successNotificationTitle('Filiale gelöscht'),
             
             Actions\Action::make('test_integration')
                 ->label('Integrationen testen')

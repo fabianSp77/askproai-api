@@ -1,0 +1,318 @@
+{
+  "audit_date": "2025-06-26",
+  "summary": {
+    "total_issues": 42,
+    "critical": 15,
+    "high": 12,
+    "medium": 10,
+    "low": 5
+  },
+  "findings": [
+    {
+      "id": "SEC-001",
+      "severity": "critical",
+      "category": "SQL Injection",
+      "description": "Multiple controllers and services use raw SQL queries without proper parameterization",
+      "affected_files": [
+        "app/Services/MCP/DatabaseMCPServer.php",
+        "app/Services/QueryOptimizer.php",
+        "app/Services/MCP/MCPQueryOptimizer.php",
+        "app/Services/Analytics/RoiCalculationService.php"
+      ],
+      "examples": [
+        "DB::select($sql, $bindings) - User input passed directly",
+        "DB::raw() usage without escaping",
+        "whereRaw() with concatenated strings"
+      ],
+      "solution": "Use parameterized queries, Laravel's query builder with bindings, and validate/sanitize all user inputs before using in queries",
+      "risk": "Attackers can execute arbitrary SQL commands, access or modify database data"
+    },
+    {
+      "id": "SEC-002",
+      "severity": "critical",
+      "category": "Multi-Tenancy Bypass",
+      "description": "TenantScope/CompanyScope implementation is incomplete and can be bypassed",
+      "affected_files": [
+        "app/Models/Scopes/TenantScope.php",
+        "app/Models/Scopes/CompanyScope.php"
+      ],
+      "examples": [
+        "TenantScope::apply() is empty - no filtering applied",
+        "CompanyScope relies on untrusted X-Company-Id header",
+        "No validation of company_id in headers"
+      ],
+      "solution": "Implement proper tenant isolation at database level, validate company context from authenticated user only, never trust client headers",
+      "risk": "Data leakage between tenants, unauthorized access to other companies' data"
+    },
+    {
+      "id": "SEC-003",
+      "severity": "critical",
+      "category": "Authentication Bypass",
+      "description": "Multiple API endpoints lack authentication or have it disabled",
+      "affected_files": [
+        "routes/api.php"
+      ],
+      "examples": [
+        "/api/mcp/retell/webhook - No authentication",
+        "/api/retell/webhook-debug - Debug endpoint exposed",
+        "/api/test/webhook - Test endpoints in production",
+        "/api/calcom/book-test - Hardcoded test data exposed"
+      ],
+      "solution": "Remove all debug/test endpoints from production, enforce authentication on all API endpoints, use middleware groups consistently",
+      "risk": "Unauthorized access to sensitive operations and data"
+    },
+    {
+      "id": "SEC-004",
+      "severity": "critical",
+      "category": "Webhook Security",
+      "description": "Webhook signature verification can be bypassed or is missing",
+      "affected_files": [
+        "routes/api.php",
+        "app/Http/Controllers/RetellWebhookController.php"
+      ],
+      "examples": [
+        "TEMPORARY FIX comments show signature verification disabled",
+        "Multiple webhook routes without verification middleware",
+        "IP whitelist middleware not enforced"
+      ],
+      "solution": "Enable signature verification on all webhooks, implement replay attack protection, enforce IP whitelisting for webhook providers",
+      "risk": "Fake webhook calls can manipulate appointment data, create unauthorized bookings"
+    },
+    {
+      "id": "SEC-005",
+      "severity": "critical",
+      "category": "API Key Exposure",
+      "description": "API keys stored in plain text or weakly encrypted",
+      "affected_files": [
+        "app/Services/EncryptionService.php",
+        "app/Models/Company.php"
+      ],
+      "examples": [
+        "Encryption service exists but not consistently used",
+        "API keys potentially exposed in logs",
+        "No key rotation mechanism"
+      ],
+      "solution": "Encrypt all API keys at rest, implement key rotation, use environment variables for sensitive data, mask keys in logs",
+      "risk": "Exposed API keys can be used to access external services, incur costs"
+    },
+    {
+      "id": "SEC-006",
+      "severity": "high",
+      "category": "Input Validation",
+      "description": "Missing input validation on critical endpoints",
+      "affected_files": [
+        "app/Http/Controllers/CustomerController.php",
+        "app/Http/Controllers/ApiController.php"
+      ],
+      "examples": [
+        "$request->all() used without validation",
+        "Direct database inserts without sanitization",
+        "Phone numbers not validated"
+      ],
+      "solution": "Implement Laravel Form Requests for all endpoints, validate phone numbers with libphonenumber, sanitize all inputs",
+      "risk": "XSS attacks, data corruption, invalid data in database"
+    },
+    {
+      "id": "SEC-007",
+      "severity": "high",
+      "category": "CSRF Protection",
+      "description": "CSRF protection not properly configured for API endpoints",
+      "affected_files": [
+        "app/Http/Kernel.php",
+        "routes/api.php"
+      ],
+      "examples": [
+        "API routes may bypass CSRF verification",
+        "Mixed authentication methods without proper CSRF handling"
+      ],
+      "solution": "Use proper API authentication (Sanctum tokens), ensure CSRF protection for web routes, separate API and web authentication",
+      "risk": "Cross-site request forgery attacks possible"
+    },
+    {
+      "id": "SEC-008",
+      "severity": "high",
+      "category": "Rate Limiting",
+      "description": "Inconsistent or missing rate limiting on critical endpoints",
+      "affected_files": [
+        "routes/api.php"
+      ],
+      "examples": [
+        "Some endpoints have throttle:60,1 others have none",
+        "MCP endpoints allow 1000 requests/minute",
+        "No adaptive rate limiting based on behavior"
+      ],
+      "solution": "Implement consistent rate limiting across all endpoints, use adaptive rate limiting for suspicious behavior, different limits for authenticated vs public",
+      "risk": "DDoS attacks, brute force attempts, resource exhaustion"
+    },
+    {
+      "id": "SEC-009",
+      "severity": "high",
+      "category": "Debug Information Exposure",
+      "description": "Debug endpoints and verbose error messages in production",
+      "affected_files": [
+        "routes/api.php",
+        "Various controllers"
+      ],
+      "examples": [
+        "Test webhook routes active in production",
+        "Debug controllers exposing internal information",
+        "Stack traces potentially exposed"
+      ],
+      "solution": "Remove all debug endpoints from production, implement proper error handling without exposing internals, use different error responses for production",
+      "risk": "Information disclosure helping attackers understand system internals"
+    },
+    {
+      "id": "SEC-010",
+      "severity": "high",
+      "category": "Job Security",
+      "description": "Jobs lack proper tenant context validation",
+      "affected_files": [
+        "app/Jobs/ProcessRetellWebhookJob.php",
+        "Various job files"
+      ],
+      "examples": [
+        "CompanyAwareJob trait mentioned but implementation unclear",
+        "Jobs may process data across tenant boundaries",
+        "No validation of data ownership in jobs"
+      ],
+      "solution": "Ensure all jobs validate tenant context, implement job-level authorization, log tenant context in all job executions",
+      "risk": "Background jobs could process data from wrong tenants"
+    },
+    {
+      "id": "SEC-011",
+      "severity": "medium",
+      "category": "Logging Security",
+      "description": "Sensitive data potentially logged",
+      "affected_files": [
+        "Various controllers and services"
+      ],
+      "examples": [
+        "Request bodies logged without sanitization",
+        "API keys potentially in logs",
+        "Customer data in debug logs"
+      ],
+      "solution": "Implement structured logging with data masking, never log sensitive fields, use different log levels for production",
+      "risk": "Sensitive data exposure through log files"
+    },
+    {
+      "id": "SEC-012",
+      "severity": "medium",
+      "category": "Session Security",
+      "description": "Session configuration may allow hijacking",
+      "affected_files": [
+        "config/session.php"
+      ],
+      "examples": [
+        "Session fixation possibilities",
+        "No session encryption mentioned",
+        "Cookie security settings unclear"
+      ],
+      "solution": "Use secure session cookies, implement session regeneration on login, enforce HTTPS for sessions",
+      "risk": "Session hijacking, unauthorized access"
+    },
+    {
+      "id": "SEC-013",
+      "severity": "medium",
+      "category": "File Upload Security",
+      "description": "No clear file upload validation found",
+      "affected_files": [
+        "Various controllers"
+      ],
+      "examples": [
+        "Document uploads without type validation",
+        "No virus scanning mentioned",
+        "File size limits unclear"
+      ],
+      "solution": "Implement strict file type validation, virus scanning, size limits, store uploads outside web root",
+      "risk": "Malicious file uploads, server compromise"
+    },
+    {
+      "id": "SEC-014",
+      "severity": "low",
+      "category": "Security Headers",
+      "description": "Missing security headers",
+      "affected_files": [
+        "app/Http/Kernel.php"
+      ],
+      "examples": [
+        "No Content-Security-Policy",
+        "No X-Frame-Options",
+        "No Strict-Transport-Security"
+      ],
+      "solution": "Implement security headers middleware, configure CSP, prevent clickjacking, enforce HTTPS",
+      "risk": "XSS attacks, clickjacking, protocol downgrade attacks"
+    },
+    {
+      "id": "SEC-015",
+      "severity": "critical",
+      "category": "Command Injection",
+      "description": "Potential command injection in various services",
+      "affected_files": [
+        "Artisan commands",
+        "Shell execution points"
+      ],
+      "examples": [
+        "System calls without proper escaping",
+        "User input in shell commands"
+      ],
+      "solution": "Never use shell commands with user input, use PHP native functions, if shell needed use escapeshellarg()",
+      "risk": "Remote code execution, server compromise"
+    }
+  ],
+  "recommendations": {
+    "immediate_actions": [
+      "1. Fix SQL injection vulnerabilities - use parameterized queries everywhere",
+      "2. Implement proper tenant isolation - never trust client headers",
+      "3. Remove all debug/test endpoints from production",
+      "4. Enable webhook signature verification on all webhook endpoints",
+      "5. Encrypt all API keys and implement rotation mechanism"
+    ],
+    "short_term": [
+      "1. Implement comprehensive input validation using Form Requests",
+      "2. Add consistent rate limiting across all endpoints",
+      "3. Set up proper error handling without information disclosure",
+      "4. Implement structured logging with data masking",
+      "5. Add security headers middleware"
+    ],
+    "long_term": [
+      "1. Implement full security audit process",
+      "2. Set up automated security scanning in CI/CD",
+      "3. Implement Web Application Firewall (WAF)",
+      "4. Regular penetration testing",
+      "5. Security training for development team"
+    ]
+  },
+  "architecture_issues": [
+    {
+      "issue": "Service Layer Complexity",
+      "description": "Too many overlapping services (7 Cal.com services, 5 Retell services)",
+      "impact": "Difficult to maintain, security vulnerabilities spread across multiple implementations",
+      "solution": "Consolidate to single service per integration with clear interfaces"
+    },
+    {
+      "issue": "Inconsistent Error Handling",
+      "description": "Different error handling patterns across codebase",
+      "impact": "Unpredictable behavior, potential information disclosure",
+      "solution": "Implement centralized error handling with consistent patterns"
+    },
+    {
+      "issue": "Mixed Authentication Methods",
+      "description": "Multiple authentication methods without clear separation",
+      "impact": "Security bypass possibilities, confusing authorization logic",
+      "solution": "Separate API and web authentication clearly, use single source of truth for authorization"
+    },
+    {
+      "issue": "Database Query Patterns",
+      "description": "Mix of Eloquent, Query Builder, and raw SQL",
+      "impact": "Inconsistent security practices, harder to audit",
+      "solution": "Standardize on Eloquent with Query Builder for complex queries, ban raw SQL"
+    }
+  ],
+  "positive_findings": [
+    "Encryption service exists for sensitive data",
+    "Webhook signature verification middleware implemented (though not always used)",
+    "Some rate limiting in place",
+    "Correlation ID tracking for debugging",
+    "Queue system for async processing"
+  ]
+}

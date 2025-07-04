@@ -99,7 +99,7 @@ class CustomerResource extends EnhancedResourceSimple
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationLabel = 'Kunden';
     protected static ?string $navigationGroup = 'Täglicher Betrieb';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 30;
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {

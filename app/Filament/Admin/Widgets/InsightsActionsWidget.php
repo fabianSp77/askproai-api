@@ -6,6 +6,7 @@ use Filament\Widgets\Widget;
 use App\Models\Call;
 use App\Models\Branch;
 use App\Models\ApiCallLog;
+use App\Models\PhoneNumber;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -44,9 +45,19 @@ class InsightsActionsWidget extends Widget
         $insights = collect();
         $now = Carbon::now();
         
+        // Get company phone numbers for filtering
+        $phoneNumbers = [];
+        if ($this->companyId) {
+            $phoneNumbers = PhoneNumber::where('company_id', $this->companyId)
+                ->where('is_active', true)
+                ->pluck('number')
+                ->toArray();
+        }
+        
         // Check for high call duration branches
         $highDurationBranches = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
+            ->when(!empty($phoneNumbers), fn($q) => $q->whereIn('to_number', $phoneNumbers))
             ->whereDate('created_at', today())
             ->whereNotNull('branch_id')
             ->with('branch')
@@ -101,6 +112,7 @@ class InsightsActionsWidget extends Widget
         // Check for low conversion branches
         $branchStats = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
+            ->when(!empty($phoneNumbers), fn($q) => $q->whereIn('to_number', $phoneNumbers))
             ->whereDate('created_at', today())
             ->whereNotNull('branch_id')
             ->with('branch')
@@ -136,6 +148,7 @@ class InsightsActionsWidget extends Widget
         // Check for no calls in last 30 minutes
         $lastCall = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
+            ->when(!empty($phoneNumbers), fn($q) => $q->whereIn('to_number', $phoneNumbers))
             ->latest('created_at')
             ->first();
             
@@ -180,12 +193,12 @@ class InsightsActionsWidget extends Widget
                 'url' => route('filament.admin.resources.branches.index'),
                 'color' => 'info',
             ],
-            [
-                'label' => 'System Status',
-                'icon' => 'heroicon-o-server-stack',
-                'url' => route('filament.admin.pages.system-monitoring'),
-                'color' => 'gray',
-            ],
+            // [
+            //     'label' => 'System Status',
+            //     'icon' => 'heroicon-o-server-stack',
+            //     'url' => route('filament.admin.pages.system-monitoring'),
+            //     'color' => 'gray',
+            // ],
         ];
     }
     

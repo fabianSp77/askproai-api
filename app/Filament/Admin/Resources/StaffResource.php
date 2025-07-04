@@ -103,8 +103,8 @@ class StaffResource extends EnhancedResourceSimple
     protected static ?string $model = Staff::class;
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'Mitarbeiter';
-    protected static ?string $navigationGroup = 'Täglicher Betrieb';
-    protected static ?int $navigationSort = 25;
+    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    protected static ?int $navigationSort = 30;
     protected static ?string $modelLabel = 'Mitarbeiter';
     protected static ?string $pluralModelLabel = 'Mitarbeiter';
     protected static ?string $recordTitleAttribute = 'name';

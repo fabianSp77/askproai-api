@@ -1,0 +1,277 @@
+{
+  "agent_config": {
+    "agent_name": "AskProAI Terminbuchungs-Assistent",
+    "agent_prompt": "# AskProAI Terminbuchungs-Assistent\n\n## Deine Rolle\nDu bist der freundliche und professionelle Terminbuchungs-Assistent von {{company_name}}. Deine Aufgabe ist es, Kunden bei der Terminvereinbarung zu helfen.\n\n## Wichtige Informationen\n- Firmenname: {{company_name}}\n- Standort: {{branch_name}}\n- Adresse: {{branch_address}}\n- Öffnungszeiten: {{business_hours}}\n\n## Gesprächsablauf\n\n### 1. Begrüßung\n- Begrüße den Anrufer freundlich\n- Nenne den Firmennamen\n- Frage nach dem Anliegen\n\n### 2. Terminanfrage verstehen\n- Erfrage die gewünschte Dienstleistung\n- Kläre den gewünschten Zeitraum\n- Frage nach bestimmten Mitarbeiterpräferenzen\n\n### 3. Kundendaten erfassen\n- Vorname und Nachname (Pflicht)\n- Telefonnummer bestätigen\n- E-Mail-Adresse für Bestätigung (optional)\n- Besondere Anmerkungen\n\n### 4. Verfügbarkeit prüfen\n- Nutze die check_availability Funktion\n- Biete 2-3 passende Termine an\n- Bei keiner Verfügbarkeit: Alternative Zeiten vorschlagen\n\n### 5. Termin buchen\n- Bestätige alle Details mit dem Kunden\n- Nutze die book_appointment Funktion\n- Bestätige die erfolgreiche Buchung\n- Erwähne die E-Mail-Bestätigung\n\n## Kommunikationsstil\n- Spreche klar und deutlich\n- Sei freundlich und geduldig\n- Verwende Sie-Form\n- Fasse wichtige Informationen zusammen\n- Buchstabiere Namen bei Bedarf\n\n## Datumsformatierung\n- Verwende deutsches Format: \"Montag, den 15. Januar\"\n- Uhrzeiten: \"14:30 Uhr\" oder \"halb drei\"\n- Bestätige immer: \"Das wäre dann am [Datum] um [Uhrzeit]\"\n\n## Bei Problemen\n- Bei technischen Problemen: Entschuldige dich und biete Rückruf an\n- Bei vollen Kalendern: Warteliste anbieten\n- Bei unklaren Anfragen: Höflich nachfragen\n- Bei Notfällen: An Notdienst verweisen\n\n## Wichtige Funktionen\n- check_availability: Verfügbare Termine prüfen\n- book_appointment: Termin buchen\n- get_business_info: Geschäftsinformationen abrufen\n- transfer_call: Anruf weiterleiten (nur bei Bedarf)",
+    "language": "de-DE",
+    "voice_model": "elevenlabs",
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "voice_temperature": 0.3,
+    "voice_speed": 0.95,
+    "volume": 1.0,
+    "responsiveness": 0.8,
+    "interruption_sensitivity": 0.7,
+    "enable_backchannel": true,
+    "backchannel_frequency": 0.6,
+    "backchannel_words": ["ja", "genau", "verstehe", "okay", "aha", "mmh", "gut"],
+    "reminder_trigger_ms": 8000,
+    "reminder_max_count": 2,
+    "normalize_for_speech": true,
+    "opt_out_sensitive_data_storage": false,
+    "end_call_after_silence_ms": 15000,
+    "max_call_duration_ms": 1800000,
+    "enable_voicemail_detection": true,
+    "voicemail_message": "Hallo, hier ist der automatische Terminbuchungsservice. Bitte rufen Sie uns während unserer Geschäftszeiten an. Vielen Dank!",
+    "voicemail_detection_timeout_ms": 5000,
+    "webhook_url": "https://api.askproai.de/api/retell/webhook",
+    "boosted_keywords": ["termin", "buchen", "verfügbar", "uhrzeit", "datum", "dienstleistung"],
+    "enable_transcription_formatting": true,
+    "last_modification_timestamp": 1735150800000,
+    "llm_model": "gpt-4",
+    "general_tools": [
+      {
+        "type": "end_call",
+        "name": "end_call",
+        "description": "Beendet den Anruf. Verwende diese Funktion nur, wenn das Gespräch abgeschlossen ist."
+      },
+      {
+        "type": "transfer_call",
+        "name": "transfer_to_support",
+        "description": "Leitet den Anruf an einen menschlichen Mitarbeiter weiter",
+        "number": "+4930123456789"
+      }
+    ],
+    "states": [
+      {
+        "name": "greeting",
+        "state_prompt": "Begrüße den Kunden freundlich und frage nach seinem Anliegen.",
+        "tools": ["get_business_info"]
+      },
+      {
+        "name": "appointment_booking",
+        "state_prompt": "Hilf dem Kunden bei der Terminbuchung. Erfrage alle notwendigen Informationen.",
+        "tools": ["check_availability", "book_appointment"]
+      },
+      {
+        "name": "confirmation",
+        "state_prompt": "Bestätige die Terminbuchung und verabschiede dich freundlich.",
+        "tools": ["end_call"]
+      }
+    ],
+    "starting_state": "greeting",
+    "post_call_analysis_prompt": "Erstelle eine Zusammenfassung des Anrufs mit folgenden Punkten:\n\n1. **Kundeninformationen**:\n   - Name\n   - Telefonnummer\n   - E-Mail (falls angegeben)\n\n2. **Termindetails**:\n   - Gebuchte Dienstleistung\n   - Datum und Uhrzeit\n   - Mitarbeiter (falls spezifiziert)\n   - Filiale/Standort\n\n3. **Gesprächsverlauf**:\n   - War die Buchung erfolgreich?\n   - Gab es Probleme oder besondere Anfragen?\n   - Kundenzufriedenheit\n\n4. **Follow-up erforderlich**:\n   - Offene Fragen\n   - Rückruf notwendig?\n   - Besondere Notizen",
+    "before_call_analysis_prompt": "Bereite dich auf das Gespräch vor:\n- Firmenname und Standort kennen\n- Verfügbare Dienstleistungen\n- Aktuelle Öffnungszeiten\n- Häufige Kundenanfragen"
+  },
+  "knowledge_base": [],
+  "functions_override": [
+    {
+      "type": "custom",
+      "name": "check_availability",
+      "description": "Prüft die Verfügbarkeit für Termine",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "service_id": {
+            "type": "string",
+            "description": "ID der gewünschten Dienstleistung"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date",
+            "description": "Startdatum für die Suche (YYYY-MM-DD)"
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date",
+            "description": "Enddatum für die Suche (YYYY-MM-DD)"
+          },
+          "staff_id": {
+            "type": "string",
+            "description": "ID des gewünschten Mitarbeiters (optional)"
+          },
+          "time_preference": {
+            "type": "string",
+            "enum": ["morning", "afternoon", "evening", "any"],
+            "description": "Bevorzugte Tageszeit"
+          }
+        },
+        "required": ["service_id", "date_from"]
+      },
+      "speak_on_send": true,
+      "speak_on_receive": true,
+      "response_property": "available_slots"
+    },
+    {
+      "type": "custom",
+      "name": "book_appointment",
+      "description": "Bucht einen Termin für den Kunden",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_first_name": {
+            "type": "string",
+            "description": "Vorname des Kunden"
+          },
+          "customer_last_name": {
+            "type": "string",
+            "description": "Nachname des Kunden"
+          },
+          "customer_phone": {
+            "type": "string",
+            "description": "Telefonnummer des Kunden"
+          },
+          "customer_email": {
+            "type": "string",
+            "format": "email",
+            "description": "E-Mail-Adresse des Kunden (optional)"
+          },
+          "service_id": {
+            "type": "string",
+            "description": "ID der gebuchten Dienstleistung"
+          },
+          "staff_id": {
+            "type": "string",
+            "description": "ID des Mitarbeiters"
+          },
+          "appointment_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Datum und Uhrzeit des Termins (ISO 8601)"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Zusätzliche Notizen oder Anmerkungen"
+          }
+        },
+        "required": ["customer_first_name", "customer_last_name", "customer_phone", "service_id", "appointment_datetime"]
+      },
+      "speak_on_send": true,
+      "speak_on_receive": true,
+      "response_property": "booking_confirmation"
+    },
+    {
+      "type": "custom",
+      "name": "get_business_info",
+      "description": "Ruft Geschäftsinformationen ab",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "info_type": {
+            "type": "string",
+            "enum": ["services", "hours", "location", "contact"],
+            "description": "Art der gewünschten Information"
+          }
+        },
+        "required": ["info_type"]
+      },
+      "speak_on_send": false,
+      "speak_on_receive": true,
+      "response_property": "business_info"
+    },
+    {
+      "type": "custom",
+      "name": "check_customer_history",
+      "description": "Prüft die Kundenhistorie anhand der Telefonnummer",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "description": "Telefonnummer des Kunden"
+          }
+        },
+        "required": ["phone_number"]
+      },
+      "speak_on_send": false,
+      "speak_on_receive": false,
+      "response_property": "customer_data"
+    },
+    {
+      "type": "custom",
+      "name": "cancel_appointment",
+      "description": "Storniert einen bestehenden Termin",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "description": "ID des zu stornierenden Termins"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Grund für die Stornierung"
+          }
+        },
+        "required": ["appointment_id"]
+      },
+      "speak_on_send": true,
+      "speak_on_receive": true,
+      "response_property": "cancellation_status"
+    },
+    {
+      "type": "custom",
+      "name": "reschedule_appointment",
+      "description": "Verschiebt einen bestehenden Termin",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "description": "ID des zu verschiebenden Termins"
+          },
+          "new_datetime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Neues Datum und Uhrzeit (ISO 8601)"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Grund für die Verschiebung"
+          }
+        },
+        "required": ["appointment_id", "new_datetime"]
+      },
+      "speak_on_send": true,
+      "speak_on_receive": true,
+      "response_property": "reschedule_status"
+    },
+    {
+      "type": "custom",
+      "name": "add_to_waitlist",
+      "description": "Fügt Kunden zur Warteliste hinzu",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_first_name": {
+            "type": "string",
+            "description": "Vorname des Kunden"
+          },
+          "customer_last_name": {
+            "type": "string",
+            "description": "Nachname des Kunden"
+          },
+          "customer_phone": {
+            "type": "string",
+            "description": "Telefonnummer des Kunden"
+          },
+          "service_id": {
+            "type": "string",
+            "description": "Gewünschte Dienstleistung"
+          },
+          "preferred_dates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Bevorzugte Daten"
+          }
+        },
+        "required": ["customer_first_name", "customer_last_name", "customer_phone", "service_id"]
+      },
+      "speak_on_send": true,
+      "speak_on_receive": true,
+      "response_property": "waitlist_status"
+    }
+  ],
+  "format_version": "2024-07-15"
+}

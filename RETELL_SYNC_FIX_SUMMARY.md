@@ -1,96 +1,83 @@
-# Retell Sync Fix Summary
+# Retell Agent Synchronization Fix Summary
 
-## Problem
-When clicking the sync button in the Retell Ultimate Control Center, the following error occurred:
-```
-ArgumentCountError: Too few arguments to function App\Services\RetellV2Service::__construct(), 0 passed
-```
+## Issues Fixed (2025-06-29)
 
-## Root Causes
-1. **API Key Initialization**: The `RetellAgent` model's `syncFromRetell()` and `pushToRetell()` methods were creating `RetellV2Service` instances without passing the required API key parameter.
+### 1. Missing Version Information
+- **Problem**: Agent version, version_title, and is_published fields were not being displayed
+- **Solution**: 
+  - Added version columns to retell_agents table
+  - Updated extractAgentFields method to include version fields
+  - Added version display in agent editor UI
 
-2. **Encryption Handling**: The MCP server was using `decrypt()` directly without checking if the API key was actually encrypted, causing potential decryption errors.
+### 2. Field Structure Mismatch
+- **Problem**: API returns flat structure but UI expects nested structure for some fields
+- **Solution**:
+  - Updated transformAgentConfiguration to handle both flat and nested structures
+  - Modified extractAgentFields to properly extract all fields
+  - Fixed loadAgentDetails to merge configuration fields properly
 
-3. **Tenant Scope Issue**: The `RetellAgent` model has a global `TenantScope` that was preventing the MCP server from creating or querying agent records because there was no company context in the MCP environment.
+### 3. Missing Fields in Editor
+- **Problem**: Fields like ambient_sound, voicemail_message were showing as missing
+- **Solution**:
+  - Added default values for fields not returned by API
+  - Fixed extraction logic to handle optional fields gracefully
 
-## Solutions Implemented
+### 4. Caching Issues
+- **Problem**: Old agent data was being displayed due to aggressive caching
+- **Solution**:
+  - Cleared all Retell-related caches
+  - Implemented proper cache invalidation on sync
 
-### 1. Fixed API Key Initialization in RetellAgent Model
-Modified both `syncFromRetell()` and `pushToRetell()` methods to:
-- Retrieve the API key from the company relationship
-- Handle both encrypted and unencrypted API keys
-- Pass the API key to the RetellV2Service constructor
+### 5. Data Sync Issues
+- **Problem**: Local database not properly syncing with Retell API
+- **Solution**:
+  - Force re-synced all agents with full data
+  - Updated sync process to include all fields from API
 
-```php
-$company = $this->company;
-if (!$company || !$company->retell_api_key) {
-    $this->update(['sync_status' => 'error']);
-    return false;
-}
+## Changes Made
 
-$apiKey = $company->retell_api_key;
-if (strlen($apiKey) > 50) {
-    try {
-        $apiKey = decrypt($apiKey);
-    } catch (\Exception $e) {
-        // Use as-is if decryption fails
-    }
-}
-
-$retellService = new \App\Services\RetellV2Service($apiKey);
-```
-
-### 2. Added Helper Method in MCP Server
-Created `getDecryptedApiKey()` method to centralize API key decryption logic:
-```php
-protected function getDecryptedApiKey(string $apiKey): string
-{
-    if (strlen($apiKey) > 50) {
-        try {
-            return decrypt($apiKey);
-        } catch (\Exception $e) {
-            // Use as-is if decryption fails
-        }
-    }
-    
-    return $apiKey;
-}
+### Database Schema
+```sql
+ALTER TABLE retell_agents ADD COLUMN version INT NULL;
+ALTER TABLE retell_agents ADD COLUMN version_title VARCHAR(255) NULL;
+ALTER TABLE retell_agents ADD COLUMN is_published BOOLEAN DEFAULT FALSE;
 ```
 
-Replaced all direct `decrypt()` calls with this helper method throughout the MCP server.
+### Code Changes
 
-### 3. Fixed Tenant Scope Issues
-Added `withoutGlobalScopes()` to RetellAgent queries in the MCP server:
-```php
-// For updateOrCreate
-$retellAgent = \App\Models\RetellAgent::withoutGlobalScopes()->updateOrCreate(...)
+1. **RetellUltimateControlCenter.php**:
+   - Updated `extractAgentFields` method to include version and missing fields
+   - Fixed `loadAgentDetails` to properly merge configuration data
+   - Added default values for optional fields
 
-// For queries
-$existingAgent = \App\Models\RetellAgent::withoutGlobalScopes()
-    ->where('company_id', $companyId)
-    ->where('agent_id', $agentId)
-    ->first();
-```
+2. **agent-editor-full.blade.php**:
+   - Added version display in header
+   - Shows version number, title, and published status
 
-## Results
-- ✅ Sync button now works without errors
-- ✅ Successfully synced 41 agents for AskProAI GmbH
-- ✅ Agent data is properly stored in the database with sync status
-- ✅ Both manual sync (via UI) and scheduled sync (via artisan command) are functional
+3. **RetellMCPServer.php**:
+   - Existing transformation logic properly handles nested structures
 
-## Testing
-```bash
-# Manual sync via artisan command
-php artisan retell:sync-configurations --company=1 --force
+## Verification Steps
 
-# Check synced data
-mysql -u askproai_user -p'lkZ57Dju9EDjrMxn' askproai_db \
-  -e "SELECT id, agent_id, name, sync_status, last_synced_at FROM retell_agents WHERE company_id = 1 LIMIT 5;"
-```
+1. Go to Admin Panel > Retell Ultimate Control Center
+2. Click "Agents synchronisieren" to sync agents
+3. Open any agent in the editor
+4. Verify:
+   - Version information is displayed in header
+   - All fields are populated correctly
+   - No "MISSING" errors in the UI
+   - Data matches what's in Retell.ai
 
-## Next Steps
-The sync functionality is now fully operational. Users can:
-1. Click the "Sync Agents" button in the UI for manual sync
-2. Use the artisan command for scheduled or manual sync
-3. View sync status on each agent card
-4. Access complete agent configuration data locally for better performance
+## Notes
+
+- Agent versions in Retell API use numeric version field (0, 1, 2, etc.)
+- Version titles often include the version in the name (e.g., "Agent V33")
+- The API returns all fields in flat structure, not nested
+- Some fields like ambient_sound are not returned by API (always null)
+
+## Future Improvements
+
+1. Implement actual version selection functionality
+2. Add version comparison view
+3. Improve caching strategy with proper TTL
+4. Add real-time sync status indicators

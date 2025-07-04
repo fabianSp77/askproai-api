@@ -1,0 +1,10 @@
+{
+    "agent_id": "agent_9a8202a740cd3120d96fcfda1e",
+    "agent_name": "Online: Assistent f\u00fcr Fabian Spitzer Rechtliches\/V33",
+    "llm_id": "llm_f3209286ed1caf6a75906d2645b9",
+    "timestamp": "2025-06-26 07:38:37",
+    "post_call_analysis_fields": 15,
+    "total_tools": 9,
+    "custom_tools": 7,
+    "update_status": "SUCCESS"
+}

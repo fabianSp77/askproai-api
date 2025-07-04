@@ -33,11 +33,11 @@ class CompanyIntegrationPortal extends Page implements HasForms, HasActions
     use InteractsWithActions;
     use InteractsWithForms;
     
-    protected static ?string $navigationIcon = 'heroicon-o-building-office';
-    protected static ?string $navigationLabel = 'Company Integration Portal';
+    protected static ?string $navigationIcon = 'heroicon-o-link';
+    protected static ?string $navigationLabel = 'Integration Setup';
     protected static ?string $title = 'Company Integration Portal';
-    protected static ?string $navigationGroup = 'Einstellungen';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'Integrationen';
+    protected static ?int $navigationSort = 1;
     
     protected static string $view = 'filament.admin.pages.company-integration-portal-professional';
     

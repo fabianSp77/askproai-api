@@ -1,0 +1,264 @@
+{
+    "agent_id": "agent_9a8202a740cd3120d96fcfda1e",
+    "timestamp": "2025-06-26 07:32:15",
+    "post_call_analysis": [
+        {
+            "name": "call_successful",
+            "type": "boolean",
+            "description": "Whether the call objectives were met (appointment made, rescheduled, or cancelled)"
+        },
+        {
+            "name": "appointment_made",
+            "type": "boolean",
+            "description": "Whether a new appointment was successfully scheduled"
+        },
+        {
+            "name": "appointment_date_time",
+            "type": "string",
+            "description": "The scheduled appointment date and time in format YYYY-MM-DD HH:MM"
+        },
+        {
+            "name": "caller_full_name",
+            "type": "string",
+            "description": "Full name of the caller"
+        },
+        {
+            "name": "caller_phone",
+            "type": "string",
+            "description": "Phone number of the caller"
+        },
+        {
+            "name": "patient_full_name",
+            "type": "string",
+            "description": "Full name of the patient (may differ from caller)"
+        },
+        {
+            "name": "patient_birth_date",
+            "type": "string",
+            "description": "Birth date of the patient in format YYYY-MM-DD"
+        },
+        {
+            "name": "insurance_type",
+            "type": "string",
+            "description": "Type of insurance: 'gesetzlich' or 'privat'"
+        },
+        {
+            "name": "health_insurance_company",
+            "type": "string",
+            "description": "Name of the health insurance company"
+        },
+        {
+            "name": "reason_for_visit",
+            "type": "string",
+            "description": "Primary reason or symptoms for the appointment"
+        },
+        {
+            "name": "first_visit",
+            "type": "boolean",
+            "description": "Whether this is the patient's first visit"
+        },
+        {
+            "name": "urgency_level",
+            "type": "string",
+            "description": "Urgency: 'routine', 'soon', 'urgent'"
+        },
+        {
+            "name": "additional_notes",
+            "type": "string",
+            "description": "Any additional information or special requests"
+        },
+        {
+            "name": "no_show_count",
+            "type": "string",
+            "description": "Number of previous no-shows for this patient"
+        },
+        {
+            "name": "reschedule_count",
+            "type": "string",
+            "description": "Number of times this appointment was rescheduled"
+        }
+    ],
+    "functions": [
+        {
+            "name": "check_customer",
+            "description": "Check if a customer exists in the system by phone number. Returns customer details if found.",
+            "parameters": [
+                {
+                    "name": "phone_number",
+                    "type": "string",
+                    "description": "Phone number of the customer to check",
+                    "required": true
+                }
+            ]
+        },
+        {
+            "name": "check_availability",
+            "description": "Check available appointment slots for a specific date or date range",
+            "parameters": [
+                {
+                    "name": "date",
+                    "type": "string",
+                    "description": "Date to check availability (YYYY-MM-DD)",
+                    "required": true
+                },
+                {
+                    "name": "date_end",
+                    "type": "string",
+                    "description": "End date for range check (YYYY-MM-DD)",
+                    "required": false
+                },
+                {
+                    "name": "service_type",
+                    "type": "string",
+                    "description": "Type of service requested",
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "book_appointment",
+            "description": "Book an appointment for a customer",
+            "parameters": [
+                {
+                    "name": "customer_name",
+                    "type": "string",
+                    "description": "Full name of the customer",
+                    "required": true
+                },
+                {
+                    "name": "phone_number",
+                    "type": "string",
+                    "description": "Phone number of the customer",
+                    "required": true
+                },
+                {
+                    "name": "appointment_date",
+                    "type": "string",
+                    "description": "Date of the appointment (YYYY-MM-DD)",
+                    "required": true
+                },
+                {
+                    "name": "appointment_time",
+                    "type": "string",
+                    "description": "Time of the appointment (HH:MM)",
+                    "required": true
+                },
+                {
+                    "name": "service_type",
+                    "type": "string",
+                    "description": "Type of service for the appointment",
+                    "required": true
+                },
+                {
+                    "name": "patient_name",
+                    "type": "string",
+                    "description": "Name of the patient (if different from customer)",
+                    "required": false
+                },
+                {
+                    "name": "birth_date",
+                    "type": "string",
+                    "description": "Birth date of the patient (YYYY-MM-DD)",
+                    "required": false
+                },
+                {
+                    "name": "insurance_type",
+                    "type": "string",
+                    "description": "Type of insurance: gesetzlich or privat",
+                    "required": false
+                },
+                {
+                    "name": "insurance_company",
+                    "type": "string",
+                    "description": "Name of insurance company",
+                    "required": false
+                },
+                {
+                    "name": "reason",
+                    "type": "string",
+                    "description": "Reason for the appointment",
+                    "required": false
+                },
+                {
+                    "name": "notes",
+                    "type": "string",
+                    "description": "Additional notes or special requests",
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "cancel_appointment",
+            "description": "Cancel an existing appointment",
+            "parameters": [
+                {
+                    "name": "phone_number",
+                    "type": "string",
+                    "description": "Phone number of the customer",
+                    "required": true
+                },
+                {
+                    "name": "appointment_date",
+                    "type": "string",
+                    "description": "Date of the appointment to cancel (YYYY-MM-DD)",
+                    "required": false
+                },
+                {
+                    "name": "patient_name",
+                    "type": "string",
+                    "description": "Name of the patient",
+                    "required": false
+                },
+                {
+                    "name": "reason",
+                    "type": "string",
+                    "description": "Reason for cancellation",
+                    "required": false
+                }
+            ]
+        },
+        {
+            "name": "reschedule_appointment",
+            "description": "Reschedule an existing appointment to a new date\/time",
+            "parameters": [
+                {
+                    "name": "phone_number",
+                    "type": "string",
+                    "description": "Phone number of the customer",
+                    "required": true
+                },
+                {
+                    "name": "old_date",
+                    "type": "string",
+                    "description": "Current appointment date (YYYY-MM-DD)",
+                    "required": false
+                },
+                {
+                    "name": "new_date",
+                    "type": "string",
+                    "description": "New appointment date (YYYY-MM-DD)",
+                    "required": true
+                },
+                {
+                    "name": "new_time",
+                    "type": "string",
+                    "description": "New appointment time (HH:MM)",
+                    "required": true
+                },
+                {
+                    "name": "patient_name",
+                    "type": "string",
+                    "description": "Name of the patient",
+                    "required": false
+                },
+                {
+                    "name": "reason",
+                    "type": "string",
+                    "description": "Reason for rescheduling",
+                    "required": false
+                }
+            ]
+        }
+    ],
+    "verification": "SUCCESS"
+}

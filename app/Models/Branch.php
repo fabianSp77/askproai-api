@@ -218,38 +218,40 @@ class Branch extends Model
     /**
      * The services that belong to the branch.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function services()
     {
-        return $this->belongsToMany(Service::class, 'branch_service')
-            ->withTimestamps()
-            ->withPivot(['price', 'duration', 'active'])
+        return $this->hasMany(Service::class, 'branch_id')
             ->orderBy('name');
     }
 
     /**
      * Master Services relationship for the branch
      * Diese Services werden vom Unternehmen geerbt und können pro Filiale angepasst werden
-     *
+     * 
+     * NOTE: Temporarily disabled - the branch_service_overrides table does not exist
+     * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function masterServices()
-    {
-        return $this->belongsToMany(MasterService::class, 'branch_service_overrides')
-                    ->withPivot(['custom_duration', 'custom_price', 'custom_calcom_event_type_id', 'active'])
-                    ->withTimestamps();
-    }
+    // public function masterServices()
+    // {
+    //     return $this->belongsToMany(MasterService::class, 'branch_service_overrides')
+    //                 ->withPivot(['custom_duration', 'custom_price', 'custom_calcom_event_type_id', 'active'])
+    //                 ->withTimestamps();
+    // }
 
     /**
      * Get only active master services for this branch
-     *
+     * 
+     * NOTE: Temporarily disabled - depends on masterServices() relationship
+     * 
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    public function activeServices()
-    {
-        return $this->masterServices()->wherePivot('active', true);
-    }
+    // public function activeServices()
+    // {
+    //     return $this->masterServices()->wherePivot('active', true);
+    // }
 
     /**
      * Get calendar mappings for the branch
@@ -359,12 +361,23 @@ class Branch extends Model
         }
 
         // Fallback to company configuration
-        if ($this->company) {
+        // Use relationLoaded to check if company is already loaded to avoid N+1
+        if ($this->relationLoaded('company') && $this->company) {
             return [
                 'api_key' => $this->company->calcom_api_key,
                 'event_type_id' => $this->company->calcom_event_type_id,
                 'team_slug' => $this->company->calcom_team_slug,
             ];
+        } elseif ($this->company_id) {
+            // If company is not loaded but we have company_id, load it
+            $company = $this->company()->first();
+            if ($company) {
+                return [
+                    'api_key' => $company->calcom_api_key,
+                    'event_type_id' => $company->calcom_event_type_id,
+                    'team_slug' => $company->calcom_team_slug,
+                ];
+            }
         }
 
         return null;
@@ -488,6 +501,137 @@ class Branch extends Model
     }
 
     /**
+     * Get configuration progress
+     */
+    public function getConfigurationProgressAttribute(): array
+    {
+        $progress = [];
+        $score = 0;
+        $maxScore = 0;
+        
+        // Basic information (30%)
+        $progress['basic_info'] = [
+            'label' => 'Grunddaten',
+            'items' => []
+        ];
+        
+        if (!empty($this->name)) {
+            $progress['basic_info']['items'][] = ['label' => 'Name', 'completed' => true];
+            $score += 5;
+        } else {
+            $progress['basic_info']['items'][] = ['label' => 'Name', 'completed' => false];
+        }
+        $maxScore += 5;
+        
+        if (!empty($this->address) && !empty($this->city) && !empty($this->postal_code)) {
+            $progress['basic_info']['items'][] = ['label' => 'Adresse', 'completed' => true];
+            $score += 10;
+        } else {
+            $progress['basic_info']['items'][] = ['label' => 'Adresse', 'completed' => false];
+        }
+        $maxScore += 10;
+        
+        if (!empty($this->phone_number)) {
+            $progress['basic_info']['items'][] = ['label' => 'Telefonnummer', 'completed' => true];
+            $score += 10;
+        } else {
+            $progress['basic_info']['items'][] = ['label' => 'Telefonnummer', 'completed' => false];
+        }
+        $maxScore += 10;
+        
+        if (!empty($this->notification_email)) {
+            $progress['basic_info']['items'][] = ['label' => 'E-Mail', 'completed' => true];
+            $score += 5;
+        } else {
+            $progress['basic_info']['items'][] = ['label' => 'E-Mail', 'completed' => false];
+        }
+        $maxScore += 5;
+        
+        // Business hours (20%)
+        if (!empty($this->business_hours)) {
+            $progress['business_hours'] = [
+                'label' => 'Öffnungszeiten',
+                'completed' => true
+            ];
+            $score += 20;
+        } else {
+            $progress['business_hours'] = [
+                'label' => 'Öffnungszeiten',
+                'completed' => false
+            ];
+        }
+        $maxScore += 20;
+        
+        // KI-Agent (30%)
+        if (!empty($this->retell_agent_id)) {
+            $progress['ai_agent'] = [
+                'label' => 'KI-Agent konfiguriert',
+                'completed' => true
+            ];
+            $score += 30;
+        } else {
+            $progress['ai_agent'] = [
+                'label' => 'KI-Agent konfiguriert',
+                'completed' => false
+            ];
+        }
+        $maxScore += 30;
+        
+        // Services & Staff (20%)
+        try {
+            $hasServices = $this->services()->withoutGlobalScope(\App\Scopes\TenantScope::class)->exists();
+        } catch (\Exception $e) {
+            // If we can't check services due to scope issues, assume false
+            $hasServices = false;
+        }
+        
+        try {
+            $hasStaff = $this->staff()->withoutGlobalScope(\App\Scopes\TenantScope::class)->exists() || 
+                        $this->availableStaff()->withoutGlobalScope(\App\Scopes\TenantScope::class)->exists();
+        } catch (\Exception $e) {
+            // If we can't check staff due to scope issues, assume false
+            $hasStaff = false;
+        }
+        
+        if ($hasServices && $hasStaff) {
+            $progress['services_staff'] = [
+                'label' => 'Services & Mitarbeiter',
+                'completed' => true
+            ];
+            $score += 20;
+        } else {
+            $progress['services_staff'] = [
+                'label' => 'Services & Mitarbeiter',
+                'completed' => false
+            ];
+        }
+        $maxScore += 20;
+        
+        // Calculate percentage
+        $percentage = $maxScore > 0 ? round(($score / $maxScore) * 100) : 0;
+        
+        return [
+            'percentage' => $percentage,
+            'score' => $score,
+            'maxScore' => $maxScore,
+            'details' => $progress
+        ];
+    }
+    
+    /**
+     * Check if branch can be activated
+     */
+    public function canBeActivated(): bool
+    {
+        return !empty($this->name) &&
+               !empty($this->phone_number) &&
+               !empty($this->notification_email) &&
+               !empty($this->address) &&
+               !empty($this->city) &&
+               !empty($this->postal_code);
+    }
+
+    /**
      * Get the route key for the model.
      *
      * @return string
@@ -507,33 +651,6 @@ class Branch extends Model
         return $this->belongsTo(RetellAgent::class, 'retell_agent_id');
     }
 
-    /**
-     * Get configuration progress for this branch
-     *
-     * @return array
-     */
-    public function getConfigurationProgressAttribute()
-    {
-        $status = $this->configuration_status ?? [];
-        
-        $steps = [
-            'basic_info' => !empty($this->name) && !empty($this->city),
-            'contact' => !empty($this->phone_number) && !empty($this->notification_email),
-            'hours' => !empty($this->business_hours),
-            'retell' => !empty($this->retell_agent_id),
-            'calendar' => !empty($this->calcom_api_key) && !empty($this->calcom_event_type_id),
-        ];
-        
-        $completed = count(array_filter($steps));
-        $total = count($steps);
-        
-        return [
-            'percentage' => round(($completed / $total) * 100),
-            'completed' => $completed,
-            'total' => $total,
-            'steps' => $steps
-        ];
-    }
 
     /**
      * Check if branch is fully configured
@@ -592,33 +709,28 @@ class Branch extends Model
         return !$this->retell_last_sync || 
                $this->retell_last_sync->diffInHours(now()) > 1;
     }
-
+    
     /**
-     * Prüft ob die Filiale aktiviert werden kann
+     * Check if branch needs appointment booking
      * 
      * @return bool
      */
-    public function canBeActivated(): bool
+    public function needsAppointmentBooking(): bool
     {
-        // Pflichtfelder für Aktivierung
-        $requiredFields = [
-            'company_id',
-            'name',
-            'address',
-            'city',
-            'postal_code',
-            'country',
-            'phone_number',
-            'notification_email'
-        ];
-        
-        foreach ($requiredFields as $field) {
-            if (empty($this->$field)) {
-                return false;
-            }
+        // Check if branch has override setting
+        if (isset($this->settings['appointment_booking_mode']) && 
+            $this->settings['appointment_booking_mode'] === 'override') {
+            return $this->settings['needs_appointment_booking'] ?? true;
         }
         
+        // Otherwise inherit from company
+        if ($this->company) {
+            return $this->company->needsAppointmentBooking();
+        }
+        
+        // Default to true
         return true;
     }
+
 
 }

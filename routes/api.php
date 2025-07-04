@@ -15,6 +15,7 @@ use App\Http\Controllers\MCPGatewayController;
 use App\Http\Controllers\RetellCustomFunctionController;
 use App\Http\Controllers\Api\CircuitBreakerHealthController;
 use App\Http\Controllers\Api\HealthCheckController;
+use App\Http\Controllers\TwilioWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,8 +37,29 @@ Route::middleware('api-no-csrf')->group(function () {
 // Load MCP Routes
 require __DIR__.'/api-mcp.php';
 
+// Retell Agent Editor API Routes
+Route::prefix('mcp/retell')->middleware(['web', 'auth'])->group(function () {
+    Route::patch('/update-agent/{agentId}', [App\Http\Controllers\Api\RetellAgentUpdateController::class, 'updateAgent'])
+        ->name('api.retell.update-agent');
+    Route::post('/publish-agent/{agentId}', [App\Http\Controllers\Api\RetellAgentUpdateController::class, 'publishAgent'])
+        ->name('api.retell.publish-agent');
+});
+
 // Test webhook routes removed for security
 // Never include test routes in production
+
+// Load Retell test routes - temporarily enabled for testing
+// TODO: Restrict to development environment after testing is complete
+if (file_exists(__DIR__.'/retell-test.php')) {
+    require __DIR__.'/retell-test.php';
+}
+
+// Retell Monitor API Routes
+Route::prefix('retell/monitor')->group(function () {
+    Route::get('/stats', [App\Http\Controllers\RetellMonitorController::class, 'stats']);
+    Route::get('/calcom-status', [App\Http\Controllers\RetellMonitorController::class, 'calcomStatus']);
+    Route::get('/activity', [App\Http\Controllers\RetellMonitorController::class, 'activity']);
+});
 
 // ---- Metrics Endpoint ----------------------------
 Route::get('/metrics', [App\Http\Controllers\Api\MetricsController::class, 'metrics'])
@@ -99,6 +121,21 @@ Route::prefix('docs-data')->middleware(['auth:sanctum'])->group(function () {
         ->name('api.docs.workflows');
     Route::get('/health', [DocumentationDataController::class, 'health'])
         ->name('api.docs.health');
+});
+
+// ---- Billing & Usage API ----------------------------
+// Protected with auth:sanctum for customer access
+Route::prefix('billing')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/usage/current', [App\Http\Controllers\Api\BillingUsageController::class, 'currentUsage'])
+        ->name('api.billing.usage.current');
+    Route::get('/usage/projection', [App\Http\Controllers\Api\BillingUsageController::class, 'projection'])
+        ->name('api.billing.usage.projection');
+    Route::get('/history', [App\Http\Controllers\Api\BillingUsageController::class, 'history'])
+        ->name('api.billing.history');
+    Route::get('/period/{periodId}', [App\Http\Controllers\Api\BillingUsageController::class, 'periodDetails'])
+        ->name('api.billing.period.details');
+    Route::get('/period/{periodId}/download', [App\Http\Controllers\Api\BillingUsageController::class, 'downloadReport'])
+        ->name('api.billing.period.download');
 });
 
 // ---- MCP Retell Webhook Route (with signature verification) ----
@@ -181,6 +218,20 @@ Route::prefix('mcp')->middleware(['auth:sanctum', 'throttle:100,1', 'validate.co
         Route::post('/search-calls', [\App\Http\Controllers\Api\MCPController::class, 'retellSearchCalls']);
         Route::get('/phone-numbers/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellPhoneNumbers']);
         // Test endpoint removed - use health check or specific diagnostic endpoints
+        
+        // Agent version management
+        Route::get('/agent-version/{agentId}/{version}', [\App\Http\Controllers\Api\RetellAgentVersionController::class, 'getVersion'])
+            ->name('mcp.retell.agent-version');
+        Route::post('/agent-compare/{agentId}', [\App\Http\Controllers\Api\RetellAgentVersionController::class, 'compareVersions'])
+            ->name('mcp.retell.agent-compare');
+            
+        // Test call functionality
+        Route::post('/test-call', [\App\Http\Controllers\Api\RetellTestCallController::class, 'initiateTestCall'])
+            ->name('mcp.retell.test-call');
+        Route::get('/test-call/{callId}/status', [\App\Http\Controllers\Api\RetellTestCallController::class, 'getTestCallStatus'])
+            ->name('mcp.retell.test-call-status');
+        Route::get('/test-scenarios/{agentId}', [\App\Http\Controllers\Api\RetellTestCallController::class, 'getTestScenarios'])
+            ->name('mcp.retell.test-scenarios');
     });
     
     Route::prefix('queue')->group(function () {
@@ -209,6 +260,28 @@ Route::prefix('cookie-consent')->group(function () {
     Route::post('/accept-all', [\App\Http\Controllers\Api\CookieConsentController::class, 'acceptAll']);
     Route::post('/reject-all', [\App\Http\Controllers\Api\CookieConsentController::class, 'rejectAll']);
     Route::post('/withdraw', [\App\Http\Controllers\Api\CookieConsentController::class, 'withdraw']);
+});
+
+// ---- Twilio Webhooks ----------------------------
+Route::prefix('twilio')->group(function () {
+    // Status callback for message delivery updates
+    Route::post('/status-callback', [TwilioWebhookController::class, 'statusCallback'])
+        ->name('twilio.status-callback');
+    
+    // Incoming message webhook
+    Route::post('/incoming-message', [TwilioWebhookController::class, 'incomingMessage'])
+        ->name('twilio.incoming-message');
+    
+    // MCP integration point for Twilio
+    Route::post('/mcp/status-callback', [TwilioWebhookController::class, 'statusCallback'])
+        ->name('twilio.mcp.status-callback');
+});
+
+// ---- Stripe Webhooks ----------------------------
+Route::prefix('stripe')->group(function () {
+    // Webhook for payment events
+    Route::post('/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])
+        ->name('stripe.webhook');
 });
 
 // ---- Metrics Endpoint for Prometheus ----------------------------
@@ -559,12 +632,21 @@ Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
 
 // Retell AI Custom Function Routes
 Route::prefix('retell')->group(function () {
-    Route::post('/collect-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'collectAppointment']);
+    // Appointment-related routes (protected by middleware)
+    Route::middleware(['check.appointment.booking'])->group(function () {
+        Route::post('/collect-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'collectAppointment']);
+        Route::post('/check-availability', [App\Http\Controllers\RetellCustomFunctionsController::class, 'checkAvailability']);
+        Route::post('/book-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'bookAppointment']);
+        Route::post('/cancel-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'cancelAppointment']);
+        Route::post('/reschedule-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'rescheduleAppointment']);
+    });
+    
+    // General routes (no appointment booking required)
     Route::post('/check-customer', [App\Http\Controllers\RetellCustomFunctionsController::class, 'checkCustomer']);
-    Route::post('/check-availability', [App\Http\Controllers\RetellCustomFunctionsController::class, 'checkAvailability']);
-    Route::post('/book-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'bookAppointment']);
-    Route::post('/cancel-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'cancelAppointment']);
-    Route::post('/reschedule-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'rescheduleAppointment']);
+    
+    // Krückeberg Servicegruppe - Reine Datensammlung (ohne Terminbuchung)
+    Route::post('/collect-data', [App\Http\Controllers\Api\RetellDataCollectionController::class, 'collectData'])
+        ->name('api.retell.collect-data');
 });
 
 // User Token Management
@@ -609,3 +691,11 @@ Route::middleware(['auth:sanctum'])->prefix('v2')->group(function () {
         Route::get('/statistics', [App\Http\Controllers\Api\V2\ExecutionController::class, 'statistics']);
     });
 });
+
+
+// TEMPORARY DEBUG ROUTES - REMOVE AFTER FIXING!
+Route::post('/retell/webhook-bypass', [\App\Http\Controllers\Api\RetellWebhookBypassController::class, 'handle'])
+    ->name('retell.webhook.bypass');
+    
+Route::post('/retell/webhook-simple', [\App\Http\Controllers\Api\RetellWebhookWorkingController::class, 'handle'])
+    ->name('retell.webhook.simple');

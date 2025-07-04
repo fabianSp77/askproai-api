@@ -39,9 +39,10 @@
                     <tr class="border-b border-gray-200 dark:border-gray-700">
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Zeit</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Telefon</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kunde</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Filiale</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dauer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Termin</th>
                     </tr>
                 </thead>
@@ -54,33 +55,51 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-mono">
                                 {{ $call['phone'] }}
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                @if($call['customer_name'])
+                                    {{ $call['customer_name'] }}
+                                @else
+                                    <span class="text-gray-500 dark:text-gray-400">-</span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                                 {{ $call['branch'] }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-mono">
                                 {{ $call['duration'] }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    {{ $call['status'] === 'Abgeschlossen' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : '' }}
-                                    {{ $call['status'] === 'Verpasst' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : '' }}
-                                    {{ $call['status'] === 'Fehlgeschlagen' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : '' }}
-                                    {{ $call['status'] === 'Abgebrochen' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400' : '' }}
-                                ">
-                                    {{ $call['status'] }}
-                                </span>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="flex flex-col items-center gap-1">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {{ $call['status'] === 'Abgeschlossen' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : '' }}
+                                        {{ $call['status'] === 'Verpasst' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : '' }}
+                                        {{ $call['status'] === 'Fehlgeschlagen' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : '' }}
+                                        {{ $call['status'] === 'Abgebrochen' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400' : '' }}
+                                    ">
+                                        {{ $call['status'] }}
+                                    </span>
+                                    @if($call['urgency'] && in_array(strtolower($call['urgency']), ['high', 'hoch']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                            Dringend
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                @if($call['appointment_booked'])
-                                    <x-heroicon-m-check-circle class="w-5 h-5 text-green-500 mx-auto" />
-                                @else
-                                    <x-heroicon-m-x-circle class="w-5 h-5 text-gray-300 dark:text-gray-600 mx-auto" />
-                                @endif
+                                <div class="flex items-center justify-center gap-1">
+                                    @if($call['appointment_booked'])
+                                        <x-heroicon-m-check-circle class="w-5 h-5 text-green-500" />
+                                    @elseif($call['appointment_requested'])
+                                        <x-heroicon-m-calendar class="w-5 h-5 text-yellow-500" />
+                                    @else
+                                        <x-heroicon-m-x-circle class="w-5 h-5 text-gray-300 dark:text-gray-600" />
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="7" class="px-6 py-12 text-center">
                                 <x-heroicon-o-phone-x-mark class="mx-auto h-12 w-12 text-gray-400" />
                                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Keine Anrufe in den letzten 24 Stunden</p>
                             </td>

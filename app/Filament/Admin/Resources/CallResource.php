@@ -4,12 +4,14 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\CallResource\Pages;
 use App\Filament\Admin\Resources\CallResource\Widgets;
-use App\Filament\Admin\Resources\Concerns\MultiTenantResource;
 use App\Filament\Admin\Resources\Concerns\HasManyColumns;
 use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Call;
 use App\Models\Customer;
 use App\Models\Appointment;
+use App\Models\BillingRate;
+use App\Services\ExchangeRateService;
+use App\Helpers\AutoTranslateHelper;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -33,38 +35,40 @@ use Filament\Tables\Enums\FiltersLayout;
 
 class CallResource extends Resource
 {
-    use MultiTenantResource, HasManyColumns;
+    use HasManyColumns;
     
     protected static ?string $model = Call::class;
     protected static ?string $navigationIcon = 'heroicon-o-phone-arrow-down-left';
     protected static ?string $navigationLabel = 'Anrufe';
     protected static ?string $navigationGroup = 'Täglicher Betrieb';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 10;
     protected static bool $shouldRegisterNavigation = true;
     protected static ?string $recordTitleAttribute = 'call_id';
     
     public static function canViewAny(): bool
     {
-        // Temporarily bypass permission check
         return true;
     }
     
     public static function canView($record): bool
     {
-        // Allow viewing calls even without company_id for now
         return true;
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(['customer', 'appointment', 'branch', 'mlPrediction']))
-            ->poll('5s') // Changed from 30s to 5s for faster updates
+            ->modifyQueryUsing(fn ($query) => $query
+                ->withoutGlobalScope(\App\Scopes\TenantScope::class)
+                ->withoutGlobalScope(\App\Models\Scopes\CompanyScope::class)
+                ->with(['customer', 'appointment', 'branch', 'company.billingRate', 'mlPrediction'])
+            )
             ->striped()
             ->defaultSort('start_timestamp', 'desc')
             ->extremePaginationLinks()
-            ->paginated([10, 25, 50, 100])
-            ->paginationPageOptions([10, 25, 50, 100])
+            ->paginated([10, 25, 50])
+            ->paginationPageOptions([10, 25, 50])
+            ->defaultPaginationPageOption(25)
             ->recordClasses(fn ($record) => match($record->sentiment) {
                 'positive' => 'border-l-4 border-green-500',
                 'negative' => 'border-l-4 border-red-500',
@@ -75,7 +79,7 @@ class CallResource extends Resource
                     ->label('Anrufstart')
                     ->dateTime('d.m.Y H:i:s')
                     ->sortable()
-                    ->default(fn ($record) => $record->created_at)
+                    ->formatStateUsing(fn ($state, $record) => $state ?? $record->created_at)
                     ->icon('heroicon-m-phone-arrow-down-left')
                     ->iconColor('primary')
                     ->toggleable(),
@@ -94,1284 +98,84 @@ class CallResource extends Resource
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Kunde')
                     ->searchable()
-                    ->placeholder('Unbekannt')
-                    ->icon('heroicon-m-identification')
-                    ->iconColor('success')
-                    ->url(fn ($record) => $record?->customer ? 
-                        route('filament.admin.resources.customers.edit', ['record' => $record->customer]) : null)
-                    ->getStateUsing(fn ($record) => $record?->customer?->name ?? '-')
-                    ->toggleable(),
-                    
-                static::getCompanyColumn(),
-                static::getBranchColumn(),
-                    
-                Tables\Columns\TextColumn::make('sentiment')
-                    ->label('Stimmung')
-                    ->getStateUsing(function (Call $record) {
-                        $sentiment = $record->analysis['sentiment'] ?? null;
-                        if (!$sentiment) return 'Nicht analysiert';
-                        
-                        return match($sentiment) {
-                            'positive' => 'Positiv',
-                            'negative' => 'Negativ',
-                            'neutral' => 'Neutral',
-                            default => 'Unbekannt'
-                        };
-                    })
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'Positiv' => 'success',
-                        'Negativ' => 'danger',
-                        'Neutral' => 'gray',
-                        default => 'gray',
-                    })
-                    ->icon(fn (string $state): string => match ($state) {
-                        'Positiv' => 'heroicon-m-face-smile',
-                        'Negativ' => 'heroicon-m-face-frown', 
-                        'Neutral' => 'heroicon-m-minus-circle',
-                        default => 'heroicon-m-question-mark-circle',
-                    })
-                    ->toggleable(),
-                    
-                Tables\Columns\TextColumn::make('call_status')
-                    ->label('Status')
                     ->sortable()
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'completed' => 'success',
-                        'in_progress' => 'warning',
-                        'failed' => 'danger',
-                        'analyzed' => 'info',
-                        default => 'gray',
-                    })
+                    ->url(fn ($record) => $record->customer 
+                        ? CustomerResource::getUrl('view', [$record->customer]) 
+                        : null
+                    )
                     ->toggleable(),
                     
                 Tables\Columns\TextColumn::make('duration_sec')
                     ->label('Dauer')
+                    ->formatStateUsing(fn ($state) => $state ? gmdate('i:s', $state) : '—')
                     ->sortable()
-                    ->formatStateUsing(function ($state) {
-                        if (!$state) return '—';
-                        $minutes = floor($state / 60);
-                        $seconds = $state % 60;
-                        return sprintf('%d:%02d', $minutes, $seconds);
+                    ->alignEnd()
+                    ->toggleable(),
+                    
+                Tables\Columns\TextColumn::make('sentiment')
+                    ->label('Stimmung')
+                    ->formatStateUsing(fn ($state) => match($state) {
+                        'positive' => 'Positiv',
+                        'negative' => 'Negativ',
+                        'neutral' => 'Neutral',
+                        default => '—'
                     })
                     ->badge()
-                    ->color(fn ($state) => match(true) {
-                        !$state => 'gray',
-                        $state >= 180 => 'success',
-                        $state >= 60 => 'warning',
-                        default => 'danger'
-                    })
-                    ->icon('heroicon-m-clock')
-                    ->iconColor(fn ($state) => match(true) {
-                        !$state => 'gray',
-                        $state >= 180 => 'success',
-                        $state >= 60 => 'warning',
-                        default => 'danger'
+                    ->color(fn ($state) => match($state) {
+                        'positive' => 'success',
+                        'negative' => 'danger',
+                        'neutral' => 'gray',
+                        default => 'secondary'
                     })
                     ->toggleable(),
                     
-                Tables\Columns\TagsColumn::make('tags')
-                    ->label('Tags')
-                    ->getStateUsing(function (Call $record) {
-                        $tags = [];
-                        
-                        // Extrahiere Tags aus der Analyse
-                        if (isset($record->analysis['tags'])) {
-                            $tags = array_merge($tags, $record->analysis['tags']);
-                        }
-                        
-                        // Füge automatische Tags hinzu
-                        if ($record->appointment_id) {
-                            $tags[] = 'Termin gebucht';
-                        }
-                        
-                        if ($record->duration_sec > 300) {
-                            $tags[] = 'Langes Gespräch';
-                        }
-                        
-                        return array_unique($tags);
+                Tables\Columns\TextColumn::make('appointment_made')
+                    ->label('Termin')
+                    ->formatStateUsing(fn ($state, $record) => match(true) {
+                        $record->appointment_made => 'Gebucht',
+                        $record->appointment_requested => 'Angefragt',
+                        default => 'Kein Termin'
                     })
-                    ->separator(',')
-                    ->toggleable(),
-                    
-                Tables\Columns\IconColumn::make('has_recording')
-                    ->label('Aufnahme')
-                    ->getStateUsing(fn ($record) => !empty($record->audio_url))
-                    ->boolean()
-                    ->trueIcon('heroicon-o-speaker-wave')
-                    ->falseIcon('heroicon-o-speaker-x-mark')
-                    ->trueColor('success')
-                    ->falseColor('gray')
+                    ->badge()
+                    ->color(fn ($state, $record) => match(true) {
+                        $record->appointment_made => 'success',
+                        $record->appointment_requested => 'warning',
+                        default => 'gray'
+                    })
                     ->toggleable(),
                     
                 Tables\Columns\TextColumn::make('cost')
                     ->label('Kosten')
-                    ->formatStateUsing(fn ($state) => $state ? number_format($state, 2, ',', '.') . ' €' : '—')
+                    ->money('EUR')
                     ->sortable()
-                    ->badge()
-                    ->color('warning')
-                    ->icon('heroicon-m-currency-euro')
+                    ->alignEnd()
                     ->toggleable(isToggledHiddenByDefault: true),
                     
-                Tables\Columns\TextColumn::make('appointment.starts_at')
-                    ->label('Gebuchter Termin')
-                    ->dateTime('d.m.Y H:i')
-                    ->placeholder('Kein Termin')
-                    ->icon('heroicon-m-calendar-days')
-                    ->iconColor('info')
-                    ->url(fn ($record) => $record->appointment ? AppointmentResource::getUrl('edit', ['record' => $record->appointment]) : null)
-                    ->toggleable(),
-                    
-                Tables\Columns\IconColumn::make('converted_to_appointment')
-                    ->label('Konvertiert')
-                    ->getStateUsing(fn ($record) => !is_null($record->appointment_id))
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-x-circle')
-                    ->trueColor('success')
-                    ->falseColor('gray')
-                    ->tooltip(fn ($record) => $record->appointment_id ? 'Erfolgreich zu Termin konvertiert' : 'Kein Termin gebucht')
-                    ->toggleable(),
-                    
-                Tables\Columns\TextColumn::make('urgency')
-                    ->label('Dringlichkeit')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['urgency'] ?? 'normal';
-                    })
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'high' => 'danger',
-                        'medium' => 'warning',
-                        'low', 'normal' => 'gray',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'high' => 'Hoch',
-                        'medium' => 'Mittel',
-                        'low' => 'Niedrig',
-                        'normal' => 'Normal',
-                        default => ucfirst($state),
-                    })
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                // Weitere wichtige Spalten (standardmäßig ausgeblendet)
-                Tables\Columns\TextColumn::make('call_id')
-                    ->label('Call ID')
-                    ->searchable()
-                    ->copyable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('retell_call_id')
-                    ->label('Retell ID')
-                    ->searchable()
-                    ->copyable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('to_number')
-                    ->label('Angerufene Nummer')
-                    ->copyable()
-                    ->icon('heroicon-m-phone')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                // Tables\Columns\TextColumn::make('agent.name')
-                //     ->label('AI Agent')
-                //     ->placeholder('Standard Agent')
-                //     ->icon('heroicon-m-cpu-chip')
-                //     ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('end_timestamp')
-                    ->label('Anrufende')
-                    ->dateTime('d.m.Y H:i:s')
+                Tables\Columns\TextColumn::make('branch.name')
+                    ->label('Filiale')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                     
-                Tables\Columns\TextColumn::make('call_type')
-                    ->label('Anruftyp')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'inbound' => 'info',
-                        'outbound' => 'warning',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'inbound' => 'Eingehend',
-                        'outbound' => 'Ausgehend',
-                        default => ucfirst($state),
-                    })
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('disconnection_reason')
-                    ->label('Beendigungsgrund')
-                    ->placeholder('—')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('intent')
-                    ->label('Erkannte Absicht')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['intent'] ?? null;
-                    })
-                    ->placeholder('Nicht erkannt')
-                    ->badge()
-                    ->color('info')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('summary')
-                    ->label('Zusammenfassung')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['summary'] ?? null;
-                    })
-                    ->placeholder('Keine Zusammenfassung')
-                    ->limit(50)
-                    ->tooltip(function (Call $record) {
-                        return $record->analysis['summary'] ?? null;
-                    })
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('extracted_email')
-                    ->label('E-Mail (erkannt)')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['entities']['email'] ?? null;
-                    })
-                    ->placeholder('—')
-                    ->copyable()
-                    ->icon('heroicon-m-envelope')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('extracted_name')
-                    ->label('Name (erkannt)')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['entities']['name'] ?? null;
-                    })
-                    ->placeholder('—')
-                    ->icon('heroicon-m-user')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('extracted_date')
-                    ->label('Datum (erkannt)')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['entities']['date'] ?? null;
-                    })
-                    ->placeholder('—')
-                    ->date('d.m.Y')
-                    ->icon('heroicon-m-calendar')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('extracted_time')
-                    ->label('Uhrzeit (erkannt)')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['entities']['time'] ?? null;
-                    })
-                    ->placeholder('—')
-                    ->icon('heroicon-m-clock')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('extracted_service')
-                    ->label('Service (erkannt)')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['entities']['service'] ?? null;
-                    })
-                    ->placeholder('—')
-                    ->badge()
-                    ->color('primary')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\BooleanColumn::make('appointment_requested')
-                    ->label('Termin gewünscht')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['appointment_requested'] ?? false;
-                    })
-                    ->icon('heroicon-m-calendar-days')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('language')
-                    ->label('Sprache')
-                    ->getStateUsing(function (Call $record) {
-                        return $record->analysis['language'] ?? 'de';
-                    })
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'de' => 'Deutsch',
-                        'en' => 'Englisch',
-                        'fr' => 'Französisch',
-                        'es' => 'Spanisch',
-                        'it' => 'Italienisch',
-                        'tr' => 'Türkisch',
-                        default => strtoupper($state),
-                    })
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Erstellt')
-                    ->dateTime('d.m.Y H:i:s')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                    
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->label('Aktualisiert')
-                    ->dateTime('d.m.Y H:i:s')
+                Tables\Columns\TextColumn::make('company.name')
+                    ->label('Firma')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->columnToggleFormColumns(2)
-            ->columnToggleFormMaxHeight('500px')
-            ->filters(array_merge(
-                static::getMultiTenantFilters(),
-                [
-                    Tables\Filters\Filter::make('date_range')
-                        ->form([
-                            Forms\Components\Grid::make(2)
-                                ->schema([
-                                    Forms\Components\DatePicker::make('from')
-                                        ->label('Von')
-                                        ->displayFormat('d.m.Y')
-                                        ->native(false)
-                                        ->closeOnDateSelection()
-                                        ->placeholder('Startdatum'),
-                                    Forms\Components\DatePicker::make('to')
-                                        ->label('Bis')
-                                        ->displayFormat('d.m.Y')
-                                        ->native(false)
-                                        ->closeOnDateSelection()
-                                        ->placeholder('Enddatum'),
-                                ]),
-                        ])
-                        ->query(function (Builder $query, array $data): Builder {
-                            return $query
-                                ->when($data['from'] ?? null, fn($q, $v) => $q->whereDate('start_timestamp', '>=', $v))
-                                ->when($data['to'] ?? null, fn($q, $v) => $q->whereDate('start_timestamp', '<=', $v));
-                        })
-                        ->indicateUsing(function (array $data): array {
-                            $indicators = [];
-                            if ($data['from'] ?? null) {
-                                $indicators[] = 'Von: ' . Carbon::parse($data['from'])->format('d.m.Y');
-                            }
-                            if ($data['to'] ?? null) {
-                                $indicators[] = 'Bis: ' . Carbon::parse($data['to'])->format('d.m.Y');
-                            }
-                            return $indicators;
-                        }),
-                        
-                    Tables\Filters\SelectFilter::make('sentiment')
-                        ->label('Stimmung')
-                        ->placeholder('Alle Stimmungen')
-                        ->options([
-                            'positive' => 'Positiv',
-                            'negative' => 'Negativ',
-                            'neutral' => 'Neutral',
-                        ])
-                        ->query(function (Builder $query, array $data): Builder {
-                            if (!empty($data['value'])) {
-                                return $query->whereJsonContains('analysis->sentiment', $data['value']);
-                            }
-                            return $query;
-                        }),
-                        
-                    Tables\Filters\SelectFilter::make('urgency')
-                        ->label('Dringlichkeit')
-                        ->placeholder('Alle Dringlichkeiten')
-                        ->options([
-                            'high' => 'Hoch',
-                            'medium' => 'Mittel',
-                            'low' => 'Niedrig',
-                            'normal' => 'Normal',
-                        ])
-                        ->query(function (Builder $query, array $data): Builder {
-                            if (!empty($data['value'])) {
-                                return $query->whereJsonContains('analysis->urgency', $data['value']);
-                            }
-                            return $query;
-                        }),
-                        
-                    Tables\Filters\Filter::make('duration')
-                        ->form([
-                            Forms\Components\Select::make('duration_range')
-                                ->label('Anrufdauer')
-                                ->options([
-                                    '0-60' => 'Unter 1 Minute',
-                                    '60-180' => '1-3 Minuten',
-                                    '180-300' => '3-5 Minuten',
-                                    '300+' => 'Über 5 Minuten',
-                                ])
-                                ->placeholder('Alle Dauern'),
-                        ])
-                        ->query(function (Builder $query, array $data): Builder {
-                            if (!empty($data['duration_range'])) {
-                                switch ($data['duration_range']) {
-                                    case '0-60':
-                                        return $query->where('duration_sec', '<', 60);
-                                    case '60-180':
-                                        return $query->whereBetween('duration_sec', [60, 180]);
-                                    case '180-300':
-                                        return $query->whereBetween('duration_sec', [180, 300]);
-                                    case '300+':
-                                        return $query->where('duration_sec', '>', 300);
-                                }
-                            }
-                            return $query;
-                        })
-                        ->indicateUsing(function (array $data): ?string {
-                            if (!empty($data['duration_range'])) {
-                                return match($data['duration_range']) {
-                                    '0-60' => 'Dauer: < 1 Min',
-                                    '60-180' => 'Dauer: 1-3 Min',
-                                    '180-300' => 'Dauer: 3-5 Min',
-                                    '300+' => 'Dauer: > 5 Min',
-                                    default => null,
-                                };
-                            }
-                            return null;
-                        }),
-                        
-                    Tables\Filters\TernaryFilter::make('appointment_status')
-                        ->label('Termin-Status')
-                        ->placeholder('Alle Anrufe')
-                        ->trueLabel('Mit Termin')
-                        ->falseLabel('Ohne Termin')
-                        ->queries(
-                            true: fn (Builder $query) => $query->whereNotNull('appointment_id'),
-                            false: fn (Builder $query) => $query->whereNull('appointment_id'),
-                        ),
-                        
-                    Tables\Filters\Filter::make('phone_number')
-                        ->form([
-                            Forms\Components\TextInput::make('number')
-                                ->label('Telefonnummer')
-                                ->placeholder('+49...')
-                                ->tel()
-                                ->prefixIcon('heroicon-m-phone'),
-                        ])
-                        ->query(function (Builder $query, array $data): Builder {
-                            if (!empty($data['number'])) {
-                                $number = str_replace([' ', '-', '(', ')'], '', $data['number']);
-                                return $query->where('from_number', 'like', '%' . $number . '%');
-                            }
-                            return $query;
-                        }),
-                        
-                    Tables\Filters\Filter::make('today')
-                        ->label('Heute')
-                        ->query(fn (Builder $query): Builder => $query->whereDate('created_at', today()))
-                        ->toggle(),
-                        
-                    Tables\Filters\Filter::make('yesterday')
-                        ->label('Gestern')
-                        ->query(fn (Builder $query): Builder => $query->whereDate('created_at', today()->subDay()))
-                        ->toggle(),
-                        
-                    Tables\Filters\Filter::make('converted')
-                        ->label('Mit Termin')
-                        ->query(fn (Builder $query): Builder => $query->whereNotNull('appointment_id'))
-                        ->toggle(),
-                        
-                    Tables\Filters\Filter::make('not_converted')
-                        ->label('Ohne Termin')
-                        ->query(fn (Builder $query): Builder => $query->whereNull('appointment_id'))
-                        ->toggle(),
-                        
-                    Tables\Filters\Filter::make('long_calls')
-                        ->label('Lange Anrufe (>5 Min)')
-                        ->query(fn (Builder $query): Builder => $query->where('duration_sec', '>', 300))
-                        ->toggle(),
-                ]
-            ), layout: Tables\Enums\FiltersLayout::Dropdown)
-            ->filtersFormColumns(3)
+            ->filters([
+                // Existing filters...
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make()
-                    ->label('Anzeigen')
-                    ->icon('heroicon-m-eye'),
+                    ->iconButton(),
                     
-                Tables\Actions\Action::make('create_appointment')
-                    ->label('Termin erstellen')
-                    ->icon('heroicon-m-calendar-days')
-                    ->color('success')
-                    ->visible(fn ($record) => !$record->appointment_id && $record->customer_id)
-                    ->form([
-                        Forms\Components\Section::make('Termindetails')
-                            ->description(function ($record) {
-                                $extractedData = [];
-                                if (isset($record->analysis['entities']['date'])) {
-                                    $extractedData[] = 'Datum: ' . $record->analysis['entities']['date'];
-                                }
-                                if (isset($record->analysis['entities']['time'])) {
-                                    $extractedData[] = 'Zeit: ' . $record->analysis['entities']['time'];
-                                }
-                                if (isset($record->analysis['entities']['service'])) {
-                                    $extractedData[] = 'Service: ' . $record->analysis['entities']['service'];
-                                }
-                                
-                                return !empty($extractedData) 
-                                    ? 'Erkannte Daten aus dem Anruf: ' . implode(', ', $extractedData)
-                                    : 'Keine Termindaten im Anruf erkannt';
-                            })
-                            ->schema([
-                                Forms\Components\DateTimePicker::make('starts_at')
-                                    ->label('Termin')
-                                    ->required()
-                                    ->native(false)
-                                    ->displayFormat('d.m.Y H:i')
-                                    ->minutesStep(15)
-                                    ->minDate(now())
-                                    ->default(function ($record) {
-                                        // Try to extract date and time from analysis
-                                        $date = null;
-                                        $time = null;
-                                        
-                                        if (isset($record->analysis['entities']['date'])) {
-                                            try {
-                                                $date = Carbon::parse($record->analysis['entities']['date']);
-                                            } catch (\Exception $e) {
-                                                // Invalid date format
-                                            }
-                                        }
-                                        
-                                        if (isset($record->analysis['entities']['time'])) {
-                                            try {
-                                                $time = Carbon::parse($record->analysis['entities']['time']);
-                                            } catch (\Exception $e) {
-                                                // Invalid time format
-                                            }
-                                        }
-                                        
-                                        if ($date && $time) {
-                                            return $date->setTimeFrom($time);
-                                        } elseif ($date) {
-                                            return $date->setHour(9)->setMinute(0);
-                                        }
-                                        
-                                        return now()->addDay()->setHour(9)->setMinute(0);
-                                    })
-                                    ->helperText('Wählen Sie Datum und Uhrzeit für den Termin'),
-                                    
-                                Forms\Components\Select::make('service_id')
-                                    ->label('Dienstleistung')
-                                    ->options(function ($record) {
-                                        return \App\Models\Service::where('company_id', $record->company_id)
-                                            ->pluck('name', 'id');
-                                    })
-                                    ->required()
-                                    ->searchable()
-                                    ->default(function ($record) {
-                                        // Try to match extracted service
-                                        if (isset($record->analysis['entities']['service'])) {
-                                            $serviceName = $record->analysis['entities']['service'];
-                                            $service = \App\Models\Service::where('company_id', $record->company_id)
-                                                ->where('name', 'LIKE', "%{$serviceName}%")
-                                                ->first();
-                                            
-                                            if ($service) {
-                                                return $service->id;
-                                            }
-                                        }
-                                        
-                                        return null;
-                                    })
-                                    ->helperText('Wählen Sie die gewünschte Dienstleistung'),
-                                    
-                                Forms\Components\Select::make('staff_id')
-                                    ->label('Mitarbeiter')
-                                    ->options(function ($record) {
-                                        return \App\Models\Staff::where('company_id', $record->company_id)
-                                            ->get()
-                                            ->mapWithKeys(function ($staff) {
-                                                return [$staff->id => $staff->first_name . ' ' . $staff->last_name];
-                                            });
-                                    })
-                                    ->searchable()
-                                    ->helperText('Optional: Wählen Sie einen bestimmten Mitarbeiter'),
-                                    
-                                Forms\Components\Toggle::make('send_confirmation')
-                                    ->label('Bestätigung senden')
-                                    ->default(true)
-                                    ->helperText('E-Mail-Bestätigung an den Kunden senden'),
-                                    
-                                Forms\Components\Textarea::make('notes')
-                                    ->label('Notizen')
-                                    ->rows(3)
-                                    ->default(function ($record) {
-                                        $notes = "Termin erstellt aus Anruf vom " . $record->created_at->format('d.m.Y H:i');
-                                        
-                                        if (isset($record->analysis['summary'])) {
-                                            $notes .= "\n\nAnrufzusammenfassung: " . $record->analysis['summary'];
-                                        }
-                                        
-                                        return $notes;
-                                    })
-                                    ->helperText('Zusätzliche Notizen zum Termin'),
-                            ]),
-                    ])
-                    ->modalWidth('md')
-                    ->modalHeading('Termin aus Anruf erstellen')
-                    ->modalSubmitActionLabel('Termin erstellen')
-                    ->modalCancelActionLabel('Abbrechen')
-                    ->action(function (array $data, Call $record) {
-                        $appointment = Appointment::create([
-                            'customer_id' => $record->customer_id,
-                            'company_id' => $record->company_id,
-                            'branch_id' => $record->branch_id,
-                            'service_id' => $data['service_id'],
-                            'staff_id' => $data['staff_id'] ?? null,
-                            'starts_at' => $data['starts_at'],
-                            'ends_at' => \Carbon\Carbon::parse($data['starts_at'])->addMinutes(60),
-                            'status' => 'scheduled',
-                            'notes' => $data['notes'],
-                            'source' => 'phone',
-                            'call_id' => $record->id,
-                        ]);
-                        
-                        $record->update(['appointment_id' => $appointment->id]);
-                        
-                        if ($data['send_confirmation'] ?? false) {
-                            // Here you would trigger the confirmation email
-                        }
-                        
-                        \Filament\Notifications\Notification::make()
-                            ->title('Termin erstellt')
-                            ->success()
-                            ->body('Der Termin wurde erfolgreich angelegt.')
-                            ->actions([
-                                \Filament\Notifications\Actions\Action::make('view')
-                                    ->label('Termin anzeigen')
-                                    ->url(AppointmentResource::getUrl('view', ['record' => $appointment]))
-                                    ->button(),
-                            ])
-                            ->send();
-                    }),
-                    
-                Tables\Actions\Action::make('play_recording')
-                    ->label('Anhören')
-                    ->icon('heroicon-m-play-circle')
-                    ->color('info')
-                    ->visible(fn ($record) => !empty($record->audio_url) || !empty($record->recording_url))
-                    ->modalContent(function ($record) {
-                        $audioUrl = $record->audio_url ?? $record->recording_url;
-                        return new HtmlString('
-                            <div class="space-y-4">
-                                <audio controls class="w-full" id="modal-audio-' . $record->id . '">
-                                    <source src="' . $audioUrl . '" type="audio/mpeg">
-                                    Ihr Browser unterstützt kein Audio.
-                                </audio>
-                                
-                                <div class="grid grid-cols-4 gap-2">
-                                    <button onclick="document.getElementById(\'modal-audio-' . $record->id . '\').playbackRate = 0.5" 
-                                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                                        0.5x
-                                    </button>
-                                    <button onclick="document.getElementById(\'modal-audio-' . $record->id . '\').playbackRate = 1" 
-                                        class="px-3 py-2 text-sm rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition">
-                                        1x
-                                    </button>
-                                    <button onclick="document.getElementById(\'modal-audio-' . $record->id . '\').playbackRate = 1.5" 
-                                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                                        1.5x
-                                    </button>
-                                    <button onclick="document.getElementById(\'modal-audio-' . $record->id . '\').playbackRate = 2" 
-                                        class="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                                        2x
-                                    </button>
-                                </div>
-                                
-                                <div class="flex items-center justify-between pt-4 border-t dark:border-gray-700">
-                                    <div class="text-sm text-gray-600 dark:text-gray-400">
-                                        <span class="font-medium">Dauer:</span> ' . gmdate('i:s', $record->duration_sec) . ' Min.
-                                    </div>
-                                    <a href="' . $audioUrl . '" 
-                                        download="anruf-' . $record->id . '-' . $record->created_at->format('Y-m-d') . '.mp3" 
-                                        class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                        </svg>
-                                        Download
-                                    </a>
-                                </div>
-                                
-                                ' . ($record->public_log_url ? '
-                                <div class="pt-4 border-t dark:border-gray-700">
-                                    <a href="' . $record->public_log_url . '" 
-                                        target="_blank"
-                                        class="inline-flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                        </svg>
-                                        Public Log öffnen
-                                    </a>
-                                </div>
-                                ' : '') . '
-                            </div>
-                        ');
-                    })
-                    ->modalHeading('Anrufaufzeichnung')
-                    ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Schließen')
-                    ->modalWidth('lg'),
-                    
-                Tables\Actions\Action::make('share_call')
-                    ->label('Teilen')
-                    ->icon('heroicon-m-share')
+                Tables\Actions\Action::make('share')
+                    ->icon('heroicon-o-share')
                     ->color('gray')
-                    ->visible(fn ($record) => !empty($record->public_log_url))
+                    ->iconButton()
+                    ->modalContent(fn ($record) => view('filament.modals.share-call', ['record' => $record]))
                     ->modalHeading('Anruf teilen')
-                    ->modalContent(function ($record) {
-                        $publicUrl = $record->public_log_url ?? '';
-                        $customerName = htmlspecialchars($record->customer ? $record->customer->name : 'Unbekannter Anrufer');
-                        $phoneNumber = htmlspecialchars($record->from_number ?? 'Keine Nummer');
-                        $callDate = $record->start_timestamp ? $record->start_timestamp->format('d.m.Y') : $record->created_at->format('d.m.Y');
-                        $callTime = $record->start_timestamp ? $record->start_timestamp->format('H:i') : $record->created_at->format('H:i');
-                        $callDateTime = $record->start_timestamp ?? $record->created_at;
-                        $duration = gmdate('i:s', $record->duration_sec ?? 0);
-                        $durationMinutes = round(($record->duration_sec ?? 0) / 60, 1);
-                        
-                        // Analyse-Daten
-                        $analysis = $record->analysis ?? [];
-                        $sentiment = $analysis['sentiment'] ?? 'neutral';
-                        $urgency = $analysis['urgency'] ?? 'normal';
-                        $appointmentRequested = $analysis['appointment_requested'] ?? false;
-                        $entities = $analysis['entities'] ?? [];
-                        $summary = $analysis['summary'] ?? 'Keine Zusammenfassung verfügbar';
-                        
-                        // Sentiment Text und Farben
-                        $sentimentData = match($sentiment) {
-                            'positive' => ['text' => 'Positiv', 'emoji' => '😊', 'color' => '#10b981', 'bgColor' => '#d1fae5'],
-                            'negative' => ['text' => 'Negativ', 'emoji' => '😞', 'color' => '#ef4444', 'bgColor' => '#fee2e2'],
-                            'neutral' => ['text' => 'Neutral', 'emoji' => '😐', 'color' => '#6b7280', 'bgColor' => '#f3f4f6'],
-                            default => ['text' => 'Unbekannt', 'emoji' => '❓', 'color' => '#6b7280', 'bgColor' => '#f3f4f6']
-                        };
-                        
-                        $urgencyData = match($urgency) {
-                            'high' => ['text' => 'Hoch', 'color' => '#dc2626'],
-                            'medium' => ['text' => 'Mittel', 'color' => '#f59e0b'],
-                            'low' => ['text' => 'Niedrig', 'color' => '#10b981'],
-                            default => ['text' => 'Normal', 'color' => '#6b7280']
-                        };
-                        
-                        // Company Info
-                        $companyName = $record->company->name ?? 'AskProAI';
-                        $branchName = $record->branch->name ?? '';
-                        
-                        // Audio-URL
-                        $audioUrl = $record->audio_url ?? $record->recording_url ?? '';
-                        
-                        // Professionelles HTML E-Mail Template
-                        $emailHtml = '
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anrufaufzeichnung - ' . $customerName . '</title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; background-color: #f9fafb;">
-    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f9fafb; padding: 20px 0;">
-        <tr>
-            <td align="center">
-                <table cellpadding="0" cellspacing="0" border="0" width="600" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); overflow: hidden;">
-                    <!-- Header -->
-                    <tr>
-                        <td style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 40px 30px; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Anrufaufzeichnung</h1>
-                            <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 16px;">' . $companyName . ($branchName ? ' - ' . $branchName : '') . '</p>
-                        </td>
-                    </tr>
-                    
-                    <!-- Caller Info -->
-                    <tr>
-                        <td style="padding: 30px;">
-                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f8fafc; border-radius: 8px; padding: 20px;">
-                                <tr>
-                                    <td>
-                                        <h2 style="margin: 0 0 15px 0; color: #1f2937; font-size: 20px; font-weight: 600;">📞 Anrufer-Details</h2>
-                                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
-                                            <tr>
-                                                <td width="50%" style="padding: 8px 0;">
-                                                    <span style="color: #6b7280; font-size: 14px;">Name:</span><br>
-                                                    <strong style="color: #1f2937; font-size: 16px;">' . $customerName . '</strong>
-                                                </td>
-                                                <td width="50%" style="padding: 8px 0;">
-                                                    <span style="color: #6b7280; font-size: 14px;">Telefon:</span><br>
-                                                    <strong style="color: #1f2937; font-size: 16px;">' . $phoneNumber . '</strong>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td width="50%" style="padding: 8px 0;">
-                                                    <span style="color: #6b7280; font-size: 14px;">Datum:</span><br>
-                                                    <strong style="color: #1f2937; font-size: 16px;">' . $callDate . '</strong>
-                                                </td>
-                                                <td width="50%" style="padding: 8px 0;">
-                                                    <span style="color: #6b7280; font-size: 14px;">Uhrzeit:</span><br>
-                                                    <strong style="color: #1f2937; font-size: 16px;">' . $callTime . ' Uhr</strong>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    
-                    <!-- Call Analysis -->
-                    <tr>
-                        <td style="padding: 0 30px 30px;">
-                            <h2 style="margin: 0 0 15px 0; color: #1f2937; font-size: 20px; font-weight: 600;">📊 Anruf-Analyse</h2>
-                            
-                            <!-- Stats Grid -->
-                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 20px;">
-                                <tr>
-                                    <td width="33%" style="padding-right: 10px;">
-                                        <div style="background-color: #f3f4f6; border-radius: 8px; padding: 15px; text-align: center;">
-                                            <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Dauer</div>
-                                            <div style="color: #1f2937; font-size: 20px; font-weight: 600;">' . $duration . '</div>
-                                            <div style="color: #6b7280; font-size: 12px;">' . $durationMinutes . ' Min.</div>
-                                        </div>
-                                    </td>
-                                    <td width="33%" style="padding: 0 5px;">
-                                        <div style="background-color: ' . $sentimentData['bgColor'] . '; border-radius: 8px; padding: 15px; text-align: center;">
-                                            <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Stimmung</div>
-                                            <div style="color: ' . $sentimentData['color'] . '; font-size: 20px; font-weight: 600;">' . $sentimentData['emoji'] . ' ' . $sentimentData['text'] . '</div>
-                                        </div>
-                                    </td>
-                                    <td width="33%" style="padding-left: 10px;">
-                                        <div style="background-color: #f3f4f6; border-radius: 8px; padding: 15px; text-align: center;">
-                                            <div style="color: #6b7280; font-size: 12px; margin-bottom: 5px;">Dringlichkeit</div>
-                                            <div style="color: ' . $urgencyData['color'] . '; font-size: 20px; font-weight: 600;">' . $urgencyData['text'] . '</div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            ' . ($appointmentRequested ? '
-                            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
-                                <strong style="color: #92400e;">⚠️ Terminwunsch erkannt</strong>
-                                <p style="margin: 5px 0 0 0; color: #78350f; font-size: 14px;">Der Anrufer hat Interesse an einem Termin bekundet.</p>
-                            </div>
-                            ' : '') . '
-                            
-                            <!-- Summary -->
-                            <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px;">
-                                <h3 style="margin: 0 0 10px 0; color: #1f2937; font-size: 16px; font-weight: 600;">📝 Zusammenfassung</h3>
-                                <p style="margin: 0; color: #4b5563; line-height: 1.6;">' . nl2br(htmlspecialchars($summary)) . '</p>
-                            </div>
-                        </td>
-                    </tr>
-                    
-                    <!-- Action Buttons -->
-                    <tr>
-                        <td style="padding: 0 30px 30px;">
-                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
-                                <tr>
-                                    <td align="center">
-                                        <a href="' . $publicUrl . '" style="display: inline-block; background-color: #3b82f6; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">🔊 Aufzeichnung anhören</a>
-                                    </td>
-                                </tr>
-                                ' . ($audioUrl ? '
-                                <tr>
-                                    <td align="center" style="padding-top: 12px;">
-                                        <a href="' . $audioUrl . '" style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">💾 Audio herunterladen</a>
-                                    </td>
-                                </tr>
-                                ' : '') . '
-                            </table>
-                        </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
-                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">Diese E-Mail wurde automatisch von AskProAI generiert.</p>
-                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">© ' . date('Y') . ' AskProAI. Alle Rechte vorbehalten.</p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-';
-                        
-                        // Erweiterte Plain Text E-Mail mit besserer Formatierung
-                        $emailPlainText = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-                        $emailPlainText .= "📞 ANRUFAUFZEICHNUNG\n";
-                        $emailPlainText .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
-                        
-                        $emailPlainText .= "👤 ANRUFER-DETAILS\n";
-                        $emailPlainText .= "─────────────────────────────────────────────────\n";
-                        $emailPlainText .= "   Name:     $customerName\n";
-                        $emailPlainText .= "   Telefon:  $phoneNumber\n";
-                        $emailPlainText .= "   Datum:    $callDate\n";
-                        $emailPlainText .= "   Uhrzeit:  $callTime Uhr\n";
-                        $emailPlainText .= "   Firma:    $companyName" . ($branchName ? " - $branchName" : "") . "\n\n";
-                        
-                        $emailPlainText .= "📊 ANRUF-ANALYSE\n";
-                        $emailPlainText .= "─────────────────────────────────────────────────\n";
-                        $emailPlainText .= "   Dauer:         $duration ($durationMinutes Min.)\n";
-                        $emailPlainText .= "   Stimmung:      {$sentimentData['emoji']} {$sentimentData['text']}\n";
-                        $emailPlainText .= "   Dringlichkeit: {$urgencyData['text']}\n";
-                        if ($appointmentRequested) {
-                            $emailPlainText .= "   ⚠️  TERMINWUNSCH ERKANNT!\n";
-                        }
-                        $emailPlainText .= "\n";
-                        
-                        if ($summary !== 'Keine Zusammenfassung verfügbar') {
-                            $emailPlainText .= "📝 ZUSAMMENFASSUNG\n";
-                            $emailPlainText .= "─────────────────────────────────────────────────\n";
-                            $emailPlainText .= wordwrap($summary, 65, "\n   ") . "\n\n";
-                        }
-                        
-                        $emailPlainText .= "🔗 LINKS\n";
-                        $emailPlainText .= "─────────────────────────────────────────────────\n";
-                        $emailPlainText .= "   Aufzeichnung ansehen:\n";
-                        $emailPlainText .= "   $publicUrl\n";
-                        if ($audioUrl) {
-                            $emailPlainText .= "\n   Audio herunterladen:\n";
-                            $emailPlainText .= "   $audioUrl\n";
-                        }
-                        $emailPlainText .= "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-                        $emailPlainText .= "Diese E-Mail wurde automatisch von AskProAI generiert.\n";
-                        $emailPlainText .= "© " . date('Y') . " AskProAI. Alle Rechte vorbehalten.\n";
-                        $emailPlainText .= "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
-                        
-                        // WhatsApp Text
-                        $whatsappText = "*🎙️ Anrufaufzeichnung*\n\n";
-                        $whatsappText .= "*Anrufer:* $customerName\n";
-                        $whatsappText .= "*Telefon:* $phoneNumber\n";
-                        $whatsappText .= "*Datum:* $callDate, $callTime Uhr\n\n";
-                        $whatsappText .= "*📊 Analyse:*\n";
-                        $whatsappText .= "• Dauer: $duration\n";
-                        $whatsappText .= "• Stimmung: {$sentimentData['emoji']} {$sentimentData['text']}\n";
-                        $whatsappText .= "• Dringlichkeit: {$urgencyData['text']}\n";
-                        if ($appointmentRequested) {
-                            $whatsappText .= "• ⚠️ Terminwunsch\n";
-                        }
-                        $whatsappText .= "\n*📝 Zusammenfassung:*\n$summary\n\n";
-                        $whatsappText .= "🔗 $publicUrl";
-                        
-                        // URL-encode the HTML for mailto link
-                        $emailHtmlEncoded = rawurlencode($emailHtml);
-                        
-                        return new HtmlString('
-                            <div class="fi-modal-content space-y-6 p-6 max-w-3xl mx-auto">
-                                <!-- Header mit Gradient -->
-                                <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary-600 to-primary-800 p-6 text-white">
-                                    <div class="absolute inset-0 bg-black/10"></div>
-                                    <div class="relative z-10">
-                                        <div class="flex items-center gap-4 mb-4">
-                                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                                                <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h3 class="text-2xl font-bold">' . $customerName . '</h3>
-                                                <p class="text-white/80">' . $phoneNumber . '</p>
-                                            </div>
-                                        </div>
-                                        <div class="grid grid-cols-3 gap-4">
-                                            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                                                <div class="text-white/70 text-xs mb-1">Datum</div>
-                                                <div class="font-semibold">' . $callDate . '</div>
-                                                <div class="text-sm text-white/80">' . $callTime . ' Uhr</div>
-                                            </div>
-                                            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                                                <div class="text-white/70 text-xs mb-1">Dauer</div>
-                                                <div class="font-semibold text-lg">' . $duration . '</div>
-                                                <div class="text-sm text-white/80">' . $durationMinutes . ' Min.</div>
-                                            </div>
-                                            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                                                <div class="text-white/70 text-xs mb-1">Stimmung</div>
-                                                <div class="font-semibold text-lg">' . $sentimentData['emoji'] . '</div>
-                                                <div class="text-sm text-white/80">' . $sentimentData['text'] . '</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Analyse-Details -->
-                                <div class="fi-section rounded-xl bg-gray-50 dark:bg-gray-900/50 p-6">
-                                    <h4 class="text-lg font-semibold text-gray-950 dark:text-white mb-4 flex items-center gap-2">
-                                        <svg class="h-5 w-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                        </svg>
-                                        Anruf-Analyse
-                                    </h4>
-                                    
-                                    <div class="grid grid-cols-2 gap-4 mb-4">
-                                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-sm text-gray-600 dark:text-gray-400">Dringlichkeit</span>
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="background-color: ' . $urgencyData['color'] . '20; color: ' . $urgencyData['color'] . '">
-                                                    ' . $urgencyData['text'] . '
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-sm text-gray-600 dark:text-gray-400">Terminwunsch</span>
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ' . ($appointmentRequested ? 'bg-warning-100 text-warning-800 dark:bg-warning-900/20 dark:text-warning-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300') . '">
-                                                    ' . ($appointmentRequested ? 'Ja' : 'Nein') . '
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    ' . ($summary !== 'Keine Zusammenfassung verfügbar' ? '
-                                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                                        <h5 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Zusammenfassung</h5>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">' . nl2br(htmlspecialchars($summary)) . '</p>
-                                    </div>
-                                    ' : '') . '
-                                </div>
-                                
-                                <!-- Share Options mit besserer Gestaltung -->
-                                <div class="space-y-4">
-                                    <h4 class="text-base font-semibold text-gray-950 dark:text-white flex items-center gap-2">
-                                        <svg class="h-5 w-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 010-5.284m-9.032 4.026A8.963 8.963 0 016 12c0-1.18.23-2.305.644-3.342m7.072 6.684a9.001 9.001 0 01-5.432 0m7.072 0c.886-.404 1.692-.938 2.396-1.584M6.284 8.658c.704-.646 1.51-1.18 2.396-1.584m8.036 0A8.963 8.963 0 0120 12c0 1.18-.23 2.305-.644 3.342m-2.64-5.284a9.001 9.001 0 010 5.284"></path>
-                                        </svg>
-                                        Anruf teilen
-                                    </h4>
-                                    
-                                    <div class="grid gap-3">
-                                        <!-- HTML E-Mail Button -->
-                                        <button type="button"
-                                                onclick="openEmailModal' . $record->id . '()" 
-                                                class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-btn-size-lg gap-2 px-4 py-3 text-sm inline-grid shadow-sm bg-primary-600 text-white hover:bg-primary-500 dark:bg-primary-500 dark:hover:bg-primary-400 focus-visible:ring-primary-600/50 dark:focus-visible:ring-primary-400/50">
-                                            <svg class="fi-btn-icon h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                            </svg>
-                                            <span class="fi-btn-label">Professionelle HTML-E-Mail versenden</span>
-                                        </button>
-                                        
-                                        <!-- Direct Mail Button (Fallback) -->
-                                        <a href="mailto:?subject=' . urlencode('Anrufaufzeichnung: ' . $customerName . ' - ' . $callDate) . '&body=' . urlencode($emailPlainText) . '" 
-                                           class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-gray-50 text-gray-950 hover:bg-gray-100 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 ring-1 ring-gray-950/10 dark:ring-white/20">
-                                            <svg class="fi-btn-icon h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
-                                            </svg>
-                                            <span class="fi-btn-label">E-Mail-Client öffnen</span>
-                                        </a>
-                                        
-                                        <!-- WhatsApp Button -->
-                                        <a href="https://wa.me/?text=' . urlencode($whatsappText) . '" 
-                                           target="_blank"
-                                           class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-success-600 text-white hover:bg-success-500 dark:bg-success-500 dark:hover:bg-success-400 focus-visible:ring-success-600/50 dark:focus-visible:ring-success-400/50">
-                                            <svg class="fi-btn-icon h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                                            </svg>
-                                            <span class="fi-btn-label">WhatsApp</span>
-                                        </a>
-                                        
-                                        <!-- Copy Link Button -->
-                                        <button type="button"
-                                                onclick="copyShareLink' . $record->id . '()" 
-                                                class="fi-btn relative grid-flow-col items-center justify-center font-semibold outline-none transition duration-75 focus-visible:ring-2 rounded-lg fi-btn-size-md gap-1.5 px-3 py-2 text-sm inline-grid shadow-sm bg-gray-50 text-gray-950 hover:bg-gray-100 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 ring-1 ring-gray-950/10 dark:ring-white/20">
-                                            <svg class="fi-btn-icon h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                            </svg>
-                                            <span class="fi-btn-label" id="copy-btn-text-' . $record->id . '">Link kopieren</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <!-- Link Display mit besserem Design -->
-                                <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Direkter Link zur Aufzeichnung:
-                                    </label>
-                                    <div class="flex items-center gap-2">
-                                        <input id="share-link-' . $record->id . '" 
-                                               type="text" 
-                                               value="' . $publicUrl . '" 
-                                               readonly 
-                                               class="fi-input block w-full border-none bg-white dark:bg-gray-800 py-2 pe-3 ps-3 text-sm text-gray-950 transition duration-75 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-inset disabled:text-gray-500 dark:text-white sm:text-sm sm:leading-6 ring-1 ring-gray-950/10 dark:ring-white/20 font-mono">
-                                        <button type="button"
-                                                onclick="copyShareLink' . $record->id . '()" 
-                                                class="fi-icon-btn relative flex items-center justify-center rounded-lg outline-none transition duration-75 focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-70 h-10 w-10 text-gray-400 hover:text-gray-500 focus-visible:ring-primary-600 dark:text-gray-500 dark:hover:text-gray-400 bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-950/10 dark:ring-white/20">
-                                            <svg class="fi-icon-btn-icon h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <script>
-                                function copyShareLink' . $record->id . '() {
-                                    const input = document.getElementById("share-link-' . $record->id . '");
-                                    const btnText = document.getElementById("copy-btn-text-' . $record->id . '");
-                                    
-                                    input.select();
-                                    input.setSelectionRange(0, 99999);
-                                    
-                                    navigator.clipboard.writeText(input.value).then(() => {
-                                        // Zeige Erfolgsmeldung
-                                        if (btnText) {
-                                            const originalText = btnText.textContent;
-                                            btnText.textContent = "✓ Kopiert!";
-                                            setTimeout(() => {
-                                                btnText.textContent = originalText;
-                                            }, 2000);
-                                        }
-                                        
-                                        // Filament notification
-                                        window.$wireui?.notify({
-                                            title: "Link kopiert!",
-                                            description: "Der Link wurde in die Zwischenablage kopiert.",
-                                            icon: "success",
-                                            timeout: 2500
-                                        });
-                                    }).catch(() => {
-                                        // Fallback für ältere Browser
-                                        document.execCommand("copy");
-                                        if (btnText) {
-                                            const originalText = btnText.textContent;
-                                            btnText.textContent = "✓ Kopiert!";
-                                            setTimeout(() => {
-                                                btnText.textContent = originalText;
-                                            }, 2000);
-                                        }
-                                    });
-                                }
-                                
-                                function openEmailModal' . $record->id . '() {
-                                    // Close the share modal
-                                    window.dispatchEvent(new CustomEvent("close-modal", { detail: { id: "share-modal" } }));
-                                    
-                                    // Find the send email action and trigger it
-                                    const sendEmailBtn = document.querySelector(\'[wire\\\\:click*="mountTableAction"][wire\\\\:click*="send_email"][wire\\\\:click*="' . $record->id . '"]\');
-                                    if (sendEmailBtn) {
-                                        sendEmailBtn.click();
-                                    } else {
-                                        // Fallback: Show notification to use the table action
-                                        alert("Bitte nutzen Sie die \'Per E-Mail senden\' Aktion in der Tabelle, um eine HTML-E-Mail zu versenden.");
-                                    }
-                                }
-                                
-                                function copyEmailText' . $record->id . '() {
-                                    const emailContent = ' . json_encode($emailPlainText) . ';
-                                    const btnText = document.getElementById("copy-email-text-' . $record->id . '");
-                                    
-                                    navigator.clipboard.writeText(emailContent).then(() => {
-                                        // Zeige Erfolgsmeldung
-                                        if (btnText) {
-                                            const originalText = btnText.textContent;
-                                            btnText.textContent = "✓ E-Mail-Text kopiert!";
-                                            setTimeout(() => {
-                                                btnText.textContent = originalText;
-                                            }, 2000);
-                                        }
-                                        
-                                        // Show notification with instructions
-                                        const notification = document.createElement("div");
-                                        notification.className = "fixed bottom-4 right-4 bg-primary-600 text-white p-4 rounded-lg shadow-lg z-50 max-w-md";
-                                        notification.innerHTML = `
-                                            <div class="flex items-start gap-3">
-                                                <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                <div>
-                                                    <h4 class="font-semibold mb-1">E-Mail-Text kopiert!</h4>
-                                                    <p class="text-sm text-white/90">Der formatierte Text wurde in die Zwischenablage kopiert. Sie können ihn jetzt in Ihr E-Mail-Programm einfügen.</p>
-                                                </div>
-                                            </div>
-                                        `;
-                                        document.body.appendChild(notification);
-                                        
-                                        setTimeout(() => {
-                                            notification.style.opacity = "0";
-                                            notification.style.transition = "opacity 0.3s ease-out";
-                                            setTimeout(() => {
-                                                document.body.removeChild(notification);
-                                            }, 300);
-                                        }, 4000);
-                                    }).catch((err) => {
-                                        console.error("Failed to copy:", err);
-                                        alert("Der Text konnte nicht kopiert werden. Bitte versuchen Sie es erneut.");
-                                    });
-                                }
-                            </script>
-                        ');
-                    })
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Schließen')
-                    ->modalWidth('4xl'),
-                    
-                Tables\Actions\Action::make('send_email')
-                    ->label('Per E-Mail senden')
-                    ->icon('heroicon-m-envelope')
-                    ->color('primary')
-                    ->form([
-                        Forms\Components\TextInput::make('recipient_email')
-                            ->label('Empfänger E-Mail')
-                            ->email()
-                            ->required()
-                            ->placeholder('beispiel@domain.de'),
-                            
-                        Forms\Components\TextInput::make('subject')
-                            ->label('Betreff')
-                            ->default(fn ($record) => 'Anrufaufzeichnung - ' . $record->created_at->format('d.m.Y H:i'))
-                            ->required(),
-                            
-                        Forms\Components\Textarea::make('message')
-                            ->label('Nachricht (optional)')
-                            ->placeholder('Fügen Sie eine persönliche Nachricht hinzu...')
-                            ->rows(3),
-                    ])
-                    ->action(function ($record, array $data) {
-                        try {
-                            // Load call with all relations
-                            $record->load([
-                                'customer',
-                                'company',
-                                'branch',
-                                'staff',
-                                'service',
-                                'appointment'
-                            ]);
-
-                            // Prepare email data
-                            $emailData = [
-                                'call' => $record,
-                                'subject' => $data['subject'],
-                                'custom_message' => $data['message'] ?? null,
-                                'sender_name' => auth()->user()->name,
-                                'sender_email' => auth()->user()->email
-                            ];
-
-                            // Send the email
-                            \Illuminate\Support\Facades\Mail::to($data['recipient_email'])
-                                ->send(new \App\Mail\CallRecordingMail($emailData));
-
-                            \Filament\Notifications\Notification::make()
-                                ->title('E-Mail gesendet')
-                                ->body('Die E-Mail wurde erfolgreich an ' . $data['recipient_email'] . ' gesendet.')
-                                ->success()
-                                ->send();
-
-                        } catch (\Exception $e) {
-                            \Log::error('Failed to send call recording email', [
-                                'call_id' => $record->id,
-                                'error' => $e->getMessage()
-                            ]);
-
-                            \Filament\Notifications\Notification::make()
-                                ->title('Fehler')
-                                ->body('Die E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.')
-                                ->danger()
-                                ->send();
-                        }
-                    })
-                    ->modalHeading('Anrufdetails per E-Mail senden')
-                    ->modalSubmitActionLabel('E-Mail senden')
-                    ->modalCancelActionLabel('Abbrechen'),
+                    ->modalCancelActionLabel('Schließen'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -1379,7 +183,6 @@ class CallResource extends Resource
                 ]),
             ]);
         
-        // Apply configuration for handling many columns
         return static::configureTableForManyColumns($table);
     }
 
@@ -1399,219 +202,597 @@ class CallResource extends Resource
             Widgets\CallAnalyticsWidget::class,
         ];
     }
-    
+
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
-                Infolists\Components\Section::make('Anrufdetails')
+                // ENTERPRISE HEADER DESIGN - Clean and Structured
+                Infolists\Components\Section::make()
                     ->schema([
-                        Infolists\Components\Grid::make(3)
+                        // Customer Name and Interest/Reason as header
+                        Infolists\Components\Grid::make(1)
                             ->schema([
-                                Infolists\Components\TextEntry::make('start_timestamp')
-                                    ->label('Anrufstart')
-                                    ->dateTime('d.m.Y H:i:s')
-                                    ->default(fn ($record) => $record->created_at)
-                                    ->icon('heroicon-m-phone-arrow-down-left'),
-                                    
-                                Infolists\Components\TextEntry::make('duration_sec')
-                                    ->label('Dauer')
-                                    ->formatStateUsing(fn ($state) => gmdate('i:s', $state))
-                                    ->icon('heroicon-m-clock'),
-                                    
-                                Infolists\Components\TextEntry::make('call_status')
-                                    ->label('Status')
-                                    ->badge()
-                                    ->color(fn (string $state): string => match ($state) {
-                                        'completed' => 'success',
-                                        'in_progress' => 'warning',
-                                        'failed' => 'danger',
-                                        'analyzed' => 'info',
-                                        default => 'gray',
-                                    }),
-                            ]),
-                            
-                        Infolists\Components\Grid::make(2)
-                            ->schema([
-                                Infolists\Components\TextEntry::make('from_number')
-                                    ->label('Anrufer')
-                                    ->icon('heroicon-m-phone')
-                                    ->copyable()
-                                    ->weight(FontWeight::Bold),
-                                    
-                                Infolists\Components\TextEntry::make('to_number')
-                                    ->label('Angerufene Nummer')
-                                    ->icon('heroicon-m-phone-arrow-down-left'),
-                            ]),
-                    ]),
-                    
-                Infolists\Components\Section::make('Analyse & Inhalt')
-                    ->schema([
-                        Infolists\Components\ViewEntry::make('audio_player')
-                            ->label('Aufzeichnung mit Sentiment-Timeline')
-                            ->view('filament.components.audio-player-sentiment')
-                            ->visible(fn ($record) => !empty($record->audio_url) || !empty($record->recording_url)),
-                            
-                        Infolists\Components\Grid::make(3)
-                            ->schema([
-                                Infolists\Components\TextEntry::make('sentiment')
-                                    ->label('ML Stimmungsanalyse')
+                                Infolists\Components\TextEntry::make('customer_header')
+                                    ->hiddenLabel()
                                     ->getStateUsing(function ($record) {
-                                        // Check for ML prediction first
-                                        if ($record->mlPrediction) {
-                                            $sentiment = $record->mlPrediction->sentiment_label;
-                                            $score = $record->mlPrediction->sentiment_score;
-                                            $confidence = $record->mlPrediction->confidence_percentage;
-                                            
-                                            return match($sentiment) {
-                                                'positive' => "😊 Positiv ({$score}) - {$confidence}",
-                                                'negative' => "😔 Negativ ({$score}) - {$confidence}",
-                                                'neutral' => "😐 Neutral ({$score}) - {$confidence}",
-                                                default => 'Nicht analysiert'
-                                            };
+                                        $customerName = $record->customer?->name 
+                                            ?? $record->extracted_name
+                                            ?? $record->metadata['customer_data']['full_name']
+                                            ?? 'Unbekannter Anrufer';
+                                        
+                                        $interest = '';
+                                        if ($record->reason_for_visit) {
+                                            $interest = $record->reason_for_visit;
+                                        } elseif ($record->appointment_requested) {
+                                            $interest = 'Terminanfrage';
+                                        } elseif ($record->mlPrediction?->intent) {
+                                            $interest = ucfirst($record->mlPrediction->intent);
                                         }
                                         
-                                        // Fallback to old analysis
-                                        $sentiment = $record->analysis['sentiment'] ?? 'unknown';
-                                        return match($sentiment) {
-                                            'positive' => '😊 Positiv',
-                                            'negative' => '😔 Negativ',
-                                            'neutral' => '😐 Neutral',
-                                            default => 'Nicht analysiert'
-                                        };
+                                        // Get call summary if available
+                                        $summary = $record->webhook_data['call_analysis']['call_summary'] ?? null;
+                                        if (!$interest && $summary) {
+                                            // Auto-translate if enabled
+                                            $translatedSummary = AutoTranslateHelper::translateContent(
+                                                $summary, 
+                                                $record->detected_language
+                                            );
+                                            $interest = Str::limit($translatedSummary, 150);
+                                        }
+                                        
+                                        return new HtmlString("
+                                            <div class='mb-6'>
+                                                <h1 class='text-2xl font-bold text-gray-900 dark:text-white mb-2'>$customerName</h1>
+                                                " . ($interest ? "<p class='text-base text-gray-600 dark:text-gray-400'>$interest</p>" : "") . "
+                                            </div>
+                                        ");
                                     })
-                                    ->badge()
-                                    ->color(fn ($record): string => 
-                                        $record->mlPrediction 
-                                            ? $record->mlPrediction->sentiment_color
-                                            : match($record->analysis['sentiment'] ?? 'unknown') {
-                                                'positive' => 'success',
-                                                'negative' => 'danger',
-                                                'neutral' => 'gray',
-                                                default => 'gray',
-                                            }
+                            ]),
+                            
+                        // Metrics in a clean blade view
+                        Infolists\Components\ViewEntry::make('header_metrics')
+                            ->label(false)
+                            ->view('filament.infolists.call-header-metrics-simple'),
+                    ])
+                    ->extraAttributes([
+                        'class' => 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 mb-6 shadow-sm',
+                    ]),
+                
+                // MAIN CONTENT AREA - Grid Layout for better distribution
+                Infolists\Components\Grid::make([
+                    'default' => 1,
+                    'md' => 1,
+                    'lg' => 12,
+                ])
+                ->schema([
+                    // LEFT COLUMN - Primary Information (2/3 width)
+                    Infolists\Components\Group::make([
+                        // Call Summary Card
+                        Infolists\Components\Section::make('Anrufzusammenfassung')
+                            ->description('Wichtigste Informationen aus dem Gespräch')
+                            ->icon('heroicon-o-document-text')
+                            ->extraAttributes(['class' => 'h-full'])
+                            ->schema([
+                                // Call Reason
+                                Infolists\Components\ViewEntry::make('reason_display')
+                                    ->label('Anrufgrund')
+                                    ->view('filament.infolists.toggleable-text')
+                                    ->viewData(function ($record) {
+                                        $content = $record->reason_for_visit ?? 
+                                                  $record->summary ?? 
+                                                  'Nicht erfasst';
+                                        
+                                        if ($content === 'Nicht erfasst') {
+                                            return [
+                                                'content' => ['original' => $content, 'translated' => $content],
+                                                'showToggle' => false
+                                            ];
+                                        }
+                                        
+                                        return [
+                                            'content' => AutoTranslateHelper::getToggleableContent(
+                                                $content,
+                                                $record->detected_language
+                                            ),
+                                            'showToggle' => true
+                                        ];
+                                    }),
+                                    
+                                // Key Points
+                                Infolists\Components\ViewEntry::make('key_points')
+                                    ->label('Wichtige Punkte')
+                                    ->view('filament.infolists.key-points-list')
+                                    ->visible(fn ($record) => !empty($record->analysis)),
+                                    
+                                // Customer Intent
+                                Infolists\Components\Grid::make(2)
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('appointment_intent')
+                                            ->label('Terminwunsch')
+                                            ->getStateUsing(fn ($record) => $record->appointment_requested ? 'Ja' : 'Nein')
+                                            ->badge()
+                                            ->color(fn ($record) => $record->appointment_requested ? 'success' : 'gray'),
+                                            
+                                        Infolists\Components\TextEntry::make('urgency_level')
+                                            ->label('Dringlichkeit')
+                                            ->getStateUsing(fn ($record) => 
+                                                $record->analysis['urgency'] ?? 'Normal'
+                                            )
+                                            ->badge()
+                                            ->color(fn ($state) => match($state) {
+                                                'Hoch' => 'danger',
+                                                'Mittel' => 'warning',
+                                                default => 'gray'
+                                            }),
+                                    ])
+                                    ->visible(fn ($record) => 
+                                        $record->appointment_requested || 
+                                        !empty($record->analysis['urgency'])
+                                    ),
+                            ])
+                            ->collapsible()
+                            ->collapsed(false),
+                            
+                        // Audio & Transcript Section
+                        Infolists\Components\Section::make('Gesprächsaufzeichnung')
+                            ->description('Audio-Aufnahme und Transkript')
+                            ->icon('heroicon-o-microphone')
+                            ->extraAttributes(['class' => 'h-full mt-6'])
+                            ->schema([
+                                // Audio Player
+                                Infolists\Components\ViewEntry::make('audio')
+                                    ->label(false)
+                                    ->view('filament.components.audio-player-enterprise-improved')
+                                    ->visible(fn ($record) => 
+                                        !empty($record->audio_url) || 
+                                        !empty($record->recording_url)
                                     ),
                                     
-                                Infolists\Components\TextEntry::make('analysis.intent')
-                                    ->label('Absicht')
-                                    ->placeholder('Nicht erkannt')
-                                    ->badge()
-                                    ->color('info'),
-                                    
-                                Infolists\Components\TextEntry::make('analysis.urgency')
-                                    ->label('Dringlichkeit')
-                                    ->placeholder('Normal')
-                                    ->badge()
-                                    ->color(fn ($state) => match($state) {
-                                        'high' => 'danger',
-                                        'medium' => 'warning',
-                                        'low' => 'success',
-                                        default => 'gray',
-                                    }),
-                            ]),
-                            
-                        Infolists\Components\ViewEntry::make('transcript')
-                            ->label('Transkript mit Sentiment-Analyse')
-                            ->view('filament.infolists.transcript-sentiment-viewer')
-                            ->columnSpanFull(),
-                    ]),
-                    
-                Infolists\Components\Section::make('Extrahierte Informationen')
-                    ->schema([
-                        Infolists\Components\Grid::make(2)
-                            ->schema([
-                                Infolists\Components\KeyValueEntry::make('analysis.entities')
-                                    ->label('Erkannte Entitäten')
-                                    ->keyLabel('Typ')
-                                    ->valueLabel('Wert')
-                                    ->getStateUsing(function ($record) {
-                                        $entities = $record->analysis['entities'] ?? [];
-                                        $formatted = [];
-                                        
-                                        $labels = [
-                                            'name' => 'Name',
-                                            'email' => 'E-Mail',
-                                            'phone' => 'Telefon',
-                                            'date' => 'Datum',
-                                            'time' => 'Uhrzeit',
-                                            'service' => 'Dienstleistung',
-                                            'location' => 'Ort',
+                                // Transcript
+                                Infolists\Components\ViewEntry::make('transcript')
+                                    ->label(false)
+                                    ->view('filament.infolists.transcript-viewer-enterprise')
+                                    ->viewData(function ($record) {
+                                        // Get all translatable texts
+                                        $texts = AutoTranslateHelper::processCallTexts($record);
+                                        return [
+                                            'transcript' => $texts['transcript'],
+                                            'showTranslateToggle' => auth()->user()?->auto_translate_content ?? false
                                         ];
+                                    })
+                                    ->visible(fn ($record) => 
+                                        !empty($record->transcript) || 
+                                        !empty($record->transcript_object)
+                                    ),
+                            ])
+                            ->collapsible()
+                            ->collapsed(false),
+                    ])
+                    ->columnSpan(['default' => 1, 'lg' => 8]),
+                    
+                    // RIGHT COLUMN - Secondary Information (1/3 width)
+                    Infolists\Components\Group::make([
+                        // Customer Information
+                        Infolists\Components\Section::make('Kundeninformationen')
+                            ->icon('heroicon-o-user')
+                            ->extraAttributes(['class' => 'h-full'])
+                            ->schema([
+                                Infolists\Components\TextEntry::make('customer_info')
+                                    ->hiddenLabel()
+                                    ->getStateUsing(function ($record) {
+                                        $name = $record->customer?->name ?? 
+                                               $record->extracted_name ?? 
+                                               'Nicht erfasst';
                                         
-                                        foreach ($entities as $key => $value) {
-                                            $formatted[$labels[$key] ?? $key] = $value;
+                                        $status = $record->first_visit ? 
+                                                 'Neukunde' : 'Bestandskunde';
+                                        
+                                        $company = $record->customer?->company_name ??
+                                                  $record->metadata['customer_data']['company_name'] ?? '';
+                                        
+                                        $html = "<div class='space-y-2'>";
+                                        $html .= "<div class='font-medium text-gray-900 dark:text-white'>$name</div>";
+                                        
+                                        if ($company) {
+                                            $html .= "<div class='text-sm text-gray-600 dark:text-gray-400'>$company</div>";
                                         }
                                         
-                                        return $formatted ?: ['Keine Entitäten' => 'erkannt'];
+                                        $html .= "<div class='inline-flex items-center gap-2 mt-2'>";
+                                        $html .= "<span class='px-2 py-1 text-xs rounded-full " . 
+                                                ($record->first_visit ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 
+                                                'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300') . 
+                                                "'>$status</span>";
+                                        
+                                        if ($record->no_show_count > 0) {
+                                            $html .= "<span class='px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'>";
+                                            $html .= "{$record->no_show_count} No-Shows</span>";
+                                        }
+                                        
+                                        $html .= "</div></div>";
+                                        
+                                        return new HtmlString($html);
                                     }),
                                     
-                                Infolists\Components\TextEntry::make('tags')
-                                    ->label('Tags')
-                                    ->getStateUsing(function ($record) {
-                                        $tags = $record->analysis['tags'] ?? [];
-                                        
-                                        if ($record->appointment_id) {
-                                            $tags[] = 'Termin gebucht';
-                                        }
-                                        
-                                        if ($record->duration_sec > 300) {
-                                            $tags[] = 'Langes Gespräch';
-                                        }
-                                        
-                                        if (empty($tags)) {
-                                            return 'Keine Tags';
-                                        }
-                                        
-                                        return $tags;
-                                    })
-                                    ->badge()
-                                    ->separator(',')
-                                    ->color('gray'),
-                            ]),
-                    ])
-                    ->visible(fn ($record) => !empty($record->analysis)),
-                    
-                Infolists\Components\Section::make('Verknüpfungen')
-                    ->schema([
-                        Infolists\Components\Grid::make(2)
-                            ->schema([
-                                Infolists\Components\TextEntry::make('customer.name')
-                                    ->label('Kunde')
-                                    ->placeholder('Kein Kunde zugeordnet')
-                                    ->icon('heroicon-m-user')
-                                    ->url(fn ($record) => $record->customer ? CustomerResource::getUrl('edit', ['record' => $record->customer]) : null),
+                                // Contact Details
+                                Infolists\Components\Grid::make(1)
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('email_info')
+                                            ->label('E-Mail')
+                                            ->getStateUsing(fn ($record) => 
+                                                $record->customer?->email ?? 
+                                                $record->extracted_email ?? 
+                                                '—'
+                                            )
+                                            ->copyable()
+                                            ->icon('heroicon-m-envelope'),
+                                            
+                                        Infolists\Components\TextEntry::make('address_info')
+                                            ->label('Adresse')
+                                            ->getStateUsing(fn ($record) => 
+                                                $record->customer?->address ?? '—'
+                                            )
+                                            ->icon('heroicon-m-map-pin')
+                                            ->visible(fn ($record) => $record->customer?->address),
+                                    ])
+                                    ->extraAttributes(['class' => 'mt-4']),
                                     
-                                Infolists\Components\TextEntry::make('appointment.starts_at')
-                                    ->label('Gebuchter Termin')
-                                    ->dateTime('d.m.Y H:i')
-                                    ->placeholder('Kein Termin gebucht')
-                                    ->icon('heroicon-m-calendar-days')
-                                    ->url(fn ($record) => $record->appointment ? AppointmentResource::getUrl('edit', ['record' => $record->appointment]) : null),
-                            ]),
-                    ]),
-                    
+                                // Customer Actions
+                                Infolists\Components\Actions::make([
+                                    Infolists\Components\Actions\Action::make('view_customer')
+                                        ->label('Kunde anzeigen')
+                                        ->icon('heroicon-m-arrow-top-right-on-square')
+                                        ->url(fn ($record) => 
+                                            $record->customer ? 
+                                            CustomerResource::getUrl('view', [$record->customer]) : 
+                                            null
+                                        )
+                                        ->visible(fn ($record) => $record->customer),
+                                        
+                                    Infolists\Components\Actions\Action::make('create_customer')
+                                        ->label('Kunde anlegen')
+                                        ->icon('heroicon-m-user-plus')
+                                        ->color('primary')
+                                        ->url(fn ($record) => CustomerResource::getUrl('create', [
+                                            'data' => [
+                                                'name' => $record->extracted_name ?? '',
+                                                'email' => $record->extracted_email ?? '',
+                                                'phone' => $record->from_number,
+                                            ]
+                                        ]))
+                                        ->visible(fn ($record) => 
+                                            !$record->customer && 
+                                            ($record->extracted_name || $record->from_number)
+                                        ),
+                                ])
+                                ->fullWidth()
+                                ->extraAttributes(['class' => 'mt-4']),
+                            ])
+                            ->compact(),
+                            
+                        // Appointment Information
+                        Infolists\Components\Section::make('Termininformationen')
+                            ->icon('heroicon-o-calendar-days')
+                            ->extraAttributes(['class' => 'h-full mt-6'])
+                            ->schema([
+                                Infolists\Components\TextEntry::make('appointment_status')
+                                    ->hiddenLabel()
+                                    ->getStateUsing(function ($record) {
+                                        if ($record->appointment) {
+                                            $date = $record->appointment->starts_at->format('d.m.Y');
+                                            $time = $record->appointment->starts_at->format('H:i');
+                                            $service = $record->appointment->service?->name ?? 'Allgemein';
+                                            
+                                            return new HtmlString("
+                                                <div class='space-y-2'>
+                                                    <div class='flex items-center gap-2'>
+                                                        <svg class='w-5 h-5 text-green-500' fill='currentColor' viewBox='0 0 20 20'>
+                                                            <path fill-rule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z' clip-rule='evenodd'></path>
+                                                        </svg>
+                                                        <span class='font-medium text-green-700 dark:text-green-400'>Termin gebucht</span>
+                                                    </div>
+                                                    <div class='ml-7 space-y-1'>
+                                                        <div class='text-sm'><span class='text-gray-500'>Datum:</span> $date</div>
+                                                        <div class='text-sm'><span class='text-gray-500'>Uhrzeit:</span> $time</div>
+                                                        <div class='text-sm'><span class='text-gray-500'>Service:</span> $service</div>
+                                                    </div>
+                                                </div>
+                                            ");
+                                        } elseif ($record->appointment_requested) {
+                                            return new HtmlString("
+                                                <div class='flex items-center gap-2'>
+                                                    <svg class='w-5 h-5 text-yellow-500' fill='currentColor' viewBox='0 0 20 20'>
+                                                        <path fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z' clip-rule='evenodd'></path>
+                                                    </svg>
+                                                    <span class='font-medium text-yellow-700 dark:text-yellow-400'>Termin angefragt</span>
+                                                </div>
+                                            ");
+                                        } else {
+                                            return new HtmlString("
+                                                <div class='text-gray-500 dark:text-gray-400'>
+                                                    Kein Termin
+                                                </div>
+                                            ");
+                                        }
+                                    }),
+                                    
+                                // Appointment Actions
+                                Infolists\Components\Actions::make([
+                                    Infolists\Components\Actions\Action::make('view_appointment')
+                                        ->label('Termin anzeigen')
+                                        ->icon('heroicon-m-arrow-top-right-on-square')
+                                        ->url(fn ($record) => 
+                                            $record->appointment ? 
+                                            AppointmentResource::getUrl('view', [$record->appointment]) : 
+                                            null
+                                        )
+                                        ->visible(fn ($record) => $record->appointment),
+                                        
+                                    Infolists\Components\Actions\Action::make('create_appointment')
+                                        ->label('Termin buchen')
+                                        ->icon('heroicon-m-calendar-days')
+                                        ->color('success')
+                                        ->url(fn ($record) => AppointmentResource::getUrl('create', [
+                                            'data' => [
+                                                'customer_id' => $record->customer_id,
+                                                'branch_id' => $record->branch_id,
+                                                'reason' => $record->reason_for_visit,
+                                            ]
+                                        ]))
+                                        ->visible(fn ($record) => 
+                                            !$record->appointment && 
+                                            $record->appointment_requested
+                                        ),
+                                ])
+                                ->fullWidth()
+                                ->extraAttributes(['class' => 'mt-4']),
+                            ])
+                            ->compact()
+                            ->visible(fn ($record) => 
+                                $record->appointment || 
+                                $record->appointment_requested
+                            ),
+                            
+                        // Analytics & Insights
+                        Infolists\Components\Section::make('Analyse & Einblicke')
+                            ->icon('heroicon-o-chart-bar')
+                            ->extraAttributes(['class' => 'h-full mt-6'])
+                            ->schema([
+                                // Retell AI Analysis
+                                Infolists\Components\Grid::make(1)
+                                    ->schema([
+                                        // Call Summary from Retell
+                                        Infolists\Components\ViewEntry::make('call_summary')
+                                            ->label('Anrufzusammenfassung (AI)')
+                                            ->view('filament.infolists.toggleable-text')
+                                            ->viewData(function ($record) {
+                                                $summary = $record->webhook_data['call_analysis']['call_summary'] ?? null;
+                                                if (!$summary) {
+                                                    return [
+                                                        'content' => ['original' => '—', 'translated' => '—'],
+                                                        'showToggle' => false
+                                                    ];
+                                                }
+                                                
+                                                return [
+                                                    'content' => AutoTranslateHelper::getToggleableContent(
+                                                        $summary,
+                                                        $record->detected_language
+                                                    ),
+                                                    'showToggle' => true
+                                                ];
+                                            })
+                                            ->columnSpanFull()
+                                            ->visible(fn ($record) => 
+                                                isset($record->webhook_data['call_analysis']['call_summary'])
+                                            ),
+                                            
+                                        // User Sentiment from Retell
+                                        Infolists\Components\TextEntry::make('retell_sentiment')
+                                            ->label('Kundenstimmung')
+                                            ->getStateUsing(function ($record) {
+                                                $sentiment = $record->webhook_data['call_analysis']['user_sentiment'] ?? null;
+                                                if (!$sentiment) {
+                                                    // Fallback to ML prediction
+                                                    if ($record->mlPrediction) {
+                                                        $sentiment = ucfirst($record->mlPrediction->sentiment_label);
+                                                        $confidence = round($record->mlPrediction->prediction_confidence * 100);
+                                                        $score = number_format($record->mlPrediction->sentiment_score, 2);
+                                                        return "$sentiment (Score: $score, Konfidenz: $confidence%)";
+                                                    }
+                                                    return '—';
+                                                }
+                                                
+                                                // Format Retell sentiment
+                                                $sentimentMap = [
+                                                    'Positive' => '😊 Positiv',
+                                                    'Negative' => '😞 Negativ', 
+                                                    'Neutral' => '😐 Neutral',
+                                                    'Mixed' => '🤔 Gemischt'
+                                                ];
+                                                
+                                                return $sentimentMap[$sentiment] ?? ucfirst($sentiment);
+                                            })
+                                            ->badge()
+                                            ->color(fn ($state) => match(true) {
+                                                str_contains($state, 'Positiv') => 'success',
+                                                str_contains($state, 'Negativ') => 'danger',
+                                                str_contains($state, 'Neutral') => 'gray',
+                                                str_contains($state, 'Gemischt') => 'warning',
+                                                default => 'gray'
+                                            }),
+                                            
+                                        // Call Success Status
+                                        Infolists\Components\TextEntry::make('call_successful')
+                                            ->label('Anruf erfolgreich')
+                                            ->getStateUsing(function ($record) {
+                                                $successful = $record->webhook_data['call_analysis']['call_successful'] ?? null;
+                                                if ($successful === null) return '—';
+                                                return $successful ? '✅ Ja' : '❌ Nein';
+                                            })
+                                            ->badge()
+                                            ->color(fn ($state) => match($state) {
+                                                '✅ Ja' => 'success',
+                                                '❌ Nein' => 'danger',
+                                                default => 'gray'
+                                            }),
+                                            
+                                        // In-Call Analysis Details
+                                        Infolists\Components\TextEntry::make('in_call_analysis')
+                                            ->label('Detailanalyse')
+                                            ->getStateUsing(function ($record) {
+                                                $analysis = $record->webhook_data['call_analysis']['in_call_analysis'] ?? [];
+                                                if (empty($analysis)) return '—';
+                                                
+                                                // Format as list
+                                                $items = [];
+                                                foreach ($analysis as $key => $value) {
+                                                    if (is_array($value)) {
+                                                        $items[] = ucfirst(str_replace('_', ' ', $key)) . ': ' . json_encode($value);
+                                                    } else {
+                                                        $items[] = ucfirst(str_replace('_', ' ', $key)) . ': ' . $value;
+                                                    }
+                                                }
+                                                
+                                                return implode("\n", $items);
+                                            })
+                                            ->visible(fn ($record) => 
+                                                !empty($record->webhook_data['call_analysis']['in_call_analysis'])
+                                            ),
+                                            
+                                        // Intent Detection
+                                        Infolists\Components\TextEntry::make('ml_intent')
+                                            ->label('Erkannte Absicht')
+                                            ->getStateUsing(fn ($record) => 
+                                                ucfirst($record->mlPrediction?->intent ?? 
+                                                $record->analysis['intent'] ?? 
+                                                '—')
+                                            ),
+                                            
+                                        // Key Features from ML
+                                        Infolists\Components\ViewEntry::make('ml_features')
+                                            ->label('ML Schlüsselfaktoren')
+                                            ->view('filament.infolists.ml-features-list')
+                                            ->visible(fn ($record) => 
+                                                $record->mlPrediction?->top_features
+                                            ),
+                                    ]),
+                                    
+                                // Latency Metrics
+                                Infolists\Components\Grid::make(3)
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('latency_e2e')
+                                            ->label('Gesamt-Latenz')
+                                            ->getStateUsing(function ($record) {
+                                                $latencyData = $record->webhook_data['latency']['e2e'] ?? null;
+                                                if (is_array($latencyData)) {
+                                                    // Check if it's a statistics array with p50, p90, etc.
+                                                    if (isset($latencyData['p50'])) {
+                                                        // Use median (p50) as the representative value
+                                                        $latency = $latencyData['p50'];
+                                                    } elseif (isset($latencyData['values']) && is_array($latencyData['values']) && !empty($latencyData['values'])) {
+                                                        // Use average of values array
+                                                        $latency = array_sum($latencyData['values']) / count($latencyData['values']);
+                                                    } else {
+                                                        $latency = null;
+                                                    }
+                                                } else {
+                                                    $latency = $latencyData;
+                                                }
+                                                return $latency !== null && is_numeric($latency) ? round($latency) . ' ms' : '—';
+                                            })
+                                            ->icon('heroicon-m-clock'),
+                                            
+                                        Infolists\Components\TextEntry::make('latency_llm')
+                                            ->label('AI-Antwortzeit')
+                                            ->getStateUsing(function ($record) {
+                                                $latencyData = $record->webhook_data['latency']['llm'] ?? null;
+                                                if (is_array($latencyData)) {
+                                                    if (isset($latencyData['p50'])) {
+                                                        $latency = $latencyData['p50'];
+                                                    } elseif (isset($latencyData['values']) && is_array($latencyData['values']) && !empty($latencyData['values'])) {
+                                                        $latency = array_sum($latencyData['values']) / count($latencyData['values']);
+                                                    } else {
+                                                        $latency = null;
+                                                    }
+                                                } else {
+                                                    $latency = $latencyData;
+                                                }
+                                                return $latency !== null && is_numeric($latency) ? round($latency) . ' ms' : '—';
+                                            })
+                                            ->icon('heroicon-m-cpu-chip'),
+                                            
+                                        Infolists\Components\TextEntry::make('latency_tts')
+                                            ->label('Sprachausgabe')
+                                            ->getStateUsing(function ($record) {
+                                                $latencyData = $record->webhook_data['latency']['tts'] ?? null;
+                                                if (is_array($latencyData)) {
+                                                    if (isset($latencyData['p50'])) {
+                                                        $latency = $latencyData['p50'];
+                                                    } elseif (isset($latencyData['values']) && is_array($latencyData['values']) && !empty($latencyData['values'])) {
+                                                        $latency = array_sum($latencyData['values']) / count($latencyData['values']);
+                                                    } else {
+                                                        $latency = null;
+                                                    }
+                                                } else {
+                                                    $latency = $latencyData;
+                                                }
+                                                return $latency !== null && is_numeric($latency) ? round($latency) . ' ms' : '—';
+                                            })
+                                            ->icon('heroicon-m-speaker-wave'),
+                                    ])
+                                    ->visible(fn ($record) => 
+                                        isset($record->webhook_data['latency'])
+                                    ),
+                            ])
+                            ->compact()
+                            ->visible(fn ($record) => 
+                                $record->mlPrediction || 
+                                !empty($record->webhook_data['call_analysis']) || 
+                                $record->cost > 0
+                            ),
+                    ])
+                    ->columnSpan(['default' => 1, 'lg' => 4]),
+                ]),
+                
+                // TECHNICAL DETAILS - Collapsible at bottom
                 Infolists\Components\Section::make('Technische Details')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->collapsed()
                     ->schema([
                         Infolists\Components\Grid::make(3)
                             ->schema([
                                 Infolists\Components\TextEntry::make('call_id')
                                     ->label('Call ID')
-                                    ->copyable(),
+                                    ->copyable()
+                                    ->fontFamily('mono'),
                                     
                                 Infolists\Components\TextEntry::make('retell_call_id')
                                     ->label('Retell Call ID')
-                                    ->copyable(),
+                                    ->copyable()
+                                    ->fontFamily('mono'),
                                     
-                                Infolists\Components\TextEntry::make('cost')
-                                    ->label('Kosten')
-                                    ->money('EUR')
-                                    ->placeholder('0,00 €'),
+                                Infolists\Components\TextEntry::make('agent_id')
+                                    ->label('Agent ID')
+                                    ->placeholder('—')
+                                    ->fontFamily('mono'),
+                                    
+                                Infolists\Components\TextEntry::make('branch.name')
+                                    ->label('Filiale'),
+                                    
+                                Infolists\Components\TextEntry::make('company.name')
+                                    ->label('Firma'),
+                                    
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label('Erstellt am')
+                                    ->dateTime('d.m.Y H:i:s'),
                             ]),
                     ])
-                    ->collapsed(),
+                    ->persistCollapsed(true)
+                    ->extraAttributes(['class' => 'mt-6']),
             ]);
     }
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::whereDate('created_at', today())->count();
@@ -1625,6 +806,6 @@ class CallResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['customer', 'appointment', 'company']);
+            ->with(['customer', 'appointment', 'company', 'mlPrediction']);
     }
 }

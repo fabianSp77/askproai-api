@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
+use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use App\Models\Scopes\TenantScope;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class Invoice extends Model
 {
@@ -17,99 +14,48 @@ class Invoice extends Model
 
     protected $fillable = [
         'company_id',
-        'branch_id',
-        'stripe_invoice_id',
-        'invoice_number',
-        'status',
-        'creation_mode',
-        'subtotal',
-        'tax_amount',
-        'total',
-        'currency',
+        'number',
         'invoice_date',
         'due_date',
-        'paid_date',
-        'payment_method',
-        'payment_terms',
-        'stripe_payment_intent_id',
-        'pdf_url',
+        'subtotal',
+        'tax_rate',
+        'tax_amount',
+        'total',
+        'status',
+        'currency',
+        'stripe_invoice_id',
+        'sent_at',
+        'paid_at',
         'metadata',
-        'notes',
-        'billing_reason',
-        'auto_advance',
-        // Tax compliance fields
-        'tax_configuration',
-        'is_reverse_charge',
-        'customer_vat_id',
-        'invoice_type',
-        'original_invoice_id',
-        'finalized_at',
-        'tax_note',
-        'is_tax_exempt',
-        // Period fields
-        'period_start',
-        'period_end',
+        'dunning_status',
     ];
 
     protected $casts = [
-        'metadata' => 'array',
-        'tax_configuration' => 'array',
         'invoice_date' => 'date',
         'due_date' => 'date',
-        'paid_date' => 'date',
-        'period_start' => 'date',
-        'period_end' => 'date',
-        'finalized_at' => 'datetime',
-        'auto_advance' => 'boolean',
-        'is_reverse_charge' => 'boolean',
-        'is_tax_exempt' => 'boolean',
+        'sent_at' => 'datetime',
+        'paid_at' => 'datetime',
         'subtotal' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total' => 'decimal:2',
+        'metadata' => 'array',
     ];
 
-    // Invoice statuses
-    const STATUS_DRAFT = 'draft';
-    const STATUS_OPEN = 'open';
-    const STATUS_PAID = 'paid';
-    const STATUS_VOID = 'void';
-    const STATUS_UNCOLLECTIBLE = 'uncollectible';
-
-    // Billing reasons
-    const REASON_SUBSCRIPTION_CYCLE = 'subscription_cycle';
-    const REASON_MANUAL = 'manual';
-    const REASON_SUBSCRIPTION_UPDATE = 'subscription_update';
-
-    protected static function booted()
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
     {
         static::addGlobalScope(new TenantScope);
-        
-        // Clear related caches when invoice is updated
-        static::saved(function ($invoice) {
-            Cache::forget('usage_invoice_ids');
-            Cache::forget("invoice_usage_check_{$invoice->id}");
-        });
-        
-        static::deleted(function ($invoice) {
-            Cache::forget('usage_invoice_ids');
-            Cache::forget("invoice_usage_check_{$invoice->id}");
-        });
     }
 
     /**
-     * Get the company that owns the invoice.
+     * Get the company.
      */
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
-    }
-
-    /**
-     * Get the branch that owns the invoice.
-     */
-    public function branch(): BelongsTo
-    {
-        return $this->belongsTo(Branch::class);
     }
 
     /**
@@ -121,51 +67,11 @@ class Invoice extends Model
     }
 
     /**
-     * Get the flexible invoice items.
+     * Get the billing periods.
      */
-    public function flexibleItems(): HasMany
+    public function billingPeriods()
     {
-        return $this->hasMany(InvoiceItemFlexible::class);
-    }
-
-    /**
-     * Get the payments for this invoice.
-     */
-    public function payments(): HasMany
-    {
-        return $this->hasMany(Payment::class);
-    }
-
-    /**
-     * Get the billing period associated with this invoice.
-     */
-    public function billingPeriod(): HasOne
-    {
-        return $this->hasOne(BillingPeriod::class);
-    }
-
-    /**
-     * Get usage items only.
-     */
-    public function usageItems(): HasMany
-    {
-        return $this->items()->where('type', 'usage');
-    }
-
-    /**
-     * Get service items only.
-     */
-    public function serviceItems(): HasMany
-    {
-        return $this->items()->where('type', 'service');
-    }
-
-    /**
-     * Check if invoice is paid.
-     */
-    public function isPaid(): bool
-    {
-        return $this->status === self::STATUS_PAID;
+        return $this->hasMany(BillingPeriod::class);
     }
 
     /**
@@ -173,195 +79,30 @@ class Invoice extends Model
      */
     public function isOverdue(): bool
     {
-        return $this->status === self::STATUS_OPEN && 
-               $this->due_date && 
+        return $this->status !== 'paid' && 
+               $this->status !== 'cancelled' && 
                $this->due_date->isPast();
     }
 
     /**
-     * Get days overdue.
+     * Mark invoice as paid.
      */
-    public function getDaysOverdueAttribute(): ?int
+    public function markAsPaid(): void
     {
-        if (!$this->isOverdue()) {
-            return null;
-        }
-
-        return $this->due_date->diffInDays(now());
+        $this->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
     }
 
     /**
-     * Get the paid amount.
+     * Mark invoice as sent.
      */
-    public function getPaidAmountAttribute(): float
+    public function markAsSent(): void
     {
-        return $this->payments()
-            ->where('status', 'succeeded')
-            ->sum('amount');
-    }
-
-    /**
-     * Get the outstanding amount.
-     */
-    public function getOutstandingAmountAttribute(): float
-    {
-        return max(0, $this->total - $this->paid_amount);
-    }
-
-    /**
-     * Generate next invoice number.
-     */
-    public static function generateInvoiceNumber(Company $company): string
-    {
-        try {
-            $prefix = $company->invoice_prefix ?: 'INV';
-            $number = $company->next_invoice_number ?: 1;
-            
-            // Format: PREFIX-YYYY-00001
-            $invoiceNumber = sprintf(
-                '%s-%s-%05d',
-                $prefix,
-                now()->format('Y'),
-                $number
-            );
-            
-            // Increment for next time
-            $company->increment('next_invoice_number');
-            
-            return $invoiceNumber;
-        } catch (\Exception $e) {
-            Log::error('Error generating invoice number', [
-                'company_id' => $company->id,
-                'error' => $e->getMessage()
-            ]);
-            
-            // Fallback
-            return 'INV-' . now()->format('YmdHis');
-        }
-    }
-
-    /**
-     * Sync with Stripe invoice data.
-     */
-    public function syncWithStripe(array $stripeData): void
-    {
-        try {
-            $this->update([
-                'status' => $stripeData['status'] ?? $this->status,
-                'paid_date' => isset($stripeData['status_transitions']['paid_at']) 
-                    ? \Carbon\Carbon::createFromTimestamp($stripeData['status_transitions']['paid_at'])
-                    : null,
-                'pdf_url' => $stripeData['invoice_pdf'] ?? $this->pdf_url,
-                'metadata' => array_merge($this->metadata ?? [], [
-                    'stripe_data' => $stripeData,
-                    'last_sync' => now()->toIso8601String(),
-                ]),
-            ]);
-            
-            Log::info('Invoice synced with Stripe', [
-                'invoice_id' => $this->id,
-                'stripe_invoice_id' => $this->stripe_invoice_id,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error syncing invoice with Stripe', [
-                'invoice_id' => $this->id,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Calculate tax amount based on items.
-     */
-    public function calculateTaxAmount(): float
-    {
-        return $this->items->sum(function ($item) {
-            return $item->amount * ($item->tax_rate / 100);
-        });
-    }
-
-    /**
-     * Scope for open invoices.
-     */
-    public function scopeOpen($query)
-    {
-        return $query->where('status', self::STATUS_OPEN);
-    }
-
-    /**
-     * Scope for paid invoices.
-     */
-    public function scopePaid($query)
-    {
-        return $query->where('status', self::STATUS_PAID);
-    }
-
-    /**
-     * Scope for overdue invoices.
-     */
-    public function scopeOverdue($query)
-    {
-        return $query->open()
-            ->whereNotNull('due_date')
-            ->where('due_date', '<', now());
-    }
-
-    /**
-     * Get status badge color.
-     */
-    public function getStatusColorAttribute(): string
-    {
-        return match($this->status) {
-            self::STATUS_DRAFT => 'gray',
-            self::STATUS_OPEN => 'warning',
-            self::STATUS_PAID => 'success',
-            self::STATUS_VOID => 'danger',
-            self::STATUS_UNCOLLECTIBLE => 'danger',
-            default => 'secondary',
-        };
-    }
-
-    /**
-     * Get formatted status label.
-     */
-    public function getStatusLabelAttribute(): string
-    {
-        return match($this->status) {
-            self::STATUS_DRAFT => 'Entwurf',
-            self::STATUS_OPEN => 'Offen',
-            self::STATUS_PAID => 'Bezahlt',
-            self::STATUS_VOID => 'Storniert',
-            self::STATUS_UNCOLLECTIBLE => 'Uneinbringlich',
-            default => ucfirst($this->status),
-        };
-    }
-
-    /**
-     * Get description for export (DATEV etc.)
-     */
-    public function getDescriptionForExport(): string
-    {
-        $items = $this->items->pluck('description')->filter()->take(3);
-        $description = $items->join(', ');
-        
-        if ($this->items->count() > 3) {
-            $description .= ' ...';
-        }
-        
-        return $description ?: 'Rechnung ' . $this->invoice_number;
-    }
-
-    /**
-     * Get the customer relationship
-     * Note: Currently invoices are created for companies, not individual customers
-     * This method is kept for compatibility but returns null
-     */
-    public function customer()
-    {
-        // In the current implementation, invoices are created for companies
-        // not individual customers. If we need customer-level invoices in the future,
-        // we would need to add a customer_id column to the invoices table
-        // and implement: return $this->belongsTo(Customer::class);
-        return null;
+        $this->update([
+            'status' => 'sent',
+            'sent_at' => now(),
+        ]);
     }
 }

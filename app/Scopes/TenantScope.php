@@ -15,6 +15,11 @@ class TenantScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
     {
+        // Skip for webhooks and API routes (no user context)
+        if (request()->is('api/retell/*') || request()->is('api/webhook*') || request()->is('api/*/webhook*')) {
+            return; // Don't apply tenant filtering for webhooks
+        }
+        
         // Skip for super admins and resellers (only for admin users)
         if (Auth::guard('web')->check()) {
             $user = Auth::guard('web')->user();
@@ -45,8 +50,16 @@ class TenantScope implements Scope
     /**
      * Ermittelt die aktuelle Company ID aus verschiedenen Quellen
      */
-    private function getCurrentCompanyId(): ?int
+    private function getCurrentCompanyId(): ?string
     {
+        // 0. PRIORITY: Check for admin impersonation FIRST
+        if (session()->has('admin_impersonation')) {
+            $adminImpersonation = session('admin_impersonation');
+            if (isset($adminImpersonation['company_id'])) {
+                return $adminImpersonation['company_id'];
+            }
+        }
+        
         // 1. Explizit gesetzter Tenant (z.B. für Background Jobs)
         if (app()->bound('current_company_id')) {
             return app('current_company_id');
@@ -76,7 +89,7 @@ class TenantScope implements Scope
         
         // 4. Aus dem Request Header (für API-Requests)
         if (request()->hasHeader('X-Company-ID')) {
-            return (int) request()->header('X-Company-ID');
+            return request()->header('X-Company-ID');
         }
         
         // 5. Aus der Subdomain (für Multi-Tenant per Subdomain)

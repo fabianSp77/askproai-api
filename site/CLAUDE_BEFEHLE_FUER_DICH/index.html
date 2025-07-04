@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/CLAUDE_BEFEHLE_FUER_DICH/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Claude Befehle für dich - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Claude Befehle f\u00fcr dich";
+        var mkdocs_page_input_path = "CLAUDE_BEFEHLE_FUER_DICH.md";
+        var mkdocs_page_url = "/mkdocs/CLAUDE_BEFEHLE_FUER_DICH/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Claude Befehle für dich</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#inhaltsverzeichnis">📑 Inhaltsverzeichnis</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#claude-self-update">Claude Self-Update</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#neuen-kunden-einrichten">Neuen Kunden einrichten</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_1">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#telefonnummer-testen">Telefonnummer testen</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_2">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#business-kpis-anzeigen">Business KPIs anzeigen</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_3">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#anderungen-vor-deployment-prufen">Änderungen vor Deployment prüfen</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_4">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#beste-losung-finden-mcp">Beste Lösung finden (MCP)</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_5">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#webhooks-uberwachen">Webhooks überwachen</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_6">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#notfall-alles-fixen">Notfall - Alles fixen</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_7">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#system-gesundheit-prufen">System-Gesundheit prüfen</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_8">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#datenfluss-debuggen">Datenfluss debuggen</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_9">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#deployment-vorbereiten">Deployment vorbereiten</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_10">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#datenbank-abfragen">Datenbank-Abfragen</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#befehl-fur-claude_11">Befehl für Claude:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#kombinierte-befehle">Kombinierte Befehle</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#morgen-routine">Morgen-Routine:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#vor-dem-wochenende">Vor dem Wochenende:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#neuer-feature-launch">Neuer Feature Launch:</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#problem-debugging">Problem-Debugging:</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#die-5-wichtigsten-fur-deinen-alltag">Die 5 wichtigsten für deinen Alltag</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#pro-tipps">💡 Pro-Tipps:</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../api/overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../api/endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../api/webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Power User &raquo;</li>
+      <li>Claude Befehle für dich</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="claude-befehle-fur-dich-einfach-kopieren-einfugen">🎯 Claude-Befehle für dich - Einfach kopieren &amp; einfügen!</h1>
+<blockquote>
+<p><strong>So funktioniert's</strong>: Kopiere einfach den Befehl und gib ihn Claude. Er weiß dann genau, was zu tun ist!</p>
+</blockquote>
+<h2 id="inhaltsverzeichnis">📑 Inhaltsverzeichnis</h2>
+<ol>
+<li><a href="#claude-self-update">Claude Self-Update</a></li>
+<li><a href="#neuen-kunden-einrichten">Neuen Kunden einrichten</a></li>
+<li><a href="#telefonnummer-testen">Telefonnummer testen</a></li>
+<li><a href="#business-kpis-anzeigen">Business KPIs anzeigen</a></li>
+<li><a href="#änderungen-vor-deployment-prüfen">Änderungen vor Deployment prüfen</a></li>
+<li><a href="#beste-lösung-finden-mcp">Beste Lösung finden (MCP)</a></li>
+<li><a href="#webhooks-überwachen">Webhooks überwachen</a></li>
+<li><a href="#notfall---alles-fixen">Notfall - Alles fixen</a></li>
+<li><a href="#system-gesundheit-prüfen">System-Gesundheit prüfen</a></li>
+<li><a href="#datenfluss-debuggen">Datenfluss debuggen</a></li>
+<li><a href="#deployment-vorbereiten">Deployment vorbereiten</a></li>
+<li><a href="#datenbank-abfragen">Datenbank-Abfragen</a></li>
+<li><a href="#kombinierte-befehle">Kombinierte Befehle</a></li>
+<li><a href="#die-5-wichtigsten-für-deinen-alltag">Die 5 wichtigsten für deinen Alltag</a></li>
+</ol>
+<hr />
+<h2 id="claude-self-update">Claude Self-Update</h2>
+<h3 id="befehl-fur-claude">Befehl für Claude:</h3>
+<pre><code>Claude, führe einen Self-Update durch: Lies CLAUDE_CONTEXT_SUMMARY.md, BEST_PRACTICES_IMPLEMENTATION.md und alle heute geänderten Dateien. Bestätige dein Verständnis der neuen Features.
+</code></pre>
+<p><strong>Wann nutzen</strong>: Am Anfang einer neuen Session oder nach großen Änderungen</p>
+<hr />
+<h2 id="neuen-kunden-einrichten">Neuen Kunden einrichten</h2>
+<h3 id="befehl-fur-claude_1">Befehl für Claude:</h3>
+<pre><code>Claude, richte einen neuen Kunden ein mit: Firmenname &quot;Zahnarztpraxis Dr. Müller&quot;, Telefon &quot;+49 30 555 1234&quot;, Email &quot;info@zahnarzt-mueller.de&quot;, Filiale &quot;Praxis Berlin-Mitte&quot;
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, nutze ask-setup für: &quot;Friseursalon Beauty Style&quot;, &quot;+49 30 123 4567&quot;, &quot;kontakt@beauty-style.de&quot;, &quot;Hauptsalon&quot;
+</code></pre>
+<hr />
+<h2 id="telefonnummer-testen">Telefonnummer testen</h2>
+<h3 id="befehl-fur-claude_2">Befehl für Claude:</h3>
+<pre><code>Claude, teste warum die Telefonnummer +49 30 555 1234 nicht richtig zugeordnet wird. Zeige mir den kompletten Flow.
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, die Anrufe von +49 30 987 6543 kommen nicht an. Nutze ask-phone zum Debuggen.
+</code></pre>
+<hr />
+<h2 id="business-kpis-anzeigen">Business KPIs anzeigen</h2>
+<h3 id="befehl-fur-claude_3">Befehl für Claude:</h3>
+<pre><code>Claude, zeige mir die KPIs für Company ID 1 in einem übersichtlichen Format. Ich brauche Anrufe, Termine und Conversion Rate.
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, erstelle mir einen Wochenbericht mit allen KPIs für unseren Hauptkunden (Company 1).
+</code></pre>
+<hr />
+<h2 id="anderungen-vor-deployment-prufen">Änderungen vor Deployment prüfen</h2>
+<h3 id="befehl-fur-claude_4">Befehl für Claude:</h3>
+<pre><code>Claude, analysiere die Auswirkungen der letzten Änderungen bevor wir deployen. Gibt es Breaking Changes?
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, wir wollen gleich live gehen. Mache einen ask-impact Check und sage mir ob es sicher ist.
+</code></pre>
+<hr />
+<h2 id="beste-losung-finden-mcp">Beste Lösung finden (MCP)</h2>
+<h3 id="befehl-fur-claude_5">Befehl für Claude:</h3>
+<pre><code>Claude, finde den besten MCP-Server für: &quot;Ich muss alle Termine von heute exportieren und per Email versenden&quot;
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, nutze MCP Discovery für: &quot;Kunde anrufen lassen und automatisch Folgetermin buchen&quot;
+</code></pre>
+<hr />
+<h2 id="webhooks-uberwachen">Webhooks überwachen</h2>
+<h3 id="befehl-fur-claude_6">Befehl für Claude:</h3>
+<pre><code>Claude, überprüfe ob alle Webhooks funktionieren. Zeige mir Failed Webhooks der letzten Stunde.
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, wir bekommen keine Anrufe mehr rein. Checke die Webhook Health!
+</code></pre>
+<hr />
+<h2 id="notfall-alles-fixen">Notfall - Alles fixen</h2>
+<h3 id="befehl-fur-claude_7">Befehl für Claude:</h3>
+<pre><code>Claude, führe den Emergency Fix aus! Die App zeigt nur Fehler.
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, ich bekomme &quot;Access Denied&quot; Fehler. Nutze ask-fix zum Reparieren!
+</code></pre>
+<hr />
+<h2 id="system-gesundheit-prufen">System-Gesundheit prüfen</h2>
+<h3 id="befehl-fur-claude_8">Befehl für Claude:</h3>
+<pre><code>Claude, mache einen kompletten Health Check. Ich will wissen ob alles läuft.
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, bevor ich ins Wochenende gehe: Ist das System gesund? Mache ask-health.
+</code></pre>
+<hr />
+<h2 id="datenfluss-debuggen">Datenfluss debuggen</h2>
+<h3 id="befehl-fur-claude_9">Befehl für Claude:</h3>
+<pre><code>Claude, zeige mir den Datenfluss für Call ID &quot;call_xyz123&quot;. Wo hängt es?
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, der Anruf kam rein aber kein Termin wurde erstellt. Tracke den Flow!
+</code></pre>
+<hr />
+<h2 id="deployment-vorbereiten">Deployment vorbereiten</h2>
+<h3 id="befehl-fur-claude_10">Befehl für Claude:</h3>
+<pre><code>Claude, bereite das Deployment vor. Alle Tests, Impact Analysis und Quality Checks.
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, wir wollen Montag deployen. Ist alles ready? Nutze ask-deploy!
+</code></pre>
+<hr />
+<h2 id="datenbank-abfragen">Datenbank-Abfragen</h2>
+<h3 id="befehl-fur-claude_11">Befehl für Claude:</h3>
+<pre><code>Claude, zeige mir die letzten 50 Anrufe mit Kundennamen und Firma.
+</code></pre>
+<p><strong>Dein konkretes Beispiel</strong>:</p>
+<pre><code>Claude, ich brauche alle Anrufe von heute für den Kunden &quot;Zahnarztpraxis Dr. Müller&quot;.
+</code></pre>
+<hr />
+<h2 id="kombinierte-befehle">Kombinierte Befehle</h2>
+<h3 id="morgen-routine">Morgen-Routine:</h3>
+<pre><code>Claude, guten Morgen! Mache einen Health Check, zeige mir die KPIs von gestern und liste alle Failed Webhooks.
+</code></pre>
+<h3 id="vor-dem-wochenende">Vor dem Wochenende:</h3>
+<pre><code>Claude, Wochenend-Check: System Health, offene Todos, kritische Errors der Woche.
+</code></pre>
+<h3 id="neuer-feature-launch">Neuer Feature Launch:</h3>
+<pre><code>Claude, wir launchen das neue Feature. Mache: Impact Analysis, alle Tests, Documentation Check, dann Deployment Vorbereitung.
+</code></pre>
+<h3 id="problem-debugging">Problem-Debugging:</h3>
+<pre><code>Claude, Kunde beschwert sich dass keine Termine gebucht werden. Debugge: Phone Resolution für +49 30 123456, Webhook Health, Data Flows der letzten Stunde.
+</code></pre>
+<hr />
+<h2 id="die-5-wichtigsten-fur-deinen-alltag">Die 5 wichtigsten für deinen Alltag</h2>
+<ol>
+<li><strong>Bei Problemen</strong>: "Claude, nutze ask-fix - nichts geht mehr!"</li>
+<li><strong>Neuer Kunde</strong>: "Claude, setup für [Firma, Telefon, Email]"</li>
+<li><strong>Morgens</strong>: "Claude, ask-health - läuft alles?"</li>
+<li><strong>Für Reports</strong>: "Claude, KPIs für Company 1 diese Woche"</li>
+<li><strong>Vor Deploy</strong>: "Claude, ask-deploy - können wir live gehen?"</li>
+</ol>
+<hr />
+<h2 id="pro-tipps">💡 Pro-Tipps:</h2>
+<ul>
+<li><strong>Sei spezifisch</strong>: Statt "zeig mir Anrufe" → "zeig mir Failed Calls von heute"</li>
+<li><strong>Nutze IDs</strong>: Wenn du Company ID, Call ID etc. kennst, gib sie mit</li>
+<li><strong>Kombiniere</strong>: Du kannst mehrere Befehle in einer Nachricht geben</li>
+<li><strong>Frage nach</strong>: Wenn du unsicher bist, frag Claude nach dem besten Befehl</li>
+</ul>
+<hr />
+<p><strong>Speicher dir diese Datei!</strong> Dann hast du immer die richtigen Befehle zur Hand. 🚀</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../TOP_10_COMMANDS/" class="btn btn-neutral float-left" title="Top 10 Commands"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../MY_COMMANDS/" class="btn btn-neutral float-right" title="Meine Commands">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../TOP_10_COMMANDS/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../MY_COMMANDS/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

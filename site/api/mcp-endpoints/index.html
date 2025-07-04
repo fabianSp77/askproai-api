@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://api.askproai.de/mkdocs/api/mcp-endpoints/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>MCP API Endpoints - AskProAI Dokumentation</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "MCP API Endpoints";
+        var mkdocs_page_input_path = "api/mcp-endpoints.md";
+        var mkdocs_page_url = "/mkdocs/api/mcp-endpoints/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> AskProAI Dokumentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Start</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Hauptdokumentation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE/">Projekt Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_QUICK_REFERENCE/">Quick Reference</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_CONTEXT_SUMMARY/">Context Summary</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Power User</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TOP_10_COMMANDS/">Top 10 Commands</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CLAUDE_BEFEHLE_FUER_DICH/">Claude Befehle für dich</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../MY_COMMANDS/">Meine Commands</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Best Practices 2025</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../BEST_PRACTICES_IMPLEMENTATION/">Implementation Guide</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEVELOPMENT_PROCESS_2025/">Development Process</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../CLAUDE_DOCUMENTATION_GAPS_ANALYSIS.md">Documentation Gaps</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Schnellstart</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../5-MINUTEN_ONBOARDING_PLAYBOOK/">5-Minuten Onboarding</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Architektur</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/overview/">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/services/">Services</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/system-design/">System Design</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/mcp-architecture/">MCP Architecture</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/database-schema/">Database Schema</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/security/">Security</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../architecture/performance/">Performance</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../overview.md">Übersicht</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../authentication/">Authentication</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../endpoints.md">Endpoints</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../webhooks/">Webhooks</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Features</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/appointment-booking/">Appointment Booking</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/call-management.md">Call Management</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../features/customer-portal.md">Customer Portal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../features/multi-tenancy/">Multi-Tenancy</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../development/setup.md">Setup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/testing.md">Testing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../development/code-standards.md">Code Standards</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Deployment</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="" href="../../deployment/overview.md">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/production.md">Production</a>
+                  </li>
+                  <li class="toctree-l1"><a class="" href="../../deployment/environment-variables.md">Environment Variables</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Betrieb</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../CUSTOMER_SUCCESS_RUNBOOK/">Customer Success</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../EMERGENCY_RESPONSE_PLAYBOOK/">Emergency Response</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../ERROR_PATTERNS/">Error Patterns</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../TROUBLESHOOTING_DECISION_TREE/">Troubleshooting</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../DEPLOYMENT_CHECKLIST/">Deployment Checklist</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Monitoring</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../KPI_DASHBOARD_TEMPLATE/">KPI Dashboard</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../INTEGRATION_HEALTH_MONITOR/">Health Monitor</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../PHONE_TO_APPOINTMENT_FLOW/">Phone to Appointment Flow</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">AskProAI Dokumentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>MCP API Endpoints</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="mcp-api-endpoints">MCP API Endpoints</h1>
+<p>!!! info "MCP Gateway"
+    All MCP operations go through the unified gateway endpoint using JSON-RPC 2.0 protocol.</p>
+<h2 id="gateway-endpoint">🚀 Gateway Endpoint</h2>
+<h3 id="main-gateway">Main Gateway</h3>
+<pre><code>POST /api/mcp/gateway
+Content-Type: application/json
+Authorization: Bearer {token}
+</code></pre>
+<p>All MCP requests follow the JSON-RPC 2.0 specification:</p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;server.method&quot;,
+    &quot;params&quot;: {
+        // Method-specific parameters
+    },
+    &quot;id&quot;: &quot;unique-request-id&quot;
+}
+</code></pre>
+<h3 id="health-check">Health Check</h3>
+<pre><code>GET /api/mcp/health
+</code></pre>
+<p>Returns health status of all MCP servers:</p>
+<pre><code class="language-json">{
+    &quot;gateway&quot;: &quot;healthy&quot;,
+    &quot;servers&quot;: {
+        &quot;retell_config&quot;: {
+            &quot;status&quot;: &quot;healthy&quot;,
+            &quot;response_time_ms&quot;: 45
+        },
+        &quot;retell_custom&quot;: {
+            &quot;status&quot;: &quot;healthy&quot;,
+            &quot;response_time_ms&quot;: 12
+        },
+        &quot;webhook&quot;: {
+            &quot;status&quot;: &quot;healthy&quot;,
+            &quot;response_time_ms&quot;: 23
+        }
+    },
+    &quot;timestamp&quot;: &quot;2025-06-23T14:30:00Z&quot;
+}
+</code></pre>
+<h2 id="retell-configuration-methods">📡 Retell Configuration Methods</h2>
+<h3 id="getwebhook">getWebhook</h3>
+<p>Get current webhook configuration for a company.</p>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;retell_config.getWebhook&quot;,
+    &quot;params&quot;: {
+        &quot;company_id&quot;: 1
+    },
+    &quot;id&quot;: &quot;req_001&quot;
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;agents&quot;: [
+            {
+                &quot;agent_id&quot;: &quot;agent_abc123&quot;,
+                &quot;agent_name&quot;: &quot;Main Reception&quot;,
+                &quot;webhook_url&quot;: &quot;https://api.askproai.de/api/mcp/retell/custom-function&quot;,
+                &quot;last_updated_timestamp&quot;: 1719156000
+            }
+        ],
+        &quot;webhook_url&quot;: &quot;https://api.askproai.de/api/mcp/retell/custom-function&quot;
+    },
+    &quot;id&quot;: &quot;req_001&quot;
+}
+</code></pre>
+<h3 id="updatewebhook">updateWebhook</h3>
+<p>Update webhook configuration for specified agents.</p>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;retell_config.updateWebhook&quot;,
+    &quot;params&quot;: {
+        &quot;company_id&quot;: 1,
+        &quot;webhook_url&quot;: &quot;https://api.askproai.de/api/mcp/retell/custom-function&quot;,
+        &quot;events&quot;: [&quot;call_started&quot;, &quot;call_ended&quot;, &quot;call_analyzed&quot;],
+        &quot;agent_ids&quot;: [&quot;agent_abc123&quot;, &quot;agent_xyz789&quot;]
+    },
+    &quot;id&quot;: &quot;req_002&quot;
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;success&quot;: true,
+        &quot;updated_count&quot;: 2,
+        &quot;details&quot;: [
+            {
+                &quot;agent_id&quot;: &quot;agent_abc123&quot;,
+                &quot;status&quot;: &quot;updated&quot;
+            },
+            {
+                &quot;agent_id&quot;: &quot;agent_xyz789&quot;,
+                &quot;status&quot;: &quot;updated&quot;
+            }
+        ]
+    },
+    &quot;id&quot;: &quot;req_002&quot;
+}
+</code></pre>
+<h3 id="testwebhook">testWebhook</h3>
+<p>Send a test webhook to verify configuration.</p>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;retell_config.testWebhook&quot;,
+    &quot;params&quot;: {
+        &quot;company_id&quot;: 1,
+        &quot;webhook_url&quot;: &quot;https://api.askproai.de/api/mcp/retell/custom-function&quot;,
+        &quot;test_payload&quot;: {
+            &quot;event&quot;: &quot;call_ended&quot;,
+            &quot;call&quot;: {
+                &quot;call_id&quot;: &quot;test_123&quot;,
+                &quot;from_number&quot;: &quot;+491234567890&quot;,
+                &quot;to_number&quot;: &quot;+493083793369&quot;
+            }
+        }
+    },
+    &quot;id&quot;: &quot;req_003&quot;
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;success&quot;: true,
+        &quot;response&quot;: {
+            &quot;status_code&quot;: 200,
+            &quot;body&quot;: {
+                &quot;success&quot;: true,
+                &quot;message&quot;: &quot;Webhook processed&quot;
+            },
+            &quot;headers&quot;: {
+                &quot;content-type&quot;: &quot;application/json&quot;
+            },
+            &quot;duration_ms&quot;: 156
+        }
+    },
+    &quot;id&quot;: &quot;req_003&quot;
+}
+</code></pre>
+<h3 id="deploycustomfunctions">deployCustomFunctions</h3>
+<p>Deploy custom functions to Retell agents.</p>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;retell_config.deployCustomFunctions&quot;,
+    &quot;params&quot;: {
+        &quot;company_id&quot;: 1,
+        &quot;agent_ids&quot;: [&quot;agent_abc123&quot;],
+        &quot;functions&quot;: {
+            &quot;collect_appointment_information&quot;: {
+                &quot;description&quot;: &quot;Collect appointment details&quot;,
+                &quot;parameters&quot;: {
+                    &quot;type&quot;: &quot;object&quot;,
+                    &quot;properties&quot;: {
+                        &quot;name&quot;: {&quot;type&quot;: &quot;string&quot;},
+                        &quot;date&quot;: {&quot;type&quot;: &quot;string&quot;},
+                        &quot;time&quot;: {&quot;type&quot;: &quot;string&quot;},
+                        &quot;service&quot;: {&quot;type&quot;: &quot;string&quot;}
+                    },
+                    &quot;required&quot;: [&quot;name&quot;, &quot;date&quot;, &quot;time&quot;]
+                }
+            }
+        }
+    },
+    &quot;id&quot;: &quot;req_004&quot;
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;deployed&quot;: [
+            {
+                &quot;agent_id&quot;: &quot;agent_abc123&quot;,
+                &quot;success&quot;: true,
+                &quot;functions&quot;: [&quot;collect_appointment_information&quot;]
+            }
+        ]
+    },
+    &quot;id&quot;: &quot;req_004&quot;
+}
+</code></pre>
+<h3 id="getagentprompttemplate">getAgentPromptTemplate</h3>
+<p>Get agent prompt template with company-specific variables.</p>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;retell_config.getAgentPromptTemplate&quot;,
+    &quot;params&quot;: {
+        &quot;company_id&quot;: 1,
+        &quot;branch_id&quot;: 1,
+        &quot;language&quot;: &quot;de&quot;
+    },
+    &quot;id&quot;: &quot;req_005&quot;
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;template&quot;: &quot;Sie sind der KI-Assistent für {{company_name}}...&quot;,
+        &quot;variables&quot;: {
+            &quot;company_name&quot;: &quot;AskProAI Demo&quot;,
+            &quot;branch_name&quot;: &quot;Berlin Hauptfiliale&quot;,
+            &quot;services&quot;: [&quot;Beratung&quot;, &quot;Support&quot;, &quot;Training&quot;],
+            &quot;working_hours&quot;: &quot;Mo-Fr 9:00-18:00&quot;
+        },
+        &quot;rendered&quot;: &quot;Sie sind der KI-Assistent für AskProAI Demo...&quot;
+    },
+    &quot;id&quot;: &quot;req_005&quot;
+}
+</code></pre>
+<h2 id="custom-function-endpoints">📞 Custom Function Endpoints</h2>
+<h3 id="retell-custom-function-handler">Retell Custom Function Handler</h3>
+<pre><code>POST /api/mcp/retell/custom-function
+Content-Type: application/json
+X-Retell-Signature: {signature}
+</code></pre>
+<p>This endpoint handles custom function calls from Retell.ai:</p>
+<p><strong>Request from Retell:</strong></p>
+<pre><code class="language-json">{
+    &quot;function_name&quot;: &quot;collect_appointment_information&quot;,
+    &quot;call_id&quot;: &quot;call_abc123&quot;,
+    &quot;parameters&quot;: {
+        &quot;name&quot;: &quot;John Doe&quot;,
+        &quot;date&quot;: &quot;2025-07-15&quot;,
+        &quot;time&quot;: &quot;14:00&quot;,
+        &quot;service&quot;: &quot;Consultation&quot;
+    }
+}
+</code></pre>
+<p><strong>Response to Retell:</strong></p>
+<pre><code class="language-json">{
+    &quot;success&quot;: true,
+    &quot;message&quot;: &quot;Appointment information collected successfully&quot;,
+    &quot;data&quot;: {
+        &quot;confirmation_number&quot;: &quot;APT-2025-07-15-001&quot;
+    }
+}
+</code></pre>
+<h2 id="appointment-management-methods">🗓️ Appointment Management Methods</h2>
+<h3 id="findappointments">findAppointments</h3>
+<p>Find appointments by phone number.</p>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;appointment_mgmt.findAppointments&quot;,
+    &quot;params&quot;: {
+        &quot;phone&quot;: &quot;+491234567890&quot;,
+        &quot;upcoming_only&quot;: true
+    },
+    &quot;id&quot;: &quot;req_006&quot;
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;appointments&quot;: [
+            {
+                &quot;id&quot;: 12345,
+                &quot;date&quot;: &quot;2025-07-15&quot;,
+                &quot;time&quot;: &quot;14:00&quot;,
+                &quot;service&quot;: &quot;Consultation&quot;,
+                &quot;duration&quot;: 60,
+                &quot;branch&quot;: &quot;Berlin Office&quot;,
+                &quot;staff&quot;: &quot;Dr. Smith&quot;
+            }
+        ],
+        &quot;customer_name&quot;: &quot;John Doe&quot;
+    },
+    &quot;id&quot;: &quot;req_006&quot;
+}
+</code></pre>
+<h3 id="rescheduleappointment">rescheduleAppointment</h3>
+<p>Reschedule an existing appointment.</p>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;appointment_mgmt.rescheduleAppointment&quot;,
+    &quot;params&quot;: {
+        &quot;appointment_id&quot;: 12345,
+        &quot;phone&quot;: &quot;+491234567890&quot;,
+        &quot;new_date&quot;: &quot;2025-07-16&quot;,
+        &quot;new_time&quot;: &quot;15:00&quot;
+    },
+    &quot;id&quot;: &quot;req_007&quot;
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;success&quot;: true,
+        &quot;appointment&quot;: {
+            &quot;id&quot;: 12345,
+            &quot;old_datetime&quot;: &quot;2025-07-15 14:00&quot;,
+            &quot;new_datetime&quot;: &quot;2025-07-16 15:00&quot;,
+            &quot;confirmation_sent&quot;: true
+        }
+    },
+    &quot;id&quot;: &quot;req_007&quot;
+}
+</code></pre>
+<h3 id="cancelappointment">cancelAppointment</h3>
+<p>Cancel an appointment.</p>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;appointment_mgmt.cancelAppointment&quot;,
+    &quot;params&quot;: {
+        &quot;appointment_id&quot;: 12345,
+        &quot;phone&quot;: &quot;+491234567890&quot;,
+        &quot;reason&quot;: &quot;Schedule conflict&quot;
+    },
+    &quot;id&quot;: &quot;req_008&quot;
+}
+</code></pre>
+<p><strong>Response:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;result&quot;: {
+        &quot;success&quot;: true,
+        &quot;message&quot;: &quot;Appointment cancelled successfully&quot;,
+        &quot;refund_applicable&quot;: false
+    },
+    &quot;id&quot;: &quot;req_008&quot;
+}
+</code></pre>
+<h2 id="webhook-processing">🔧 Webhook Processing</h2>
+<h3 id="processretellwebhook">processRetellWebhook</h3>
+<p>Process incoming Retell webhook (internal use).</p>
+<p><strong>Request:</strong></p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;webhook.processRetellWebhook&quot;,
+    &quot;params&quot;: {
+        &quot;event&quot;: &quot;call_ended&quot;,
+        &quot;call&quot;: {
+            &quot;call_id&quot;: &quot;call_123&quot;,
+            &quot;from_number&quot;: &quot;+491234567890&quot;,
+            &quot;to_number&quot;: &quot;+493083793369&quot;,
+            &quot;duration&quot;: 180,
+            &quot;variables&quot;: {
+                &quot;name&quot;: &quot;John Doe&quot;,
+                &quot;appointment_date&quot;: &quot;2025-07-15&quot;,
+                &quot;appointment_time&quot;: &quot;14:00&quot;
+            }
+        }
+    },
+    &quot;id&quot;: &quot;webhook_001&quot;
+}
+</code></pre>
+<h2 id="authentication">🔐 Authentication</h2>
+<p>All MCP gateway requests require authentication:</p>
+<pre><code class="language-bash">curl -X POST https://api.askproai.de/api/mcp/gateway \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_TOKEN&quot; \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;retell_config.getWebhook&quot;,
+    &quot;params&quot;: {&quot;company_id&quot;: 1},
+    &quot;id&quot;: &quot;test_001&quot;
+  }'
+</code></pre>
+<h2 id="error-responses">⚠️ Error Responses</h2>
+<p>MCP follows JSON-RPC 2.0 error codes:</p>
+<pre><code class="language-json">{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;error&quot;: {
+        &quot;code&quot;: -32600,
+        &quot;message&quot;: &quot;Invalid Request&quot;,
+        &quot;data&quot;: {
+            &quot;details&quot;: &quot;Missing required parameter: company_id&quot;
+        }
+    },
+    &quot;id&quot;: &quot;req_001&quot;
+}
+</code></pre>
+<h3 id="standard-error-codes">Standard Error Codes</h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Message</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-32700</td>
+<td>Parse error</td>
+<td>Invalid JSON</td>
+</tr>
+<tr>
+<td>-32600</td>
+<td>Invalid Request</td>
+<td>Invalid request format</td>
+</tr>
+<tr>
+<td>-32601</td>
+<td>Method not found</td>
+<td>Unknown method</td>
+</tr>
+<tr>
+<td>-32602</td>
+<td>Invalid params</td>
+<td>Invalid parameters</td>
+</tr>
+<tr>
+<td>-32603</td>
+<td>Internal error</td>
+<td>Server error</td>
+</tr>
+<tr>
+<td>-32000</td>
+<td>Server error</td>
+<td>Application-specific error</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rate-limiting">📊 Rate Limiting</h2>
+<p>MCP endpoints are rate-limited per company:</p>
+<ul>
+<li><strong>Default</strong>: 100 requests per minute</li>
+<li><strong>Webhook endpoints</strong>: 1000 requests per minute</li>
+<li><strong>Test endpoints</strong>: 10 requests per minute</li>
+</ul>
+<p>Rate limit headers:</p>
+<pre><code>X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1719156000
+</code></pre>
+<h2 id="testing">🧪 Testing</h2>
+<h3 id="using-curl">Using cURL</h3>
+<pre><code class="language-bash"># Test webhook configuration
+curl -X POST https://api.askproai.de/api/mcp/gateway \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;Authorization: Bearer YOUR_TOKEN&quot; \
+  -d '{
+    &quot;jsonrpc&quot;: &quot;2.0&quot;,
+    &quot;method&quot;: &quot;retell_config.testWebhook&quot;,
+    &quot;params&quot;: {
+        &quot;company_id&quot;: 1,
+        &quot;webhook_url&quot;: &quot;https://api.askproai.de/api/mcp/retell/custom-function&quot;
+    },
+    &quot;id&quot;: &quot;test_001&quot;
+  }'
+</code></pre>
+<h3 id="using-postman">Using Postman</h3>
+<ol>
+<li>Set request type to POST</li>
+<li>Set URL to <code>https://api.askproai.de/api/mcp/gateway</code></li>
+<li>Add Authorization header</li>
+<li>Set body to raw JSON</li>
+<li>Send request</li>
+</ol>
+<h3 id="php-example">PHP Example</h3>
+<pre><code class="language-php">$client = new \GuzzleHttp\Client();
+
+$response = $client-&gt;post('https://api.askproai.de/api/mcp/gateway', [
+    'headers' =&gt; [
+        'Authorization' =&gt; 'Bearer ' . $apiToken,
+        'Content-Type' =&gt; 'application/json',
+    ],
+    'json' =&gt; [
+        'jsonrpc' =&gt; '2.0',
+        'method' =&gt; 'retell_config.getWebhook',
+        'params' =&gt; [
+            'company_id' =&gt; 1
+        ],
+        'id' =&gt; uniqid('req_')
+    ]
+]);
+
+$result = json_decode($response-&gt;getBody(), true);
+</code></pre>
+<hr />
+<p>!!! tip "Best Practice"
+    Always include a unique ID in your requests to match responses, especially when making concurrent requests.</p>
+              
+            </div>
+          </div><footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+site_name: AskProAI Dokumentation
+site_url: https://api.askproai.de/docs
+site_description: Komplette Dokumentation für AskProAI - AI Phone Assistant & Appointment Booking
+
+# Dokumentations-Verzeichnis auf Root setzen, da die meisten Dateien dort liegen
+docs_dir: .
+site_dir: public/mkdocs
+
+theme:
+  name: material
+  language: de
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Dunkler Modus
+    - scheme: slate
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Heller Modus
+
+nav:
+  - Start: index.md
+  - Schnellstart:
+    - 5-Minuten Onboarding: 5-MINUTEN_ONBOARDING_PLAYBOOK.md
+    - Quick Reference: CLAUDE_QUICK_REFERENCE.md
+  - Betrieb:
+    - Customer Success: CUSTOMER_SUCCESS_RUNBOOK.md
+    - Emergency Response: EMERGENCY_RESPONSE_PLAYBOOK.md
+    - Error Patterns: ERROR_PATTERNS.md
+  - Entwicklung:
+    - Projekt Übersicht: CLAUDE.md
+    - Deployment: DEPLOYMENT_CHECKLIST.md
+    - Troubleshooting: TROUBLESHOOTING_DECISION_TREE.md
+  - Monitoring:
+    - KPI Dashboard: KPI_DASHBOARD_TEMPLATE.md
+    - Health Monitor: INTEGRATION_HEALTH_MONITOR.md
+  - Architektur:
+    - Datenfluss: PHONE_TO_APPOINTMENT_FLOW.md
+
+plugins:
+  - search:
+      lang: de
+  - mermaid2:
+      arguments:
+        theme: default
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: datetime
+      timezone: Europe/Berlin
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/askproai
+  version:
+    provider: mike
+  analytics:
+    provider: google
+    property: G-XXXXXXXXXX
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - meta
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde

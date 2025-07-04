@@ -113,6 +113,38 @@ return Application::configure(basePath: dirname(__DIR__))
             
             /* 📱 Mobile Detection Middleware */
             'mobile.detector' => \App\Http\Middleware\MobileDetector::class,
+            
+            /* 📊 API Metrics Auth */
+            'api.metrics.auth' => \App\Http\Middleware\ApiMetricsAuth::class,
+            
+            /* 🏢 Multi-tenancy & Context */
+            'tenant.context' => \App\Http\Middleware\EnsureTenantContext::class,
+            'branch.context' => \App\Http\Middleware\BranchContextMiddleware::class,
+            'validate.company.context' => \App\Http\Middleware\ValidateCompanyContext::class,
+            
+            /* 🔐 API Authentication */
+            'api.auth' => \App\Http\Middleware\ApiAuthMiddleware::class,
+            
+            /* ✅ Webhook Signature Verification */
+            'verify.stripe.signature' => \App\Http\Middleware\VerifyStripeSignature::class,
+            'webhook.replay.protection' => \App\Http\Middleware\WebhookReplayProtection::class,
+            
+            /* 🛡️ Additional Security */
+            'input.validation' => \App\Http\Middleware\InputValidationMiddleware::class,
+            'check.cookie.consent' => \App\Http\Middleware\CheckCookieConsent::class,
+            'ip.whitelist' => \App\Http\Middleware\IpWhitelist::class,
+            
+            /* 📈 Monitoring & Performance */
+            'monitoring' => \App\Http\Middleware\MonitoringMiddleware::class,
+            'cache.response' => \App\Http\Middleware\CacheResponse::class,
+            
+            /* 🎯 Application Specific */
+            'dashboard.routes' => \App\Http\Middleware\ResolveDashboardRoutes::class,
+            'validate.retell' => \App\Http\Middleware\ValidateRetellInput::class,
+
+            /* 🏢 Portal Middleware */
+            'portal.auth' => \App\Http\Middleware\PortalAuthenticate::class,
+            'portal.permission' => \App\Http\Middleware\PortalPermission::class,
 
             /* ── Laravel-Standard ─────────────────────────────── */
             'auth'              => \App\Http\Middleware\Authenticate::class,
@@ -126,6 +158,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified'          => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         ]);
     })
+    ->withCommands([
+        __DIR__.'/../app/Console/Commands',
+    ])
+    ->withBindings([
+        \Illuminate\Contracts\Console\Kernel::class => \App\Console\Kernel::class,
+    ])
     ->withExceptions(function (Exceptions $exceptions) {
         // Handle Livewire headers error globally
         $exceptions->render(function (\ErrorException $e, $request) {

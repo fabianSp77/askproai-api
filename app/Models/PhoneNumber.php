@@ -69,6 +69,14 @@ class PhoneNumber extends Model
     }
     
     /**
+     * Get the Retell agent associated with this phone number
+     */
+    public function retellAgent()
+    {
+        return $this->belongsTo(RetellAgent::class, 'retell_agent_id', 'agent_id');
+    }
+    
+    /**
      * Scope for active phone numbers
      */
     public function scopeActive($query)

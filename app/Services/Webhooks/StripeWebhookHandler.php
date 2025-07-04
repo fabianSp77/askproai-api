@@ -9,19 +9,30 @@ use App\Models\Payment;
 use App\Models\Subscription;
 use App\Services\StripeInvoiceService;
 use App\Services\Billing\StripeSubscriptionService;
+use App\Services\Billing\DunningService;
+use App\Services\Billing\BillingAlertService;
 use Carbon\Carbon;
 
 class StripeWebhookHandler extends BaseWebhookHandler
 {
     protected StripeInvoiceService $invoiceService;
     protected StripeSubscriptionService $subscriptionService;
+    protected WebhookEventLogger $eventLogger;
+    protected DunningService $dunningService;
+    protected BillingAlertService $alertService;
     
     public function __construct(
         StripeInvoiceService $invoiceService,
-        StripeSubscriptionService $subscriptionService
+        StripeSubscriptionService $subscriptionService,
+        WebhookEventLogger $eventLogger,
+        DunningService $dunningService,
+        BillingAlertService $alertService
     ) {
         $this->invoiceService = $invoiceService;
         $this->subscriptionService = $subscriptionService;
+        $this->eventLogger = $eventLogger;
+        $this->dunningService = $dunningService;
+        $this->alertService = $alertService;
     }
     
     /**
@@ -32,24 +43,71 @@ class StripeWebhookHandler extends BaseWebhookHandler
     public function getSupportedEvents(): array
     {
         return [
+            // Checkout events
             'checkout.session.completed',
+            'checkout.session.expired',
+            
+            // Customer events
             'customer.created',
             'customer.updated',
             'customer.deleted',
+            
+            // Subscription events
             'customer.subscription.created',
             'customer.subscription.updated',
             'customer.subscription.deleted',
             'customer.subscription.trial_will_end',
+            'customer.subscription.paused',
+            'customer.subscription.resumed',
+            
+            // Invoice events
             'invoice.created',
             'invoice.finalized',
+            'invoice.sent',
             'invoice.paid',
             'invoice.payment_failed',
             'invoice.payment_succeeded',
             'invoice.upcoming',
+            'invoice.marked_uncollectible',
+            'invoice.voided',
+            
+            // Payment events
             'payment_intent.succeeded',
             'payment_intent.payment_failed',
+            'payment_intent.canceled',
+            'payment_intent.processing',
+            'payment_intent.requires_action',
+            
+            // Payment method events
             'payment_method.attached',
-            'payment_method.detached'
+            'payment_method.detached',
+            'payment_method.updated',
+            
+            // Charge events (for one-time payments)
+            'charge.succeeded',
+            'charge.failed',
+            'charge.refunded',
+            'charge.dispute.created',
+            
+            // Payout events (if using Stripe Connect)
+            'payout.created',
+            'payout.paid',
+            'payout.failed',
+            
+            // Price events (for dynamic pricing)
+            'price.created',
+            'price.updated',
+            'price.deleted',
+            
+            // Product events
+            'product.created',
+            'product.updated',
+            'product.deleted',
+            
+            // Usage record events (for metered billing)
+            'invoice.item.created',
+            'invoice.item.updated',
+            'invoice.item.deleted'
         ];
     }
     
@@ -62,6 +120,8 @@ class StripeWebhookHandler extends BaseWebhookHandler
      */
     public function handle(WebhookEvent $webhookEvent, string $correlationId): array
     {
+        $startTime = microtime(true);
+        
         $this->logContext = [
             'provider' => $webhookEvent->provider,
             'event_type' => $webhookEvent->event_type,
@@ -81,23 +141,36 @@ class StripeWebhookHandler extends BaseWebhookHandler
             ];
         }
         
-        return $this->withCorrelationId($correlationId, function () use ($webhookEvent, $correlationId) {
-            // Convert payload to Stripe event object format
-            $stripeEvent = (object) $webhookEvent->payload;
+        try {
+            $result = $this->withCorrelationId($correlationId, function () use ($webhookEvent, $correlationId) {
+                // Convert payload to Stripe event object format
+                $stripeEvent = (object) $webhookEvent->payload;
+                
+                // Process through invoice service
+                $result = $this->invoiceService->processWebhook($stripeEvent);
+                
+                // Route to specific handler for additional processing
+                $method = $this->getHandlerMethod($webhookEvent->event_type);
+                
+                if (method_exists($this, $method)) {
+                    $additionalResult = $this->$method($webhookEvent, $correlationId);
+                    $result = array_merge($result, $additionalResult);
+                }
+                
+                return $result;
+            });
             
-            // Process through invoice service
-            $result = $this->invoiceService->processWebhook($stripeEvent);
-            
-            // Route to specific handler for additional processing
-            $method = $this->getHandlerMethod($webhookEvent->event_type);
-            
-            if (method_exists($this, $method)) {
-                $additionalResult = $this->$method($webhookEvent, $correlationId);
-                $result = array_merge($result, $additionalResult);
-            }
+            // Log successful processing
+            $processingTime = microtime(true) - $startTime;
+            $this->eventLogger->logProcessed($webhookEvent, $result, $processingTime);
             
             return $result;
-        });
+            
+        } catch (\Exception $e) {
+            // Log error
+            $this->eventLogger->logError($webhookEvent, $e);
+            throw $e;
+        }
     }
     
     /**
@@ -259,11 +332,52 @@ class StripeWebhookHandler extends BaseWebhookHandler
                 ])
             ]);
             
-            // TODO: Send payment failure notification
-            $this->logInfo('Invoice payment failed notification would be sent', [
-                'invoice_id' => $localInvoice->id,
-                'company_id' => $localInvoice->company_id
-            ]);
+            // Initiate dunning process
+            try {
+                $dunningProcess = $this->dunningService->handleFailedPayment($webhookEvent);
+                
+                $this->logInfo('Dunning process initiated', [
+                    'invoice_id' => $localInvoice->id,
+                    'company_id' => $localInvoice->company_id,
+                    'dunning_process_id' => $dunningProcess->id ?? null
+                ]);
+            } catch (\Exception $e) {
+                $this->logError('Failed to initiate dunning process', [
+                    'invoice_id' => $localInvoice->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+            
+            // Send payment failed alert
+            try {
+                $company = Company::find($localInvoice->company_id);
+                if ($company) {
+                    $this->alertService->createImmediateAlert($company, 'payment_failed', [
+                        'severity' => 'critical',
+                        'title' => 'Payment Failed',
+                        'message' => sprintf(
+                            'Payment failed for invoice %s (€%.2f). This is attempt %d.',
+                            $localInvoice->number,
+                            $localInvoice->total,
+                            $invoice['attempt_count'] ?? 1
+                        ),
+                        'data' => [
+                            'invoice_id' => $localInvoice->id,
+                            'invoice_number' => $localInvoice->number,
+                            'amount' => $localInvoice->total,
+                            'attempt_count' => $invoice['attempt_count'] ?? 1,
+                            'next_attempt' => $invoice['next_payment_attempt'] 
+                                ? Carbon::createFromTimestamp($invoice['next_payment_attempt'])->toIso8601String()
+                                : null,
+                        ],
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $this->logError('Failed to send payment failed alert', [
+                    'invoice_id' => $localInvoice->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
         }
         
         return [
@@ -670,6 +784,321 @@ class StripeWebhookHandler extends BaseWebhookHandler
             'success' => true,
             'payment_method_id' => $paymentMethod['id'] ?? null,
             'message' => 'Payment method attached'
+        ];
+    }
+    
+    /**
+     * Handle invoice.finalized event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleInvoiceFinalized(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $invoice = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logInfo('Processing invoice finalized', [
+            'invoice_id' => $invoice['id'] ?? null,
+            'subscription_id' => $invoice['subscription'] ?? null,
+            'amount_due' => ($invoice['amount_due'] ?? 0) / 100
+        ]);
+        
+        // Find local invoice
+        $localInvoice = Invoice::where('stripe_invoice_id', $invoice['id'])->first();
+        
+        if (!$localInvoice) {
+            // Try to find related billing period
+            $billingPeriod = null;
+            if (isset($invoice['subscription'])) {
+                $subscription = Subscription::where('stripe_subscription_id', $invoice['subscription'])->first();
+                if ($subscription) {
+                    $billingPeriod = \App\Models\BillingPeriod::where('subscription_id', $subscription->id)
+                        ->where('status', 'processed')
+                        ->whereNull('stripe_invoice_id')
+                        ->orderBy('end_date', 'desc')
+                        ->first();
+                }
+            }
+            
+            if ($billingPeriod) {
+                // Update billing period with invoice ID
+                $billingPeriod->update([
+                    'stripe_invoice_id' => $invoice['id'],
+                    'stripe_invoice_created_at' => now()
+                ]);
+                
+                $this->logInfo('Billing period linked to Stripe invoice', [
+                    'billing_period_id' => $billingPeriod->id,
+                    'stripe_invoice_id' => $invoice['id']
+                ]);
+            }
+        }
+        
+        if ($localInvoice) {
+            $localInvoice->update([
+                'status' => Invoice::STATUS_OPEN,
+                'pdf_url' => $invoice['invoice_pdf'] ?? null,
+                'finalized_at' => Carbon::createFromTimestamp($invoice['finalized_at'] ?? time())
+            ]);
+        }
+        
+        return [
+            'success' => true,
+            'invoice_id' => $localInvoice->id ?? null,
+            'message' => 'Invoice finalized'
+        ];
+    }
+    
+    /**
+     * Handle invoice.sent event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleInvoiceSent(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $invoice = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logInfo('Processing invoice sent', [
+            'invoice_id' => $invoice['id'] ?? null,
+            'customer_email' => $invoice['customer_email'] ?? null
+        ]);
+        
+        // Update local invoice if exists
+        $localInvoice = Invoice::where('stripe_invoice_id', $invoice['id'])->first();
+        
+        if ($localInvoice) {
+            $localInvoice->update([
+                'sent_at' => now(),
+                'metadata' => array_merge($localInvoice->metadata ?? [], [
+                    'stripe_sent_at' => now()->toIso8601String(),
+                    'sent_to_email' => $invoice['customer_email'] ?? null
+                ])
+            ]);
+        }
+        
+        return [
+            'success' => true,
+            'invoice_id' => $localInvoice->id ?? null,
+            'message' => 'Invoice sent notification processed'
+        ];
+    }
+    
+    /**
+     * Handle invoice.voided event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleInvoiceVoided(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $invoice = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logInfo('Processing invoice voided', [
+            'invoice_id' => $invoice['id'] ?? null
+        ]);
+        
+        // Update local invoice
+        $localInvoice = Invoice::where('stripe_invoice_id', $invoice['id'])->first();
+        
+        if ($localInvoice) {
+            $localInvoice->update([
+                'status' => Invoice::STATUS_VOID,
+                'voided_at' => now()
+            ]);
+            
+            // Update related billing period if exists
+            $billingPeriod = \App\Models\BillingPeriod::where('stripe_invoice_id', $invoice['id'])->first();
+            if ($billingPeriod) {
+                $billingPeriod->update([
+                    'is_invoiced' => false,
+                    'stripe_invoice_id' => null,
+                    'stripe_invoice_created_at' => null
+                ]);
+            }
+        }
+        
+        return [
+            'success' => true,
+            'invoice_id' => $localInvoice->id ?? null,
+            'message' => 'Invoice voided'
+        ];
+    }
+    
+    /**
+     * Handle charge.succeeded event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleChargeSucceeded(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $charge = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logInfo('Processing charge succeeded', [
+            'charge_id' => $charge['id'] ?? null,
+            'amount' => ($charge['amount'] ?? 0) / 100,
+            'customer_id' => $charge['customer'] ?? null
+        ]);
+        
+        // Create payment record if not from invoice
+        if (!isset($charge['invoice']) || empty($charge['invoice'])) {
+            $company = Company::where('stripe_customer_id', $charge['customer'])->first();
+            
+            if ($company) {
+                Payment::create([
+                    'company_id' => $company->id,
+                    'invoice_id' => null, // One-time payment
+                    'amount' => $charge['amount'] / 100,
+                    'currency' => strtoupper($charge['currency']),
+                    'payment_method' => $charge['payment_method_details']['type'] ?? 'card',
+                    'stripe_charge_id' => $charge['id'],
+                    'stripe_payment_intent_id' => $charge['payment_intent'] ?? null,
+                    'status' => 'completed',
+                    'paid_at' => Carbon::createFromTimestamp($charge['created']),
+                    'description' => $charge['description'] ?? 'One-time payment',
+                    'metadata' => [
+                        'correlation_id' => $correlationId,
+                        'receipt_url' => $charge['receipt_url'] ?? null
+                    ]
+                ]);
+                
+                $this->logInfo('One-time payment recorded', [
+                    'company_id' => $company->id,
+                    'amount' => $charge['amount'] / 100
+                ]);
+            }
+        }
+        
+        return [
+            'success' => true,
+            'charge_id' => $charge['id'] ?? null,
+            'message' => 'Charge succeeded'
+        ];
+    }
+    
+    /**
+     * Handle charge.failed event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleChargeFailed(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $charge = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logWarning('Processing charge failed', [
+            'charge_id' => $charge['id'] ?? null,
+            'amount' => ($charge['amount'] ?? 0) / 100,
+            'failure_code' => $charge['failure_code'] ?? null,
+            'failure_message' => $charge['failure_message'] ?? null
+        ]);
+        
+        // TODO: Send payment failure notification
+        // TODO: Implement dunning management
+        
+        return [
+            'success' => true,
+            'charge_id' => $charge['id'] ?? null,
+            'message' => 'Charge failed processed'
+        ];
+    }
+    
+    /**
+     * Handle charge.refunded event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleChargeRefunded(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $charge = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logInfo('Processing charge refunded', [
+            'charge_id' => $charge['id'] ?? null,
+            'amount_refunded' => ($charge['amount_refunded'] ?? 0) / 100,
+            'refunded' => $charge['refunded'] ?? false
+        ]);
+        
+        // Find payment by charge ID
+        $payment = Payment::where('stripe_charge_id', $charge['id'])->first();
+        
+        if ($payment) {
+            $payment->update([
+                'status' => $charge['refunded'] ? 'refunded' : 'partially_refunded',
+                'refunded_amount' => $charge['amount_refunded'] / 100,
+                'refunded_at' => now(),
+                'metadata' => array_merge($payment->metadata ?? [], [
+                    'refund_reason' => $charge['refunds']['data'][0]['reason'] ?? 'unknown',
+                    'refunded_via_webhook' => true
+                ])
+            ]);
+            
+            $this->logInfo('Payment refund recorded', [
+                'payment_id' => $payment->id,
+                'refunded_amount' => $charge['amount_refunded'] / 100
+            ]);
+        }
+        
+        return [
+            'success' => true,
+            'charge_id' => $charge['id'] ?? null,
+            'payment_id' => $payment->id ?? null,
+            'message' => 'Charge refunded'
+        ];
+    }
+    
+    /**
+     * Handle invoice.marked_uncollectible event
+     *
+     * @param WebhookEvent $webhookEvent
+     * @param string $correlationId
+     * @return array
+     */
+    protected function handleInvoiceMarkedUncollectible(WebhookEvent $webhookEvent, string $correlationId): array
+    {
+        $invoice = $webhookEvent->payload['data']['object'] ?? [];
+        
+        $this->logWarning('Processing invoice marked uncollectible', [
+            'invoice_id' => $invoice['id'] ?? null,
+            'amount_due' => ($invoice['amount_due'] ?? 0) / 100
+        ]);
+        
+        // Update local invoice
+        $localInvoice = Invoice::where('stripe_invoice_id', $invoice['id'])->first();
+        
+        if ($localInvoice) {
+            $localInvoice->update([
+                'status' => 'uncollectible',
+                'metadata' => array_merge($localInvoice->metadata ?? [], [
+                    'marked_uncollectible_at' => now()->toIso8601String(),
+                    'final_attempt_count' => $invoice['attempt_count'] ?? 0
+                ])
+            ]);
+            
+            // Update company subscription status if needed
+            if ($localInvoice->company) {
+                $subscription = $localInvoice->company->activeSubscription();
+                if ($subscription) {
+                    // TODO: Implement suspension logic
+                    $this->logWarning('Company should be suspended for uncollectible invoice', [
+                        'company_id' => $localInvoice->company_id,
+                        'invoice_id' => $localInvoice->id
+                    ]);
+                }
+            }
+        }
+        
+        return [
+            'success' => true,
+            'invoice_id' => $localInvoice->id ?? null,
+            'message' => 'Invoice marked uncollectible'
         ];
     }
 }

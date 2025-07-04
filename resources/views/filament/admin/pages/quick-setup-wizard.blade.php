@@ -34,7 +34,7 @@
         </div>
     </div>
     
-    <form wire:submit.prevent="completeSetup">
+    <form wire:submit.prevent="completeSetup" x-data="phoneInputEnhancer">
         {{ $this->form }}
     </form>
     
@@ -67,6 +67,43 @@
                 timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             }
         }, 1000);
+        
+        // Phone Input Enhancement - Minimal version
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('phoneInputEnhancer', () => ({
+                init() {
+                    // Only log once on initialization
+                    console.log('Phone input enhancer initialized');
+                    
+                    // Watch for Livewire updates
+                    if (window.Livewire) {
+                        Livewire.hook('message.processed', (message, component) => {
+                            // Only process if we're on the phone configuration step
+                            if (this.$el.querySelector('[name*="phone_strategy"]')) {
+                                this.enhancePhoneInputs();
+                            }
+                        });
+                    }
+                },
+                
+                enhancePhoneInputs() {
+                    // Silently enhance phone inputs without logging
+                    const phoneInputs = this.$el.querySelectorAll('input[type="tel"]');
+                    phoneInputs.forEach(input => {
+                        // Only modify if not already enhanced
+                        if (!input.dataset.enhanced) {
+                            input.dataset.enhanced = 'true';
+                            
+                            // Ensure inputs are not disabled unless explicitly set
+                            if (!input.hasAttribute('wire:disabled')) {
+                                input.removeAttribute('disabled');
+                                input.removeAttribute('readonly');
+                            }
+                        }
+                    });
+                }
+            }));
+        });
     </script>
     @endpush
 </x-filament-panels::page>

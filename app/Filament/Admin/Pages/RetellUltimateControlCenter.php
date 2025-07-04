@@ -31,11 +31,11 @@ class RetellUltimateControlCenter extends Page
 
     protected static ?string $navigationIcon = 'heroicon-o-command-line';
 
-    protected static ?string $navigationGroup = 'Einrichtung';
+    protected static ?string $navigationGroup = 'Integrationen';
 
-    protected static ?string $navigationLabel = 'Retell Konfiguration';
+    protected static ?string $navigationLabel = 'Retell.ai Control Center';
 
-    protected static ?int $navigationSort = 50;
+    protected static ?int $navigationSort = 10;
 
     protected static string $view = 'filament.admin.pages.retell-ultimate-control-center';
 

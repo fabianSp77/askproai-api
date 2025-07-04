@@ -32,12 +32,15 @@ class VerifyRetellSignature
         }
         
         // Log incoming webhook attempts for monitoring
+        $correlationId = $request->header('X-Correlation-ID', uniqid('retell_'));
         Log::info('[Retell Webhook] Signature verification started', [
+            'correlation_id' => $correlationId,
             'url' => $request->fullUrl(),
             'has_signature' => $request->hasHeader('X-Retell-Signature'),
             'has_timestamp' => $request->hasHeader('X-Retell-Timestamp'),
             'ip' => $request->ip(),
-            'headers' => $request->headers->all()
+            'content_length' => strlen($request->getContent()),
+            'event_type' => $request->input('event_type', 'unknown')
         ]);
         
         // Verify IP address (optional but recommended)
@@ -191,10 +194,22 @@ class VerifyRetellSignature
             );
         }
         
-        Log::info('[Retell Webhook] Signature verified successfully');
+        // Enhanced success logging
+        $payload = json_decode($body, true);
+        Log::info('[Retell Webhook] Signature verified successfully', [
+            'correlation_id' => $correlationId,
+            'event_type' => $payload['event_type'] ?? 'unknown',
+            'call_id' => $payload['call_id'] ?? $payload['call']['call_id'] ?? null,
+            'verification_method' => $verified ? 'success' : 'failed',
+            'timestamp_used' => $timestamp,
+            'ip' => $request->ip()
+        ]);
         
-        // Mark request as validated
-        $request->merge(['webhook_validated' => true]);
+        // Mark request as validated and add correlation ID
+        $request->merge([
+            'webhook_validated' => true,
+            'correlation_id' => $correlationId
+        ]);
 
         return $next($request);
     }

@@ -26,18 +26,11 @@ class CircuitBreakerService
         ]);
     }
     
-    public function call(string $service, callable $callback, ?string $fallback = null)
+    public function call(string $service, callable $callback, ?callable $fallback = null)
     {
         $breaker = $this->getBreaker($service);
         
-        try {
-            return $breaker->call($callback);
-        } catch (\Exception $e) {
-            if ($fallback && is_callable($fallback)) {
-                return $fallback($e);
-            }
-            throw $e;
-        }
+        return $breaker->call($service, $callback, $fallback);
     }
     
     public function getBreaker(string $service): CircuitBreaker
@@ -45,9 +38,10 @@ class CircuitBreakerService
         $config = $this->getConfig($service);
         
         return new CircuitBreaker(
-            $service,
             $config['failure_threshold'] ?? 5,
-            $config['recovery_timeout'] ?? 60
+            $config['success_threshold'] ?? 2,
+            $config['recovery_timeout'] ?? 60,
+            $config['half_open_requests'] ?? 3
         );
     }
     

@@ -35,7 +35,7 @@ class PerformanceServiceProvider extends ServiceProvider
             Event::listen(RequestHandled::class, function ($event) {
                 if ($event->request->is('admin/*') || $event->request->is('api/*')) {
                     $memory = round(memory_get_peak_usage() / 1024 / 1024, 2);
-                    $time = round(microtime(true) - LARAVEL_START, 2);
+                    $time = round(microtime(true) - (defined('LARAVEL_START') ? LARAVEL_START : $_SERVER['REQUEST_TIME_FLOAT']), 2);
                     
                     // Log if memory usage is high or response is slow
                     if ($memory > 256 || $time > 2) {

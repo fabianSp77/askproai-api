@@ -1,0 +1,47 @@
+site_name: AskProAI Dokumentation
+site_url: https://api.askproai.de/mkdocs
+site_description: Komplette Dokumentation für AskProAI
+
+docs_dir: docs_mkdocs
+site_dir: public/mkdocs
+
+theme: readthedocs
+
+nav:
+  - Start: index.md
+  - Schnellstart:
+    - 5-Minuten Onboarding: 5-MINUTEN_ONBOARDING_PLAYBOOK.md
+    - Quick Reference: CLAUDE_QUICK_REFERENCE.md
+  - Architektur:
+    - Übersicht: architecture/overview.md
+    - Services: architecture/services.md
+    - System Design: architecture/system-design.md
+    - MCP Architecture: architecture/mcp-architecture.md
+    - Database Schema: architecture/database-schema.md
+    - Security: architecture/security.md
+    - Performance: architecture/performance.md
+  - API:
+    - Übersicht: api/overview.md
+    - Authentication: api/authentication.md
+    - Endpoints: api/endpoints.md
+    - Webhooks: api/webhooks.md
+  - Features:
+    - Appointment Booking: features/appointment-booking.md
+    - Call Management: features/call-management.md
+    - Customer Portal: features/customer-portal.md
+    - Multi-Tenancy: features/multi-tenancy.md
+  - Development:
+    - Setup: development/setup.md
+    - Testing: development/testing.md
+    - Code Standards: development/code-standards.md
+  - Deployment:
+    - Overview: deployment/overview.md
+    - Production: deployment/production.md
+    - Environment Variables: deployment/environment-variables.md
+  - Betrieb:
+    - Customer Success: CUSTOMER_SUCCESS_RUNBOOK.md
+    - Emergency Response: EMERGENCY_RESPONSE_PLAYBOOK.md
+    - Error Patterns: ERROR_PATTERNS.md
+  - Monitoring:
+    - KPI Dashboard: KPI_DASHBOARD_TEMPLATE.md
+    - Health Monitor: INTEGRATION_HEALTH_MONITOR.md
