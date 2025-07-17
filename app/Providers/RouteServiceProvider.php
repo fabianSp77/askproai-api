@@ -31,8 +31,21 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
+            // API V2 Routes for React Frontend
+            Route::middleware('api')
+                ->prefix('api')
+                ->group(base_path('routes/api-v2.php'));
+
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+                
+            // Portal API routes
+            Route::middleware(['web', 'portal.session'])
+                ->group(base_path('routes/api-portal.php'));
+                
+            // Business Portal routes
+            Route::middleware(['web', 'portal.session'])
+                ->group(base_path('routes/business-portal.php'));
         });
     }
 

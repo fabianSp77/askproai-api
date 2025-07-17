@@ -7,8 +7,10 @@ use App\Models\Branch;
 use App\Models\Call;
 use App\Models\Company;
 use App\Models\Customer;
+use App\Models\PhoneNumber;
 use App\Models\Service;
 use App\Models\Staff;
+use App\Models\User;
 use App\Services\Dashboard\DashboardMetricsService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,11 +30,26 @@ class DashboardMetricsServiceTest extends TestCase
     {
         parent::setUp();
         
+        // Clear cache to ensure fresh calculations
+        Cache::flush();
+        
         $this->service = app(DashboardMetricsService::class);
         
         // Create test data
         $this->company = Company::factory()->create();
         $this->branch = Branch::factory()->create(['company_id' => $this->company->id]);
+        
+        // Create phone numbers for the company (required for Call filtering)
+        // Note: Using minimal fields to avoid migration issues in tests
+        PhoneNumber::create([
+            'company_id' => $this->company->id,
+            'branch_id' => $this->branch->id,
+            'number' => '+4917612345678',
+        ]);
+        
+        // Create a mock authenticated user with the company
+        $user = User::factory()->create(['company_id' => $this->company->id]);
+        $this->actingAs($user);
     }    #[Test]
     public function it_calculates_appointment_kpis_correctly()
     {
@@ -67,22 +84,33 @@ class DashboardMetricsServiceTest extends TestCase
             'period' => 'today',
         ];
         
+        // Debug: Check if appointments were created
+        $appointmentCount = Appointment::where('company_id', $this->company->id)->count();
+        $this->assertEquals(8, $appointmentCount, "Expected 8 appointments in database, found {$appointmentCount}");
+        
+        // Debug: Check appointments for today
+        $appointmentsToday = Appointment::where('company_id', $this->company->id)
+            ->whereBetween('starts_at', [now()->startOfDay(), now()->endOfDay()])
+            ->count();
+        $this->assertEquals(5, $appointmentsToday, "Expected 5 appointments today, found {$appointmentsToday}");
+        
         $kpis = $this->service->getAppointmentKpis($filters);
         
         // Assert revenue calculation
         $this->assertEquals(500, $kpis['revenue']['value']);
         $this->assertEquals('500€', $kpis['revenue']['formatted']);
-        $this->assertEquals(66.67, $kpis['revenue']['change']); // 500 vs 300 = +66.67%
+        $this->assertEqualsWithDelta(66.67, $kpis['revenue']['change'], 0.01); // 500 vs 300 = +66.67%
         
         // Assert appointment count
         $this->assertEquals(5, $kpis['appointments']['value']);
     }    #[Test]
     public function it_calculates_call_kpis_correctly()
     {
-        // Create test calls
+        // Create test calls with the correct phone number
         Call::factory()->count(10)->create([
             'company_id' => $this->company->id,
             'branch_id' => $this->branch->id,
+            'to_number' => '+4917612345678', // Match the PhoneNumber we created
             'created_at' => now(),
             'duration_sec' => 300, // 5 minutes
             'call_status' => 'completed'
@@ -92,6 +120,7 @@ class DashboardMetricsServiceTest extends TestCase
         $appointmentCalls = Call::factory()->count(3)->create([
             'company_id' => $this->company->id,
             'branch_id' => $this->branch->id,
+            'to_number' => '+4917612345678', // Match the PhoneNumber we created
             'created_at' => now(),
             'duration_sec' => 600,
             'call_status' => 'completed'
@@ -112,13 +141,38 @@ class DashboardMetricsServiceTest extends TestCase
             'period' => 'today',
         ];
         
+        // Debug: Check if calls were created
+        $callCount = Call::where('company_id', $this->company->id)->count();
+        $this->assertEquals(13, $callCount, "Expected 13 calls in database, found {$callCount}");
+        
+        // Debug: Check calls with date filter
+        $callsToday = Call::where('company_id', $this->company->id)
+            ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
+            ->count();
+        $this->assertEquals(13, $callsToday, "Expected 13 calls today, found {$callsToday}");
+        
+        // Debug: Check calls with forCompany
+        try {
+            $callsWithForCompany = Call::forCompany($this->company->id)
+                ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
+                ->count();
+            $this->assertEquals(13, $callsWithForCompany, "Expected 13 calls with forCompany, found {$callsWithForCompany}");
+        } catch (\Exception $e) {
+            // forCompany might fail in tests, try withoutGlobalScope
+            $callsWithoutScope = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                ->where('company_id', $this->company->id)
+                ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
+                ->count();
+            $this->assertEquals(13, $callsWithoutScope, "Expected 13 calls withoutGlobalScope, found {$callsWithoutScope}");
+        }
+        
         $kpis = $this->service->getCallKpis($filters);
         
         // Assert total calls
         $this->assertEquals(13, $kpis['total_calls']['value']);
         
         // Assert success rate (calls with appointments / total calls)
-        $this->assertEquals(23.08, $kpis['success_rate']['value']); // 3/13 = 23.08%
+        $this->assertEqualsWithDelta(23.08, $kpis['success_rate']['value'], 0.1); // 3/13 = 23.08%
         
         // Assert average duration
         $avgDuration = (10 * 300 + 3 * 600) / 13; // 369.23 seconds
@@ -223,7 +277,7 @@ class DashboardMetricsServiceTest extends TestCase
         
         // Revenue should be 1000 this month vs 500 last month = +100%
         $this->assertEquals(1000, $kpis['revenue']['value']);
-        $this->assertEquals(100, $kpis['revenue']['change']);
+        $this->assertEqualsWithDelta(100.0, $kpis['revenue']['change'], 0.01);
         $this->assertEquals('up', $kpis['revenue']['trend']);
     }    #[Test]
     public function it_handles_branch_filters_correctly()

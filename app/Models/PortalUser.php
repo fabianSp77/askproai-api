@@ -29,6 +29,7 @@ class PortalUser extends Authenticatable
         'last_login_ip',
         'settings',
         'notification_preferences',
+        'call_notification_preferences',
         'preferred_language',
         'timezone',
     ];
@@ -44,6 +45,7 @@ class PortalUser extends Authenticatable
         'permissions' => 'array',
         'settings' => 'array',
         'notification_preferences' => 'array',
+        'call_notification_preferences' => 'array',
         'is_active' => 'boolean',
         'two_factor_enforced' => 'boolean',
         'two_factor_confirmed_at' => 'datetime',
@@ -70,7 +72,7 @@ class PortalUser extends Authenticatable
         self::ROLE_OWNER => [
             'calls.view_all', 'calls.edit_all', 'calls.export',
             'appointments.view_all', 'appointments.edit_all',
-            'billing.view', 'billing.pay', 'billing.export',
+            'billing.view', 'billing.pay', 'billing.export', 'billing.manage',
             'analytics.view_all', 'analytics.export',
             'team.manage', 'settings.manage',
             'feedback.view_all', 'feedback.respond'
@@ -78,7 +80,7 @@ class PortalUser extends Authenticatable
         self::ROLE_ADMIN => [
             'calls.view_all', 'calls.edit_all', 'calls.export',
             'appointments.view_all', 'appointments.edit_all',
-            'billing.view', 'billing.pay', 'billing.export',
+            'billing.view', 'billing.pay', 'billing.export', 'billing.manage',
             'analytics.view_all', 'analytics.export',
             'feedback.view_all', 'feedback.respond'
         ],
@@ -113,6 +115,16 @@ class PortalUser extends Authenticatable
     }
 
     /**
+     * Portal permissions relationship
+     */
+    public function portalPermissions()
+    {
+        return $this->belongsToMany(PortalPermission::class, 'portal_user_permissions')
+            ->withPivot(['granted_at', 'granted_by_user_id', 'granted_by_user_type'])
+            ->withTimestamps();
+    }
+
+    /**
      * Check if user has a specific permission
      */
     public function hasPermission(string $permission): bool
@@ -122,9 +134,25 @@ class PortalUser extends Authenticatable
             return true;
         }
 
-        // Check custom permissions first
-        if ($this->permissions && in_array($permission, $this->permissions)) {
+        // Check new portal permissions system first
+        if ($this->portalPermissions()->where('name', $permission)->exists()) {
             return true;
+        }
+
+        // Check custom permissions (legacy)
+        if ($this->permissions) {
+            // Ensure permissions is an array (handle edge cases with corrupted data)
+            $permissions = $this->permissions;
+            
+            // If it's still a string after casting, try to decode it
+            if (is_string($permissions)) {
+                $permissions = json_decode($permissions, true) ?: [];
+            }
+            
+            // Only check if we have a valid array
+            if (is_array($permissions) && in_array($permission, $permissions)) {
+                return true;
+            }
         }
 
         // Check role-based permissions
@@ -286,5 +314,13 @@ class PortalUser extends Authenticatable
     public function initiatedTopups()
     {
         return $this->hasMany(BalanceTopup::class, 'initiated_by');
+    }
+    
+    /**
+     * Check if user can manage billing
+     */
+    public function canManageBilling(): bool
+    {
+        return $this->hasPermission('billing.manage');
     }
 }

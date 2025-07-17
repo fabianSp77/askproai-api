@@ -90,7 +90,7 @@ class ViewCompany extends ViewRecord
                                     
                                 TextEntry::make('staff_count')
                                     ->label('Mitarbeiter')
-                                    ->state(fn ($record) => $record->staff()->where('is_active', true)->count())
+                                    ->state(fn ($record) => $record->staff()->where('active', true)->count())
                                     ->icon('heroicon-o-users'),
                             ]),
                     ]),

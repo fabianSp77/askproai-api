@@ -1,0 +1,199 @@
+/* White-Label Demo CSS */
+/* Kann über CSS Variables schnell angepasst werden */
+
+:root {
+    /* Standard AskProAI Farben */
+    --primary-color: #3B82F6;
+    --secondary-color: #1F2937;
+    --accent-color: #10B981;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --background: #FFFFFF;
+    --surface: #F9FAFB;
+}
+
+/* TechPartner GmbH Branding */
+.company-techpartner {
+    --primary-color: #DC2626;  /* Rot */
+    --secondary-color: #7C3AED; /* Lila */
+    --accent-color: #F59E0B;    /* Orange */
+}
+
+/* Dr. Schmidt Praxis Branding */
+.company-dr-schmidt {
+    --primary-color: #059669;   /* Medizin-Grün */
+    --secondary-color: #0891B2; /* Medizin-Blau */
+    --accent-color: #0EA5E9;    /* Hellblau */
+}
+
+/* Kanzlei Müller Branding */
+.company-kanzlei-mueller {
+    --primary-color: #1E40AF;   /* Dunkelblau */
+    --secondary-color: #4B5563; /* Grau */
+    --accent-color: #EAB308;    /* Gold */
+}
+
+/* Salon Bella Branding */
+.company-salon-bella {
+    --primary-color: #EC4899;   /* Pink */
+    --secondary-color: #9333EA; /* Lila */
+    --accent-color: #F97316;    /* Orange */
+}
+
+/* White-Label Overrides */
+.white-label-enabled {
+    /* Logo Bereich */
+    .fi-sidebar-header {
+        background: var(--primary-color) !important;
+    }
+    
+    /* Navigation */
+    .fi-sidebar-nav {
+        background: var(--surface) !important;
+    }
+    
+    /* Buttons */
+    .fi-btn-primary {
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+    }
+    
+    .fi-btn-primary:hover {
+        background-color: var(--secondary-color) !important;
+        border-color: var(--secondary-color) !important;
+    }
+    
+    /* Links */
+    a {
+        color: var(--primary-color) !important;
+    }
+    
+    /* Headers */
+    .fi-header {
+        background: var(--background) !important;
+        border-bottom: 2px solid var(--primary-color) !important;
+    }
+    
+    /* Cards */
+    .fi-card {
+        border: 1px solid var(--surface) !important;
+    }
+    
+    .fi-card:hover {
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 1px var(--primary-color) !important;
+    }
+    
+    /* Stats Widgets */
+    .fi-stats-card {
+        border-top: 3px solid var(--accent-color) !important;
+    }
+    
+    /* Tables */
+    .fi-table thead {
+        background: var(--surface) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    .fi-table tbody tr:hover {
+        background: rgba(var(--primary-color), 0.05) !important;
+    }
+    
+    /* Badges */
+    .fi-badge {
+        background: var(--accent-color) !important;
+    }
+    
+    /* Custom Logo Container */
+    .white-label-logo {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: white;
+    }
+    
+    .white-label-logo img {
+        max-height: 40px;
+        margin-right: 0.75rem;
+    }
+}
+
+/* Demo Mode Banner */
+.white-label-demo-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    z-index: 9999;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.9; }
+    50% { opacity: 1; }
+    100% { opacity: 0.9; }
+}
+
+/* Quick Theme Switcher for Demo */
+.theme-switcher {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: white;
+    border: 2px solid #E5E7EB;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    z-index: 9998;
+}
+
+.theme-switcher h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.theme-switcher button {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.25rem;
+    background: white;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.theme-switcher button:hover {
+    background: #F3F4F6;
+    transform: translateX(2px);
+}
+
+.theme-switcher button.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .white-label-demo-banner {
+        font-size: 0.75rem;
+        padding: 0.375rem;
+    }
+    
+    .theme-switcher {
+        bottom: 1rem;
+        right: 1rem;
+        padding: 0.75rem;
+    }
+}

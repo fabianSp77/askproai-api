@@ -9,6 +9,13 @@ use App\Services\RateLimiter\ApiRateLimiter;
 use App\Services\Database\ConnectionPoolManager;
 use App\Exceptions\MCPException;
 use App\Contracts\MCPServiceInterface;
+use App\Services\MCP\GitHubMCPServer;
+use App\Services\MCP\ApidogMCPServer;
+use App\Services\MCP\SequentialThinkingMCPServer;
+use App\Services\MCP\DatabaseQueryMCPServer;
+use App\Services\MCP\NotionMCPServer;
+use App\Services\MCP\MemoryBankMCPServer;
+use App\Services\MCP\FigmaMCPServer;
 
 /**
  * MCP Orchestrator - Central routing and coordination for all MCP services
@@ -67,6 +74,13 @@ class MCPOrchestrator
             'queue' => app(QueueMCPServer::class),
             'retell' => app(RetellMCPServer::class),
             'stripe' => app(StripeMCPServer::class),
+            'github' => app(GitHubMCPServer::class),
+            'apidog' => app(ApidogMCPServer::class),
+            'sequential_thinking' => app(SequentialThinkingMCPServer::class),
+            'database_query' => app(DatabaseQueryMCPServer::class),
+            'notion' => app(NotionMCPServer::class),
+            'memory_bank' => app(MemoryBankMCPServer::class),
+            'figma' => app(FigmaMCPServer::class),
         ];
         
         Log::info('MCP Orchestrator initialized', [

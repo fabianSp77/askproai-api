@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Response Check</title>
+</head>
+<body>
+    <h1>API Response Check</h1>
+    <div id="results"></div>
+    
+    <script>
+        const token = localStorage.getItem('admin_token') || '45|WYhFfzNjL2H6T0dTaZVaOJoCPQUAr2ktsH02QqPu34d2e786';
+        const results = document.getElementById('results');
+        
+        async function checkAPIs() {
+            const endpoints = [
+                '/admin-api/auth/user',
+                '/admin-api/dashboard/stats',
+                '/admin-api/dashboard/recent-activity',
+                '/admin-api/calls?per_page=5',
+                '/admin-api/appointments?per_page=5',
+                '/admin-api/customers?per_page=5'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    results.innerHTML += `
+                        <div style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+                            <h3>${endpoint}</h3>
+                            <p>Status: ${response.status} ${response.ok ? '✅' : '❌'}</p>
+                            <pre style="background: white; padding: 10px; overflow: auto;">${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                    
+                } catch (error) {
+                    results.innerHTML += `
+                        <div style="margin: 20px 0; padding: 20px; background: #fee; border-radius: 8px;">
+                            <h3>${endpoint}</h3>
+                            <p>Error: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        checkAPIs();
+    </script>
+</body>
+</html>

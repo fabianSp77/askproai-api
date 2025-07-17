@@ -1,0 +1,50 @@
+/* Minimal Dropdown Fix - Z-Index and Visibility */
+
+/* Ensure dropdown panels are on top */
+.fi-dropdown-panel {
+    z-index: 9999 !important;
+    position: absolute !important;
+}
+
+/* Fix dropdown triggers */
+.fi-dropdown button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure dropdown items are clickable */
+.fi-dropdown-list-item,
+.fi-dropdown-panel button,
+.fi-dropdown-panel a {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Fix select dropdowns */
+.fi-input-wrp select {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Fix date picker dropdowns */
+.fi-fo-date-time-picker button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure dropdowns are not hidden by overflow */
+.fi-page-header,
+.fi-section {
+    overflow: visible !important;
+}
+
+/* Fix for branch selector dropdown specifically */
+.fi-dropdown.branch-selector .fi-dropdown-panel {
+    right: 0 !important;
+    min-width: 200px !important;
+}
+
+/* Fix for filter dropdowns */
+.fi-ta-filters .fi-dropdown-panel {
+    position: fixed !important;
+}

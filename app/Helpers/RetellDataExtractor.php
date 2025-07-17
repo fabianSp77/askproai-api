@@ -51,6 +51,10 @@ class RetellDataExtractor
             $extracted['user_sentiment'] = $analysis['user_sentiment'] ?? null;
             $extracted['call_successful'] = isset($analysis['call_successful']) ? ($analysis['call_successful'] ? 1 : 0) : null;
             
+            // WICHTIG: Call Summary extrahieren
+            $extracted['summary'] = $analysis['call_summary'] ?? null;
+            $extracted['call_summary'] = $analysis['call_summary'] ?? null;
+            
             // Language Detection from Call Analysis
             if (isset($analysis['detected_language'])) {
                 $extracted['detected_language'] = substr($analysis['detected_language'], 0, 5); // Limit to 5 chars (e.g., "de", "en", "de-DE")
@@ -72,6 +76,18 @@ class RetellDataExtractor
                 $extracted['appointment_made'] = isset($custom['appointment_made']) ? ($custom['appointment_made'] ? 1 : 0) : 0;
                 $extracted['appointment_requested'] = isset($custom['appointment_date_time']) && !empty($custom['appointment_date_time']) ? 1 : 0;
                 $extracted['reason_for_visit'] = $custom['reason_for_visit'] ?? null;
+                
+                // Extrahiere detaillierte Termininformationen
+                $extracted['datum_termin'] = $custom['datum_termin'] ?? $custom['appointment_date'] ?? null;
+                $extracted['uhrzeit_termin'] = $custom['uhrzeit_termin'] ?? $custom['appointment_time'] ?? null;
+                $extracted['dienstleistung'] = $custom['dienstleistung'] ?? $custom['service_requested'] ?? null;
+                
+                // Extrahiere Telefonnummer aus custom data falls vorhanden
+                if (isset($custom['phone_number']) && !empty($custom['phone_number'])) {
+                    $extracted['extracted_phone'] = $custom['phone_number'];
+                } elseif (isset($custom['telefonnummer']) && !empty($custom['telefonnummer'])) {
+                    $extracted['extracted_phone'] = $custom['telefonnummer'];
+                }
                 
                 // Insurance info
                 $extracted['versicherungsstatus'] = $custom['insurance_type'] ?? null;

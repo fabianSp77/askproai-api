@@ -86,11 +86,8 @@ class TeamController extends Controller
             return $member;
         });
         
-        return view('portal.team.index', [
-            'teamMembers' => $teamMembers,
-            'currentUser' => $user,
-            'canManage' => session('is_admin_viewing') || ($user && $user->hasPermission('team.manage')),
-        ]);
+        // Load React SPA directly
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
     
     /**
@@ -107,9 +104,8 @@ class TeamController extends Controller
             }
         }
         
-        return view('portal.team.invite', [
-            'availableRoles' => $this->getAvailableRoles($user),
-        ]);
+        // Load React SPA directly
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
     
     /**

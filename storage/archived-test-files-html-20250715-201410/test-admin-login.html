@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login Test</title>
+    <meta name="csrf-token" content="test">
+</head>
+<body>
+    <h1>Admin Login Test</h1>
+    
+    <div>
+        <label>Email: <input type="email" id="email" value="admin@askproai.de"></label><br>
+        <label>Password: <input type="password" id="password" value="admin123"></label><br>
+        <button onclick="testLogin()">Test Login</button>
+    </div>
+    
+    <h2>Results:</h2>
+    <pre id="results"></pre>
+    
+    <script>
+    async function testLogin() {
+        const results = document.getElementById('results');
+        results.textContent = 'Testing login...\n';
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        try {
+            // Get CSRF token first
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            results.textContent += 'CSRF Token: ' + csrfToken + '\n';
+            
+            // Test login
+            results.textContent += '\nSending login request...\n';
+            const response = await fetch('/api/admin/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ email, password })
+            });
+            
+            results.textContent += 'Response Status: ' + response.status + '\n';
+            results.textContent += 'Response Headers:\n';
+            for (let [key, value] of response.headers) {
+                results.textContent += '  ' + key + ': ' + value + '\n';
+            }
+            
+            const text = await response.text();
+            results.textContent += '\nResponse Body:\n' + text + '\n';
+            
+            if (response.ok) {
+                const data = JSON.parse(text);
+                results.textContent += '\n✅ SUCCESS! Token: ' + data.token + '\n';
+                
+                // Save token
+                localStorage.setItem('admin_token', data.token);
+                results.textContent += '\nToken saved to localStorage\n';
+                
+                // Test auth/user endpoint
+                results.textContent += '\nTesting /auth/user endpoint...\n';
+                const userResponse = await fetch('/api/admin/auth/user', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': 'Bearer ' + data.token
+                    }
+                });
+                
+                const userData = await userResponse.text();
+                results.textContent += 'User data: ' + userData + '\n';
+            } else {
+                results.textContent += '\n❌ Login failed\n';
+            }
+            
+        } catch (error) {
+            results.textContent += '\n❌ ERROR: ' + error.message + '\n';
+            results.textContent += 'Stack: ' + error.stack + '\n';
+        }
+    }
+    
+    // Check if already logged in
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+        document.getElementById('results').textContent = 'Found existing token: ' + token.substring(0, 30) + '...\n';
+    }
+    </script>
+</body>
+</html>

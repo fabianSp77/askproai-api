@@ -10,7 +10,7 @@ class StaffEventType extends Pivot
 
     protected $fillable = [
         'staff_id',
-        'event_type_id',
+        'calcom_event_type_id',
         'calcom_user_id',
         'is_primary',
         'custom_duration',
@@ -38,6 +38,6 @@ class StaffEventType extends Pivot
      */
     public function eventType()
     {
-        return $this->belongsTo(CalcomEventType::class, 'event_type_id');
+        return $this->belongsTo(CalcomEventType::class, 'calcom_event_type_id');
     }
 }

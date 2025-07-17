@@ -90,7 +90,7 @@ class Service extends Model
 
     public function staff()
     {
-        return $this->belongsToMany(Staff::class, 'service_staff')
+        return $this->belongsToMany(Staff::class, 'staff_services')
             ->withPivot('duration_minutes', 'price', 'active')
             ->withTimestamps();
     }

@@ -846,6 +846,7 @@ class RetellMCPServer
             $apiKey = config('services.retell.api_key');
             if (!$apiKey) {
                 return [
+                    'healthy' => false,
                     'status' => false,
                     'message' => 'No default Retell API key configured',
                     'checked_at' => now()->toIso8601String()
@@ -861,6 +862,7 @@ class RetellMCPServer
             $isHealthy = is_array($response);
             
             return [
+                'healthy' => $isHealthy,
                 'status' => $isHealthy,
                 'message' => $isHealthy ? 'Retell API is healthy' : 'Retell API is not responding',
                 'agent_count' => is_array($response) ? count($response) : 0,
@@ -869,6 +871,7 @@ class RetellMCPServer
             
         } catch (\Exception $e) {
             return [
+                'healthy' => false,
                 'status' => false,
                 'message' => 'Health check failed: ' . $e->getMessage(),
                 'checked_at' => now()->toIso8601String()

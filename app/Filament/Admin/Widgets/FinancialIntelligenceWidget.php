@@ -79,14 +79,14 @@ class FinancialIntelligenceWidget extends FilterableWidget
             ? round($appointmentMetrics['total_revenue'] / $callMetrics['total_calls'], 2)
             : 0;
         
-        return [
+        return array_merge(parent::getViewData(), [
             'roi' => $roiData,
             'trend' => $trend,
             'costPerBooking' => $costPerBooking,
             'expectedValuePerCall' => $expectedValuePerCall,
             'period' => $this->dateFilter,
             'periodLabel' => $this->getPeriodLabel(),
-        ];
+        ]);
     }
     
     protected function getDateRange(): array

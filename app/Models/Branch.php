@@ -49,7 +49,6 @@ class Branch extends Model
      */
         protected $fillable = [
         'company_id',
-        'customer_id',
         'name',
         'slug',
         'phone_number',
@@ -73,7 +72,14 @@ class Branch extends Model
         'active',
         'notify_on_booking',
         'deleted_at',
-        'features'
+        'features',
+        'call_notification_overrides',
+        // Call notification preferences
+        'send_call_summaries',
+        'call_summary_recipients',
+        'include_transcript_in_summary',
+        'include_csv_export',
+        'summary_email_frequency'
     ];
 
     /**
@@ -98,6 +104,7 @@ class Branch extends Model
         'retell_last_sync' => 'datetime',
         'configuration_status' => 'array',
         'parent_settings' => 'array',
+        'call_notification_overrides' => 'array',
         'business_hours' => 'array',
         'services_override' => 'array',
         'settings' => 'array',
@@ -108,6 +115,11 @@ class Branch extends Model
         'coordinates' => 'array',
         'features' => 'array',
         'transport_info' => 'array',
+        // Call notification preferences
+        'send_call_summaries' => 'boolean',
+        'call_summary_recipients' => 'array',
+        'include_transcript_in_summary' => 'boolean',
+        'include_csv_export' => 'boolean',
     ];
 
     /**
@@ -164,15 +176,7 @@ class Branch extends Model
         return $this->belongsTo(Company::class);
     }
     
-    /**
-     * Get the customer that owns the branch.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function customer()
-    {
-        return $this->belongsTo(Customer::class);
-    }
+    // REMOVED: customer() relationship - branches belong to companies, not customers
 
     /**
      * Get the staff members for the branch.

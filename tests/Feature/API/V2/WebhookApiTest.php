@@ -43,13 +43,6 @@ class WebhookApiTest extends TestCase
         config(['services.calcom.webhook_secret' => 'test-calcom-secret']);
     }
 
-    /**
-     * Generate a valid webhook signature
-     */
-    protected function generateWebhookSignature(string $payload, string $secret): string
-    {
-        return hash_hmac('sha256', $payload, $secret);
-    }
 
     /**
      * Test Retell webhook without signature is rejected
@@ -121,8 +114,7 @@ class WebhookApiTest extends TestCase
             ]
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         $response = $this->postJson(
             '/api/v2/public/webhooks/retell',
@@ -156,8 +148,7 @@ class WebhookApiTest extends TestCase
             // Missing call_id
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         $response = $this->postJson(
             '/api/v2/public/webhooks/retell',
@@ -269,8 +260,7 @@ class WebhookApiTest extends TestCase
             ]
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-calcom-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-calcom-secret');
         
         $response = $this->postJson(
             '/api/v2/public/webhooks/calcom',
@@ -327,8 +317,7 @@ class WebhookApiTest extends TestCase
                 $payload['payload']['cancellationReason'] = 'Customer request';
             }
             
-            $jsonPayload = json_encode($payload);
-            $signature = $this->generateWebhookSignature($jsonPayload, 'test-calcom-secret');
+            $signature = $this->generateWebhookSignature($payload, 'test-calcom-secret');
             
             $response = $this->postJson(
                 '/api/v2/public/webhooks/calcom',
@@ -356,8 +345,7 @@ class WebhookApiTest extends TestCase
             'status' => 'completed'
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         // Make requests up to the limit (assuming 100 per minute for public endpoints)
         for ($i = 0; $i < 100; $i++) {
@@ -399,8 +387,7 @@ class WebhookApiTest extends TestCase
             ]
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         $response = $this->postJson(
             '/api/v2/public/webhooks/retell',
@@ -443,8 +430,7 @@ class WebhookApiTest extends TestCase
             ]
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         $response = $this->postJson(
             '/api/v2/public/webhooks/retell',
@@ -474,8 +460,7 @@ class WebhookApiTest extends TestCase
             'duration' => 120
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         // Send the same webhook multiple times
         for ($i = 0; $i < 3; $i++) {
@@ -508,8 +493,7 @@ class WebhookApiTest extends TestCase
             ]
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         Log::shouldReceive('error')->once();
         
@@ -541,8 +525,7 @@ class WebhookApiTest extends TestCase
             'api_key' => 'other-tenant-key' // Tenant identification
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         $response = $this->postJson(
             '/api/v2/public/webhooks/retell',
@@ -578,8 +561,7 @@ class WebhookApiTest extends TestCase
             ]
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         $response = $this->postJson(
             '/api/v2/public/webhooks/retell',
@@ -610,8 +592,7 @@ class WebhookApiTest extends TestCase
             'phone_number' => '+49 170 5556666'
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         $response = $this->postJson(
             '/api/v2/public/webhooks/retell',
@@ -634,8 +615,7 @@ class WebhookApiTest extends TestCase
             'phone_number' => '+49 170 7778888'
         ];
         
-        $jsonPayload = json_encode($payload);
-        $signature = $this->generateWebhookSignature($jsonPayload, 'test-retell-secret');
+        $signature = $this->generateWebhookSignature($payload, 'test-retell-secret');
         
         $startTime = microtime(true);
         

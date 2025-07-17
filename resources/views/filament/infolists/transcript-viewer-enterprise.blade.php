@@ -7,9 +7,15 @@
     $sentenceSentiments = $mlPrediction ? ($mlPrediction->sentence_sentiments ?? []) : [];
     $transcriptObject = $call->transcript_object ?? [];
     
-    // Get translation data passed from parent component
-    $transcriptData = $getViewData()['transcript'] ?? null;
-    $showTranslateToggle = $getViewData()['showTranslateToggle'] ?? false;
+    // Get translation data - for now we'll handle it directly
+    $showTranslateToggle = auth()->user()?->auto_translate_content ?? false;
+    $transcriptData = null;
+    if ($showTranslateToggle && $transcript) {
+        $transcriptData = AutoTranslateHelper::getToggleableContent(
+            $transcript,
+            $call->detected_language
+        );
+    }
 @endphp
 
 <div class="w-full" x-data="transcriptViewerEnterprise(@js($getRecord()->id), @js($sentenceSentiments), @js($showTranslateToggle), @js($transcriptData))">
@@ -36,16 +42,34 @@
                     
                     {{-- View Options --}}
                     <div class="flex items-center gap-2">
-                        @if($showTranslation)
+                        @if($showTranslateToggle && $transcriptData && $transcriptData['should_translate'])
                             <div class="flex items-center gap-1 mr-2">
-                                <span class="text-xs text-gray-500">Sprache:</span>
                                 <button 
-                                    @click="showOriginal = !showOriginal"
-                                    class="px-2 py-1 text-xs font-medium rounded-md transition-colors bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+                                    @click="showTranslated = !showTranslated"
+                                    class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
                                 >
-                                    <span x-show="!showOriginal">{{ TranslationHelper::formatLanguage($call->detected_language) }}</span>
-                                    <span x-show="showOriginal">{{ TranslationHelper::formatLanguage($userLanguage) }}</span>
+                                    <svg 
+                                        class="w-3 h-3" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path 
+                                            stroke-linecap="round" 
+                                            stroke-linejoin="round" 
+                                            stroke-width="2" 
+                                            d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                                        ></path>
+                                    </svg>
+                                    <span x-text="showTranslated ? 'Original anzeigen' : 'Übersetzung anzeigen'"></span>
                                 </button>
+                                
+                                @if($transcriptData['source_language'] && $transcriptData['target_language'])
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                                        <span x-show="!showTranslated">{{ strtoupper($transcriptData['source_language']) }}</span>
+                                        <span x-show="showTranslated">{{ strtoupper($transcriptData['target_language']) }}</span>
+                                    </span>
+                                @endif
                             </div>
                         @endif
                         
@@ -114,7 +138,9 @@
                                                       title="{{ ucfirst($sentiment) }}"></span>
                                             @endif
                                         </div>
-                                        <div class="text-sm text-gray-900 dark:text-gray-100 leading-relaxed" x-text="getUtteranceContent({{ $index }})"></div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-100 leading-relaxed">
+                                            {{ $utterance['content'] ?? '' }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -253,15 +279,16 @@
 
 @push('scripts')
 <script>
-function transcriptViewerEnterprise(callId, sentenceSentiments, showTranslation, translatedTranscript) {
+function transcriptViewerEnterprise(callId, sentenceSentiments, showTranslateToggle, transcriptData) {
     return {
         callId: callId,
         sentenceSentiments: sentenceSentiments || [],
         viewMode: 'conversation',
         selectedSentence: null,
-        showOriginal: true,
-        showTranslation: showTranslation || false,
-        translatedTranscript: translatedTranscript || null,
+        showTranslated: false,
+        showTranslateToggle: showTranslateToggle || false,
+        transcriptData: transcriptData || null,
+        transcriptObject: @js($transcriptObject),
         
         init() {
             // Add click handler to sentiment sentences

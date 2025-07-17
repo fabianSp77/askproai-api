@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpine Components Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Alpine Components Test</h1>
+    
+    <div class="test-section">
+        <h2>Framework Status</h2>
+        <div id="status"></div>
+        <button class="primary" onclick="checkStatus()">Check Status</button>
+        <button class="secondary" onclick="window.location.reload()">Reload Page</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Company Branch Select Test</h2>
+        <div id="companyTest"></div>
+        <button class="primary" onclick="testCompanySelect()">Test Component</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Commands</h2>
+        <p>Open your browser console and run these commands:</p>
+        <ul>
+            <li><code>portalDebug.status()</code> - Show complete status</li>
+            <li><code>portalDebug.fixAll()</code> - Attempt to fix all issues</li>
+            <li><code>portalFix.status()</code> - Portal fix status</li>
+            <li><code>manualFrameworkLoader.status()</code> - Framework loader status</li>
+        </ul>
+    </div>
+    
+    <script>
+        function checkStatus() {
+            const statusDiv = document.getElementById('status');
+            let html = '';
+            
+            if (window.Alpine) {
+                html += '<div class="status success">✅ Alpine.js loaded (version: ' + (window.Alpine.version || 'unknown') + ')</div>';
+            } else {
+                html += '<div class="status error">❌ Alpine.js not loaded</div>';
+            }
+            
+            if (window.Livewire) {
+                html += '<div class="status success">✅ Livewire loaded</div>';
+            } else {
+                html += '<div class="status error">❌ Livewire not loaded</div>';
+            }
+            
+            // Check stores
+            if (window.Alpine && window.Alpine.store) {
+                try {
+                    const sidebar = window.Alpine.store('sidebar');
+                    if (sidebar) {
+                        html += '<div class="status success">✅ Sidebar store exists</div>';
+                    } else {
+                        html += '<div class="status error">❌ Sidebar store missing</div>';
+                    }
+                } catch (e) {
+                    html += '<div class="status error">❌ Error accessing stores: ' + e.message + '</div>';
+                }
+            }
+            
+            // Check Alpine components
+            const alpineComponents = document.querySelectorAll('[x-data]');
+            html += '<div class="status success">Found ' + alpineComponents.length + ' Alpine components</div>';
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        function testCompanySelect() {
+            const testDiv = document.getElementById('companyTest');
+            
+            if (!window.Alpine) {
+                testDiv.innerHTML = '<div class="status error">Alpine not loaded</div>';
+                return;
+            }
+            
+            try {
+                // Check if companyBranchSelect is registered
+                const testComponent = document.createElement('div');
+                testComponent.setAttribute('x-data', 'companyBranchSelect()');
+                document.body.appendChild(testComponent);
+                
+                // Try to initialize it
+                window.Alpine.initTree(testComponent);
+                
+                if (testComponent.__x) {
+                    testDiv.innerHTML = '<div class="status success">✅ companyBranchSelect component can be initialized</div>';
+                    
+                    // Show component data
+                    const data = testComponent.__x.$data;
+                    testDiv.innerHTML += '<pre>' + JSON.stringify({
+                        showDropdown: data.showDropdown,
+                        searchQuery: data.searchQuery,
+                        selectedCompany: data.selectedCompany,
+                        selectedBranches: data.selectedBranches
+                    }, null, 2) + '</pre>';
+                } else {
+                    testDiv.innerHTML = '<div class="status error">❌ Component not initialized</div>';
+                }
+                
+                // Clean up
+                document.body.removeChild(testComponent);
+            } catch (e) {
+                testDiv.innerHTML = '<div class="status error">❌ Error: ' + e.message + '</div>';
+            }
+        }
+        
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            setTimeout(checkStatus, 1000);
+        });
+    </script>
+</body>
+</html>

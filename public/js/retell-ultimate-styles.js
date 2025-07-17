@@ -45,5 +45,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    console.log('Retell Ultimate Dashboard modern styles applied');
+    //console.log('Retell Ultimate Dashboard modern styles applied');
 });

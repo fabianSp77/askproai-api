@@ -150,7 +150,7 @@
                 
                 <div class="flex justify-between items-center mt-4">
                     <p class="text-sm text-gray-600 dark:text-gray-400 italic">
-                        "{{ Str::limit($call->notes ?? 'Interessiert an Premium-Paket, möchte Rückruf nächste Woche...', 80) }}"
+                        "{{ Str::limit($call->notes ?? 'Interessiert an Premium-Paket, möchte Rückruf planen für nächste Woche...', 80) }}"
                     </p>
                     
                     <div class="flex gap-2">

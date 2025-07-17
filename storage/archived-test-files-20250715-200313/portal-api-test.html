@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Portal API Test</title>
+    <meta name="csrf-token" content="">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .success { color: #065F46; background: #D1FAE5; }
+        .error { color: #991B1B; background: #FEE2E2; }
+        .endpoint {
+            margin: 10px 0;
+            padding: 10px;
+            background: #F3F4F6;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Portal API Test</h1>
+    
+    <div class="box" style="background: #DBEAFE; color: #1E40AF;">
+        <h3>Quick Actions</h3>
+        <button onclick="window.location.href='/portal-login-simple.html'" style="background: #059669;">Go to Login Page</button>
+        <button onclick="window.location.href='/business/dashboard'" style="background: #7C3AED;">Go to Dashboard</button>
+    </div>
+    
+    <div class="box">
+        <h2>Session Info</h2>
+        <button onclick="checkSession()">Check Session</button>
+        <pre id="session-result"></pre>
+    </div>
+    
+    <div class="box">
+        <h2>API Endpoints</h2>
+        
+        <div class="endpoint">
+            <h3>Auth Check</h3>
+            <button onclick="testEndpoint('/business/api/check-auth')">Test /api/check-auth</button>
+        </div>
+        
+        <div class="endpoint">
+            <h3>Dashboard</h3>
+            <button onclick="testEndpoint('/business/api/dashboard')">Test /api/dashboard</button>
+        </div>
+        
+        <div class="endpoint">
+            <h3>Calls</h3>
+            <button onclick="testEndpoint('/business/api/calls?page=1&per_page=10')">Test /api/calls</button>
+        </div>
+        
+        <div class="endpoint">
+            <h3>User Permissions</h3>
+            <button onclick="testEndpoint('/business/api/user/permissions')">Test /api/user/permissions</button>
+        </div>
+        
+        <pre id="api-result"></pre>
+    </div>
+    
+    <script>
+    // Get CSRF token on load
+    fetch('/business/test-login')
+        .then(r => r.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const token = doc.querySelector('meta[name="csrf-token"]')?.content;
+            if (token) {
+                document.querySelector('meta[name="csrf-token"]').content = token;
+                console.log('CSRF token loaded');
+            }
+        });
+    
+    async function checkSession() {
+        try {
+            const response = await fetch('/business/test/session');
+            const data = await response.json();
+            document.getElementById('session-result').textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            document.getElementById('session-result').textContent = 'Error: ' + error.message;
+        }
+    }
+    
+    async function testEndpoint(url) {
+        const resultEl = document.getElementById('api-result');
+        resultEl.textContent = 'Loading...';
+        
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                data = text;
+            }
+            
+            resultEl.className = response.ok ? 'success' : 'error';
+            resultEl.textContent = `Status: ${response.status}\n\n` + 
+                (typeof data === 'object' ? JSON.stringify(data, null, 2) : data);
+        } catch (error) {
+            resultEl.className = 'error';
+            resultEl.textContent = 'Error: ' + error.message;
+        }
+    }
+    
+    // Check session on load
+    checkSession();
+    </script>
+</body>
+</html>

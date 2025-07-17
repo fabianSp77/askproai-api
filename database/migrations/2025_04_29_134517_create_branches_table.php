@@ -7,7 +7,7 @@ return new class extends CompatibleMigration {
     public function up(): void {
         $this->createTableIfNotExists('branches', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('customer_id')->index();
+            $table->uuid('customer_id')->nullable()->index();
             $table->string('name');
             $table->string('slug')->nullable()->unique();
             $table->string('city')->nullable();

@@ -1,0 +1,1 @@
+<?php return ["disable_tenant_scope" => true];

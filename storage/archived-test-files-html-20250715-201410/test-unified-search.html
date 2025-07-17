@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Search Demo - AskProAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <h1 class="text-3xl font-bold text-gray-900">Unified Search Demo</h1>
+                <p class="text-gray-600 mt-2">Eine Suche für alles - Kunden, Termine, Anrufe und mehr</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-8">
+            <!-- Feature Overview -->
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold mb-6">🔍 Unified Search Features</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-blue-50 p-6 rounded-lg">
+                        <div class="text-3xl mb-3">⚡</div>
+                        <h3 class="font-semibold mb-2">Instant Results</h3>
+                        <p class="text-sm text-gray-600">Ergebnisse erscheinen während der Eingabe - keine Wartezeit</p>
+                    </div>
+                    
+                    <div class="bg-green-50 p-6 rounded-lg">
+                        <div class="text-3xl mb-3">🎯</div>
+                        <h3 class="font-semibold mb-2">Smart Ranking</h3>
+                        <p class="text-sm text-gray-600">Relevanteste Ergebnisse werden automatisch priorisiert</p>
+                    </div>
+                    
+                    <div class="bg-purple-50 p-6 rounded-lg">
+                        <div class="text-3xl mb-3">🚀</div>
+                        <h3 class="font-semibold mb-2">Quick Actions</h3>
+                        <p class="text-sm text-gray-600">Aktionen direkt aus der Suche - Anrufen, Termin erstellen, etc.</p>
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-6 rounded-lg">
+                        <div class="text-3xl mb-3">🔄</div>
+                        <h3 class="font-semibold mb-2">Search History</h3>
+                        <p class="text-sm text-gray-600">Letzte Suchen werden gespeichert für schnellen Zugriff</p>
+                    </div>
+                    
+                    <div class="bg-red-50 p-6 rounded-lg">
+                        <div class="text-3xl mb-3">📊</div>
+                        <h3 class="font-semibold mb-2">Multi-Category</h3>
+                        <p class="text-sm text-gray-600">Suche über Kunden, Termine, Anrufe, Mitarbeiter gleichzeitig</p>
+                    </div>
+                    
+                    <div class="bg-indigo-50 p-6 rounded-lg">
+                        <div class="text-3xl mb-3">⌨️</div>
+                        <h3 class="font-semibold mb-2">Keyboard First</h3>
+                        <p class="text-sm text-gray-600">Cmd+K / Ctrl+K für schnellen Zugriff, Navigation mit Pfeiltasten</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Demo -->
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold mb-6">💡 So funktioniert's</h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="font-semibold mb-3">1. Öffnen mit Keyboard Shortcut</h3>
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <code class="text-sm">
+                                Mac: <kbd class="px-2 py-1 bg-white rounded shadow">⌘</kbd> + <kbd class="px-2 py-1 bg-white rounded shadow">K</kbd>
+                                &nbsp;&nbsp;|&nbsp;&nbsp;
+                                Windows: <kbd class="px-2 py-1 bg-white rounded shadow">Ctrl</kbd> + <kbd class="px-2 py-1 bg-white rounded shadow">K</kbd>
+                            </code>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-semibold mb-3">2. Eingeben und Filtern</h3>
+                        <div class="bg-gray-100 p-4 rounded-lg space-y-2">
+                            <p class="text-sm"><strong>Beispiele:</strong></p>
+                            <ul class="text-sm space-y-1 ml-4">
+                                <li>• "Max Mustermann" → Findet Kunden</li>
+                                <li>• "0171 1234567" → Findet Anrufe und Kunden</li>
+                                <li>• "Termin morgen" → Zeigt morgige Termine</li>
+                                <li>• "Anrufe heute" → Heutige Anrufe</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-semibold mb-3">3. Quick Actions nutzen</h3>
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 100'%3E%3Crect width='600' height='100' fill='%23f3f4f6'/%3E%3Ctext x='20' y='30' font-family='Arial' font-size='14' fill='%23374151'%3EMax Mustermann%3C/text%3E%3Ctext x='20' y='50' font-family='Arial' font-size='12' fill='%236b7280'%3E0171 1234567 • Kunde%3C/text%3E%3Cg transform='translate(500, 35)'%3E%3Ccircle cx='0' cy='0' r='15' fill='%23e5e7eb'/%3E%3Cpath d='M-5,-5 L5,5 M5,-5 L-5,5' stroke='%236b7280' stroke-width='2'/%3E%3C/g%3E%3Cg transform='translate(540, 35)'%3E%3Ccircle cx='0' cy='0' r='15' fill='%23e5e7eb'/%3E%3Cpath d='M-5,-5 L5,5 M5,-5 L-5,5' stroke='%236b7280' stroke-width='2'/%3E%3C/g%3E%3C/svg%3E" alt="Quick Actions Demo" class="w-full rounded">
+                            <p class="text-sm text-gray-600 mt-2">Hover über Ergebnisse zeigt Quick Actions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Implementation Status -->
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold mb-6">📊 Implementierungs-Status</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">✅</span>
+                            <div>
+                                <p class="font-semibold">Backend Search Service</p>
+                                <p class="text-sm text-gray-600">UnifiedSearchService mit Smart Ranking</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold">Fertig</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">✅</span>
+                            <div>
+                                <p class="font-semibold">Livewire Component</p>
+                                <p class="text-sm text-gray-600">Real-time Search mit Alpine.js</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold">Fertig</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">✅</span>
+                            <div>
+                                <p class="font-semibold">Search History</p>
+                                <p class="text-sm text-gray-600">Automatisches Tracking & Suggestions</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold">Fertig</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-2xl">✅</span>
+                            <div>
+                                <p class="font-semibold">Filament Integration</p>
+                                <p class="text-sm text-gray-600">Command Palette Widget im Admin Panel</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold">Fertig</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Access -->
+            <div class="mt-8 text-center">
+                <a href="/admin" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                    Zum Admin Panel →
+                </a>
+                <p class="text-sm text-gray-600 mt-4">
+                    Drücke <kbd class="px-2 py-1 bg-gray-200 rounded">⌘K</kbd> oder <kbd class="px-2 py-1 bg-gray-200 rounded">Ctrl+K</kbd> im Admin Panel
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Interactive Demo -->
+    <script>
+        // Simulate search functionality
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                alert('Im echten Admin Panel würde jetzt die Unified Search öffnen!');
+            }
+        });
+    </script>
+</body>
+</html>

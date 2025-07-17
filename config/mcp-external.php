@@ -52,6 +52,29 @@ return [
             'timeout' => 30,
             'description' => 'Advanced task management and automation',
         ],
+        
+        'github' => [
+            'enabled' => env('MCP_GITHUB_ENABLED', true),
+            'command' => 'node',
+            'args' => ['/var/www/api-gateway/mcp-external/github-mcp/index.js'],
+            'env' => [
+                'GITHUB_TOKEN' => env('GITHUB_TOKEN'),
+            ],
+            'timeout' => 30,
+            'description' => 'GitHub API integration for repository management, issues, PRs, and code access',
+        ],
+        
+        'apidog' => [
+            'enabled' => env('MCP_APIDOG_ENABLED', true),
+            'command' => 'node',
+            'args' => ['/var/www/api-gateway/mcp-external/apidog-mcp/index.js'],
+            'env' => [
+                'APIDOG_API_KEY' => env('APIDOG_API_KEY'),
+                'APIDOG_PROJECT_ID' => env('APIDOG_PROJECT_ID'),
+            ],
+            'timeout' => 30,
+            'description' => 'API specification management, code generation, and documentation from Apidog',
+        ],
     ],
 
     /*

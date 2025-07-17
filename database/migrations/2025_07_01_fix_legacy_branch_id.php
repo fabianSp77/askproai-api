@@ -16,8 +16,10 @@ return new class extends Migration
         // Generiere eine neue UUID für den Legacy-Branch
         $newUuid = (string) Str::uuid();
         
-        // Deaktiviere Foreign Key Checks temporär
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        // Deaktiviere Foreign Key Checks temporär (nur für MySQL)
+        if (config('database.default') === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        }
         
         try {
             // Update aller Referenzen in anderen Tabellen ZUERST
@@ -47,8 +49,10 @@ return new class extends Migration
             \Log::info("Legacy branch ID '1' wurde zu UUID '{$newUuid}' migriert");
             
         } finally {
-            // Aktiviere Foreign Key Checks wieder
-            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            // Aktiviere Foreign Key Checks wieder (nur für MySQL)
+            if (config('database.default') === 'mysql') {
+                DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            }
         }
     }
 

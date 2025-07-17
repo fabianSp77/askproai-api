@@ -11,11 +11,16 @@ class BranchFactory extends Factory
         return [
             'name' => $this->faker->company . ' Filiale',
             'company_id' => \App\Models\Company::factory(),
-            'customer_id' => null,
+            'uuid' => \Illuminate\Support\Str::uuid()->toString(),
             'slug' => $this->faker->slug,
             'city' => $this->faker->city,
-            'phone_number' => $this->faker->phoneNumber,
+            'country' => 'Deutschland',
+            'address' => $this->faker->streetAddress,
+            'postal_code' => $this->faker->numerify('#####'),
+            'phone_number' => '+49' . $this->faker->numerify('30#######'),
+            'notification_email' => $this->faker->safeEmail,
             'active' => true,
+            'is_active' => true,
         ];
     }
 }

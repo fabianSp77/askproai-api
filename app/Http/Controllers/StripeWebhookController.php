@@ -11,9 +11,9 @@ class StripeWebhookController extends Controller
 {
     protected StripeTopupService $stripeService;
 
-    public function __construct(StripeTopupService $stripeService)
+    public function __construct()
     {
-        $this->stripeService = $stripeService;
+        $this->stripeService = app(StripeTopupService::class);
     }
 
     /**

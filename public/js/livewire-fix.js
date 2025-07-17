@@ -12,7 +12,7 @@
         if (window.Livewire) {
             window.Livewire.config = window.Livewire.config || {};
             window.Livewire.config.updateUri = 'https://api.askproai.de/livewire/update';
-            console.log('Livewire update URI fixed:', window.Livewire.config.updateUri);
+            //console.log('Livewire update URI fixed:', window.Livewire.config.updateUri);
         }
         
         // Also fix the data attribute

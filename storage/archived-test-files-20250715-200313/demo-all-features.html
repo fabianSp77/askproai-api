@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI - Feature Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <h1 class="text-3xl font-bold text-gray-900">AskProAI Feature Demo</h1>
+                <p class="text-gray-600 mt-2">Alle neuen Features auf einen Blick</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-8">
+            <!-- Feature Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Error Pattern Catalog -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="bg-red-500 text-white p-4">
+                        <h2 class="text-xl font-semibold">🚨 Error Pattern Catalog</h2>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Umfassende Fehlerdatenbank mit automatischen Lösungen</p>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                13 dokumentierte Fehler
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Automatische Fix-Scripts
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Suchfunktion & Filter
+                            </li>
+                        </ul>
+                        <a href="/errors" class="mt-4 inline-block bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                            Zur Fehlerdatenbank →
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Help Center -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="bg-blue-500 text-white p-4">
+                        <h2 class="text-xl font-semibold">📚 Help Center</h2>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Selbsthilfe-Portal für Kunden</p>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                6 Kategorien
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                20+ Artikel
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Deutsche Inhalte
+                            </li>
+                        </ul>
+                        <a href="/help" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                            Zum Help Center →
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Prompt Templates -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="bg-purple-500 text-white p-4">
+                        <h2 class="text-xl font-semibold">🧠 Prompt Templates</h2>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Hierarchisches Template-Management</p>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Vererbungshierarchie
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Variable Substitution
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Live Preview
+                            </li>
+                        </ul>
+                        <a href="/admin/prompt-templates" class="mt-4 inline-block bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                            Zu den Templates →
+                        </a>
+                    </div>
+                </div>
+
+                <!-- MCP Dashboard -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="bg-green-500 text-white p-4">
+                        <h2 class="text-xl font-semibold">🔌 MCP Dashboard</h2>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Übersicht aller MCP-Server</p>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                20+ MCP-Server
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Health Monitoring
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Auto-Discovery
+                            </li>
+                        </ul>
+                        <a href="/admin/mcp-dashboard" class="mt-4 inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                            Zum Dashboard →
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Notion Integration -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="bg-gray-700 text-white p-4">
+                        <h2 class="text-xl font-semibold">📝 Notion Integration</h2>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Dokumentation in Notion synchronisiert</p>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Automatischer Import
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Strukturierte Daten
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                API Integration
+                            </li>
+                        </ul>
+                        <div class="mt-4 text-sm text-gray-500">
+                            ✅ Erfolgreich importiert
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Developer Tools -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="bg-indigo-500 text-white p-4">
+                        <h2 class="text-xl font-semibold">🛠️ Developer Tools</h2>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600 mb-4">Erweiterte Entwickler-Features</p>
+                        <ul class="space-y-2 text-sm">
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Fix Scripts
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Test Pages
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 mr-2">✓</span>
+                                Debug Tools
+                            </li>
+                        </ul>
+                        <a href="/public/test-all-pages.php" class="mt-4 inline-block bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600">
+                            Test Suite →
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Demo Section -->
+            <div class="mt-12 bg-white rounded-lg shadow-lg p-8" x-data="{ activeTab: 'error' }">
+                <h2 class="text-2xl font-bold mb-6">🎯 Interaktive Demo</h2>
+                
+                <!-- Tab Navigation -->
+                <div class="flex space-x-4 mb-6 border-b">
+                    <button @click="activeTab = 'error'" 
+                            :class="activeTab === 'error' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'"
+                            class="pb-2 px-4 font-medium">
+                        Error Catalog
+                    </button>
+                    <button @click="activeTab = 'template'" 
+                            :class="activeTab === 'template' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'"
+                            class="pb-2 px-4 font-medium">
+                        Template System
+                    </button>
+                    <button @click="activeTab = 'help'" 
+                            :class="activeTab === 'help' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-600'"
+                            class="pb-2 px-4 font-medium">
+                        Help Center
+                    </button>
+                </div>
+
+                <!-- Tab Content -->
+                <div x-show="activeTab === 'error'" x-transition>
+                    <h3 class="font-semibold mb-3">Error Pattern Beispiel</h3>
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <span class="text-red-500 text-2xl mr-3">⚠️</span>
+                            <div>
+                                <h4 class="font-bold text-red-700">RETELL_001</h4>
+                                <p class="text-red-600 mt-1">Es werden keine Anrufe eingespielt</p>
+                                <div class="mt-3">
+                                    <span class="text-sm font-medium text-gray-700">Lösung:</span>
+                                    <code class="block mt-1 text-sm bg-gray-100 p-2 rounded">php fix-retell-import.php</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="activeTab === 'template'" x-transition>
+                    <h3 class="font-semibold mb-3">Template Vererbung Beispiel</h3>
+                    <div class="space-y-4">
+                        <div class="bg-gray-100 p-4 rounded">
+                            <h4 class="font-medium text-gray-700">Parent Template:</h4>
+                            <pre class="mt-2 text-sm">Guten Tag bei {{company_name}}.</pre>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded">
+                            <h4 class="font-medium text-blue-700">Child Template:</h4>
+                            <pre class="mt-2 text-sm">{{parent}}
+Wie kann ich Ihnen helfen?</pre>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded">
+                            <h4 class="font-medium text-green-700">Ergebnis:</h4>
+                            <pre class="mt-2 text-sm">Guten Tag bei AskProAI.
+Wie kann ich Ihnen helfen?</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="activeTab === 'help'" x-transition>
+                    <h3 class="font-semibold mb-3">Help Center Kategorien</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-100 p-4 rounded text-center">
+                            <span class="text-3xl">🚀</span>
+                            <p class="mt-2 font-medium">Erste Schritte</p>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded text-center">
+                            <span class="text-3xl">📅</span>
+                            <p class="mt-2 font-medium">Termine</p>
+                        </div>
+                        <div class="bg-purple-100 p-4 rounded text-center">
+                            <span class="text-3xl">💳</span>
+                            <p class="mt-2 font-medium">Abrechnung</p>
+                        </div>
+                        <div class="bg-yellow-100 p-4 rounded text-center">
+                            <span class="text-3xl">👤</span>
+                            <p class="mt-2 font-medium">Konto</p>
+                        </div>
+                        <div class="bg-red-100 p-4 rounded text-center">
+                            <span class="text-3xl">🔧</span>
+                            <p class="mt-2 font-medium">Fehlerbehebung</p>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded text-center">
+                            <span class="text-3xl">❓</span>
+                            <p class="mt-2 font-medium">FAQ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Overview -->
+            <div class="mt-12 bg-white rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold mb-6">📊 Status Übersicht</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-green-500">100%</div>
+                        <p class="text-gray-600 mt-2">Features implementiert</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-blue-500">7</div>
+                        <p class="text-gray-600 mt-2">Neue Systeme</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-purple-500">50+</div>
+                        <p class="text-gray-600 mt-2">Dokumentationsseiten</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white mt-16">
+            <div class="max-w-7xl mx-auto px-4 py-8">
+                <p class="text-center">
+                    AskProAI © 2025 - Alle Features erfolgreich implementiert und getestet
+                </p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

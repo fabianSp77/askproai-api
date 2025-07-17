@@ -128,18 +128,20 @@ class ListAppointments extends ListRecords
     
     public function getTabs(): array
     {
+        return []; // Temporarily disabled for debugging
+        
         $model = \App\Models\Appointment::class;
         
         return [
             'all' => Tab::make('Alle Termine')
                 ->icon('heroicon-m-calendar-days')
-                ->badge($model::count())
+                // ->badge(static::getResource()::getEloquentQuery()->count())
                 ->badgeColor('gray'),
                 
             'today' => Tab::make('Heute')
                 ->icon('heroicon-m-calendar')
                 ->modifyQueryUsing(fn (Builder $query) => $query->whereDate('starts_at', today()))
-                ->badge($model::whereDate('starts_at', today())->count())
+                // ->badge(static::getResource()::getEloquentQuery()->whereDate('starts_at', today())->count())
                 ->badgeColor('primary'),
                 
             'upcoming' => Tab::make('Kommend')
@@ -148,9 +150,10 @@ class ListAppointments extends ListRecords
                     ->where('starts_at', '>', now())
                     ->where('status', '!=', 'cancelled')
                     ->orderBy('starts_at', 'asc'))
-                ->badge($model::where('starts_at', '>', now())
-                    ->where('status', '!=', 'cancelled')
-                    ->count())
+                // ->badge(static::getResource()::getEloquentQuery()
+                //     ->where('starts_at', '>', now())
+                //     ->where('status', '!=', 'cancelled')
+                //     ->count())
                 ->badgeColor('info'),
                 
             'needs_confirmation' => Tab::make('Zu bestätigen')
@@ -159,10 +162,11 @@ class ListAppointments extends ListRecords
                     ->where('status', 'pending')
                     ->where('starts_at', '>', now())
                     ->where('starts_at', '<', now()->addDays(7)))
-                ->badge($model::where('status', 'pending')
-                    ->where('starts_at', '>', now())
-                    ->where('starts_at', '<', now()->addDays(7))
-                    ->count())
+                // ->badge(static::getResource()::getEloquentQuery()
+                //     ->where('status', 'pending')
+                //     ->where('starts_at', '>', now())
+                //     ->where('starts_at', '<', now()->addDays(7))
+                //     ->count())
                 ->badgeColor('warning'),
                 
             'no_shows' => Tab::make('Nicht erschienen')
@@ -173,13 +177,13 @@ class ListAppointments extends ListRecords
                         $q->where('status', 'confirmed')
                           ->where('ends_at', '<', now()->subHours(2));
                     }))
-                ->badge($model::where('status', 'no_show')->count())
+                // ->badge(static::getResource()::getEloquentQuery()->where('status', 'no_show')->count())
                 ->badgeColor('danger'),
                 
             'completed' => Tab::make('Abgeschlossen')
                 ->icon('heroicon-m-check-circle')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'completed'))
-                ->badge($model::where('status', 'completed')->count())
+                // ->badge(static::getResource()::getEloquentQuery()->where('status', 'completed')->count())
                 ->badgeColor('success'),
                 
             'synced' => Tab::make('Cal.com')
@@ -188,10 +192,10 @@ class ListAppointments extends ListRecords
                     $q->whereNotNull('calcom_booking_id')
                       ->orWhereNotNull('calcom_v2_booking_id');
                 }))
-                ->badge($model::where(function($q) {
-                    $q->whereNotNull('calcom_booking_id')
-                      ->orWhereNotNull('calcom_v2_booking_id');
-                })->count())
+                // ->badge(static::getResource()::getEloquentQuery()->where(function($q) {
+                //     $q->whereNotNull('calcom_booking_id')
+                //       ->orWhereNotNull('calcom_v2_booking_id');
+                // })->count())
                 ->badgeColor('success'),
                 
             'manual' => Tab::make('Manuell')
@@ -200,10 +204,11 @@ class ListAppointments extends ListRecords
                     ->whereNull('calcom_booking_id')
                     ->whereNull('calcom_v2_booking_id')
                     ->whereNull('call_id'))
-                ->badge($model::whereNull('calcom_booking_id')
-                    ->whereNull('calcom_v2_booking_id')
-                    ->whereNull('call_id')
-                    ->count())
+                // ->badge(static::getResource()::getEloquentQuery()
+                //     ->whereNull('calcom_booking_id')
+                //     ->whereNull('calcom_v2_booking_id')
+                //     ->whereNull('call_id')
+                //     ->count())
                 ->badgeColor('gray'),
         ];
     }
@@ -211,16 +216,17 @@ class ListAppointments extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
-            \App\Filament\Admin\Widgets\AppointmentKpiWidget::class,
-            \App\Filament\Admin\Widgets\AppointmentTrendWidget::class,
+            // TODO: Add widgets when implemented
+            // \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
+            // \App\Filament\Admin\Widgets\AppointmentKpiWidget::class,
+            // \App\Filament\Admin\Widgets\AppointmentTrendWidget::class,
         ];
     }
     
     protected function getFooterWidgets(): array
     {
         return [
-            AppointmentResource\Widgets\AppointmentCalendar::class,
+            // AppointmentResource\Widgets\AppointmentCalendar::class, // Temporarily disabled
         ];
     }
 }

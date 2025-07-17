@@ -7,7 +7,7 @@
 window.AskProAITester = {
     // Capture current view with annotations
     captureAnnotated: function() {
-        console.log('📸 Capturing annotated view...');
+        //console.log('📸 Capturing annotated view...');
         
         // Highlight important elements
         const elements = {
@@ -42,11 +42,11 @@ window.AskProAITester = {
             performance: performance.timing,
         };
         
-        console.log('📊 UI Test Report:', report);
+        //console.log('📊 UI Test Report:', report);
         
         // Copy to clipboard
         navigator.clipboard.writeText(JSON.stringify(report, null, 2));
-        console.log('✅ Report copied to clipboard!');
+        //console.log('✅ Report copied to clipboard!');
         
         return report;
     },
@@ -69,12 +69,12 @@ window.AskProAITester = {
             desktop: { width: 1920, height: 1080 },
         };
         
-        console.log('📱 Testing responsive layouts...');
+        //console.log('📱 Testing responsive layouts...');
         
         Object.entries(sizes).forEach(([device, size]) => {
             window.resizeTo(size.width, size.height);
             setTimeout(() => {
-                console.log(`${device}: ${this.checkLayout()}`);
+                //console.log(`${device}: ${this.checkLayout()}`);
             }, 1000);
         });
     },
@@ -106,7 +106,7 @@ window.AskProAITester = {
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData);
                 
-                console.log('📝 Form submission captured:', {
+                //console.log('📝 Form submission captured:', {
                     action: form.action,
                     method: form.method,
                     data: data,
@@ -118,12 +118,12 @@ window.AskProAITester = {
             });
         });
         
-        console.log('✅ Form capture enabled');
+        //console.log('✅ Form capture enabled');
     }
 };
 
 // Auto-initialize
-console.log('🔧 AskProAI UI Tester loaded. Available commands:');
-console.log('- AskProAITester.captureAnnotated()');
-console.log('- AskProAITester.testResponsive()');
-console.log('- AskProAITester.captureFormState()');
+//console.log('🔧 AskProAI UI Tester loaded. Available commands:');
+//console.log('- AskProAITester.captureAnnotated()');
+//console.log('- AskProAITester.testResponsive()');
+//console.log('- AskProAITester.captureFormState()');

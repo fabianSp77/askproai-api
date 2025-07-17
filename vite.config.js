@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
     plugins: [
@@ -24,6 +25,11 @@ export default defineConfig({
                 'resources/css/filament/admin/dropdown-fixes.css',
                 'resources/css/filament/admin/wizard-component-fixes.css',
                 'resources/css/filament/admin/monitoring-dashboard-responsive.css',
+                'resources/css/filament/admin/z-index-fix.css',
+                'resources/css/filament/admin/dropdown-stacking-fix.css',
+                'resources/css/filament/admin/simple-width-fix.css',
+                'resources/css/filament/admin/professional-mobile-menu.css',
+                'resources/css/call-detail-modern.css',
                 'resources/js/app.js', // For non-admin pages
                 'resources/js/app-filament-compatible.js', // For admin pages
                 'resources/js/filament-v3-fixes.js',
@@ -42,9 +48,37 @@ export default defineConfig({
                 'resources/js/responsive-zoom-handler.js',
                 'resources/js/pusher-integration.js',
                 'resources/js/wizard-progress-enhancer.js',
-                'resources/js/wizard-v2-enhancements.js'
+                'resources/js/wizard-v2-enhancements.js',
+                // React App Entry Points
+                'resources/js/app-react.jsx',
+                'resources/js/app-react-simple.jsx',
+                'resources/js/PortalApp.jsx',
+                'resources/js/PortalAppModern.jsx',
+                // Portal React Components
+                'resources/js/portal-calls.jsx',
+                'resources/js/portal-dashboard.jsx',
+                'resources/js/portal-customers.jsx',
+                'resources/js/portal-settings.jsx',
+                'resources/js/portal-team.jsx',
+                'resources/js/portal-analytics.jsx',
+                'resources/js/portal-appointments.jsx',
+                'resources/js/portal-billing.jsx',
+                // Optimized Portal React Components
+                'resources/js/portal-dashboard-optimized.jsx',
+                'resources/js/portal-calls-optimized.jsx',
+                'resources/js/portal-appointments-optimized.jsx',
+                'resources/js/portal-customers-optimized.jsx',
+                'resources/js/portal-team-optimized.jsx',
+                'resources/js/portal-analytics-optimized.jsx',
+                'resources/js/portal-settings-optimized.jsx',
+                'resources/js/portal-billing-optimized.jsx',
+                // Admin React Portal
+                'resources/js/admin.jsx',
+                // Dropdown Close Fix
+                'resources/js/dropdown-close-fix.js'
             ],
             refresh: true,
         }),
+        react(),
     ],
 });

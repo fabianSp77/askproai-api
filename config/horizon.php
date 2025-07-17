@@ -219,6 +219,19 @@ return [
             'timeout' => 120,
             'nice' => -5,
         ],
+        'emails' => [
+            'connection' => 'redis',
+            'queue' => ['emails', 'high:notify'],
+            'balance' => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses' => 5,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 256,
+            'tries' => 3,
+            'timeout' => 300,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [
@@ -273,6 +286,22 @@ return [
                 'timeout' => 120,
                 'nice' => 0,
             ],
+            'emails' => [
+                'connection' => 'redis',
+                'queue' => ['emails', 'high:notify'],
+                'balance' => 'auto',
+                'autoScalingStrategy' => 'time',
+                'maxProcesses' => 10,
+                'minProcesses' => 2,
+                'balanceMaxShift' => 3,
+                'balanceCooldown' => 3,
+                'maxTime' => 0,
+                'maxJobs' => 0,
+                'memory' => 256,
+                'tries' => 3,
+                'timeout' => 300,
+                'nice' => 0,
+            ],
         ],
 
         'local' => [
@@ -284,6 +313,9 @@ return [
             ],
             'webhooks-high' => [
                 'maxProcesses' => 1,
+            ],
+            'emails' => [
+                'maxProcesses' => 2,
             ],
         ],
     ],

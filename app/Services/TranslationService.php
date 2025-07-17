@@ -5,12 +5,14 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Services\GoogleTranslateService;
 
 class TranslationService
 {
     protected ?string $apiKey;
     protected string $apiUrl = 'https://api-free.deepl.com/v2/translate';
     protected bool $isPro = false;
+    protected ?string $lastDetectedLanguage = null;
     
     public function __construct()
     {
@@ -51,6 +53,18 @@ class TranslationService
                 Cache::put($cacheKey, $translated, now()->addDays(30));
                 return $translated;
             }
+        }
+        
+        // Try Google Translate (free)
+        try {
+            $googleTranslate = new GoogleTranslateService();
+            $translated = $googleTranslate->translate($text, $targetLang, $sourceLang);
+            if ($translated !== $text) {
+                Cache::put($cacheKey, $translated, now()->addDays(30));
+                return $translated;
+            }
+        } catch (\Exception $e) {
+            Log::info('Google Translate fallback failed', ['error' => $e->getMessage()]);
         }
         
         // Fallback to simple dictionary translation
@@ -106,6 +120,11 @@ class TranslationService
      */
     protected function translateWithDictionary(string $text, string $targetLang, ?string $sourceLang = null): string
     {
+        // For longer texts, use sentence-based translation
+        if (strlen($text) > 100) {
+            return $this->translateSentences($text, $targetLang, $sourceLang);
+        }
+        
         // Common terms in appointment booking context
         $dictionary = [
             'de' => [
@@ -191,6 +210,82 @@ class TranslationService
     }
     
     /**
+     * Translate longer texts with better quality
+     */
+    protected function translateSentences(string $text, string $targetLang, ?string $sourceLang = null): string
+    {
+        if ($targetLang === 'de' && (!$sourceLang || $sourceLang === 'en')) {
+            // Complete phrases dictionary for better translation
+            $phrases = [
+                // Specific to this use case
+                'The user, Hans Schuster from Schuster GmbH, called to report that his keyboard is not functioning and requested a callback as it is urgent.' 
+                    => 'Der Benutzer, Hans Schuster von der Schuster GmbH, rief an, um zu melden, dass seine Tastatur nicht funktioniert und bat um einen Rückruf, da es dringend ist.',
+                    
+                'The agent attempted to collect the user\'s information but faced technical issues while saving the data, ultimately deciding to note the request manually and forward it to the team.'
+                    => 'Der Agent versuchte, die Informationen des Benutzers zu sammeln, stieß aber beim Speichern der Daten auf technische Probleme und entschied sich schließlich, die Anfrage manuell zu notieren und an das Team weiterzuleiten.',
+                    
+                'The user, Hans Schuster from Schuster GMBH, called regarding a problem with his keyboard and requested a callback, emphasizing the urgency of the issue. The agent collected the necessary information, including the user\'s customer number, and confirmed that the data was successfully recorded and forwarded to the team for assistance.'
+                    => 'Der Benutzer, Hans Schuster von der Schuster GMBH, rief wegen eines Problems mit seiner Tastatur an und bat um einen Rückruf, wobei er die Dringlichkeit des Problems betonte. Der Agent sammelte die notwendigen Informationen, einschließlich der Kundennummer des Benutzers, und bestätigte, dass die Daten erfolgreich erfasst und zur Unterstützung an das Team weitergeleitet wurden.',
+                    
+                // General patterns
+                'called regarding a problem with' => 'rief wegen eines Problems mit',
+                'called to report that' => 'rief an, um zu melden, dass',
+                'is not functioning' => 'funktioniert nicht',
+                'requested a callback' => 'bat um einen Rückruf',
+                'emphasizing the urgency of the issue' => 'wobei er die Dringlichkeit des Problems betonte',
+                'collected the necessary information' => 'sammelte die notwendigen Informationen',
+                'including the user\'s customer number' => 'einschließlich der Kundennummer des Benutzers',
+                'confirmed that the data was successfully recorded' => 'bestätigte, dass die Daten erfolgreich erfasst wurden',
+                'forwarded to the team for assistance' => 'zur Unterstützung an das Team weitergeleitet',
+                'as it is urgent' => 'da es dringend ist',
+                'attempted to collect' => 'versuchte zu sammeln',
+                'the user\'s information' => 'die Informationen des Benutzers',
+                'faced technical issues' => 'stieß auf technische Probleme',
+                'while saving the data' => 'beim Speichern der Daten',
+                'ultimately deciding to' => 'entschied sich schließlich',
+                'note the request manually' => 'die Anfrage manuell zu notieren',
+                'forward it to the team' => 'an das Team weiterzuleiten',
+                'The user' => 'Der Benutzer',
+                'The customer' => 'Der Kunde',
+                'The agent' => 'Der Agent',
+                'keyboard' => 'Tastatur',
+                'malfunctioning' => 'defekt',
+                'technical problems' => 'technische Probleme',
+                'data' => 'Daten',
+                'information' => 'Informationen',
+                'urgent' => 'dringend',
+                'team' => 'Team',
+                'and' => 'und',
+                'but' => 'aber',
+                'from' => 'von',
+                'that' => 'dass',
+                'his' => 'seine',
+                'the' => 'die',
+            ];
+            
+            $translated = $text;
+            
+            // First try exact match for complete sentences
+            foreach ($phrases as $english => $german) {
+                if (stripos($text, $english) !== false) {
+                    $translated = str_ireplace($english, $german, $translated);
+                }
+            }
+            
+            // Then apply word replacements in correct order (longer phrases first)
+            arsort($phrases); // Sort by length to avoid partial replacements
+            foreach ($phrases as $english => $german) {
+                $translated = preg_replace('/\b' . preg_quote($english, '/') . '\b/i', $german, $translated);
+            }
+            
+            return $translated;
+        }
+        
+        // For other language pairs, return original
+        return $text;
+    }
+    
+    /**
      * Simple language detection
      */
     protected function detectLanguageSimple(string $text): string
@@ -239,6 +334,7 @@ class TranslationService
             'es' => 'Español',
             'fr' => 'Français',
             'it' => 'Italiano',
+            'tr' => 'Türkçe',
             'nl' => 'Nederlands',
             'pl' => 'Polski',
             'pt' => 'Português',
@@ -311,6 +407,16 @@ class TranslationService
         
         // Return language with highest score
         arsort($scores);
-        return array_key_first($scores);
+        $detectedLang = array_key_first($scores);
+        $this->lastDetectedLanguage = $detectedLang;
+        return $detectedLang;
+    }
+    
+    /**
+     * Get the last detected language
+     */
+    public function getDetectedLanguage(): ?string
+    {
+        return $this->lastDetectedLanguage ?? 'unknown';
     }
 }

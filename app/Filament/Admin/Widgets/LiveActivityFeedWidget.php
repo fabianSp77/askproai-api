@@ -23,10 +23,10 @@ class LiveActivityFeedWidget extends FilterableWidget
     {
         $activities = $this->getRecentActivities();
         
-        return [
+        return array_merge(parent::getViewData(), [
             'activities' => $activities,
             'hasActivities' => $activities->isNotEmpty(),
-        ];
+        ]);
     }
     
     protected function getRecentActivities(): Collection

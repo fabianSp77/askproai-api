@@ -283,6 +283,25 @@ class Kernel extends ConsoleKernel
             ->runInBackground()
             ->onOneServer()
             ->appendOutputTo(storage_path('logs/balance-monitoring.log'));
+            
+        // Call Summary Batch Emails
+        
+        // Send hourly call summaries
+        $schedule->command('calls:send-batch-summaries --frequency=hourly')
+            ->hourly()
+            ->at('05')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/call-summaries.log'));
+            
+        // Send daily call summaries at 8 AM
+        $schedule->command('calls:send-batch-summaries --frequency=daily')
+            ->dailyAt('08:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onOneServer()
+            ->appendOutputTo(storage_path('logs/call-summaries.log'));
     }
 
     /**

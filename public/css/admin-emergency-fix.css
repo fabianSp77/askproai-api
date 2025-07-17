@@ -1,0 +1,91 @@
+/**
+ * Emergency CSS Fix for Admin Portal
+ * This fixes the gray/white screen issue
+ */
+
+/* Force body and main containers to be visible */
+body {
+    background-color: #f9fafb !important;
+    color: #111827 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Ensure Filament containers are visible */
+.fi-body,
+.fi-layout,
+.fi-page,
+.fi-main,
+.fi-content {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    background-color: transparent !important;
+}
+
+/* Fix potential overlay issues */
+.fi-modal-overlay,
+.fixed.inset-0 {
+    z-index: 9999 !important;
+}
+
+/* Ensure forms are visible */
+.fi-form,
+.fi-login-panel {
+    opacity: 1 !important;
+    visibility: visible !important;
+    background-color: white !important;
+    z-index: 1000 !important;
+}
+
+/* Fix potential loading screen stuck issue */
+.fi-loading-indicator,
+[wire\:loading] {
+    display: none !important;
+}
+
+/* Ensure navigation is visible */
+.fi-sidebar,
+.fi-topbar {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Force text to be visible */
+* {
+    color: inherit !important;
+}
+
+h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, label {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Remove any overlays that might be blocking */
+.before\:absolute::before,
+.after\:absolute::after {
+    display: none !important;
+}
+
+/* Ensure login form is visible */
+.fi-simple-page {
+    min-height: 100vh !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #f9fafb !important;
+}
+
+.fi-simple-main {
+    background-color: white !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+    padding: 2rem !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Debug - add red border to all elements to see structure */
+.debug * {
+    border: 1px solid red !important;
+}

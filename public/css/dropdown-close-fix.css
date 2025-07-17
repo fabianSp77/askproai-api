@@ -1,0 +1,93 @@
+/* CRITICAL: Allow dropdowns to close properly */
+/* This must come AFTER all emergency fixes */
+
+/* Restore dropdown hide behavior */
+.fi-dropdown-panel[x-show="false"],
+.fi-dropdown-panel:not([x-show]),
+[x-data] [x-show="false"] {
+    display: none !important;
+}
+
+/* Alpine.js controlled visibility */
+[x-show="open"]:not([x-cloak]) {
+    display: block !important;
+}
+
+[x-show="!open"]:not([x-cloak]),
+[x-show="false"]:not([x-cloak]) {
+    display: none !important;
+}
+
+/* Dropdown-specific overrides */
+.fi-dropdown,
+.fi-dropdown-trigger,
+.fi-dropdown-panel {
+    /* Remove universal visibility override for dropdowns */
+    visibility: inherit !important;
+    opacity: inherit !important;
+}
+
+/* Dropdown panel when closed */
+.fi-dropdown-panel[style*="display: none"],
+.fi-dropdown-panel[style*="display:none"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Alpine transition states */
+[x-transition\:enter],
+[x-transition\:enter-start],
+[x-transition\:enter-end],
+[x-transition\:leave],
+[x-transition\:leave-start],
+[x-transition\:leave-end] {
+    /* Let Alpine handle these */
+    visibility: inherit !important;
+    opacity: inherit !important;
+}
+
+/* Ensure click-away works */
+body:not(.dropdown-open) .fi-dropdown-panel {
+    pointer-events: auto;
+}
+
+/* Fix for branch selector specifically */
+.branch-selector-dropdown [x-show]:not([x-show="true"]) {
+    display: none !important;
+}
+
+/* Override emergency fix for dropdown containers */
+.fi-dropdown * {
+    visibility: inherit !important;
+    opacity: inherit !important;
+}
+
+/* Specific Filament dropdown fixes */
+.fi-dropdown [x-cloak] {
+    display: none !important;
+}
+
+/* When dropdown is explicitly closed via Alpine */
+[x-data*="open: false"] .fi-dropdown-panel,
+[x-data*="open:false"] .fi-dropdown-panel {
+    display: none !important;
+}
+
+/* Fix action buttons dropdowns */
+.fi-ac-dropdown .fi-dropdown-panel[x-show="open"] {
+    display: block !important;
+}
+
+.fi-ac-dropdown .fi-dropdown-panel[x-show="!open"],
+.fi-ac-dropdown .fi-dropdown-panel[x-show="false"] {
+    display: none !important;
+}
+
+/* Branch switcher specific */
+[x-data*="branchSwitcher"] [x-show="open"]:where(:not(template)) {
+    display: block !important;
+}
+
+[x-data*="branchSwitcher"] [x-show="!open"]:where(:not(template)) {
+    display: none !important;
+}

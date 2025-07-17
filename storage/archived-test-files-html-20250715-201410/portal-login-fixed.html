@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success { background: #D1FAE5; color: #065F46; }
+        .error { background: #FEE2E2; color: #991B1B; }
+        .info { background: #DBEAFE; color: #1E40AF; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Business Portal Login</h2>
+        
+        <div id="status"></div>
+        
+        <form id="loginForm" onsubmit="doLogin(event)">
+            <input type="email" id="email" placeholder="Email" value="fabianspitzer@icloud.com" required>
+            <input type="password" id="password" placeholder="Passwort" value="demo123" required>
+            <button type="submit">Einloggen</button>
+        </form>
+        
+        <hr style="margin: 20px 0;">
+        
+        <div style="text-align: center;">
+            <p>Oder direkt:</p>
+            <a href="/business/login" style="color: #3B82F6;">Zur Laravel Login-Seite</a>
+        </div>
+    </div>
+    
+    <script>
+    async function doLogin(event) {
+        event.preventDefault();
+        
+        const statusEl = document.getElementById('status');
+        statusEl.className = 'status info';
+        statusEl.textContent = 'Logging in...';
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        try {
+            // First, get the login page to extract CSRF token
+            const loginPageResponse = await fetch('/business/login', {
+                credentials: 'include'
+            });
+            const loginPageHtml = await loginPageResponse.text();
+            
+            // Extract CSRF token from the login page
+            const tokenMatch = loginPageHtml.match(/<input[^>]*name="_token"[^>]*value="([^"]+)"/);
+            if (!tokenMatch) {
+                throw new Error('CSRF token not found');
+            }
+            const csrfToken = tokenMatch[1];
+            
+            // Now submit the login form
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('_token', csrfToken);
+            
+            const loginResponse = await fetch('/business/login', {
+                method: 'POST',
+                credentials: 'include',
+                body: formData,
+                redirect: 'manual' // Don't follow redirects automatically
+            });
+            
+            // Check response
+            if (loginResponse.status === 302 || loginResponse.status === 200) {
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ Login erfolgreich! Weiterleitung...';
+                
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = '/business/dashboard';
+                }, 500);
+            } else {
+                const responseText = await loginResponse.text();
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ Login fehlgeschlagen (${loginResponse.status})`;
+                console.error('Login failed:', responseText);
+            }
+            
+        } catch (error) {
+            statusEl.className = 'status error';
+            statusEl.textContent = '❌ Fehler: ' + error.message;
+            console.error('Login error:', error);
+        }
+    }
+    
+    // Auto-submit on page load for quick testing
+    // setTimeout(() => document.getElementById('loginForm').submit(), 500);
+    </script>
+</body>
+</html>

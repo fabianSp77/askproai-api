@@ -9,6 +9,7 @@ use App\Helpers\SafeQueryHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 use App\Scopes\TenantScope;
@@ -78,6 +79,10 @@ class Call extends Model
         'public_log_url',
         'retell_dynamic_variables',
         'opt_out_sensitive_data',
+        'consent_given',
+        'data_forwarded',
+        'consent_at',
+        'forwarded_at',
         'details',
         'external_id',
         'phone_number',
@@ -98,12 +103,12 @@ class Call extends Model
         'custom_analysis_data',
         'call_summary',
         'llm_token_usage',
+        'reason_for_visit',
+        'appointment_requested',
         'user_sentiment',
         'extracted_name',
         'extracted_email',
         'appointment_made',
-        'appointment_requested',
-        'reason_for_visit',
         'versicherungsstatus',
         'health_insurance_company',
         'end_to_end_latency',
@@ -112,7 +117,20 @@ class Call extends Model
         // Language detection
         'detected_language',
         'language_confidence',
-        'language_mismatch'
+        'language_mismatch',
+        // Additional fields from migrations
+        'datum_termin',
+        'uhrzeit_termin',
+        'dienstleistung',
+        'telefonnummer',
+        'extracted_phone',
+        'name',
+        'email',
+        'grund',
+        'behandlung_dauer',
+        'rezeptstatus',
+        'haustiere_name',
+        'notiz'
     ];
 
     protected $casts = [
@@ -443,8 +461,8 @@ class Call extends Model
     {
         parent::boot();
         
-        // Apply tenant scope
-        static::addGlobalScope(new TenantScope);
+        // BelongsToCompany trait already applies the CompanyScope
+        // So we don't need to add TenantScope here
         
         static::saving(function ($call) {
             // Auto-analyze if we have a transcript
@@ -507,9 +525,9 @@ class Call extends Model
     /**
      * Appointment relationship
      */
-    public function appointment(): BelongsTo
+    public function appointment(): HasOne
     {
-        return $this->belongsTo(Appointment::class);
+        return $this->hasOne(Appointment::class);
     }
     
     /**
@@ -559,6 +577,14 @@ class Call extends Model
     {
         return $this->hasOne(MLCallPrediction::class);
     }
+    
+    /**
+     * Call charge relationship
+     */
+    public function callCharge()
+    {
+        return $this->hasOne(CallCharge::class);
+    }
 
     /**
      * Portal data relationship
@@ -566,6 +592,14 @@ class Call extends Model
     public function callPortalData()
     {
         return $this->hasOne(CallPortalData::class);
+    }
+
+    /**
+     * Activities relationship
+     */
+    public function activities()
+    {
+        return $this->hasMany(CallActivity::class)->orderBy('created_at', 'desc');
     }
 
     /**

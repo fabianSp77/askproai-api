@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+    bootstrap="vendor/autoload.php"
+    colors="true"
+    cacheDirectory=".phpunit.cache"
+    stopOnFailure="false"
+    executionOrder="random"
+    beStrictAboutOutputDuringTests="true"
+    failOnRisky="true"
+    failOnWarning="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="E2E">
+            <directory>tests/E2E</directory>
+        </testsuite>
+        <testsuite name="Performance">
+            <directory>tests/Performance</directory>
+        </testsuite>
+    </testsuites>
+    
+    <!-- Coverage Configuration -->
+    <coverage 
+        includeUncoveredFiles="true"
+        pathCoverage="false"
+        ignoreDeprecatedCodeUnits="true"
+        disableCodeCoverageIgnore="false"
+    >
+        <report>
+            <html outputDirectory="coverage/html" 
+                  lowUpperBound="50" 
+                  highLowerBound="90"/>
+            <text outputFile="coverage/coverage.txt" 
+                  showUncoveredFiles="true" 
+                  showOnlySummary="false"/>
+            <xml outputDirectory="coverage/xml"/>
+            <clover outputFile="coverage/clover.xml"/>
+            <cobertura outputFile="coverage/cobertura.xml"/>
+            <crap4j outputFile="coverage/crap4j.xml" 
+                    threshold="30"/>
+            <php outputFile="coverage/coverage.php"/>
+        </report>
+    </coverage>
+    
+    <!-- Source files to analyze for coverage -->
+    <source>
+        <include>
+            <directory suffix=".php">app</directory>
+        </include>
+        <exclude>
+            <!-- Exclude framework files -->
+            <directory>app/Console/Kernel.php</directory>
+            <directory>app/Exceptions/Handler.php</directory>
+            <directory>app/Providers/BroadcastServiceProvider.php</directory>
+            
+            <!-- Exclude generated files -->
+            <directory>app/Models/Scopes</directory>
+            <directory suffix="ServiceProvider.php">app/Providers</directory>
+            
+            <!-- Exclude UI/View files -->
+            <directory>app/View</directory>
+            <directory>app/Http/Middleware/RedirectIfAuthenticated.php</directory>
+            
+            <!-- Exclude config and bootstrap -->
+            <file>app/Providers/RouteServiceProvider.php</file>
+        </exclude>
+    </source>
+    
+    <!-- PHP Configuration -->
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="base64:KgXuiSIghU/rFT2KFE699fYbjrXy8i8/h3rCvyfqZis="/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="BROADCAST_CONNECTION" value="log"/>
+        <env name="FILESYSTEM_DISK" value="local"/>
+        
+        <!-- Coverage specific settings -->
+        <env name="XDEBUG_MODE" value="coverage"/>
+        <ini name="memory_limit" value="512M"/>
+        <ini name="error_reporting" value="-1"/>
+        
+        <!-- Disable certain features during testing -->
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="PULSE_ENABLED" value="false"/>
+    </php>
+    
+    <!-- Logging configuration -->
+    <logging>
+        <junit outputFile="coverage/junit.xml"/>
+        <testdoxHtml outputFile="coverage/testdox.html"/>
+        <testdoxText outputFile="coverage/testdox.txt"/>
+        <teamcity outputFile="coverage/teamcity.txt"/>
+    </logging>
+</phpunit>

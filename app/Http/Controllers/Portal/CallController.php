@@ -16,8 +16,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use App\Models\UserPreference;
+use App\Helpers\CallDataFormatter;
 
 class CallController extends Controller
 {
@@ -44,7 +47,7 @@ class CallController extends Controller
         $query = Call::query()
             ->where('company_id', $companyId)
             ->whereIn('to_number', $companyPhoneNumbers)  // Only show calls to company's phone numbers
-            ->with(['branch', 'callPortalData', 'callPortalData.assignedTo', 'customer']);
+            ->with(['branch', 'callPortalData', 'callPortalData.assignedTo', 'customer', 'charge']);
 
         // Filter by status
         if ($request->filled('status')) {
@@ -196,14 +199,32 @@ class CallController extends Controller
                 ->get(['id', 'name', 'email']);
         }
 
-        // Use redesigned view
-        return view('portal.calls.index-redesigned', compact('calls', 'stats', 'teamMembers'));
+        // Get user column preferences
+        $userId = session('is_admin_viewing') ? session('admin_impersonation.user_id', 0) : ($user ? $user->id : 0);
+        $userType = session('is_admin_viewing') ? 'admin' : 'portal';
+        
+        $columnPrefs = UserPreference::getPreference($userId, $userType, 'calls_columns', UserPreference::getDefaultCallsColumns());
+        $viewTemplates = UserPreference::getViewTemplates();
+        
+        // Check if user has billing.view permission for costs column
+        $canViewCosts = session('is_admin_viewing') || ($user && $user->hasPermission('billing.view'));
+        if (!$canViewCosts && isset($columnPrefs['costs'])) {
+            $columnPrefs['costs']['visible'] = false;
+        }
+        
+        // Sort columns by order
+        uasort($columnPrefs, function($a, $b) {
+            return ($a['order'] ?? 999) <=> ($b['order'] ?? 999);
+        });
+        
+        // Load React SPA directly
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
 
     /**
      * Display the specified call
      */
-    public function show(Call $call)
+    public function show(Request $request, Call $call)
     {
         $user = Auth::guard('portal')->user();
         
@@ -211,6 +232,9 @@ class CallController extends Controller
         if (!session('is_admin_viewing')) {
             $this->authorizeViewCall($call, $user);
         }
+        
+        // Always use React view for business portal
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
 
         // Load relationships
         $call->load([
@@ -220,8 +244,36 @@ class CallController extends Controller
                 $query->orderBy('starts_at', 'desc')->limit(5);
             },
             'branch',
-            'callNotes.user'
+            'callNotes.user',
+            'charge'
         ]);
+
+        // Ensure JSON fields are properly loaded as arrays
+        if (is_string($call->webhook_data)) {
+            $call->webhook_data = json_decode($call->webhook_data, true);
+        }
+        
+        if (is_string($call->transcript_object)) {
+            $decoded = json_decode($call->transcript_object, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $call->transcript_object = $decoded;
+            }
+        }
+        
+        if (is_string($call->transcript_with_tools)) {
+            $decoded = json_decode($call->transcript_with_tools, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $call->transcript_with_tools = $decoded;
+            }
+        }
+        
+        // Also check metadata field for JSON decoding
+        if (is_string($call->metadata)) {
+            $decoded = json_decode($call->metadata, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $call->metadata = $decoded;
+            }
+        }
 
         // Get call history for this customer
         $customerCallHistory = [];
@@ -243,7 +295,7 @@ class CallController extends Controller
 
         // Get team members for assignment
         $teamMembers = [];
-        if (session('is_admin_viewing') || $user->hasPermission('calls.edit_all')) {
+        if (session('is_admin_viewing') || ($user && $user->hasPermission('calls.edit_all'))) {
             // Get company ID from session if admin viewing
             $companyId = session('is_admin_viewing') ? session('admin_impersonation.company_id') : $user->company_id;
             $teamMembers = PortalUser::where('company_id', $companyId)
@@ -252,6 +304,9 @@ class CallController extends Controller
                 ->get(['id', 'name', 'email']);
         }
 
+        // Track view activity
+        $this->trackActivity($call, 'viewed', 'Anruf im Business Portal angezeigt', $user);
+        
         // Use redesigned view
         return view('portal.calls.show-redesigned', compact('call', 'customerCallHistory', 'teamMembers'));
     }
@@ -316,7 +371,7 @@ class CallController extends Controller
     {
         $user = Auth::guard('portal')->user();
         
-        if (!session('is_admin_viewing') && !$user->hasPermission('calls.edit_all')) {
+        if (!session('is_admin_viewing') && (!$user || !$user->hasPermission('calls.edit_all'))) {
             abort(403);
         }
 
@@ -438,13 +493,63 @@ class CallController extends Controller
     }
 
     /**
+     * Send call summary email
+     */
+    public function sendSummary(Request $request, Call $call)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        if (!session('is_admin_viewing') && (!$user || !$user->hasPermission('calls.edit_all'))) {
+            abort(403);
+        }
+
+        // Ensure call belongs to user's company
+        $companyId = session('is_admin_viewing') ? session('admin_impersonation.company_id') : $user->company_id;
+        if ($call->company_id !== $companyId) {
+            abort(403);
+        }
+
+        $request->validate([
+            'recipients' => 'required|array|min:1',
+            'recipients.*' => 'required|email',
+            'message' => 'nullable|string|max:500',
+            'include_transcript' => 'nullable|boolean',
+            'include_csv' => 'nullable|boolean',
+        ]);
+
+        try {
+            // Dispatch the job
+            \App\Jobs\SendCallSummaryJob::dispatch(
+                $call,
+                $request->recipients,
+                $request->message
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Zusammenfassung wird an ' . count($request->recipients) . ' Empfänger gesendet.',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send call summary', [
+                'call_id' => $call->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Fehler beim Senden der Zusammenfassung.',
+            ], 500);
+        }
+    }
+
+    /**
      * Export calls to CSV
      */
     public function exportCsv(Request $request)
     {
         $user = Auth::guard('portal')->user();
         
-        if (!session('is_admin_viewing') && !$user->hasPermission('calls.export')) {
+        if (!session('is_admin_viewing') && (!$user || !$user->hasPermission('calls.export'))) {
             abort(403);
         }
 
@@ -500,6 +605,53 @@ class CallController extends Controller
     }
 
     /**
+     * Export multiple calls with filters
+     */
+    public function exportBatch(Request $request)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        if (!session('is_admin_viewing') && (!$user || !$user->hasPermission('calls.export'))) {
+            abort(403);
+        }
+
+        $request->validate([
+            'filters' => 'nullable|array',
+            'columns' => 'nullable|array',
+            'format' => 'nullable|in:csv,xlsx,json',
+        ]);
+
+        try {
+            $companyId = session('is_admin_viewing') ? session('admin_impersonation.company_id') : $user->company_id;
+            
+            $exportService = new \App\Services\CallExportService();
+            
+            $filters = $request->filters ?? [];
+            $filters['company_id'] = $companyId;
+            
+            $csv = $exportService->exportWithFilters($filters, $request->columns);
+            
+            $filename = $exportService->generateFilename('anrufe_batch');
+            
+            return response()->streamDownload(function () use ($csv) {
+                echo $csv;
+            }, $filename, [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to export calls batch', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Fehler beim Export.',
+            ], 500);
+        }
+    }
+
+    /**
      * Get call statistics for dashboard
      */
     private function getCallStatistics(?PortalUser $user)
@@ -517,7 +669,7 @@ class CallController extends Controller
             ->whereIn('to_number', $companyPhoneNumbers);
         
         // Apply permission-based filtering (skip for admin viewing)
-        if (!session('is_admin_viewing') && !$user->hasPermission('calls.view_all')) {
+        if (!session('is_admin_viewing') && $user && !$user->hasPermission('calls.view_all')) {
             $baseQuery->whereHas('callPortalData', function ($q) use ($user) {
                 $q->where('assigned_to', $user->id);
             });
@@ -540,8 +692,11 @@ class CallController extends Controller
         ];
 
         // Calculate costs for today (only if user has permission)
-        if (session('is_admin_viewing') || $user->hasPermission('billing.view')) {
-            $todaysCalls = (clone $baseQuery)->whereDate('created_at', today())->get();
+        if (session('is_admin_viewing') || ($user && $user->hasPermission('billing.view'))) {
+            $todaysCalls = (clone $baseQuery)
+                ->whereDate('created_at', today())
+                ->with('charge') // Eager load charge relation
+                ->get();
             $todaysCosts = 0;
             
             foreach ($todaysCalls as $call) {
@@ -584,7 +739,7 @@ class CallController extends Controller
             abort(404);
         }
 
-        if (!session('is_admin_viewing') && !$user->hasPermission('calls.view_all')) {
+        if (!session('is_admin_viewing') && $user && !$user->hasPermission('calls.view_all')) {
             $portalData = $call->callPortalData;
             if (!$portalData || $portalData->assigned_to !== $user->id) {
                 if (!$user->hasPermission('calls.view_team')) {
@@ -612,7 +767,7 @@ class CallController extends Controller
             abort(404);
         }
 
-        if (!session('is_admin_viewing') && !$user->hasPermission('calls.edit_all')) {
+        if (!session('is_admin_viewing') && (!$user || !$user->hasPermission('calls.edit_all'))) {
             $portalData = $call->callPortalData;
             if (!$portalData || $portalData->assigned_to !== $user->id) {
                 abort(403);
@@ -627,7 +782,7 @@ class CallController extends Controller
     {
         $user = Auth::guard('portal')->user();
         
-        if (!session('is_admin_viewing') && !$user->hasPermission('calls.export')) {
+        if (!session('is_admin_viewing') && (!$user || !$user->hasPermission('calls.export'))) {
             abort(403);
         }
 
@@ -643,7 +798,7 @@ class CallController extends Controller
         // Get selected calls
         $calls = Call::whereIn('id', $request->call_ids)
             ->where('company_id', $companyId)
-            ->with(['branch', 'callPortalData.assignedTo', 'customer'])
+            ->with(['branch', 'callPortalData.assignedTo', 'customer', 'charge'])
             ->get();
 
         if ($request->format === 'csv') {
@@ -664,7 +819,7 @@ class CallController extends Controller
         foreach ($calls as $call) {
             // Calculate cost if user has permission
             $cost = null;
-            if (Auth::guard('portal')->user()->hasPermission('billing.view') || session('is_admin_viewing')) {
+            if (session('is_admin_viewing') || (Auth::guard('portal')->user() && Auth::guard('portal')->user()->hasPermission('billing.view'))) {
                 if ($call->charge) {
                     $cost = $call->charge->amount_charged;
                 } elseif ($call->duration_sec) {
@@ -712,8 +867,422 @@ class CallController extends Controller
      */
     private function exportBulkPdf($calls)
     {
-        // TODO: Implement PDF export using DomPDF or similar
-        // For now, redirect back with message
-        return back()->with('info', 'PDF Export wird in Kürze verfügbar sein.');
+        // Calculate costs for each call if user has permission
+        $showCosts = session('is_admin_viewing') || (Auth::guard('portal')->user() && Auth::guard('portal')->user()->hasPermission('billing.view'));
+        $totalCost = 0;
+        
+        foreach ($calls as $call) {
+            $cost = null;
+            if ($showCosts) {
+                if ($call->charge) {
+                    $cost = $call->charge->amount_charged;
+                } elseif ($call->duration_sec) {
+                    $pricing = \App\Models\CompanyPricing::getCurrentForCompany($call->company_id);
+                    if ($pricing) {
+                        $cost = $pricing->calculatePrice($call->duration_sec);
+                    } else {
+                        $billingRate = \App\Models\BillingRate::where('company_id', $call->company_id)->active()->first();
+                        if ($billingRate) {
+                            $cost = $billingRate->calculateCharge($call->duration_sec);
+                        }
+                    }
+                }
+            }
+            // Add cost to call object for use in view
+            $call->cost = $cost;
+            $totalCost += $cost ?? 0;
+        }
+        
+        // Generate PDF using Browsershot
+        $html = view('portal.calls.export-pdf', [
+            'calls' => $calls,
+            'showCosts' => $showCosts,
+            'totalCost' => $totalCost,
+            'showSummary' => true
+        ])->render();
+        
+        $filename = 'anrufe_export_' . now()->format('Y-m-d_His') . '.pdf';
+        $tempPath = storage_path('app/temp/' . $filename);
+        
+        // Ensure temp directory exists
+        if (!file_exists(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+        
+        try {
+            \Spatie\Browsershot\Browsershot::html($html)
+                ->format('A4')
+                ->landscape()
+                ->margins(10, 10, 10, 10)
+                ->showBackground()
+                ->savePdf($tempPath);
+            
+            return response()->download($tempPath, $filename, [
+                'Content-Type' => 'application/pdf',
+            ])->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error('PDF export failed: ' . $e->getMessage());
+            return back()->with('error', 'PDF Export fehlgeschlagen. Bitte versuchen Sie es erneut.');
+        }
+    }
+    
+    /**
+     * Update user column preferences
+     */
+    public function updateColumnPreferences(Request $request)
+    {
+        $request->validate([
+            'columns' => 'required|array',
+            'columns.*.visible' => 'required|boolean',
+            'columns.*.order' => 'required|integer|min:1',
+        ]);
+        
+        $user = Auth::guard('portal')->user();
+        $userId = session('is_admin_viewing') ? session('admin_impersonation.user_id', 0) : ($user ? $user->id : 0);
+        $userType = session('is_admin_viewing') ? 'admin' : 'portal';
+        
+        // Get current preferences
+        $currentPrefs = UserPreference::getPreference($userId, $userType, 'calls_columns', UserPreference::getDefaultCallsColumns());
+        
+        // Update with new values
+        foreach ($request->columns as $key => $values) {
+            if (isset($currentPrefs[$key])) {
+                $currentPrefs[$key]['visible'] = $values['visible'] ?? false;
+                $currentPrefs[$key]['order'] = $values['order'] ?? 999;
+            }
+        }
+        
+        // Save preferences
+        UserPreference::setPreference($userId, $userType, 'calls_columns', $currentPrefs);
+        
+        return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Apply a predefined view template
+     */
+    public function applyViewTemplate(Request $request)
+    {
+        $request->validate([
+            'template' => 'required|string|in:compact,standard,detailed,management',
+        ]);
+        
+        $user = Auth::guard('portal')->user();
+        $userId = session('is_admin_viewing') ? session('admin_impersonation.user_id', 0) : ($user ? $user->id : 0);
+        $userType = session('is_admin_viewing') ? 'admin' : 'portal';
+        
+        $templates = UserPreference::getViewTemplates();
+        $template = $templates[$request->template] ?? null;
+        
+        if (!$template) {
+            return response()->json(['error' => 'Invalid template'], 400);
+        }
+        
+        // Get default columns
+        $defaultColumns = UserPreference::getDefaultCallsColumns();
+        
+        // Apply template
+        foreach ($defaultColumns as $key => &$column) {
+            $column['visible'] = in_array($key, $template['columns']);
+        }
+        
+        // Save preferences
+        UserPreference::setPreference($userId, $userType, 'calls_columns', $defaultColumns);
+        
+        return response()->json(['success' => true]);
+    }
+    
+    /**
+     * Format call data for copying/exporting
+     */
+    public function formatCall(Request $request, Call $call)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        // Check permissions (skip for admin viewing)
+        if (!session('is_admin_viewing')) {
+            $this->authorizeViewCall($call, $user);
+        }
+        
+        // Load necessary relationships
+        $call->load([
+            'callPortalData.assignedTo',
+            'customer',
+            'branch',
+            'callNotes.user',
+            'charge',
+            'appointment'
+        ]);
+        
+        $format = $request->input('format', 'complete');
+        $options = [];
+        
+        switch ($format) {
+            case 'summary':
+                $formatted = CallDataFormatter::formatSummaryForClipboard($call);
+                break;
+                
+            case 'complete':
+                $options = [
+                    'include_transcript' => $request->input('include_transcript', true),
+                    'include_metadata' => $request->input('include_metadata', false),
+                    'format' => 'text'
+                ];
+                $formatted = CallDataFormatter::formatForClipboard($call, $options);
+                break;
+                
+            case 'html':
+                $options = [
+                    'include_transcript' => $request->input('include_transcript', false),
+                    'include_metadata' => $request->input('include_metadata', false),
+                    'format' => 'html'
+                ];
+                $formatted = CallDataFormatter::formatForClipboard($call, $options);
+                break;
+                
+            case 'custom':
+                $fields = $request->input('fields', []);
+                $options = [
+                    'include_transcript' => $fields['transcript'] ?? false,
+                    'include_metadata' => $fields['metadata'] ?? false,
+                    'format' => 'text'
+                ];
+                
+                // TODO: Implement custom field selection logic in CallDataFormatter
+                $formatted = CallDataFormatter::formatForClipboard($call, $options);
+                break;
+                
+            default:
+                $formatted = CallDataFormatter::formatForClipboard($call);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'formatted' => $formatted
+        ]);
+    }
+    
+    /**
+     * Translate call content (summary, transcript, etc.)
+     */
+    public function translate(Request $request, Call $call)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        // Check permissions
+        if (!$user->hasPermission('calls.view_own')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        // Validate request
+        $request->validate([
+            'text' => 'required|string',
+            'target_language' => 'required|string|in:de,en,es,fr,it' // Add more languages as needed
+        ]);
+        
+        try {
+            // Here we would normally call a translation API (Google Translate, DeepL, etc.)
+            // For now, we'll simulate a translation for the demo
+            
+            $text = $request->input('text');
+            $targetLang = $request->input('target_language');
+            
+            // Simple mock translation - in production, use a real translation service
+            if ($targetLang === 'de') {
+                // For demo purposes, if the text contains certain English phrases, translate them
+                $translations = [
+                    'Customer called about' => 'Kunde rief an wegen',
+                    'appointment' => 'Termin',
+                    'urgent' => 'dringend',
+                    'callback requested' => 'Rückruf erbeten',
+                    'The customer' => 'Der Kunde',
+                    'requested' => 'bat um',
+                    'They need' => 'Sie benötigen',
+                    'wants to' => 'möchte',
+                    'schedule' => 'vereinbaren',
+                    'reschedule' => 'verschieben',
+                    'cancel' => 'absagen',
+                    'The client' => 'Der Kunde',
+                    'follow up' => 'nachfassen',
+                    'called regarding' => 'rief an bezüglich',
+                ];
+                
+                $translatedText = $text;
+                foreach ($translations as $en => $de) {
+                    $translatedText = str_ireplace($en, $de, $translatedText);
+                }
+                
+                // If no translation happened, return a generic German translation
+                if ($translatedText === $text && str_contains(strtolower($text), 'customer')) {
+                    $translatedText = "Der Kunde hat angerufen. " . $text;
+                }
+            } else {
+                // For other languages, just return the original text with a note
+                $translatedText = $text . " [Translation to {$targetLang} not available]";
+            }
+            
+            // Log translation request for monitoring
+            Log::info('Call translation requested', [
+                'call_id' => $call->id,
+                'user_id' => $user->id,
+                'target_language' => $targetLang,
+                'text_length' => strlen($text)
+            ]);
+            
+            // Track translation activity
+            $this->trackActivity($call, 'translated', 'Zusammenfassung wurde übersetzt (EN → DE)', $user);
+            
+            return response()->json([
+                'success' => true,
+                'translated_text' => $translatedText,
+                'source_language' => 'en', // Auto-detected in real implementation
+                'target_language' => $targetLang
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Translation failed', [
+                'call_id' => $call->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Translation service temporarily unavailable'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Export a single call to PDF
+     */
+    public function exportPdf(Call $call)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        // Check permissions
+        if (!$user->hasPermission('calls.view_own')) {
+            abort(403);
+        }
+        
+        // Calculate cost if user has permission
+        $showCosts = session('is_admin_viewing') || $user->hasPermission('billing.view');
+        $cost = null;
+        
+        if ($showCosts) {
+            if ($call->charge) {
+                $cost = $call->charge->amount_charged;
+            } elseif ($call->duration_sec) {
+                $pricing = \App\Models\CompanyPricing::getCurrentForCompany($call->company_id);
+                if ($pricing) {
+                    $cost = $pricing->calculatePrice($call->duration_sec);
+                } else {
+                    $billingRate = \App\Models\BillingRate::where('company_id', $call->company_id)->active()->first();
+                    if ($billingRate) {
+                        $cost = $billingRate->calculateCharge($call->duration_sec);
+                    }
+                }
+            }
+        }
+        
+        // Add cost to call object for use in view
+        $call->cost = $cost;
+        
+        // Load relationships
+        $call->load(['branch', 'callPortalData', 'callPortalData.assignedTo', 'customer', 'charge', 'callNotes.user']);
+        
+        // Track export activity
+        $this->trackActivity($call, 'exported', 'Anruf als PDF exportiert', $user);
+        
+        // Generate PDF using Browsershot
+        $html = view('portal.calls.export-pdf-single', [
+            'call' => $call,
+            'showCosts' => $showCosts
+        ])->render();
+        
+        $filename = 'anruf_' . $call->id . '_' . now()->format('Y-m-d_His') . '.pdf';
+        $tempPath = storage_path('app/temp/' . $filename);
+        
+        // Ensure temp directory exists
+        if (!file_exists(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+        
+        try {
+            \Spatie\Browsershot\Browsershot::html($html)
+                ->format('A4')
+                ->margins(20, 20, 20, 20)
+                ->showBackground()
+                ->waitUntilNetworkIdle()
+                ->savePdf($tempPath);
+            
+            return response()->download($tempPath, $filename, [
+                'Content-Type' => 'application/pdf',
+            ])->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error('PDF export failed: ' . $e->getMessage());
+            
+            // Fallback to simple HTML-to-PDF if Browsershot fails
+            try {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('portal.calls.export-pdf-single', [
+                    'call' => $call,
+                    'showCosts' => $showCosts
+                ]);
+                
+                return $pdf->download($filename);
+            } catch (\Exception $e2) {
+                Log::error('PDF export fallback also failed: ' . $e2->getMessage());
+                return back()->with('error', 'PDF Export fehlgeschlagen. Bitte nutzen Sie die Druckfunktion als Alternative.');
+            }
+        }
+    }
+    
+    /**
+     * Track activity in the notes system
+     */
+    private function trackActivity(Call $call, string $type, string $content, ?PortalUser $user = null)
+    {
+        // Only track if user is authenticated
+        if (!$user) {
+            return;
+        }
+        
+        // Enhanced activity types for comprehensive tracking
+        $activityTypes = [
+            'viewed' => 'view',
+            'status_changed' => 'status_change',
+            'assigned' => 'assignment',
+            'note_added' => 'note',
+            'exported' => 'export',
+            'translated' => 'translation',
+            'printed' => 'print',
+            'callback_scheduled' => 'callback',
+            'email_sent' => 'email',
+            'customer_updated' => 'customer_update'
+        ];
+        
+        $noteType = $activityTypes[$type] ?? 'activity';
+        
+        // Create activity note
+        CallNote::create([
+            'call_id' => $call->id,
+            'user_id' => $user->id,
+            'type' => $noteType,
+            'content' => '[Portal-Aktivität] ' . $content,
+            'metadata' => [
+                'activity_type' => $type,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'session_id' => session()->getId(),
+                'timestamp' => now()->toIso8601String()
+            ]
+        ]);
+        
+        // Update last activity timestamp on call portal data
+        if ($call->callPortalData) {
+            $call->callPortalData->update([
+                'last_activity_at' => now(),
+                'last_activity_by' => $user->id
+            ]);
+        }
     }
 }

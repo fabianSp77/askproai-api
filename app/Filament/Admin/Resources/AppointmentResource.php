@@ -28,7 +28,7 @@ class AppointmentResource extends Resource
         $user = auth()->user();
         
         // Super admin can view all
-        if ($user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
         
@@ -41,7 +41,7 @@ class AppointmentResource extends Resource
         $user = auth()->user();
         
         // Super admin can view all
-        if ($user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
         
@@ -59,7 +59,7 @@ class AppointmentResource extends Resource
         $user = auth()->user();
         
         // Super admin can edit all
-        if ($user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
         
@@ -77,7 +77,7 @@ class AppointmentResource extends Resource
         $user = auth()->user();
         
         // Super admin can create
-        if ($user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
         
@@ -184,10 +184,7 @@ class AppointmentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(array_merge(
-                ['customer', 'staff', 'service', 'branch', 'calcomEventType', 'call'],
-                static::getMultiTenantRelations()
-            )))
+            // ->modifyQueryUsing(fn ($query) => $query->with(['customer', 'staff', 'service', 'branch', 'company']))
             ->poll('30s')
             ->columns([
                 Tables\Columns\TextColumn::make('id')
@@ -764,14 +761,12 @@ class AppointmentResource extends Resource
             ->emptyStateHeading('Keine Termine vorhanden')
             ->emptyStateDescription('Erstellen Sie einen neuen Termin über den Button oben.')
             ->emptyStateIcon('heroicon-o-calendar')
-            ->deferLoading()
-            ->persistFiltersInSession()
-            ->persistSearchInSession()
-            ->persistSortInSession()
-            ->persistColumnSearchesInSession()
-            ->extremePaginationLinks()
-            ->paginated([10, 25, 50, 100])
-            ->selectCurrentPageOnly();
+            // ->persistFiltersInSession()
+            // ->persistSearchInSession()
+            // ->persistSortInSession()
+            // ->persistColumnSearchesInSession()
+            // ->extremePaginationLinks()
+            ->paginated([10, 25, 50, 100]);
     }
 
     public static function getRelations(): array

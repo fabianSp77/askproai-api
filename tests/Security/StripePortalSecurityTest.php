@@ -43,6 +43,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 1: SQL Injection Prevention
      */
+    #[Test]
     public function test_sql_injection_prevention_in_customer_search()
     {
         // Attempt SQL injection in various fields
@@ -73,6 +74,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 2: XSS Protection
      */
+    #[Test]
     public function test_xss_protection_in_customer_portal()
     {
         $xssPayloads = [
@@ -108,6 +110,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 3: Authentication and Authorization
      */
+    #[Test]
     public function test_multi_tenant_isolation()
     {
         // Create invoice for Company A
@@ -132,6 +135,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 4: CSRF Protection
      */
+    #[Test]
     public function test_csrf_protection_on_state_changing_operations()
     {
         // Test without CSRF token
@@ -162,6 +166,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 5: Sensitive Data Exposure
      */
+    #[Test]
     public function test_no_sensitive_data_exposure_in_api_responses()
     {
         // Create webhook event with sensitive data
@@ -201,6 +206,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 6: Rate Limiting
      */
+    #[Test]
     public function test_rate_limiting_on_sensitive_endpoints()
     {
         // Test login endpoint rate limiting
@@ -223,6 +229,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 7: Webhook Security
      */
+    #[Test]
     public function test_stripe_webhook_signature_verification()
     {
         $payload = json_encode(['test' => 'data']);
@@ -255,6 +262,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 8: Input Validation
      */
+    #[Test]
     public function test_input_validation_prevents_malicious_data()
     {
         // Test oversized input
@@ -289,6 +297,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 9: Password Security
      */
+    #[Test]
     public function test_password_security_requirements()
     {
         // Test weak password
@@ -325,6 +334,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 10: Session Security
      */
+    #[Test]
     public function test_session_security_and_fixation_prevention()
     {
         // Get initial session ID
@@ -352,6 +362,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 11: Magic Link Security
      */
+    #[Test]
     public function test_magic_link_token_security()
     {
         // Generate magic link
@@ -390,6 +401,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 12: File Upload Security
      */
+    #[Test]
     public function test_file_upload_security()
     {
         // If there's a profile picture upload endpoint
@@ -415,6 +427,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 13: API Key Security
      */
+    #[Test]
     public function test_api_keys_are_properly_secured()
     {
         // Ensure Stripe keys are not exposed in responses
@@ -433,6 +446,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 14: Subdomain Isolation
      */
+    #[Test]
     public function test_subdomain_based_multi_tenancy()
     {
         // Access Company A's portal with Company B's subdomain
@@ -447,6 +461,7 @@ class StripePortalSecurityTest extends TestCase
     /**
      * Test 15: Audit Logging
      */
+    #[Test]
     public function test_security_events_are_logged()
     {
         // Failed login attempt

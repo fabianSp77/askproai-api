@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test React Appointment Edit</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .status.ok {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+        }
+        .log {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>React Admin Portal - Appointment Edit Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Appointments</h2>
+        <p>Available test appointment IDs:</p>
+        <ul>
+            <li>Appointment #5 - <a href="/admin-react/appointments/5" target="_blank">View Detail Page</a></li>
+            <li>Appointment #23 - <a href="/admin-react/appointments/23" target="_blank">View Detail Page</a></li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Steps</h2>
+        <ol>
+            <li>Click on one of the appointment detail links above</li>
+            <li>On the detail page, click the "Bearbeiten" (Edit) button</li>
+            <li>The edit modal should appear without errors</li>
+            <li>Try changing some values and save</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Live Preview</h2>
+        <iframe src="/admin-react/appointments/5" id="preview"></iframe>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Log <span class="status ok" id="log-status">Monitoring...</span></h2>
+        <div class="log" id="console-log">
+            Waiting for console messages...
+        </div>
+    </div>
+
+    <script>
+        // Capture console messages from iframe
+        const iframe = document.getElementById('preview');
+        const logDiv = document.getElementById('console-log');
+        const logStatus = document.getElementById('log-status');
+        let logs = [];
+
+        function addLog(message, type = 'log') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ef4444' : (type === 'warn' ? '#f59e0b' : '#6b7280');
+            logs.push(`<span style="color: ${color}">[${time}] ${message}</span>`);
+            if (logs.length > 50) logs.shift();
+            logDiv.innerHTML = logs.join('<br>');
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            if (type === 'error') {
+                logStatus.className = 'status error';
+                logStatus.textContent = 'Error detected!';
+            }
+        }
+
+        // Try to capture iframe console (limited by same-origin policy)
+        iframe.addEventListener('load', () => {
+            try {
+                const iframeWindow = iframe.contentWindow;
+                if (iframeWindow) {
+                    addLog('Iframe loaded successfully', 'log');
+                    
+                    // Check if React is loaded
+                    if (iframeWindow.React) {
+                        addLog('React detected in iframe', 'log');
+                    }
+                }
+            } catch (e) {
+                addLog('Cannot access iframe content (cross-origin): ' + e.message, 'warn');
+            }
+        });
+
+        // Test API directly
+        async function testAPI() {
+            try {
+                const response = await fetch('/admin-api/appointments/5');
+                if (response.ok) {
+                    addLog('API test successful: /admin-api/appointments/5', 'log');
+                } else {
+                    addLog('API test failed: ' + response.status + ' ' + response.statusText, 'error');
+                }
+            } catch (e) {
+                addLog('API test error: ' + e.message, 'error');
+            }
+        }
+
+        // Run tests
+        setTimeout(testAPI, 1000);
+    </script>
+</body>
+</html>

@@ -11,6 +11,11 @@ return [
             'password'   => env('MAIL_PASSWORD'),
             'timeout'    => 10,
         ],
+        'resend' => [
+            'transport' => 'resend',
+            'key' => env('RESEND_API_KEY'),
+            'queue' => 'emails',
+        ],
         'log' => ['transport' => 'log'],
     ],
     'from' => [

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fix Livewire CSRF</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Livewire CSRF Token Fix</h1>
+    
+    <script>
+        // Force set a CSRF token if missing
+        if (!document.querySelector('meta[name="csrf-token"]')) {
+            const meta = document.createElement('meta');
+            meta.name = 'csrf-token';
+            meta.content = 'dummy-token-for-testing';
+            document.head.appendChild(meta);
+        }
+        
+        // Check if Livewire is loaded
+        if (typeof window.Livewire !== 'undefined') {
+            console.log('Livewire version:', window.Livewire.version);
+            
+            // Try to disable CSRF check
+            if (window.Livewire.config) {
+                console.log('Livewire config:', window.Livewire.config);
+            }
+        }
+        
+        // Override Livewire's CSRF check
+        document.addEventListener('livewire:init', () => {
+            console.log('Livewire initialized');
+            
+            // Try to intercept requests
+            Livewire.hook('request', ({ component, commit, respond, fail }) => {
+                console.log('Livewire request intercepted');
+                // Always add a token even if empty
+                commit.fingerprint.csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            });
+        });
+    </script>
+    
+    <p>Check the browser console for Livewire information.</p>
+    
+    <h2>Quick Fix Options:</h2>
+    <ol>
+        <li><strong>Clear all sessions and cookies:</strong><br>
+            <code>php artisan session:flush</code>
+        </li>
+        <li><strong>Regenerate application key:</strong><br>
+            <code>php artisan key:generate</code>
+        </li>
+        <li><strong>Clear all caches:</strong><br>
+            <code>php artisan optimize:clear</code>
+        </li>
+    </ol>
+</body>
+</html>

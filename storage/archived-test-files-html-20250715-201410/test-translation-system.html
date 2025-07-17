@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Translation System Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px; 
+            background: #f5f5f5; 
+            margin: 0;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #1a1f2e; 
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #2563eb;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .result {
+            background: #f3f4f6;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        .language-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .language-button {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .language-button:hover {
+            background: #f3f4f6;
+        }
+        .language-button.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .translation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .translation-item {
+            padding: 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        .translation-key {
+            font-family: monospace;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .translation-value {
+            font-size: 16px;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Translation System Test</h1>
+        <p class="subtitle">Testen Sie das mehrsprachige Übersetzungssystem für das Admin Portal</p>
+        
+        <div class="section">
+            <h3>🌐 Verfügbare Sprachen</h3>
+            <div id="languages" class="language-buttons">
+                <div class="result">Loading languages...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📝 Übersetzte Texte</h3>
+            <p>Aktuelle Sprache: <strong id="current-locale">de</strong></p>
+            <div id="translations" class="translation-grid">
+                <div class="result">Wählen Sie eine Sprache aus...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🔧 API Tests</h3>
+            <button class="test-button" onclick="testTranslateAPI()">
+                Test Translate API
+            </button>
+            <button class="test-button" onclick="clearCache()">
+                Clear Translation Cache
+            </button>
+            <div id="api-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>💡 Integration im React Admin Portal</h3>
+            <div class="success">
+                ✅ Translation Context Provider implementiert<br>
+                ✅ Language Selector Component erstellt<br>
+                ✅ useTranslation Hook verfügbar<br>
+                ✅ Lokale Speicherung der Sprachauswahl<br>
+                ✅ Automatisches Laden bei Sprachwechsel
+            </div>
+            
+            <h4>Verwendung im Code:</h4>
+            <div class="result">
+// In jeder Komponente:
+const { t } = useTranslation();
+
+// Einfache Übersetzung:
+&lt;h1&gt;{t('calls.title')}&lt;/h1&gt;
+
+// Mit Parametern:
+&lt;p&gt;{t('stats.total_calls', { count: 42 })}&lt;/p&gt;
+
+// Sprachwechsel:
+const { changeLocale } = useTranslation();
+changeLocale('en');
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🚀 Portal Links</h3>
+            <a href="/admin-react" class="test-button" style="text-decoration: none; display: inline-block;">
+                React Admin Portal öffnen
+            </a>
+            <a href="/react-admin-overview.html" class="test-button" style="text-decoration: none; display: inline-block; background: #6b7280;">
+                Übersicht
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('admin_token') || '45|WYhFfzNjL2H6T0dTaZVaOJoCPQUAr2ktsH02QqPu34d2e786';
+        let currentLocale = 'de';
+        let availableLanguages = {};
+
+        // Load languages on page load
+        loadLanguages();
+
+        async function apiCall(endpoint, options = {}) {
+            const response = await fetch(`/admin-api${endpoint}`, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    ...options.headers
+                }
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'API Error');
+            }
+
+            return data;
+        }
+
+        async function loadLanguages() {
+            try {
+                const data = await apiCall('/translations/languages');
+                availableLanguages = data.languages;
+                
+                const languagesDiv = document.getElementById('languages');
+                languagesDiv.innerHTML = '';
+                
+                Object.entries(availableLanguages).forEach(([code, name]) => {
+                    const button = document.createElement('button');
+                    button.className = 'language-button' + (code === currentLocale ? ' active' : '');
+                    button.textContent = `${name} (${code})`;
+                    button.onclick = () => selectLanguage(code);
+                    languagesDiv.appendChild(button);
+                });
+                
+                // Load initial translations
+                loadTranslations(currentLocale);
+            } catch (error) {
+                document.getElementById('languages').innerHTML = 
+                    `<div class="error">Error loading languages: ${error.message}</div>`;
+            }
+        }
+
+        async function selectLanguage(locale) {
+            currentLocale = locale;
+            document.getElementById('current-locale').textContent = locale;
+            
+            // Update button states
+            document.querySelectorAll('.language-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(`(${locale})`)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            loadTranslations(locale);
+        }
+
+        async function loadTranslations(locale) {
+            try {
+                const data = await apiCall(`/translations/${locale}`);
+                const translationsDiv = document.getElementById('translations');
+                translationsDiv.innerHTML = '';
+                
+                // Show a sample of translations
+                const sampleKeys = [
+                    'nav.dashboard', 'nav.calls', 'nav.customers',
+                    'calls.title', 'calls.live_calls', 'calls.active_calls',
+                    'common.search', 'common.filter', 'common.save',
+                    'call_detail.overview', 'call_detail.our_cost', 'call_detail.customer_revenue',
+                    'filter.today', 'filter.completed', 'stats.total_calls'
+                ];
+                
+                sampleKeys.forEach(key => {
+                    if (data.translations[key]) {
+                        const item = document.createElement('div');
+                        item.className = 'translation-item';
+                        item.innerHTML = `
+                            <div class="translation-key">${key}</div>
+                            <div class="translation-value">${data.translations[key]}</div>
+                        `;
+                        translationsDiv.appendChild(item);
+                    }
+                });
+            } catch (error) {
+                document.getElementById('translations').innerHTML = 
+                    `<div class="error">Error loading translations: ${error.message}</div>`;
+            }
+        }
+
+        async function testTranslateAPI() {
+            const resultDiv = document.getElementById('api-result');
+            
+            try {
+                const testText = "The user called to book an appointment for tomorrow";
+                const response = await apiCall('/translations/translate', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        text: testText,
+                        target_lang: 'de',
+                        source_lang: 'en'
+                    })
+                });
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <strong>Translation successful!</strong><br>
+                        Original: ${response.original}<br>
+                        Translated: ${response.translated}<br>
+                        Target: ${response.target_lang}, Source: ${response.source_lang}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function clearCache() {
+            const resultDiv = document.getElementById('api-result');
+            
+            try {
+                await apiCall('/translations/clear-cache', { method: 'POST' });
+                resultDiv.innerHTML = '<div class="success">Translation cache cleared successfully!</div>';
+                
+                // Reload current translations
+                loadTranslations(currentLocale);
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

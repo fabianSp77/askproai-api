@@ -135,7 +135,7 @@ document.addEventListener('alpine:init', () => {
         
         openQuickSearch() {
             // Implementation for quick search modal
-            console.log('Quick search opened');
+            //console.log('Quick search opened');
         },
         
         closeAllModals() {

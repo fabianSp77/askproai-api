@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Dashboard - AskProAI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background-color: #1f2937;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .alert {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #3b82f6;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            margin: 0.25rem;
+        }
+        
+        .button:hover {
+            background-color: #2563eb;
+        }
+        
+        .button.secondary {
+            background-color: #6b7280;
+        }
+        
+        .button.secondary:hover {
+            background-color: #4b5563;
+        }
+        
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f9fafb;
+            border-radius: 0.375rem;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .check-mark {
+            color: #10b981;
+        }
+        
+        .x-mark {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 Emergency Dashboard - AskProAI</h1>
+    </div>
+    
+    <div class="container">
+        <div class="alert">
+            <strong>⚠️ Technisches Problem erkannt</strong><br>
+            Das normale Admin-Interface hat Darstellungsprobleme. Dies ist ein statisches HTML-Dashboard als Notlösung.
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <h2>📊 Verwaltung</h2>
+                <a href="/admin/companies" class="button">Firmen</a>
+                <a href="/admin/branches" class="button">Filialen</a>
+                <a href="/admin/users" class="button">Benutzer</a>
+                <a href="/admin/portal-users" class="button">Portal Benutzer</a>
+            </div>
+            
+            <div class="card">
+                <h2>📞 Kommunikation</h2>
+                <a href="/admin/calls" class="button">Anrufe</a>
+                <a href="/admin/appointments" class="button">Termine</a>
+                <a href="/admin/customers" class="button">Kunden</a>
+                <a href="/admin/phone-numbers" class="button">Telefonnummern</a>
+            </div>
+            
+            <div class="card">
+                <h2>⚙️ System</h2>
+                <a href="/horizon" class="button secondary">Laravel Horizon</a>
+                <a href="/admin/settings" class="button secondary">Einstellungen</a>
+                <a href="/admin/logs" class="button secondary">System Logs</a>
+                <a href="/telescope" class="button secondary">Laravel Telescope</a>
+            </div>
+            
+            <div class="card">
+                <h2>🔧 Direktzugriff</h2>
+                <a href="/admin?disable_middleware=1" class="button secondary">Admin ohne Middleware</a>
+                <a href="/admin-simple.php" class="button secondary">Simple Admin PHP</a>
+                <a href="/login-standalone.php" class="button secondary">Standalone Login</a>
+                <a href="/test-basic.php" class="button secondary">PHP Test</a>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 2rem;">
+            <h2>System Status</h2>
+            <div class="status">
+                <div class="status-item">
+                    <span>PHP Funktionsfähig</span>
+                    <span class="check-mark">✓</span>
+                </div>
+                <div class="status-item">
+                    <span>Statisches HTML</span>
+                    <span class="check-mark">✓</span>
+                </div>
+                <div class="status-item">
+                    <span>JavaScript erforderlich</span>
+                    <span class="x-mark">✗</span>
+                </div>
+                <div class="status-item">
+                    <span>Keine externen Dependencies</span>
+                    <span class="check-mark">✓</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 2rem;">
+            <h2>Fehlerbehebung</h2>
+            <ol>
+                <li>Browser-Cache leeren: Strg+Shift+F5 (Windows) oder Cmd+Shift+R (Mac)</li>
+                <li>Alle Cookies für api.askproai.de löschen</li>
+                <li>Browser neu starten</li>
+                <li>Anderen Browser verwenden (Chrome, Firefox, Safari)</li>
+                <li>Browser-Erweiterungen deaktivieren (besonders Ad-Blocker)</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        // Minimaler JavaScript Test
+        console.log('Emergency Dashboard loaded successfully');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM ready');
+            // Füge Zeitstempel hinzu
+            const timeElement = document.createElement('div');
+            timeElement.style.padding = '1rem';
+            timeElement.style.textAlign = 'center';
+            timeElement.style.color = '#6b7280';
+            timeElement.textContent = 'Geladen um: ' + new Date().toLocaleString('de-DE');
+            document.body.appendChild(timeElement);
+        });
+    </script>
+</body>
+</html>

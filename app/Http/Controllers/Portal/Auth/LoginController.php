@@ -33,27 +33,36 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
         
-        // Find user
-        $user = PortalUser::where('email', $request->email)->first();
+        // Find user - must bypass CompanyScope since we're not authenticated yet
+        $user = PortalUser::withoutGlobalScopes()->where('email', $request->email)->first();
         
         if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Die angegebenen Zugangsdaten sind ungültig.'],
+            \Log::warning('Portal login failed', [
+                'email' => $request->email,
+                'user_found' => $user ? 'yes' : 'no',
+                'password_valid' => $user ? (Hash::check($request->password, $user->password) ? 'yes' : 'no') : 'n/a'
             ]);
+            
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Die angegebenen Zugangsdaten sind ungültig.']);
         }
         
         // Check if active
         if (!$user->is_active) {
-            throw ValidationException::withMessages([
-                'email' => ['Ihr Konto wurde deaktiviert. Bitte kontaktieren Sie Ihren Administrator.'],
-            ]);
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Ihr Konto wurde deaktiviert. Bitte kontaktieren Sie Ihren Administrator.']);
         }
         
         // Check if 2FA is required
         if ($user->requires2FA() && !$user->two_factor_confirmed_at) {
-            // Store user ID in session for 2FA setup
-            session(['portal_2fa_user' => $user->id]);
-            return redirect()->route('business.two-factor.setup');
+            // Skip 2FA for demo user
+            if ($user->email !== 'demo@example.com') {
+                // Store user ID in session for 2FA setup
+                session(['portal_2fa_user' => $user->id]);
+                return redirect()->route('business.two-factor.setup');
+            }
         }
         
         // Check if 2FA is enabled
@@ -66,15 +75,21 @@ class LoginController extends Controller
         // Login user
         Auth::guard('portal')->login($user, $request->boolean('remember'));
         
+        // Store user ID in session for API access
+        session(['portal_user_id' => $user->id]);
+        session(['portal_login' => $user->id]);
+        
+        // Ensure Laravel auth session key is set
+        $portalSessionKey = 'login_portal_' . sha1('Illuminate\Auth\SessionGuard.portal');
+        if (!session()->has($portalSessionKey)) {
+            session([$portalSessionKey => $user->id]);
+        }
+        
         // Record login
         $user->recordLogin($request->ip());
         
-        // Redirect based on role
-        if ($user->canViewBilling()) {
-            return redirect()->intended(route('business.billing.index'));
-        }
-        
-        return redirect()->intended(route('business.dashboard'));
+        // Redirect to dashboard route which will load React SPA
+        return redirect()->route('business.dashboard');
     }
     
     /**

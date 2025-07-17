@@ -1,0 +1,15 @@
+{
+  "name": "apidog-mcp-server",
+  "version": "1.0.0",
+  "description": "Apidog MCP Server for AskProAI",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.4.5",
+    "js-yaml": "^4.1.0"
+  }
+}

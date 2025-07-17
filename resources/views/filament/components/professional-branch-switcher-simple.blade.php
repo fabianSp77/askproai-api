@@ -15,7 +15,11 @@
 @endphp
 
 {{-- Ultra Simple Branch Switcher - 100% Working Solution --}}
-<div id="{{ $componentId }}" class="relative branch-selector-dropdown">
+<div id="{{ $componentId }}" class="relative branch-selector-dropdown" 
+     x-data="{ 
+         branches: {{ $branches ? $branches->toJson() : '[]' }},
+         search: ''
+     }">
     {{-- Trigger Button --}}
     <button
         type="button"
@@ -39,9 +43,8 @@
     {{-- Dropdown Panel --}}
     <div
         id="{{ $componentId }}-panel"
-        class="hidden absolute end-0 z-[99999] mt-2 w-72 origin-top-right divide-y divide-gray-100 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:divide-gray-700 dark:bg-gray-800 dark:ring-white/10"
+        class="hidden absolute end-0 mt-2 w-72 origin-top-right divide-y divide-gray-100 rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:divide-gray-700 dark:bg-gray-800 dark:ring-white/10 branch-dropdown-panel"
         role="menu"
-        style="position: fixed !important;"
     >
         {{-- Search Input (shown when more than 5 branches) --}}
         @if($branches && $branches->count() > 5)
@@ -213,6 +216,7 @@
         dropdown.style.top = (buttonRect.bottom + 8) + 'px';
         dropdown.style.right = (window.innerWidth - buttonRect.right) + 'px';
         dropdown.style.left = 'auto';
+        dropdown.style.zIndex = '65'; // Ensure it's above sidebar
         
         // Check if dropdown goes off screen
         const dropdownRect = dropdown.getBoundingClientRect();

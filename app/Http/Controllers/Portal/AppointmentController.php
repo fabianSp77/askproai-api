@@ -28,7 +28,8 @@ class AppointmentController extends Controller
             ->orderBy('starts_at', 'desc')
             ->paginate(20);
         
-        return view('portal.appointments.index', compact('appointments'));
+        // Load React SPA directly
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
     
     /**
@@ -49,6 +50,7 @@ class AppointmentController extends Controller
             ->with(['customer', 'staff', 'branch', 'service'])
             ->findOrFail($id);
         
-        return view('portal.appointments.show', compact('appointment'));
+        // Load React SPA directly
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
 }

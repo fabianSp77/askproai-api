@@ -9,7 +9,7 @@
                 'icon' => 'heroicon-o-exclamation-triangle',
                 'color' => 'danger',
                 'title' => 'Dringend nachfassen!',
-                'description' => 'Kunde war unzufrieden - sofortiger Rückruf empfohlen'
+                'description' => 'Kunde war unzufrieden - sofortiger Rückruf planen empfohlen'
             ];
         }
         

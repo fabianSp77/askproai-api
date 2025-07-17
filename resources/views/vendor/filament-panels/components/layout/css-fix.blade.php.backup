@@ -1,0 +1,137 @@
+{{-- Emergency CSS Fix for Filament Layout --}}
+<link rel="stylesheet" href="{{ asset('css/filament/filament/app.css') }}">
+<link rel="stylesheet" href="{{ asset('css/filament-hotfix.css') }}">
+<link rel="stylesheet" href="{{ asset('css/filament-hotfix-override.css') }}">
+<link rel="stylesheet" href="{{ asset('css/admin-emergency-fix.css') }}">
+
+{{-- Dropdown Close Fix - Must load AFTER emergency fixes --}}
+<link rel="stylesheet" href="{{ asset('css/dropdown-close-fix.css') }}">
+{{-- Script file doesn't exist, commenting out to prevent 404 error --}}
+{{-- <script src="{{ asset('js/dropdown-close-fix.js') }}" defer></script> --}}
+
+<style>
+    /* Emergency inline styles to ensure basic layout */
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        opacity: 1 !important;
+        visibility: visible !important;
+        background-color: #f9fafb !important;
+    }
+    
+    /* Force everything to be visible */
+    body * {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Remove any potential overlays */
+    .loading-overlay,
+    .spinner-overlay,
+    [wire\:loading] {
+        display: none !important;
+    }
+    
+    .fi-layout {
+        display: flex;
+        min-height: 100vh;
+    }
+    
+    /* Ensure sidebar is visible */
+    .fi-sidebar {
+        width: 20rem;
+        background: #fff;
+        border-right: 1px solid #e5e7eb;
+        position: fixed;
+        height: 100vh;
+        left: 0;
+        top: 0;
+        overflow-y: auto;
+        /* z-index managed by stacking-context-fix.css */
+    }
+    
+    /* Main content area */
+    .fi-main {
+        margin-left: 20rem;
+        flex: 1;
+        width: calc(100% - 20rem);
+    }
+    
+    /* Dark mode support */
+    .dark .fi-sidebar {
+        background: #111827;
+        border-right-color: #374151;
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 1024px) {
+        .fi-sidebar {
+            transform: translateX(-100%);
+            z-index: 50;
+        }
+        
+        .fi-sidebar.fi-sidebar-open {
+            transform: translateX(0);
+        }
+        
+        .fi-main {
+            margin-left: 0;
+            width: 100%;
+        }
+    }
+    
+    /* Force x-cloak elements to be visible as fallback */
+    [x-cloak], [x-cloak]::before, [x-cloak]::after {
+        display: initial !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+</style>
+
+<script>
+    // Emergency Alpine.js initialization fix
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Emergency Alpine fix running...');
+        
+        // Force remove x-cloak after delay
+        setTimeout(function() {
+            document.querySelectorAll('[x-cloak]').forEach(function(el) {
+                el.removeAttribute('x-cloak');
+                el.style.display = '';
+                el.style.opacity = '1';
+                el.style.visibility = 'visible';
+            });
+            
+            // Force body visibility
+            document.body.style.opacity = '1';
+            document.body.style.visibility = 'visible';
+            document.body.style.display = 'block';
+            
+            console.log('Forced visibility applied');
+        }, 500);
+        
+        // Try to manually start Alpine if it hasn't started
+        setTimeout(function() {
+            if (typeof Alpine !== 'undefined' && !Alpine.started) {
+                console.log('Manually starting Alpine...');
+                Alpine.start();
+            }
+        }, 1000);
+    });
+    
+    // Also try on window load
+    window.addEventListener('load', function() {
+        document.querySelectorAll('[x-cloak]').forEach(function(el) {
+            el.removeAttribute('x-cloak');
+        });
+    });
+</script>
+
+{{-- Load additional fixes for admin portal --}}
+@php
+    $appPortal = session('current_portal', 'admin');
+@endphp
+
+@if($appPortal === 'admin' && request()->routeIs('filament.admin.*'))
+    {{-- Scripts removed - unified-ui-fix.js handles all UI fixes globally in base.blade.php --}}
+@endif

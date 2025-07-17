@@ -96,6 +96,11 @@
         </header>
     </div>
 
+    {{-- Mobile Branch Switcher - Only visible on mobile --}}
+    <div class="lg:hidden px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+        @include('filament.components.professional-branch-switcher-mobile')
+    </div>
+
     <nav
         class="fi-sidebar-nav flex-grow flex flex-col gap-y-7 overflow-y-auto overflow-x-hidden px-6 py-8"
         style="scrollbar-gutter: stable"

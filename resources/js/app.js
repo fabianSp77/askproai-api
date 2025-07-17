@@ -29,12 +29,31 @@ import './ultimate-ui-system';
 // Import Retell Configuration Center
 import './retell-configuration-center';
 
+// Import Alpine Diagnostic and Fix Script
+import './alpine-diagnostic-fix';
+
+// Import Portal Alpine Stabilizer - MUST be before Alpine.start()
+import './portal-alpine-stabilizer';
+
+// Dropdown fixes are now handled by minimal-dropdown-fix.css only
+
 window.Alpine = Alpine;
 
 Alpine.plugin(collapse);
 Alpine.plugin(persist);
 Alpine.plugin(focus);
-Alpine.start();
+
+// Delay Alpine start to ensure all components are registered
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        Alpine.start();
+    });
+} else {
+    // Small delay to ensure everything is loaded
+    setTimeout(() => {
+        Alpine.start();
+    }, 100);
+}
 
 // Initialize hotkeys for command palette
 import hotkeys from 'hotkeys-js';

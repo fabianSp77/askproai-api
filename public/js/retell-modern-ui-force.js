@@ -1,5 +1,5 @@
 // Retell Modern UI - Aggressive Force Apply
-console.log('🚀 Retell Modern UI Force Loader Initialized');
+//console.log('🚀 Retell Modern UI Force Loader Initialized');
 
 // Define the modern styles
 const MODERN_STYLES = {
@@ -69,21 +69,21 @@ function applyStylesToElement(element, styles) {
 }
 
 function applyModernStyles() {
-    console.log('🎨 Applying Modern Styles...');
+    //console.log('🎨 Applying Modern Styles...');
     
     // Check if we're in dark mode
     const isDarkMode = document.documentElement.classList.contains('dark');
     
     // Find all function cards - be more specific
     const functionCards = document.querySelectorAll('.function-card-modern');
-    console.log(`Found ${functionCards.length} function cards with .function-card-modern class`);
+    //console.log(`Found ${functionCards.length} function cards with .function-card-modern class`);
     
     // If no cards found with the class, try a more general selector
     if (functionCards.length === 0) {
         const generalCards = document.querySelectorAll('[x-show*="functions"] .space-y-4 > div > div.group');
-        console.log(`Found ${generalCards.length} function cards with general selector`);
+        //console.log(`Found ${generalCards.length} function cards with general selector`);
         generalCards.forEach((card, index) => {
-            console.log(`Styling general card ${index + 1}`);
+            //console.log(`Styling general card ${index + 1}`);
             applyStylesToElement(card, MODERN_STYLES.functionCard);
             if (isDarkMode) {
                 applyStylesToElement(card, MODERN_STYLES.functionCardDark);
@@ -95,7 +95,7 @@ function applyModernStyles() {
         // Check if this is within the functions tab
         const functionsTab = card.closest('[x-show*="functions"]');
         if (functionsTab) {
-            console.log(`Styling function card ${index + 1}`);
+            //console.log(`Styling function card ${index + 1}`);
             
             // Apply base styles
             applyStylesToElement(card, MODERN_STYLES.functionCard);
@@ -122,11 +122,11 @@ function applyModernStyles() {
     
     // Find and style badges
     const badges = document.querySelectorAll('span.inline-flex.items-center.px-3.py-1, .function-badge');
-    console.log(`Found ${badges.length} badges`);
+    //console.log(`Found ${badges.length} badges`);
     
     badges.forEach((badge, index) => {
         const text = badge.textContent.trim().toLowerCase();
-        console.log(`Badge ${index + 1} text: "${text}"`);
+        //console.log(`Badge ${index + 1} text: "${text}"`);
         
         if (text.includes('cal')) {
             applyStylesToElement(badge, MODERN_STYLES.badge.cal);
@@ -139,7 +139,7 @@ function applyModernStyles() {
     
     // Style gradient buttons
     const buttons = document.querySelectorAll('.btn-gradient-primary, button[style*="gradient"]');
-    console.log(`Found ${buttons.length} gradient buttons`);
+    //console.log(`Found ${buttons.length} gradient buttons`);
     
     buttons.forEach(button => {
         if (!button.style.background || !button.style.background.includes('gradient')) {
@@ -153,7 +153,7 @@ function applyModernStyles() {
         }
     });
     
-    console.log('✅ Modern styles applied!');
+    //console.log('✅ Modern styles applied!');
 }
 
 // Make function globally available
@@ -171,14 +171,14 @@ if (document.readyState === 'loading') {
 
 // Apply when Alpine initializes
 document.addEventListener('alpine:init', () => {
-    console.log('Alpine initialized, applying styles...');
+    //console.log('Alpine initialized, applying styles...');
     setTimeout(applyModernStyles, 1000);
 });
 
 // Apply on Livewire updates
 if (window.Livewire) {
     Livewire.hook('message.processed', () => {
-        console.log('Livewire update detected, reapplying styles...');
+        //console.log('Livewire update detected, reapplying styles...');
         setTimeout(applyModernStyles, 200);
     });
 }
@@ -189,7 +189,7 @@ setInterval(() => {
     if (functionsTab && functionsTab.style.display !== 'none') {
         const needsStyles = document.querySelector('.function-card-modern:not([data-styled])');
         if (needsStyles) {
-            console.log('Found unstyled elements, applying...');
+            //console.log('Found unstyled elements, applying...');
             applyModernStyles();
             // Mark as styled
             document.querySelectorAll('.function-card-modern').forEach(el => {
@@ -199,4 +199,4 @@ setInterval(() => {
     }
 }, 1000);
 
-console.log('✨ Modern UI Force Loader ready! Click the refresh icon or call applyModernStyles() to apply styles.');
+//console.log('✨ Modern UI Force Loader ready! Click the refresh icon or call applyModernStyles() to apply styles.');

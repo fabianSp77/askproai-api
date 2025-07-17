@@ -28,7 +28,7 @@ class StripeInvoiceWorkflowTest extends TestCase
     use RefreshDatabase;
 
     protected StripeInvoiceService $service;
-    protected $stripeMock;
+    protected $stripeClientMock;
     protected Company $company;
     protected BillingPeriod $billingPeriod;
 
@@ -37,15 +37,15 @@ class StripeInvoiceWorkflowTest extends TestCase
         parent::setUp();
 
         // Mock Stripe client
-        $this->stripeMock = Mockery::mock(StripeClient::class);
-        $this->stripeMock->customers = Mockery::mock();
-        $this->stripeMock->invoices = Mockery::mock();
-        $this->stripeMock->invoiceItems = Mockery::mock();
-        $this->stripeMock->paymentIntents = Mockery::mock();
+        $this->stripeClientMock = Mockery::mock(StripeClient::class);
+        $this->stripeClientMock->customers = Mockery::mock();
+        $this->stripeClientMock->invoices = Mockery::mock();
+        $this->stripeClientMock->invoiceItems = Mockery::mock();
+        $this->stripeClientMock->paymentIntents = Mockery::mock();
 
         // Override the StripeClient in the service
         $this->app->bind(StripeClient::class, function () {
-            return $this->stripeMock;
+            return $this->stripeClientMock;
         });
 
         // Create test company
@@ -79,7 +79,7 @@ class StripeInvoiceWorkflowTest extends TestCase
     {
         // Step 1: Create Stripe customer
         $stripeCustomerId = 'cus_test123';
-        $this->stripeMock->customers->shouldReceive('create')
+        $this->stripeClientMock->customers->shouldReceive('create')
             ->once()
             ->with(Mockery::on(function ($data) {
                 return $data['name'] === 'Test Company GmbH' &&
@@ -114,7 +114,7 @@ class StripeInvoiceWorkflowTest extends TestCase
         ];
 
         // Mock invoice item creation for calls
-        $this->stripeMock->invoiceItems->shouldReceive('create')
+        $this->stripeClientMock->invoiceItems->shouldReceive('create')
             ->once()
             ->with(Mockery::on(function ($data) use ($stripeCustomerId) {
                 return $data['customer'] === $stripeCustomerId &&
@@ -125,7 +125,7 @@ class StripeInvoiceWorkflowTest extends TestCase
             ->andReturn((object)['id' => 'ii_calls']);
 
         // Mock invoice item creation for appointments
-        $this->stripeMock->invoiceItems->shouldReceive('create')
+        $this->stripeClientMock->invoiceItems->shouldReceive('create')
             ->once()
             ->with(Mockery::on(function ($data) use ($stripeCustomerId) {
                 return $data['customer'] === $stripeCustomerId &&
@@ -136,7 +136,7 @@ class StripeInvoiceWorkflowTest extends TestCase
             ->andReturn((object)['id' => 'ii_appointments']);
 
         // Mock invoice creation
-        $this->stripeMock->invoices->shouldReceive('create')
+        $this->stripeClientMock->invoices->shouldReceive('create')
             ->once()
             ->with(Mockery::on(function ($data) use ($stripeCustomerId) {
                 return $data['customer'] === $stripeCustomerId &&
@@ -170,7 +170,7 @@ class StripeInvoiceWorkflowTest extends TestCase
         $this->assertEquals(1.50, $callItem->unit_price);
 
         // Step 4: Finalize invoice
-        $this->stripeMock->invoices->shouldReceive('finalizeInvoice')
+        $this->stripeClientMock->invoices->shouldReceive('finalizeInvoice')
             ->once()
             ->with($stripeInvoiceId)
             ->andReturn((object)[
@@ -190,7 +190,7 @@ class StripeInvoiceWorkflowTest extends TestCase
         $paymentIntentId = 'pi_test123';
         $chargeId = 'ch_test123';
 
-        $this->stripeMock->invoices->shouldReceive('pay')
+        $this->stripeClientMock->invoices->shouldReceive('pay')
             ->once()
             ->with($stripeInvoiceId)
             ->andReturn((object)[
@@ -202,7 +202,7 @@ class StripeInvoiceWorkflowTest extends TestCase
                 'paid_at' => time(),
             ]);
 
-        $this->stripeMock->paymentIntents->shouldReceive('retrieve')
+        $this->stripeClientMock->paymentIntents->shouldReceive('retrieve')
             ->once()
             ->with($paymentIntentId)
             ->andReturn((object)[
@@ -265,7 +265,7 @@ class StripeInvoiceWorkflowTest extends TestCase
         ]);
 
         // Mock Stripe calls with discount calculation
-        $this->stripeMock->invoiceItems->shouldReceive('create')
+        $this->stripeClientMock->invoiceItems->shouldReceive('create')
             ->once()
             ->with(Mockery::on(function ($data) {
                 return $data['unit_amount'] === 1500 && $data['quantity'] === 100;
@@ -273,7 +273,7 @@ class StripeInvoiceWorkflowTest extends TestCase
             ->andReturn((object)['id' => 'ii_calls']);
 
         // Add discount as negative line item
-        $this->stripeMock->invoiceItems->shouldReceive('create')
+        $this->stripeClientMock->invoiceItems->shouldReceive('create')
             ->once()
             ->with(Mockery::on(function ($data) {
                 return $data['description'] === '20% Rabatt' && 
@@ -282,7 +282,7 @@ class StripeInvoiceWorkflowTest extends TestCase
             ->andReturn((object)['id' => 'ii_discount']);
 
         // Add credit as negative line item
-        $this->stripeMock->invoiceItems->shouldReceive('create')
+        $this->stripeClientMock->invoiceItems->shouldReceive('create')
             ->once()
             ->with(Mockery::on(function ($data) {
                 return $data['description'] === 'Guthaben' && 
@@ -290,7 +290,7 @@ class StripeInvoiceWorkflowTest extends TestCase
             }))
             ->andReturn((object)['id' => 'ii_credit']);
 
-        $this->stripeMock->invoices->shouldReceive('create')
+        $this->stripeClientMock->invoices->shouldReceive('create')
             ->once()
             ->andReturn((object)[
                 'id' => 'in_discount',
@@ -327,7 +327,7 @@ class StripeInvoiceWorkflowTest extends TestCase
         ]);
 
         // First payment attempt fails
-        $this->stripeMock->invoices->shouldReceive('pay')
+        $this->stripeClientMock->invoices->shouldReceive('pay')
             ->once()
             ->with('in_failed')
             ->andThrow(new \Stripe\Exception\CardException('Your card was declined.', 'card_declined'));
@@ -343,7 +343,7 @@ class StripeInvoiceWorkflowTest extends TestCase
         $this->assertEquals(1, $invoice->payment_attempts);
 
         // Second payment attempt with different card succeeds
-        $this->stripeMock->invoices->shouldReceive('pay')
+        $this->stripeClientMock->invoices->shouldReceive('pay')
             ->once()
             ->with('in_failed', ['payment_method' => 'pm_new_card'])
             ->andReturn((object)[
@@ -354,7 +354,7 @@ class StripeInvoiceWorkflowTest extends TestCase
                 'paid_at' => time(),
             ]);
 
-        $this->stripeMock->paymentIntents->shouldReceive('retrieve')
+        $this->stripeClientMock->paymentIntents->shouldReceive('retrieve')
             ->once()
             ->andReturn((object)[
                 'id' => 'pi_retry',
@@ -386,8 +386,8 @@ class StripeInvoiceWorkflowTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $this->stripeMock->invoiceItems->shouldReceive('create')->once();
-        $this->stripeMock->invoices->shouldReceive('create')
+        $this->stripeClientMock->invoiceItems->shouldReceive('create')->once();
+        $this->stripeClientMock->invoices->shouldReceive('create')
             ->once()
             ->with(Mockery::on(function ($data) {
                 // Verify reverse charge metadata

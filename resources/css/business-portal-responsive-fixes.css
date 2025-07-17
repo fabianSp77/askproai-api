@@ -1,0 +1,189 @@
+/* Business Portal Responsive Fixes - Issue #337 */
+/* Fixes for zoom level 0.75 and various viewport sizes */
+
+/* Base responsive improvements */
+:root {
+    --min-touch-target: 44px;
+    --safe-area-inset: env(safe-area-inset-bottom, 0px);
+}
+
+/* Fix for zoom level detection and scaling */
+@media (min-resolution: 0.75dppx) and (max-resolution: 0.76dppx) {
+    /* Specific fixes for 75% zoom */
+    .business-portal-content {
+        font-size: 1.1rem;
+    }
+    
+    /* Ensure buttons remain clickable */
+    button, .btn, [role="button"] {
+        min-height: var(--min-touch-target);
+        min-width: var(--min-touch-target);
+    }
+}
+
+/* Responsive grid adjustments */
+@media (min-width: 1024px) and (max-width: 1440px) {
+    /* Adjust grid for medium-large screens */
+    .call-detail-grid {
+        grid-template-columns: 1fr minmax(320px, 380px) !important;
+    }
+}
+
+/* Sticky sidebar improvements */
+.sticky-sidebar {
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+}
+
+@media (max-width: 1023px) {
+    .sticky-sidebar {
+        position: relative;
+        top: 0;
+        max-height: none;
+    }
+}
+
+/* Floating action bar responsive */
+.floating-action-bar {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 50;
+}
+
+@media (min-width: 1024px) {
+    .floating-action-bar {
+        bottom: 1.5rem;
+        right: 1.5rem;
+    }
+}
+
+/* Ensure minimum touch targets */
+.floating-action-bar button {
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Audio player responsive fixes */
+.audio-player-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.audio-player-controls input[type="range"] {
+    min-height: var(--min-touch-target);
+    padding: 0.5rem 0;
+}
+
+/* Timeline responsive improvements */
+.timeline-dot {
+    width: 2.5rem;
+    height: 2.5rem;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+}
+
+/* Card responsive padding */
+@media (max-width: 640px) {
+    .card-content {
+        padding: 1rem;
+    }
+}
+
+/* Navigation button responsiveness */
+.navigation-buttons button {
+    min-width: var(--min-touch-target);
+    min-height: var(--min-touch-target);
+}
+
+/* Prevent horizontal scroll at different zoom levels */
+body {
+    overflow-x: hidden;
+}
+
+.business-portal-wrapper {
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+/* Fix for content overflow in cards */
+.card {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Responsive text sizing */
+@media (min-width: 0px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+@media (min-width: 640px) {
+    html {
+        font-size: 15px;
+    }
+}
+
+@media (min-width: 1024px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+/* Fix for dialog at different zoom levels */
+.dialog-content {
+    max-height: 90vh;
+    max-width: min(90vw, 64rem);
+}
+
+/* Email composer responsive fixes */
+.email-composer-dialog {
+    max-height: calc(100vh - 2rem);
+    margin: 1rem;
+}
+
+@media (min-width: 768px) {
+    .email-composer-dialog {
+        max-height: calc(100vh - 4rem);
+        margin: 2rem auto;
+    }
+}
+
+/* Tabs responsive */
+.tabs-list {
+    flex-wrap: wrap;
+}
+
+.tabs-trigger {
+    min-height: var(--min-touch-target);
+    padding: 0.5rem 1rem;
+}
+
+/* Fix sticky elements for Safari */
+@supports (-webkit-touch-callout: none) {
+    .sticky-sidebar {
+        position: -webkit-sticky;
+    }
+}
+
+/* Improve focus states for accessibility */
+:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Print styles to prevent issues */
+@media print {
+    .floating-action-bar,
+    .sticky-sidebar {
+        position: relative !important;
+    }
+}

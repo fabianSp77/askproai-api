@@ -8,16 +8,35 @@
     stopOnFailure="false"
 >
     <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
-        <testsuite name="Unit">
-            <directory>tests/Unit</directory>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
         </testsuite>
         <testsuite name="E2E">
             <directory>tests/E2E</directory>
         </testsuite>
+        <testsuite name="Performance">
+            <directory>tests/Performance</directory>
+        </testsuite>
     </testsuites>
+    <coverage>
+        <report>
+            <html outputDirectory="coverage/php" lowUpperBound="50" highLowerBound="90"/>
+            <text outputFile="coverage/php/coverage.txt" showOnlySummary="true"/>
+            <clover outputFile="coverage/php/clover.xml"/>
+            <cobertura outputFile="coverage/php/cobertura.xml"/>
+        </report>
+    </coverage>
+    <logging>
+        <junit outputFile="coverage/php/junit.xml"/>
+        <testdoxHtml outputFile="coverage/php/testdox.html"/>
+        <testdoxText outputFile="coverage/php/testdox.txt"/>
+    </logging>
     <source>
         <include>
             <directory>app</directory>

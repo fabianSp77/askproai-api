@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Portal Debug</title>
+    <meta name="csrf-token" content="">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .success { color: #065F46; background: #D1FAE5; padding: 10px; border-radius: 4px; }
+        .error { color: #991B1B; background: #FEE2E2; padding: 10px; border-radius: 4px; }
+        .warning { color: #92400E; background: #FEF3C7; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Portal Debug Dashboard</h1>
+    
+    <div class="grid">
+        <div class="box">
+            <h2>1. Session Check</h2>
+            <button onclick="checkSession()">Check Laravel Session</button>
+            <pre id="session-result"></pre>
+        </div>
+        
+        <div class="box">
+            <h2>2. Cookie Check</h2>
+            <button onclick="checkCookies()">Check Cookies</button>
+            <pre id="cookie-result"></pre>
+        </div>
+        
+        <div class="box">
+            <h2>3. Auth Status</h2>
+            <button onclick="checkAuth()">Check Auth Guards</button>
+            <pre id="auth-result"></pre>
+        </div>
+        
+        <div class="box">
+            <h2>4. Test Login</h2>
+            <button onclick="testLogin()">Login as Demo User</button>
+            <pre id="login-result"></pre>
+        </div>
+    </div>
+    
+    <div class="box" style="margin-top: 20px;">
+        <h2>5. API Tests</h2>
+        <button onclick="testAPI('/business/api/check-auth')">Test Auth Check API</button>
+        <button onclick="testAPI('/business/api/dashboard')">Test Dashboard API</button>
+        <button onclick="testAPI('/business/api/calls')">Test Calls API</button>
+        <pre id="api-result"></pre>
+    </div>
+    
+    <div class="box" style="margin-top: 20px;">
+        <h2>Quick Links</h2>
+        <button onclick="window.location.href='/portal-login-simple.html'" style="background: #059669;">Login Page</button>
+        <button onclick="window.location.href='/business/dashboard'" style="background: #7C3AED;">Dashboard</button>
+        <button onclick="window.location.href='/business/test/session'" style="background: #DC2626;">Raw Session Data</button>
+    </div>
+    
+    <script>
+    // Get CSRF token on load
+    fetch('/business/test-login')
+        .then(r => r.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const token = doc.querySelector('meta[name="csrf-token"]')?.content;
+            if (token) {
+                document.querySelector('meta[name="csrf-token"]').content = token;
+                console.log('CSRF token loaded');
+            }
+        })
+        .catch(e => console.error('Failed to load CSRF token:', e));
+    
+    async function checkSession() {
+        const resultEl = document.getElementById('session-result');
+        try {
+            const response = await fetch('/business/test/session');
+            const data = await response.json();
+            resultEl.textContent = JSON.stringify(data, null, 2);
+            
+            // Highlight important fields
+            if (data.portal_user_id) {
+                resultEl.innerHTML = '<div class="success">✓ Portal User ID: ' + data.portal_user_id + '</div>' + 
+                                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } else {
+                resultEl.innerHTML = '<div class="error">✗ No Portal User in Session</div>' + 
+                                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+        } catch (error) {
+            resultEl.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+        }
+    }
+    
+    function checkCookies() {
+        const resultEl = document.getElementById('cookie-result');
+        const cookies = document.cookie.split(';').map(c => c.trim());
+        
+        let cookieData = {
+            total: cookies.length,
+            cookies: {}
+        };
+        
+        cookies.forEach(cookie => {
+            const [name, value] = cookie.split('=');
+            if (name) {
+                cookieData.cookies[name] = value ? value.substring(0, 20) + '...' : '';
+            }
+        });
+        
+        resultEl.textContent = JSON.stringify(cookieData, null, 2);
+        
+        // Check for session cookie
+        const hasSession = cookies.some(c => c.startsWith('laravel_session=') || c.startsWith('askproai_api_gateway_session='));
+        if (hasSession) {
+            resultEl.innerHTML = '<div class="success">✓ Session Cookie Found</div>' + 
+                                '<pre>' + JSON.stringify(cookieData, null, 2) + '</pre>';
+        } else {
+            resultEl.innerHTML = '<div class="error">✗ No Session Cookie</div>' + 
+                                '<pre>' + JSON.stringify(cookieData, null, 2) + '</pre>';
+        }
+    }
+    
+    async function checkAuth() {
+        const resultEl = document.getElementById('auth-result');
+        try {
+            const response = await fetch('/business/api/check-auth', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            const data = await response.json();
+            resultEl.textContent = JSON.stringify(data, null, 2);
+            
+            if (response.ok && data.portal_auth?.authenticated) {
+                resultEl.innerHTML = '<div class="success">✓ Authenticated as: ' + data.portal_auth.user.email + '</div>' + 
+                                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } else {
+                resultEl.innerHTML = '<div class="error">✗ Not Authenticated (Status: ' + response.status + ')</div>' + 
+                                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+        } catch (error) {
+            resultEl.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+        }
+    }
+    
+    async function testLogin() {
+        const resultEl = document.getElementById('login-result');
+        resultEl.innerHTML = '<div class="warning">Logging in...</div>';
+        
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+            const formData = new FormData();
+            formData.append('email', 'fabianspitzer@icloud.com');
+            formData.append('password', 'demo123');
+            formData.append('_token', token);
+            
+            const response = await fetch('/business/test-login-api', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                resultEl.innerHTML = '<div class="success">✓ Login Successful!</div>' + 
+                                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>' +
+                                    '<button onclick="checkSession()" style="margin-top: 10px;">Re-check Session</button>';
+            } else {
+                resultEl.innerHTML = '<div class="error">✗ Login Failed</div>' + 
+                                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+        } catch (error) {
+            resultEl.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+        }
+    }
+    
+    async function testAPI(url) {
+        const resultEl = document.getElementById('api-result');
+        resultEl.innerHTML = '<div class="warning">Loading ' + url + '...</div>';
+        
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                data = text;
+            }
+            
+            if (response.ok) {
+                resultEl.innerHTML = '<div class="success">✓ API Success (Status: ' + response.status + ')</div>' + 
+                                    '<pre>' + (typeof data === 'object' ? JSON.stringify(data, null, 2) : data) + '</pre>';
+            } else {
+                resultEl.innerHTML = '<div class="error">✗ API Failed (Status: ' + response.status + ')</div>' + 
+                                    '<pre>' + (typeof data === 'object' ? JSON.stringify(data, null, 2) : data) + '</pre>';
+            }
+        } catch (error) {
+            resultEl.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+        }
+    }
+    
+    // Run initial checks
+    setTimeout(() => {
+        checkSession();
+        checkCookies();
+    }, 500);
+    </script>
+</body>
+</html>

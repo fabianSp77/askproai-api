@@ -1,0 +1,89 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V2\AuthController;
+use App\Http\Controllers\Api\V2\AppointmentController;
+use App\Http\Controllers\Api\V2\CallController;
+use App\Http\Controllers\Api\V2\CustomerController;
+use App\Http\Controllers\Api\V2\DashboardController;
+use App\Http\Controllers\Api\V2\BranchController;
+use App\Http\Controllers\Api\V2\CompanyController;
+
+/*
+|--------------------------------------------------------------------------
+| API V2 Routes for React Frontend
+|--------------------------------------------------------------------------
+*/
+
+// Public routes
+Route::prefix('v2')->group(function () {
+    // Authentication
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail']);
+});
+
+// Protected routes
+Route::prefix('v2')->middleware(['auth:sanctum', 'verified'])->group(function () {
+    // Auth
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::post('/auth/refresh', [AuthController::class, 'refresh']);
+    Route::get('/auth/user', [AuthController::class, 'user']);
+    Route::patch('/auth/user', [AuthController::class, 'updateUser']);
+    
+    // Dashboard
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/recent-activity', [DashboardController::class, 'recentActivity']);
+    Route::get('/dashboard/analytics', [DashboardController::class, 'analytics']);
+    
+    // Appointments
+    Route::apiResource('appointments', AppointmentController::class);
+    Route::post('/appointments/{appointment}/confirm', [AppointmentController::class, 'confirm']);
+    Route::post('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
+    Route::post('/appointments/{appointment}/complete', [AppointmentController::class, 'complete']);
+    Route::post('/appointments/{appointment}/no-show', [AppointmentController::class, 'noShow']);
+    Route::post('/appointments/check-availability', [AppointmentController::class, 'checkAvailability']);
+    
+    // Calls
+    Route::get('/calls', [CallController::class, 'index']);
+    Route::get('/calls/{call}', [CallController::class, 'show']);
+    Route::get('/calls/{call}/transcript', [CallController::class, 'transcript']);
+    Route::get('/calls/{call}/recording', [CallController::class, 'recording']);
+    Route::get('/calls/analytics', [CallController::class, 'analytics']);
+    Route::post('/calls/export', [CallController::class, 'export']);
+    
+    // Customers
+    Route::apiResource('customers', CustomerController::class);
+    Route::post('/customers/{customer}/merge', [CustomerController::class, 'merge']);
+    Route::get('/customers/{customer}/appointments', [CustomerController::class, 'appointments']);
+    Route::get('/customers/{customer}/calls', [CustomerController::class, 'calls']);
+    Route::post('/customers/{customer}/tags', [CustomerController::class, 'addTag']);
+    Route::delete('/customers/{customer}/tags/{tag}', [CustomerController::class, 'removeTag']);
+    Route::post('/customers/{customer}/block', [CustomerController::class, 'block']);
+    Route::post('/customers/{customer}/unblock', [CustomerController::class, 'unblock']);
+    
+    // Branches
+    Route::get('/branches', [BranchController::class, 'index']);
+    Route::get('/branches/{branch}', [BranchController::class, 'show']);
+    Route::get('/branches/{branch}/staff', [BranchController::class, 'staff']);
+    Route::get('/branches/{branch}/services', [BranchController::class, 'services']);
+    
+    // Company
+    Route::get('/company', [CompanyController::class, 'show']);
+    Route::patch('/company', [CompanyController::class, 'update']);
+    Route::get('/company/settings', [CompanyController::class, 'settings']);
+    Route::patch('/company/settings', [CompanyController::class, 'updateSettings']);
+});
+
+// Webhook routes (no auth required but signature verification)
+Route::prefix('v2/webhooks')->group(function () {
+    Route::post('/retell', [App\Http\Controllers\Api\V2\WebhookController::class, 'retell'])
+        ->middleware('verify.retell.signature');
+    Route::post('/calcom', [App\Http\Controllers\Api\V2\WebhookController::class, 'calcom'])
+        ->middleware('verify.calcom.signature');
+    Route::post('/stripe', [App\Http\Controllers\Api\V2\WebhookController::class, 'stripe'])
+        ->middleware('verify.stripe.signature');
+});

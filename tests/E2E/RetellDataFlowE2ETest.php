@@ -38,7 +38,7 @@ class RetellDataFlowE2ETest extends TestCase
         
         // Setup test environment
         $this->setupTestCompany();
-        $this->mockCalcomApi();
+        $this->mockCalcomApiForE2E();
     }
 
     /**
@@ -479,7 +479,7 @@ class RetellDataFlowE2ETest extends TestCase
         ]);
     }
 
-    protected function mockCalcomApi(): void
+    protected function mockCalcomApiForE2E(): void
     {
         Http::fake([
             // Default successful booking response

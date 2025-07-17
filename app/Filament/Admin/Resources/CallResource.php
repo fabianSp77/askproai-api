@@ -27,11 +27,13 @@ use App\Filament\Admin\Resources\AppointmentResource;
 use Illuminate\Support\Facades\Log;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use App\Filament\Admin\Resources\CallResource\Actions\MarkAsNonBillableAction;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
 use Filament\Tables\Enums\FiltersLayout;
+use Filament\Notifications\Notification;
 
 class CallResource extends Resource
 {
@@ -60,8 +62,8 @@ class CallResource extends Resource
         return $table
             ->modifyQueryUsing(fn ($query) => $query
                 ->withoutGlobalScope(\App\Scopes\TenantScope::class)
-                ->withoutGlobalScope(\App\Models\Scopes\CompanyScope::class)
-                ->with(['customer', 'appointment', 'branch', 'company.billingRate', 'mlPrediction'])
+                ->withoutGlobalScope(\App\Scopes\CompanyScope::class)
+                ->with(['customer', 'appointment', 'branch', 'company.billingRate', 'mlPrediction', 'callCharge'])
             )
             ->striped()
             ->defaultSort('start_timestamp', 'desc')
@@ -69,6 +71,7 @@ class CallResource extends Resource
             ->paginated([10, 25, 50])
             ->paginationPageOptions([10, 25, 50])
             ->defaultPaginationPageOption(25)
+            ->selectCurrentPageOnly()
             ->recordClasses(fn ($record) => match($record->sentiment) {
                 'positive' => 'border-l-4 border-green-500',
                 'negative' => 'border-l-4 border-red-500',
@@ -151,6 +154,39 @@ class CallResource extends Resource
                     ->alignEnd()
                     ->toggleable(isToggledHiddenByDefault: true),
                     
+                Tables\Columns\TextColumn::make('callCharge.refund_status')
+                    ->label('Erstattung')
+                    ->default('')
+                    ->formatStateUsing(fn ($state) => match($state) {
+                        'full' => 'Voll erstattet',
+                        'partial' => 'Teilweise erstattet',
+                        'none' => '',
+                        null => '',
+                        default => ''
+                    })
+                    ->badge()
+                    ->color(fn ($state) => match($state) {
+                        'full' => 'success',
+                        'partial' => 'warning',
+                        null => null,
+                        default => null
+                    })
+                    ->toggleable(),
+                    
+                Tables\Columns\IconColumn::make('non_billable_status')
+                    ->label('Nicht abrechenbar')
+                    ->getStateUsing(fn ($record) => $record->metadata['non_billable'] ?? false)
+                    ->boolean()
+                    ->trueIcon('heroicon-o-x-circle')
+                    ->falseIcon('')
+                    ->trueColor('danger')
+                    ->tooltip(fn ($record) => 
+                        ($record->metadata['non_billable'] ?? false)
+                            ? 'Grund: ' . ($record->metadata['non_billable_reason'] ?? 'Unbekannt')
+                            : null
+                    )
+                    ->toggleable(isToggledHiddenByDefault: false),
+                    
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
                     ->sortable()
@@ -162,7 +198,15 @@ class CallResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                // Existing filters...
+                Tables\Filters\SelectFilter::make('refund_status')
+                    ->label('Erstattungsstatus')
+                    ->relationship('callCharge', 'refund_status')
+                    ->options([
+                        'none' => 'Nicht erstattet',
+                        'partial' => 'Teilweise erstattet',
+                        'full' => 'Voll erstattet',
+                    ])
+                    ->placeholder('Alle Anrufe'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
@@ -178,10 +222,88 @@ class CallResource extends Resource
                     ->modalCancelActionLabel('Schließen'),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+                MarkAsNonBillableAction::make(),
+                Tables\Actions\BulkAction::make('createRefund')
+                        ->label('Gutschrift erstellen')
+                        ->icon('heroicon-o-receipt-refund')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading('Gutschrift für ausgewählte Anrufe erstellen')
+                        ->modalDescription('Diese Aktion erstellt eine Gutschrift für die ausgewählten Anrufe und fügt den Betrag dem Prepaid-Guthaben hinzu.')
+                        ->form([
+                            \Filament\Forms\Components\Select::make('reason')
+                                ->label('Erstattungsgrund')
+                                ->options([
+                                    'technical_issue' => 'Technisches Problem',
+                                    'quality_issue' => 'Qualitätsproblem',
+                                    'wrong_number' => 'Falsche Nummer / Verwählt',
+                                    'customer_complaint' => 'Kundenbeschwerde',
+                                    'test_call' => 'Testanruf',
+                                    'other' => 'Sonstiges',
+                                ])
+                                ->required()
+                                ->default('technical_issue'),
+                            \Filament\Forms\Components\TextInput::make('percentage')
+                                ->label('Erstattungsprozentsatz')
+                                ->numeric()
+                                ->default(100)
+                                ->minValue(1)
+                                ->maxValue(100)
+                                ->suffix('%')
+                                ->required(),
+                            \Filament\Forms\Components\Textarea::make('notes')
+                                ->label('Anmerkungen')
+                                ->rows(3)
+                                ->maxLength(500),
+                        ])
+                        ->action(function (array $data, \Illuminate\Database\Eloquent\Collection $records) {
+                            $callIds = $records->pluck('id')->toArray();
+                            $refundService = app(\App\Services\CallRefundService::class);
+                            
+                            $reason = match($data['reason']) {
+                                'technical_issue' => 'Technisches Problem',
+                                'quality_issue' => 'Qualitätsproblem',
+                                'wrong_number' => 'Falsche Nummer',
+                                'customer_complaint' => 'Kundenbeschwerde',
+                                'test_call' => 'Testanruf',
+                                'other' => 'Sonstiges: ' . ($data['notes'] ?? ''),
+                            };
+                            
+                            $results = $refundService->refundMultipleCalls(
+                                $callIds,
+                                $reason,
+                                $data['percentage']
+                            );
+                            
+                            \Filament\Notifications\Notification::make()
+                                ->title('Gutschriften erstellt')
+                                ->body(sprintf(
+                                    '%d Anrufe erstattet. Gesamtbetrag: %.2f €',
+                                    $results['total_refunded'],
+                                    $results['total_amount']
+                                ))
+                                ->success()
+                                ->send();
+                                
+                            if (count($results['failed']) > 0) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Einige Erstattungen fehlgeschlagen')
+                                    ->body(sprintf(
+                                        '%d Anrufe konnten nicht erstattet werden.',
+                                        count($results['failed'])
+                                    ))
+                                    ->warning()
+                                    ->send();
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                Tables\Actions\DeleteBulkAction::make(),
+            ])
+            ->recordClasses(fn ($record) => 
+                ($record->metadata['non_billable'] ?? false) 
+                    ? 'non-billable-call-row' 
+                    : ''
+            );
         
         return static::configureTableForManyColumns($table);
     }
@@ -207,57 +329,11 @@ class CallResource extends Resource
     {
         return $infolist
             ->schema([
-                // ENTERPRISE HEADER DESIGN - Clean and Structured
-                Infolists\Components\Section::make()
-                    ->schema([
-                        // Customer Name and Interest/Reason as header
-                        Infolists\Components\Grid::make(1)
-                            ->schema([
-                                Infolists\Components\TextEntry::make('customer_header')
-                                    ->hiddenLabel()
-                                    ->getStateUsing(function ($record) {
-                                        $customerName = $record->customer?->name 
-                                            ?? $record->extracted_name
-                                            ?? $record->metadata['customer_data']['full_name']
-                                            ?? 'Unbekannter Anrufer';
-                                        
-                                        $interest = '';
-                                        if ($record->reason_for_visit) {
-                                            $interest = $record->reason_for_visit;
-                                        } elseif ($record->appointment_requested) {
-                                            $interest = 'Terminanfrage';
-                                        } elseif ($record->mlPrediction?->intent) {
-                                            $interest = ucfirst($record->mlPrediction->intent);
-                                        }
-                                        
-                                        // Get call summary if available
-                                        $summary = $record->webhook_data['call_analysis']['call_summary'] ?? null;
-                                        if (!$interest && $summary) {
-                                            // Auto-translate if enabled
-                                            $translatedSummary = AutoTranslateHelper::translateContent(
-                                                $summary, 
-                                                $record->detected_language
-                                            );
-                                            $interest = Str::limit($translatedSummary, 150);
-                                        }
-                                        
-                                        return new HtmlString("
-                                            <div class='mb-6'>
-                                                <h1 class='text-2xl font-bold text-gray-900 dark:text-white mb-2'>$customerName</h1>
-                                                " . ($interest ? "<p class='text-base text-gray-600 dark:text-gray-400'>$interest</p>" : "") . "
-                                            </div>
-                                        ");
-                                    })
-                            ]),
-                            
-                        // Metrics in a clean blade view
-                        Infolists\Components\ViewEntry::make('header_metrics')
-                            ->label(false)
-                            ->view('filament.infolists.call-header-metrics-simple'),
-                    ])
-                    ->extraAttributes([
-                        'class' => 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 mb-6 shadow-sm',
-                    ]),
+                // MODERN HEADER V2 - Balanced customer prominence with call context
+                Infolists\Components\ViewEntry::make('modern_header')
+                    ->label(false)
+                    ->view('filament.infolists.call-header-modern-v2')
+                    ->columnSpanFull(),
                 
                 // MAIN CONTENT AREA - Grid Layout for better distribution
                 Infolists\Components\Grid::make([
@@ -268,42 +344,152 @@ class CallResource extends Resource
                 ->schema([
                     // LEFT COLUMN - Primary Information (2/3 width)
                     Infolists\Components\Group::make([
-                        // Call Summary Card
-                        Infolists\Components\Section::make('Anrufzusammenfassung')
-                            ->description('Wichtigste Informationen aus dem Gespräch')
-                            ->icon('heroicon-o-document-text')
+                        // Call Analysis & Insights
+                        Infolists\Components\Section::make('Analyse und Einblicke')
+                            ->description('KI-gestützte Gesprächsanalyse und Erkenntnisse')
+                            ->icon('heroicon-o-light-bulb')
                             ->extraAttributes(['class' => 'h-full'])
                             ->schema([
-                                // Call Reason
-                                Infolists\Components\ViewEntry::make('reason_display')
-                                    ->label('Anrufgrund')
-                                    ->view('filament.infolists.toggleable-text')
-                                    ->viewData(function ($record) {
-                                        $content = $record->reason_for_visit ?? 
-                                                  $record->summary ?? 
-                                                  'Nicht erfasst';
+                                // AI Analysis Grid
+                                Infolists\Components\Grid::make(2)
+                                    ->schema([
+                                        // Sentiment Analysis
+                                        Infolists\Components\TextEntry::make('sentiment_analysis')
+                                            ->label('Stimmungsanalyse')
+                                            ->getStateUsing(function ($record) {
+                                                $sentiment = $record->webhook_data['call_analysis']['user_sentiment'] ?? 
+                                                           $record->mlPrediction?->sentiment_label ?? 
+                                                           'neutral';
+                                                
+                                                $sentimentMap = [
+                                                    'positive' => ['😊 Positiv', 'success'],
+                                                    'negative' => ['😞 Negativ', 'danger'],
+                                                    'mixed' => ['🤔 Gemischt', 'warning'],
+                                                    'neutral' => ['😐 Neutral', 'gray']
+                                                ];
+                                                
+                                                $config = $sentimentMap[strtolower($sentiment)] ?? $sentimentMap['neutral'];
+                                                return $config[0];
+                                            })
+                                            ->badge()
+                                            ->color(function ($record) {
+                                                $sentiment = $record->webhook_data['call_analysis']['user_sentiment'] ?? 'neutral';
+                                                $colorMap = [
+                                                    'positive' => 'success',
+                                                    'negative' => 'danger',
+                                                    'mixed' => 'warning',
+                                                    'neutral' => 'gray'
+                                                ];
+                                                return $colorMap[strtolower($sentiment)] ?? 'gray';
+                                            }),
+                                            
+                                        // Detected Language
+                                        Infolists\Components\TextEntry::make('language_analysis')
+                                            ->label('Erkannte Sprache')
+                                            ->getStateUsing(function ($record) {
+                                                $lang = $record->webhook_data['call_analysis']['language'] ?? 
+                                                        $record->detected_language ?? 
+                                                        'de';
+                                                
+                                                $languages = [
+                                                    'de' => '🇩🇪 Deutsch',
+                                                    'en' => '🇬🇧 Englisch',
+                                                    'fr' => '🇫🇷 Französisch',
+                                                    'es' => '🇪🇸 Spanisch',
+                                                    'it' => '🇮🇹 Italienisch',
+                                                    'tr' => '🇹🇷 Türkisch',
+                                                    'ar' => '🇸🇦 Arabisch',
+                                                ];
+                                                
+                                                return $languages[$lang] ?? "🌐 $lang";
+                                            })
+                                            ->badge()
+                                            ->color('info'),
+                                    ]),
+                                    
+                                // Key Insights
+                                Infolists\Components\TextEntry::make('key_insights')
+                                    ->label('Wichtige Erkenntnisse')
+                                    ->getStateUsing(function ($record) {
+                                        $insights = [];
                                         
-                                        if ($content === 'Nicht erfasst') {
-                                            return [
-                                                'content' => ['original' => $content, 'translated' => $content],
-                                                'showToggle' => false
-                                            ];
+                                        // Check for appointment request
+                                        if ($record->appointment_requested || 
+                                            (!empty($record->webhook_data['dynamic_variables']['appointment_requested']) && 
+                                             $record->webhook_data['dynamic_variables']['appointment_requested'] === 'true')) {
+                                            $insights[] = '📅 Kunde möchte einen Termin vereinbaren';
                                         }
                                         
-                                        return [
-                                            'content' => AutoTranslateHelper::getToggleableContent(
-                                                $content,
-                                                $record->detected_language
-                                            ),
-                                            'showToggle' => true
-                                        ];
-                                    }),
+                                        // Check call duration
+                                        if ($record->duration_sec > 300) {
+                                            $insights[] = '⏱️ Längeres Gespräch (' . gmdate('i:s', $record->duration_sec) . ') - Kunde hatte ausführliche Fragen';
+                                        } elseif ($record->duration_sec < 60) {
+                                            $insights[] = '⚡ Kurzes Gespräch (' . $record->duration_sec . 's) - Schnelle Abwicklung';
+                                        }
+                                        
+                                        // Check if first-time caller
+                                        if ($record->first_visit) {
+                                            $insights[] = '🆕 Erstanrufer - Potentieller Neukunde';
+                                        }
+                                        
+                                        // Check call success
+                                        if (!empty($record->webhook_data['call_analysis']['call_successful'])) {
+                                            if ($record->webhook_data['call_analysis']['call_successful']) {
+                                                $insights[] = '✅ Erfolgreiches Gespräch';
+                                            } else {
+                                                $insights[] = '⚠️ Gespräch möglicherweise nicht erfolgreich abgeschlossen';
+                                            }
+                                        }
+                                        
+                                        // If no insights, provide helpful message
+                                        if (empty($insights)) {
+                                            return '<div class="text-gray-500 italic">Führen Sie eine detaillierte Analyse durch, um Erkenntnisse zu gewinnen.</div>';
+                                        }
+                                        
+                                        return '<ul class="space-y-2">' . 
+                                               implode('', array_map(fn($insight) => "<li>$insight</li>", $insights)) . 
+                                               '</ul>';
+                                    })
+                                    ->html(),
                                     
-                                // Key Points
-                                Infolists\Components\ViewEntry::make('key_points')
-                                    ->label('Wichtige Punkte')
-                                    ->view('filament.infolists.key-points-list')
-                                    ->visible(fn ($record) => !empty($record->analysis)),
+                                // Action Recommendations
+                                Infolists\Components\TextEntry::make('recommendations')
+                                    ->label('Empfohlene Maßnahmen')
+                                    ->getStateUsing(function ($record) {
+                                        $actions = [];
+                                        
+                                        // Based on sentiment
+                                        $sentiment = strtolower($record->webhook_data['call_analysis']['user_sentiment'] ?? 'neutral');
+                                        if ($sentiment === 'negative') {
+                                            $actions[] = '🔴 Priorität: Kunde war unzufrieden - zeitnahe Rückmeldung empfohlen';
+                                        }
+                                        
+                                        // If appointment requested
+                                        if ($record->appointment_requested) {
+                                            if (!$record->appointment_id) {
+                                                $actions[] = '📅 Termin vereinbaren - Kunde wartet auf Rückmeldung';
+                                            }
+                                        }
+                                        
+                                        // For new customers
+                                        if ($record->first_visit && !$record->customer_id) {
+                                            $actions[] = '👤 Kundenprofil anlegen für bessere Betreuung';
+                                        }
+                                        
+                                        // For short calls
+                                        if ($record->duration_sec < 30) {
+                                            $actions[] = '📞 Rückruf erwägen - Gespräch war sehr kurz';
+                                        }
+                                        
+                                        if (empty($actions)) {
+                                            return '<div class="text-green-600 dark:text-green-400">✅ Keine dringenden Maßnahmen erforderlich</div>';
+                                        }
+                                        
+                                        return '<ul class="space-y-2">' . 
+                                               implode('', array_map(fn($action) => "<li>$action</li>", $actions)) . 
+                                               '</ul>';
+                                    })
+                                    ->html(),
                                     
                                 // Customer Intent
                                 Infolists\Components\Grid::make(2)
@@ -317,22 +503,193 @@ class CallResource extends Resource
                                         Infolists\Components\TextEntry::make('urgency_level')
                                             ->label('Dringlichkeit')
                                             ->getStateUsing(fn ($record) => 
-                                                $record->analysis['urgency'] ?? 'Normal'
+                                                $record->urgency_level ??
+                                                $record->analysis['urgency'] ?? 
+                                                'Normal'
                                             )
                                             ->badge()
-                                            ->color(fn ($state) => match($state) {
-                                                'Hoch' => 'danger',
-                                                'Mittel' => 'warning',
+                                            ->color(fn ($state) => match(strtolower($state)) {
+                                                'hoch', 'high' => 'danger',
+                                                'mittel', 'medium' => 'warning',
+                                                'niedrig', 'low' => 'success',
                                                 default => 'gray'
                                             }),
                                     ])
                                     ->visible(fn ($record) => 
                                         $record->appointment_requested || 
-                                        !empty($record->analysis['urgency'])
+                                        !empty($record->analysis['urgency']) ||
+                                        !empty($record->urgency_level)
                                     ),
+                                    
+                                // Additional Call Information
+                                Infolists\Components\Grid::make(2)
+                                    ->schema([
+                                        Infolists\Components\TextEntry::make('analysis.detected_language')
+                                            ->label('Sprache')
+                                            ->getStateUsing(fn ($record) => match($record->analysis['detected_language'] ?? 'de') {
+                                                'de' => '🇩🇪 Deutsch',
+                                                'en' => '🇬🇧 English',
+                                                'fr' => '🇫🇷 Français',
+                                                'es' => '🇪🇸 Español',
+                                                'it' => '🇮🇹 Italiano',
+                                                'tr' => '🇹🇷 Türkçe',
+                                                default => $record->analysis['detected_language'] ?? 'Unbekannt'
+                                            })
+                                            ->visible(fn ($record) => !empty($record->analysis['detected_language'])),
+                                            
+                                        Infolists\Components\TextEntry::make('analysis.call_successful')
+                                            ->label('Anruf erfolgreich')
+                                            ->getStateUsing(fn ($record) => 
+                                                ($record->analysis['call_successful'] ?? false) ? 'Ja' : 'Nein'
+                                            )
+                                            ->badge()
+                                            ->color(fn ($state) => $state === 'Ja' ? 'success' : 'danger')
+                                            ->visible(fn ($record) => isset($record->analysis['call_successful'])),
+                                    ]),
                             ])
                             ->collapsible()
                             ->collapsed(false),
+                            
+                        // Customer Data Section - Structured data collected during the call
+                        Infolists\Components\Section::make('Erfasste Kundendaten')
+                            ->description('Strukturierte Informationen aus dem Gespräch')
+                            ->icon('heroicon-o-user-circle')
+                            ->schema([
+                                // Show message if no customer data
+                                Infolists\Components\TextEntry::make('no_customer_data')
+                                    ->label(false)
+                                    ->getStateUsing(function ($record) {
+                                        // Check if data was mentioned in transcript but not saved
+                                        if (!empty($record->transcript) && str_contains($record->transcript, 'technisches Problem beim Speichern')) {
+                                            return 'Kundendaten wurden im Gespräch erfasst, konnten aber aufgrund eines technischen Fehlers nicht gespeichert werden. Bitte Transkript prüfen.';
+                                        }
+                                        return 'Keine strukturierten Kundendaten erfasst';
+                                    })
+                                    ->visible(fn ($record) => 
+                                        empty($record->metadata) || 
+                                        !isset($record->metadata['customer_data'])
+                                    )
+                                    ->extraAttributes(['class' => 'text-gray-500 italic']),
+                                    
+                                // Show customer data grid if available
+                                Infolists\Components\Grid::make(2)
+                                    ->visible(fn ($record) => 
+                                        !empty($record->metadata) && 
+                                        isset($record->metadata['customer_data'])
+                                    )
+                                    ->schema([
+                                        // Contact Information
+                                        Infolists\Components\Group::make([
+                                            Infolists\Components\TextEntry::make('heading_contact')
+                                                ->label(false)
+                                                ->getStateUsing(fn () => new HtmlString('<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Kontaktinformationen</h4>'))
+                                                ->html()
+                                                ->columnSpanFull(),
+                                                Infolists\Components\TextEntry::make('customer_name')
+                                                    ->label('Name')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        $record->metadata['customer_data']['full_name'] ?? 
+                                                        $record->extracted_name ?? 
+                                                        $record->customer?->name ??
+                                                        '-'
+                                                    )
+                                                    ->icon('heroicon-m-user'),
+                                                    
+                                                Infolists\Components\TextEntry::make('customer_company')
+                                                    ->label('Firma')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        $record->metadata['customer_data']['company'] ?? '-'
+                                                    )
+                                                    ->icon('heroicon-m-building-office'),
+                                                    
+                                                Infolists\Components\TextEntry::make('customer_email')
+                                                    ->label('E-Mail')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        $record->metadata['customer_data']['email'] ?? '-'
+                                                    )
+                                                    ->icon('heroicon-m-envelope')
+                                                    ->copyable(fn ($state) => $state !== '-'),
+                                                    
+                                                Infolists\Components\TextEntry::make('customer_phone')
+                                                    ->label('Telefon (Primär)')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        $record->metadata['customer_data']['phone_primary'] ?? '-'
+                                                    )
+                                                    ->icon('heroicon-m-phone')
+                                                    ->copyable(fn ($state) => $state !== '-'),
+                                                    
+                                                Infolists\Components\TextEntry::make('customer_phone_secondary')
+                                                    ->label('Telefon (Sekundär)')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        $record->metadata['customer_data']['phone_secondary'] ?? '-'
+                                                    )
+                                                    ->icon('heroicon-m-phone')
+                                                    ->copyable(fn ($state) => $state !== '-'),
+                                                    
+                                                Infolists\Components\TextEntry::make('customer_number')
+                                                    ->label('Kundennummer')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        $record->metadata['customer_data']['customer_number'] ?? '-'
+                                                    )
+                                                    ->icon('heroicon-m-identification'),
+                                        ]),
+                                            
+                                        // Request and Consent
+                                        Infolists\Components\Group::make([
+                                            Infolists\Components\TextEntry::make('heading_request')
+                                                ->label(false)
+                                                ->getStateUsing(fn () => new HtmlString('<h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Anfrage & Einwilligung</h4>'))
+                                                ->html()
+                                                ->columnSpanFull(),
+                                                Infolists\Components\TextEntry::make('customer_request')
+                                                    ->label('Anliegen')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        $record->metadata['customer_data']['request'] ?? '-'
+                                                    )
+                                                    ->icon('heroicon-m-chat-bubble-left-right')
+                                                    ->columnSpanFull(),
+                                                    
+                                                Infolists\Components\TextEntry::make('customer_notes')
+                                                    ->label('Notizen')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        $record->metadata['customer_data']['notes'] ?? '-'
+                                                    )
+                                                    ->icon('heroicon-m-document-text')
+                                                    ->columnSpanFull(),
+                                                    
+                                                Infolists\Components\TextEntry::make('customer_consent')
+                                                    ->label('Datenspeicherung erlaubt')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        ($record->metadata['customer_data']['consent'] ?? false) ? 'Ja' : 'Nein'
+                                                    )
+                                                    ->badge()
+                                                    ->color(fn ($state) => $state === 'Ja' ? 'success' : 'danger')
+                                                    ->icon(fn ($state) => 
+                                                        $state === 'Ja' ? 'heroicon-m-check-circle' : 'heroicon-m-x-circle'
+                                                    ),
+                                                    
+                                                Infolists\Components\TextEntry::make('data_collected_at')
+                                                    ->label('Erfasst am')
+                                                    ->getStateUsing(fn ($record) => 
+                                                        isset($record->metadata['customer_data']['collected_at']) 
+                                                            ? \Carbon\Carbon::parse($record->metadata['customer_data']['collected_at'])
+                                                                ->timezone('Europe/Berlin')
+                                                                ->format('d.m.Y H:i:s')
+                                                            : '-'
+                                                    )
+                                                    ->icon('heroicon-m-clock'),
+                                        ]),
+                                    ]),
+                            ])
+                            ->collapsible()
+                            ->collapsed(false),
+                            
+                        // Customer Journey & Interaction Widget
+                        Infolists\Components\ViewEntry::make('customer_journey')
+                            ->label(false)
+                            ->view('filament.infolists.customer-journey-widget')
+                            ->columnSpanFull()
+                            ->extraAttributes(['class' => 'overflow-visible']),
                             
                         // Audio & Transcript Section
                         Infolists\Components\Section::make('Gesprächsaufzeichnung')
@@ -349,18 +706,10 @@ class CallResource extends Resource
                                         !empty($record->recording_url)
                                     ),
                                     
-                                // Transcript
+                                // Transcript with Toggle
                                 Infolists\Components\ViewEntry::make('transcript')
                                     ->label(false)
-                                    ->view('filament.infolists.transcript-viewer-enterprise')
-                                    ->viewData(function ($record) {
-                                        // Get all translatable texts
-                                        $texts = AutoTranslateHelper::processCallTexts($record);
-                                        return [
-                                            'transcript' => $texts['transcript'],
-                                            'showTranslateToggle' => auth()->user()?->auto_translate_content ?? false
-                                        ];
-                                    })
+                                    ->view('filament.infolists.toggleable-transcript')
                                     ->visible(fn ($record) => 
                                         !empty($record->transcript) || 
                                         !empty($record->transcript_object)
@@ -378,92 +727,227 @@ class CallResource extends Resource
                             ->icon('heroicon-o-user')
                             ->extraAttributes(['class' => 'h-full'])
                             ->schema([
-                                Infolists\Components\TextEntry::make('customer_info')
-                                    ->hiddenLabel()
-                                    ->getStateUsing(function ($record) {
-                                        $name = $record->customer?->name ?? 
-                                               $record->extracted_name ?? 
-                                               'Nicht erfasst';
-                                        
-                                        $status = $record->first_visit ? 
-                                                 'Neukunde' : 'Bestandskunde';
-                                        
-                                        $company = $record->customer?->company_name ??
-                                                  $record->metadata['customer_data']['company_name'] ?? '';
-                                        
-                                        $html = "<div class='space-y-2'>";
-                                        $html .= "<div class='font-medium text-gray-900 dark:text-white'>$name</div>";
-                                        
-                                        if ($company) {
-                                            $html .= "<div class='text-sm text-gray-600 dark:text-gray-400'>$company</div>";
-                                        }
-                                        
-                                        $html .= "<div class='inline-flex items-center gap-2 mt-2'>";
-                                        $html .= "<span class='px-2 py-1 text-xs rounded-full " . 
-                                                ($record->first_visit ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 
-                                                'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300') . 
-                                                "'>$status</span>";
-                                        
-                                        if ($record->no_show_count > 0) {
-                                            $html .= "<span class='px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'>";
-                                            $html .= "{$record->no_show_count} No-Shows</span>";
-                                        }
-                                        
-                                        $html .= "</div></div>";
-                                        
-                                        return new HtmlString($html);
-                                    }),
-                                    
-                                // Contact Details
+                                // Customer Details Grid
                                 Infolists\Components\Grid::make(1)
                                     ->schema([
-                                        Infolists\Components\TextEntry::make('email_info')
+                                        // Name & Status
+                                        Infolists\Components\TextEntry::make('customer_name')
+                                            ->label('Name')
+                                            ->getStateUsing(fn ($record) => 
+                                                $record->customer?->name ?? 
+                                                $record->extracted_name ?? 
+                                                'Nicht erfasst'
+                                            )
+                                            ->weight('bold'),
+                                            
+                                        // Company
+                                        Infolists\Components\TextEntry::make('customer_company')
+                                            ->label('Firma')
+                                            ->getStateUsing(fn ($record) => 
+                                                $record->customer?->company_name ?? 
+                                                $record->metadata['customer_data']['company_name'] ?? 
+                                                '-'
+                                            )
+                                            ->visible(fn ($record) => 
+                                                !empty($record->customer?->company_name) || 
+                                                !empty($record->metadata['customer_data']['company_name'])
+                                            ),
+                                            
+                                        // Phone Number
+                                        Infolists\Components\TextEntry::make('phone_number')
+                                            ->label('Telefon')
+                                            ->copyable()
+                                            ->copyMessage('Nummer kopiert')
+                                            ->copyMessageDuration(2000),
+                                            
+                                        // Email
+                                        Infolists\Components\TextEntry::make('customer.email')
                                             ->label('E-Mail')
                                             ->getStateUsing(fn ($record) => 
                                                 $record->customer?->email ?? 
                                                 $record->extracted_email ?? 
-                                                '—'
+                                                '-'
                                             )
                                             ->copyable()
-                                            ->icon('heroicon-m-envelope'),
+                                            ->visible(fn ($record) => 
+                                                !empty($record->customer?->email) || 
+                                                !empty($record->extracted_email)
+                                            ),
                                             
-                                        Infolists\Components\TextEntry::make('address_info')
-                                            ->label('Adresse')
+                                        // Customer Status Badge
+                                        Infolists\Components\TextEntry::make('customer_status')
+                                            ->label('Status')
                                             ->getStateUsing(fn ($record) => 
-                                                $record->customer?->address ?? '—'
+                                                $record->first_visit ? 'Neukunde' : 'Bestandskunde'
                                             )
-                                            ->icon('heroicon-m-map-pin')
-                                            ->visible(fn ($record) => $record->customer?->address),
-                                    ])
-                                    ->extraAttributes(['class' => 'mt-4']),
+                                            ->badge()
+                                            ->color(fn ($state) => 
+                                                $state === 'Neukunde' ? 'info' : 'success'
+                                            ),
+                                            
+                                        // Call History
+                                        Infolists\Components\TextEntry::make('call_history')
+                                            ->label('Anrufhistorie')
+                                            ->getStateUsing(function ($record) {
+                                                if (!$record->customer) {
+                                                    return 'Erster Anruf';
+                                                }
+                                                
+                                                $callCount = $record->customer->calls()->count();
+                                                $lastCall = $record->customer->calls()
+                                                    ->where('id', '!=', $record->id)
+                                                    ->latest()
+                                                    ->first();
+                                                
+                                                $text = "$callCount " . ($callCount === 1 ? 'Anruf' : 'Anrufe') . " insgesamt";
+                                                
+                                                if ($lastCall) {
+                                                    $text .= " • Letzter: " . $lastCall->created_at->diffForHumans();
+                                                }
+                                                
+                                                return $text;
+                                            })
+                                            ->visible(fn ($record) => $record->customer_id),
+                                            
+                                        // Tags
+                                        Infolists\Components\TextEntry::make('customer.tags')
+                                            ->label('Tags')
+                                            ->badge()
+                                            ->separator(',')
+                                            ->visible(fn ($record) => 
+                                                $record->customer && 
+                                                !empty($record->customer->tags)
+                                            ),
+                                            
+                                        // Address
+                                        Infolists\Components\TextEntry::make('customer.address')
+                                            ->label('Adresse')
+                                            ->visible(fn ($record) => $record->customer?->address)
+                                            ->icon('heroicon-m-map-pin'),
+                                            
+                                        // Birthday
+                                        Infolists\Components\TextEntry::make('customer.birthdate')
+                                            ->label('Geburtstag')
+                                            ->date('d.m.Y')
+                                            ->visible(fn ($record) => $record->customer?->birthdate)
+                                            ->icon('heroicon-m-cake'),
+                                            
+                                        // Created Date
+                                        Infolists\Components\TextEntry::make('customer.created_at')
+                                            ->label('Kunde seit')
+                                            ->dateTime('d.m.Y')
+                                            ->visible(fn ($record) => $record->customer_id)
+                                            ->icon('heroicon-m-calendar'),
+                                            
+                                        // Total Appointments
+                                        Infolists\Components\TextEntry::make('appointment_count')
+                                            ->label('Termine insgesamt')
+                                            ->getStateUsing(fn ($record) => 
+                                                $record->customer?->appointments()->count() ?? 0
+                                            )
+                                            ->visible(fn ($record) => $record->customer_id)
+                                            ->icon('heroicon-m-calendar-days'),
+                                            
+                                        // No-Show Count
+                                        Infolists\Components\TextEntry::make('no_show_info')
+                                            ->label('No-Shows')
+                                            ->getStateUsing(fn ($record) => 
+                                                $record->customer?->appointments()
+                                                    ->where('status', 'no_show')
+                                                    ->count() ?? 0
+                                            )
+                                            ->color(fn ($state) => $state > 2 ? 'danger' : 'gray')
+                                            ->visible(fn ($record) => $record->customer_id)
+                                            ->icon('heroicon-m-x-circle'),
+                                            
+                                        // Last Visit
+                                        Infolists\Components\TextEntry::make('last_visit')
+                                            ->label('Letzter Besuch')
+                                            ->getStateUsing(function ($record) {
+                                                if (!$record->customer) return '-';
+                                                
+                                                $lastAppointment = $record->customer->appointments()
+                                                    ->where('status', 'completed')
+                                                    ->orderBy('starts_at', 'desc')
+                                                    ->first();
+                                                    
+                                                return $lastAppointment ? 
+                                                    $lastAppointment->starts_at->format('d.m.Y') : 
+                                                    'Noch kein Besuch';
+                                            })
+                                            ->visible(fn ($record) => $record->customer_id)
+                                            ->icon('heroicon-m-clock'),
+                                            
+                                        // Notes
+                                        Infolists\Components\TextEntry::make('customer.notes')
+                                            ->label('Notizen')
+                                            ->visible(fn ($record) => $record->customer?->notes)
+                                            ->html()
+                                            ->columnSpanFull(),
+                                    ]),
                                     
                                 // Customer Actions
                                 Infolists\Components\Actions::make([
+                                    // View Customer Action (only for existing customers)
                                     Infolists\Components\Actions\Action::make('view_customer')
-                                        ->label('Kunde anzeigen')
+                                        ->label('Kundenprofil')
                                         ->icon('heroicon-m-arrow-top-right-on-square')
+                                        ->color('gray')
+                                        ->visible(fn ($record) => $record->customer_id)
                                         ->url(fn ($record) => 
-                                            $record->customer ? 
+                                            $record->customer_id ? 
                                             CustomerResource::getUrl('view', [$record->customer]) : 
                                             null
                                         )
-                                        ->visible(fn ($record) => $record->customer),
+                                        ->openUrlInNewTab(),
                                         
+                                    // Create Customer Action (only for non-existing customers)
                                     Infolists\Components\Actions\Action::make('create_customer')
                                         ->label('Kunde anlegen')
                                         ->icon('heroicon-m-user-plus')
                                         ->color('primary')
+                                        ->visible(fn ($record) => !$record->customer_id)
                                         ->url(fn ($record) => CustomerResource::getUrl('create', [
                                             'data' => [
                                                 'name' => $record->extracted_name ?? '',
                                                 'email' => $record->extracted_email ?? '',
                                                 'phone' => $record->from_number,
                                             ]
-                                        ]))
-                                        ->visible(fn ($record) => 
-                                            !$record->customer && 
-                                            ($record->extracted_name || $record->from_number)
-                                        ),
+                                        ])),
+                                        
+                                    // Add Note Action
+                                    Infolists\Components\Actions\Action::make('add_note')
+                                        ->label('Notiz hinzufügen')
+                                        ->icon('heroicon-m-pencil')
+                                        ->color('gray')
+                                        ->form([
+                                            Forms\Components\Textarea::make('note')
+                                                ->label('Notiz')
+                                                ->required()
+                                                ->rows(3),
+                                        ])
+                                        ->action(function ($record, array $data) {
+                                            // Add note to customer or call
+                                            if ($record->customer) {
+                                                $record->customer->notes .= "\n\n" . now()->format('d.m.Y H:i') . ":\n" . $data['note'];
+                                                $record->customer->save();
+                                            } else {
+                                                // Add to call metadata
+                                                $metadata = $record->metadata ?? [];
+                                                $metadata['notes'] = $metadata['notes'] ?? [];
+                                                $metadata['notes'][] = [
+                                                    'content' => $data['note'],
+                                                    'created_at' => now()->toIso8601String(),
+                                                    'user_id' => auth()->id(),
+                                                ];
+                                                $record->update(['metadata' => $metadata]);
+                                            }
+                                            
+                                            Notification::make()
+                                                ->success()
+                                                ->title('Notiz hinzugefügt')
+                                                ->send();
+                                        }),
                                 ])
                                 ->fullWidth()
                                 ->extraAttributes(['class' => 'mt-4']),
@@ -561,27 +1045,10 @@ class CallResource extends Resource
                                 // Retell AI Analysis
                                 Infolists\Components\Grid::make(1)
                                     ->schema([
-                                        // Call Summary from Retell
+                                        // Call Summary from Retell with Toggle
                                         Infolists\Components\ViewEntry::make('call_summary')
                                             ->label('Anrufzusammenfassung (AI)')
-                                            ->view('filament.infolists.toggleable-text')
-                                            ->viewData(function ($record) {
-                                                $summary = $record->webhook_data['call_analysis']['call_summary'] ?? null;
-                                                if (!$summary) {
-                                                    return [
-                                                        'content' => ['original' => '—', 'translated' => '—'],
-                                                        'showToggle' => false
-                                                    ];
-                                                }
-                                                
-                                                return [
-                                                    'content' => AutoTranslateHelper::getToggleableContent(
-                                                        $summary,
-                                                        $record->detected_language
-                                                    ),
-                                                    'showToggle' => true
-                                                ];
-                                            })
+                                            ->view('filament.infolists.toggleable-summary')
                                             ->columnSpanFull()
                                             ->visible(fn ($record) => 
                                                 isset($record->webhook_data['call_analysis']['call_summary'])

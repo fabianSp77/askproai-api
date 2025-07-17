@@ -1,0 +1,54 @@
+/**
+ * MINIMAL DROPDOWN FIX
+ * 
+ * This is the ONLY CSS file needed to fix dropdowns appearing behind sidebar.
+ * DO NOT add more CSS files - they will conflict!
+ * 
+ * The issue: Transform creates a new stacking context, causing z-index issues
+ * The fix: Remove transform from sidebar on desktop, use proper z-index hierarchy
+ */
+
+/* Desktop: Remove transform from sidebar to prevent stacking context */
+@media (min-width: 1024px) {
+    .fi-sidebar {
+        transform: none !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        z-index: 30 !important;
+    }
+    
+    /* Use margin instead of transform for content spacing */
+    .fi-main {
+        margin-left: 20rem !important;
+    }
+}
+
+/* All dropdowns must be above sidebar */
+.fi-dropdown-panel {
+    z-index: 40 !important;
+}
+
+/* Table action dropdowns */
+.fi-ta-actions .fi-dropdown-panel,
+.fi-ac-dropdown-panel {
+    z-index: 41 !important;
+}
+
+/* User menu and branch selector */
+.fi-user-menu .fi-dropdown-panel,
+.branch-dropdown-panel {
+    z-index: 42 !important;
+}
+
+/* Allow dropdowns to overflow table containers */
+.fi-ta-ctn {
+    overflow-y: visible !important;
+}
+
+/* Mobile: Keep transform for slide animation */
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        z-index: 50 !important;
+    }
+}

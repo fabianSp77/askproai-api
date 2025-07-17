@@ -1,0 +1,24 @@
+{
+  "name": "@askproai/api-client",
+  "version": "0.0.0",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit",
+    "generate": "openapi-typescript https://api.askproai.de/openapi.json -o ./src/types/api.ts"
+  },
+  "dependencies": {
+    "ky": "^1.2.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@askproai/config": "workspace:*",
+    "@types/node": "^20",
+    "openapi-typescript": "^6.7.4",
+    "tsup": "^9.0.0",
+    "typescript": "^5.3.3"
+  }
+}

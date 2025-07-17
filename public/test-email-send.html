@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Send Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .success {
+            color: #22c55e;
+        }
+        .error {
+            color: #ef4444;
+            background: #fee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .warning {
+            color: #f59e0b;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Email Send Test</h1>
+        
+        <div class="test-section">
+            <h2>Test Email API</h2>
+            <div>
+                <label>Call ID:</label>
+                <input type="number" id="callId" value="316" placeholder="Enter Call ID">
+            </div>
+            <div>
+                <label>Recipients (comma separated):</label>
+                <input type="email" id="recipients" placeholder="test@example.com, test2@example.com">
+            </div>
+            <div>
+                <label>Custom Message (optional):</label>
+                <textarea id="customMessage" rows="4" placeholder="Optional custom message"></textarea>
+            </div>
+            <button onclick="testSendEmail()">Test Send Email</button>
+            <button onclick="testPreview()">Test Preview</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Response</h2>
+            <pre id="response">No request sent yet</pre>
+        </div>
+
+        <div class="test-section">
+            <h2>Debug Info</h2>
+            <pre id="debug">Loading...</pre>
+        </div>
+    </div>
+
+    <script>
+        // Get CSRF token
+        async function getCsrfToken() {
+            try {
+                // First try from auth response
+                const authResponse = await fetch('/business/api/auth-check', {
+                    credentials: 'include'
+                });
+                const authData = await authResponse.json();
+                if (authData.csrf_token) {
+                    return authData.csrf_token;
+                }
+                
+                // Try from meta tag
+                let token = document.querySelector('meta[name="csrf-token"]')?.content;
+                if (token) return token;
+                
+                // Try from window.Laravel
+                if (window.Laravel && window.Laravel.csrfToken) {
+                    return window.Laravel.csrfToken;
+                }
+                
+                // Try from cookie (already decoded by browser)
+                const cookies = document.cookie.split(';');
+                const xsrfCookie = cookies.find(c => c.trim().startsWith('XSRF-TOKEN='));
+                if (xsrfCookie) {
+                    // The cookie value is already URL decoded by the browser
+                    const cookieValue = xsrfCookie.split('=')[1];
+                    // Laravel expects the raw cookie value, not the decoded one
+                    return cookieValue;
+                }
+                
+                return 'no-token-found';
+            } catch (error) {
+                console.error('Failed to get CSRF token:', error);
+                return 'error-getting-token';
+            }
+        }
+
+        async function updateDebugInfo() {
+            const csrfToken = await getCsrfToken();
+            const debugInfo = {
+                csrf_token: csrfToken,
+                cookies: document.cookie,
+                auth_state: 'checking...'
+            };
+            
+            // Check auth
+            try {
+                const response = await fetch('/business/api/auth-check', {
+                    credentials: 'include'
+                });
+                const authData = await response.json();
+                debugInfo.auth_state = authData;
+            } catch (error) {
+                debugInfo.auth_state = 'Error: ' + error.message;
+            }
+            
+            document.getElementById('debug').textContent = JSON.stringify(debugInfo, null, 2);
+        }
+
+        async function testSendEmail() {
+            const callId = document.getElementById('callId').value;
+            const recipientsInput = document.getElementById('recipients').value;
+            const customMessage = document.getElementById('customMessage').value;
+            
+            if (!callId || !recipientsInput) {
+                alert('Please enter Call ID and at least one recipient');
+                return;
+            }
+            
+            const recipients = recipientsInput.split(',').map(r => r.trim()).filter(r => r);
+            const csrfToken = await getCsrfToken();
+            
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = '<div class="loading"></div> Sending...';
+            
+            try {
+                const response = await fetch('/business/api/email/send-direct', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        call_id: parseInt(callId),
+                        recipients: recipients,
+                        subject: `Test Email - Call #${callId}`,
+                        html_content: customMessage ? `<div>${customMessage.replace(/\n/g, '<br>')}</div>` : null,
+                        include_options: {
+                            summary: true,
+                            transcript: false,
+                            customerInfo: true,
+                            appointmentInfo: true,
+                            attachCSV: true,
+                            attachRecording: false
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                responseDiv.innerHTML = `
+                    <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                    <strong>Response:</strong><br>
+                    ${JSON.stringify(data, null, 2)}
+                `;
+                
+                if (!response.ok) {
+                    responseDiv.className = 'error';
+                } else {
+                    responseDiv.className = 'success';
+                }
+                
+            } catch (error) {
+                responseDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+            
+            updateDebugInfo();
+        }
+
+        async function testPreview() {
+            const callId = document.getElementById('callId').value;
+            const customMessage = document.getElementById('customMessage').value;
+            
+            if (!callId) {
+                alert('Please enter Call ID');
+                return;
+            }
+            
+            const csrfToken = await getCsrfToken();
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = '<div class="loading"></div> Generating preview...';
+            
+            try {
+                const response = await fetch('/business/api/email/preview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        call_id: parseInt(callId),
+                        subject: `Test Preview - Call #${callId}`,
+                        html_content: customMessage ? `<div>${customMessage.replace(/\n/g, '<br>')}</div>` : null,
+                        include_options: {
+                            summary: true,
+                            transcript: false,
+                            customerInfo: true,
+                            appointmentInfo: true,
+                            actionItems: true,
+                            attachCSV: true,
+                            attachRecording: false
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.preview_html) {
+                    responseDiv.innerHTML = `
+                        <strong>Preview Generated Successfully</strong><br>
+                        <div style="border: 1px solid #ccc; padding: 20px; margin-top: 10px; background: white;">
+                            ${data.preview_html}
+                        </div>
+                    `;
+                } else {
+                    responseDiv.innerHTML = `
+                        <strong>Status:</strong> ${response.status}<br>
+                        <strong>Response:</strong><br>
+                        ${JSON.stringify(data, null, 2)}
+                    `;
+                    responseDiv.className = 'error';
+                }
+                
+            } catch (error) {
+                responseDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+            
+            updateDebugInfo();
+        }
+
+        // Initial load
+        updateDebugInfo();
+    </script>
+</body>
+</html>

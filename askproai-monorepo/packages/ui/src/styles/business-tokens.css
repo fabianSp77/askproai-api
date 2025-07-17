@@ -1,0 +1,149 @@
+@layer base {
+  :root {
+    /* Business Portal spezifische Design Tokens */
+    --business-primary: var(--primary-600);
+    --business-primary-hover: var(--primary-700);
+    --business-secondary: var(--gray-600);
+    --business-secondary-hover: var(--gray-700);
+    --business-accent: 139 92 246; /* Violet */
+    --business-accent-hover: 124 58 237;
+    
+    /* Call Status Farben */
+    --call-active: var(--success-500);
+    --call-ended: var(--gray-500);
+    --call-missed: var(--warning-500);
+    --call-failed: var(--error-500);
+    
+    /* Dashboard Gradient Colors */
+    --gradient-start: var(--primary-500);
+    --gradient-end: var(--primary-700);
+    --gradient-accent: 139 92 246;
+    
+    /* Interactive Elements */
+    --hover-overlay: 0 0 0 / 0.04;
+    --focus-ring-width: 3px;
+    --focus-ring-offset: 2px;
+  }
+  
+  .dark {
+    --business-primary: var(--primary-500);
+    --business-primary-hover: var(--primary-400);
+    --business-secondary: var(--gray-400);
+    --business-secondary-hover: var(--gray-300);
+    --business-accent: 167 139 250;
+    --business-accent-hover: 196 181 253;
+    
+    /* Dark mode gradient adjustments */
+    --gradient-start: var(--primary-600);
+    --gradient-end: var(--primary-800);
+    
+    /* Dark mode interactive */
+    --hover-overlay: 255 255 255 / 0.04;
+  }
+}
+
+/* Business Portal spezifische Komponenten */
+@layer components {
+  /* Hero Section */
+  .business-hero {
+    @apply relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 p-8 text-white;
+    @apply dark:from-primary-700 dark:to-primary-900;
+  }
+  
+  .business-hero::before {
+    @apply absolute inset-0 bg-gradient-mesh opacity-10;
+    content: '';
+  }
+  
+  /* Dashboard Cards */
+  .business-card {
+    @apply group relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-all duration-200;
+    @apply hover:shadow-md hover:-translate-y-0.5;
+  }
+  
+  .business-card-gradient {
+    @apply bg-gradient-to-br from-card via-card/95 to-card/90;
+  }
+  
+  /* Call Cards */
+  .call-card {
+    @apply rounded-lg border bg-card p-4 transition-all;
+    @apply hover:shadow-sm hover:border-primary/20;
+  }
+  
+  .call-status-indicator {
+    @apply inline-flex h-2 w-2 rounded-full;
+  }
+  
+  .call-active {
+    @apply bg-call-active animate-pulse;
+  }
+  
+  .call-ended {
+    @apply bg-call-ended;
+  }
+  
+  .call-missed {
+    @apply bg-call-missed;
+  }
+  
+  .call-failed {
+    @apply bg-call-failed;
+  }
+  
+  /* CTAs and Buttons */
+  .business-cta {
+    @apply inline-flex items-center justify-center rounded-lg bg-business-primary px-6 py-3 text-sm font-medium text-white shadow-sm transition-all;
+    @apply hover:bg-business-primary-hover hover:shadow-md hover:-translate-y-0.5;
+    @apply focus:outline-none focus:ring-2 focus:ring-business-primary focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+  }
+  
+  .business-cta-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-sm transition-all;
+    @apply hover:bg-gray-50 hover:border-gray-400;
+    @apply dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700;
+  }
+  
+  /* Feature Cards */
+  .feature-card {
+    @apply relative rounded-xl border bg-gradient-to-b from-gray-50/50 to-white p-6;
+    @apply dark:from-gray-800/50 dark:to-gray-900 dark:border-gray-700;
+  }
+  
+  .feature-icon {
+    @apply flex h-12 w-12 items-center justify-center rounded-lg bg-primary-100 text-primary-600;
+    @apply dark:bg-primary-900/20 dark:text-primary-400;
+  }
+  
+  /* Stats Display */
+  .stat-card {
+    @apply rounded-lg bg-gray-50 p-4 text-center;
+    @apply dark:bg-gray-800/50;
+  }
+  
+  .stat-value {
+    @apply text-3xl font-bold text-gray-900;
+    @apply dark:text-gray-100;
+  }
+  
+  .stat-label {
+    @apply text-sm text-gray-600;
+    @apply dark:text-gray-400;
+  }
+  
+  /* Mobile Optimizations */
+  @media (max-width: 640px) {
+    .business-hero {
+      @apply p-6;
+    }
+    
+    .business-card {
+      @apply p-4;
+    }
+    
+    .business-cta {
+      @apply w-full;
+    }
+  }
+}

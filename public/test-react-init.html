@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>React Init Test</title>
+    <meta name="csrf-token" content="test">
+</head>
+<body>
+    <h1>React Initialization Test</h1>
+    
+    <div id="test-root"></div>
+    
+    <script type="module">
+        console.log('=== React Init Test ===');
+        
+        // Test 1: Check if React is available
+        import('react').then(React => {
+            console.log('✅ React loaded:', React.version);
+        }).catch(err => {
+            console.error('❌ React load failed:', err);
+        });
+        
+        // Test 2: Check if ReactDOM is available
+        import('react-dom/client').then(({ createRoot }) => {
+            console.log('✅ ReactDOM loaded');
+            
+            // Test 3: Try to render a simple component
+            import('react').then(React => {
+                const TestComponent = () => React.createElement('div', {}, 'React is working!');
+                const root = createRoot(document.getElementById('test-root'));
+                root.render(React.createElement(TestComponent));
+                console.log('✅ React render successful');
+            });
+        }).catch(err => {
+            console.error('❌ ReactDOM load failed:', err);
+        });
+        
+        // Test 4: Check Vite module loading
+        console.log('Checking Vite modules...');
+        
+        // Test 5: Check if app element exists
+        setTimeout(() => {
+            const appElement = document.getElementById('app');
+            console.log('App element exists:', !!appElement);
+            if (appElement) {
+                console.log('App data attributes:', {
+                    auth: appElement.dataset.auth,
+                    csrf: appElement.dataset.csrf,
+                    apiUrl: appElement.dataset.apiUrl,
+                    initialRoute: appElement.dataset.initialRoute
+                });
+            }
+        }, 100);
+    </script>
+    
+    <!-- Load the actual React app bundle -->
+    <script type="module" src="/build/assets/PortalApp.jsx"></script>
+</body>
+</html>

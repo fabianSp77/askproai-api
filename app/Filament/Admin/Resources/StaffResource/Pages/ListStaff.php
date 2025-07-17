@@ -10,6 +10,11 @@ use Filament\Resources\Pages\ListRecords;
 class ListStaff extends ListRecords
 {
     protected static string $resource = StaffResource::class;
+    
+    protected function getPageClass(): string
+    {
+        return 'staff-index';
+    }
 
     protected function getHeaderActions(): array
     {

@@ -1,0 +1,304 @@
+/* Dark Mode Styles for Business Portal */
+
+/* CSS Variables for shadcn/ui components */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Global dark mode styles */
+body.dark-mode {
+    background-color: #141414;
+    color: #ffffff;
+}
+
+/* Ant Design component overrides for dark mode */
+body.dark-mode .ant-layout {
+    background: #141414;
+}
+
+body.dark-mode .ant-layout-sider {
+    background: #1f1f1f;
+}
+
+body.dark-mode .ant-layout-header {
+    background: #1f1f1f !important;
+    border-bottom: 1px solid #303030;
+}
+
+body.dark-mode .ant-layout-content {
+    background: #141414;
+}
+
+body.dark-mode .ant-card {
+    background: #1f1f1f;
+    border-color: #303030;
+}
+
+body.dark-mode .ant-table {
+    background: #1f1f1f;
+}
+
+body.dark-mode .ant-table-thead > tr > th {
+    background: #262626;
+    border-bottom-color: #434343;
+}
+
+body.dark-mode .ant-table-tbody > tr > td {
+    border-bottom-color: #303030;
+}
+
+body.dark-mode .ant-table-tbody > tr:hover > td {
+    background: #262626;
+}
+
+body.dark-mode .ant-input,
+body.dark-mode .ant-select-selector,
+body.dark-mode .ant-picker {
+    background: #262626 !important;
+    border-color: #434343 !important;
+    color: #ffffff;
+}
+
+body.dark-mode .ant-input:hover,
+body.dark-mode .ant-select-selector:hover,
+body.dark-mode .ant-picker:hover {
+    border-color: #595959 !important;
+}
+
+body.dark-mode .ant-input:focus,
+body.dark-mode .ant-select-focused .ant-select-selector,
+body.dark-mode .ant-picker-focused {
+    border-color: #1890ff !important;
+}
+
+body.dark-mode .ant-select-dropdown,
+body.dark-mode .ant-picker-dropdown {
+    background: #1f1f1f;
+}
+
+body.dark-mode .ant-select-item-option-content,
+body.dark-mode .ant-picker-cell-inner {
+    color: #ffffff;
+}
+
+body.dark-mode .ant-select-item-option:hover,
+body.dark-mode .ant-picker-cell:hover .ant-picker-cell-inner {
+    background: #262626;
+}
+
+body.dark-mode .ant-modal-content {
+    background: #1f1f1f;
+}
+
+body.dark-mode .ant-modal-header {
+    background: #1f1f1f;
+    border-bottom-color: #303030;
+}
+
+body.dark-mode .ant-modal-footer {
+    border-top-color: #303030;
+}
+
+body.dark-mode .ant-drawer-content {
+    background: #1f1f1f;
+}
+
+body.dark-mode .ant-drawer-header {
+    border-bottom-color: #303030;
+}
+
+body.dark-mode .ant-menu-light {
+    background: #1f1f1f;
+}
+
+body.dark-mode .ant-menu-light .ant-menu-item:hover,
+body.dark-mode .ant-menu-light .ant-menu-item-active,
+body.dark-mode .ant-menu-light .ant-menu-submenu-active {
+    background: #262626;
+}
+
+body.dark-mode .ant-menu-light.ant-menu-root > .ant-menu-item-selected,
+body.dark-mode .ant-menu-light.ant-menu-root > .ant-menu-submenu-selected {
+    background: #1890ff20;
+}
+
+body.dark-mode .ant-statistic-title {
+    color: #bfbfbf;
+}
+
+body.dark-mode .ant-statistic-content {
+    color: #ffffff;
+}
+
+body.dark-mode .ant-divider {
+    border-color: #303030;
+}
+
+body.dark-mode .ant-badge-count {
+    background: #ff4d4f;
+    color: #ffffff;
+}
+
+body.dark-mode .ant-tag {
+    background: #262626;
+    border-color: #434343;
+}
+
+body.dark-mode .ant-tag.ant-tag-success {
+    background: #52c41a20;
+    border-color: #52c41a40;
+    color: #52c41a;
+}
+
+body.dark-mode .ant-tag.ant-tag-error {
+    background: #ff4d4f20;
+    border-color: #ff4d4f40;
+    color: #ff4d4f;
+}
+
+body.dark-mode .ant-tag.ant-tag-warning {
+    background: #faad1420;
+    border-color: #faad1440;
+    color: #faad14;
+}
+
+body.dark-mode .ant-tag.ant-tag-processing {
+    background: #1890ff20;
+    border-color: #1890ff40;
+    color: #1890ff;
+}
+
+/* Charts in dark mode */
+body.dark-mode .recharts-text {
+    fill: #bfbfbf;
+}
+
+body.dark-mode .recharts-cartesian-grid-horizontal line,
+body.dark-mode .recharts-cartesian-grid-vertical line {
+    stroke: #303030;
+}
+
+/* Notification styles */
+body.dark-mode .ant-notification {
+    background: #1f1f1f;
+    border: 1px solid #303030;
+}
+
+body.dark-mode .ant-notification-notice-message {
+    color: #ffffff;
+}
+
+body.dark-mode .ant-notification-notice-description {
+    color: #bfbfbf;
+}
+
+/* Toast notifications */
+body.dark-mode .Toastify__toast {
+    background: #1f1f1f;
+    color: #ffffff;
+}
+
+body.dark-mode .Toastify__toast--error {
+    background: #ff4d4f20;
+}
+
+body.dark-mode .Toastify__toast--success {
+    background: #52c41a20;
+}
+
+body.dark-mode .Toastify__toast--warning {
+    background: #faad1420;
+}
+
+body.dark-mode .Toastify__toast--info {
+    background: #1890ff20;
+}
+
+/* Smart Search component */
+body.dark-mode .suggestion-item:hover {
+    background-color: #262626 !important;
+}
+
+/* Scrollbar styling */
+body.dark-mode ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+    background: #1f1f1f;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background: #434343;
+    border-radius: 4px;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #595959;
+}
+
+/* Print styles for dark mode */
+@media print {
+    body.dark-mode {
+        background: white;
+        color: black;
+    }
+    
+    body.dark-mode * {
+        background: white !important;
+        color: black !important;
+    }
+}

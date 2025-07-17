@@ -13,11 +13,10 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
-use Tests\Traits\SimplifiedMigrations;
 
 class CallRepositoryTest extends TestCase
 {
-    use SimplifiedMigrations;
+    use RefreshDatabase;
 
     protected CallRepository $repository;
     protected Company $company;
@@ -32,6 +31,7 @@ class CallRepositoryTest extends TestCase
         $this->company = Company::factory()->create();
         
         // Set up tenant context
+        app()->instance('current_company_id', $this->company->id);
         app()->instance('current_company', $this->company);
     }
 
@@ -53,10 +53,10 @@ class CallRepositoryTest extends TestCase
             'call_id' => 'call_123',
             'retell_call_id' => 'retell_123',
             'status' => 'completed',
-            'duration_seconds' => 120,
+            'duration_sec' => 120,
             'customer_id' => $customer->id,
             'company_id' => $this->company->id,
-            'cost_cents' => 50,
+            'cost' => 0.5,
             'agent_id' => 'agent_123'
         ];
 
@@ -65,8 +65,8 @@ class CallRepositoryTest extends TestCase
         $this->assertInstanceOf(Call::class, $call);
         $this->assertEquals('+1234567890', $call->from_number);
         $this->assertEquals('completed', $call->status);
-        $this->assertEquals(120, $call->duration_seconds);
-        $this->assertEquals(50, $call->cost_cents);
+        $this->assertEquals(120, $call->duration_sec);
+        $this->assertEquals(0.5, $call->cost);
     }
 
     /** @test */
@@ -79,14 +79,14 @@ class CallRepositoryTest extends TestCase
 
         $result = $this->repository->update($call->id, [
             'status' => 'completed',
-            'duration_seconds' => 180,
+            'duration_sec' => 180,
             'transcript' => 'Call transcript here'
         ]);
 
         $this->assertTrue($result);
         $call->refresh();
         $this->assertEquals('completed', $call->status);
-        $this->assertEquals(180, $call->duration_seconds);
+        $this->assertEquals(180, $call->duration_sec);
         $this->assertEquals('Call transcript here', $call->transcript);
     }
 
@@ -274,7 +274,7 @@ class CallRepositoryTest extends TestCase
         Call::factory()->count(5)->create([
             'company_id' => $this->company->id,
             'status' => 'completed',
-            'duration_seconds' => 120,
+            'duration_sec' => 120,
             'appointment_id' => $appointment->id,
             'created_at' => now()
         ]);
@@ -282,7 +282,7 @@ class CallRepositoryTest extends TestCase
         Call::factory()->count(3)->create([
             'company_id' => $this->company->id,
             'status' => 'completed',
-            'duration_seconds' => 180,
+            'duration_sec' => 180,
             'appointment_id' => null,
             'created_at' => now()
         ]);
@@ -290,13 +290,13 @@ class CallRepositoryTest extends TestCase
         Call::factory()->count(2)->create([
             'company_id' => $this->company->id,
             'status' => 'failed',
-            'duration_seconds' => 0,
+            'duration_sec' => 0,
             'created_at' => now()
         ]);
 
         $stats = $this->repository->getStatistics($startDate, $endDate);
 
-        $this->assertEquals(10, $stats['total']);
+        $this->assertEquals(10, $stats['total_calls']);
         $this->assertEquals(8, $stats['completed']);
         $this->assertEquals(2, $stats['failed']);
         $this->assertEquals(135, $stats['average_duration']); // (5*120 + 3*180) / 8
@@ -314,7 +314,7 @@ class CallRepositoryTest extends TestCase
 
         $stats = $this->repository->getStatistics($startDate, $endDate);
 
-        $this->assertEquals(0, $stats['total']);
+        $this->assertEquals(0, $stats['total_calls']);
         $this->assertEquals(0, $stats['completed']);
         $this->assertEquals(0, $stats['failed']);
         $this->assertEquals(0, $stats['average_duration']);
@@ -427,7 +427,7 @@ class CallRepositoryTest extends TestCase
             'company_id' => $this->company->id,
             'retell_call_id' => 'retell_123',
             'status' => 'initiated',
-            'duration_seconds' => 0
+            'duration_sec' => 0
         ]);
 
         $webhookData = [
@@ -435,7 +435,7 @@ class CallRepositoryTest extends TestCase
             'duration' => 240,
             'transcript' => 'Customer: Hello, I need an appointment...',
             'analysis' => ['sentiment' => 'positive'],
-            'cost' => 75,
+            'cost' => 0.75,
             'extra_field' => 'extra_value'
         ];
 
@@ -445,10 +445,10 @@ class CallRepositoryTest extends TestCase
         
         $call->refresh();
         $this->assertEquals('completed', $call->status);
-        $this->assertEquals(240, $call->duration_seconds);
+        $this->assertEquals(240, $call->duration_sec);
         $this->assertEquals('Customer: Hello, I need an appointment...', $call->transcript);
         $this->assertEquals(['sentiment' => 'positive'], $call->analysis);
-        $this->assertEquals(75, $call->cost_cents);
+        $this->assertEquals(0.75, $call->cost);
         $this->assertArrayHasKey('extra_field', $call->webhook_data);
     }
 
@@ -503,19 +503,19 @@ class CallRepositoryTest extends TestCase
         Call::factory()->count(5)->create([
             'company_id' => $this->company->id,
             'status' => 'completed',
-            'duration_seconds' => 300
+            'duration_sec' => 300
         ]);
 
         Call::factory()->count(3)->create([
             'company_id' => $this->company->id,
             'status' => 'completed',
-            'duration_seconds' => 60
+            'duration_sec' => 60
         ]);
 
         // Apply criteria for long calls
         $longCalls = $this->repository
             ->pushCriteria(function ($query) {
-                $query->where('duration_seconds', '>', 120);
+                $query->where('duration_sec', '>', 120);
             })
             ->all();
 
@@ -527,20 +527,20 @@ class CallRepositoryTest extends TestCase
     {
         $call1 = Call::factory()->create([
             'company_id' => $this->company->id,
-            'duration_seconds' => 300
+            'duration_sec' => 300
         ]);
 
         $call2 = Call::factory()->create([
             'company_id' => $this->company->id,
-            'duration_seconds' => 100
+            'duration_sec' => 100
         ]);
 
         $call3 = Call::factory()->create([
             'company_id' => $this->company->id,
-            'duration_seconds' => 200
+            'duration_sec' => 200
         ]);
 
-        $calls = $this->repository->orderBy('duration_seconds', 'asc')->all();
+        $calls = $this->repository->orderBy('duration_sec', 'asc')->all();
 
         $this->assertEquals($call2->id, $calls[0]->id);
         $this->assertEquals($call3->id, $calls[1]->id);
@@ -607,13 +607,13 @@ class CallRepositoryTest extends TestCase
     {
         Call::factory()->count(3)->create([
             'company_id' => $this->company->id,
-            'duration_seconds' => null,
+            'duration_sec' => null,
             'appointment_id' => null
         ]);
 
         $stats = $this->repository->getStatistics(now()->startOfMonth(), now()->endOfMonth());
 
-        $this->assertEquals(3, $stats['total']);
+        $this->assertEquals(3, $stats['total_calls']);
         $this->assertEquals(0, $stats['average_duration']);
         $this->assertEquals(0, $stats['total_duration']);
         $this->assertEquals(0, $stats['appointments_booked']);

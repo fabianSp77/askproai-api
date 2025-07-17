@@ -92,8 +92,13 @@ class BillingApiController extends BaseApiController
         $billingRate = $this->billingService->getCompanyBillingRate($company);
 
         return response()->json([
+            'company' => [
+                'id' => $company->id,
+                'name' => $company->name,
+            ],
             'prepaid_balance' => [
                 'id' => $prepaidBalance->id,
+                'company_id' => $company->id,
                 'current_balance' => (float) $prepaidBalance->balance,
                 'bonus_balance' => (float) ($prepaidBalance->bonus_balance ?? 0),
                 'total_balance' => (float) $prepaidBalance->getTotalBalance(),

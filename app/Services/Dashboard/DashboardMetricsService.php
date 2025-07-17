@@ -7,10 +7,12 @@ use App\Models\Call;
 use App\Models\Customer;
 use App\Models\PhoneNumber;
 use Carbon\Carbon;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Zentrale Service-Klasse für Dashboard KPI-Berechnungen
@@ -48,7 +50,8 @@ class DashboardMetricsService
                 $companyId = $filters['company_id'] ?? null;
                 
                 return [
-                    'revenue' => $this->calculateAppointmentRevenue($dateRange, $previousRange),
+                    'revenue' => $this->calculateAppointmentRevenue($dateRange, $previousRange, $filters),
+                    'appointments' => $this->calculateAppointmentCount($dateRange, $previousRange, $filters),
                     'occupancy' => $this->calculateOccupancy($dateRange, $previousRange),
                     'conversion' => $this->calculateConversionRate($dateRange, $previousRange, $companyId),
                     'no_show_rate' => $this->calculateNoShowRate($dateRange, $previousRange),
@@ -101,10 +104,11 @@ class DashboardMetricsService
             try {
                 $dateRange = $this->getDateRange($filters);
                 $previousRange = $this->getPreviousDateRange($dateRange);
+                $companyId = $filters['company_id'] ?? null;
                 
                 return [
-                    'total_customers' => $this->calculateTotalCustomers($dateRange, $previousRange),
-                    'new_customers' => $this->calculateNewCustomers($dateRange, $previousRange),
+                    'total_customers' => $this->calculateTotalCustomers($dateRange, $previousRange, $companyId),
+                    'new_customers' => $this->calculateNewCustomers($dateRange, $previousRange, $companyId),
                     'avg_clv' => $this->calculateAvgCustomerLifetimeValue($dateRange, $previousRange),
                     'returning_rate' => $this->calculateReturningCustomerRate($dateRange, $previousRange),
                     'churn_rate' => $this->calculateChurnRate($dateRange, $previousRange),
@@ -146,25 +150,71 @@ class DashboardMetricsService
     // APPOINTMENT KPI CALCULATIONS
     // ========================================================================
 
-    private function calculateAppointmentRevenue(array $dateRange, array $previousRange): array
+    private function calculateAppointmentRevenue(array $dateRange, array $previousRange, array $filters = []): array
     {
-        $current = Appointment::query()
-            ->join('services', 'appointments.service_id', '=', 'services.id')
-            ->where('appointments.status', 'completed')
+        // Start with base query
+        $query = Appointment::query();
+        
+        // If company_id is provided, remove global scope and filter manually
+        if (!empty($filters['company_id'])) {
+            $query = Appointment::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                ->where('appointments.company_id', $filters['company_id']);
+        }
+            
+        $query->join('services', 'appointments.service_id', '=', 'services.id')
+            ->where('appointments.status', 'completed');
+            
+        // Apply branch filter if provided
+        if (!empty($filters['branch_id'])) {
+            $query->where('appointments.branch_id', $filters['branch_id']);
+        }
+            
+        $current = $query->clone()
             ->whereBetween('appointments.starts_at', $dateRange)
             ->sum('services.price') ?? 0;
 
-        $previous = Appointment::query()
-            ->join('services', 'appointments.service_id', '=', 'services.id')
-            ->where('appointments.status', 'completed')
+        $previous = $query->clone()
             ->whereBetween('appointments.starts_at', $previousRange)
             ->sum('services.price') ?? 0;
 
         return [
             'value' => $current,
             'previous' => $previous,
-            'change' => $this->calculatePercentageChange($current, $previous),
+            'change' => $this->calculatePercentageChange($current, $previous, 2),
             'formatted' => number_format($current, 0, ',', '.') . '€',
+            'trend' => $current > $previous ? 'up' : ($current < $previous ? 'down' : 'stable'),
+        ];
+    }
+    
+    private function calculateAppointmentCount(array $dateRange, array $previousRange, array $filters = []): array
+    {
+        // Start with base query
+        $query = Appointment::query();
+        
+        // If company_id is provided, remove global scope and filter manually
+        if (!empty($filters['company_id'])) {
+            $query = Appointment::withoutGlobalScope(\App\Scopes\TenantScope::class)
+                ->where('company_id', $filters['company_id']);
+        }
+        
+        // Apply branch filter if provided
+        if (!empty($filters['branch_id'])) {
+            $query->where('branch_id', $filters['branch_id']);
+        }
+        
+        $current = $query->clone()
+            ->whereBetween('starts_at', $dateRange)
+            ->count();
+            
+        $previous = $query->clone()
+            ->whereBetween('starts_at', $previousRange)
+            ->count();
+            
+        return [
+            'value' => $current,
+            'previous' => $previous,
+            'change' => $this->calculatePercentageChange($current, $previous),
+            'formatted' => number_format($current, 0, ',', '.'),
             'trend' => $current > $previous ? 'up' : ($current < $previous ? 'down' : 'stable'),
         ];
     }
@@ -192,23 +242,33 @@ class DashboardMetricsService
 
     private function calculateConversionRate(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $query = Call::query();
+        // Use forCompany() to explicitly set company context
+        $query = $companyId ? Call::forCompany($companyId) : Call::query();
         
         if ($companyId) {
             $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
             if (!empty($phoneNumbers)) {
                 $query->whereIn('to_number', $phoneNumbers);
             }
-            $query->where('company_id', $companyId);
         }
         
-        $callsWithIntent = $query->clone()
-            ->whereBetween('created_at', $dateRange)
-            ->where(function($q) {
+        $callsWithIntentQuery = $query->clone()
+            ->whereBetween('created_at', $dateRange);
+            
+        // Apply JSON query differently for SQLite vs MySQL
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            $callsWithIntentQuery->where(function($q) {
+                $q->whereRaw("json_extract(analysis, '$.intent') LIKE ?", ['%booking%'])
+                  ->orWhere('duration_sec', '>', 30);
+            });
+        } else {
+            $callsWithIntentQuery->where(function($q) {
                 $q->whereJsonContains('analysis->intent', 'booking')
-                  ->orWhere('duration_sec', '>', 30); // Mindestdauer als Intent-Indikator
-            })
-            ->count();
+                  ->orWhere('duration_sec', '>', 30);
+            });
+        }
+        
+        $callsWithIntent = $callsWithIntentQuery->count();
 
         $appointmentsFromCalls = Appointment::whereNotNull('call_id')
             ->whereBetween('created_at', $dateRange)
@@ -226,13 +286,23 @@ class DashboardMetricsService
         $current = $callsWithIntent > 0 ? ($appointmentsFromCalls / $callsWithIntent) * 100 : 0;
 
         // Previous period
-        $prevCallsWithIntent = $query->clone()
-            ->whereBetween('created_at', $previousRange)
-            ->where(function($q) {
+        $prevCallsWithIntentQuery = $query->clone()
+            ->whereBetween('created_at', $previousRange);
+            
+        // Apply JSON query differently for SQLite vs MySQL
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            $prevCallsWithIntentQuery->where(function($q) {
+                $q->whereRaw("json_extract(analysis, '$.intent') LIKE ?", ['%booking%'])
+                  ->orWhere('duration_sec', '>', 30);
+            });
+        } else {
+            $prevCallsWithIntentQuery->where(function($q) {
                 $q->whereJsonContains('analysis->intent', 'booking')
                   ->orWhere('duration_sec', '>', 30);
-            })
-            ->count();
+            });
+        }
+        
+        $prevCallsWithIntent = $prevCallsWithIntentQuery->count();
 
         $prevAppointmentsFromCalls = Appointment::whereNotNull('call_id')
             ->whereBetween('created_at', $previousRange)
@@ -260,16 +330,20 @@ class DashboardMetricsService
 
     private function calculateNoShowRate(array $dateRange, array $previousRange): array
     {
-        $totalAppointments = Appointment::whereBetween('starts_at', $dateRange)->count();
-        $noShows = Appointment::where('status', 'no_show')
+        $totalAppointments = Appointment::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->whereBetween('starts_at', $dateRange)->count();
+        $noShows = Appointment::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('status', 'no_show')
             ->whereBetween('starts_at', $dateRange)
             ->count();
         
         $current = $totalAppointments > 0 ? ($noShows / $totalAppointments) * 100 : 0;
 
         // Previous period
-        $prevTotalAppointments = Appointment::whereBetween('starts_at', $previousRange)->count();
-        $prevNoShows = Appointment::where('status', 'no_show')
+        $prevTotalAppointments = Appointment::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->whereBetween('starts_at', $previousRange)->count();
+        $prevNoShows = Appointment::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('status', 'no_show')
             ->whereBetween('starts_at', $previousRange)
             ->count();
         
@@ -286,7 +360,8 @@ class DashboardMetricsService
 
     private function calculateAvgDuration(array $dateRange, array $previousRange): array
     {
-        $current = Appointment::whereBetween('starts_at', $dateRange)
+        $current = Appointment::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->whereBetween('starts_at', $dateRange)
             ->whereNotNull('duration_minutes')
             ->avg('duration_minutes') ?? 0;
 
@@ -345,14 +420,14 @@ class DashboardMetricsService
 
     private function calculateTotalCalls(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $query = Call::query();
+        // Use forCompany() to explicitly set company context
+        $query = $companyId ? Call::forCompany($companyId) : Call::query();
         
         if ($companyId) {
             $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
             if (!empty($phoneNumbers)) {
                 $query->whereIn('to_number', $phoneNumbers);
             }
-            $query->where('company_id', $companyId);
         }
         
         $current = $query->clone()->whereBetween('created_at', $dateRange)->count();
@@ -369,14 +444,14 @@ class DashboardMetricsService
 
     private function calculateCallAvgDuration(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $query = Call::query();
+        // Use forCompany() to explicitly set company context
+        $query = $companyId ? Call::forCompany($companyId) : Call::query();
         
         if ($companyId) {
             $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
             if (!empty($phoneNumbers)) {
                 $query->whereIn('to_number', $phoneNumbers);
             }
-            $query->where('company_id', $companyId);
         }
         
         $current = $query->clone()
@@ -400,14 +475,14 @@ class DashboardMetricsService
 
     private function calculateCallSuccessRate(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $query = Call::query();
+        // Use forCompany() to explicitly set company context
+        $query = $companyId ? Call::forCompany($companyId) : Call::query();
         
         if ($companyId) {
             $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
             if (!empty($phoneNumbers)) {
                 $query->whereIn('to_number', $phoneNumbers);
             }
-            $query->where('company_id', $companyId);
         }
         
         $totalCalls = $query->clone()->whereBetween('created_at', $dateRange)->count();
@@ -438,38 +513,56 @@ class DashboardMetricsService
 
     private function calculatePositiveSentiment(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $query = Call::query();
+        // Use forCompany() to explicitly set company context
+        $query = $companyId ? Call::forCompany($companyId) : Call::query();
         
         if ($companyId) {
             $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
             if (!empty($phoneNumbers)) {
                 $query->whereIn('to_number', $phoneNumbers);
             }
-            $query->where('company_id', $companyId);
         }
         
-        $totalCalls = $query->clone()
-            ->whereBetween('created_at', $dateRange)
-            ->whereJsonContains('analysis->sentiment', ['positive', 'negative', 'neutral'])
-            ->count();
+        $totalCallsQuery = $query->clone()
+            ->whereBetween('created_at', $dateRange);
+            
+        $positiveCallsQuery = $query->clone()
+            ->whereBetween('created_at', $dateRange);
+            
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            // SQLite: Check if sentiment exists and is one of the valid values
+            $totalCallsQuery->whereRaw("json_extract(analysis, '$.sentiment') IN ('positive', 'negative', 'neutral')");
+            $positiveCallsQuery->whereRaw("json_extract(analysis, '$.sentiment') = 'positive'");
+        } else {
+            // MySQL: Use native JSON functions
+            $totalCallsQuery->whereJsonContains('analysis->sentiment', ['positive', 'negative', 'neutral']);
+            $positiveCallsQuery->whereJsonContains('analysis->sentiment', 'positive');
+        }
         
-        $positiveCalls = $query->clone()
-            ->whereBetween('created_at', $dateRange)
-            ->whereJsonContains('analysis->sentiment', 'positive')
-            ->count();
+        $totalCalls = $totalCallsQuery->count();
+        $positiveCalls = $positiveCallsQuery->count();
 
         $current = $totalCalls > 0 ? ($positiveCalls / $totalCalls) * 100 : 0;
 
         // Previous period
-        $prevTotalCalls = $query->clone()
-            ->whereBetween('created_at', $previousRange)
-            ->whereJsonContains('analysis->sentiment', ['positive', 'negative', 'neutral'])
-            ->count();
+        $prevTotalCallsQuery = $query->clone()
+            ->whereBetween('created_at', $previousRange);
+            
+        $prevPositiveCallsQuery = $query->clone()
+            ->whereBetween('created_at', $previousRange);
+            
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            // SQLite: Check if sentiment exists and is one of the valid values
+            $prevTotalCallsQuery->whereRaw("json_extract(analysis, '$.sentiment') IN ('positive', 'negative', 'neutral')");
+            $prevPositiveCallsQuery->whereRaw("json_extract(analysis, '$.sentiment') = 'positive'");
+        } else {
+            // MySQL: Use native JSON functions
+            $prevTotalCallsQuery->whereJsonContains('analysis->sentiment', ['positive', 'negative', 'neutral']);
+            $prevPositiveCallsQuery->whereJsonContains('analysis->sentiment', 'positive');
+        }
         
-        $prevPositiveCalls = $query->clone()
-            ->whereBetween('created_at', $previousRange)
-            ->whereJsonContains('analysis->sentiment', 'positive')
-            ->count();
+        $prevTotalCalls = $prevTotalCallsQuery->count();
+        $prevPositiveCalls = $prevPositiveCallsQuery->count();
 
         $previous = $prevTotalCalls > 0 ? ($prevPositiveCalls / $prevTotalCalls) * 100 : 0;
 
@@ -484,14 +577,14 @@ class DashboardMetricsService
 
     private function calculateAvgCallCost(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $query = Call::query();
+        // Use forCompany() to explicitly set company context
+        $query = $companyId ? Call::forCompany($companyId) : Call::query();
         
         if ($companyId) {
             $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
             if (!empty($phoneNumbers)) {
                 $query->whereIn('to_number', $phoneNumbers);
             }
-            $query->where('company_id', $companyId);
         }
         
         $current = $query->clone()
@@ -516,14 +609,14 @@ class DashboardMetricsService
     private function calculateCallROI(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
         // ROI = (Termin-Wert - Call-Kosten) / Call-Kosten * 100
-        $query = Call::query();
+        // Use forCompany() to explicitly set company context
+        $query = $companyId ? Call::forCompany($companyId) : Call::query();
         
         if ($companyId) {
             $phoneNumbers = $this->getCompanyPhoneNumbers($companyId);
             if (!empty($phoneNumbers)) {
                 $query->whereIn('to_number', $phoneNumbers);
             }
-            $query->where('company_id', $companyId);
         }
         
         $callCosts = $query->clone()
@@ -584,10 +677,15 @@ class DashboardMetricsService
     // CUSTOMER KPI CALCULATIONS
     // ========================================================================
 
-    private function calculateTotalCustomers(array $dateRange, array $previousRange): array
+    private function calculateTotalCustomers(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $current = Customer::count();
-        $previous = Customer::where('created_at', '<', $previousRange[1])->count();
+        // Use withoutGlobalScope if company_id is provided
+        $query = $companyId 
+            ? Customer::withoutGlobalScope(\App\Scopes\TenantScope::class)->where('company_id', $companyId)
+            : Customer::query();
+            
+        $current = $query->count();
+        $previous = $query->clone()->where('created_at', '<', $previousRange[1])->count();
 
         return [
             'value' => $current,
@@ -598,10 +696,15 @@ class DashboardMetricsService
         ];
     }
 
-    private function calculateNewCustomers(array $dateRange, array $previousRange): array
+    private function calculateNewCustomers(array $dateRange, array $previousRange, ?int $companyId = null): array
     {
-        $current = Customer::whereBetween('created_at', $dateRange)->count();
-        $previous = Customer::whereBetween('created_at', $previousRange)->count();
+        // Use withoutGlobalScope if company_id is provided
+        $query = $companyId 
+            ? Customer::withoutGlobalScope(\App\Scopes\TenantScope::class)->where('company_id', $companyId)
+            : Customer::query();
+            
+        $current = $query->clone()->whereBetween('created_at', $dateRange)->count();
+        $previous = $query->clone()->whereBetween('created_at', $previousRange)->count();
 
         return [
             'value' => $current,
@@ -793,15 +896,27 @@ class DashboardMetricsService
             return [];
         }
         
-        return PhoneNumber::where('company_id', $companyId)
-            ->where('is_active', true)
-            ->pluck('number')
-            ->toArray();
+        $query = PhoneNumber::where('company_id', $companyId);
+        
+        // Only filter by is_active if the column exists (for compatibility with tests)
+        if (\Schema::hasColumn('phone_numbers', 'is_active')) {
+            $query->where('is_active', true);
+        }
+        
+        return $query->pluck('number')->toArray();
     }
 
     private function getDateRange(array $filters): array
     {
         $period = $filters['period'] ?? 'today';
+        
+        // Handle custom date range
+        if ($period === 'custom' && isset($filters['date_from']) && isset($filters['date_to'])) {
+            return [
+                Carbon::parse($filters['date_from'])->startOfDay(),
+                Carbon::parse($filters['date_to'])->endOfDay(),
+            ];
+        }
         
         return match($period) {
             'today' => [now()->startOfDay(), now()->endOfDay()],
@@ -819,6 +934,16 @@ class DashboardMetricsService
     {
         $start = Carbon::parse($currentRange[0]);
         $end = Carbon::parse($currentRange[1]);
+        
+        // For single-day ranges (like "today"), return the full previous day
+        if ($start->isSameDay($end)) {
+            return [
+                $start->copy()->subDay()->startOfDay(),
+                $start->copy()->subDay()->endOfDay(),
+            ];
+        }
+        
+        // For multi-day ranges, use the original logic
         $duration = $start->diffInDays($end);
         
         return [
@@ -937,6 +1062,7 @@ class DashboardMetricsService
     {
         return [
             'revenue' => ['value' => 0, 'previous' => 0, 'change' => 0, 'formatted' => '0€', 'trend' => 'stable'],
+            'appointments' => ['value' => 0, 'previous' => 0, 'change' => 0, 'formatted' => '0', 'trend' => 'stable'],
             'occupancy' => ['value' => 0, 'previous' => 0, 'change' => 0, 'formatted' => '0%', 'trend' => 'stable'],
             'conversion' => ['value' => 0, 'previous' => 0, 'change' => 0, 'formatted' => '0%', 'trend' => 'stable'],
             'no_show_rate' => ['value' => 0, 'previous' => 0, 'change' => 0, 'formatted' => '0%', 'trend' => 'stable'],
@@ -1314,5 +1440,34 @@ class DashboardMetricsService
             default:
                 return [today()->subDay()->startOfDay(), today()->subDay()->endOfDay()];
         }
+    }
+    
+    /**
+     * Helper method to handle JSON queries across different databases
+     * SQLite doesn't support whereJsonContains, so we need alternatives
+     */
+    private function applyJsonContainsQuery($query, string $column, $value)
+    {
+        $driver = DB::connection()->getDriverName();
+        
+        if ($driver === 'sqlite') {
+            // SQLite workaround using json_extract and LIKE
+            if (is_array($value)) {
+                // For array values, check if any of them exist in the JSON
+                $query->where(function($q) use ($column, $value) {
+                    foreach ($value as $val) {
+                        $q->orWhereRaw("json_extract({$column}, '$') LIKE ?", ['%"' . $val . '"%']);
+                    }
+                });
+            } else {
+                // For single values
+                $query->whereRaw("json_extract({$column}, '$') LIKE ?", ['%"' . $value . '"%']);
+            }
+        } else {
+            // MySQL/MariaDB native JSON support
+            $query->whereJsonContains($column, $value);
+        }
+        
+        return $query;
     }
 }

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard - Keine Weiterleitungen</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .feature {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .transcript {
+            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .links {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Test Dashboard - Reine HTML-Seite</h1>
+        
+        <div class="success">
+            ✅ Diese Seite ist eine reine HTML-Datei. Keine Laravel-Weiterleitungen möglich!
+        </div>
+        
+        <h2>Testbare Features:</h2>
+        
+        <div class="feature">
+            <h3>🎵 Audio Player Test</h3>
+            <button onclick="playAudio()">Audio abspielen</button>
+            <button onclick="pauseAudio()">Audio pausieren</button>
+            <audio id="testAudio" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+        </div>
+        
+        <div class="feature">
+            <h3>📄 Transkript Toggle Test</h3>
+            <button onclick="toggleTranscript()">Transkript anzeigen/verbergen</button>
+            <div id="transcript" class="transcript">
+                Dies ist ein Test-Transkript. In der echten Anwendung würde hier das Gespräch stehen.
+                Der Text kann sehr lang sein und wird dann scrollbar.
+            </div>
+        </div>
+        
+        <div class="feature">
+            <h3>🌐 Übersetzung Test</h3>
+            <button onclick="testTranslation()">Übersetzung simulieren</button>
+        </div>
+        
+        <div class="feature">
+            <h3>💳 Stripe Test</h3>
+            <button onclick="testStripe()">Zahlung simulieren</button>
+        </div>
+        
+        <div class="links">
+            <h3>Weitere Test-Links:</h3>
+            <a href="/standalone-dashboard.html">Vollständiges Standalone Dashboard</a>
+            <a href="/portal-final-bypass.php">PHP Bypass Dashboard</a>
+            <a href="/business/bypass/dashboard">Bypass Dashboard Route</a>
+        </div>
+    </div>
+    
+    <script>
+        function playAudio() {
+            document.getElementById('testAudio').play();
+            alert('Audio wird abgespielt');
+        }
+        
+        function pauseAudio() {
+            document.getElementById('testAudio').pause();
+            alert('Audio pausiert');
+        }
+        
+        function toggleTranscript() {
+            const transcript = document.getElementById('transcript');
+            transcript.style.display = transcript.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function testTranslation() {
+            alert('Übersetzung würde hier in 12 Sprachen angezeigt: DE, EN, ES, FR, IT, PT, ZH, JA, KO, AR, RU, TR');
+        }
+        
+        function testStripe() {
+            alert('Stripe Checkout würde hier öffnen. Test-Karte: 4242 4242 4242 4242');
+        }
+        
+        console.log('Test Dashboard geladen - Keine Weiterleitungen!');
+    </script>
+</body>
+</html>

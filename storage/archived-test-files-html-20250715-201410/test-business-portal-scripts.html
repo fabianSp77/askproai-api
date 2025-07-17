@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Scripts Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .status { padding: 5px 10px; border-radius: 4px; display: inline-block; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Business Portal Scripts Test</h1>
+    
+    <div class="test-section">
+        <h2>Script Loading Test</h2>
+        <button onclick="testScriptLoading()">Test Script Loading</button>
+        <div id="script-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <button onclick="captureConsole()">Capture Console</button>
+        <button onclick="clearConsole()">Clear</button>
+        <pre id="console-output"></pre>
+    </div>
+    
+    <div class="test-section">
+        <h2>Business Portal Admin Page Analysis</h2>
+        <button onclick="analyzeBusinessPortal()">Analyze Business Portal</button>
+        <div id="analysis-results"></div>
+    </div>
+
+    <script>
+        const consoleLog = [];
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        // Override console methods
+        console.log = function(...args) {
+            consoleLog.push({ type: 'log', message: args.join(' '), time: new Date().toISOString() });
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            consoleLog.push({ type: 'error', message: args.join(' '), time: new Date().toISOString() });
+            originalError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            consoleLog.push({ type: 'warn', message: args.join(' '), time: new Date().toISOString() });
+            originalWarn.apply(console, args);
+        };
+        
+        function testScriptLoading() {
+            const results = document.getElementById('script-results');
+            results.innerHTML = '<h3>Testing Script Loading...</h3>';
+            
+            // Check if scripts exist
+            const scripts = [
+                '/js/unified-ui-fix.js',
+                '/js/unified-ui-fix-v2.js',
+                '/js/debug-loading-sequence.js'
+            ];
+            
+            scripts.forEach(script => {
+                fetch(script)
+                    .then(response => {
+                        const status = response.ok ? 'success' : 'error';
+                        const statusText = response.ok ? 'Loaded' : `Error: ${response.status}`;
+                        results.innerHTML += `
+                            <div>
+                                <code>${script}</code>: 
+                                <span class="status ${status}">${statusText}</span>
+                            </div>
+                        `;
+                    })
+                    .catch(error => {
+                        results.innerHTML += `
+                            <div>
+                                <code>${script}</code>: 
+                                <span class="status error">Failed: ${error.message}</span>
+                            </div>
+                        `;
+                    });
+            });
+            
+            // Check global objects
+            setTimeout(() => {
+                results.innerHTML += '<h4>Global Objects:</h4>';
+                const globals = {
+                    'window.Alpine': typeof window.Alpine !== 'undefined',
+                    'window.Livewire': typeof window.Livewire !== 'undefined',
+                    'window.livewire': typeof window.livewire !== 'undefined',
+                    'window.unifiedUIFix': typeof window.unifiedUIFix !== 'undefined',
+                    'window.unifiedUIFixV2': typeof window.unifiedUIFixV2 !== 'undefined',
+                    'window.debugLoadingSequence': typeof window.debugLoadingSequence !== 'undefined'
+                };
+                
+                for (const [key, exists] of Object.entries(globals)) {
+                    const status = exists ? 'success' : 'warning';
+                    const text = exists ? 'Available' : 'Not Found';
+                    results.innerHTML += `
+                        <div>
+                            <code>${key}</code>: 
+                            <span class="status ${status}">${text}</span>
+                        </div>
+                    `;
+                }
+            }, 1000);
+        }
+        
+        function captureConsole() {
+            const output = document.getElementById('console-output');
+            output.textContent = consoleLog.map(entry => 
+                `[${entry.time}] [${entry.type.toUpperCase()}] ${entry.message}`
+            ).join('\n');
+        }
+        
+        function clearConsole() {
+            consoleLog.length = 0;
+            document.getElementById('console-output').textContent = '';
+        }
+        
+        async function analyzeBusinessPortal() {
+            const results = document.getElementById('analysis-results');
+            results.innerHTML = '<h3>Analyzing Business Portal Admin Page...</h3>';
+            
+            try {
+                // Use XMLHttpRequest to bypass CORS if needed
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', '/admin/business-portal-admin', true);
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        const html = xhr.responseText;
+                        
+                        // Extract script tags
+                        const scriptRegex = /<script[^>]*src="([^"]+)"[^>]*>/g;
+                        const scripts = [];
+                        let match;
+                        while ((match = scriptRegex.exec(html)) !== null) {
+                            scripts.push(match[1]);
+                        }
+                        
+                        results.innerHTML += '<h4>Scripts Found:</h4>';
+                        results.innerHTML += '<ul>' + scripts.map(s => `<li><code>${s}</code></li>`).join('') + '</ul>';
+                        
+                        // Check for specific UI fix scripts
+                        const hasUnifiedFix = scripts.some(s => s.includes('unified-ui-fix'));
+                        const hasDebugSequence = scripts.some(s => s.includes('debug-loading-sequence'));
+                        
+                        results.innerHTML += '<h4>UI Fix Scripts:</h4>';
+                        results.innerHTML += `
+                            <div>Unified UI Fix: <span class="status ${hasUnifiedFix ? 'success' : 'error'}">${hasUnifiedFix ? 'Found' : 'Missing'}</span></div>
+                            <div>Debug Sequence: <span class="status ${hasDebugSequence ? 'success' : 'warning'}">${hasDebugSequence ? 'Found' : 'Missing'}</span></div>
+                        `;
+                        
+                        // Check for Livewire/Alpine indicators
+                        const hasLivewire = html.includes('wire:');
+                        const hasAlpine = html.includes('x-data') || html.includes('x-show');
+                        
+                        results.innerHTML += '<h4>Framework Indicators:</h4>';
+                        results.innerHTML += `
+                            <div>Livewire: <span class="status ${hasLivewire ? 'success' : 'error'}">${hasLivewire ? 'Found' : 'Missing'}</span></div>
+                            <div>Alpine: <span class="status ${hasAlpine ? 'success' : 'error'}">${hasAlpine ? 'Found' : 'Missing'}</span></div>
+                        `;
+                        
+                    } else {
+                        results.innerHTML += `<div class="status error">Failed to load page: ${xhr.status}</div>`;
+                    }
+                };
+                xhr.onerror = function() {
+                    results.innerHTML += '<div class="status error">Network error</div>';
+                };
+                xhr.send();
+                
+            } catch (error) {
+                results.innerHTML += `<div class="status error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        // Run initial test
+        window.addEventListener('load', () => {
+            testScriptLoading();
+        });
+    </script>
+</body>
+</html>

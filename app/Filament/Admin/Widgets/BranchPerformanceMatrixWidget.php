@@ -71,7 +71,7 @@ class BranchPerformanceMatrixWidget extends FilterableWidget
             ? array_sum(array_column($branches, 'conversion_rate')) / count($branches)
             : 0;
         
-        return [
+        return array_merge(parent::getViewData(), [
             'branches' => $branches,
             'companyTotal' => $companyRoi['company_total'],
             'topPerformer' => $companyRoi['top_performer'],
@@ -80,7 +80,7 @@ class BranchPerformanceMatrixWidget extends FilterableWidget
             'avgConversion' => round($avgConversion, 1),
             'sortBy' => $this->sortBy,
             'sortDirection' => $this->sortDirection,
-        ];
+        ]);
     }
     
     protected function sortBranches(array $branches): array

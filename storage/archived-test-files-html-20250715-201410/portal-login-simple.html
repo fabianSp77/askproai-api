@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Portal Login - Simple</title>
+    <meta name="csrf-token" content="">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success { background: #D1FAE5; color: #065F46; }
+        .error { background: #FEE2E2; color: #991B1B; }
+        .info { background: #DBEAFE; color: #1E40AF; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Portal Login - Direct Test</h2>
+        
+        <div id="status" class="status info">Bereit zum Login...</div>
+        
+        <form id="loginForm">
+            <input type="hidden" name="email" value="fabianspitzer@icloud.com">
+            <input type="hidden" name="password" value="demo123">
+            <button type="submit" id="loginBtn">Login als Demo User</button>
+        </form>
+        
+        <button onclick="checkSession()">Session prüfen</button>
+        <button onclick="window.location.href='/business/dashboard'">Zum Dashboard</button>
+        <button onclick="window.location.href='/business/admin-switch'">Admin Switch</button>
+        <button onclick="testRegularLogin()" style="background: #10B981;">Test Regular Login</button>
+        
+        <hr style="margin: 20px 0;">
+        
+        <h3>Debug Info:</h3>
+        <pre id="debug"></pre>
+    </div>
+    
+    <script>
+    // Get CSRF token first
+    fetch('/business/test-login')
+        .then(r => r.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const token = doc.querySelector('meta[name="csrf-token"]')?.content;
+            if (token) {
+                document.querySelector('meta[name="csrf-token"]').content = token;
+                console.log('CSRF token loaded:', token);
+            }
+        });
+    
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const status = document.getElementById('status');
+        const debug = document.getElementById('debug');
+        const btn = document.getElementById('loginBtn');
+        
+        status.className = 'status info';
+        status.textContent = 'Logging in...';
+        btn.disabled = true;
+        
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+            
+            const formData = new FormData();
+            formData.append('email', 'fabianspitzer@icloud.com');
+            formData.append('password', 'demo123');
+            formData.append('_token', token);
+            
+            const response = await fetch('/business/test-login-api', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: formData
+            });
+            
+            const data = await response.text();
+            debug.textContent = `Response Status: ${response.status}\nResponse: ${data}`;
+            
+            if (response.ok || response.status === 302) {
+                status.className = 'status success';
+                status.textContent = '✅ Login erfolgreich! Weiterleitung...';
+                
+                // Check session after login
+                setTimeout(() => {
+                    checkSession();
+                    window.location.href = '/business/dashboard';
+                }, 1000);
+            } else {
+                status.className = 'status error';
+                status.textContent = `❌ Login fehlgeschlagen (${response.status})`;
+            }
+        } catch (error) {
+            status.className = 'status error';
+            status.textContent = '❌ Fehler: ' + error.message;
+            debug.textContent = error.stack;
+        } finally {
+            btn.disabled = false;
+        }
+    });
+    
+    async function checkSession() {
+        try {
+            const response = await fetch('/business/test/session');
+            const data = await response.json();
+            
+            document.getElementById('debug').textContent = JSON.stringify(data, null, 2);
+            
+            const status = document.getElementById('status');
+            if (data.auth_check) {
+                status.className = 'status success';
+                status.textContent = `✅ Eingeloggt als: ${data.auth_user.email}`;
+            } else {
+                status.className = 'status error';
+                status.textContent = '❌ Nicht eingeloggt';
+            }
+        } catch (error) {
+            document.getElementById('debug').textContent = 'Error: ' + error.message;
+        }
+    }
+    
+    // Check session on load
+    checkSession();
+    
+    async function testRegularLogin() {
+        const status = document.getElementById('status');
+        const debug = document.getElementById('debug');
+        
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+            
+            const formData = new FormData();
+            formData.append('email', 'fabianspitzer@icloud.com');
+            formData.append('password', 'demo123');
+            formData.append('_token', token);
+            
+            const response = await fetch('/business/login', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: formData
+            });
+            
+            const text = await response.text();
+            debug.textContent = `Regular Login Response Status: ${response.status}\nResponse: ${text}`;
+            
+            if (response.ok || response.status === 302) {
+                status.className = 'status success';
+                status.textContent = '✅ Regular login successful!';
+            } else {
+                status.className = 'status error';
+                status.textContent = `❌ Regular login failed (${response.status})`;
+            }
+        } catch (error) {
+            debug.textContent = 'Error: ' + error.message;
+        }
+    }
+    </script>
+</body>
+</html>

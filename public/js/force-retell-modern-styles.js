@@ -69,14 +69,14 @@
     };
 
     function applyModernStyles() {
-        console.log('🎨 Applying modern styles to Retell Dashboard...');
+        //console.log('🎨 Applying modern styles to Retell Dashboard...');
         
         // Apply to function cards
         const functionCards = document.querySelectorAll('.function-card-modern, [class*="function-card"], [x-show*="expandedFunctions"]');
         functionCards.forEach(card => {
             if (card.closest('[x-show="selectedTab === \'functions\'"]')) {
                 card.style.cssText = modernStyles.functionCard;
-                console.log('✅ Applied modern style to function card');
+                //console.log('✅ Applied modern style to function card');
             }
         });
         
@@ -165,5 +165,5 @@
     `;
     document.head.appendChild(style);
     
-    console.log('✨ Modern styles force-loader initialized');
+    //console.log('✨ Modern styles force-loader initialized');
 })();

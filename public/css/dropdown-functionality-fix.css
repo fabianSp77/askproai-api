@@ -1,0 +1,98 @@
+/* Dropdown Functionality Fix - Ensure clickability */
+
+/* Remove pointer-events blocking */
+.fi-dropdown,
+.fi-dropdown *,
+.fi-dropdown-panel,
+.fi-dropdown-panel *,
+.fi-dropdown-list-item,
+.fi-dropdown-list-item * {
+    pointer-events: auto !important;
+}
+
+/* Ensure dropdown items are clickable */
+.fi-dropdown-list-item button,
+.fi-dropdown-list-item a,
+.fi-dropdown-panel button,
+.fi-dropdown-panel a,
+[wire\:click],
+[x-on\:click] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    user-select: none !important;
+}
+
+/* Fix for Livewire elements */
+[wire\:click]:not([disabled]) {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure dropdowns are visible */
+.fi-dropdown-panel {
+    z-index: 9999 !important;
+    position: absolute !important;
+}
+
+/* Fix select components */
+.fi-fo-select button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.fi-fo-select [role="listbox"] {
+    z-index: 9999 !important;
+}
+
+.fi-fo-select [role="option"] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Date picker specific fixes */
+.fi-fo-date-time-picker button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Table filter dropdowns */
+.fi-ta-filters .fi-dropdown {
+    position: relative !important;
+}
+
+.fi-ta-filters .fi-dropdown-panel {
+    position: absolute !important;
+    z-index: 9999 !important;
+    min-width: 200px !important;
+}
+
+/* Hover states to show interactivity */
+.fi-dropdown-list-item:hover,
+[wire\:click]:not([disabled]):hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Remove any blocking overlays */
+.fi-dropdown::before,
+.fi-dropdown::after {
+    pointer-events: none !important;
+}
+
+/* Ensure Alpine.js elements work */
+[x-data] button:not([disabled]) {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Fix for nested dropdowns */
+.fi-dropdown .fi-dropdown {
+    z-index: 10000 !important;
+}
+
+/* Ensure focus states work */
+.fi-dropdown-list-item:focus-within,
+.fi-dropdown-panel button:focus,
+.fi-dropdown-panel a:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.5) !important;
+    outline-offset: -2px !important;
+}

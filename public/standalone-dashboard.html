@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI - Standalone Dashboard (Keine Weiterleitung)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .transcript-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .transcript-content.expanded {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">
+                            🚀 AskProAI Portal - Feature Demo
+                        </h1>
+                        <p class="text-sm text-gray-600 mt-1">
+                            Standalone HTML - Keine Weiterleitungen
+                        </p>
+                    </div>
+                    <div class="text-sm text-green-600">
+                        <i class="fas fa-check-circle"></i> Standalone Mode
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-6">
+            <!-- Info Alert -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <h3 class="font-semibold text-green-900 mb-2">✅ Diese Seite funktioniert garantiert!</h3>
+                <p class="text-green-800 text-sm">
+                    Dies ist eine reine HTML-Seite ohne Laravel-Routing. Sie können nicht weitergeleitet werden.
+                    Alle Features sind mit Demo-Daten implementiert.
+                </p>
+            </div>
+
+            <!-- Feature Cards -->
+            <div class="grid md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                    <div class="text-blue-500 text-3xl mb-2">🎵</div>
+                    <h3 class="font-semibold">Audio Player</h3>
+                    <p class="text-sm text-gray-600">Inline-Wiedergabe</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                    <div class="text-green-500 text-3xl mb-2">📄</div>
+                    <h3 class="font-semibold">Transkripte</h3>
+                    <p class="text-sm text-gray-600">Ein-/Ausklappbar</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                    <div class="text-purple-500 text-3xl mb-2">🌐</div>
+                    <h3 class="font-semibold">Übersetzung</h3>
+                    <p class="text-sm text-gray-600">12 Sprachen</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+                    <div class="text-orange-500 text-3xl mb-2">💳</div>
+                    <h3 class="font-semibold">Stripe</h3>
+                    <p class="text-sm text-gray-600">Zahlungen</p>
+                </div>
+            </div>
+
+            <!-- Demo Calls Table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 border-b">
+                    <h2 class="text-xl font-semibold">📞 Demo-Anrufliste</h2>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Anrufer</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dauer</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200" id="calls-tbody">
+                            <!-- Demo data will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Stripe Demo -->
+            <div class="mt-8 bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">💳 Stripe Test-Integration</h3>
+                <div class="grid md:grid-cols-4 gap-4">
+                    <button onclick="showStripeDemo(10)" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                        10€ aufladen
+                    </button>
+                    <button onclick="showStripeDemo(25)" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                        25€ aufladen
+                    </button>
+                    <button onclick="showStripeDemo(50)" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                        50€ aufladen
+                    </button>
+                    <button onclick="showStripeDemo(100)" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+                        100€ aufladen
+                    </button>
+                </div>
+                <p class="text-sm text-gray-600 mt-3">
+                    Test-Kreditkarte: 4242 4242 4242 4242 | Ablauf: Beliebig | CVV: Beliebig
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden audio element -->
+    <audio id="audio-player" style="display: none;"></audio>
+
+    <script>
+        // Demo data
+        const demoCalls = [
+            {
+                id: 1,
+                phone: '+49 151 12345678',
+                customer: 'Max Mustermann',
+                date: '06.07.2025 14:30',
+                duration: '02:45',
+                status: 'ended',
+                hasAudio: true,
+                audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                transcript: 'Guten Tag, ich möchte gerne einen Termin vereinbaren. Ich habe Rückenschmerzen und würde gerne zur Physiotherapie kommen. Wann hätten Sie denn Zeit? Am besten wäre für mich nachmittags, da ich vormittags arbeiten muss.'
+            },
+            {
+                id: 2,
+                phone: '+49 170 98765432',
+                customer: 'Anna Schmidt',
+                date: '06.07.2025 11:15',
+                duration: '01:30',
+                status: 'ended',
+                hasAudio: true,
+                audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+                transcript: 'Hallo, ich rufe wegen meines Termins morgen an. Ich muss den leider absagen, da ich krank geworden bin. Können wir einen neuen Termin für nächste Woche vereinbaren?'
+            },
+            {
+                id: 3,
+                phone: '+49 162 55443322',
+                customer: 'Peter Weber',
+                date: '05.07.2025 16:45',
+                duration: '03:20',
+                status: 'ended',
+                hasAudio: true,
+                audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+                transcript: 'Ich interessiere mich für Ihre Dienstleistungen. Können Sie mir mehr über Ihre Preise und Verfügbarkeiten erzählen? Ich bräuchte regelmäßige Termine, am besten einmal pro Woche.'
+            }
+        ];
+
+        // Render demo calls
+        function renderCalls() {
+            const tbody = document.getElementById('calls-tbody');
+            tbody.innerHTML = '';
+            
+            demoCalls.forEach(call => {
+                // Main row
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">${call.phone}</div>
+                            <div class="text-sm text-gray-500">${call.customer}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${call.date}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${call.duration}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            ${call.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex space-x-2">
+                            ${call.hasAudio ? `
+                                <button onclick="toggleAudio(${call.id}, '${call.audioUrl}')" 
+                                        class="text-blue-600 hover:text-blue-900 p-1" title="Audio abspielen">
+                                    <i id="audio-icon-${call.id}" class="fas fa-play"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="toggleTranscript(${call.id})" 
+                                    class="text-green-600 hover:text-green-900 p-1" title="Transkript">
+                                <i class="fas fa-file-alt"></i>
+                            </button>
+                            <button onclick="showTranslation(${call.id})" 
+                                    class="text-purple-600 hover:text-purple-900 p-1" title="Übersetzen">
+                                <i class="fas fa-globe"></i>
+                            </button>
+                            <button onclick="showDetails(${call.id})" 
+                                    class="text-gray-600 hover:text-gray-900 p-1" title="Details">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                
+                // Transcript row
+                const transcriptTr = document.createElement('tr');
+                transcriptTr.id = `transcript-${call.id}`;
+                transcriptTr.style.display = 'none';
+                transcriptTr.className = 'bg-gray-50';
+                transcriptTr.innerHTML = `
+                    <td colspan="5" class="px-6 py-4">
+                        <div class="transcript-content" id="transcript-content-${call.id}">
+                            <div class="bg-white p-4 rounded-lg border">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h4 class="font-semibold text-gray-900">Transkript</h4>
+                                    <button onclick="copyTranscript(${call.id})" 
+                                            class="text-sm text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-copy"></i> Kopieren
+                                    </button>
+                                </div>
+                                <div class="text-sm text-gray-700" id="transcript-text-${call.id}">
+                                    ${call.transcript}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(transcriptTr);
+            });
+        }
+
+        // Audio player functionality
+        let currentAudioId = null;
+        const audioPlayer = document.getElementById('audio-player');
+
+        function toggleAudio(callId, url) {
+            const icon = document.getElementById('audio-icon-' + callId);
+            
+            if (currentAudioId === callId && !audioPlayer.paused) {
+                audioPlayer.pause();
+                icon.className = 'fas fa-play';
+                currentAudioId = null;
+            } else {
+                if (currentAudioId) {
+                    document.getElementById('audio-icon-' + currentAudioId).className = 'fas fa-play';
+                }
+                
+                audioPlayer.src = url;
+                audioPlayer.play();
+                icon.className = 'fas fa-pause';
+                currentAudioId = callId;
+            }
+            
+            audioPlayer.onended = function() {
+                icon.className = 'fas fa-play';
+                currentAudioId = null;
+            };
+        }
+
+        // Transcript toggle
+        function toggleTranscript(callId) {
+            const row = document.getElementById('transcript-' + callId);
+            const content = document.getElementById('transcript-content-' + callId);
+            
+            if (row.style.display === 'none') {
+                // Hide all other transcripts
+                document.querySelectorAll('[id^="transcript-"]').forEach(r => {
+                    if (r.id !== 'transcript-' + callId) {
+                        r.style.display = 'none';
+                        r.querySelector('.transcript-content').classList.remove('expanded');
+                    }
+                });
+                
+                row.style.display = 'table-row';
+                setTimeout(() => content.classList.add('expanded'), 10);
+            } else {
+                content.classList.remove('expanded');
+                setTimeout(() => row.style.display = 'none', 300);
+            }
+        }
+
+        // Copy transcript
+        function copyTranscript(callId) {
+            const call = demoCalls.find(c => c.id === callId);
+            navigator.clipboard.writeText(call.transcript).then(() => {
+                showNotification('Transkript kopiert!');
+            });
+        }
+
+        // Demo functions
+        function showTranslation(callId) {
+            showNotification('Übersetzung: Unterstützt DE, EN, ES, FR, IT, PT, ZH, JA, KO, AR, RU, TR');
+        }
+
+        function showDetails(callId) {
+            const call = demoCalls.find(c => c.id === callId);
+            showNotification(`Details für Anruf von ${call.customer}`);
+        }
+
+        function showStripeDemo(amount) {
+            showNotification(`Stripe Checkout für €${amount} - Test-Karte: 4242 4242 4242 4242`);
+        }
+
+        // Notification system
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initialize
+        renderCalls();
+        
+        // Log for debugging
+        console.log('Standalone Dashboard loaded - No redirects possible!');
+    </script>
+</body>
+</html>

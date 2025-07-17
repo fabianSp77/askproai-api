@@ -1,0 +1,35 @@
+{
+  "all": true,
+  "include": [
+    "resources/js/**/*.{js,jsx,ts,tsx}"
+  ],
+  "exclude": [
+    "**/*.test.{js,jsx,ts,tsx}",
+    "**/*.spec.{js,jsx,ts,tsx}",
+    "**/test/**",
+    "**/tests/**",
+    "**/coverage/**",
+    "**/node_modules/**",
+    "**/.{idea,git,cache,output,temp}/**",
+    "resources/js/bootstrap.js",
+    "resources/js/app.js"
+  ],
+  "reporter": [
+    "html",
+    "text",
+    "lcov",
+    "json"
+  ],
+  "report-dir": "coverage/js",
+  "check-coverage": true,
+  "branches": 80,
+  "lines": 80,
+  "functions": 80,
+  "statements": 80,
+  "watermarks": {
+    "lines": [80, 95],
+    "functions": [80, 95],
+    "branches": [80, 95],
+    "statements": [80, 95]
+  }
+}

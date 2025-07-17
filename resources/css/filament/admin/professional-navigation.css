@@ -44,7 +44,7 @@
 /* Enhanced Focus States for Accessibility */
 .branch-switcher-item:focus,
 .navigation-item:focus {
-    @apply outline-none ring-2 ring-offset-2 ring-primary-500 dark:ring-offset-gray-800;
+    @apply outline-none ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-gray-800;
 }
 
 /* Custom Scrollbar for Dropdown Menus */
@@ -106,17 +106,17 @@
 /* Professional Badge Styles */
 .branch-indicator-badge {
     @apply absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full;
-    @apply bg-primary-600 dark:bg-primary-400;
+    @apply bg-blue-600 dark:bg-blue-400;
     @apply ring-2 ring-white dark:ring-gray-800;
     animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes pulse-ring {
     0% {
-        box-shadow: 0 0 0 0 rgba(var(--primary-600), 0.5);
+        box-shadow: 0 0 0 0 rgba(var(--blue-600), 0.5);
     }
     100% {
-        box-shadow: 0 0 0 8px rgba(var(--primary-600), 0);
+        box-shadow: 0 0 0 8px rgba(var(--blue-600), 0);
     }
 }
 
@@ -125,7 +125,7 @@
     @apply w-full pl-9 pr-3 py-2 text-sm;
     @apply border-gray-300 dark:border-gray-600;
     @apply rounded-md;
-    @apply focus:border-primary-500 focus:ring-primary-500;
+    @apply focus:border-blue-500 focus:ring-blue-500;
     @apply dark:bg-gray-700 dark:text-white;
     @apply transition-all duration-200;
 }
@@ -187,7 +187,7 @@
 
 .navigation-item::before {
     content: '';
-    @apply absolute inset-0 bg-primary-100 dark:bg-primary-900/20;
+    @apply absolute inset-0 bg-blue-100 dark:bg-blue-900/20;
     @apply transform -translate-x-full;
     @apply transition-transform duration-300 ease-out;
 }
@@ -297,7 +297,7 @@
 
 /* Professional Focus Indicators */
 :focus-visible {
-    @apply outline-none ring-2 ring-offset-2 ring-primary-500;
+    @apply outline-none ring-2 ring-offset-2 ring-blue-500;
 }
 
 /* Smooth Page Transitions */

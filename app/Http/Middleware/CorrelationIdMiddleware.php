@@ -26,9 +26,15 @@ class CorrelationIdMiddleware
         // Set it in the request for downstream use
         $request->headers->set('X-Correlation-ID', $correlationId);
 
-        // Set it in the logger
-        $logger = app(StructuredLogger::class);
-        $logger->setCorrelationId($correlationId);
+        // Set it in the logger - check if method exists
+        try {
+            $logger = app(StructuredLogger::class);
+            if (method_exists($logger, 'setCorrelationId')) {
+                $logger->setCorrelationId($correlationId);
+            }
+        } catch (\Exception $e) {
+            // Logger not available, continue without it
+        }
 
         // Add to Laravel's log context
         \Log::shareContext([

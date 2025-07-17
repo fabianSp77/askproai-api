@@ -3,14 +3,20 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Portal\ReactDashboardController;
 use App\Models\Company;
 use App\Models\BalanceTransaction;
+use App\Models\Invoice;
+use App\Models\BalanceTopup;
 use App\Services\PrepaidBillingService;
 use App\Services\BalanceMonitoringService;
 use App\Services\StripeTopupService;
+use App\Services\SpendingLimitService;
+use App\Services\InvoicePdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class BillingController extends Controller
@@ -18,15 +24,21 @@ class BillingController extends Controller
     protected PrepaidBillingService $billingService;
     protected BalanceMonitoringService $monitoringService;
     protected StripeTopupService $stripeService;
+    protected SpendingLimitService $spendingLimitService;
+    protected InvoicePdfService $invoicePdfService;
 
     public function __construct(
         PrepaidBillingService $billingService,
         BalanceMonitoringService $monitoringService,
-        StripeTopupService $stripeService
+        StripeTopupService $stripeService,
+        SpendingLimitService $spendingLimitService,
+        InvoicePdfService $invoicePdfService
     ) {
         $this->billingService = $billingService;
         $this->monitoringService = $monitoringService;
         $this->stripeService = $stripeService;
+        $this->spendingLimitService = $spendingLimitService;
+        $this->invoicePdfService = $invoicePdfService;
     }
 
     /**
@@ -52,6 +64,9 @@ class BillingController extends Controller
         // Get balance status
         $balanceStatus = $this->monitoringService->getBalanceStatus($company);
         
+        // Get prepaid balance with bonus
+        $prepaidBalance = $this->billingService->getOrCreateBalance($company);
+        
         // Get recent transactions
         $transactions = BalanceTransaction::where('company_id', $company->id)
             ->orderBy('created_at', 'desc')
@@ -68,22 +83,21 @@ class BillingController extends Controller
         // Get suggested topup amounts
         $suggestedAmounts = $this->stripeService->getSuggestedAmounts($company);
         
+        // Get applicable bonus rules
+        $bonusRules = $this->billingService->getApplicableBonusRules($company);
+        
+        // Get spending summary
+        $spendingSummary = $this->spendingLimitService->getSpendingSummary($company);
+        
         // Extract values from balanceStatus for the view
         $effectiveBalance = $balanceStatus['effective_balance'] ?? 0;
         $reservedBalance = $balanceStatus['reserved_balance'] ?? 0;
         $availableMinutes = $balanceStatus['available_minutes'] ?? 0;
+        $bonusBalance = $prepaidBalance->bonus_balance;
+        $totalBalance = $prepaidBalance->getTotalBalance();
 
-        return view('portal.billing.index', compact(
-            'company',
-            'balanceStatus',
-            'effectiveBalance',
-            'reservedBalance',
-            'availableMinutes',
-            'transactions',
-            'monthlyStats',
-            'billingRate',
-            'suggestedAmounts'
-        ));
+        // Load React SPA directly
+        return app(ReactDashboardController::class)->index();
     }
 
     /**
@@ -102,7 +116,7 @@ class BillingController extends Controller
         }
 
         // Check permissions (skip for admin viewing)
-        if (!session('is_admin_viewing') && !$user->hasPermission('billing.pay')) {
+        if (!session('is_admin_viewing') && (!$user || !$user->hasPermission('billing.pay'))) {
             abort(403, 'Sie haben keine Berechtigung, Guthaben aufzuladen.');
         }
 
@@ -111,12 +125,15 @@ class BillingController extends Controller
         
         // Pre-select amount if provided
         $selectedAmount = $request->get('suggested', $suggestedAmounts[1] ?? 100);
+        
+        // Get applicable bonus rules
+        $bonusRules = $this->billingService->getApplicableBonusRules($company);
+        
+        // Get prepaid balance
+        $prepaidBalance = $this->billingService->getOrCreateBalance($company);
 
-        return view('portal.billing.topup', compact(
-            'suggestedAmounts',
-            'selectedAmount',
-            'company'
-        ));
+        // Load React SPA directly
+        return app(ReactDashboardController::class)->index();
     }
 
     /**
@@ -167,8 +184,11 @@ class BillingController extends Controller
             $this->stripeService->handleCheckoutSessionCompleted($sessionId);
         }
 
-        return redirect()->route('business.billing.index')
-            ->with('success', 'Ihr Guthaben wurde erfolgreich aufgeladen.');
+        // Store message in session for React to display
+        session()->flash('success', 'Ihr Guthaben wurde erfolgreich aufgeladen.');
+        
+        // Return React SPA
+        return app(ReactDashboardController::class)->index();
     }
 
     /**
@@ -176,8 +196,11 @@ class BillingController extends Controller
      */
     public function topupCancel()
     {
-        return redirect()->route('business.billing.index')
-            ->with('info', 'Die Aufladung wurde abgebrochen.');
+        // Store message in session for React to display
+        session()->flash('info', 'Die Aufladung wurde abgebrochen.');
+        
+        // Return React SPA
+        return app(ReactDashboardController::class)->index();
     }
 
     /**
@@ -221,7 +244,8 @@ class BillingController extends Controller
         $transactions = $query->orderBy('created_at', 'desc')
                              ->paginate(50);
 
-        return view('portal.billing.transactions', compact('transactions'));
+        // Redirect to React billing page
+        return app(ReactDashboardController::class)->index();
     }
 
     /**
@@ -249,9 +273,54 @@ class BillingController extends Controller
             abort(404, 'Keine Rechnung verfügbar.');
         }
 
-        // TODO: Generate and download PDF invoice
-        // For now, redirect back with message
-        return back()->with('info', 'Die Rechnungsfunktion wird in Kürze verfügbar sein.');
+        // Try to find the topup record
+        $topup = BalanceTopup::find($transaction->reference_id);
+        
+        if (!$topup) {
+            abort(404, 'Aufladung nicht gefunden.');
+        }
+        
+        // Option 1: Check if we have a local invoice
+        if ($topup->invoice_id) {
+            $invoice = Invoice::findOrFail($topup->invoice_id);
+            
+            // Generate or get PDF
+            try {
+                $pdfPath = $this->invoicePdfService->getPdf($invoice);
+                $filename = $this->invoicePdfService->getDownloadFilename($invoice);
+                
+                return response()->download($pdfPath, $filename, [
+                    'Content-Type' => 'application/pdf',
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to generate invoice PDF', [
+                    'invoice_id' => $invoice->id,
+                    'error' => $e->getMessage(),
+                ]);
+                return back()->with('error', 'Fehler beim Erstellen der Rechnung.');
+            }
+        }
+        
+        // Option 2: Use Stripe invoice URL if available
+        if ($topup->stripe_invoice_id) {
+            try {
+                $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+                $stripeInvoice = $stripe->invoices->retrieve($topup->stripe_invoice_id);
+                
+                if ($stripeInvoice->invoice_pdf) {
+                    // Redirect to Stripe's PDF
+                    return redirect($stripeInvoice->invoice_pdf);
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to retrieve Stripe invoice', [
+                    'stripe_invoice_id' => $topup->stripe_invoice_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+        
+        // No invoice available
+        return back()->with('info', 'Für diese Transaktion ist noch keine Rechnung verfügbar. Bitte kontaktieren Sie den Support.');
     }
 
     /**
@@ -352,16 +421,8 @@ class BillingController extends Controller
             return $this->exportUsageData($request, $dailyUsage, $stats);
         }
 
-        return view('portal.billing.usage', compact(
-            'company',
-            'stats',
-            'topDays',
-            'chartData',
-            'billingRate',
-            'period',
-            'startDate',
-            'endDate'
-        ));
+        // Redirect to React billing page
+        return app(ReactDashboardController::class)->index();
     }
     
     /**
@@ -510,5 +571,266 @@ class BillingController extends Controller
         // TODO: Implement PDF export with a library like DomPDF or TCPDF
         session()->flash('info', 'PDF-Export wird in Kürze verfügbar sein.');
         return redirect()->back();
+    }
+    
+    /**
+     * Show auto-topup settings page
+     */
+    public function autoTopup(Request $request)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        // Handle admin viewing
+        if (session('is_admin_viewing')) {
+            $companyId = session('admin_impersonation.company_id');
+            $company = Company::findOrFail($companyId);
+        } else {
+            $company = $user->company;
+        }
+
+        // Check permissions (skip for admin viewing)
+        if (!session('is_admin_viewing') && !$user->canManageBilling()) {
+            abort(403, 'Sie haben keine Berechtigung, die Auto-Aufladung zu verwalten.');
+        }
+
+        // Get prepaid balance
+        $prepaidBalance = $this->billingService->getOrCreateBalance($company);
+        
+        // Get saved payment methods from Stripe
+        $savedPaymentMethods = collect();
+        if ($company->stripe_customer_id) {
+            try {
+                $savedPaymentMethods = $this->stripeService->getSavedPaymentMethods($company);
+            } catch (\Exception $e) {
+                \Log::error('Failed to fetch saved payment methods', [
+                    'company_id' => $company->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        // Get bonus rules for display
+        $bonusRules = $this->billingService->getApplicableBonusRules($company);
+        
+        // Calculate applicable bonus for current auto-topup amount
+        $applicableBonus = null;
+        if ($prepaidBalance->auto_topup_amount) {
+            $bonusCalculation = $this->billingService->calculateBonus($prepaidBalance->auto_topup_amount, $company);
+            if ($bonusCalculation['rule']) {
+                $applicableBonus = [
+                    'bonus_percentage' => $bonusCalculation['rule']->bonus_percentage,
+                    'bonus_amount' => $bonusCalculation['bonus_amount']
+                ];
+            }
+        }
+
+        // Redirect to React billing page
+        return app(ReactDashboardController::class)->index();
+    }
+    
+    /**
+     * Update auto-topup settings
+     */
+    public function updateAutoTopup(Request $request)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        // Handle admin viewing
+        if (session('is_admin_viewing')) {
+            return back()->with('error', 'Als Administrator können Sie die Auto-Aufladung nicht für Kunden aktivieren.');
+        }
+        
+        $company = $user->company;
+        
+        // Check permissions
+        if (!$user->canManageBilling()) {
+            abort(403, 'Sie haben keine Berechtigung, die Auto-Aufladung zu verwalten.');
+        }
+        
+        // Validate request
+        $validated = $request->validate([
+            'auto_topup_enabled' => 'nullable|boolean',
+            'auto_topup_threshold' => 'required_if:auto_topup_enabled,1|numeric|min:10|max:500',
+            'auto_topup_amount' => 'required_if:auto_topup_enabled,1|numeric|min:50|max:5000',
+            'auto_topup_daily_limit' => 'required_if:auto_topup_enabled,1|integer|min:1|max:5',
+            'auto_topup_monthly_limit' => 'required_if:auto_topup_enabled,1|integer|min:5|max:30',
+            'payment_method_id' => 'required_if:auto_topup_enabled,1|string',
+        ]);
+        
+        // Get prepaid balance
+        $prepaidBalance = $this->billingService->getOrCreateBalance($company);
+        
+        // Update settings
+        $prepaidBalance->auto_topup_enabled = $request->boolean('auto_topup_enabled');
+        
+        if ($prepaidBalance->auto_topup_enabled) {
+            // Verify payment method exists and belongs to company
+            if ($request->payment_method_id) {
+                try {
+                    $paymentMethod = $this->stripeService->getPaymentMethod($request->payment_method_id);
+                    if ($paymentMethod->customer !== $company->stripe_customer_id) {
+                        return back()->with('error', 'Die ausgewählte Zahlungsmethode ist ungültig.');
+                    }
+                    $prepaidBalance->auto_topup_payment_method_id = $request->payment_method_id;
+                } catch (\Exception $e) {
+                    return back()->with('error', 'Die ausgewählte Zahlungsmethode konnte nicht verifiziert werden.');
+                }
+            }
+            
+            $prepaidBalance->auto_topup_threshold = $validated['auto_topup_threshold'];
+            $prepaidBalance->auto_topup_amount = $validated['auto_topup_amount'];
+            $prepaidBalance->auto_topup_daily_limit = $validated['auto_topup_daily_limit'];
+            $prepaidBalance->auto_topup_monthly_limit = $validated['auto_topup_monthly_limit'];
+        } else {
+            // Clear payment method when disabling
+            $prepaidBalance->auto_topup_payment_method_id = null;
+        }
+        
+        $prepaidBalance->save();
+        
+        // Log the change
+        activity()
+            ->performedOn($prepaidBalance)
+            ->causedBy($user)
+            ->withProperties([
+                'auto_topup_enabled' => $prepaidBalance->auto_topup_enabled,
+                'threshold' => $prepaidBalance->auto_topup_threshold,
+                'amount' => $prepaidBalance->auto_topup_amount,
+            ])
+            ->log('Auto-topup settings updated');
+        
+        return redirect()->route('business.billing.auto-topup')
+            ->with('success', 'Die Auto-Aufladung Einstellungen wurden erfolgreich gespeichert.');
+    }
+    
+    /**
+     * Show payment methods page
+     */
+    public function paymentMethods(Request $request)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        // Handle admin viewing
+        if (session('is_admin_viewing')) {
+            $companyId = session('admin_impersonation.company_id');
+            $company = Company::findOrFail($companyId);
+        } else {
+            $company = $user->company;
+        }
+
+        // Check permissions (skip for admin viewing)
+        if (!session('is_admin_viewing') && !$user->canManageBilling()) {
+            abort(403, 'Sie haben keine Berechtigung, die Zahlungsmethoden zu verwalten.');
+        }
+
+        // Get saved payment methods from Stripe
+        $savedPaymentMethods = collect();
+        if ($company->stripe_customer_id) {
+            try {
+                $savedPaymentMethods = $this->stripeService->getSavedPaymentMethods($company);
+            } catch (\Exception $e) {
+                \Log::error('Failed to fetch saved payment methods', [
+                    'company_id' => $company->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // Redirect to React billing page
+        return app(ReactDashboardController::class)->index();
+    }
+    
+    /**
+     * Add payment method page
+     */
+    public function addPaymentMethod(Request $request)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        // Handle admin viewing
+        if (session('is_admin_viewing')) {
+            return back()->with('error', 'Als Administrator können Sie keine Zahlungsmethoden für Kunden hinzufügen.');
+        }
+        
+        $company = $user->company;
+        
+        // Check permissions
+        if (!$user->canManageBilling()) {
+            abort(403, 'Sie haben keine Berechtigung, Zahlungsmethoden hinzuzufügen.');
+        }
+        
+        // Create setup intent for adding payment method
+        $setupIntent = $this->stripeService->createSetupIntent($company);
+        
+        // Redirect to React billing page
+        return app(ReactDashboardController::class)->index();
+    }
+    
+    /**
+     * Store payment method
+     */
+    public function storePaymentMethod(Request $request)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        if (session('is_admin_viewing')) {
+            return back()->with('error', 'Als Administrator können Sie keine Zahlungsmethoden für Kunden hinzufügen.');
+        }
+        
+        $company = $user->company;
+        
+        // Check permissions
+        if (!$user->canManageBilling()) {
+            abort(403, 'Sie haben keine Berechtigung, Zahlungsmethoden hinzuzufügen.');
+        }
+        
+        $request->validate([
+            'payment_method_id' => 'required|string',
+        ]);
+        
+        try {
+            // Attach payment method to customer
+            $this->stripeService->attachPaymentMethod($company, $request->payment_method_id);
+            
+            return redirect()->route('business.billing.payment-methods')
+                ->with('success', 'Zahlungsmethode wurde erfolgreich hinzugefügt.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Die Zahlungsmethode konnte nicht hinzugefügt werden: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Delete payment method
+     */
+    public function deletePaymentMethod(Request $request, $paymentMethodId)
+    {
+        $user = Auth::guard('portal')->user();
+        
+        if (session('is_admin_viewing')) {
+            return back()->with('error', 'Als Administrator können Sie keine Zahlungsmethoden für Kunden löschen.');
+        }
+        
+        $company = $user->company;
+        
+        // Check permissions
+        if (!$user->canManageBilling()) {
+            abort(403, 'Sie haben keine Berechtigung, Zahlungsmethoden zu löschen.');
+        }
+        
+        try {
+            // Check if this payment method is used for auto-topup
+            $prepaidBalance = $this->billingService->getOrCreateBalance($company);
+            if ($prepaidBalance->auto_topup_payment_method_id === $paymentMethodId) {
+                return back()->with('error', 'Diese Zahlungsmethode wird für Auto-Aufladung verwendet und kann nicht gelöscht werden.');
+            }
+            
+            // Detach payment method
+            $this->stripeService->detachPaymentMethod($paymentMethodId);
+            
+            return redirect()->route('business.billing.payment-methods')
+                ->with('success', 'Zahlungsmethode wurde erfolgreich entfernt.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Die Zahlungsmethode konnte nicht entfernt werden: ' . $e->getMessage());
+        }
     }
 }

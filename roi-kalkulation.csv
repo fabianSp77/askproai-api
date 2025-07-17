@@ -1,0 +1,19 @@
+White-Label AI-Telefonie ROI-Kalkulation
+
+Parameter,Wert
+Anzahl Kunden,20
+Minuten pro Kunde/Monat,500
+Gesamt-Minuten,10000
+Verkaufspreis pro Minute,0.19
+Kosten pro Minute,0.15
+Gewinn pro Minute,0.04
+Monatlicher Gewinn,400
+Jährlicher Gewinn,4800
+
+Skalierung
+Kunden,Monatlich,Jährlich
+10,200,2400
+20,400,4800
+50,1000,12000
+100,2000,24000
+200,4000,48000

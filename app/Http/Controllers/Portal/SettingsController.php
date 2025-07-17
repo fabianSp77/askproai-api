@@ -17,9 +17,8 @@ class SettingsController extends Controller
     {
         $user = Auth::guard('portal')->user();
         
-        return view('portal.settings.index', [
-            'user' => $user,
-        ]);
+        // Redirect to React settings page
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
     
     /**
@@ -29,9 +28,8 @@ class SettingsController extends Controller
     {
         $user = Auth::guard('portal')->user();
         
-        return view('portal.settings.profile', [
-            'user' => $user,
-        ]);
+        // Redirect to React settings page
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
     
     /**
@@ -57,7 +55,8 @@ class SettingsController extends Controller
      */
     public function password()
     {
-        return view('portal.settings.password');
+        // Redirect to React settings page
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
     
     /**
@@ -87,10 +86,8 @@ class SettingsController extends Controller
     {
         $user = Auth::guard('portal')->user();
         
-        return view('portal.settings.notifications', [
-            'user' => $user,
-            'preferences' => $user->notification_preferences ?? [],
-        ]);
+        // Redirect to React settings page
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
     
     /**

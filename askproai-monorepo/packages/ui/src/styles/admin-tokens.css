@@ -1,0 +1,119 @@
+@layer base {
+  :root {
+    /* Admin-spezifische Design Tokens */
+    --admin-sidebar: var(--gray-900);
+    --admin-sidebar-hover: var(--gray-800);
+    --admin-sidebar-active: var(--primary-600);
+    --admin-header: 0 0 100;
+    --admin-header-border: var(--gray-200);
+    
+    /* Status-Farben */
+    --status-scheduled: var(--primary-500);
+    --status-confirmed: var(--success-500);
+    --status-completed: var(--success-600);
+    --status-cancelled: var(--warning-500);
+    --status-no-show: var(--error-500);
+    
+    /* Metriken-Farben */
+    --metric-positive: var(--success-500);
+    --metric-negative: var(--error-500);
+    --metric-neutral: var(--gray-500);
+    
+    /* Chart-Farben */
+    --chart-1: var(--primary-500);
+    --chart-2: var(--success-500);
+    --chart-3: var(--warning-500);
+    --chart-4: var(--error-500);
+    --chart-5: 139 92 246; /* Violet */
+    --chart-6: 236 72 153; /* Pink */
+    --chart-7: 14 165 233; /* Sky */
+    --chart-8: 168 85 247; /* Purple */
+  }
+  
+  .dark {
+    --admin-sidebar: var(--gray-950);
+    --admin-sidebar-hover: var(--gray-900);
+    --admin-sidebar-active: var(--primary-500);
+    --admin-header: var(--gray-900);
+    --admin-header-border: var(--gray-800);
+    
+    /* Dark mode adjustments for charts */
+    --chart-1: var(--primary-400);
+    --chart-2: var(--success-400);
+    --chart-3: var(--warning-400);
+    --chart-4: var(--error-400);
+  }
+}
+
+/* Admin-spezifische Komponenten-Styles */
+@layer components {
+  /* Sidebar Navigation */
+  .admin-nav-item {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all;
+    @apply text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+    @apply dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-50;
+  }
+  
+  .admin-nav-item.active {
+    @apply bg-primary-50 text-primary-600;
+    @apply dark:bg-primary-950 dark:text-primary-400;
+  }
+  
+  /* Data Tables */
+  .admin-table {
+    @apply w-full caption-bottom text-sm;
+  }
+  
+  .admin-table-header {
+    @apply border-b bg-gray-50/50 font-medium text-gray-700;
+    @apply dark:border-gray-800 dark:bg-gray-900/50 dark:text-gray-300;
+  }
+  
+  .admin-table-row {
+    @apply border-b transition-colors hover:bg-gray-50/50;
+    @apply dark:border-gray-800 dark:hover:bg-gray-900/50;
+  }
+  
+  /* Metric Cards */
+  .metric-card {
+    @apply rounded-xl border bg-card p-6 shadow-sm;
+  }
+  
+  .metric-trend-up {
+    @apply text-success-600 dark:text-success-400;
+  }
+  
+  .metric-trend-down {
+    @apply text-error-600 dark:text-error-400;
+  }
+  
+  /* Status Badges */
+  .status-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  
+  .status-scheduled {
+    @apply bg-primary-100 text-primary-800;
+    @apply dark:bg-primary-900/20 dark:text-primary-400;
+  }
+  
+  .status-confirmed {
+    @apply bg-success-100 text-success-800;
+    @apply dark:bg-success-900/20 dark:text-success-400;
+  }
+  
+  .status-completed {
+    @apply bg-success-100 text-success-800;
+    @apply dark:bg-success-900/20 dark:text-success-400;
+  }
+  
+  .status-cancelled {
+    @apply bg-warning-100 text-warning-800;
+    @apply dark:bg-warning-900/20 dark:text-warning-400;
+  }
+  
+  .status-no-show {
+    @apply bg-error-100 text-error-800;
+    @apply dark:bg-error-900/20 dark:text-error-400;
+  }
+}

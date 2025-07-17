@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal Fix</title>
+    
+    <!-- Load original CSS -->
+    <link href="https://api.askproai.de/css/filament/forms/forms.css?v=3.3.14.0" rel="stylesheet">
+    <link href="https://api.askproai.de/css/filament/support/support.css?v=3.3.14.0" rel="stylesheet">
+    <link href="https://api.askproai.de/css/filament/filament/app.css" rel="stylesheet">
+    <link href="https://api.askproai.de/css/filament-hotfix.css" rel="stylesheet">
+    <link href="https://api.askproai.de/css/filament-hotfix-override.css" rel="stylesheet">
+    
+    <!-- Emergency fix -->
+    <link href="https://api.askproai.de/css/admin-emergency-fix.css" rel="stylesheet">
+    
+    <style>
+        /* Additional inline fixes */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .diagnostic {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: yellow;
+            padding: 10px;
+            border: 2px solid black;
+            z-index: 99999;
+            font-size: 12px;
+        }
+        
+        .test-content {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+        }
+        
+        .test-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagnostic">
+        <strong>Diagnostic Info:</strong><br>
+        CSS Files Loaded: <span id="css-count">0</span><br>
+        JS Status: <span id="js-status">Loading...</span><br>
+        <button onclick="location.href='/admin/'">Go to Real Admin</button><br>
+        <button onclick="location.href='/business/login'">Go to Business Portal</button>
+    </div>
+    
+    <div class="test-content">
+        <div class="test-box">
+            <h1>Admin Portal CSS Test</h1>
+            <p>If you can see this, the CSS emergency fix is working.</p>
+            
+            <h2>Quick Links:</h2>
+            <ul>
+                <li><a href="/admin/">Admin Portal (Original)</a></li>
+                <li><a href="/admin/login">Admin Login (Direct)</a></li>
+                <li><a href="/business/login">Business Portal Login</a></li>
+                <li><a href="/test-admin-css.html">CSS Debug Tool</a></li>
+            </ul>
+            
+            <h2>Possible Issues:</h2>
+            <ol>
+                <li>CSS files not loading properly</li>
+                <li>JavaScript errors preventing render</li>
+                <li>Authentication redirect loop</li>
+                <li>Livewire/Alpine.js initialization failure</li>
+            </ol>
+            
+            <h2>Test Login Form:</h2>
+            <form action="/admin/login" method="POST" style="margin-top: 20px;">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <div style="margin-bottom: 15px;">
+                    <label for="email" style="display: block; margin-bottom: 5px;">Email:</label>
+                    <input type="email" name="email" id="email" required 
+                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label for="password" style="display: block; margin-bottom: 5px;">Password:</label>
+                    <input type="password" name="password" id="password" required 
+                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <button type="submit" 
+                        style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+                    Login Test
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Count loaded CSS files
+        document.getElementById('css-count').textContent = document.styleSheets.length;
+        
+        // Check JavaScript
+        try {
+            if (typeof window.Livewire !== 'undefined') {
+                document.getElementById('js-status').textContent = 'Livewire OK';
+            } else if (typeof window.Alpine !== 'undefined') {
+                document.getElementById('js-status').textContent = 'Alpine OK';
+            } else {
+                document.getElementById('js-status').textContent = 'JS Partially Loaded';
+            }
+        } catch (e) {
+            document.getElementById('js-status').textContent = 'JS Error: ' + e.message;
+        }
+        
+        // Log any console errors
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e);
+        });
+    </script>
+</body>
+</html>

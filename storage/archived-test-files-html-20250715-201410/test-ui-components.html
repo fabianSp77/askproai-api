@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Components Test - Comprehensive Check</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #374151;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .status-item {
+            padding: 15px;
+            border-radius: 6px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+        .status-ok {
+            background: #d1fae5;
+            border-color: #34d399;
+            color: #065f46;
+        }
+        .status-error {
+            background: #fee2e2;
+            border-color: #f87171;
+            color: #991b1b;
+        }
+        .status-warning {
+            background: #fef3c7;
+            border-color: #fbbf24;
+            color: #92400e;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 5px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .test-pass {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .test-fail {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .console-output {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .console-line {
+            margin: 2px 0;
+        }
+        .console-error {
+            color: #ef4444;
+        }
+        .console-warning {
+            color: #f59e0b;
+        }
+        .console-info {
+            color: #3b82f6;
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .selector-test {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f3f4f6;
+            border-radius: 4px;
+        }
+        .selector-test code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 UI Components Comprehensive Test</h1>
+        
+        <!-- Status Overview -->
+        <div class="test-section">
+            <h2>1. System Status Overview</h2>
+            <div class="status-grid" id="statusGrid">
+                <div class="status-item">Alpine.js: <span id="alpineStatus">Checking...</span></div>
+                <div class="status-item">Livewire: <span id="livewireStatus">Checking...</span></div>
+                <div class="status-item">Emergency Fix: <span id="emergencyStatus">Checking...</span></div>
+                <div class="status-item">Comprehensive Fix: <span id="comprehensiveStatus">Checking...</span></div>
+                <div class="status-item">Filament Dropdown Fix: <span id="dropdownStatus">Checking...</span></div>
+                <div class="status-item">Filament Select Fix: <span id="selectStatus">Checking...</span></div>
+            </div>
+        </div>
+        
+        <!-- Selector Tests -->
+        <div class="test-section">
+            <h2>2. CSS Selector Tests</h2>
+            <div id="selectorTests">
+                <div class="selector-test">
+                    <strong>Testing:</strong> <code>select[wire\\\\:model="selectedCompanyId"]</code>
+                    <span id="selectorTest1">...</span>
+                </div>
+                <div class="selector-test">
+                    <strong>Testing:</strong> <code>[wire\\\\:id]</code>
+                    <span id="selectorTest2">...</span>
+                </div>
+                <div class="selector-test">
+                    <strong>Testing:</strong> <code>.fi-dropdown</code>
+                    <span id="selectorTest3">...</span>
+                </div>
+                <div class="selector-test">
+                    <strong>Testing:</strong> <code>.fi-topbar-open-sidebar-btn</code>
+                    <span id="selectorTest4">...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Interactive Tests -->
+        <div class="test-section">
+            <h2>3. Interactive Component Tests</h2>
+            
+            <div class="action-buttons">
+                <button onclick="testBusinessPortal()">Test Business Portal Page</button>
+                <button onclick="testMobileMenu()">Test Mobile Menu</button>
+                <button onclick="testCompanyDropdown()">Test Company Dropdown</button>
+                <button onclick="testPortalButton()">Test Portal Button</button>
+                <button onclick="testAllDropdowns()">Test All Dropdowns</button>
+                <button onclick="runAllTests()">Run All Tests</button>
+            </div>
+            
+            <div id="testResults"></div>
+        </div>
+        
+        <!-- Console Output -->
+        <div class="test-section">
+            <h2>4. Console Output</h2>
+            <div class="console-output" id="consoleOutput">
+                <div class="console-line console-info">Console output will appear here...</div>
+            </div>
+            <div class="action-buttons">
+                <button onclick="clearConsole()">Clear Console</button>
+                <button onclick="showDebugInfo()">Show Debug Info</button>
+            </div>
+        </div>
+        
+        <!-- Live Page Test -->
+        <div class="test-section">
+            <h2>5. Live Page Test</h2>
+            <div class="action-buttons">
+                <button onclick="loadBusinessPortal()">Load Business Portal Admin</button>
+                <button onclick="loadAdminDashboard()">Load Admin Dashboard</button>
+            </div>
+            <iframe id="testFrame" style="display:none;"></iframe>
+        </div>
+    </div>
+    
+    <script>
+        // Console capture
+        const consoleOutput = document.getElementById('consoleOutput');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addConsoleOutput(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = `console-line console-${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addConsoleOutput(args.join(' '), 'info');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addConsoleOutput(args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addConsoleOutput(args.join(' '), 'warning');
+        };
+        
+        // Status checks
+        function checkStatus() {
+            // Alpine.js
+            const alpineStatus = document.getElementById('alpineStatus');
+            if (typeof window.Alpine !== 'undefined') {
+                alpineStatus.textContent = `✅ Loaded (v${window.Alpine.version || 'unknown'})`;
+                alpineStatus.parentElement.classList.add('status-ok');
+            } else {
+                alpineStatus.textContent = '❌ Not Loaded';
+                alpineStatus.parentElement.classList.add('status-error');
+            }
+            
+            // Livewire
+            const livewireStatus = document.getElementById('livewireStatus');
+            if (typeof window.Livewire !== 'undefined') {
+                livewireStatus.textContent = '✅ Loaded';
+                livewireStatus.parentElement.classList.add('status-ok');
+            } else {
+                livewireStatus.textContent = '❌ Not Loaded';
+                livewireStatus.parentElement.classList.add('status-error');
+            }
+            
+            // Fix scripts
+            const scripts = {
+                emergencyStatus: typeof window.emergencyFix !== 'undefined',
+                comprehensiveStatus: typeof window.comprehensiveUIFix !== 'undefined',
+                dropdownStatus: typeof window.filamentDropdownFix !== 'undefined',
+                selectStatus: typeof window.filamentSelectFix !== 'undefined'
+            };
+            
+            Object.entries(scripts).forEach(([id, loaded]) => {
+                const element = document.getElementById(id);
+                if (loaded) {
+                    element.textContent = '✅ Loaded';
+                    element.parentElement.classList.add('status-ok');
+                } else {
+                    element.textContent = '❌ Not Loaded';
+                    element.parentElement.classList.add('status-error');
+                }
+            });
+        }
+        
+        // Selector tests
+        function testSelectors() {
+            const tests = [
+                {
+                    id: 'selectorTest1',
+                    selector: 'select[wire\\\\:model="selectedCompanyId"]',
+                    description: 'Company dropdown selector'
+                },
+                {
+                    id: 'selectorTest2',
+                    selector: '[wire\\\\:id]',
+                    description: 'Livewire component selector'
+                },
+                {
+                    id: 'selectorTest3',
+                    selector: '.fi-dropdown',
+                    description: 'Filament dropdown selector'
+                },
+                {
+                    id: 'selectorTest4',
+                    selector: '.fi-topbar-open-sidebar-btn',
+                    description: 'Mobile menu button selector'
+                }
+            ];
+            
+            tests.forEach(test => {
+                try {
+                    const elements = document.querySelectorAll(test.selector);
+                    const result = document.getElementById(test.id);
+                    if (elements.length > 0) {
+                        result.textContent = ` ✅ Found ${elements.length} element(s)`;
+                        result.style.color = '#065f46';
+                    } else {
+                        result.textContent = ' ❌ No elements found';
+                        result.style.color = '#991b1b';
+                    }
+                } catch (error) {
+                    const result = document.getElementById(test.id);
+                    result.textContent = ` ❌ Error: ${error.message}`;
+                    result.style.color = '#991b1b';
+                }
+            });
+        }
+        
+        // Test functions
+        async function testBusinessPortal() {
+            console.log('Opening Business Portal Admin page in new tab...');
+            window.open('/admin/business-portal-admin', '_blank');
+            showTestResult('Business Portal opened in new tab. Check if dropdowns and buttons work.');
+        }
+        
+        function testMobileMenu() {
+            console.log('Testing mobile menu functionality...');
+            if (window.comprehensiveUIFix) {
+                window.comprehensiveUIFix.testMobileMenu();
+                showTestResult('Mobile menu test triggered. Check console for results.');
+            } else {
+                showTestResult('Comprehensive UI Fix not loaded!', false);
+            }
+        }
+        
+        function testCompanyDropdown() {
+            console.log('Testing company dropdown...');
+            if (window.emergencyFix) {
+                window.emergencyFix.testCompanySelect();
+                showTestResult('Company dropdown test triggered.');
+            } else {
+                showTestResult('Emergency Fix not loaded!', false);
+            }
+        }
+        
+        function testPortalButton() {
+            console.log('Testing portal button...');
+            if (window.emergencyFix) {
+                window.emergencyFix.testPortalButton();
+                showTestResult('Portal button test triggered.');
+            } else {
+                showTestResult('Emergency Fix not loaded!', false);
+            }
+        }
+        
+        function testAllDropdowns() {
+            console.log('Testing all dropdowns...');
+            if (window.filamentDropdownFix) {
+                window.filamentDropdownFix.debug();
+                showTestResult('Dropdown debug info shown in console.');
+            } else {
+                showTestResult('Filament Dropdown Fix not loaded!', false);
+            }
+        }
+        
+        function runAllTests() {
+            console.log('Running all tests...');
+            checkStatus();
+            testSelectors();
+            showDebugInfo();
+            showTestResult('All tests completed. Check results above.');
+        }
+        
+        function showTestResult(message, success = true) {
+            const results = document.getElementById('testResults');
+            const result = document.createElement('div');
+            result.className = `test-result ${success ? 'test-pass' : 'test-fail'}`;
+            result.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(result);
+        }
+        
+        function clearConsole() {
+            consoleOutput.innerHTML = '<div class="console-line console-info">Console cleared.</div>';
+        }
+        
+        function showDebugInfo() {
+            console.log('=== Debug Information ===');
+            
+            if (window.emergencyFix) {
+                window.emergencyFix.status();
+            }
+            
+            if (window.comprehensiveUIFix) {
+                window.comprehensiveUIFix.status();
+            }
+            
+            if (window.filamentDropdownFix) {
+                window.filamentDropdownFix.debug();
+            }
+            
+            if (window.filamentSelectFix) {
+                window.filamentSelectFix.debug();
+            }
+        }
+        
+        function loadBusinessPortal() {
+            const frame = document.getElementById('testFrame');
+            frame.style.display = 'block';
+            frame.src = '/admin/business-portal-admin';
+            console.log('Loading Business Portal Admin in iframe...');
+        }
+        
+        function loadAdminDashboard() {
+            const frame = document.getElementById('testFrame');
+            frame.style.display = 'block';
+            frame.src = '/admin';
+            console.log('Loading Admin Dashboard in iframe...');
+        }
+        
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('Test page loaded. Checking status...');
+            setTimeout(() => {
+                checkStatus();
+                testSelectors();
+            }, 1000);
+        });
+        
+        // Error handler
+        window.addEventListener('error', (event) => {
+            console.error(`JavaScript Error: ${event.message} at ${event.filename}:${event.lineno}`);
+        });
+    </script>
+</body>
+</html>

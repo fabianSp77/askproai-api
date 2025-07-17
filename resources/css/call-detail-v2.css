@@ -1,0 +1,234 @@
+/* Call Detail V2 Styles */
+
+/* Urgency Bar Animations */
+@keyframes urgencyPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+.urgency-critical {
+    animation: urgencyPulse 2s infinite;
+}
+
+/* Timeline Styles */
+.timeline-container {
+    position: relative;
+}
+
+.timeline-line {
+    position: absolute;
+    left: 20px;
+    top: 40px;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 52px;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-item:last-child .timeline-line {
+    display: none;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 2px solid #e5e7eb;
+}
+
+.timeline-dot.active {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.timeline-dot.email {
+    border-color: #3b82f6;
+}
+
+.timeline-dot.status {
+    border-color: #f97316;
+}
+
+.timeline-dot.assignment {
+    border-color: #10b981;
+}
+
+.timeline-dot.call {
+    border-color: #ef4444;
+}
+
+/* Status Timeline Card Sticky Behavior */
+.status-timeline-card {
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+}
+
+/* Critical Info Bar */
+.critical-info-bar {
+    background: linear-gradient(to right, #f9fafb, #f3f4f6);
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Urgency Badge Styles */
+.urgency-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.urgency-badge.critical {
+    background-color: #ef4444;
+    color: white;
+    animation: urgencyPulse 2s infinite;
+}
+
+.urgency-badge.high {
+    background-color: #f97316;
+    color: white;
+}
+
+.urgency-badge.normal {
+    background-color: #10b981;
+    color: white;
+}
+
+/* Status History Item Hover */
+.timeline-item:hover .timeline-content {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.timeline-content {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+/* Compact Info Cards */
+.info-card-compact {
+    transition: all 0.2s ease;
+}
+
+.info-card-compact:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Customer Hero Section Enhanced */
+.customer-hero {
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+    border: 1px solid #bfdbfe;
+}
+
+/* Quick Action Buttons */
+.quick-action-btn {
+    transition: all 0.2s ease;
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Layout Grid Adjustments */
+@media (min-width: 1024px) {
+    .main-content-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1.5rem;
+    }
+}
+
+/* Status Badge Enhanced */
+.status-badge-enhanced {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Email Forward Counter */
+.forward-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: #f3f4f6;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.forward-counter:hover {
+    background: #e5e7eb;
+    cursor: pointer;
+}
+
+/* Current Status Highlight */
+.current-status-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Navigation Improvements */
+.nav-button-v2 {
+    transition: all 0.15s ease;
+}
+
+.nav-button-v2:not(:disabled):hover {
+    background-color: #eff6ff;
+    border-color: #3b82f6;
+}
+
+/* Responsive Timeline */
+@media (max-width: 768px) {
+    .timeline-item {
+        padding-left: 40px;
+    }
+    
+    .timeline-dot {
+        width: 32px;
+        height: 32px;
+        left: 0;
+    }
+    
+    .timeline-line {
+        left: 16px;
+    }
+}

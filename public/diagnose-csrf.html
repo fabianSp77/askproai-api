@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSRF Diagnose</title>
+    <meta name="csrf-token" content="test-token">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 10px; border: 1px solid #ddd; }
+        .success { background: #e7f5e7; }
+        .error { background: #ffe7e7; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>CSRF Problem Diagnose</h1>
+    
+    <div class="test">
+        <h3>Test 1: Login ohne CSRF Token</h3>
+        <button onclick="testLoginNoCSRF()">Test starten</button>
+        <pre id="test1"></pre>
+    </div>
+    
+    <div class="test">
+        <h3>Test 2: Login mit CSRF Token aus Meta</h3>
+        <button onclick="testLoginWithMetaCSRF()">Test starten</button>
+        <pre id="test2"></pre>
+    </div>
+    
+    <div class="test">
+        <h3>Test 3: Login mit CSRF Cookie</h3>
+        <button onclick="testLoginWithCookieCSRF()">Test starten</button>
+        <pre id="test3"></pre>
+    </div>
+    
+    <div class="test">
+        <h3>Test 4: Nach Login - API Call mit Token</h3>
+        <button onclick="testAPIWithToken()">Test starten</button>
+        <pre id="test4"></pre>
+    </div>
+    
+    <script>
+        async function testLoginNoCSRF() {
+            const result = document.getElementById('test1');
+            result.textContent = 'Teste Login ohne CSRF Token...\n';
+            
+            try {
+                const response = await fetch('/api/admin/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@askproai.de',
+                        password: 'admin123'
+                    })
+                });
+                
+                result.textContent += `Status: ${response.status} ${response.statusText}\n`;
+                const text = await response.text();
+                result.textContent += `Response: ${text}\n`;
+                
+                if (response.ok) {
+                    const data = JSON.parse(text);
+                    localStorage.setItem('test_token', data.token);
+                    result.textContent += `\n✅ SUCCESS! Token gespeichert.\n`;
+                    result.parentElement.classList.add('success');
+                } else {
+                    result.parentElement.classList.add('error');
+                }
+            } catch (error) {
+                result.textContent += `ERROR: ${error.message}\n`;
+                result.parentElement.classList.add('error');
+            }
+        }
+        
+        async function testLoginWithMetaCSRF() {
+            const result = document.getElementById('test2');
+            result.textContent = 'Teste Login mit CSRF Token aus Meta Tag...\n';
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            result.textContent += `CSRF Token: ${csrfToken}\n`;
+            
+            try {
+                const response = await fetch('/api/admin/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@askproai.de',
+                        password: 'admin123'
+                    })
+                });
+                
+                result.textContent += `Status: ${response.status} ${response.statusText}\n`;
+                const text = await response.text();
+                result.textContent += `Response: ${text}\n`;
+                
+                if (response.ok) {
+                    result.parentElement.classList.add('success');
+                } else {
+                    result.parentElement.classList.add('error');
+                }
+            } catch (error) {
+                result.textContent += `ERROR: ${error.message}\n`;
+                result.parentElement.classList.add('error');
+            }
+        }
+        
+        async function testLoginWithCookieCSRF() {
+            const result = document.getElementById('test3');
+            result.textContent = 'Teste Login mit CSRF aus Cookie...\n';
+            
+            // First get CSRF cookie
+            try {
+                await fetch('/sanctum/csrf-cookie');
+                result.textContent += 'CSRF Cookie geholt\n';
+                
+                // Get XSRF-TOKEN from cookie
+                const xsrfToken = document.cookie
+                    .split('; ')
+                    .find(row => row.startsWith('XSRF-TOKEN='))
+                    ?.split('=')[1];
+                    
+                result.textContent += `XSRF Token: ${xsrfToken ? xsrfToken.substring(0, 20) + '...' : 'nicht gefunden'}\n`;
+                
+                const response = await fetch('/api/admin/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-XSRF-TOKEN': decodeURIComponent(xsrfToken || '')
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'admin@askproai.de',
+                        password: 'admin123'
+                    })
+                });
+                
+                result.textContent += `Status: ${response.status} ${response.statusText}\n`;
+                const text = await response.text();
+                result.textContent += `Response: ${text}\n`;
+                
+                if (response.ok) {
+                    result.parentElement.classList.add('success');
+                } else {
+                    result.parentElement.classList.add('error');
+                }
+            } catch (error) {
+                result.textContent += `ERROR: ${error.message}\n`;
+                result.parentElement.classList.add('error');
+            }
+        }
+        
+        async function testAPIWithToken() {
+            const result = document.getElementById('test4');
+            result.textContent = 'Teste API Call mit gespeichertem Token...\n';
+            
+            const token = localStorage.getItem('test_token');
+            if (!token) {
+                result.textContent += 'Kein Token gefunden! Bitte erst Test 1 ausführen.\n';
+                result.parentElement.classList.add('error');
+                return;
+            }
+            
+            result.textContent += `Token: ${token.substring(0, 20)}...\n`;
+            
+            try {
+                const response = await fetch('/api/admin/dashboard/stats', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                result.textContent += `Status: ${response.status} ${response.statusText}\n`;
+                const text = await response.text();
+                result.textContent += `Response: ${text.substring(0, 200)}...\n`;
+                
+                if (response.ok) {
+                    result.textContent += '\n✅ API Call erfolgreich!\n';
+                    result.parentElement.classList.add('success');
+                } else {
+                    result.parentElement.classList.add('error');
+                }
+            } catch (error) {
+                result.textContent += `ERROR: ${error.message}\n`;
+                result.parentElement.classList.add('error');
+            }
+        }
+        
+        // Check cookies on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const cookies = document.cookie.split('; ');
+            console.log('Aktuelle Cookies:', cookies);
+        });
+    </script>
+</body>
+</html>

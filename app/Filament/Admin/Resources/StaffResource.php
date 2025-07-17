@@ -10,10 +10,10 @@ use App\Models\Service;
 use App\Models\Branch;
 use App\Filament\Components\StatusBadge;
 use App\Filament\Components\ActionButton;
-use App\Filament\Components\DateRangePicker;
 use App\Filament\Components\SearchableSelect;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Illuminate\Support\Facades\DB;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -163,7 +163,21 @@ class StaffResource extends EnhancedResourceSimple
                                                     ->maxLength(255)
                                                     ->label('E-Mail')
                                                     ->prefixIcon('heroicon-o-envelope')
-                                                    ->helperText('E-Mail-Adresse für Terminbestätigungen und Benachrichtigungen'),
+                                                    ->helperText('E-Mail-Adresse für Terminbestätigungen und Benachrichtigungen')
+                                                    ->unique(
+                                                        table: \App\Models\Staff::class,
+                                                        column: 'email',
+                                                        ignoreRecord: true,
+                                                        modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
+                                                            return $rule
+                                                                ->where('company_id', $get('company_id'))
+                                                                ->whereNotNull('email')
+                                                                ->where('email', '!=', '');
+                                                        }
+                                                    )
+                                                    ->validationMessages([
+                                                        'unique' => 'Diese E-Mail-Adresse wird bereits von einem anderen Mitarbeiter in diesem Unternehmen verwendet.',
+                                                    ]),
 
                                                 Forms\Components\TextInput::make('phone')
                                                     ->tel()
@@ -295,26 +309,29 @@ class StaffResource extends EnhancedResourceSimple
                 ->withCount(['appointments', 'appointments as upcoming_appointments_count' => function ($query) {
                     $query->where('starts_at', '>=', now())->whereIn('status', ['confirmed', 'pending']);
                 }]))
+            ->contentGrid(null) // Disable grid layout for better table display
             ->columns([
-                Split::make([
-                    Tables\Columns\ImageColumn::make('avatar')
-                        ->defaultImageUrl(url('/images/default-avatar.png'))
-                        ->circular()
-                        ->grow(false),
-                    
-                    Stack::make([
-                        Tables\Columns\TextColumn::make('name')
-                            ->searchable()
-                            ->sortable()
-                            ->weight('bold')
-                            ->icon('heroicon-o-user'),
-Tables\Columns\TextColumn::make('email')
-                            ->searchable()
-                            ->icon('heroicon-o-envelope')
-                            ->iconPosition(IconPosition::Before)
-                            ->color('gray'),
-                    ]),
-                ]),
+                // Simplified layout without Split/Stack for better alignment
+                Tables\Columns\ImageColumn::make('avatar')
+                    ->label('')
+                    ->defaultImageUrl(url('/images/default-avatar.png'))
+                    ->circular()
+                    ->size(40),
+                
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Mitarbeiter')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->description(fn ($record) => $record->email)
+                    ->wrap(),
+
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('Telefon')
+                    ->searchable()
+                    ->icon('heroicon-o-phone')
+                    ->iconPosition(IconPosition::Before)
+                    ->toggleable(isToggledHiddenByDefault: false),
 
                 Tables\Columns\TextColumn::make('company.name')
                     ->label('Unternehmen')

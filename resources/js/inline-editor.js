@@ -403,6 +403,7 @@ export class InlineEditor {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
             },
+                credentials: 'include',
             body: JSON.stringify({
                 recordId,
                 field,

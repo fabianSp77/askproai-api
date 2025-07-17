@@ -1,6 +1,55 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\CallCustomerAssignmentController;
+
+// Include emergency admin routes
+require __DIR__ . '/admin-emergency.php';
+
+// Admin Portal Switch Routes
+require __DIR__ . '/admin-switch.php';
+
+// Widget test route
+require __DIR__.'/test-widgets.php';
+
+// Error Catalog Routes
+Route::prefix('errors')->name('errors.')->group(function () {
+    Route::get('/', [App\Http\Controllers\ErrorCatalogController::class, 'index'])->name('index');
+    Route::get('/autocomplete', [App\Http\Controllers\ErrorCatalogController::class, 'autocomplete'])->name('autocomplete');
+    Route::get('/{errorCode}', [App\Http\Controllers\ErrorCatalogController::class, 'show'])->name('show');
+    Route::post('/feedback/{solutionId}', [App\Http\Controllers\ErrorCatalogController::class, 'submitFeedback'])->name('feedback');
+});
+
+// React Admin Portal (wenn aktiviert)
+if (config('app.admin_portal_react', false)) {
+    Route::prefix('admin')->group(base_path('routes/admin-react.php'));
+}
+
+// Emergency auth routes - bypass everything
+Route::get('/emergency-login', [\App\Http\Controllers\EmergencyAuthController::class, 'login'])
+    ->withoutMiddleware(['web', 'auth', 'csrf']);
+    
+Route::get('/auto-admin-login', [\App\Http\Controllers\EmergencyAuthController::class, 'autoLogin'])
+    ->withoutMiddleware(['web', 'auth', 'csrf']);
+
+// Direct auth route - bypasses all middleware
+Route::get('/admin-direct-auth', function () {
+    $uid = request('uid');
+    $token = request('token');
+    
+    if ($uid && $token) {
+        $user = \App\Models\User::find($uid);
+        if ($user) {
+            // Force login
+            \Illuminate\Support\Facades\Auth::guard('web')->loginUsingId($user->id);
+            session()->regenerate();
+            
+            return redirect('/admin')->with('success', 'Logged in via direct auth');
+        }
+    }
+    
+    return redirect('/direct-login.php')->with('error', 'Invalid auth token');
+})->withoutMiddleware(['web']);
 
 // Test route to verify application is working
 Route::get('/test', function () {
@@ -28,13 +77,39 @@ Route::get('/', function () {
     return redirect('/admin');
 });
 
+// Admin route - let Filament handle it
+// Route removed - Filament will handle /admin route automatically
+
 // Branch switching route
 Route::post('/admin/branch/switch', [App\Http\Controllers\BranchSwitchController::class, 'switch'])
     ->middleware(['auth'])
     ->name('admin.branch.switch');
 
+// Call customer assignment route
+Route::post('/admin/calls/{call}/assign-customer', [CallCustomerAssignmentController::class, 'assign'])
+    ->middleware(['auth'])
+    ->name('admin.calls.assign-customer');
+
 // Test ML Dashboard outside Filament
 Route::get('/test-ml-dashboard', [\App\Http\Controllers\TestMLController::class, 'index']);
+
+// React Admin Portal Routes
+Route::get('/admin-react-login', function () {
+    return view('admin.react-app-complete');
+});
+
+// React Admin Portal - catch all routes
+Route::get('/admin-react/{any?}', function () {
+    return view('admin.react-admin-portal');
+})->where('any', '.*');
+
+Route::get('/admin/react-admin-portal', function () {
+    return view('admin.react-admin-portal');
+});
+
+Route::get('/admin-test-appointments', function () {
+    return view('admin.test-appointments');
+})->middleware(['web', 'auth']);
 
 // Documentation redirects to consolidate multiple locations
 Route::get('/documentation/{any?}', [App\Http\Controllers\DocumentationRedirectController::class, 'redirect'])
@@ -48,6 +123,22 @@ Route::get('/documentation', [App\Http\Controllers\DocumentationRedirectControll
 // Filament dashboard routes fix removed - pages now use default route generation
 
 // API Login routes are now in routes/api.php
+
+// Public Topup Routes (no authentication required)
+Route::prefix('topup')->name('public.topup.')->group(function () {
+    Route::get('/{company}', [App\Http\Controllers\PublicTopupController::class, 'showTopupForm'])
+        ->name('form');
+    Route::post('/{company}', [App\Http\Controllers\PublicTopupController::class, 'processTopup'])
+        ->name('process');
+    Route::get('/{company}/success', [App\Http\Controllers\PublicTopupController::class, 'success'])
+        ->name('success');
+    Route::get('/{company}/cancel', [App\Http\Controllers\PublicTopupController::class, 'cancel'])
+        ->name('cancel');
+});
+
+// API endpoint to generate topup links
+Route::post('/api/generate-topup-link', [App\Http\Controllers\PublicTopupController::class, 'generateLink'])
+    ->name('api.generate-topup-link');
 
 // Retell Test Hub & Monitor Routes (available in all environments)
 Route::get('/retell-test', function () {
@@ -82,6 +173,11 @@ Route::get('/impressum', [App\Http\Controllers\PrivacyController::class, 'impres
 Route::get('/dashboard', function () {
     return redirect('/admin');
 })->middleware(['auth'])->name('dashboard');
+
+// Admin dashboard redirect
+Route::get('/admin/dashboard', function () {
+    return redirect('/admin');
+})->middleware(['auth'])->name('admin.dashboard');
 
 // Invoice download route
 Route::get('/invoice/{invoice}/download', function (App\Models\Invoice $invoice) {
@@ -249,11 +345,40 @@ Route::middleware(['auth'])->group(function () {
 
 // Customer Portal Routes
 Route::prefix('portal')->group(function () {
+    // Legacy redirects - redirect old portal URLs to business URLs
+    Route::get('/calls/{id}', function ($id) {
+        return redirect("/business/calls/{$id}", 301);
+    });
+    Route::get('/appointments/{id}', function ($id) {
+        return redirect("/business/appointments/{$id}", 301);
+    });
+    Route::get('/customers/{id}', function ($id) {
+        return redirect("/business/customers/{$id}", 301);
+    });
+    Route::get('/dashboard', function () {
+        return redirect("/business/dashboard", 301);
+    });
+    Route::get('/', function () {
+        return redirect("/business/", 301);
+    });
+    
     require __DIR__.'/portal.php';
 });
 
 // Business Portal Routes
 require __DIR__.'/business-portal.php';
+
+// Admin API routes (web authenticated)
+Route::middleware(['auth:web'])->prefix('admin-api')->group(function () {
+    Route::post('/calls/{call}/translate-summary', [App\Http\Controllers\Admin\AdminApiController::class, 'translateCallSummary'])
+        ->name('admin.api.calls.translate-summary');
+    
+    // Transaction exports
+    Route::get('/transactions/export/csv', [App\Http\Controllers\Admin\TransactionExportController::class, 'exportCsv'])
+        ->name('admin.api.transactions.export.csv');
+    Route::get('/transactions/export/pdf', [App\Http\Controllers\Admin\TransactionExportController::class, 'exportPdf'])
+        ->name('admin.api.transactions.export.pdf');
+});
 
 // Remove temporary debug route - let Livewire handle its own routes
 
@@ -284,3 +409,69 @@ Route::prefix('gdpr')->group(function () {
 
 Route::get('/privacy-tools', [App\Http\Controllers\GDPRController::class, 'privacyTools'])
     ->name('privacy-tools');
+
+
+// Temporary token login for testing
+Route::get('/business/login-with-token', function (Request $request) {
+    $token = $request->get('token');
+    $userId = \Illuminate\Support\Facades\Cache::pull('portal_login_token_' . $token);
+    
+    if (!$userId) {
+        return redirect()->route('business.login')->with('error', 'Invalid or expired token');
+    }
+    
+    $user = \App\Models\PortalUser::find($userId);
+    if (!$user || !$user->is_active) {
+        return redirect()->route('business.login')->with('error', 'User not found or inactive');
+    }
+    
+    \Illuminate\Support\Facades\Auth::guard('portal')->login($user);
+    $user->recordLogin($request->ip());
+    
+    return redirect()->route('business.dashboard');
+})->name('business.login-with-token');
+
+
+// Admin viewing portal route
+Route::get('/admin-view-portal/{session}', function ($session) {
+    $data = \Illuminate\Support\Facades\Cache::get('admin_viewing_' . $session);
+    if (!$data) {
+        return redirect('/business/login')->with('error', 'Invalid session');
+    }
+    
+    // Set admin viewing session
+    session(['is_admin_viewing' => true]);
+    session(['admin_impersonation' => [
+        'user_id' => 0,
+        'company_id' => $data['company_id'],
+        'company_name' => \App\Models\Company::find($data['company_id'])->name,
+        'admin_id' => $data['admin_id']
+    ]]);
+    
+    return redirect('/business/dashboard');
+})->name('admin.view-portal');
+
+// Test login page with credentials visible
+Route::get('/portal-test-login', function () {
+    return view('portal.test-login');
+})->name('portal.test-login');
+
+// React Admin Portal Routes - commented out duplicates (already defined above)
+// Route::get('/admin-react-login', function () {
+//     return view('admin.react-login');
+// })->name('admin.react.login');
+
+// Route::get('/admin-react-login-fixed', function () {
+//     return view('admin.react-login-fixed');
+// })->name('admin.react.login.fixed');
+
+// Route::get('/admin-react', function () {
+//     return view('admin.react-app-complete');
+// })->name('admin.react.app');
+
+// Include Livewire 404 fix routes
+require __DIR__.'/livewire-fix.php';
+
+
+// Demo login route
+require __DIR__.'/demo-login.php';

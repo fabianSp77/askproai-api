@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Business Portal Settings API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Business Portal Settings API Test</h1>
+    
+    <div class="test">
+        <h2>1. Test Settings Routes</h2>
+        <button onclick="testRoute('/business/settings')">Test Settings Page</button>
+        <button onclick="testRoute('/business/api/settings/profile')">Test Profile API</button>
+        <button onclick="testRoute('/business/api/settings/company')">Test Company API</button>
+        <div id="route-results"></div>
+    </div>
+    
+    <div class="test">
+        <h2>2. Test Authentication</h2>
+        <button onclick="testAuth()">Check Auth Status</button>
+        <div id="auth-results"></div>
+    </div>
+    
+    <div class="test">
+        <h2>3. Test Login & Access Settings</h2>
+        <button onclick="testFullFlow()">Run Full Test Flow</button>
+        <div id="flow-results"></div>
+    </div>
+
+    <script>
+        async function testRoute(url) {
+            const resultsDiv = document.getElementById('route-results');
+            resultsDiv.innerHTML = `<p>Testing ${url}...</p>`;
+            
+            try {
+                const response = await fetch(url, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = await response.text();
+                }
+                
+                resultsDiv.innerHTML = `
+                    <div class="${response.ok ? 'success' : 'error'}">
+                        <h3>${url}</h3>
+                        <p>Status: ${response.status} ${response.statusText}</p>
+                        <p>Type: ${contentType}</p>
+                        <pre>${typeof data === 'object' ? JSON.stringify(data, null, 2) : data.substring(0, 500)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>${url}</h3>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testAuth() {
+            const resultsDiv = document.getElementById('auth-results');
+            
+            try {
+                const response = await fetch('/business/api/check-auth', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="${data.authenticated ? 'success' : 'warning'}">
+                        <h3>Authentication Status</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h3>Auth Check Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testFullFlow() {
+            const resultsDiv = document.getElementById('flow-results');
+            resultsDiv.innerHTML = '<p>Running full test flow...</p>';
+            
+            let results = [];
+            
+            // Step 1: Login
+            try {
+                const loginResponse = await fetch('/business/login', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        email: 'demo@example.com',
+                        password: 'password'
+                    })
+                });
+                
+                results.push({
+                    step: 'Login',
+                    status: loginResponse.status,
+                    ok: loginResponse.ok
+                });
+            } catch (error) {
+                results.push({
+                    step: 'Login',
+                    error: error.message
+                });
+            }
+            
+            // Step 2: Test Settings API
+            try {
+                const settingsResponse = await fetch('/business/api/settings/profile', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await settingsResponse.json();
+                
+                results.push({
+                    step: 'Settings API',
+                    status: settingsResponse.status,
+                    ok: settingsResponse.ok,
+                    data: data
+                });
+            } catch (error) {
+                results.push({
+                    step: 'Settings API',
+                    error: error.message
+                });
+            }
+            
+            resultsDiv.innerHTML = `
+                <div class="warning">
+                    <h3>Full Flow Results</h3>
+                    <pre>${JSON.stringify(results, null, 2)}</pre>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

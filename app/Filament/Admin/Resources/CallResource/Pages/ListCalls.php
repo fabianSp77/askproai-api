@@ -15,6 +15,8 @@ class ListCalls extends ListRecords
 {
     protected static string $resource = CallResource::class;
     
+    protected static string $view = 'filament.admin.resources.call-resource.pages.list-calls';
+    
     protected function getViewData(): array
     {
         return [
@@ -171,10 +173,32 @@ class ListCalls extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\CallLiveStatusWidget::class,
-            \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
-            \App\Filament\Admin\Widgets\CallKpiWidget::class,
-            \App\Filament\Admin\Resources\CallResource\Widgets\CallAnalyticsWidget::class,
+            // Widgets temporarily disabled - they need to be updated to work with Filament 3
+            // \App\Filament\Admin\Widgets\CallLiveStatusWidget::class,
+            // \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
+            // \App\Filament\Admin\Widgets\CallKpiWidget::class,
+            // \App\Filament\Admin\Resources\CallResource\Widgets\CallAnalyticsWidget::class,
         ];
+    }
+    
+    public function getHeaderWidgetsColumns(): int | string | array
+    {
+        return 2; // 2 columns for better layout
+    }
+    
+    // Add this method to ensure widgets are loaded in Filament v3
+    public function getVisibleHeaderWidgets(): array
+    {
+        return $this->filterVisibleWidgets($this->getHeaderWidgets());
+    }
+    
+    protected function getHeaderWidgetsData(): array
+    {
+        return [];
+    }
+    
+    public function hasHeaderWidgets(): bool
+    {
+        return count($this->getHeaderWidgets()) > 0;
     }
 }

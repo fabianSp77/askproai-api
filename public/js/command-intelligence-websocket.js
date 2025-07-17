@@ -184,12 +184,12 @@ class CommandIntelligenceWebSocket {
      * Connection event handlers
      */
     onConnected() {
-        console.log('WebSocket connected');
+        //console.log('WebSocket connected');
         window.dispatchEvent(new CustomEvent('websocket:connected'));
     }
 
     onDisconnected() {
-        console.log('WebSocket disconnected');
+        //console.log('WebSocket disconnected');
         window.dispatchEvent(new CustomEvent('websocket:disconnected'));
         
         // Attempt reconnection
@@ -215,7 +215,7 @@ class CommandIntelligenceWebSocket {
         this.reconnectAttempts++;
         const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
         
-        console.log(`Attempting reconnection in ${delay}ms...`);
+        //console.log(`Attempting reconnection in ${delay}ms...`);
         
         setTimeout(() => {
             if (!this.isConnected) {

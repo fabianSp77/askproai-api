@@ -214,4 +214,67 @@
             </div>
         </form>
     </x-filament::modal>
+    
+    {{-- JavaScript fallback for redirects --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Listen for redirect events from Livewire
+            window.addEventListener('redirect-to-portal', function(event) {
+                console.log('[BusinessPortalAdmin] Received redirect event:', event.detail);
+                if (event.detail && event.detail.url) {
+                    window.location.href = event.detail.url;
+                }
+            });
+            
+            // Auto-open portal if requested
+            window.addEventListener('auto-open-portal', function(event) {
+                console.log('[BusinessPortalAdmin] Auto-opening portal for company:', event.detail);
+                if (event.detail && event.detail.companyId) {
+                    setTimeout(() => {
+                        @this.openPortalForCompany(event.detail.companyId);
+                    }, 500);
+                }
+            });
+            
+            // Also fix select dropdown initialization
+            const companySelect = document.querySelector('[wire\\:model="selectedCompanyId"]');
+            if (companySelect) {
+                console.log('[BusinessPortalAdmin] Found company select, ensuring initialization...');
+                
+                // Force Alpine initialization if needed
+                setTimeout(() => {
+                    const alpineComponent = companySelect.closest('[x-data]');
+                    if (alpineComponent && window.Alpine && !alpineComponent.__x) {
+                        try {
+                            Alpine.initTree(alpineComponent);
+                            console.log('[BusinessPortalAdmin] Initialized Alpine on company select');
+                        } catch (e) {
+                            console.error('[BusinessPortalAdmin] Failed to init Alpine:', e);
+                        }
+                    }
+                }, 500);
+            }
+        });
+        
+        // Livewire event listener
+        if (typeof Livewire !== 'undefined') {
+            Livewire.on('redirect-to-portal', (data) => {
+                console.log('[BusinessPortalAdmin] Livewire redirect event:', data);
+                if (data.url) {
+                    window.location.href = data.url;
+                }
+            });
+            
+            Livewire.on('auto-open-portal', (data) => {
+                console.log('[BusinessPortalAdmin] Auto-open portal event:', data);
+                if (data.companyId) {
+                    setTimeout(() => {
+                        @this.openPortalForCompany(data.companyId);
+                    }, 500);
+                }
+            });
+        }
+    </script>
+    
+    {{-- Note: unified-ui-fix.js is already loaded globally in base.blade.php --}}
 </x-filament-panels::page>

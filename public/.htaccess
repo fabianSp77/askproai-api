@@ -4,6 +4,10 @@
     </IfModule>
 
     RewriteEngine On
+# Temporary redirect disabled - testing original admin
+# RewriteCond %{REQUEST_URI} ^/admin$ [NC]
+# RewriteRule ^(.*)$ /admin-simple.php [L,R=302]
+
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
@@ -23,3 +27,17 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+# Allow direct PHP access for login bypass
+<Files "admin-emergency.php">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Disable redirects for emergency access
+RewriteEngine On
+# Temporary redirect disabled - testing original admin
+# RewriteCond %{REQUEST_URI} ^/admin$ [NC]
+# RewriteRule ^(.*)$ /admin-simple.php [L,R=302]
+
+RewriteCond %{REQUEST_URI} ^/admin-emergency\.php$ [NC]
+RewriteRule .* - [L]

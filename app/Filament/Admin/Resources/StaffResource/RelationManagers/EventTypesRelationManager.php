@@ -26,7 +26,7 @@ class EventTypesRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('event_type_id')
+                Forms\Components\Select::make('calcom_event_type_id')
                     ->label('Event-Type')
                     ->options(function () {
                         return CalcomEventType::where('company_id', $this->ownerRecord->company_id)
@@ -211,7 +211,7 @@ class EventTypesRelationManager extends RelationManager
                         // Set this one as primary
                         \DB::table('staff_event_types')
                             ->where('staff_id', $this->ownerRecord->id)
-                            ->where('event_type_id', $record->id)
+                            ->where('calcom_event_type_id', $record->id)
                             ->update(['is_primary' => true]);
                             
                         Notification::make()
@@ -242,7 +242,7 @@ class EventTypesRelationManager extends RelationManager
                     ->using(function ($record, array $data) {
                         \DB::table('staff_event_types')
                             ->where('staff_id', $this->ownerRecord->id)
-                            ->where('event_type_id', $record->id)
+                            ->where('calcom_event_type_id', $record->id)
                             ->update([
                                 'is_primary' => $data['is_primary'] ?? false,
                                 'custom_duration' => $data['custom_duration'],

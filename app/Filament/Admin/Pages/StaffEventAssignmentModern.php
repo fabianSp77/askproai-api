@@ -91,18 +91,21 @@ class StaffEventAssignmentModern extends Page implements HasForms
         // Lade Event-Types mit Buchungsstatistiken
         $this->eventTypes = CalcomEventType::where('company_id', $this->company_id)
             ->where('is_active', true)
-            ->withCount(['bookings' => function ($query) {
-                $query->where('created_at', '>=', now()->subDays(30));
-            }])
             ->orderBy('name')
             ->get()
             ->map(function ($et) {
+                // Count bookings through appointments
+                $bookingsCount = \App\Models\Appointment::where('company_id', $this->company_id)
+                    ->where('calcom_event_type_id', $et->calcom_event_type_id)
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->count();
+                
                 return [
                     'id' => (int)$et->id,
                     'name' => $et->name,
                     'duration' => $et->duration_minutes,
                     'price' => $et->price,
-                    'bookings_count' => $et->bookings_count,
+                    'bookings_count' => $bookingsCount,
                     'required_skills' => $et->required_skills ?? [],
                     'difficulty_level' => $et->difficulty_level ?? 'medium',
                 ];

@@ -48,6 +48,12 @@ class Company extends Model
         'calcom_user_id',
         'google_calendar_credentials',
         'stripe_customer_id',
+        // White-label fields
+        'parent_company_id',
+        'company_type',
+        'is_white_label',
+        'white_label_settings',
+        'commission_rate',
         'stripe_subscription_id',
         // Tax fields
         'tax_number',
@@ -73,6 +79,14 @@ class Company extends Model
         // Subscription dates
         'subscription_started_at',
         'subscription_current_period_end',
+        // Call notification preferences
+        'send_call_summaries',
+        'call_summary_recipients',
+        'include_transcript_in_summary',
+        'include_csv_export',
+        'summary_email_frequency',
+        'call_notification_settings',
+        'email_notifications_enabled',
     ];
 
     protected $casts = [
@@ -95,6 +109,17 @@ class Company extends Model
         'revenue_previous_year' => 'decimal:2',
         'subscription_started_at' => 'datetime',
         'subscription_current_period_end' => 'datetime',
+        // Call notification preferences
+        'send_call_summaries' => 'boolean',
+        'call_summary_recipients' => 'array',
+        'include_transcript_in_summary' => 'boolean',
+        'include_csv_export' => 'boolean',
+        'call_notification_settings' => 'array',
+        'email_notifications_enabled' => 'boolean',
+        // White-label fields
+        'is_white_label' => 'boolean',
+        'white_label_settings' => 'array',
+        'commission_rate' => 'decimal:2',
     ];
 
     protected $hidden = [
@@ -268,6 +293,57 @@ class Company extends Model
         return $this->hasMany(Branch::class);
     }
     
+    /**
+     * Get the parent company (for white-label clients).
+     */
+    public function parentCompany()
+    {
+        return $this->belongsTo(Company::class, 'parent_company_id');
+    }
+    
+    /**
+     * Get the child companies (for resellers).
+     */
+    public function childCompanies(): HasMany
+    {
+        return $this->hasMany(Company::class, 'parent_company_id');
+    }
+    
+    /**
+     * Check if this company is a reseller.
+     */
+    public function isReseller(): bool
+    {
+        return $this->company_type === 'reseller';
+    }
+    
+    /**
+     * Check if this company is a client of a reseller.
+     */
+    public function isClient(): bool
+    {
+        return $this->company_type === 'client';
+    }
+    
+    /**
+     * Get all companies this company can access (self + children if reseller).
+     */
+    public function getAccessibleCompanies()
+    {
+        if ($this->isReseller()) {
+            return Company::where('id', $this->id)
+                ->orWhere('parent_company_id', $this->id)
+                ->get();
+        }
+        
+        return collect([$this]);
+    }
+
+    public function onboardingState(): HasOne
+    {
+        return $this->hasOne(OnboardingState::class);
+    }
+    
     
 
     /**
@@ -396,6 +472,14 @@ class Company extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Get the goals for the company.
+     */
+    public function goals(): HasMany
+    {
+        return $this->hasMany(CompanyGoal::class);
     }
 
     /**

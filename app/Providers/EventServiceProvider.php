@@ -12,9 +12,11 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         \App\Events\CallCreated::class => [
             [\App\Listeners\CallEventListener::class, 'onCallCreated'],
+            \App\Listeners\UpdateCustomerCallStats::class,
         ],
         \App\Events\CallUpdated::class => [
             [\App\Listeners\CallEventListener::class, 'onCallUpdated'],
+            \App\Listeners\UpdateCustomerCallStats::class,
         ],
         // Queue job listeners for connection management
         \Illuminate\Queue\Events\JobProcessed::class => [

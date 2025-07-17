@@ -13,16 +13,31 @@ class PrepaidBalance extends Model
     protected $fillable = [
         'company_id',
         'balance',
+        'bonus_balance',
         'reserved_balance',
         'low_balance_threshold',
         'last_warning_sent_at',
+        'auto_topup_enabled',
+        'auto_topup_threshold',
+        'auto_topup_amount',
+        'stripe_payment_method_id',
+        'last_auto_topup_at',
+        'auto_topup_daily_count',
+        'auto_topup_monthly_limit',
     ];
 
     protected $casts = [
         'balance' => 'decimal:2',
+        'bonus_balance' => 'decimal:2',
         'reserved_balance' => 'decimal:2',
         'low_balance_threshold' => 'decimal:2',
+        'auto_topup_threshold' => 'decimal:2',
+        'auto_topup_amount' => 'decimal:2',
+        'auto_topup_monthly_limit' => 'decimal:2',
         'last_warning_sent_at' => 'datetime',
+        'last_auto_topup_at' => 'datetime',
+        'auto_topup_enabled' => 'boolean',
+        'auto_topup_daily_count' => 'integer',
     ];
 
     // Relationships
@@ -58,18 +73,57 @@ class PrepaidBalance extends Model
             ]);
         });
     }
+    
+    public function addBonusBalance(float $amount, string $description, string $referenceType = null, string $referenceId = null)
+    {
+        return DB::transaction(function () use ($amount, $description, $referenceType, $referenceId) {
+            $this->lockForUpdate();
+            
+            $bonusBefore = $this->bonus_balance;
+            $this->increment('bonus_balance', $amount);
+            
+            return BalanceTransaction::create([
+                'company_id' => $this->company_id,
+                'type' => 'bonus',
+                'amount' => $amount,
+                'balance_before' => $this->balance,
+                'balance_after' => $this->balance,
+                'bonus_amount' => $amount,
+                'affects_bonus' => true,
+                'description' => $description,
+                'reference_type' => $referenceType,
+                'reference_id' => $referenceId,
+                'created_by' => auth()->guard('portal')->user()->id ?? null,
+            ]);
+        });
+    }
 
     public function deductBalance(float $amount, string $description, string $referenceType = null, string $referenceId = null)
     {
         return DB::transaction(function () use ($amount, $description, $referenceType, $referenceId) {
             $this->lockForUpdate();
             
-            if ($this->getEffectiveBalance() < $amount) {
+            if ($this->getEffectiveTotalBalance() < $amount) {
                 throw new \Exception('Insufficient balance');
             }
             
             $balanceBefore = $this->balance;
-            $this->decrement('balance', $amount);
+            $bonusBefore = $this->bonus_balance;
+            $remainingAmount = $amount;
+            $bonusUsed = 0;
+            
+            // Erst Bonus-Guthaben verwenden
+            if ($this->bonus_balance > 0 && $remainingAmount > 0) {
+                $bonusToUse = min($this->bonus_balance, $remainingAmount);
+                $this->decrement('bonus_balance', $bonusToUse);
+                $bonusUsed = $bonusToUse;
+                $remainingAmount -= $bonusToUse;
+            }
+            
+            // Dann normales Guthaben
+            if ($remainingAmount > 0) {
+                $this->decrement('balance', $remainingAmount);
+            }
             
             return BalanceTransaction::create([
                 'company_id' => $this->company_id,
@@ -77,6 +131,8 @@ class PrepaidBalance extends Model
                 'amount' => -$amount,
                 'balance_before' => $balanceBefore,
                 'balance_after' => $this->balance,
+                'bonus_amount' => -$bonusUsed,
+                'affects_bonus' => $bonusUsed > 0,
                 'description' => $description,
                 'reference_type' => $referenceType,
                 'reference_id' => $referenceId,
@@ -90,7 +146,7 @@ class PrepaidBalance extends Model
         return DB::transaction(function () use ($amount) {
             $this->lockForUpdate();
             
-            if ($this->getEffectiveBalance() < $amount) {
+            if ($this->getEffectiveTotalBalance() < $amount) {
                 return false;
             }
             
@@ -133,6 +189,22 @@ class PrepaidBalance extends Model
     public function getEffectiveBalance(): float
     {
         return $this->balance - $this->reserved_balance;
+    }
+    
+    public function getTotalBalance(): float
+    {
+        return $this->balance + $this->bonus_balance;
+    }
+    
+    public function getEffectiveTotalBalance(): float
+    {
+        return $this->getTotalBalance() - $this->reserved_balance;
+    }
+    
+    public function getWithdrawableBalance(): float
+    {
+        // Nur normales Guthaben kann ausgezahlt werden, nicht Bonus
+        return max(0, $this->balance - $this->reserved_balance);
     }
 
     public function isLowBalance(): bool

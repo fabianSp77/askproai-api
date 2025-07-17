@@ -43,6 +43,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->middleware('api')
                 ->group(base_path('routes/webhooks.php'));
                 
+            // Load Portal API routes
+            require base_path('routes/api-portal.php');
+            
+            // Load Admin API routes
+            Route::prefix('admin-api')
+                ->middleware(['api', 'auth:sanctum'])
+                ->group(base_path('routes/api-admin.php'));
+                
             // Load API v2 routes - temporarily disabled due to missing controllers
             // Route::prefix('api')
             //     ->middleware('api')
@@ -54,11 +62,8 @@ return Application::configure(basePath: dirname(__DIR__))
         /* ---------------------------------------------------------
          |  Global Middleware (runs on every request)
          * -------------------------------------------------------- */
-        // Replace Laravel's StartSession with our fixed version
-        $middleware->replace(
-            \Illuminate\Session\Middleware\StartSession::class,
-            \App\Http\Middleware\FixStartSession::class
-        );
+        // Use Laravel's default StartSession middleware
+        // Note: FixStartSession was removed as it was causing authentication failures
         
         // Add middleware in reverse order since prepend adds to the beginning
         $middleware->prepend(\App\Http\Middleware\TrustProxies::class);
@@ -77,6 +82,50 @@ return Application::configure(basePath: dirname(__DIR__))
          |  WEB-Gruppe  (Standard-Middleware für Browser-Requests)
          * -------------------------------------------------------- */
         // Removed FixLivewireAssets middleware - causing issues
+        
+        // Add Inertia middleware to web group
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+        ]);
+        
+        /* ---------------------------------------------------------
+         |  PORTAL-Gruppe  (Business Portal specific middleware)
+         * -------------------------------------------------------- */
+        $middleware->group('portal', [
+            \App\Http\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+        
+        /* ---------------------------------------------------------
+         |  BUSINESS-PORTAL-Gruppe  (Business Portal specific middleware)
+         * -------------------------------------------------------- */
+        $middleware->group('business-portal', [
+            \App\Http\Middleware\PortalSessionConfig::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\RefreshCsrfTokenForPortal::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+        
+        /* ---------------------------------------------------------
+         |  BUSINESS-API-Gruppe  (Business API specific middleware)
+         * -------------------------------------------------------- */
+        $middleware->group('business-api', [
+            \App\Http\Middleware\PortalSessionConfig::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\SharePortalSession::class,
+            'throttle:api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
 
         /* ---------------------------------------------------------
          |  API-Gruppe  (typisch für stateless Requests / SPA)
@@ -144,7 +193,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
             /* 🏢 Portal Middleware */
             'portal.auth' => \App\Http\Middleware\PortalAuthenticate::class,
+            'portal.auth.api' => \App\Http\Middleware\PortalApiAuth::class,
             'portal.permission' => \App\Http\Middleware\PortalPermission::class,
+            'portal.api.cors' => \App\Http\Middleware\PortalApiCors::class,
+            'portal.session' => \App\Http\Middleware\PortalSessionConfig::class,
+            
+            /* 👤 Admin */
+            'admin.session' => \App\Http\Middleware\AdminSessionConfig::class,
+            'admin.impersonation' => \App\Http\Middleware\AdminImpersonation::class,
+            
+            /* ⚛️ Inertia.js Middleware */
+            'inertia' => \App\Http\Middleware\HandleInertiaRequests::class,
 
             /* ── Laravel-Standard ─────────────────────────────── */
             'auth'              => \App\Http\Middleware\Authenticate::class,

@@ -10,7 +10,7 @@ return new class extends CompatibleMigration
     {
         $this->createTableIfNotExists('integrations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kunde_id')->constrained('kunden')->onDelete('cascade');
+            $table->foreignId('kunde_id')->constrained('customers')->onDelete('cascade');
             $table->string('system');
             $this->addJsonColumn($table, 'zugangsdaten', false);
             $table->timestamps();

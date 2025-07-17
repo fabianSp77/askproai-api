@@ -21,6 +21,7 @@
         "filament/widgets": "3.3.14",
         "giggsey/libphonenumber-for-php": "*",
         "illuminate/view": "*",
+        "inertiajs/inertia-laravel": "^1.0",
         "laravel/fortify": "^1.27",
         "laravel/framework": "^11.0",
         "laravel/horizon": "^5.31",
@@ -64,7 +65,9 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Helpers/features.php"
+            "app/Helpers/features.php",
+            "app/Helpers/PortalDisplayHelper.php",
+            "app/helpers.php"
         ]
     },
     "autoload-dev": {
@@ -106,6 +109,18 @@
         ],
         "test:coverage": [
             "@php artisan test --coverage --min=80"
+        ],
+        "test:unit": [
+            "@php artisan test --testsuite=Unit"
+        ],
+        "test:feature": [
+            "@php artisan test --testsuite=Feature"
+        ],
+        "test:integration": [
+            "@php artisan test --testsuite=Integration"
+        ],
+        "test:parallel": [
+            "@php artisan test --parallel"
         ],
         "quality": [
             "@pint:test",

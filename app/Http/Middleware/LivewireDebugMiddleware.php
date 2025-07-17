@@ -11,7 +11,7 @@ class LivewireDebugMiddleware
     public function handle(Request $request, Closure $next)
     {
         // Only debug Livewire requests
-        if ($request->path() \!== 'livewire/update') {
+        if ($request->path() !== 'livewire/update') {
             return $next($request);
         }
 
@@ -45,4 +45,3 @@ class LivewireDebugMiddleware
         }
     }
 }
-EOF < /dev/null

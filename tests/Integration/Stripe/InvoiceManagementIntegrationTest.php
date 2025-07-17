@@ -26,7 +26,7 @@ class InvoiceManagementIntegrationTest extends TestCase
     protected User $admin;
     protected Company $company;
     protected StripeInvoiceService $stripeService;
-    protected $stripeMock;
+    protected \Tests\Mocks\StripeServiceMock $stripeMock;
 
     protected function setUp(): void
     {

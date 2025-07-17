@@ -29,6 +29,11 @@ class GlobalFilterWidget extends Widget
     
     protected static ?int $sort = -1; // Immer ganz oben
     
+    public static function canView(): bool
+    {
+        return true; // Always show this widget
+    }
+    
     public bool $showDatePicker = false;
     
     public function mount(): void

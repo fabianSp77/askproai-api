@@ -67,8 +67,8 @@
             ]);
         }
         
-        // Add notes (if relation exists)
-        if (method_exists($customer, 'notes')) {
+        // Add notes (if relation exists and has data)
+        if (method_exists($customer, 'notes') && $customer->notes !== null) {
             foreach ($customer->notes as $note) {
                 $events->push([
                     'date' => $note->created_at,

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\CheckAutoTopupJob;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,12 +18,19 @@ class CallCharge extends Model
         'amount_charged',
         'balance_transaction_id',
         'charged_at',
+        'refunded_amount',
+        'refund_status',
+        'refunded_at',
+        'refund_reason',
+        'refund_transaction_id',
     ];
 
     protected $casts = [
         'rate_per_minute' => 'decimal:4',
         'amount_charged' => 'decimal:2',
+        'refunded_amount' => 'decimal:2',
         'charged_at' => 'datetime',
+        'refunded_at' => 'datetime',
     ];
 
     // Relationships
@@ -41,6 +49,11 @@ class CallCharge extends Model
         return $this->belongsTo(BalanceTransaction::class, 'balance_transaction_id');
     }
 
+    public function refundTransaction()
+    {
+        return $this->belongsTo(BalanceTransaction::class, 'refund_transaction_id');
+    }
+
     // Scopes
     public function scopeForPeriod($query, $startDate, $endDate)
     {
@@ -50,6 +63,16 @@ class CallCharge extends Model
     public function scopeForCompany($query, $companyId)
     {
         return $query->where('company_id', $companyId);
+    }
+
+    public function scopeRefunded($query)
+    {
+        return $query->where('refund_status', '!=', 'none');
+    }
+
+    public function scopeNotRefunded($query)
+    {
+        return $query->where('refund_status', 'none');
     }
 
     // Accessors
@@ -73,6 +96,21 @@ class CallCharge extends Model
     public function getFormattedRateAttribute()
     {
         return number_format($this->rate_per_minute, 2, ',', '.') . ' €/Min';
+    }
+
+    public function getIsRefundedAttribute()
+    {
+        return $this->refund_status !== 'none';
+    }
+
+    public function getNetAmountAttribute()
+    {
+        return $this->amount_charged - $this->refunded_amount;
+    }
+
+    public function getFormattedNetAmountAttribute()
+    {
+        return number_format($this->net_amount, 2, ',', '.') . ' €';
     }
 
     // Static Methods
@@ -122,7 +160,7 @@ class CallCharge extends Model
             );
 
             // Create charge record
-            return self::create([
+            $charge = self::create([
                 'call_id' => $call->id,
                 'company_id' => $company->id,
                 'duration_seconds' => $call->duration_sec,
@@ -131,6 +169,13 @@ class CallCharge extends Model
                 'balance_transaction_id' => $transaction->id,
                 'charged_at' => now(),
             ]);
+            
+            // Dispatch auto-topup check job
+            CheckAutoTopupJob::dispatch($company, $amountToCharge)
+                ->onQueue('default')
+                ->delay(now()->addSeconds(5)); // Small delay to ensure transaction is committed
+            
+            return $charge;
         } catch (\Exception $e) {
             // Log error
             \Log::error('Failed to charge call', [

@@ -10,6 +10,8 @@ use App\Models\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use App\Support\InertiaFacade as Inertia;
 
 class DashboardController extends Controller
 {
@@ -17,6 +19,33 @@ class DashboardController extends Controller
      * Show portal dashboard
      */
     public function index()
+    {
+        // Check if React version is requested
+        if (request()->query('react') === 'true') {
+            return $this->indexReact();
+        }
+        
+        return $this->indexBlade();
+    }
+    
+    /**
+     * React version of dashboard
+     */
+    protected function indexReact()
+    {
+        $user = Auth::guard('portal')->user();
+        
+        if (!$user) {
+            return redirect()->route('business.login');
+        }
+        
+        return view('portal.dashboard.react');
+    }
+    
+    /**
+     * Original Blade version
+     */
+    protected function indexBlade()
     {
         // Check admin viewing FIRST - before checking portal user
         if (session('is_admin_viewing') && session('admin_impersonation')) {
@@ -111,14 +140,8 @@ class DashboardController extends Controller
             $teamPerformance = $this->getTeamPerformance($user);
         }
         
-        return view('portal.dashboard', compact(
-            'user',
-            'company',
-            'stats',
-            'recentCalls',
-            'upcomingTasks',
-            'teamPerformance'
-        ));
+        // Redirect to React dashboard
+        return redirect()->route('business.dashboard');
     }
     
     /**
@@ -126,13 +149,16 @@ class DashboardController extends Controller
      */
     protected function getStatistics($user)
     {
-        $stats = [];
+        $cacheKey = "portal.stats.{$user->company_id}.{$user->id}";
         
-        // Get company phone numbers for filtering
-        $companyPhoneNumbers = PhoneNumber::where('company_id', $user->company_id)
-            ->where('is_active', true)
-            ->pluck('number')
-            ->toArray();
+        return Cache::remember($cacheKey, 300, function() use ($user) {
+            $stats = [];
+            
+            // Get company phone numbers for filtering
+            $companyPhoneNumbers = PhoneNumber::where('company_id', $user->company_id)
+                ->where('is_active', true)
+                ->pluck('number')
+                ->toArray();
         
         // Call statistics
         if ($user->hasPermission('calls.view_all')) {
@@ -185,7 +211,8 @@ class DashboardController extends Controller
                 ->sum('total');
         }
         
-        return $stats;
+            return $stats;
+        });
     }
     
     /**
@@ -199,7 +226,7 @@ class DashboardController extends Controller
             ->pluck('number')
             ->toArray();
             
-        $query = Call::with(['branch', 'customer'])
+        $query = Call::with(['branch', 'customer', 'callPortalData', 'appointment'])
             ->where('company_id', $user->company_id)
             ->whereIn('to_number', $companyPhoneNumbers);
         
@@ -369,13 +396,7 @@ class DashboardController extends Controller
         // Get team performance (for managers/owners)
         $teamPerformance = $this->getTeamPerformance($user);
         
-        return view('portal.dashboard', compact(
-            'user',
-            'company',
-            'stats',
-            'recentCalls',
-            'upcomingTasks',
-            'teamPerformance'
-        ));
+        // Redirect to React dashboard
+        return redirect()->route('business.dashboard');
     }
 }

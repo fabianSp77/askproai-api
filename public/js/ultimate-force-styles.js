@@ -1,5 +1,5 @@
 // Ultimate Force Modern Styles - The Nuclear Option
-console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
+//console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
 
 (function() {
     'use strict';
@@ -123,14 +123,14 @@ console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
         bodyStyle.textContent = ultimateCSS;
         document.body.appendChild(bodyStyle);
         
-        console.log('💉 Styles injected at HEAD and BODY');
+        //console.log('💉 Styles injected at HEAD and BODY');
     }
     
     // Apply inline styles that OVERRIDE EVERYTHING
     function forceInlineStyles() {
         // Find all function cards
         const cards = document.querySelectorAll('.function-card-modern');
-        console.log(`🎯 Found ${cards.length} function cards to style`);
+        //console.log(`🎯 Found ${cards.length} function cards to style`);
         
         cards.forEach((card, index) => {
             // Remove any existing style attribute and rebuild from scratch
@@ -158,7 +158,7 @@ console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
             // Add a data attribute to track
             card.setAttribute('data-styled', 'ultimate');
             
-            console.log(`✅ Styled card ${index + 1} with ultimate force`);
+            //console.log(`✅ Styled card ${index + 1} with ultimate force`);
         });
         
         // Style badges
@@ -206,7 +206,7 @@ console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
             
             if (badgeStyle) {
                 badge.setAttribute('style', badgeStyle);
-                console.log(`✅ Styled badge: ${text}`);
+                //console.log(`✅ Styled badge: ${text}`);
             }
         });
     }
@@ -229,7 +229,7 @@ console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
             });
             
             if (needsRestyle) {
-                console.log('🔄 Style override detected, reapplying...');
+                //console.log('🔄 Style override detected, reapplying...');
                 forceInlineStyles();
             }
         });
@@ -244,7 +244,7 @@ console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
     
     // The ultimate application function
     function applyUltimateStyles() {
-        console.log('🚀 APPLYING ULTIMATE FORCE STYLES');
+        //console.log('🚀 APPLYING ULTIMATE FORCE STYLES');
         
         // Step 1: Inject CSS everywhere
         injectStylesEverywhere();
@@ -255,7 +255,7 @@ console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
         // Step 3: Setup monitoring
         setTimeout(setupMonitoring, 200);
         
-        console.log('✨ ULTIMATE STYLES APPLIED - THIS SHOULD WORK!');
+        //console.log('✨ ULTIMATE STYLES APPLIED - THIS SHOULD WORK!');
     }
     
     // Apply immediately
@@ -265,7 +265,7 @@ console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
     setInterval(() => {
         const cards = document.querySelectorAll('.function-card-modern:not([data-styled="ultimate"])');
         if (cards.length > 0) {
-            console.log('🔍 Found unstyled cards, applying ultimate force...');
+            //console.log('🔍 Found unstyled cards, applying ultimate force...');
             forceInlineStyles();
         }
     }, 500);
@@ -281,5 +281,5 @@ console.log('💣 ULTIMATE FORCE STYLES ACTIVATED - THIS WILL WORK!');
         }
     });
     
-    console.log('💪 ULTIMATE FORCE STYLES READY - Call applyModernStyles() or wait for auto-apply');
+    //console.log('💪 ULTIMATE FORCE STYLES READY - Call applyModernStyles() or wait for auto-apply');
 })();

@@ -1,40 +1,44 @@
 {
-  "name": "AskProAI Command Intelligence",
-  "short_name": "AskProAI Cmd",
-  "description": "State-of-the-art Command Management für AskProAI und Claude",
-  "start_url": "/claude-command-intelligence.html",
+  "name": "AskProAI Business Portal",
+  "short_name": "AskProAI",
+  "description": "AI-gestütztes Business Portal für Anrufverwaltung und Terminbuchungen",
+  "start_url": "/business/dashboard",
   "display": "standalone",
-  "background_color": "#F9FAFB",
-  "theme_color": "#3B82F6",
-  "orientation": "portrait-primary",
+  "background_color": "#f5f5f5",
+  "theme_color": "#667eea",
+  "orientation": "portrait",
+  "scope": "/business/",
+  "lang": "de-DE",
+  "dir": "ltr",
+  "categories": ["business", "productivity"],
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 fill=%27%233B82F6%27/%3E%3Ctext x=%27256%27 y=%27320%27 font-family=%27Arial%27 font-size=%27256%27 fill=%27white%27 text-anchor=%27middle%27%3E🚀%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 fill=%27%23667eea%27 rx=%2764%27/%3E%3Ctext x=%27256%27 y=%27320%27 font-family=%27Arial%27 font-size=%27256%27 fill=%27white%27 text-anchor=%27middle%27%3E📞%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 192 192%27%3E%3Crect width=%27192%27 height=%27192%27 fill=%27%23667eea%27 rx=%2724%27/%3E%3Ctext x=%2796%27 y=%27120%27 font-family=%27Arial%27 font-size=%2796%27 fill=%27white%27 text-anchor=%27middle%27%3E📞%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
   "shortcuts": [
     {
-      "name": "Quick Setup",
-      "short_name": "Setup",
-      "description": "Neuen Kunden einrichten",
-      "url": "/claude-command-intelligence.html?action=quick-setup"
+      "name": "Neue Anrufe",
+      "short_name": "Anrufe",
+      "description": "Direkt zu neuen Anrufen",
+      "url": "/business/calls?filter=new"
     },
     {
-      "name": "System Health",
-      "short_name": "Health",
-      "description": "System Health Check",
-      "url": "/claude-command-intelligence.html?action=health-check"
-    },
-    {
-      "name": "Emergency Fix",
-      "short_name": "Fix",
-      "description": "Emergency Fix ausführen",
-      "url": "/claude-command-intelligence.html?action=emergency-fix"
+      "name": "Termine heute",
+      "short_name": "Termine",
+      "description": "Heutige Termine anzeigen",
+      "url": "/business/appointments?date=today"
     }
   ],
-  "categories": ["productivity", "utilities", "developer"],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "related_applications": []
 }

@@ -1,0 +1,108 @@
+<?php
+
+namespace App\Scopes;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+
+class TenantScope implements Scope
+{
+    /**
+     * Apply the scope to a given Eloquent query builder.
+     * Uses explicit session-based company context instead of volatile auth data
+     */
+    public function apply(Builder $builder, Model $model)
+    {
+        // Skip if we're in a command or if explicitly disabled
+        if (app()->runningInConsole() || config('app.disable_tenant_scope')) {
+            return;
+        }
+        
+        // Get company ID from multiple sources (in priority order)
+        $companyId = $this->resolveCompanyId();
+        
+        if ($companyId) {
+            $builder->where($model->getTable() . '.company_id', $companyId);
+            
+            // Log for debugging
+            if (config('app.debug')) {
+                \Log::debug('TenantScope applied', [
+                    'model' => get_class($model),
+                    'company_id' => $companyId,
+                    'source' => $this->getCompanyIdSource(),
+                ]);
+            }
+        }
+    }
+    
+    /**
+     * Resolve company ID from multiple sources
+     */
+    protected function resolveCompanyId(): ?int
+    {
+        // 1. Explicit session-based company ID (highest priority)
+        if ($companyId = Session::get('active_company_id')) {
+            $this->companyIdSource = 'session:active_company_id';
+            return (int) $companyId;
+        }
+        
+        // 2. Portal-specific company ID
+        if ($companyId = Session::get('portal_company_id')) {
+            $this->companyIdSource = 'session:portal_company_id';
+            return (int) $companyId;
+        }
+        
+        // 3. Admin impersonation context
+        $impersonation = Session::get('admin_impersonation');
+        if ($impersonation && isset($impersonation['company_id'])) {
+            $this->companyIdSource = 'session:admin_impersonation';
+            return (int) $impersonation['company_id'];
+        }
+        
+        // 4. Current portal user (Business Portal)
+        if (Auth::guard('portal')->check()) {
+            $user = Auth::guard('portal')->user();
+            if ($user && $user->company_id) {
+                $this->companyIdSource = 'auth:portal';
+                // Cache in session for performance
+                Session::put('portal_company_id', $user->company_id);
+                return (int) $user->company_id;
+            }
+        }
+        
+        // 5. Current admin user (Admin Portal)
+        if (Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+            if ($user && method_exists($user, 'company_id')) {
+                $companyId = $user->company_id;
+                if ($companyId) {
+                    $this->companyIdSource = 'auth:web';
+                    return (int) $companyId;
+                }
+            }
+        }
+        
+        // 6. Default company (for single-tenant setups)
+        if ($defaultCompany = config('app.default_company_id')) {
+            $this->companyIdSource = 'config:default';
+            return (int) $defaultCompany;
+        }
+        
+        // No company context found
+        $this->companyIdSource = 'none';
+        return null;
+    }
+    
+    /**
+     * Get the source of the company ID for debugging
+     */
+    protected function getCompanyIdSource(): string
+    {
+        return $this->companyIdSource ?? 'unknown';
+    }
+    
+    protected $companyIdSource;
+}

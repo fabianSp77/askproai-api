@@ -56,7 +56,24 @@ class Customer extends Authenticatable
         'preferred_appointment_time',
         'loyalty_tier',
         'vip_since',
-        'special_requirements'
+        'special_requirements',
+        // Neue Felder für Kunden-Tracking
+        'company_name',
+        'customer_number',
+        'phone_variants',
+        'matching_confidence',
+        'call_count',
+        'last_call_at',
+        // Customer Journey Felder
+        'journey_status',
+        'journey_status_updated_at',
+        'journey_history',
+        'last_appointment_at',
+        'completed_appointments',
+        'cancelled_appointments',
+        'no_show_appointments',
+        'total_revenue',
+        'internal_notes'
     ];
     
     protected $casts = [
@@ -84,7 +101,20 @@ class Customer extends Authenticatable
         'last_appointment_date' => 'date',
         'communication_preferences' => 'array',
         'vip_since' => 'datetime',
-        'special_requirements' => 'array'
+        'special_requirements' => 'array',
+        // Customer tracking casts
+        'phone_variants' => 'array',
+        'matching_confidence' => 'integer',
+        'call_count' => 'integer',
+        'last_call_at' => 'datetime',
+        // Customer Journey casts
+        'journey_status_updated_at' => 'datetime',
+        'journey_history' => 'array',
+        'last_appointment_at' => 'datetime',
+        'completed_appointments' => 'integer',
+        'cancelled_appointments' => 'integer',
+        'no_show_appointments' => 'integer',
+        'total_revenue' => 'decimal:2',
     ];
 
     protected $hidden = [
@@ -134,10 +164,7 @@ class Customer extends Authenticatable
         });
     }
 
-    public function branches(): HasMany
-    {
-        return $this->hasMany(Branch::class);
-    }
+    // REMOVED: branches() relationship - customers don't own branches
     
     public function appointments(): HasMany
     {
@@ -189,6 +216,33 @@ class Customer extends Authenticatable
     public function gdprRequests()
     {
         return $this->hasMany(GdprRequest::class);
+    }
+    
+    /**
+     * Get related customers (same person/company)
+     */
+    public function relatedCustomers()
+    {
+        return $this->hasMany(CustomerRelationship::class, 'customer_id');
+    }
+    
+    /**
+     * Get customers related to this one
+     */
+    public function relatedToCustomers()
+    {
+        return $this->hasMany(CustomerRelationship::class, 'related_customer_id');
+    }
+    
+    /**
+     * Get all relationships (bidirectional)
+     */
+    public function getAllRelatedCustomers()
+    {
+        $outgoing = $this->relatedCustomers()->with('relatedCustomer')->get();
+        $incoming = $this->relatedToCustomers()->with('customer')->get();
+        
+        return $outgoing->merge($incoming);
     }
 
     /**

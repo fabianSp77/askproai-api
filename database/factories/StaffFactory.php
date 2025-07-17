@@ -12,7 +12,7 @@ class StaffFactory extends Factory
         return [
             'name' => $this->faker->name,
             'email' => $this->faker->unique()->safeEmail,
-            'phone' => $this->faker->phoneNumber,
+            'phone' => '+49' . $this->faker->numerify('30#######'),
             'active' => true,
             'company_id' => \App\Models\Company::factory(),
             'branch_id' => Branch::factory(),

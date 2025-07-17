@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .info { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+        .error { background: #ffcccc; padding: 10px; margin: 10px 0; }
+        .success { background: #ccffcc; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel Debug</h1>
+    
+    <div id="status">Checking...</div>
+    
+    <script>
+        const status = document.getElementById('status');
+        
+        // Check if we can access the admin panel
+        fetch('/admin', {
+            credentials: 'include',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html'
+            }
+        })
+        .then(response => {
+            status.innerHTML = `
+                <div class="info">
+                    <h3>Response Info:</h3>
+                    <p>Status: ${response.status}</p>
+                    <p>Status Text: ${response.statusText}</p>
+                    <p>Type: ${response.type}</p>
+                    <p>URL: ${response.url}</p>
+                </div>
+            `;
+            
+            return response.text();
+        })
+        .then(html => {
+            // Check if HTML contains expected elements
+            const hasFilament = html.includes('filament');
+            const hasLivewire = html.includes('livewire');
+            const hasCSRF = html.includes('csrf-token');
+            const htmlLength = html.length;
+            
+            status.innerHTML += `
+                <div class="${htmlLength > 1000 ? 'success' : 'error'}">
+                    <h3>Content Analysis:</h3>
+                    <p>HTML Length: ${htmlLength} bytes</p>
+                    <p>Contains Filament: ${hasFilament ? '✓' : '✗'}</p>
+                    <p>Contains Livewire: ${hasLivewire ? '✓' : '✗'}</p>
+                    <p>Contains CSRF Token: ${hasCSRF ? '✓' : '✗'}</p>
+                </div>
+            `;
+            
+            // Check for any script errors
+            if (html.includes('</body>')) {
+                status.innerHTML += '<div class="success">HTML structure looks complete</div>';
+            }
+            
+            // Try to find any error messages
+            const errorMatch = html.match(/error|exception|failed/gi);
+            if (errorMatch) {
+                status.innerHTML += `<div class="info">Found ${errorMatch.length} potential error keywords</div>`;
+            }
+            
+            // Show first 500 chars of body content
+            const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/);
+            if (bodyMatch) {
+                const bodyContent = bodyMatch[1].substring(0, 500);
+                status.innerHTML += `
+                    <div class="info">
+                        <h3>Body Preview:</h3>
+                        <pre>${bodyContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            status.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+        });
+        
+        // Also check console errors
+        window.addEventListener('error', function(e) {
+            status.innerHTML += `<div class="error">JavaScript Error: ${e.message} at ${e.filename}:${e.lineno}</div>`;
+        });
+    </script>
+    
+    <hr>
+    <h2>Direct Links:</h2>
+    <ul>
+        <li><a href="/admin" target="_blank">Admin Panel</a></li>
+        <li><a href="/admin-simple.php" target="_blank">Simple Admin (Backup)</a></li>
+        <li><a href="/login-standalone.php" target="_blank">Standalone Login</a></li>
+    </ul>
+</body>
+</html>

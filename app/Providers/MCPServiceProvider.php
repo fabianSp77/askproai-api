@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\MCP\MCPOrchestrator;
+use App\Services\MCPAutoDiscoveryService;
 use App\Services\MCP\WebhookMCPServer;
 use App\Services\MCP\CalcomMCPServer;
 use App\Services\MCP\DatabaseMCPServer;
@@ -30,6 +31,14 @@ use App\Services\MCP\RetellCustomFunctionMCPServer;
 use App\Services\MCP\AppointmentManagementMCPServer;
 use App\Services\MCP\AppointmentMCPServer;
 use App\Services\MCP\CustomerMCPServer;
+use App\Services\MCP\GitHubMCPServer;
+use App\Services\MCP\ApidogMCPServer;
+use App\Services\MCP\SequentialThinkingMCPServer;
+use App\Services\MCP\DatabaseQueryMCPServer;
+use App\Services\MCP\NotionMCPServer;
+use App\Services\MCP\MemoryBankMCPServer;
+use App\Services\MCP\FigmaMCPServer;
+use App\Services\MCP\AuthenticationMCPServer;
 use Illuminate\Support\Facades\Log;
 
 class MCPServiceProvider extends ServiceProvider
@@ -66,6 +75,13 @@ class MCPServiceProvider extends ServiceProvider
             );
         });
         
+        // Register MCP Auto Discovery Service
+        $this->app->singleton(MCPAutoDiscoveryService::class, function ($app) {
+            return new MCPAutoDiscoveryService(
+                $app->make(MCPOrchestrator::class)
+            );
+        });
+        
         // Register individual MCP servers
         $this->app->singleton(WebhookMCPServer::class);
         $this->app->singleton(CalcomMCPServer::class);
@@ -94,6 +110,14 @@ class MCPServiceProvider extends ServiceProvider
         $this->app->singleton(AppointmentManagementMCPServer::class);
         $this->app->singleton(AppointmentMCPServer::class);
         $this->app->singleton(CustomerMCPServer::class);
+        $this->app->singleton(GitHubMCPServer::class);
+        $this->app->singleton(ApidogMCPServer::class);
+        $this->app->singleton(SequentialThinkingMCPServer::class);
+        $this->app->singleton(DatabaseQueryMCPServer::class);
+        $this->app->singleton(NotionMCPServer::class);
+        $this->app->singleton(MemoryBankMCPServer::class);
+        $this->app->singleton(FigmaMCPServer::class);
+        $this->app->singleton(AuthenticationMCPServer::class);
     }
 
     /**
@@ -115,6 +139,8 @@ class MCPServiceProvider extends ServiceProvider
                         $orchestrator->warmup();
                     }
                     
+                    // TEMPORARILY DISABLED - Causes TenantScope issues
+                    /*
                     // Warm cache only if we have time left
                     if ((time() - $startTime) < $timeout && class_exists(MCPCacheWarmer::class)) {
                         try {
@@ -126,6 +152,7 @@ class MCPServiceProvider extends ServiceProvider
                             Log::debug('MCPCacheWarmer not available', ['error' => $e->getMessage()]);
                         }
                     }
+                    */
                     
                     // Skip connection pool configuration - method doesn't exist
                     // The MCPConnectionPoolManager optimizes on demand

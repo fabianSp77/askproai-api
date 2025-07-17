@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Admin Login Test</title>
+</head>
+<body>
+    <h1>Simple Admin Login Test</h1>
+    
+    <div>
+        <label>Email: <input type="email" id="email" value="admin@askproai.de"></label><br>
+        <label>Password: <input type="password" id="password" value="admin123"></label><br>
+        <button onclick="testLogin()">Test Login</button>
+    </div>
+    
+    <h2>Results:</h2>
+    <pre id="results"></pre>
+    
+    <script>
+    async function testLogin() {
+        const results = document.getElementById('results');
+        results.textContent = 'Testing login...\n';
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        try {
+            results.textContent += '\nSending login request...\n';
+            const response = await fetch('/api/admin/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+            
+            results.textContent += 'Response Status: ' + response.status + '\n';
+            
+            const text = await response.text();
+            results.textContent += '\nResponse Body:\n' + text + '\n';
+            
+            if (response.ok) {
+                const data = JSON.parse(text);
+                results.textContent += '\n✅ SUCCESS! Token: ' + data.token + '\n';
+                
+                // Save token
+                localStorage.setItem('admin_token', data.token);
+                results.textContent += '\nToken saved to localStorage\n';
+                results.textContent += '\nYou can now go to: /admin-react\n';
+            } else {
+                results.textContent += '\n❌ Login failed\n';
+            }
+            
+        } catch (error) {
+            results.textContent += '\n❌ ERROR: ' + error.message + '\n';
+            results.textContent += 'Stack: ' + error.stack + '\n';
+        }
+    }
+    </script>
+</body>
+</html>

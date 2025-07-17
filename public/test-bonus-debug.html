@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bonus Debug Test</title>
+</head>
+<body>
+    <h1>Bonus Calculation Debug</h1>
+    <input type="number" id="testAmount" value="1000" />
+    <button onclick="testCalculation()">Test Calculation</button>
+    <div id="results"></div>
+
+    <script>
+        function testCalculation() {
+            const amountNum = parseFloat(document.getElementById('testAmount').value);
+            let bonusPercentage = 0;
+            
+            // This is the calculation from the page
+            if (amountNum >= 5000) {
+                bonusPercentage = 50;
+            } else if (amountNum >= 3000) {
+                bonusPercentage = 40;
+            } else if (amountNum >= 2000) {
+                bonusPercentage = 30;
+            } else if (amountNum >= 1000) {
+                bonusPercentage = 20;
+            } else if (amountNum >= 500) {
+                bonusPercentage = 15;
+            } else if (amountNum >= 250) {
+                bonusPercentage = 10;
+            }
+            
+            const bonusAmount = amountNum * (bonusPercentage / 100);
+            const total = amountNum + bonusAmount;
+            
+            document.getElementById('results').innerHTML = `
+                <p>Amount: ${amountNum}€</p>
+                <p>Bonus Percentage: ${bonusPercentage}%</p>
+                <p>Bonus Amount: ${bonusAmount}€</p>
+                <p>Total: ${total}€</p>
+            `;
+        }
+        
+        // Test on load
+        testCalculation();
+    </script>
+</body>
+</html>

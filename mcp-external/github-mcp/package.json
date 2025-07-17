@@ -1,0 +1,14 @@
+{
+  "name": "github-mcp-server",
+  "version": "1.0.0",
+  "description": "GitHub MCP Server for AskProAI",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "@octokit/rest": "^20.0.2",
+    "dotenv": "^16.4.5"
+  }
+}

@@ -33,11 +33,11 @@ class InsightsActionsWidget extends Widget
         $insights = $this->generateInsights();
         $quickActions = $this->getQuickActions();
         
-        return [
+        return array_merge(parent::getViewData(), [
             'insights' => $insights,
             'quickActions' => $quickActions,
             'hasUrgentIssues' => $insights->where('priority', 'urgent')->isNotEmpty(),
-        ];
+        ]);
     }
     
     protected function generateInsights(): Collection

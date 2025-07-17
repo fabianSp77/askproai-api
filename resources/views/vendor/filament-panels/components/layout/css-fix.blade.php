@@ -1,12 +1,33 @@
 {{-- Emergency CSS Fix for Filament Layout --}}
 <link rel="stylesheet" href="{{ asset('css/filament/filament/app.css') }}">
 <link rel="stylesheet" href="{{ asset('css/filament-hotfix.css') }}">
+<link rel="stylesheet" href="{{ asset('css/filament-hotfix-override.css') }}">
+<link rel="stylesheet" href="{{ asset('css/admin-emergency-fix.css') }}">
+
+{{-- Dropdown Close Fix - Must load AFTER emergency fixes --}}
+<link rel="stylesheet" href="{{ asset('css/dropdown-close-fix.css') }}">
 
 <style>
     /* Emergency inline styles to ensure basic layout */
     body {
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        opacity: 1 !important;
+        visibility: visible !important;
+        background-color: #f9fafb !important;
+    }
+    
+    /* Force everything to be visible */
+    body * {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Remove any potential overlays */
+    .loading-overlay,
+    .spinner-overlay,
+    [wire\:loading] {
+        display: none !important;
     }
     
     .fi-layout {
@@ -56,3 +77,15 @@
         }
     }
 </style>
+
+{{-- TEMPORARY: Alpine.js script removed for demo to prevent conflicts --}}
+{{-- Alpine is already initialized by Livewire/Filament --}}
+
+{{-- Load additional fixes for admin portal --}}
+@php
+    $appPortal = session('current_portal', 'admin');
+@endphp
+
+@if($appPortal === 'admin' && request()->routeIs('filament.admin.*'))
+    {{-- Scripts removed - unified-ui-fix.js handles all UI fixes globally in base.blade.php --}}
+@endif

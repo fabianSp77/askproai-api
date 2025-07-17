@@ -19,12 +19,16 @@ class BalanceTopup extends Model
         'stripe_response',
         'initiated_by',
         'paid_at',
+        'metadata',
+        'invoice_id',
+        'stripe_invoice_id',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'stripe_response' => 'json',
         'paid_at' => 'datetime',
+        'metadata' => 'json',
     ];
 
     // Status Constants
@@ -49,6 +53,11 @@ class BalanceTopup extends Model
     {
         return $this->hasOne(BalanceTransaction::class, 'reference_id')
                     ->where('reference_type', 'topup');
+    }
+    
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
     }
 
     // Scopes

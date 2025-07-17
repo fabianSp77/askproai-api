@@ -11,7 +11,7 @@ class CompanyFactory extends Factory
         $name = $this->faker->company;
         return [
             'name' => $name,
-            'slug' => \Illuminate\Support\Str::slug($name),
+            'slug' => \Illuminate\Support\Str::slug($name) . '-' . $this->faker->unique()->randomNumber(5),
             'email' => $this->faker->companyEmail,
             'phone' => $this->faker->phoneNumber,
             'address' => $this->faker->address,

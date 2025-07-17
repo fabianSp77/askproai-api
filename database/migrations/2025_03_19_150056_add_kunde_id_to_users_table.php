@@ -10,7 +10,7 @@ return new class extends CompatibleMigration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('kunde_id')->nullable()
-                  ->constrained('kunden')->cascadeOnDelete();
+                  ->constrained('customers')->cascadeOnDelete();
         });
     }
 

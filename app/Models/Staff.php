@@ -27,6 +27,7 @@ class Staff extends Model
         'phone',
         'external_id',
         'active',
+        'is_active',
         'is_bookable',
         'calendar_mode',
         'calcom_user_id',
@@ -41,6 +42,7 @@ class Staff extends Model
 
     protected $casts = [
         'active' => 'boolean',
+        'is_active' => 'boolean',
         'is_bookable' => 'boolean',
         'workable_branches' => 'array',
     ];
@@ -97,7 +99,7 @@ class Staff extends Model
     // Many-to-Many Beziehung zu Event Types
     public function eventTypes()
     {
-        return $this->belongsToMany(CalcomEventType::class, 'staff_event_types', 'staff_id', 'event_type_id')
+        return $this->belongsToMany(CalcomEventType::class, 'staff_event_types', 'staff_id', 'calcom_event_type_id')
             ->using(StaffEventType::class)
             ->withPivot([
                 'calcom_user_id',

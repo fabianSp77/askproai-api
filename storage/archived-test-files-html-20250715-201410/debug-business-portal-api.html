@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Portal API Debug</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #495057;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Business Portal API Debug</h1>
+        
+        <div class="test-section">
+            <h2>1. Session & Auth Status</h2>
+            <button onclick="checkSession()">Check Session</button>
+            <div id="session-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. API Endpoints Test</h2>
+            <button onclick="testUserPermissions()">Test User/Permissions</button>
+            <button onclick="testCallsApi()">Test Calls API</button>
+            <button onclick="testBillingApi()">Test Billing API</button>
+            <div id="api-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Direct API Call (with credentials)</h2>
+            <button onclick="directApiCall()">Direct Call to /business/api/calls</button>
+            <div id="direct-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Check Cookies</h2>
+            <button onclick="checkCookies()">List All Cookies</button>
+            <div id="cookies-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/business/api';
+
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            element.className = 'result ' + className;
+            element.textContent = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+        }
+
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/debug/session', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                log('session-result', data, response.ok ? 'success' : 'error');
+            } catch (error) {
+                log('session-result', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testUserPermissions() {
+            try {
+                const response = await fetch(API_BASE + '/user/permissions', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = {
+                        error: 'Non-JSON response',
+                        contentType: contentType,
+                        status: response.status,
+                        statusText: response.statusText,
+                        body: await response.text()
+                    };
+                }
+                
+                log('api-result', data, response.ok ? 'success' : 'error');
+            } catch (error) {
+                log('api-result', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testCallsApi() {
+            try {
+                const response = await fetch(API_BASE + '/calls?page=1&per_page=10', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = {
+                        error: 'Non-JSON response',
+                        contentType: contentType,
+                        status: response.status,
+                        statusText: response.statusText,
+                        htmlPreview: (await response.text()).substring(0, 500) + '...'
+                    };
+                }
+                
+                log('api-result', data, response.ok ? 'success' : 'error');
+            } catch (error) {
+                log('api-result', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function testBillingApi() {
+            try {
+                const response = await fetch(API_BASE + '/billing/usage', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const contentType = response.headers.get('content-type');
+                let data;
+                
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    data = {
+                        error: 'Non-JSON response',
+                        contentType: contentType,
+                        status: response.status,
+                        statusText: response.statusText
+                    };
+                }
+                
+                log('api-result', data, response.ok ? 'success' : 'error');
+            } catch (error) {
+                log('api-result', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function directApiCall() {
+            try {
+                // Get CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                                 getCookie('XSRF-TOKEN');
+                
+                const response = await fetch('/business/api/calls', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+                
+                let result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: {}
+                };
+                
+                // Get all headers
+                for (let [key, value] of response.headers) {
+                    result.headers[key] = value;
+                }
+                
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    result.data = await response.json();
+                } else {
+                    result.htmlPreview = (await response.text()).substring(0, 1000);
+                }
+                
+                log('direct-result', result, response.ok ? 'success' : 'error');
+            } catch (error) {
+                log('direct-result', 'Error: ' + error.message + '\n\nStack: ' + error.stack, 'error');
+            }
+        }
+
+        function checkCookies() {
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            const cookieData = {
+                count: cookies.length,
+                cookies: cookies,
+                parsed: {}
+            };
+            
+            cookies.forEach(cookie => {
+                const [name, value] = cookie.split('=');
+                if (name) {
+                    cookieData.parsed[name] = value;
+                }
+            });
+            
+            log('cookies-result', cookieData, 'success');
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        // Add debug endpoint
+        const debugEndpoint = document.createElement('script');
+        debugEndpoint.textContent = `
+            // Create debug endpoint if not exists
+            if (!window.debugSessionEndpoint) {
+                window.debugSessionEndpoint = true;
+                
+                // Override fetch to add debug headers
+                const originalFetch = window.fetch;
+                window.fetch = function(...args) {
+                    console.log('Fetch intercepted:', args[0]);
+                    return originalFetch.apply(this, args);
+                };
+            }
+        `;
+        document.head.appendChild(debugEndpoint);
+    </script>
+</body>
+</html>

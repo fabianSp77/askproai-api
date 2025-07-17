@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI - Neue React Portale</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <div class="gradient-bg text-white py-16">
+            <div class="max-w-6xl mx-auto px-4">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">AskProAI React Migration</h1>
+                <p class="text-xl opacity-90">Willkommen zur neuen Generation unserer Portale</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-6xl mx-auto px-4 py-12">
+            <!-- Status Alert -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+                <h2 class="text-lg font-semibold text-blue-900 mb-2">📋 Aktueller Status</h2>
+                <ul class="space-y-2 text-blue-800">
+                    <li>✅ React-Architektur vollständig implementiert</li>
+                    <li>✅ Demo-Versionen verfügbar</li>
+                    <li>⚠️ SSL-Zertifikate für Staging-Domains pending (DNS zeigt auf anderen Server)</li>
+                    <li>✅ Alternative Demo-Links unten verfügbar</li>
+                </ul>
+            </div>
+
+            <!-- Demo Links -->
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <!-- Admin Portal -->
+                <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 gradient-bg rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold">Admin Portal</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">
+                        Verwaltungsoberfläche für Administratoren mit Dashboard, 
+                        Terminverwaltung und Kundendaten.
+                    </p>
+                    <a href="/demo-admin.html" class="inline-flex items-center gap-2 gradient-bg text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity">
+                        Demo ansehen
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Business Portal -->
+                <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold">Business Portal</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">
+                        Kundenportal für Unternehmen mit Anrufstatistiken, 
+                        Terminübersicht und Analysen.
+                    </p>
+                    <a href="/demo-portal.html" class="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors">
+                        Demo ansehen
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h3 class="text-2xl font-bold mb-6">🚀 Neue Features</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Keine Session-Probleme</h4>
+                            <p class="text-sm text-gray-600">Keine 419 Errors mehr</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 bg-green-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Mobile First</h4>
+                            <p class="text-sm text-gray-600">Perfekt auf allen Geräten</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Dark Mode</h4>
+                            <p class="text-sm text-gray-600">Augenschonend arbeiten</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 bg-amber-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Modernes Design</h4>
+                            <p class="text-sm text-gray-600">State of the Art UI/UX</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Perfekte UX</h4>
+                            <p class="text-sm text-gray-600">Intuitiv & schnell</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <div class="w-10 h-10 bg-indigo-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">TypeScript</h4>
+                            <p class="text-sm text-gray-600">Type-safe development</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Info -->
+            <div class="mt-8 bg-gray-100 rounded-xl p-8">
+                <h3 class="text-xl font-bold mb-4">🔧 Technische Details</h3>
+                <div class="space-y-3 text-sm">
+                    <p><strong>Stack:</strong> React 18, Next.js 14, TypeScript 5.3, Tailwind CSS</p>
+                    <p><strong>Architektur:</strong> Turborepo Monorepo mit shared UI Components</p>
+                    <p><strong>Authentication:</strong> JWT mit Laravel Sanctum Backend</p>
+                    <p><strong>Deployment:</strong> PM2 Process Manager, Nginx Reverse Proxy</p>
+                    <p><strong>Status:</strong> Staging-DNS muss noch konfiguriert werden</p>
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="mt-8 text-center">
+                <p class="text-gray-600 mb-4">
+                    Das alte System bleibt unter <a href="https://api.askproai.de/admin" class="text-blue-600 hover:underline">api.askproai.de/admin</a> 
+                    weiterhin verfügbar.
+                </p>
+                <div class="inline-flex items-center gap-2 text-sm text-gray-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Bei Fragen zur DNS-Konfiguration bitte melden
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

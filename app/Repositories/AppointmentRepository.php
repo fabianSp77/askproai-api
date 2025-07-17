@@ -39,7 +39,7 @@ class AppointmentRepository extends BaseRepository
     /**
      * Get appointments for staff member
      */
-    public function getByStaff(int $staffId, ?Carbon $date = null): Collection
+    public function getByStaff(string|int $staffId, ?Carbon $date = null): Collection
     {
         return $this->pushCriteria(function ($query) use ($staffId, $date) {
             $query->where('staff_id', $staffId);
@@ -55,7 +55,7 @@ class AppointmentRepository extends BaseRepository
     /**
      * Get appointments for customer
      */
-    public function getByCustomer(int $customerId, bool $onlyFuture = true): Collection
+    public function getByCustomer(string|int $customerId, bool $onlyFuture = true): Collection
     {
         $query = $this->model->where('customer_id', $customerId);
         
@@ -72,7 +72,7 @@ class AppointmentRepository extends BaseRepository
     /**
      * Get overlapping appointments
      */
-    public function getOverlapping(int $staffId, Carbon $startTime, Carbon $endTime, ?int $excludeId = null): Collection
+    public function getOverlapping(string|int $staffId, Carbon $startTime, Carbon $endTime, string|int|null $excludeId = null): Collection
     {
         $query = $this->model
             ->where('staff_id', $staffId)
@@ -96,7 +96,7 @@ class AppointmentRepository extends BaseRepository
     /**
      * Check if time slot is available
      */
-    public function isTimeSlotAvailable(int $staffId, Carbon $startTime, Carbon $endTime): bool
+    public function isTimeSlotAvailable(string|int $staffId, Carbon $startTime, Carbon $endTime): bool
     {
         return $this->getOverlapping($staffId, $startTime, $endTime)->isEmpty();
     }

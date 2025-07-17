@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI React Status - JETZT LIVE!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Success Header -->
+        <div class="gradient-bg text-white py-12">
+            <div class="max-w-6xl mx-auto px-4 text-center">
+                <div class="inline-flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full mb-4">
+                    <div class="w-2 h-2 bg-white rounded-full pulse"></div>
+                    <span class="text-sm font-medium">LIVE</span>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">React Apps sind JETZT LIVE! 🎉</h1>
+                <p class="text-xl opacity-90">Die neuen React-Portale laufen und sind erreichbar</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="max-w-6xl mx-auto px-4 py-12">
+            <!-- Live Apps -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-green-600">✅ Funktionierende React Apps</h2>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Admin Portal -->
+                    <div class="border-2 border-green-500 rounded-lg p-6">
+                        <h3 class="text-xl font-bold mb-3">Admin Portal (React)</h3>
+                        <a href="https://api.askproai.de/react-admin/" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                            Jetzt öffnen
+                        </a>
+                        <p class="mt-3 text-sm text-gray-600">
+                            URL: <code class="bg-gray-100 px-2 py-1 rounded">https://api.askproai.de/react-admin/</code>
+                        </p>
+                    </div>
+
+                    <!-- Business Portal -->
+                    <div class="border-2 border-green-500 rounded-lg p-6">
+                        <h3 class="text-xl font-bold mb-3">Business Portal (React)</h3>
+                        <a href="https://api.askproai.de/react-portal/" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                            Jetzt öffnen
+                        </a>
+                        <p class="mt-3 text-sm text-gray-600">
+                            URL: <code class="bg-gray-100 px-2 py-1 rounded">https://api.askproai.de/react-portal/</code>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-4 bg-green-50 rounded-lg">
+                    <p class="text-green-800">
+                        <strong>🚀 Die React Apps laufen!</strong> Node.js Server sind mit PM2 gestartet und Nginx leitet die Requests weiter.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Was wurde heute gemacht -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold mb-6">📋 Was wurde heute alles gemacht?</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-green-500 rounded-full flex-shrink-0 flex items-center justify-center mt-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Komplette React-Architektur gebaut</h4>
+                            <p class="text-sm text-gray-600">Monorepo mit Turborepo, TypeScript, ESLint, Tailwind CSS</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-green-500 rounded-full flex-shrink-0 flex items-center justify-center mt-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Admin & Business Portal Apps entwickelt</h4>
+                            <p class="text-sm text-gray-600">Vollständige React-Anwendungen mit modernem UI/UX</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-green-500 rounded-full flex-shrink-0 flex items-center justify-center mt-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Backend API v2 implementiert</h4>
+                            <p class="text-sm text-gray-600">JWT Authentication, CORS, neue API Routes</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-green-500 rounded-full flex-shrink-0 flex items-center justify-center mt-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">Deployment mit PM2 & Nginx</h4>
+                            <p class="text-sm text-gray-600">Production-ready Setup mit Process Management</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-amber-500 rounded-full flex-shrink-0 flex items-center justify-center mt-1">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold">DNS-Problem umgangen</h4>
+                            <p class="text-sm text-gray-600">Alternative Lösung über Subpaths implementiert</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Status -->
+            <div class="bg-gray-100 rounded-xl p-8">
+                <h3 class="text-xl font-bold mb-4">🔧 Technischer Status</h3>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold mb-2">PM2 Prozesse</h4>
+                        <pre class="bg-white p-3 rounded text-xs">askproai-admin    → Port 3001 ✅
+askproai-business → Port 3002 ✅</pre>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold mb-2">Nginx Routing</h4>
+                        <pre class="bg-white p-3 rounded text-xs">/react-admin/  → localhost:3001 ✅
+/react-portal/ → localhost:3002 ✅</pre>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-4 bg-amber-50 rounded-lg">
+                    <p class="text-amber-800 text-sm">
+                        <strong>Hinweis:</strong> Die Staging-Domains (admin-staging.askproai.de) zeigen noch auf einen anderen Server. 
+                        Nutzen Sie die Subpath-URLs oben oder konfigurieren Sie die DNS A-Records.
+                    </p>
+                </div>
+            </div>
+
+            <!-- PM2 Status Check -->
+            <div class="mt-8 text-center">
+                <button onclick="checkStatus()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                    Live-Status prüfen
+                </button>
+                <div id="statusResult" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkStatus() {
+            const result = document.getElementById('statusResult');
+            result.innerHTML = '<p class="text-gray-600">Prüfe Status...</p>';
+            
+            try {
+                const adminResponse = await fetch('https://api.askproai.de/react-admin/');
+                const portalResponse = await fetch('https://api.askproai.de/react-portal/');
+                
+                result.innerHTML = `
+                    <div class="inline-flex items-center gap-4 mt-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 ${adminResponse.ok ? 'bg-green-500' : 'bg-red-500'} rounded-full"></div>
+                            <span>Admin: ${adminResponse.ok ? 'Online' : 'Offline'}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 ${portalResponse.ok ? 'bg-green-500' : 'bg-red-500'} rounded-full"></div>
+                            <span>Portal: ${portalResponse.ok ? 'Online' : 'Offline'}</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = '<p class="text-red-600">Fehler beim Status-Check</p>';
+            }
+        }
+        
+        // Auto-check on load
+        checkStatus();
+    </script>
+</body>
+</html>

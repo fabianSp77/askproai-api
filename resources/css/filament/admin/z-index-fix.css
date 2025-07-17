@@ -15,38 +15,49 @@
    DROPDOWNS & ACTION GROUPS
    ======================================== */
 
+/* COMMENTED OUT - Now managed by stacking-context-fix.css
 /* Action Group Dropdowns in Tables */
+/*
 .fi-ta-actions-group-dropdown,
 .fi-ac-dropdown,
 .fi-dropdown {
     z-index: 50 !important;
 }
+*/
 
 /* Dropdown Panels (must be above table content) */
+/*
 .fi-dropdown-panel {
     z-index: 51 !important;
     position: relative !important;
 }
+*/
 
 /* Dropdown Lists */
+/*
 .fi-dropdown-list {
     z-index: 52 !important;
     max-height: 400px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
 }
+*/
 
 /* Branch Selector Dropdown (Higher priority) */
+/*
 .fi-global-search-field,
 .branch-selector-dropdown,
 [x-data*="branch"] .fi-dropdown-panel {
     z-index: 55 !important;
 }
+*/
 
 /* User Menu Dropdown */
+/*
 .fi-user-menu .fi-dropdown-panel {
     z-index: 56 !important;
 }
+*/
 
 /* ========================================
    TABLES & TABLE ACTIONS
@@ -102,20 +113,27 @@
    NAVIGATION & SIDEBARS
    ======================================== */
 
+/* COMMENTED OUT - Now managed by stacking-context-fix.css
 /* Main Sidebar */
+/*
 .fi-sidebar {
     z-index: 30 !important;
 }
+*/
 
 /* Mobile Navigation Overlay */
+/*
 .fi-sidebar-backdrop {
     z-index: 35 !important;
 }
+*/
 
 /* Top Navigation Bar */
+/*
 .fi-topbar {
     z-index: 25 !important;
 }
+*/
 
 /* ========================================
    NOTIFICATIONS & TOOLTIPS

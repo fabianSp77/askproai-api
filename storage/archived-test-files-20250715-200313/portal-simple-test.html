@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Portal Simple Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        .success {
+            background: #10B981;
+        }
+        .error {
+            background: #EF4444;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        .status.error {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+    </style>
+</head>
+<body>
+    <h1>Portal Simple Test</h1>
+    
+    <div class="box">
+        <h2>Step 1: Simple Login (No CSRF)</h2>
+        <button onclick="simpleLogin()" class="success">Login ohne CSRF</button>
+        <div id="login-status"></div>
+        <pre id="login-result"></pre>
+    </div>
+    
+    <div class="box">
+        <h2>Step 2: Check Session</h2>
+        <button onclick="checkSession()">Check Session</button>
+        <pre id="session-result"></pre>
+    </div>
+    
+    <div class="box">
+        <h2>Step 3: Session Debug</h2>
+        <button onclick="testAPI('/business/api/simple-auth-test')">Simple Auth Test</button>
+        <pre id="debug-result"></pre>
+    </div>
+    
+    <div class="box">
+        <h2>Step 4: Test API</h2>
+        <button onclick="testAPI('/business/api/dashboard')">Test Dashboard API</button>
+        <button onclick="testAPI('/business/api/calls')">Test Calls API</button>
+        <button onclick="testAPI('/business/api/session-debug')">Session Debug API</button>
+        <button onclick="testAPI('/business/api/check-auth')">Check Auth API</button>
+        <pre id="api-result"></pre>
+    </div>
+    
+    <div class="box">
+        <h2>Quick Links</h2>
+        <button onclick="window.location.href='/business/dashboard'" style="background: #7C3AED;">
+            Go to Dashboard
+        </button>
+    </div>
+    
+    <script>
+    async function simpleLogin() {
+        const statusEl = document.getElementById('login-status');
+        const resultEl = document.getElementById('login-result');
+        
+        statusEl.innerHTML = '<div class="status">Logging in...</div>';
+        
+        try {
+            const response = await fetch('/business/simple-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({})
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                statusEl.innerHTML = '<div class="status success">✅ Login Successful!</div>';
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                
+                // Auto-check session after login
+                setTimeout(checkSession, 1000);
+            } else {
+                statusEl.innerHTML = '<div class="status error">❌ Login Failed</div>';
+                resultEl.textContent = JSON.stringify(data, null, 2);
+            }
+        } catch (error) {
+            statusEl.innerHTML = '<div class="status error">❌ Error: ' + error.message + '</div>';
+            resultEl.textContent = error.stack;
+        }
+    }
+    
+    async function checkSession() {
+        const resultEl = document.getElementById('session-result');
+        
+        try {
+            const response = await fetch('/business/test/session', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            resultEl.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.portal_user_id) {
+                resultEl.innerHTML = '<div class="status success">✅ Session Active (User ID: ' + data.portal_user_id + ')</div>' + 
+                                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } else {
+                resultEl.innerHTML = '<div class="status error">❌ No Session</div>' + 
+                                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+        } catch (error) {
+            resultEl.textContent = 'Error: ' + error.message;
+        }
+    }
+    
+    async function testAPI(url) {
+        const resultEl = document.getElementById(url.includes('debug') ? 'debug-result' : 'api-result');
+        
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                data = text;
+            }
+            
+            if (response.ok) {
+                resultEl.innerHTML = '<div class="status success">✅ API Success (Status: ' + response.status + ')</div>' + 
+                                    '<pre>' + (typeof data === 'object' ? JSON.stringify(data, null, 2) : data) + '</pre>';
+            } else {
+                resultEl.innerHTML = '<div class="status error">❌ API Failed (Status: ' + response.status + ')</div>' + 
+                                    '<pre>' + (typeof data === 'object' ? JSON.stringify(data, null, 2) : data) + '</pre>';
+            }
+        } catch (error) {
+            resultEl.innerHTML = '<div class="status error">❌ Error: ' + error.message + '</div>';
+        }
+    }
+    </script>
+</body>
+</html>

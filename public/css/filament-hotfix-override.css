@@ -1,0 +1,20 @@
+/**
+ * Filament Hotfix Override
+ * This file overrides the z-index values in filament-hotfix.css
+ */
+
+/* Override sidebar z-index from filament-hotfix.css */
+.fi-sidebar {
+    z-index: 30 !important; /* Override z-index: 20 */
+}
+
+/* Override topbar z-index from filament-hotfix.css */
+.fi-topbar {
+    z-index: 25 !important; /* Override z-index: 10 */
+}
+
+/* Ensure dropdowns are above everything */
+.fi-dropdown-panel,
+[role="menu"] {
+    z-index: 60 !important;
+}

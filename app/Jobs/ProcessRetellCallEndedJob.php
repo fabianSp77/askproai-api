@@ -114,6 +114,9 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             // Update call status
             $call->update(['call_status' => 'analyzed']);
             
+            // Dispatch call summary job if enabled
+            $this->dispatchCallSummaryIfNeeded($call);
+            
             Log::info('Successfully processed Retell call_ended webhook', [
                 'call_id' => $call->id,
                 'retell_call_id' => $call->retell_call_id,
@@ -672,6 +675,48 @@ class ProcessRetellCallEndedJob implements ShouldQueue
             Log::error('Error analyzing transcript for appointment', [
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+    
+    /**
+     * Dispatch call summary job if enabled
+     */
+    protected function dispatchCallSummaryIfNeeded(Call $call): void
+    {
+        try {
+            if (!$call->company) {
+                return;
+            }
+            
+            // Check if company has summary enabled
+            if ($call->company->send_call_summaries) {
+                // Check frequency setting
+                $frequency = $call->company->summary_email_frequency ?? 'immediate';
+                
+                if ($frequency === 'immediate') {
+                    // Dispatch immediately
+                    \App\Jobs\SendCallSummaryJob::dispatch($call)
+                        ->delay(now()->addSeconds(30)); // Small delay to ensure all data is processed
+                    
+                    Log::info('Dispatched immediate call summary job', [
+                        'call_id' => $call->id,
+                        'company_id' => $call->company_id
+                    ]);
+                } else {
+                    // For hourly/daily, we'll need a separate scheduled job
+                    // Just log for now
+                    Log::info('Call summary scheduled for batch processing', [
+                        'call_id' => $call->id,
+                        'frequency' => $frequency
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to dispatch call summary job', [
+                'call_id' => $call->id,
+                'error' => $e->getMessage()
+            ]);
+            // Don't throw - this shouldn't fail the main webhook processing
         }
     }
 }

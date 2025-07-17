@@ -247,6 +247,7 @@ class AskProAIMobileApp {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
                 },
+                credentials: 'include',
                 body: JSON.stringify(subscription)
             });
         } catch (error) {

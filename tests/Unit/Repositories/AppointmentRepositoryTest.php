@@ -15,11 +15,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
-use Tests\Traits\SimplifiedMigrations;
 
 class AppointmentRepositoryTest extends TestCase
 {
-    use SimplifiedMigrations;
+    use RefreshDatabase;
 
     protected AppointmentRepository $repository;
     protected Company $company;
@@ -443,11 +442,11 @@ class AppointmentRepositoryTest extends TestCase
 
         $stats = $this->repository->getStatistics($startDate, $endDate);
 
-        $this->assertEquals(8, $stats['total']);
-        $this->assertEquals(5, $stats['completed']);
-        $this->assertEquals(2, $stats['cancelled']);
-        $this->assertEquals(1, $stats['no_show']);
-        $this->assertEquals(500.00, $stats['revenue']);
+        $this->assertEquals(8, $stats['total_appointments']);
+        $this->assertEquals(5, $stats['completed_appointments']);
+        $this->assertEquals(2, $stats['cancelled_appointments']);
+        $this->assertEquals(1, $stats['no_show_appointments']);
+        $this->assertEquals(500.00, $stats['total_revenue']);
     }
 
     /** @test */

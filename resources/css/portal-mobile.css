@@ -1,0 +1,63 @@
+/* Mobile-specific styles for Business Portal */
+
+/* Safe area padding for iOS devices */
+.mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Ensure content doesn't get hidden behind bottom nav */
+@media (max-width: 768px) {
+    .ant-layout-content {
+        padding-bottom: 72px !important;
+    }
+    
+    /* Hide desktop navigation on mobile */
+    .ant-layout-sider {
+        display: none !important;
+    }
+    
+    /* Adjust header for mobile */
+    .ant-layout-header {
+        padding: 0 16px !important;
+        height: 56px !important;
+        line-height: 56px !important;
+    }
+    
+    /* Ensure modals and drawers appear above bottom nav */
+    .ant-modal-wrap,
+    .ant-drawer-mask,
+    .ant-drawer-content-wrapper {
+        z-index: 1001 !important;
+    }
+    
+    /* Adjust floating action buttons if any */
+    .fab-button {
+        bottom: 80px !important;
+    }
+}
+
+/* Smooth transitions */
+.mobile-bottom-nav > div {
+    transition: all 0.3s ease;
+}
+
+/* Active state feedback */
+.mobile-bottom-nav > div:active {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Prevent text selection on navigation items */
+.mobile-bottom-nav {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix for iOS Safari bottom bar */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .mobile-bottom-nav {
+        padding-bottom: calc(8px + env(safe-area-inset-bottom, 0));
+    }
+}

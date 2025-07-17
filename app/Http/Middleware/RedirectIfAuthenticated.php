@@ -26,7 +26,15 @@ class RedirectIfAuthenticated
                     return redirect()->route('portal.dashboard');
                 }
                 
-                return redirect('/admin');
+                // Handle portal guard
+                if ($guard === 'portal') {
+                    return redirect()->route('business.dashboard');
+                }
+                
+                // For web guard (admin), only redirect if we're not already in admin
+                if (!$request->is('admin/*')) {
+                    return redirect('/admin');
+                }
             }
         }
 

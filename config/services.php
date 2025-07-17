@@ -149,4 +149,32 @@ return [
         'pro' => env('DEEPL_PRO', false), // true for Pro API, false for Free API
     ],
 
+    'resend' => [
+        'key' => env('RESEND_API_KEY'),
+    ],
+
+    'github' => [
+        'token' => env('GITHUB_TOKEN'),
+        'webhook_secret' => env('GITHUB_WEBHOOK_SECRET'),
+        'base_url' => env('GITHUB_BASE_URL', 'https://api.github.com'),
+    ],
+
+    'apidog' => [
+        'api_key' => env('APIDOG_API_KEY'),
+        'project_id' => env('APIDOG_PROJECT_ID'),
+        'base_url' => env('APIDOG_BASE_URL', 'https://api.apidog.com'),
+        'cache_ttl' => env('APIDOG_CACHE_TTL', 604800), // 7 days in seconds
+    ],
+
+    'notion' => [
+        'api_key' => env('NOTION_API_KEY'),
+        'version' => '2022-06-28',
+        'parent_page_id' => env('NOTION_PARENT_PAGE_ID'),
+    ],
+
+    'figma' => [
+        'api_token' => env('FIGMA_API_TOKEN'),
+        'base_url' => 'https://api.figma.com/v1',
+    ],
+
 ];

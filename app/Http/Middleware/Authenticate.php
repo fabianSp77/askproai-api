@@ -16,6 +16,11 @@ class Authenticate extends Middleware
             return null;
         }
         
+        // Check if this is a business portal route
+        if ($request->is('business/*') || $request->routeIs('business.*')) {
+            return route('business.login');
+        }
+        
         // Check if this is a portal/customer route
         if ($request->is('portal/*') || $request->routeIs('portal.*')) {
             return route('portal.login');

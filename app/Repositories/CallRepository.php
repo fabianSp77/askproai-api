@@ -23,7 +23,7 @@ class CallRepository extends BaseRepository
     {
         return $this->model
             ->where('status', $status)
-            ->with(['customer', 'appointment', 'agent'])
+            ->with(['customer', 'appointment'])
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -34,7 +34,7 @@ class CallRepository extends BaseRepository
     public function getRecent(int $limit = 50): Collection
     {
         return $this->model
-            ->with(['customer', 'appointment', 'agent'])
+            ->with(['customer', 'appointment'])
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();
@@ -60,7 +60,7 @@ class CallRepository extends BaseRepository
     {
         return $this->model
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->with(['customer', 'appointment', 'agent'])
+            ->with(['customer', 'appointment'])
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -109,11 +109,11 @@ class CallRepository extends BaseRepository
             'total_calls' => $calls->count(),
             'completed_calls' => $completedCalls->count(),
             'failed_calls' => $calls->where('status', 'failed')->count(),
-            'total_duration_seconds' => $completedCalls->sum('duration_seconds') ?? 0,
+            'total_duration_seconds' => $completedCalls->sum('duration_sec') ?? 0,
             'average_duration_seconds' => $completedCalls->count() > 0 
-                ? round($completedCalls->sum('duration_seconds') / $completedCalls->count()) 
+                ? round($completedCalls->sum('duration_sec') / $completedCalls->count()) 
                 : 0,
-            'total_cost_cents' => $completedCalls->sum('cost_cents') ?? 0,
+            'total_cost_cents' => $completedCalls->sum('cost') * 100 ?? 0,
             'appointments_booked' => $calls->whereNotNull('appointment_id')->count(),
             'conversion_rate' => $calls->count() > 0 
                 ? round(($calls->whereNotNull('appointment_id')->count() / $calls->count()) * 100, 2) 
@@ -181,10 +181,10 @@ class CallRepository extends BaseRepository
         
         $updateData = [
             'status' => $webhookData['status'] ?? $call->status,
-            'duration_seconds' => $webhookData['duration'] ?? $call->duration_seconds,
+            'duration_sec' => $webhookData['duration'] ?? $call->duration_sec,
             'transcript' => $webhookData['transcript'] ?? $call->transcript,
             'analysis' => $webhookData['analysis'] ?? $call->analysis,
-            'cost_cents' => $webhookData['cost'] ?? $call->cost_cents,
+            'cost' => $webhookData['cost'] ?? $call->cost,
             'webhook_data' => array_merge($call->webhook_data ?? [], $webhookData),
         ];
         

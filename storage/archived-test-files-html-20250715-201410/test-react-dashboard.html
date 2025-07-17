@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>React Dashboard Test</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <h1>React Dashboard Debug Test</h1>
+    
+    <h2>1. API Test:</h2>
+    <button onclick="testAPI()">Test API</button>
+    <pre id="api-result"></pre>
+    
+    <h2>2. React App Mount Test:</h2>
+    <div id="app" 
+         data-auth='{"user":{"email":"test@example.com"}}' 
+         data-api-url="/api"
+         data-csrf="test-token">
+        <p>If you see this text, React did not mount.</p>
+    </div>
+    
+    <h2>3. Console Output:</h2>
+    <pre id="console-output"></pre>
+    
+    <script>
+        // Override console.error to capture errors
+        const output = document.getElementById('console-output');
+        const originalError = console.error;
+        console.error = function(...args) {
+            output.textContent += 'ERROR: ' + args.join(' ') + '\n';
+            originalError.apply(console, args);
+        };
+        
+        async function testAPI() {
+            const result = document.getElementById('api-result');
+            try {
+                result.textContent = 'Fetching...';
+                const response = await fetch('/business/api/dashboard');
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                result.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        // Test if React files are loading
+        window.addEventListener('load', () => {
+            output.textContent += 'Page loaded\n';
+            output.textContent += 'App element exists: ' + (!!document.getElementById('app')) + '\n';
+        });
+    </script>
+</body>
+</html>

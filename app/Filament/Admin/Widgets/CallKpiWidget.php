@@ -12,6 +12,11 @@ class CallKpiWidget extends BaseWidget
 {
     protected static ?string $pollingInterval = '5s';
     
+    public static function canView(): bool
+    {
+        return true; // Always show this widget
+    }
+    
     protected function getStats(): array
     {
         $company = auth()->user()->company;

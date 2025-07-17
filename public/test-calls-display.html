@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Calls Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .success {
+            color: #22c55e;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .warning {
+            color: #f59e0b;
+        }
+        .data-info {
+            background: #e0f2fe;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background: #f3f4f6;
+            font-weight: 600;
+        }
+        .refresh-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .refresh-btn:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calls Display Test</h1>
+        
+        <div class="test-section">
+            <h2>Authentication Status</h2>
+            <div id="auth-status">Checking...</div>
+        </div>
+
+        <div class="test-section">
+            <h2>API Response Structure</h2>
+            <div id="api-structure">Checking...</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Frontend Data Processing</h2>
+            <div id="frontend-processing">Analyzing...</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Calls Data Display</h2>
+            <button class="refresh-btn" onclick="refreshCalls()">Refresh Calls</button>
+            <div id="calls-display"></div>
+        </div>
+    </div>
+
+    <script>
+        async function checkAuth() {
+            try {
+                const response = await fetch('/business/api/auth-check', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const authDiv = document.getElementById('auth-status');
+                if (data.authenticated && data.user) {
+                    authDiv.innerHTML = `<span class="success">✓ Authenticated as: ${data.user.name || 'Unknown'} (ID: ${data.user.id || 'N/A'})</span>`;
+                } else if (data.authenticated) {
+                    authDiv.innerHTML = '<span class="success">✓ Authenticated (no user details)</span>';
+                } else {
+                    authDiv.innerHTML = '<span class="error">✗ Not authenticated</span>';
+                }
+            } catch (error) {
+                document.getElementById('auth-status').innerHTML = `<span class="error">✗ Auth check failed: ${error.message}</span>`;
+            }
+        }
+
+        async function checkApiStructure() {
+            try {
+                const response = await fetch('/business/api/calls?per_page=5', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                const data = await response.json();
+                const structureDiv = document.getElementById('api-structure');
+                
+                let html = '<h3>Raw API Response:</h3>';
+                html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.calls) {
+                    html += '<div class="data-info"><strong>Structure:</strong> Response wrapped in "calls" object</div>';
+                    if (data.calls.data && Array.isArray(data.calls.data)) {
+                        html += `<div class="success">✓ Found ${data.calls.data.length} calls in data.calls.data</div>`;
+                    }
+                } else if (data.data && Array.isArray(data.data)) {
+                    html += '<div class="data-info"><strong>Structure:</strong> Direct data array</div>';
+                    html += `<div class="success">✓ Found ${data.data.length} calls in data.data</div>`;
+                }
+                
+                structureDiv.innerHTML = html;
+                
+                // Simulate frontend processing
+                simulateFrontendProcessing(data);
+                
+            } catch (error) {
+                document.getElementById('api-structure').innerHTML = `<span class="error">✗ API call failed: ${error.message}</span>`;
+            }
+        }
+
+        function simulateFrontendProcessing(apiResponse) {
+            const processingDiv = document.getElementById('frontend-processing');
+            let html = '<h3>Frontend Processing Simulation:</h3>';
+            
+            // Simulate the useCalls.js logic
+            const callsData = apiResponse.calls || apiResponse;
+            const calls = callsData.data || [];
+            
+            html += '<div class="data-info">';
+            html += '<strong>Frontend Hook Logic:</strong><br>';
+            html += `1. const callsData = data.calls || data;<br>`;
+            html += `2. setCalls(callsData.data || []);<br>`;
+            html += `3. Result: ${calls.length} calls extracted</div>`;
+            
+            if (calls.length > 0) {
+                html += '<div class="success">✓ Frontend processing successful</div>';
+                displayCalls(calls);
+            } else {
+                html += '<div class="error">✗ No calls extracted</div>';
+            }
+            
+            processingDiv.innerHTML = html;
+        }
+
+        function displayCalls(calls) {
+            const displayDiv = document.getElementById('calls-display');
+            
+            if (!calls || calls.length === 0) {
+                displayDiv.innerHTML = '<div class="warning">No calls to display</div>';
+                return;
+            }
+            
+            let html = '<table>';
+            html += '<thead><tr>';
+            html += '<th>ID</th>';
+            html += '<th>Von</th>';
+            html += '<th>An</th>';
+            html += '<th>Dauer</th>';
+            html += '<th>Erstellt</th>';
+            html += '<th>Status</th>';
+            html += '</tr></thead>';
+            html += '<tbody>';
+            
+            calls.forEach(call => {
+                html += '<tr>';
+                html += `<td>${call.id}</td>`;
+                html += `<td>${call.from_number || '-'}</td>`;
+                html += `<td>${call.to_number || '-'}</td>`;
+                html += `<td>${call.duration_formatted || '-'}</td>`;
+                html += `<td>${call.created_at || '-'}</td>`;
+                html += `<td>${call.status || '-'}</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            displayDiv.innerHTML = html;
+        }
+
+        async function refreshCalls() {
+            await checkApiStructure();
+        }
+
+        // Initial checks
+        checkAuth();
+        checkApiStructure();
+    </script>
+</body>
+</html>

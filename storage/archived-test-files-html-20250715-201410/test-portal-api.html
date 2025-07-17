@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error {
+            background: #fee;
+            border-color: #fcc;
+            color: #c00;
+        }
+        .success {
+            background: #efe;
+            border-color: #cfc;
+            color: #060;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Portal API Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Login Test</h2>
+        <input type="email" id="email" placeholder="Email" value="test@askproai.de">
+        <input type="password" id="password" placeholder="Password" value="test123">
+        <button onclick="testLogin()">Login</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Get Calls</h2>
+        <button onclick="getCalls()" id="getCallsBtn" disabled>Get Calls</button>
+        <div id="callsResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Get Call Timeline</h2>
+        <input type="text" id="callId" placeholder="Call ID">
+        <button onclick="getTimeline()" id="getTimelineBtn" disabled>Get Timeline</button>
+        <div id="timelineResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Send Summary</h2>
+        <input type="text" id="summaryCallId" placeholder="Call ID">
+        <input type="email" id="recipients" placeholder="Recipients (comma separated)" value="test@example.com">
+        <button onclick="sendSummary()" id="sendSummaryBtn" disabled>Send Summary</button>
+        <div id="summaryResult" class="result"></div>
+    </div>
+
+    <script>
+        let csrfToken = '';
+        
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            resultDiv.textContent = 'Logging in...';
+            resultDiv.className = 'result';
+            
+            try {
+                // Get CSRF token first
+                const tokenResponse = await fetch('/sanctum/csrf-cookie', {
+                    credentials: 'include'
+                });
+                
+                csrfToken = getCookie('XSRF-TOKEN');
+                console.log('CSRF Token:', csrfToken);
+                
+                // Login
+                const response = await fetch('/business/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': decodeURIComponent(csrfToken)
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = 'Login successful!\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                    
+                    // Enable other buttons
+                    document.getElementById('getCallsBtn').disabled = false;
+                    document.getElementById('getTimelineBtn').disabled = false;
+                    document.getElementById('sendSummaryBtn').disabled = false;
+                } else {
+                    resultDiv.textContent = 'Login failed:\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function getCalls() {
+            const resultDiv = document.getElementById('callsResult');
+            resultDiv.textContent = 'Loading calls...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/business/api/calls', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': decodeURIComponent(csrfToken)
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = 'Calls loaded:\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                    
+                    // Set first call ID in inputs
+                    if (data.calls && data.calls.length > 0) {
+                        document.getElementById('callId').value = data.calls[0].id;
+                        document.getElementById('summaryCallId').value = data.calls[0].id;
+                    }
+                } else {
+                    resultDiv.textContent = 'Failed to get calls:\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function getTimeline() {
+            const callId = document.getElementById('callId').value;
+            const resultDiv = document.getElementById('timelineResult');
+            
+            if (!callId) {
+                resultDiv.textContent = 'Please enter a call ID';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            resultDiv.textContent = 'Loading timeline...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch(`/business/api/calls/${callId}/timeline`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': decodeURIComponent(csrfToken)
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = 'Timeline loaded:\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = 'Failed to get timeline:\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function sendSummary() {
+            const callId = document.getElementById('summaryCallId').value;
+            const recipients = document.getElementById('recipients').value.split(',').map(r => r.trim());
+            const resultDiv = document.getElementById('summaryResult');
+            
+            if (!callId) {
+                resultDiv.textContent = 'Please enter a call ID';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            resultDiv.textContent = 'Sending summary...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch(`/business/api/calls/${callId}/send-summary`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': decodeURIComponent(csrfToken)
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        recipients: recipients,
+                        include_transcript: true,
+                        include_recording: false
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = 'Summary sent successfully:\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = 'Failed to send summary:\n' + JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message + '\n\nStack: ' + error.stack;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

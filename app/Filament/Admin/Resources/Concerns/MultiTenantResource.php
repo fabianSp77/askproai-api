@@ -20,7 +20,7 @@ trait MultiTenantResource
         $user = auth()->user();
         
         // Super admins and resellers see everything
-        if ($user && ($user->hasRole('super_admin') || $user->hasRole('reseller'))) {
+        if ($user && ($user->hasRole('super_admin') || $user->hasRole('Super Admin') || $user->hasRole('reseller'))) {
             return $query;
         }
         
@@ -34,6 +34,10 @@ trait MultiTenantResource
             if (\Schema::hasColumn($table, 'company_id')) {
                 $query->where($table . '.company_id', $user->company_id);
             }
+        } else if ($user && !$user->hasRole('super_admin') && !$user->hasRole('Super Admin') && !$user->hasRole('reseller')) {
+            // If user has no company_id and is not a super admin, show nothing
+            // This prevents users without company from seeing all data
+            $query->whereRaw('1 = 0');
         }
         
         return $query;
@@ -48,7 +52,7 @@ trait MultiTenantResource
         $filters = [];
         
         // Company filter (only for super admins)
-        if ($user && ($user->hasRole('super_admin') || $user->hasRole('reseller'))) {
+        if ($user && ($user->hasRole('super_admin') || $user->hasRole('Super Admin') || $user->hasRole('reseller'))) {
             $filters[] = Tables\Filters\SelectFilter::make('company_id')
                 ->label('Unternehmen')
                 ->relationship('company', 'name')
@@ -64,7 +68,7 @@ trait MultiTenantResource
                 $query = Branch::query();
                 
                 // Filter branches by company for non-admins
-                if ($user && !$user->hasRole('super_admin') && !$user->hasRole('reseller')) {
+                if ($user && !$user->hasRole('super_admin') && !$user->hasRole('Super Admin') && !$user->hasRole('reseller')) {
                     $query->where('company_id', $user->company_id);
                 }
                 
@@ -90,7 +94,7 @@ trait MultiTenantResource
             ->icon('heroicon-m-building-office')
             ->searchable()
             ->sortable()
-            ->visible(fn () => $user && ($user->hasRole('super_admin') || $user->hasRole('reseller')))
+            ->visible(fn () => $user && ($user->hasRole('super_admin') || $user->hasRole('Super Admin') || $user->hasRole('reseller')))
             ->toggleable();
     }
     
@@ -119,7 +123,7 @@ trait MultiTenantResource
         $schema = [];
         
         // Company select (only for super admins)
-        if ($user && ($user->hasRole('super_admin') || $user->hasRole('reseller'))) {
+        if ($user && ($user->hasRole('super_admin') || $user->hasRole('Super Admin') || $user->hasRole('reseller'))) {
             $schema[] = Forms\Components\Select::make('company_id')
                 ->label('Unternehmen')
                 ->relationship('company', 'name')

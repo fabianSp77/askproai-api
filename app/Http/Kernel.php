@@ -33,15 +33,13 @@ class Kernel extends HttpKernel
      * -------------------------------------------------------------------- */
     protected $middlewareGroups = [
         'web' => [
-            Middleware\LogLivewireErrors::class,
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             Middleware\CheckCookieConsent::class,
-            Middleware\LivewireErrorHandler::class,
             // \App\Http\Middleware\ResponseCompressionMiddleware::class, // Temporarily disabled - may interfere with Livewire
         ],
         'api' => [
@@ -58,6 +56,33 @@ class Kernel extends HttpKernel
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             Middleware\AdaptiveRateLimitMiddleware::class,
+        ],
+        
+        'admin-api' => [
+            // Keine Session oder CSRF für Admin API
+            'throttle:api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ],
+        
+        'business-portal' => [
+            \App\Http\Middleware\PortalSessionConfig::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\RefreshCsrfTokenForPortal::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ],
+        
+        'business-api' => [
+            \App\Http\Middleware\PortalSessionConfig::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\SharePortalSession::class,
+            'throttle:api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
@@ -86,9 +111,29 @@ class Kernel extends HttpKernel
         'branch.context' => Middleware\BranchContextMiddleware::class,
         'check.appointment.booking' => Middleware\CheckAppointmentBookingRequired::class,
         
-        // Portal Middleware
-        'portal.auth' => Middleware\PortalAuthenticate::class,
+        // Portal Middleware - Unified
+        'portal.auth' => Middleware\PortalAuth::class,
+        'portal.auth.optional' => Middleware\PortalAuth::class . ':optional',
+        'portal.auth.api' => Middleware\PortalAuth::class,
+        'portal.api.auth' => Middleware\PortalAuth::class,
         'portal.permission' => Middleware\PortalPermission::class,
+        'allow.dual.auth' => Middleware\AllowDualAuth::class,
+        'fix.portal.auth' => Middleware\FixPortalAuth::class,
+        'share.portal.session' => Middleware\SharePortalSession::class,
+        
+        // Session Configuration Middleware
+        'portal.session' => Middleware\PortalSessionConfig::class,
+        'admin.session' => Middleware\AdminSessionConfig::class,
+        
+        // Admin Impersonation
+        'admin.impersonation' => Middleware\AdminImpersonation::class,
+        
+        // Admin API
+        'disable.csrf.admin' => Middleware\DisableCSRFForAdminAPI::class,
+        'disable.tenant.scope' => Middleware\DisableTenantScopeForAdminApi::class,
+        
+        // Legacy aliases for backward compatibility
+        'portal.authenticate' => Middleware\PortalAuth::class,
 
         // ── Laravel-Standard ──────────────────────────────────────────────
         'auth' => Middleware\Authenticate::class,
@@ -100,5 +145,6 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'admin.bypass' => \App\Http\Middleware\AdminBypass::class,
     ];
 }

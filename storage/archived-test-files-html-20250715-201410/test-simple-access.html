@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Access Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .test-link:hover {
+            background-color: #0056b3;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        code {
+            background-color: #e9ecef;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Access Test</h1>
+        
+        <div class="section">
+            <h2>Framework Status</h2>
+            <p>Based on the console output:</p>
+            <ul>
+                <li class="success">✅ Alpine.js loaded (v3.14.9)</li>
+                <li class="success">✅ Livewire loaded</li>
+                <li class="success">✅ 93 Alpine components initialized</li>
+                <li class="success">✅ No JavaScript issues detected</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Test Links</h2>
+            <p>Click these links to test access:</p>
+            <a href="/admin" class="test-link" target="_blank">Admin Dashboard</a>
+            <a href="/admin/login" class="test-link" target="_blank">Admin Login</a>
+            <a href="/admin/appointments" class="test-link" target="_blank">Appointments</a>
+            <a href="/admin/calls" class="test-link" target="_blank">Calls</a>
+        </div>
+        
+        <div class="section">
+            <h2>Route Information</h2>
+            <p>According to the route test:</p>
+            <ul>
+                <li>✅ Route <code>/admin</code> → <code>App\Filament\Admin\Pages\OperationsDashboard</code></li>
+                <li>✅ OperationsDashboard class exists</li>
+                <li>✅ Slug: <code>dashboard</code></li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>If you see a 404 Error</h2>
+            <p>Possible causes:</p>
+            <ol>
+                <li><strong>Authentication Required</strong>: You might need to be logged in first. Try <a href="/admin/login">Admin Login</a></li>
+                <li><strong>Cache Issues</strong>: The route cache might need clearing</li>
+                <li><strong>Middleware Issues</strong>: There might be middleware preventing access</li>
+            </ol>
+            
+            <h3>Quick Fix Commands</h3>
+            <pre><code>php artisan optimize:clear
+php artisan route:clear
+php artisan config:clear
+php artisan cache:clear</code></pre>
+        </div>
+        
+        <div class="section">
+            <h2>Console Debug Commands</h2>
+            <p>Open browser console and run:</p>
+            <ul>
+                <li><code>portalDebug.status()</code> - Check component status</li>
+                <li><code>window.Alpine.version</code> - Check Alpine version</li>
+                <li><code>window.Livewire</code> - Check if Livewire is loaded</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

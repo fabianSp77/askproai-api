@@ -22,9 +22,56 @@ yarn-error.log
 /.vscode
 /.zed
 .env*.bak
-+491234567890,
-true,
 .env
 .env.*
 *.bak
 *.bak*
+
+# Test artifacts
+/coverage
+/coverage/
+coverage/
+*.coverage
+.nyc_output
+.vitest-result.json
+
+# Test results
+/tests/api/results/
+/tests/e2e/screenshots/
+/tests/e2e/videos/
+/tests/performance/results/
+test-results/
+*.test-results.json
+
+# IDE test configs
+.phpunit.cache
+.phpunit.result.cache
+.pest/
+vitest.config.ts.timestamp-*
+
+# Newman/Postman
+newman/
+postman/
+
+# Performance testing
+k6_results/
+*.har
+
+# Test databases
+*.sqlite
+*.sqlite-journal
+test.db
+
+# Test logs
+/storage/logs/testing.log
+tests/*.log
+
+# Environment files for testing
+.env.testing
+.env.test
+.env.ci
+
+# Temporary test files
+/tests/fixtures/temp/
+/tests/tmp/
+*.tmp

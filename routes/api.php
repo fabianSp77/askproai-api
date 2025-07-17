@@ -1,5 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V2\PortalController;
 use App\Http\Controllers\FrontendErrorController;
 use App\Http\Controllers\CalcomWebhookController;
 use App\Http\Controllers\RetellWebhookController;
@@ -14,14 +15,25 @@ use App\Http\Controllers\Api\DocumentationDataController;
 use App\Http\Controllers\MCPGatewayController;
 use App\Http\Controllers\RetellCustomFunctionController;
 use App\Http\Controllers\Api\CircuitBreakerHealthController;
-use App\Http\Controllers\Api\HealthCheckController;
 use App\Http\Controllers\TwilioWebhookController;
+use App\Http\Controllers\Api\NotionWebhookController;
+use App\Http\Controllers\Api\GitHubWebhookController;
+use App\Http\Controllers\HealthCheckController;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
 */
+
+// Health Check Routes (public)
+Route::get('/health', [HealthCheckController::class, 'health']);
+Route::get('/health-check', [HealthCheckController::class, 'health']);
+Route::get('/health/detailed', [HealthCheckController::class, 'detailed']);
+
+// Admin API Routes (React Admin Portal)
+Route::prefix('admin')
+    ->group(base_path('routes/api-admin.php'));
 
 // Command Intelligence API Routes (ohne CSRF)
 Route::middleware('api-no-csrf')->group(function () {
@@ -136,6 +148,24 @@ Route::prefix('billing')->middleware(['auth:sanctum'])->group(function () {
         ->name('api.billing.period.details');
     Route::get('/period/{periodId}/download', [App\Http\Controllers\Api\BillingUsageController::class, 'downloadReport'])
         ->name('api.billing.period.download');
+});
+
+// ---- Stripe Payment Links API ----------------------------
+Route::prefix('stripe')->group(function () {
+    // Payment Link endpoints (requires authentication)
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('/payment-link/create', [App\Http\Controllers\StripePaymentLinkController::class, 'generatePaymentLink'])
+            ->name('api.stripe.payment-link.create');
+        Route::get('/payment-link/{companyId}', [App\Http\Controllers\StripePaymentLinkController::class, 'getPaymentLink'])
+            ->name('api.stripe.payment-link.get');
+        Route::get('/payment-link/{companyId}/qr-code', [App\Http\Controllers\StripePaymentLinkController::class, 'generateQRCode'])
+            ->name('api.stripe.payment-link.qr-code');
+    });
+    
+    // Public topup link generation (for admin use)
+    Route::post('/generate-topup-link', [App\Http\Controllers\PublicTopupController::class, 'generateLink'])
+        ->middleware(['auth:sanctum'])
+        ->name('api.stripe.generate-topup-link');
 });
 
 // ---- MCP Retell Webhook Route (with signature verification) ----
@@ -277,6 +307,20 @@ Route::prefix('twilio')->group(function () {
         ->name('twilio.mcp.status-callback');
 });
 
+// ---- GitHub Webhooks ----------------------------
+Route::prefix('github')->group(function () {
+    // GitHub webhook for real-time sync
+    Route::post('/webhook', [GitHubWebhookController::class, 'handleWebhook'])
+        ->name('github.webhook');
+});
+
+// ---- Notion Webhooks ----------------------------
+Route::prefix('notion')->group(function () {
+    // Notion webhook for events
+    Route::post('/webhook', [NotionWebhookController::class, 'handleWebhook'])
+        ->name('notion.webhook');
+});
+
 // ---- Stripe Webhooks ----------------------------
 Route::prefix('stripe')->group(function () {
     // Webhook for payment events
@@ -313,6 +357,17 @@ Route::post('/retell/optimized-webhook', function (Request $request) {
     return app(UnifiedWebhookController::class)->handle($request);
 })->middleware(['verify.retell.signature'])
   ->name('retell.optimized.webhook');
+
+// ---- Notion Webhook Routes ----
+Route::prefix('notion')->group(function () {
+    // Main webhook endpoint
+    Route::post('/webhook', [NotionWebhookController::class, 'handleWebhook'])
+        ->name('notion.webhook');
+    
+    // Test endpoint to verify webhook configuration
+    Route::post('/webhook/test', [NotionWebhookController::class, 'test'])
+        ->name('notion.webhook.test');
+});
 
 // Debug webhook removed for security - use standard webhook with logging if needed
 
@@ -401,22 +456,26 @@ Route::middleware(['auth:sanctum'])->group(function () {
 // ---- Protected API Routes (require authentication) ----
 Route::middleware(['auth:sanctum', 'input.validation'])->group(function () {
     // Customer API
-    Route::apiResource('customers', App\Http\Controllers\API\CustomerController::class);
+    Route::apiResource('customers', App\Http\Controllers\API\CustomerController::class)->names('api.customers');
     
     // Appointment API
-    Route::apiResource('appointments', App\Http\Controllers\API\AppointmentController::class);
+    Route::apiResource('appointments', App\Http\Controllers\API\AppointmentController::class)->names('api.appointments');
     
     // Staff API
-    Route::apiResource('staff', App\Http\Controllers\API\StaffController::class);
+    Route::apiResource('staff', App\Http\Controllers\API\StaffController::class)->names('api.staff');
     
     // Service API
-    Route::apiResource('services', App\Http\Controllers\API\ServiceController::class);
+    Route::apiResource('services', App\Http\Controllers\API\ServiceController::class)->names('api.services');
     
     // Business API
     Route::apiResource('businesses', App\Http\Controllers\API\BusinessController::class);
     
     // Call API
-    Route::apiResource('calls', App\Http\Controllers\API\CallController::class);
+    Route::apiResource('calls', App\Http\Controllers\API\CallController::class)->names('api.calls');
+    Route::post('calls/{call}/translate-summary', [App\Http\Controllers\API\CallController::class, 'translateSummary'])
+        ->name('api.calls.translate-summary');
+    Route::get('calls/{call}/export-pdf', [App\Http\Controllers\API\CallController::class, 'exportPdf'])
+        ->name('api.calls.export-pdf');
     
     // Legacy billing route
     Route::get('/billing/checkout', [App\Http\Controllers\BillingController::class, 'checkout']);
@@ -699,3 +758,43 @@ Route::post('/retell/webhook-bypass', [\App\Http\Controllers\Api\RetellWebhookBy
     
 Route::post('/retell/webhook-simple', [\App\Http\Controllers\Api\RetellWebhookWorkingController::class, 'handle'])
     ->name('retell.webhook.simple');
+
+// Debug endpoint for session checking
+Route::get('/debug/session', function (Request $request) {
+    return response()->json([
+        'session_id' => session()->getId(),
+        'is_admin_viewing' => session('is_admin_viewing'),
+        'admin_impersonation' => session('admin_impersonation'),
+        'portal_user_id' => session('portal_user_id'),
+        'portal_auth' => Auth::guard('portal')->check(),
+        'web_auth' => Auth::guard('web')->check(),
+        'web_user' => Auth::guard('web')->user() ? Auth::guard('web')->user()->email : null,
+        'portal_user' => Auth::guard('portal')->user() ? Auth::guard('portal')->user()->email : null,
+    ]);
+});
+
+// Error Catalog API Routes
+Route::prefix('errors')->name('api.errors.')->group(function () {
+    Route::get('/search', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'search'])->name('search');
+    Route::get('/statistics', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'statistics'])->name('statistics');
+    Route::post('/detect', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'detect'])->name('detect');
+    Route::get('/{errorCode}', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'show'])->name('show');
+    
+    // Authenticated routes for error reporting
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/report', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'reportOccurrence'])->name('report');
+        Route::post('/occurrences/{occurrenceId}/resolve', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'markResolved'])->name('resolve');
+    });
+});
+
+
+// V2 Portal API Routes
+Route::prefix('v2/portal')->group(function () {
+    Route::post('/auth/login', [PortalController::class, 'login']);
+    
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/dashboard', [PortalController::class, 'dashboard']);
+        Route::get('/appointments', [PortalController::class, 'appointments']);
+        Route::get('/calls', [PortalController::class, 'calls']);
+    });
+});

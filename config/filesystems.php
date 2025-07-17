@@ -60,6 +60,28 @@ return [
             'report' => false,
         ],
 
+        'invoices' => [
+            'driver' => 'local',
+            'root' => storage_path('app/invoices'),
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
+        'archive' => [
+            'driver' => 'local',
+            'root' => storage_path('app/archive'),
+            'visibility' => 'private',
+            'permissions' => [
+                'file' => [
+                    'private' => 0444, // Read-only for GoBD compliance
+                ],
+                'dir' => [
+                    'private' => 0755,
+                ],
+            ],
+            'throw' => false,
+        ],
+
     ],
 
     /*

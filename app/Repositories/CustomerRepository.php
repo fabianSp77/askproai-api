@@ -24,9 +24,11 @@ class CustomerRepository extends BaseRepository
         // Normalize phone number (remove spaces, dashes, etc.)
         $normalizedPhone = preg_replace('/[^0-9+]/', '', $phone);
         
-        return $this->model
-            ->where('phone', $normalizedPhone)
-            ->orWhere('phone', $phone)
+        return $this->model->newQuery()
+            ->where(function($query) use ($normalizedPhone, $phone) {
+                $query->where('phone', $normalizedPhone)
+                      ->orWhere('phone', $phone);
+            })
             ->first();
     }
 
@@ -35,7 +37,7 @@ class CustomerRepository extends BaseRepository
      */
     public function findByEmail(string $email): ?Customer
     {
-        return $this->model
+        return $this->model->newQuery()
             ->where('email', strtolower($email))
             ->first();
     }
@@ -79,7 +81,7 @@ class CustomerRepository extends BaseRepository
      */
     public function getWithAppointments(): Collection
     {
-        return $this->model
+        return $this->model->newQuery()
             ->has('appointments')
             ->with(['appointments' => function ($query) {
                 $query->orderBy('starts_at', 'desc')->limit(10);
@@ -91,9 +93,9 @@ class CustomerRepository extends BaseRepository
     /**
      * Get customers by branch
      */
-    public function getByBranch(int $branchId): Collection
+    public function getByBranch(string|int $branchId): Collection
     {
-        return $this->model
+        return $this->model->newQuery()
             ->whereHas('appointments', function ($query) use ($branchId) {
                 $query->where('branch_id', $branchId);
             })
@@ -110,7 +112,7 @@ class CustomerRepository extends BaseRepository
      */
     public function getWithNoShows(int $minNoShows = 1): Collection
     {
-        return $this->model
+        return $this->model->newQuery()
             ->whereHas('appointments', function ($query) {
                 $query->where('status', 'no_show');
             }, '>=', $minNoShows)
@@ -126,7 +128,7 @@ class CustomerRepository extends BaseRepository
      */
     public function getTopCustomers(int $limit = 10): Collection
     {
-        return $this->model
+        return $this->model->newQuery()
             ->withCount('appointments')
             ->orderBy('appointments_count', 'desc')
             ->limit($limit)
@@ -140,7 +142,7 @@ class CustomerRepository extends BaseRepository
     {
         $normalizedTerm = preg_replace('/[^0-9+]/', '', $term);
         
-        return $this->model
+        return $this->model->newQuery()
             ->where(function ($query) use ($term, $normalizedTerm) {
                 $query->where('name', 'like', "%{$term}%")
                       ->orWhere('email', 'like', "%{$term}%")
@@ -161,11 +163,11 @@ class CustomerRepository extends BaseRepository
     public function getStatistics(): array
     {
         return [
-            'total' => $this->model->count(),
-            'with_email' => $this->model->whereNotNull('email')->count(),
-            'with_phone' => $this->model->whereNotNull('phone')->count(),
-            'active' => $this->model->has('appointments')->count(),
-            'new_this_month' => $this->model->where('created_at', '>=', now()->startOfMonth())->count(),
+            'total' => $this->model->newQuery()->count(),
+            'with_email' => $this->model->newQuery()->whereNotNull('email')->count(),
+            'with_phone' => $this->model->newQuery()->whereNotNull('phone')->count(),
+            'active' => $this->model->newQuery()->has('appointments')->count(),
+            'new_this_month' => $this->model->newQuery()->where('created_at', '>=', now()->startOfMonth())->count()
         ];
     }
 
@@ -174,7 +176,7 @@ class CustomerRepository extends BaseRepository
      */
     public function getByTag(string $tag): Collection
     {
-        return $this->model
+        return $this->model->newQuery()
             ->whereJsonContains('tags', $tag)
             ->orderBy('name')
             ->get();
@@ -223,7 +225,7 @@ class CustomerRepository extends BaseRepository
     {
         $date = $date ?? now();
         
-        return $this->model
+        return $this->model->newQuery()
             ->whereMonth('birthdate', $date->month)
             ->whereDay('birthdate', $date->day)
             ->orderBy('name')

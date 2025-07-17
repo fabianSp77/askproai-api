@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UI Fixes Verification</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .status { display: inline-block; padding: 5px 10px; margin: 5px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f5f5f5; padding: 15px; overflow-x: auto; border-radius: 4px; }
+        .console-output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace; }
+        h2 { color: #333; }
+        .fix-status { font-size: 18px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔧 UI Fixes Verification Dashboard</h1>
+    
+    <div class="section">
+        <h2>1. Quick Test Commands</h2>
+        <p>Open the Business Portal Admin page and run these commands in the browser console:</p>
+        
+        <div class="console-output">
+// Check if UI fixes are loaded<br>
+console.log('UI Fix V2:', !!window.unifiedUIFixV2);<br>
+console.log('Emergency Fix:', !!window.emergencyButtonFix);<br>
+<br>
+// Get detailed status<br>
+if (window.unifiedUIFixV2) window.unifiedUIFixV2.status();<br>
+<br>
+// Test mobile menu<br>
+if (window.unifiedUIFixV2) window.unifiedUIFixV2.test.mobileMenu();<br>
+<br>
+// Test company selector<br>
+if (window.unifiedUIFixV2) window.unifiedUIFixV2.test.companySelect();<br>
+<br>
+// Test portal button<br>
+if (window.unifiedUIFixV2) window.unifiedUIFixV2.test.portalButton();<br>
+<br>
+// Force reapply all fixes<br>
+if (window.emergencyButtonFix) window.emergencyButtonFix.applyAll();
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>2. Live Status Check</h2>
+        <button onclick="checkBusinessPortal()">Check Business Portal Status</button>
+        <button onclick="window.open('/admin/business-portal-admin', '_blank')">Open Business Portal</button>
+        
+        <div id="status-results" style="margin-top: 20px;"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Expected Results</h2>
+        <div class="fix-status">✅ <strong>Mobile Menu:</strong> Burger button should open/close sidebar on mobile</div>
+        <div class="fix-status">✅ <strong>Company Selector:</strong> Dropdown should be enabled and change company data</div>
+        <div class="fix-status">✅ <strong>Portal Buttons:</strong> "Kundenportal öffnen" should redirect to business portal</div>
+        <div class="fix-status">✅ <strong>Dropdowns:</strong> All dropdown menus should open/close properly</div>
+        <div class="fix-status">✅ <strong>No 404 Errors:</strong> dropdown-close-fix.js error should be gone</div>
+    </div>
+    
+    <div class="section">
+        <h2>4. Troubleshooting</h2>
+        <h3>If fixes aren't working:</h3>
+        <ol>
+            <li><strong>Clear Browser Cache:</strong> Press Ctrl+Shift+R (or Cmd+Shift+R on Mac)</li>
+            <li><strong>Check Console:</strong> Look for any JavaScript errors</li>
+            <li><strong>Verify Scripts Loaded:</strong> Check Network tab for unified-ui-fix-v2.js</li>
+            <li><strong>Manual Fix:</strong> Run <code>window.emergencyButtonFix.applyAll()</code> in console</li>
+        </ol>
+        
+        <h3>Common Issues:</h3>
+        <ul>
+            <li><span class="status warning">Alpine not ready</span> - Wait a few seconds and try again</li>
+            <li><span class="status warning">Livewire not found</span> - Page may still be loading</li>
+            <li><span class="status error">404 errors</span> - Clear Laravel cache: <code>php artisan optimize:clear</code></li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <h2>5. Summary</h2>
+        <p><strong>What was fixed:</strong></p>
+        <ul>
+            <li>✅ Removed non-existent dropdown-close-fix.js reference causing 404 error</li>
+            <li>✅ Unified UI Fix V2 script properly loads and initializes</li>
+            <li>✅ Emergency Button Fix provides immediate functionality</li>
+            <li>✅ All interactive elements should now be working</li>
+        </ul>
+        
+        <p><strong>Files modified:</strong></p>
+        <ul>
+            <li><code>/resources/views/vendor/filament-panels/components/layout/css-fix.blade.php</code> - Commented out missing JS file</li>
+        </ul>
+    </div>
+
+    <script>
+        async function checkBusinessPortal() {
+            const results = document.getElementById('status-results');
+            results.innerHTML = '<div class="status info">Checking Business Portal...</div>';
+            
+            try {
+                // Check if scripts are accessible
+                const scripts = [
+                    { url: '/js/unified-ui-fix-v2.js', name: 'Unified UI Fix V2' },
+                    { url: '/js/emergency-button-fix.js', name: 'Emergency Button Fix' },
+                    { url: '/js/debug-loading-sequence.js', name: 'Debug Loading' },
+                    { url: '/js/dropdown-close-fix.js', name: 'Dropdown Close Fix (Should 404)' }
+                ];
+                
+                results.innerHTML = '<h3>Script Status:</h3>';
+                
+                for (const script of scripts) {
+                    try {
+                        const response = await fetch(script.url);
+                        const status = response.ok ? 'success' : 'error';
+                        const text = response.ok ? 'Available' : `Error ${response.status}`;
+                        results.innerHTML += `<div>${script.name}: <span class="status ${status}">${text}</span></div>`;
+                    } catch (e) {
+                        results.innerHTML += `<div>${script.name}: <span class="status error">Network Error</span></div>`;
+                    }
+                }
+                
+                // Check Business Portal page
+                results.innerHTML += '<h3>Business Portal Page:</h3>';
+                try {
+                    const response = await fetch('/admin/business-portal-admin', { credentials: 'same-origin' });
+                    if (response.ok) {
+                        results.innerHTML += '<div class="status success">Page loads successfully</div>';
+                        
+                        const html = await response.text();
+                        
+                        // Check for key indicators
+                        const checks = {
+                            'unified-ui-fix-v2.js': 'UI Fix V2 Script',
+                            'emergency-button-fix.js': 'Emergency Fix Script',
+                            'dropdown-close-fix.js': 'Problematic Script (Should NOT be present)',
+                            'fi-topbar-open-sidebar-btn': 'Mobile Menu Button',
+                            'selectedCompanyId': 'Company Selector',
+                            'wire:click': 'Livewire Handlers'
+                        };
+                        
+                        results.innerHTML += '<h4>Page Content Checks:</h4>';
+                        for (const [search, name] of Object.entries(checks)) {
+                            const found = html.includes(search);
+                            const isProblematic = search === 'dropdown-close-fix.js';
+                            const status = isProblematic ? (found ? 'error' : 'success') : (found ? 'success' : 'warning');
+                            const text = isProblematic ? (found ? 'Still Present ❌' : 'Removed ✅') : (found ? 'Found ✅' : 'Not Found ⚠️');
+                            results.innerHTML += `<div>${name}: <span class="status ${status}">${text}</span></div>`;
+                        }
+                    } else if (response.status === 401) {
+                        results.innerHTML += '<div class="status warning">Not authenticated - Please login first</div>';
+                    } else {
+                        results.innerHTML += `<div class="status error">Page error: ${response.status}</div>`;
+                    }
+                } catch (e) {
+                    results.innerHTML += '<div class="status error">Cannot check page: ' + e.message + '</div>';
+                }
+                
+            } catch (error) {
+                results.innerHTML = '<div class="status error">Error: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

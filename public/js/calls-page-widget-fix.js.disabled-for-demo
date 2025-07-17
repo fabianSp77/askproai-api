@@ -1,0 +1,112 @@
+// Calls Page Widget Fix
+(function() {
+    'use strict';
+    
+    //console.log('[Calls Widget Fix] Starting calls page widget fix...');
+    
+    // Check if we're on the calls page
+    function isCallsPage() {
+        return window.location.pathname.includes('/admin/calls') || 
+               window.location.pathname === '/admin/calls';
+    }
+    
+    // Function to inject widgets directly if they're missing
+    function injectWidgetsIfMissing() {
+        if (!isCallsPage()) return;
+        
+        //console.log('[Calls Widget Fix] Checking for widget containers...');
+        
+        // Look for the main content area
+        const pageContent = document.querySelector('.fi-page-content');
+        if (!pageContent) {
+            //console.log('[Calls Widget Fix] Page content not found');
+            return;
+        }
+        
+        // Check if widgets already exist
+        const existingWidgets = pageContent.querySelectorAll('.fi-wi, .fi-widget');
+        if (existingWidgets.length > 0) {
+            //console.log('[Calls Widget Fix] Widgets already present:', existingWidgets.length);
+            return;
+        }
+        
+        // Look for the table container
+        const tableContainer = pageContent.querySelector('.fi-ta-content');
+        if (!tableContainer) {
+            //console.log('[Calls Widget Fix] Table container not found');
+            return;
+        }
+        
+        //console.log('[Calls Widget Fix] No widgets found, creating placeholder...');
+        
+        // Create a widget container
+        const widgetContainer = document.createElement('div');
+        widgetContainer.className = 'fi-page-header-widgets';
+        widgetContainer.style.cssText = 'margin-bottom: 1rem; padding: 1rem; background: #f3f4f6; border: 2px dashed #d1d5db; border-radius: 0.5rem;';
+        widgetContainer.innerHTML = `
+            <div style="text-align: center; color: #6b7280;">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Widget-Bereich</h3>
+                <p>Die Widgets werden geladen...</p>
+                <p style="font-size: 0.875rem; margin-top: 0.5rem;">Falls die Widgets nicht erscheinen, drücken Sie Strg+F5</p>
+            </div>
+        `;
+        
+        // Insert before the table
+        tableContainer.parentNode.insertBefore(widgetContainer, tableContainer);
+        
+        // Try to trigger Livewire to reload the page properly
+        if (window.Livewire) {
+            //console.log('[Calls Widget Fix] Triggering Livewire refresh...');
+            window.Livewire.visit(window.location.href);
+        }
+    }
+    
+    // Function to ensure widgets are visible
+    function ensureWidgetsVisible() {
+        const widgets = document.querySelectorAll('.fi-wi, .fi-widget, [class*="fi-wi-"]');
+        widgets.forEach(widget => {
+            widget.style.display = 'block';
+            widget.style.visibility = 'visible';
+            widget.style.opacity = '1';
+            widget.classList.remove('hidden', 'invisible');
+        });
+    }
+    
+    // Main initialization
+    function init() {
+        if (!isCallsPage()) {
+            //console.log('[Calls Widget Fix] Not on calls page, skipping');
+            return;
+        }
+        
+        //console.log('[Calls Widget Fix] Initializing on calls page...');
+        
+        // Try multiple times with delays
+        const attempts = [0, 500, 1000, 2000, 3000];
+        attempts.forEach(delay => {
+            setTimeout(() => {
+                injectWidgetsIfMissing();
+                ensureWidgetsVisible();
+            }, delay);
+        });
+    }
+    
+    // Initialize on various events
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    
+    // Livewire navigation
+    document.addEventListener('livewire:navigated', () => {
+        setTimeout(init, 100);
+    });
+    
+    // Also check on page visibility change
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && isCallsPage()) {
+            ensureWidgetsVisible();
+        }
+    });
+})();

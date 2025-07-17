@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="test-token">
+    <title>React Direct Test</title>
+    
+    <!-- Load app CSS -->
+    <link rel="stylesheet" href="/build/assets/app-aCajt0TN.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        pre {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <h1>React Direct Test</h1>
+        <p>Testing React app initialization directly...</p>
+    </div>
+    
+    <!-- App container with proper data attributes -->
+    <div id="app" 
+         data-auth='{"user":{"id":1,"name":"Test User","email":"test@test.com","company_id":1,"role":"admin"},"isAdminViewing":false,"adminViewingCompany":""}'
+         data-api-url="/api"
+         data-csrf="test-token"
+         data-initial-route="/">
+    </div>
+    
+    <div class="debug-info">
+        <h2>Console Output:</h2>
+        <pre id="console-output"></pre>
+    </div>
+    
+    <script>
+        // Capture console logs
+        const consoleOutput = document.getElementById('console-output');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function logToPage(type, ...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            consoleOutput.textContent += `[${timestamp}] ${type}: ${message}\n`;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logToPage('LOG', ...args);
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logToPage('ERROR', ...args);
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            logToPage('WARN', ...args);
+        };
+        
+        // Log initial state
+        console.log('Page loaded, checking for app element...');
+        const appElement = document.getElementById('app');
+        console.log('App element found:', !!appElement);
+        
+        if (appElement) {
+            console.log('App data attributes:', {
+                auth: appElement.dataset.auth ? 'Present' : 'Missing',
+                csrf: appElement.dataset.csrf,
+                apiUrl: appElement.dataset.apiUrl,
+                initialRoute: appElement.dataset.initialRoute
+            });
+        }
+        
+        // Window error handler
+        window.addEventListener('error', (e) => {
+            console.error('Window error:', e.message, 'at', e.filename, ':', e.lineno);
+        });
+        
+        // Module load error handler
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e.reason);
+        });
+    </script>
+    
+    <!-- Load React app bundle -->
+    <script type="module">
+        console.log('Loading React app module...');
+        import('/build/assets/PortalApp-B53ID9FA.js')
+            .then(() => {
+                console.log('✅ React app module loaded successfully');
+            })
+            .catch(err => {
+                console.error('❌ Failed to load React app module:', err);
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Business Portal - Live Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-ok { color: #10b981; font-weight: bold; }
+        .status-error { color: #ef4444; font-weight: bold; }
+        .status-warning { color: #f59e0b; font-weight: bold; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563eb; }
+        pre {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .log-entry {
+            padding: 5px;
+            margin: 2px 0;
+            border-radius: 4px;
+        }
+        .log-info { background: #dbeafe; }
+        .log-success { background: #d1fae5; }
+        .log-error { background: #fee2e2; }
+        .log-warning { background: #fef3c7; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Business Portal Debug Tool</h1>
+    
+    <div class="section">
+        <h2>1. Direkte Debug-Aktionen</h2>
+        <button onclick="checkPageStatus()">Check Page Status</button>
+        <button onclick="testCompanyDropdown()">Test Company Dropdown</button>
+        <button onclick="testPortalButton()">Test Portal Button</button>
+        <button onclick="debugAlpine()">Debug Alpine.js</button>
+        <button onclick="debugLivewire()">Debug Livewire</button>
+        <button onclick="clearAndReload()">Clear Cache & Reload</button>
+    </div>
+    
+    <div class="section">
+        <h2>2. Live Status</h2>
+        <div id="liveStatus">
+            <p>Klicke auf "Check Page Status" um zu beginnen...</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Debug Console</h2>
+        <div id="debugConsole" style="max-height: 400px; overflow-y: auto;">
+            <!-- Debug logs will appear here -->
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>4. Fix-Vorschläge</h2>
+        <div id="fixSuggestions">
+            <!-- Fix suggestions will appear here -->
+        </div>
+    </div>
+
+    <script>
+        // Debug logging
+        function log(message, type = 'info') {
+            const console = document.getElementById('debugConsole');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            console.appendChild(entry);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Main debug functions
+        async function checkPageStatus() {
+            log('Starte Page Status Check...', 'info');
+            
+            try {
+                // Load the page in a hidden iframe
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = '/admin/business-portal-admin';
+                document.body.appendChild(iframe);
+                
+                iframe.onload = function() {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const iframeWin = iframe.contentWindow;
+                    
+                    // Check Alpine.js
+                    const alpineStatus = typeof iframeWin.Alpine !== 'undefined';
+                    const alpineStarted = alpineStatus && iframeWin.Alpine.started;
+                    
+                    // Check Livewire
+                    const livewireStatus = typeof iframeWin.Livewire !== 'undefined';
+                    const livewireComponents = livewireStatus ? Object.keys(iframeWin.Livewire.components || {}).length : 0;
+                    
+                    // Check for our fix scripts
+                    const dropdownFixLoaded = typeof iframeWin.filamentDropdownFix !== 'undefined';
+                    const selectFixLoaded = typeof iframeWin.filamentSelectFix !== 'undefined';
+                    
+                    // Check for specific elements
+                    const companySelect = iframeDoc.querySelector('select[wire\\:model="selectedCompanyId"]');
+                    const portalButton = Array.from(iframeDoc.querySelectorAll('button')).find(btn => 
+                        btn.textContent.includes('Portal öffnen')
+                    );
+                    
+                    // Update status
+                    const statusDiv = document.getElementById('liveStatus');
+                    statusDiv.innerHTML = `
+                        <h3>Framework Status:</h3>
+                        <p>Alpine.js: <span class="${alpineStatus ? 'status-ok' : 'status-error'}">${alpineStatus ? 'Loaded' : 'Not Loaded'}</span> ${alpineStarted ? '(Started)' : '(Not Started)'}</p>
+                        <p>Livewire: <span class="${livewireStatus ? 'status-ok' : 'status-error'}">${livewireStatus ? 'Loaded' : 'Not Loaded'}</span> (${livewireComponents} components)</p>
+                        
+                        <h3>Fix Scripts:</h3>
+                        <p>Dropdown Fix: <span class="${dropdownFixLoaded ? 'status-ok' : 'status-error'}">${dropdownFixLoaded ? 'Loaded' : 'Not Loaded'}</span></p>
+                        <p>Select Fix: <span class="${selectFixLoaded ? 'status-ok' : 'status-error'}">${selectFixLoaded ? 'Loaded' : 'Not Loaded'}</span></p>
+                        
+                        <h3>UI Elements:</h3>
+                        <p>Company Dropdown: <span class="${companySelect ? 'status-ok' : 'status-error'}">${companySelect ? 'Found' : 'Not Found'}</span></p>
+                        <p>Portal Button: <span class="${portalButton ? 'status-ok' : 'status-error'}">${portalButton ? 'Found' : 'Not Found'}</span></p>
+                    `;
+                    
+                    // Log details
+                    if (alpineStatus) {
+                        log(`Alpine version: ${iframeWin.Alpine.version || 'unknown'}`, 'success');
+                    } else {
+                        log('Alpine.js nicht gefunden!', 'error');
+                    }
+                    
+                    if (livewireStatus) {
+                        log(`Livewire geladen mit ${livewireComponents} Komponenten`, 'success');
+                    } else {
+                        log('Livewire nicht gefunden!', 'error');
+                    }
+                    
+                    // Check for console errors
+                    const errors = iframeWin.__testErrors || [];
+                    if (errors.length > 0) {
+                        log(`${errors.length} JavaScript Fehler gefunden:`, 'error');
+                        errors.forEach(err => log(err.message, 'error'));
+                    }
+                    
+                    // Cleanup
+                    setTimeout(() => document.body.removeChild(iframe), 1000);
+                };
+                
+            } catch (error) {
+                log(`Fehler beim Page Check: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCompanyDropdown() {
+            log('Teste Company Dropdown...', 'info');
+            
+            // Open page in new tab for testing
+            const testWindow = window.open('/admin/business-portal-admin', '_blank');
+            
+            setTimeout(() => {
+                log('Bitte überprüfe das neue Fenster und teste das Dropdown manuell', 'warning');
+                log('Führe im Browser Console aus: window.filamentSelectFix.debug()', 'info');
+            }, 2000);
+        }
+
+        async function testPortalButton() {
+            log('Teste Portal Button...', 'info');
+            
+            // Provide test code
+            const testCode = `
+// Füge diesen Code in der Browser Console auf der Business Portal Admin Seite aus:
+
+// 1. Finde den Button
+const buttons = Array.from(document.querySelectorAll('button'));
+const portalButton = buttons.find(btn => btn.textContent.includes('Portal öffnen'));
+
+if (portalButton) {
+    console.log('Button gefunden:', portalButton);
+    console.log('Wire Click:', portalButton.getAttribute('wire:click'));
+    
+    // Simuliere Click
+    portalButton.click();
+    
+    // Check für Events
+    window.addEventListener('redirect-to-portal', (e) => {
+        console.log('Redirect Event empfangen:', e.detail);
+    });
+} else {
+    console.error('Portal Button nicht gefunden!');
+}
+            `;
+            
+            const codeDiv = document.createElement('pre');
+            codeDiv.textContent = testCode;
+            document.getElementById('debugConsole').appendChild(codeDiv);
+            
+            log('Test-Code wurde bereitgestellt. Kopiere und führe ihn aus.', 'info');
+        }
+
+        function debugAlpine() {
+            log('Alpine.js Debug...', 'info');
+            
+            const debugCode = `
+// Alpine Debug Commands:
+console.log('Alpine Version:', Alpine.version);
+console.log('Alpine Started:', Alpine.started);
+
+// Finde alle Alpine Komponenten
+document.querySelectorAll('[x-data]').forEach((el, i) => {
+    console.log(\`Component \${i}:\`, {
+        element: el,
+        data: el.__x ? el.__x.$data : 'Not initialized',
+        xData: el.getAttribute('x-data')
+    });
+});
+
+// Force Alpine init auf allen Komponenten
+document.querySelectorAll('[x-data]').forEach(el => {
+    if (!el.__x && window.Alpine) {
+        Alpine.initTree(el);
+        console.log('Initialized:', el);
+    }
+});
+            `;
+            
+            const codeDiv = document.createElement('pre');
+            codeDiv.textContent = debugCode;
+            document.getElementById('debugConsole').appendChild(codeDiv);
+            
+            log('Alpine Debug-Code bereitgestellt', 'info');
+        }
+
+        function debugLivewire() {
+            log('Livewire Debug...', 'info');
+            
+            const debugCode = `
+// Livewire Debug Commands:
+console.log('Livewire Components:', Livewire.components);
+
+// Liste alle Livewire Komponenten
+Object.entries(Livewire.components).forEach(([id, component]) => {
+    console.log(\`Component \${id}:\`, {
+        name: component.name,
+        data: component.data,
+        effects: component.effects
+    });
+});
+
+// Finde Business Portal Admin Component
+const bpaComponent = Object.values(Livewire.components).find(c => 
+    c.name && c.name.includes('business-portal-admin')
+);
+
+if (bpaComponent) {
+    console.log('Business Portal Admin Component:', bpaComponent);
+    console.log('Selected Company ID:', bpaComponent.data.selectedCompanyId);
+}
+
+// Test redirect
+if (bpaComponent) {
+    // Trigger redirect event
+    Livewire.find(bpaComponent.id).call('openCustomerPortal');
+}
+            `;
+            
+            const codeDiv = document.createElement('pre');
+            codeDiv.textContent = debugCode;
+            document.getElementById('debugConsole').appendChild(codeDiv);
+            
+            log('Livewire Debug-Code bereitgestellt', 'info');
+        }
+
+        function clearAndReload() {
+            log('Clearing cache and reloading...', 'info');
+            
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Hard reload
+            window.location.href = '/admin/business-portal-admin';
+        }
+
+        // Auto-generate fix suggestions
+        function generateFixSuggestions() {
+            const suggestions = document.getElementById('fixSuggestions');
+            suggestions.innerHTML = `
+                <h3>🔧 Empfohlene Fixes:</h3>
+                
+                <h4>1. Alpine.js Initialisierung:</h4>
+                <pre>
+// In filament-dropdown-global-fix.js ergänzen:
+document.addEventListener('livewire:navigated', () => {
+    // Re-initialize Alpine components
+    document.querySelectorAll('[x-data]:not([x-init])').forEach(el => {
+        if (!el.__x && window.Alpine) {
+            Alpine.initTree(el);
+        }
+    });
+});
+                </pre>
+                
+                <h4>2. Livewire Event Fix:</h4>
+                <pre>
+// In BusinessPortalAdmin.php:
+public function openCustomerPortal(): void
+{
+    // Force JavaScript redirect
+    $this->js('window.location.href = "/business/admin-access?token=' . $token . '"');
+}
+                </pre>
+                
+                <h4>3. Select Component Fix:</h4>
+                <pre>
+// Force update on select change:
+document.addEventListener('change', (e) => {
+    if (e.target.matches('select[wire\\\\:model]')) {
+        const component = Livewire.find(e.target.closest('[wire\\\\:id]').getAttribute('wire:id'));
+        if (component) {
+            const model = e.target.getAttribute('wire:model');
+            component.set(model, e.target.value);
+        }
+    }
+}, true);
+                </pre>
+            `;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Debug Tool bereit', 'success');
+            generateFixSuggestions();
+        });
+    </script>
+</body>
+</html>

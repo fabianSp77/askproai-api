@@ -70,18 +70,8 @@ class AnalyticsController extends Controller
         // Top customers
         $topCustomers = $this->getTopCustomers($companyId, $startDate, $endDate, $branchId, $phoneNumber);
         
-        return view('portal.analytics.index', compact(
-            'callStats',
-            'appointmentStats',
-            'hourlyDistribution',
-            'topCustomers',
-            'startDate',
-            'endDate',
-            'branches',
-            'branchId',
-            'phoneNumbers',
-            'phoneNumber'
-        ));
+        // Load React SPA directly
+        return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
     
     /**

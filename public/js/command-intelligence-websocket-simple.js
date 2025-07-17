@@ -23,7 +23,7 @@ class CommandIntelligenceWebSocket {
         }
 
         // For now, just log that we would initialize WebSocket
-        console.log('WebSocket initialization skipped - Pusher not configured');
+        //console.log('WebSocket initialization skipped - Pusher not configured');
         
         // Comment out actual WebSocket code for now
         /*

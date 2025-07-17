@@ -1,0 +1,63 @@
+/* Enhanced styles for ultra-wide screens (1800px+) */
+@media (min-width: 1800px) {
+    /* Increase max width for ultra-wide screens */
+    .billing-container {
+        max-width: 1600px !important;
+    }
+    
+    /* Better grid layout for stats on wide screens */
+    .stats-grid-wide {
+        grid-template-columns: repeat(5, 1fr) !important;
+    }
+    
+    /* Optimize card spacing */
+    .billing-content {
+        gap: 2rem;
+    }
+    
+    /* Two-column layout for main content areas */
+    .billing-main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+    
+    /* Better spacing for balance header on wide screens */
+    .balance-header-wide {
+        padding: 3rem 4rem;
+    }
+    
+    /* Optimize table widths */
+    .transaction-table-container {
+        max-width: none;
+    }
+}
+
+/* Improved layout for 1400px-1800px */
+@media (min-width: 1400px) and (max-width: 1799px) {
+    .billing-container {
+        max-width: 1320px !important;
+    }
+    
+    .stats-grid-wide {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+/* Fix for very tall viewports (1120px height) */
+@media (min-height: 1000px) {
+    /* Add more breathing room vertically */
+    .billing-header {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    
+    .billing-section {
+        margin-bottom: 3rem;
+    }
+    
+    /* Make modals taller on tall screens */
+    .topup-modal-content {
+        max-height: 90vh;
+    }
+}

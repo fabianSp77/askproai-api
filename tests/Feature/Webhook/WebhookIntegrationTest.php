@@ -333,14 +333,6 @@ class WebhookIntegrationTest extends TestCase
         });
     }
 
-    /**
-     * Helper method to generate webhook signature
-     */
-    private function generateWebhookSignature(array $payload, string $secret): string
-    {
-        $payloadString = json_encode($payload);
-        return hash_hmac('sha256', $payloadString, $secret);
-    }
 
     /**
      * Helper method to generate Stripe webhook signature

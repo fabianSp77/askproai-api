@@ -1,41 +1,52 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+/* Core responsive and mobile functionality */
 @import '../../mobile-framework.css';
 @import '../../filament-mobile-overrides.css';
+
+/* Resource-specific styles */
 @import './call-resource.css';
-@import '../../column-toggle-fix.css';
-@import '../../tab-tooltips.css';
-@import '../../column-editor-modern.css';
-@import '../../contrast-fix.css';
-@import './company-integration-portal.css';
-@import './responsive-fixes.css';
-@import './company-portal-fix.css';
-@import './retell-agent-portal.css';
-@import './ultimate-portal-design.css';
 @import './dashboard.css';
 @import './appointments.css';
 @import './calls.css';
 @import './customers.css';
-@import './table-responsive-fix.css';
-@import './resource-specific-responsive.css';
-@import './ultimate-ui.css';
+
+/* UI Components */
+@import '../../column-toggle-fix.css';
+@import '../../tab-tooltips.css';
+@import '../../column-editor-modern.css';
+@import '../../contrast-fix.css';
+@import './modern-ui-components.css';
+
+/* Portal and integrations */
+@import './company-integration-portal.css';
+@import './retell-agent-portal.css';
+@import './ultimate-portal-design.css';
 @import './retell-configuration-center.css';
 @import './retell-ultimate-modern.css';
-@import './table-width-fix.css';
-@import './full-width-fix.css';
-@import './table-column-optimization.css';
-@import './call-detail.css';
-@import './branch-actions-fix.css';
-@import './user-menu-fixes.css';
-@import './professional-navigation.css';
-/* @import './billing-alerts-improvements.css'; -- Conflicts with theme */
-@import './askproai-theme.css';
-/* @import './checkbox-state-fix.css'; -- Removed to prevent conflicts with askproai-theme */
-@import './checkbox-fix-force.css'; /* Force checkbox visibility with high specificity */
-@import './wizard-progress-fix.css'; /* Fix wizard step connection lines */
-@import './wizard-form-fix.css'; /* Fix wizard form interactions */
-@import './wizard-v2-fixes.css'; /* Enhanced fixes for Quick Setup Wizard V2 */
-@import './call-detail-enterprise.css'; /* Enterprise call detail styling */
 
+/* Layout fixes */
+@import './table-responsive-fix.css';
+@import './table-column-optimization.css';
+@import './staff-table-fix.css';
+@import './call-detail.css';
+
+/* Theme customization */
+@import './askproai-theme.css';
+@import './professional-navigation.css';
+
+/* Wizard components */
+@import './wizard-progress-fix.css';
+@import './wizard-form-fix.css';
+@import './wizard-v2-fixes.css';
+
+/* CRITICAL: This must be loaded LAST - Single source of truth for dropdown/sidebar fixes */
+@import './minimal-dropdown-fix.css';
+
+/* Non-billable calls styling */
+@import './non-billable-calls.css';
+
+/* Theme color variables */
 :root {
     --color-primary-50: 254 252 232;
     --color-primary-100: 254 249 195;
@@ -50,6 +61,7 @@
     --color-primary-950: 66 32 6;
 }
 
+/* Sidebar customization */
 .fi-sidebar-header {
     @apply bg-amber-500 text-white;
 }
@@ -62,18 +74,10 @@
     @apply bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300;
 }
 
-/* Prevent black screen during navigation */
+/* Prevent navigation flashes */
 .fi-body {
     transition: none !important;
 }
-
-/* Remove any black overlays */
-/* Commented out to fix contrast issues
-body.dark .fi-body,
-html.dark .fi-body {
-    background-color: rgb(249 250 251) !important;
-}
-*/
 
 /* Ensure page content is always visible */
 .fi-page {
@@ -81,289 +85,143 @@ html.dark .fi-body {
     visibility: visible !important;
 }
 
-/* Fix text contrast issues */
-.fi-body {
-    background-color: rgb(255 255 255) !important; /* Pure white background */
-}
-
-/* Ensure proper text colors */
-.fi-body,
-.fi-body * {
-    color: rgb(17 24 39); /* gray-900 for better contrast */
-}
-
-/* Fix gray text that's too light */
-.text-gray-500 {
-    color: rgb(75 85 99) !important; /* gray-600 for better contrast */
-}
-
-.text-gray-400 {
-    color: rgb(107 114 128) !important; /* gray-500 for better contrast */
-}
-
-/* Ensure cards have proper backgrounds */
-.fi-section,
-.fi-card {
-    background-color: rgb(255 255 255) !important;
-    border-color: rgb(229 231 235) !important;
-}
-
-/* Fix widget text contrast */
-.filament-widget .text-gray-600 {
-    color: rgb(55 65 81) !important; /* gray-700 */
-}
-
-.filament-widget .text-gray-700 {
-    color: rgb(31 41 55) !important; /* gray-800 */
-}
-
-.filament-widget .text-gray-900 {
-    color: rgb(17 24 39) !important; /* gray-900 */
-}
-
-/* Disable Livewire navigation progress bar delay */
-[wire\:navigate-progress] {
-    transition-delay: 0s !important;
-}
-
-/* Column Toggle Dropdown Improvements */
-.fi-ta-col-toggle .fi-dropdown-panel {
-    max-height: 80vh !important;
-    overflow-y: auto !important;
-}
-
-.fi-ta-col-toggle .fi-dropdown-panel > div {
-    max-height: calc(80vh - 4rem);
-    overflow-y: auto;
-    padding-right: 0.5rem;
-}
-
-/* Scrollbar styling for column toggle */
-.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar,
-.fi-ta-col-toggle .fi-dropdown-panel > div::-webkit-scrollbar {
-    width: 6px;
-}
-
-.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-track,
-.fi-ta-col-toggle .fi-dropdown-panel > div::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-thumb,
-.fi-ta-col-toggle .fi-dropdown-panel > div::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.5);
-    border-radius: 3px;
-}
-
-.fi-ta-col-toggle .fi-dropdown-panel::-webkit-scrollbar-thumb:hover,
-.fi-ta-col-toggle .fi-dropdown-panel > div::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(156, 163, 175, 0.8);
-}
-
-/* Column groups styling */
-.column-toggle-group {
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(229, 231, 235, 1);
-}
-
-.dark .column-toggle-group {
-    border-bottom-color: rgba(55, 65, 81, 1);
-}
-
-.column-toggle-group:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-
-.column-toggle-group-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: rgba(107, 114, 128, 1);
-    margin-bottom: 0.5rem;
-}
-
-.dark .column-toggle-group-label {
-    color: rgba(156, 163, 175, 1);
-}
-
-/* Tab descriptions styling */
-.tab-descriptions-widget {
-    position: relative;
-    margin-bottom: 1.5rem;
-}
-
-.tab-descriptions-container {
-    display: flex;
-    gap: 2rem;
-    padding: 1rem;
-    background: rgba(249, 250, 251, 1);
-    border-radius: 0.5rem;
-    position: relative;
-}
-
-.dark .tab-descriptions-container {
-    background: rgba(31, 41, 55, 1);
-}
-
-.tab-description {
-    flex: 1;
-    text-align: center;
-    position: relative;
-    z-index: 10;
-}
-
-.tab-description h3 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: rgba(17, 24, 39, 1);
-    margin-bottom: 0.25rem;
-}
-
-.dark .tab-description h3 {
-    color: rgba(243, 244, 246, 1);
-}
-
-.tab-description p {
-    font-size: 0.75rem;
-    color: rgba(107, 114, 128, 1);
-}
-
-.dark .tab-description p {
-    color: rgba(156, 163, 175, 1);
-}
-
-/* Connecting line for active tab */
-.tab-description-connector {
-    position: absolute;
-    bottom: -1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2px;
-    height: 1.5rem;
-    background: rgba(234, 179, 8, 1);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.tab-description.active .tab-description-connector {
-    opacity: 1;
-}
-
-.tab-description-connector::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 8px;
-    height: 8px;
-    background: rgba(234, 179, 8, 1);
-    border-radius: 50%;
-}
-
-/* Active tab highlight */
-.tab-description.active h3 {
-    color: rgba(234, 179, 8, 1);
-}
-
-.dark .tab-description.active h3 {
-    color: rgba(251, 191, 36, 1);
-}
-
-/* Fix for content sliding under sidebar */
-.fi-page-wrapper {
-    position: relative !important;
-    z-index: 10 !important;
-    margin-left: 0 !important;
-}
-
-/* Ensure proper spacing when sidebar is open */
-@media (min-width: 1024px) {
-    /* Define sidebar width variable */
-    :root {
-        --fi-sidebar-width: 16rem;
-    }
-    
-    /* Fixed sidebar positioning */
-    .fi-sidebar {
-        position: fixed !important;
-        top: 0;
-        left: 0;
-        width: var(--fi-sidebar-width);
-        height: 100vh;
-        z-index: 40 !important;
-        background: white;
-        border-right: 1px solid rgb(229, 231, 235);
-    }
-    
-    /* Dark mode sidebar */
-    .dark .fi-sidebar {
-        background: rgb(17, 24, 39);
-        border-right-color: rgb(55, 65, 81);
-    }
-    
-    /* Main content offset */
-    .fi-main {
-        margin-left: var(--fi-sidebar-width) !important;
-        width: calc(100% - var(--fi-sidebar-width)) !important;
-        position: relative !important;
-        z-index: 1 !important;
-    }
-    
-    /* Collapsed sidebar */
-    .fi-sidebar-collapsed {
-        --fi-sidebar-width: 4rem;
-    }
-    
-    /* Prevent content jump */
-    .fi-sidebar-open .fi-page-wrapper,
-    .fi-page-wrapper {
-        transition: none !important;
-        width: 100%;
-        max-width: 100%;
-    }
-    
-    .fi-main-ctn {
-        padding-left: 0 !important;
-        width: 100%;
-    }
-    
-    /* Force content to stay in place */
-    .fi-page {
-        position: relative !important;
-        margin-left: 0 !important;
-        transform: none !important;
-        width: 100%;
-        max-width: 100%;
-    }
-}
-
-/* Mobile responsiveness */
-@media (max-width: 1023px) {
-    .fi-sidebar {
-        position: fixed !important;
-        z-index: 50 !important;
-    }
-    
-    .fi-main {
-        margin-left: 0 !important;
-        width: 100% !important;
-    }
-}
-
 /* Alpine.js cloak directive */
 [x-cloak] { 
     display: none !important; 
 }
 
-/* Dropdown z-index fixes from old dropdown-fix-global */
-.fi-dropdown-panel {
-    z-index: 999999 !important;
+/* ========== WIDGET DISPLAY FIX ========== */
+/* Force widgets to be visible on calls page */
+.fi-page-header-widgets,
+.fi-widgets-container,
+.fi-widgets-grid {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
-.fi-ta-row {
-    position: static !important;
+/* Ensure widget containers are visible */
+.fi-wi,
+.fi-widget,
+[class*="fi-wi-"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 1px !important;
 }
+
+/* Stats overview widget specific */
+.fi-wi-stats-overview {
+    display: block !important;
+    margin-bottom: 1rem !important;
+}
+
+.fi-wi-stats-overview-stats-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    gap: 1rem !important;
+}
+
+.fi-wi-stats-overview-stat {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 1rem !important;
+}
+
+/* Live status widget */
+.fi-wi-live-status-widget {
+    display: block !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Global filter widget */
+.fi-wi-global-filter {
+    display: block !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Header widgets container on list pages */
+.fi-resource-view > div:first-child > div {
+    display: block !important;
+}
+
+/* Ensure grid layout for multiple widgets */
+.fi-page > div:has(.fi-wi) {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* CRITICAL FIX: Force widget container visibility on resource pages */
+.fi-resource-view > div:first-child {
+    display: block !important;
+    min-height: 50px !important;
+}
+
+/* Force any Livewire component that might be a widget to show */
+[wire\:id]:has(.fi-wi),
+[wire\:id]:has(.fi-widget) {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Debug mode - add red border to see widget containers */
+.fi-page > div:empty {
+    border: 2px dashed red !important;
+    min-height: 100px !important;
+    position: relative !important;
+}
+
+.fi-page > div:empty::after {
+    content: "Widget container (empty)" !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    color: red !important;
+    font-weight: bold !important;
+}
+/* ========== END WIDGET DISPLAY FIX ========== */
+/* ========== DASHBOARD WIDGET VISIBILITY FIX ========== */
+/* Dashboard Widget Visibility Fix */
+.fi-page.operations-dashboard .fi-widgets-container,
+.fi-page.operations-dashboard .fi-widgets-grid {
+    display: grid \!important;
+    visibility: visible \!important;
+    opacity: 1 \!important;
+}
+
+/* Ensure Filament widgets component displays properly */
+.fi-page.operations-dashboard [x-data] {
+    display: contents;
+}
+
+/* Force dashboard widgets to show */
+.fi-wi-compact-operations,
+.fi-wi-insights-actions,
+.fi-wi-financial-intelligence,
+.fi-wi-branch-performance-matrix,
+.fi-wi-live-activity-feed {
+    display: block \!important;
+    visibility: visible \!important;
+    opacity: 1 \!important;
+    min-height: 100px;
+}
+
+/* Fix widget grid layout */
+.fi-page.operations-dashboard .grid {
+    display: grid \!important;
+}
+
+/* Ensure widget component wrappers don't hide content */
+.fi-page.operations-dashboard > div > div {
+    display: contents;
+}
+
+/* Fix empty widget containers on dashboard */
+.fi-page.operations-dashboard .fi-widgets-container:empty {
+    display: none \!important;
+}
+/* ========== END DASHBOARD WIDGET VISIBILITY FIX ========== */

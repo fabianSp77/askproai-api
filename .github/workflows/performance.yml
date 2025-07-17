@@ -1,0 +1,215 @@
+name: Performance Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [labeled]
+  schedule:
+    - cron: '0 3 * * 0' # Weekly on Sunday at 3 AM UTC
+
+jobs:
+  lighthouse:
+    name: Lighthouse Performance Test
+    runs-on: ubuntu-latest
+    if: contains(github.event.label.name, 'performance') || github.event_name == 'schedule' || github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist
+          npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Start Laravel server
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan serve --no-reload &
+          sleep 5
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            http://localhost:8000
+            http://localhost:8000/portal/login
+          budgetPath: ./budget.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+  k6-load-test:
+    name: K6 Load Testing
+    runs-on: ubuntu-latest
+    if: contains(github.event.label.name, 'load-test') || github.event_name == 'schedule'
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: askproai_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Prepare Laravel Application
+        run: |
+          cp .env.testing .env
+          php artisan key:generate
+          php artisan migrate --force --seed
+        env:
+          DB_HOST: 127.0.0.1
+
+      - name: Start Laravel server
+        run: |
+          php artisan serve --no-reload &
+          sleep 5
+        env:
+          DB_HOST: 127.0.0.1
+
+      - name: Run k6 load test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: tests/performance/load-test.js
+          flags: --out json=results.json
+
+      - name: Upload k6 results
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-load-test-results
+          path: results.json
+
+  benchmark:
+    name: PHP Benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, mysql, redis
+          ini-values: opcache.enable=1, opcache.enable_cli=1
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run PHPBench
+        run: |
+          composer require --dev phpbench/phpbench
+          vendor/bin/phpbench run tests/benchmark --report=default
+
+      - name: Generate performance report
+        if: always()
+        run: |
+          echo "## 🚀 Performance Report" >> $GITHUB_STEP_SUMMARY
+          echo "### PHP Benchmarks" >> $GITHUB_STEP_SUMMARY
+          vendor/bin/phpbench run tests/benchmark --report=aggregate >> $GITHUB_STEP_SUMMARY
+
+  database-performance:
+    name: Database Performance Analysis
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: askproai_test
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run database migrations
+        run: |
+          cp .env.testing .env
+          php artisan migrate --force
+        env:
+          DB_HOST: 127.0.0.1
+
+      - name: Analyze database queries
+        run: |
+          php artisan performance:analyze --database
+        env:
+          DB_HOST: 127.0.0.1
+
+      - name: Check for N+1 queries
+        run: |
+          composer require --dev beyondcode/laravel-query-detector
+          php artisan test --filter=PerformanceTest
+        env:
+          DB_HOST: 127.0.0.1
+
+  bundle-size:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and analyze bundle
+        run: |
+          npm run build
+          npx size-limit
+
+      - name: Upload bundle stats
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-stats
+          path: |
+            public/build/stats.html
+            public/build/stats.json

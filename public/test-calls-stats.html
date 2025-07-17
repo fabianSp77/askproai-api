@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calls Stats Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .success {
+            color: #22c55e;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .warning {
+            color: #f59e0b;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .refresh-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .refresh-btn:hover {
+            background: #2563eb;
+        }
+        .info-box {
+            background: #e0f2fe;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calls Stats Test</h1>
+        
+        <div class="info-box">
+            <strong>Info:</strong> Diese Seite zeigt die Stats-Daten von der Calls API und vergleicht sie mit den erwarteten Feldern im Frontend.
+        </div>
+
+        <button class="refresh-btn" onclick="fetchStats()">Stats neu laden</button>
+
+        <h2>Stats Übersicht</h2>
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Anrufe heute</div>
+                <div class="stat-value" id="total_today">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Neue Anrufe</div>
+                <div class="stat-value" id="new">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Aktion erforderlich</div>
+                <div class="stat-value" id="action_required">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Ø Dauer (Sek.)</div>
+                <div class="stat-value" id="avg_duration">-</div>
+            </div>
+        </div>
+
+        <h2>API Response Details</h2>
+        <pre id="api-response">Lade...</pre>
+
+        <h2>Field Mapping Status</h2>
+        <div id="field-mapping"></div>
+    </div>
+
+    <script>
+        async function fetchStats() {
+            try {
+                const response = await fetch('/business/api/calls?per_page=1', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display raw response
+                document.getElementById('api-response').textContent = JSON.stringify(data, null, 2);
+                
+                // Update stats display
+                if (data.stats) {
+                    document.getElementById('total_today').textContent = data.stats.total_today || '0';
+                    document.getElementById('new').textContent = data.stats.new || '0';
+                    document.getElementById('action_required').textContent = data.stats.action_required || '0';
+                    document.getElementById('avg_duration').textContent = data.stats.avg_duration || '0';
+                    
+                    // Check field mapping
+                    checkFieldMapping(data.stats);
+                }
+                
+            } catch (error) {
+                document.getElementById('api-response').textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        function checkFieldMapping(stats) {
+            const expectedFields = ['total_today', 'new', 'action_required', 'avg_duration'];
+            const mappingDiv = document.getElementById('field-mapping');
+            let html = '<ul>';
+            
+            expectedFields.forEach(field => {
+                const exists = stats.hasOwnProperty(field);
+                const value = stats[field];
+                html += `<li>`;
+                html += `<strong>${field}:</strong> `;
+                if (exists) {
+                    html += `<span class="success">✓ Vorhanden (Wert: ${value})</span>`;
+                } else {
+                    html += `<span class="error">✗ Fehlt</span>`;
+                }
+                html += `</li>`;
+            });
+            
+            // Check for extra fields
+            html += '<li><strong>Zusätzliche Felder:</strong> ';
+            const extraFields = Object.keys(stats).filter(f => !expectedFields.includes(f));
+            if (extraFields.length > 0) {
+                html += extraFields.map(f => `${f}: ${stats[f]}`).join(', ');
+            } else {
+                html += 'Keine';
+            }
+            html += '</li>';
+            
+            html += '</ul>';
+            mappingDiv.innerHTML = html;
+        }
+        
+        // Initial load
+        fetchStats();
+    </script>
+</body>
+</html>

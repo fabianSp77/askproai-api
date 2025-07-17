@@ -7,6 +7,9 @@ use App\Models\Company;
 use App\Models\PrepaidBalance;
 use App\Models\BillingRate;
 use App\Models\CallCharge;
+use App\Models\BillingBonusRule;
+use App\Models\BalanceTransaction;
+use App\Models\BalanceTopup;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -211,4 +214,202 @@ class PrepaidBillingService
 
         return $avgDailyUsage * 30;
     }
-}
+
+    /**
+     * Apply bonus rules to a topup
+     */
+    public function applyBonusRules(Company $company, float $topupAmount, BalanceTopup $topup = null): ?float
+    {
+        // Check if this is the first topup
+        $isFirstTopup = !BalanceTransaction::where('company_id', $company->id)
+            ->where('type', 'topup')
+            ->where('amount', '>', 0)
+            ->exists();
+
+        // Get applicable bonus rules
+        $bonusRule = BillingBonusRule::forCompany($company->id)
+            ->active()
+            ->valid()
+            ->applicableForAmount($topupAmount)
+            ->orderBy('priority', 'desc')
+            ->orderBy('bonus_percentage', 'desc')
+            ->first();
+
+        if (!$bonusRule || !$bonusRule->isApplicable($topupAmount, $isFirstTopup)) {
+            return null;
+        }
+
+        // Calculate bonus
+        $bonusAmount = $bonusRule->calculateBonus($topupAmount);
+        
+        if ($bonusAmount <= 0) {
+            return null;
+        }
+
+        // Apply bonus
+        $balance = $this->getOrCreateBalance($company);
+        $balance->addBonusBalance(
+            $bonusAmount,
+            sprintf('Bonus %s%% für Aufladung von %.2f€', $bonusRule->bonus_percentage, $topupAmount),
+            'topup_bonus',
+            $topup?->id
+        );
+
+        // Record usage
+        $bonusRule->recordUsage($bonusAmount);
+
+        Log::info('Bonus applied', [
+            'company_id' => $company->id,
+            'topup_amount' => $topupAmount,
+            'bonus_amount' => $bonusAmount,
+            'bonus_rule_id' => $bonusRule->id,
+            'is_first_topup' => $isFirstTopup,
+        ]);
+
+        return $bonusAmount;
+    }
+
+    /**
+     * Process withdrawal with bonus handling
+     */
+    public function processWithdrawal(Company $company, float $amount): array
+    {
+        $balance = $this->getOrCreateBalance($company);
+        
+        // Check if enough withdrawable balance
+        $withdrawableBalance = $balance->getWithdrawableBalance();
+        if ($withdrawableBalance < $amount) {
+            throw new \Exception(sprintf(
+                'Insufficient withdrawable balance. Available: %.2f€, Requested: %.2f€',
+                $withdrawableBalance,
+                $amount
+            ));
+        }
+
+        // Process withdrawal
+        DB::transaction(function () use ($balance, $amount) {
+            $balance->lockForUpdate();
+            
+            // Only deduct from normal balance
+            $balance->decrement('balance', $amount);
+            
+            // Create transaction
+            BalanceTransaction::create([
+                'company_id' => $balance->company_id,
+                'type' => 'withdrawal',
+                'amount' => -$amount,
+                'balance_before' => $balance->balance + $amount,
+                'balance_after' => $balance->balance,
+                'description' => 'Guthaben-Auszahlung',
+                'created_by' => auth()->guard('portal')->user()->id ?? null,
+            ]);
+        });
+
+        return [
+            'withdrawn' => $amount,
+            'remaining_balance' => $balance->fresh()->balance,
+            'remaining_bonus' => $balance->fresh()->bonus_balance,
+        ];
+    }
+
+    /**
+     * Get bonus rules for display
+     */
+    public function getApplicableBonusRules(Company $company): array
+    {
+        return BillingBonusRule::forCompany($company->id)
+            ->active()
+            ->valid()
+            ->orderBy('min_amount')
+            ->get()
+            ->map(function ($rule) {
+                return [
+                    'name' => $rule->name,
+                    'min_amount' => $rule->min_amount,
+                    'max_amount' => $rule->max_amount,
+                    'bonus_percentage' => $rule->bonus_percentage,
+                    'max_bonus_amount' => $rule->max_bonus_amount,
+                    'is_first_time_only' => $rule->is_first_time_only,
+                    'description' => $rule->description ?? sprintf(
+                        'Erhalte %s%% Bonus bei Aufladungen ab %.2f€',
+                        $rule->bonus_percentage,
+                        $rule->min_amount
+                    ),
+                ];
+            })
+            ->toArray();
+    }
+    
+    /**
+     * Calculate bonus for amount
+     */
+    public function calculateBonus(float $amount, Company $company): array
+    {
+        // Check if this is first topup
+        $isFirstTopup = !BalanceTransaction::where('company_id', $company->id)
+            ->where('type', 'topup')
+            ->exists();
+            
+        // Hardcoded bonus structure for now
+        $bonusPercentage = 0;
+        if ($amount >= 5000) {
+            $bonusPercentage = 50;
+        } elseif ($amount >= 3000) {
+            $bonusPercentage = 40;
+        } elseif ($amount >= 2000) {
+            $bonusPercentage = 30;
+        } elseif ($amount >= 1000) {
+            $bonusPercentage = 20;
+        } elseif ($amount >= 500) {
+            $bonusPercentage = 15;
+        } elseif ($amount >= 250) {
+            $bonusPercentage = 10;
+        }
+        
+        $bonusAmount = $amount * ($bonusPercentage / 100);
+        
+        // Create a mock rule object for compatibility
+        $mockRule = new \stdClass();
+        $mockRule->bonus_percentage = $bonusPercentage;
+        $mockRule->id = 'hardcoded';
+        
+        // Try to get from database first
+        $rules = BillingBonusRule::forCompany($company->id)
+            ->active()
+            ->valid()
+            ->where('min_amount', '<=', $amount)
+            ->where(function ($query) use ($amount) {
+                $query->whereNull('max_amount')
+                    ->orWhere('max_amount', '>=', $amount);
+            })
+            ->when(!$isFirstTopup, function ($query) {
+                $query->where('is_first_time_only', false);
+            })
+            ->orderBy('priority', 'desc')
+            ->orderBy('bonus_percentage', 'desc')
+            ->get();
+            
+        // Find best bonus from database
+        $bestBonus = $bonusAmount;
+        $bestRule = $mockRule;
+        
+        foreach ($rules as $rule) {
+            $dbBonusAmount = $amount * ($rule->bonus_percentage / 100);
+            
+            // Apply max bonus cap if set
+            if ($rule->max_bonus_amount && $dbBonusAmount > $rule->max_bonus_amount) {
+                $dbBonusAmount = $rule->max_bonus_amount;
+            }
+            
+            if ($dbBonusAmount > $bestBonus) {
+                $bestBonus = $dbBonusAmount;
+                $bestRule = $rule;
+            }
+        }
+        
+        return [
+            'rule' => $bestRule,
+            'bonus_amount' => $bestBonus,
+            'is_first_topup' => $isFirstTopup,
+        ];
+    }}

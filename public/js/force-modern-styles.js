@@ -351,7 +351,7 @@
     
     // Initialize everything
     function initialize() {
-        console.log('🎨 Force Modern Styles: Initializing...');
+        //console.log('🎨 Force Modern Styles: Initializing...');
         
         // Initial injection
         forceInjectStyles();
@@ -364,7 +364,7 @@
         
         // Add global function for manual refresh
         window.applyModernStyles = function() {
-            console.log('🎨 Manually applying modern styles...');
+            //console.log('🎨 Manually applying modern styles...');
             forceInjectStyles();
             // Add pulse effect temporarily
             document.querySelectorAll('.function-card-modern').forEach(card => {
@@ -373,7 +373,7 @@
             });
         };
         
-        console.log('✅ Force Modern Styles: Ready! Use window.applyModernStyles() to refresh.');
+        //console.log('✅ Force Modern Styles: Ready! Use window.applyModernStyles() to refresh.');
     }
     
     // Wait for DOM and Livewire to be ready

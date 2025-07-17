@@ -12,11 +12,10 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
-use Tests\Traits\SimplifiedMigrations;
 
 class CustomerRepositoryTest extends TestCase
 {
-    use SimplifiedMigrations;
+    use RefreshDatabase;
 
     protected CustomerRepository $repository;
     protected Company $company;
@@ -31,6 +30,7 @@ class CustomerRepositoryTest extends TestCase
         $this->company = Company::factory()->create();
         
         // Set up tenant context
+        app()->instance('current_company_id', $this->company->id);
         app()->instance('current_company', $this->company);
     }
 

@@ -1,0 +1,102 @@
+/**
+ * Manual Framework Loader
+ * Loads Alpine and Livewire manually if Filament fails to load them
+ */
+(function() {
+    'use strict';
+    
+    //console.log('[Manual Framework Loader] Starting...');
+    
+    // Function to load script
+    function loadScript(src, onload) {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = onload;
+        script.onerror = () => console.error('[Manual Framework Loader] Failed to load:', src);
+        document.head.appendChild(script);
+    }
+    
+    // Function to load Livewire
+    function loadLivewire() {
+        if (window.Livewire) {
+            //console.log('[Manual Framework Loader] Livewire already loaded');
+            return;
+        }
+        
+        // Check if Livewire script exists
+        const livewirePath = '/vendor/livewire/livewire.js';
+        //console.log('[Manual Framework Loader] Loading Livewire from:', livewirePath);
+        
+        loadScript(livewirePath + '?v=' + Date.now(), () => {
+            //console.log('[Manual Framework Loader] Livewire script loaded');
+            
+            // Initialize Livewire if needed
+            if (window.Livewire && typeof window.Livewire.start === 'function') {
+                window.Livewire.start();
+                //console.log('[Manual Framework Loader] Livewire started');
+            }
+        });
+    }
+    
+    // Function to load Alpine from Filament bundle
+    function loadAlpineFromFilament() {
+        if (window.Alpine) {
+            //console.log('[Manual Framework Loader] Alpine already loaded');
+            return;
+        }
+        
+        // Try loading Filament's app.js which should contain Alpine
+        const filamentAppPath = '/js/filament/filament/app.js';
+        //console.log('[Manual Framework Loader] Loading Filament app.js from:', filamentAppPath);
+        
+        loadScript(filamentAppPath + '?v=' + Date.now(), () => {
+            //console.log('[Manual Framework Loader] Filament app.js loaded');
+            
+            // Check if Alpine is now available
+            setTimeout(() => {
+                if (window.Alpine) {
+                    //console.log('[Manual Framework Loader] Alpine loaded from Filament bundle');
+                    
+                    // Initialize if not started
+                    if (!window.Alpine.version && typeof window.Alpine.start === 'function') {
+                        window.Alpine.start();
+                        //console.log('[Manual Framework Loader] Alpine started');
+                    }
+                } else {
+                    console.error('[Manual Framework Loader] Alpine still not available after loading Filament app.js');
+                }
+            }, 100);
+        });
+    }
+    
+    // Start loading process
+    setTimeout(() => {
+        // Load Livewire first
+        loadLivewire();
+        
+        // Then load Alpine
+        setTimeout(() => {
+            loadAlpineFromFilament();
+        }, 500);
+    }, 100);
+    
+    // Export helper function
+    window.manualFrameworkLoader = {
+        reload: function() {
+            loadLivewire();
+            setTimeout(loadAlpineFromFilament, 500);
+        },
+        
+        status: function() {
+            //console.log('=== Manual Framework Loader Status ===');
+            //console.log('Alpine:', !!window.Alpine);
+            //console.log('Livewire:', !!window.Livewire);
+            if (window.Alpine) {
+                //console.log('Alpine version:', window.Alpine.version);
+            }
+            if (window.Livewire) {
+                //console.log('Livewire available');
+            }
+        }
+    };
+})();

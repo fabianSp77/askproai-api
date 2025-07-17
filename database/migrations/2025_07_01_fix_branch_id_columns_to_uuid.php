@@ -40,13 +40,19 @@ return new class extends Migration
                 
                 // Drop the old column and recreate as UUID
                 Schema::table($table, function (Blueprint $table) use ($column) {
-                    $table->dropColumn($column);
+                    // SQLite doesn't support dropping columns with indexes
+                    if (config('database.default') !== 'sqlite') {
+                        $table->dropColumn($column);
+                    }
                 });
                 
-                Schema::table($table, function (Blueprint $table) use ($column) {
-                    $table->char($column, 36)->nullable()->after('company_id');
-                    $table->index($column);
-                });
+                // Only recreate if we dropped it (not SQLite)
+                if (config('database.default') !== 'sqlite') {
+                    Schema::table($table, function (Blueprint $table) use ($column) {
+                        $table->char($column, 36)->nullable()->after('company_id');
+                        $table->index($column);
+                    });
+                }
             }
         }
     }

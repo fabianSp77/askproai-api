@@ -19,10 +19,10 @@ class BusinessPortalAdmin extends Page implements HasForms
 {
     use InteractsWithForms;
     
-    protected static ?string $navigationIcon = 'heroicon-o-building-office';
-    protected static ?string $navigationLabel = 'B2B Portal Admin';
-    protected static ?string $navigationGroup = 'Billing & Portal';
-    protected static ?int $navigationSort = 10;
+    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    protected static ?string $navigationLabel = '🏢 Kundenverwaltung';
+    protected static ?string $navigationGroup = 'Multi-Company Management';
+    protected static ?int $navigationSort = -10;
     protected static string $view = 'filament.admin.pages.business-portal-admin';
     
     public ?int $selectedCompanyId = null;
@@ -36,11 +36,24 @@ class BusinessPortalAdmin extends Page implements HasForms
     
     public static function canAccess(): bool
     {
-        return auth()->user()->hasRole('Super Admin');
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        return $user->hasRole('Super Admin');
     }
     
     public function mount(): void
     {
+        // Check if we should open a specific company portal
+        if (request()->has('open_company')) {
+            $companyId = request()->get('open_company');
+            $this->selectedCompanyId = intval($companyId);
+            
+            // Auto-open the portal after page loads
+            $this->dispatch('auto-open-portal', ['companyId' => $companyId]);
+        }
+        
         $this->loadCompanyData();
     }
     
@@ -150,15 +163,33 @@ class BusinessPortalAdmin extends Page implements HasForms
         // Generate a temporary access token for admin
         $token = $this->generateAdminAccessToken($this->selectedCompanyId);
         
-        // Redirect to business portal with admin token
-        $this->redirect('/business/admin-access?token=' . $token);
+        // Try Livewire redirect first
+        try {
+            $this->redirect('/business/admin-access?token=' . $token);
+        } catch (\Exception $e) {
+            // Fallback: Use JavaScript redirect via dispatch
+            $this->dispatch('redirect-to-portal', [
+                'url' => '/business/admin-access?token=' . $token
+            ]);
+        }
     }
     
     public function openPortalForCompany(int $companyId): void
     {
         $this->selectedCompanyId = $companyId;
-        $this->loadCompanyData();
-        $this->openCustomerPortal();
+        
+        // Generate token and redirect
+        $token = $this->generateAdminAccessToken($companyId);
+        
+        // Try Livewire redirect first
+        try {
+            $this->redirect('/business/admin-access?token=' . $token);
+        } catch (\Exception $e) {
+            // Fallback: Use JavaScript redirect via dispatch
+            $this->dispatch('redirect-to-portal', [
+                'url' => '/business/admin-access?token=' . $token
+            ]);
+        }
     }
     
     public function adjustBalance(): void
@@ -230,6 +261,7 @@ class BusinessPortalAdmin extends Page implements HasForms
             'admin_id' => auth()->id(),
             'company_id' => $companyId,
             'created_at' => now(),
+            'redirect_to' => '/business/dashboard', // Explicitly set redirect
         ], now()->addMinutes(15));
         
         return $token;

@@ -18,6 +18,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use App\Filament\Admin\Resources\PrepaidBalanceResource\Actions\ConfigureAutoTopupAction;
 
 class PrepaidBalanceResource extends Resource
 {
@@ -72,7 +73,8 @@ class PrepaidBalanceResource extends Resource
                     ->label('Guthaben')
                     ->money('EUR')
                     ->sortable()
-                    ->color(fn ($state) => $state > 0 ? 'success' : 'danger'),
+                    ->color(fn ($state) => $state > 50 ? 'success' : ($state > 0 ? 'warning' : 'danger'))
+                    ->weight('bold'),
                 TextColumn::make('reserved_balance')
                     ->label('Reserviert')
                     ->money('EUR')
@@ -184,6 +186,22 @@ class PrepaidBalanceResource extends Resource
                         }
                     }),
                 Tables\Actions\ViewAction::make(),
+                Action::make('viewTransactions')
+                    ->label('Transaktionen')
+                    ->icon('heroicon-o-list-bullet')
+                    ->color('gray')
+                    ->modalHeading('Letzte Transaktionen')
+                    ->modalWidth('5xl')
+                    ->modalContent(function (PrepaidBalance $record) {
+                        return view('filament.resources.prepaid-balance.quick-transactions', [
+                            'record' => $record,
+                            'transactions' => $record->company->balanceTransactions()
+                                ->latest()
+                                ->limit(50)
+                                ->get()
+                        ]);
+                    }),
+                ConfigureAutoTopupAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -203,7 +221,7 @@ class PrepaidBalanceResource extends Resource
     {
         return [
             'index' => Pages\ListPrepaidBalances::route('/'),
-            'view' => Pages\ViewPrepaidBalance::route('/{record}'),
+            'view' => Pages\ViewPrepaidBalanceEnhanced::route('/{record}'),
         ];
     }
     

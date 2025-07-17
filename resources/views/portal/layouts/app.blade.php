@@ -4,6 +4,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    @auth('portal')
+    <meta name="user" content="{{ json_encode([
+        'id' => auth()->guard('portal')->user()->id,
+        'name' => auth()->guard('portal')->user()->name,
+        'email' => auth()->guard('portal')->user()->email,
+        'role' => auth()->guard('portal')->user()->role ?? 'user'
+    ]) }}">
+    @endauth
+    
+    @auth('web')
+    @if(!auth()->guard('portal')->check())
+    <meta name="user" content="{{ json_encode([
+        'id' => auth()->user()->id,
+        'name' => auth()->user()->name,
+        'email' => auth()->user()->email,
+        'role' => 'admin'
+    ]) }}">
+    @endif
+    @endauth
 
     <title>{{ config('app.name', 'AskProAI') }} - Business Portal</title>
 
@@ -12,7 +32,13 @@
     <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
     <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AskProAI">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +49,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
-    @include('portal.partials.admin-banner')
+    {{-- Admin banner removed - using React portal now --}}
     
     <div class="min-h-screen bg-gray-100">
         <!-- Navigation -->
@@ -217,5 +243,44 @@
             @yield('content')
         </main>
     </div>
+    
+    {{-- Alpine.js Initialization Helper --}}
+    <script>
+        // Ensure Alpine components are properly initialized
+        document.addEventListener('alpine:init', () => {
+            console.log('Alpine initializing in Business Portal...');
+        });
+        
+        // Helper function to reinitialize Alpine components after AJAX
+        window.reinitializeAlpine = function(container = document.body) {
+            if (window.Alpine) {
+                const components = container.querySelectorAll('[x-data]:not([x-data-initialized])');
+                components.forEach(el => {
+                    try {
+                        window.Alpine.initTree(el);
+                        el.setAttribute('x-data-initialized', 'true');
+                    } catch (e) {
+                        console.warn('Failed to initialize Alpine component:', e);
+                    }
+                });
+            }
+        };
+        
+        // Global error handler for Alpine
+        window.addEventListener('alpine:expression-error', (event) => {
+            console.error('Alpine Expression Error:', event.detail);
+            // Try to recover
+            setTimeout(() => {
+                if (window.PortalAlpineStabilizer) {
+                    window.PortalAlpineStabilizer.fixComponent(event.detail.el);
+                }
+            }, 100);
+        });
+    </script>
+    
+    {{-- Include Help Widget --}}
+    @include('components.help-widget')
+    
+    @stack('scripts')
 </body>
 </html>

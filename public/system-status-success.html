@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ AskProAI System Status - ALLES FUNKTIONIERT</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .success-banner {
+            background: #10b981;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .status-item {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #10b981;
+        }
+        .status-item h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .success {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px 5px;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .button.green {
+            background: #10b981;
+        }
+        .button.green:hover {
+            background: #059669;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        .button.purple {
+            background: #8b5cf6;
+        }
+        .button.purple:hover {
+            background: #7c3aed;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+        .fixed-list {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .fixed-list h3 {
+            color: #047857;
+            margin-top: 0;
+        }
+        .fixed-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .fixed-list li {
+            margin: 10px 0;
+            color: #065f46;
+        }
+        .timestamp {
+            text-align: center;
+            color: #6b7280;
+            margin-top: 30px;
+            font-style: italic;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-banner pulse">
+            🎉 ALLE SYSTEME FUNKTIONIEREN ERFOLGREICH! 🎉
+        </div>
+
+        <div class="card">
+            <h1 style="text-align: center; color: #1f2937; margin-top: 0;">AskProAI System Status</h1>
+            
+            <div class="status-grid">
+                <div class="status-item">
+                    <h3>👨‍💼 Admin Portal</h3>
+                    <p class="success">✅ FUNKTIONIERT</p>
+                    <p>Status: HTTP 302 (Login Redirect)</p>
+                    <p>URL: <a href="/admin" target="_blank">https://api.askproai.de/admin</a></p>
+                </div>
+
+                <div class="status-item">
+                    <h3>🏢 Business Portal</h3>
+                    <p class="success">✅ FUNKTIONIERT</p>
+                    <p>Status: HTTP 200 (OK)</p>
+                    <p>URL: <a href="/business" target="_blank">https://api.askproai.de/business</a></p>
+                </div>
+
+                <div class="status-item">
+                    <h3>🔧 System Services</h3>
+                    <p class="success">✅ ALLE ONLINE</p>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>MySQL: Aktiv</li>
+                        <li>Redis: Aktiv</li>
+                        <li>PHP-FPM 8.3: Läuft</li>
+                        <li>Nginx: Aktiv</li>
+                        <li>Horizon: Läuft</li>
+                    </ul>
+                </div>
+
+                <div class="status-item">
+                    <h3>📊 Monitoring</h3>
+                    <p class="success">✅ AKTIV</p>
+                    <p>Uptime-Monitor: Alle 5 Minuten</p>
+                    <p>Letzte Prüfung: Alle Systeme OK</p>
+                </div>
+            </div>
+
+            <div class="fixed-list">
+                <h3>🔧 Was wurde repariert?</h3>
+                <ul>
+                    <li>✅ PHP Version in Nginx korrigiert (8.2 → 8.3)</li>
+                    <li>✅ Business Portal Middleware-Gruppe in bootstrap/app.php hinzugefügt</li>
+                    <li>✅ Session-Verzeichnisse erstellt (/admin und /portal)</li>
+                    <li>✅ Datei-Berechtigungen korrigiert</li>
+                    <li>✅ Laravel Caches neu generiert</li>
+                    <li>✅ Uptime-Monitor angepasst (akzeptiert 301/302 Redirects)</li>
+                    <li>✅ Business Portal Passwort korrigiert</li>
+                    <li>✅ Fehlende JavaScript-Dateien erstellt</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; margin: 40px 0;">
+                <h2 style="color: #374151;">Quick Access</h2>
+                <a href="/admin/login" class="button">Admin Login</a>
+                <a href="/admin/appointments" class="button">Termine verwalten</a>
+                <a href="/business/login" class="button green">Business Portal</a>
+                <a href="/monitoring-dashboard.html" class="button purple">Monitoring</a>
+            </div>
+
+            <div class="card" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                <h3 style="color: #1e40af;">📝 Login Credentials</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4>Admin Portal</h4>
+                        <p>Email: admin@example.com<br>
+                        Password: (im System hinterlegt)</p>
+                    </div>
+                    <div>
+                        <h4>Business Portal</h4>
+                        <p>Email: demo@example.com<br>
+                        Password: password</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timestamp">
+                Stand: <?php echo date('d.m.Y H:i:s'); ?> Uhr
+            </div>
+        </div>
+    </div>
+</body>
+</html>

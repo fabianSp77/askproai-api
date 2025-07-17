@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>White-Label AI-Telefonie Demo - 17.07.2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            padding: 60px;
+            position: relative;
+        }
+        
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            color: #3b82f6;
+        }
+        
+        h2 {
+            font-size: 3em;
+            margin-bottom: 40px;
+            color: #60a5fa;
+        }
+        
+        h3 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #93bbfc;
+        }
+        
+        p, li {
+            font-size: 1.8em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .big-number {
+            font-size: 5em;
+            color: #3b82f6;
+            font-weight: bold;
+            margin: 40px 0;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin: 40px 0;
+        }
+        
+        .stat-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid #3b82f6;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .stat-box h3 {
+            color: #93bbfc;
+            margin-bottom: 10px;
+        }
+        
+        .stat-box .value {
+            font-size: 3em;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #2563eb;
+            transform: scale(1.05);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 1.5em;
+            color: #64748b;
+        }
+        
+        .roi-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+        }
+        
+        .roi-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .roi-table th,
+        .roi-table td {
+            padding: 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .roi-table th {
+            color: #93bbfc;
+            font-weight: bold;
+        }
+        
+        .roi-table .profit {
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .logo {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            font-size: 2em;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        ul li:before {
+            content: "✓ ";
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-right: 10px;
+        }
+        
+        .warning {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid #10b981;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">AskProAI</div>
+
+    <!-- Slide 1: Titel -->
+    <div class="slide active">
+        <span class="slide-number">1/12</span>
+        <h1>Ihr White-Label AI-Telefonie Business</h1>
+        <h2 class="highlight">Starten Sie Ihr eigenes SaaS-Geschäft</h2>
+        <p style="font-size: 2.5em; margin-top: 40px;">ohne Investition, ohne Risiko, mit 20% Provision</p>
+    </div>
+
+    <!-- Slide 2: Problem -->
+    <div class="slide">
+        <span class="slide-number">2/12</span>
+        <h2>Das Problem Ihrer Kunden</h2>
+        <div class="big-number">47%</div>
+        <p>aller Anrufe werden verpasst</p>
+        <div class="warning">
+            <p>📞 Kunden rufen die Konkurrenz an</p>
+            <p>💸 Verlorener Umsatz jeden Tag</p>
+            <p>😤 Frustrierte Kunden</p>
+        </div>
+    </div>
+
+    <!-- Slide 3: Lösung -->
+    <div class="slide">
+        <span class="slide-number">3/12</span>
+        <h2>Die Lösung: 24/7 AI-Assistenten</h2>
+        <ul style="font-size: 2em;">
+            <li>Nie wieder verpasste Anrufe</li>
+            <li>Automatische Terminbuchung</li>
+            <li>Professioneller Empfang rund um die Uhr</li>
+            <li>In perfektem Deutsch</li>
+        </ul>
+        <div class="success" style="margin-top: 40px;">
+            <p>✨ Ihre Kunden gewinnen Zeit und Umsatz</p>
+        </div>
+    </div>
+
+    <!-- Slide 4: Beeindruckende Zahlen -->
+    <div class="slide">
+        <span class="slide-number">4/12</span>
+        <h2>Live-System in Aktion</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <h3>Anrufe verarbeitet</h3>
+                <div class="value">270</div>
+            </div>
+            <div class="stat-box">
+                <h3>After-Hours Calls</h3>
+                <div class="value">68.9%</div>
+            </div>
+            <div class="stat-box">
+                <h3>Verwaltetes Guthaben</h3>
+                <div class="value">5.911€</div>
+            </div>
+            <div class="stat-box">
+                <h3>Ihre Provision</h3>
+                <div class="value">1.182€</div>
+            </div>
+        </div>
+        <p style="text-align: center; margin-top: 40px;">
+            <span class="highlight">186 Anrufe außerhalb der Geschäftszeiten = 186 gerettete Kunden!</span>
+        </p>
+    </div>
+
+    <!-- Slide 5: Multi-Company Dashboard -->
+    <div class="slide">
+        <span class="slide-number">5/12</span>
+        <h2>Zentrale Verwaltung aller Kunden</h2>
+        <div style="background: rgba(255,255,255,0.05); border-radius: 20px; padding: 40px;">
+            <h3>Multi-Mandanten Dashboard</h3>
+            <ul>
+                <li>Alle Kunden auf einen Blick</li>
+                <li>Guthaben-Management</li>
+                <li>Anruf-Statistiken</li>
+                <li>White-Label für jeden Kunden</li>
+            </ul>
+        </div>
+        <p style="margin-top: 40px; text-align: center;">
+            <span class="highlight">Sie verwalten 10, 50 oder 100 Kunden mit einem Klick!</span>
+        </p>
+    </div>
+
+    <!-- Slide 6: Geschäftsmodell -->
+    <div class="slide">
+        <span class="slide-number">6/12</span>
+        <h2>Ihr Geschäftsmodell</h2>
+        <div class="roi-table">
+            <table>
+                <tr>
+                    <th>Was Sie bekommen</th>
+                    <th>Ihr Vorteil</th>
+                </tr>
+                <tr>
+                    <td>20% auf alle Umsätze</td>
+                    <td class="profit">Lebenslang, automatisch</td>
+                </tr>
+                <tr>
+                    <td>White-Label Lösung</td>
+                    <td class="profit">Ihre Marke, Ihr Business</td>
+                </tr>
+                <tr>
+                    <td>Keine Investition</td>
+                    <td class="profit">0€ Startkosten</td>
+                </tr>
+                <tr>
+                    <td>Kein technisches Risiko</td>
+                    <td class="profit">Wir kümmern uns</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Slide 7: ROI Kalkulation -->
+    <div class="slide">
+        <span class="slide-number">7/12</span>
+        <h2>Konkrete Zahlen - 20 Kunden</h2>
+        <div class="roi-table">
+            <table>
+                <tr>
+                    <th>Kalkulation</th>
+                    <th>Wert</th>
+                </tr>
+                <tr>
+                    <td>Minuten pro Kunde/Monat</td>
+                    <td>500</td>
+                </tr>
+                <tr>
+                    <td>Gesamt-Minuten (20 Kunden)</td>
+                    <td>10.000</td>
+                </tr>
+                <tr>
+                    <td>Ihr Gewinn pro Minute</td>
+                    <td>0,04€</td>
+                </tr>
+                <tr>
+                    <td>Monatlicher Gewinn</td>
+                    <td class="profit">400€</td>
+                </tr>
+                <tr>
+                    <td>Jährlicher Gewinn</td>
+                    <td class="profit" style="font-size: 1.5em;">4.800€</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Slide 8: Skalierung -->
+    <div class="slide">
+        <span class="slide-number">8/12</span>
+        <h2>Skalierungspotenzial</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <h3>50 Kunden</h3>
+                <div class="value">12.000€</div>
+                <p>pro Jahr</p>
+            </div>
+            <div class="stat-box">
+                <h3>100 Kunden</h3>
+                <div class="value">24.000€</div>
+                <p>pro Jahr</p>
+            </div>
+        </div>
+        <div class="success" style="margin-top: 40px;">
+            <p style="font-size: 1.5em; text-align: center;">
+                Bei 2 Neukunden pro Monat: Nach 2 Jahren 11.520€ Jahresgewinn!
+            </p>
+        </div>
+    </div>
+
+    <!-- Slide 9: Use Cases -->
+    <div class="slide">
+        <span class="slide-number">9/12</span>
+        <h2>Perfekt für diese Branchen</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">
+            <ul>
+                <li>Arztpraxen & Therapeuten</li>
+                <li>Rechtsanwälte & Notare</li>
+                <li>Handwerker & Dienstleister</li>
+                <li>Restaurants & Hotels</li>
+            </ul>
+            <ul>
+                <li>Fitnessstudios & Wellness</li>
+                <li>Immobilienmakler</li>
+                <li>Autowerkstätten</li>
+                <li>Jedes terminbasierte Geschäft</li>
+            </ul>
+        </div>
+        <p style="text-align: center; margin-top: 40px;">
+            <span class="highlight">Ihre Kunden sind überall - Sie müssen sie nur abholen!</span>
+        </p>
+    </div>
+
+    <!-- Slide 10: Warum jetzt? -->
+    <div class="slide">
+        <span class="slide-number">10/12</span>
+        <h2>Warum JETZT starten?</h2>
+        <ul style="font-size: 2em;">
+            <li>KI-Revolution ist JETZT - seien Sie dabei</li>
+            <li>First-Mover Advantage in Ihrer Region</li>
+            <li>Kunden suchen JETZT nach Lösungen</li>
+            <li>System läuft und ist erprobt</li>
+        </ul>
+        <div class="big-number" style="text-align: center;">
+            Jeden Tag warten = Geld verlieren
+        </div>
+    </div>
+
+    <!-- Slide 11: Nächste Schritte -->
+    <div class="slide">
+        <span class="slide-number">11/12</span>
+        <h2>Ihre nächsten Schritte</h2>
+        <div style="background: rgba(16, 185, 129, 0.1); border-radius: 20px; padding: 40px;">
+            <h3>Option 1: Pilot-Projekt (empfohlen)</h3>
+            <ul>
+                <li>Start mit 3-5 Testkunden</li>
+                <li>Wir unterstützen beim Onboarding</li>
+                <li>Erste Provisionen in 30 Tagen</li>
+            </ul>
+        </div>
+        <div style="background: rgba(59, 130, 246, 0.1); border-radius: 20px; padding: 40px; margin-top: 30px;">
+            <h3>Option 2: Voll durchstarten</h3>
+            <ul>
+                <li>Direkter Start mit 10+ Kunden</li>
+                <li>Intensiv-Workshop nächste Woche</li>
+                <li>Marketing-Unterstützung inklusive</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Slide 12: Call to Action -->
+    <div class="slide">
+        <span class="slide-number">12/12</span>
+        <h1>Bereit für Ihr eigenes <br><span class="highlight">AI-Business?</span></h1>
+        <div style="text-align: center; margin-top: 60px;">
+            <p style="font-size: 2.5em; margin-bottom: 40px;">Die Frage ist nicht OB, sondern WANN Sie starten.</p>
+            <div class="success" style="display: inline-block; padding: 40px 60px;">
+                <p style="font-size: 2em; margin: 0;">Lassen Sie uns HEUTE beginnen!</p>
+            </div>
+        </div>
+        <p style="text-align: center; margin-top: 60px; font-size: 1.5em;">
+            demo@askproai.de | +49 123 456789
+        </p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button id="prevBtn" onclick="changeSlide(-1)">← Zurück</button>
+        <button id="nextBtn" onclick="changeSlide(1)">Weiter →</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            
+            if (n >= totalSlides) currentSlide = 0;
+            if (n < 0) currentSlide = totalSlides - 1;
+            
+            slides[currentSlide].classList.add('active');
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function changeSlide(n) {
+            currentSlide += n;
+            showSlide(currentSlide);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'Home') { currentSlide = 0; showSlide(0); }
+            if (e.key === 'End') { currentSlide = totalSlides - 1; showSlide(totalSlides - 1); }
+        });
+
+        // Touch support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) changeSlide(1);
+            if (touchEndX > touchStartX + 50) changeSlide(-1);
+        }
+
+        // Initialize
+        showSlide(0);
+
+        // Fullscreen support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'f' || e.key === 'F') {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

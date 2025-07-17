@@ -12,7 +12,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📑 Inhaltsverzeichnis
 
-### 🆘 AKTUELLE BLOCKER (Stand: 2025-06-29)
+### 🆘 AKTUELLE BLOCKER (Stand: 2025-07-10)
+
+- **React Admin Portal - Kritischer Zustand** - Viele Features fehlen komplett
+  - Details: [REACT_ADMIN_PORTAL_STATUS_2025-07-10.md](./REACT_ADMIN_PORTAL_STATUS_2025-07-10.md)
+  - Problem: BranchesView, SettingsView, BillingView, TeamView sind nur Platzhalter oder fehlen
+  - Problem: Customer Detail View fehlt komplett
+  - Problem: Appointment Management nicht implementiert
+  - Lösung: Sofortige Implementierung der kritischen Features für Kundenverwaltung
+
+### 🆘 ALTE BLOCKER (Stand: 2025-06-29)
 - **Retell Ultimate Control Center** - Mehrere fehlende Methoden und Livewire v3 Issues
   - Details: [RETELL_ULTIMATE_CONTROL_CENTER_ISSUES_2025-06-29.md](./RETELL_ULTIMATE_CONTROL_CENTER_ISSUES_2025-06-29.md)
   - Problem: testCall() und viewAgentFunctions() nicht implementiert

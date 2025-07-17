@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Test Final</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            border: 2px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f5f5f5;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #4CAF50;
+            color: white;
+        }
+        .error {
+            background: #f44336;
+            color: white;
+        }
+        .info {
+            background: #2196F3;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        pre {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 UI Final Test Suite</h1>
+    
+    <div class="test-section">
+        <h2>📊 System Status</h2>
+        <div id="status-output"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔧 Quick Tests</h2>
+        <button onclick="checkScripts()">Check Loaded Scripts</button>
+        <button onclick="checkAlpine()">Check Alpine</button>
+        <button onclick="checkLivewire()">Check Livewire</button>
+        <button onclick="checkFixes()">Check UI Fixes</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🎯 Direct Access</h2>
+        <button onclick="window.open('/admin/business-portal-admin', '_blank')">Open Business Portal Admin</button>
+        <button onclick="window.open('/admin', '_blank')">Open Admin Dashboard</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>💻 Console Output</h2>
+        <pre id="console-output"></pre>
+    </div>
+    
+    <script>
+        const log = (message, type = 'info') => {
+            const statusDiv = document.getElementById('status-output');
+            const consoleDiv = document.getElementById('console-output');
+            
+            const statusMsg = document.createElement('div');
+            statusMsg.className = `status ${type}`;
+            statusMsg.textContent = message;
+            statusDiv.appendChild(statusMsg);
+            
+            consoleDiv.textContent += `[${new Date().toLocaleTimeString()}] ${message}\n`;
+        };
+        
+        function checkScripts() {
+            log('Checking loaded scripts...', 'info');
+            
+            const scripts = Array.from(document.querySelectorAll('script')).map(s => s.src || 'inline');
+            const relevantScripts = scripts.filter(src => 
+                src.includes('unified-ui-fix') || 
+                src.includes('emergency-button-fix') ||
+                src.includes('filament') ||
+                src === 'inline'
+            );
+            
+            log(`Total scripts: ${scripts.length}`, 'info');
+            log(`Relevant scripts: ${relevantScripts.length}`, 'info');
+            
+            relevantScripts.forEach(script => {
+                log(`Script: ${script}`, 'info');
+            });
+        }
+        
+        function checkAlpine() {
+            if (typeof window.Alpine !== 'undefined') {
+                log('✅ Alpine.js is loaded', 'success');
+                log(`Alpine version: ${window.Alpine.version || 'unknown'}`, 'info');
+                
+                if (window.Alpine.store) {
+                    log('Alpine stores available', 'info');
+                    try {
+                        const sidebar = window.Alpine.store('sidebar');
+                        if (sidebar) {
+                            log('✅ Sidebar store exists', 'success');
+                        } else {
+                            log('❌ Sidebar store not found', 'error');
+                        }
+                    } catch (e) {
+                        log(`Store error: ${e.message}`, 'error');
+                    }
+                }
+            } else {
+                log('❌ Alpine.js not loaded', 'error');
+            }
+        }
+        
+        function checkLivewire() {
+            if (typeof window.Livewire !== 'undefined') {
+                log('✅ Livewire v3 is loaded', 'success');
+            } else if (typeof window.livewire !== 'undefined') {
+                log('✅ Livewire v2 is loaded', 'success');
+            } else {
+                log('❌ Livewire not loaded', 'error');
+            }
+        }
+        
+        function checkFixes() {
+            log('Checking UI fixes...', 'info');
+            
+            // Check unified-ui-fix-v2
+            if (window.unifiedUIFixV2) {
+                log('✅ Unified UI Fix V2 is loaded', 'success');
+                window.unifiedUIFixV2.status();
+            } else {
+                log('❌ Unified UI Fix V2 not found', 'error');
+            }
+            
+            // Check emergency-button-fix
+            if (window.emergencyButtonFix) {
+                log('✅ Emergency Button Fix is loaded', 'success');
+            } else {
+                log('❌ Emergency Button Fix not found', 'error');
+            }
+            
+            // Check old unified-ui-fix
+            if (window.unifiedUIFix) {
+                log('⚠️ Old Unified UI Fix is still loaded', 'info');
+            }
+        }
+        
+        // Auto-run checks on load
+        window.addEventListener('load', () => {
+            log('Page loaded, running automatic checks...', 'info');
+            setTimeout(() => {
+                checkAlpine();
+                checkLivewire();
+                checkFixes();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

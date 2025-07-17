@@ -153,8 +153,8 @@
                                     <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Keine Ergebnisse gefunden</p>
                                 </div>
                             </div>
+                        </div>
                     </div>
-                </div>
                 </div>
                 
                 {{-- Date Filter Dropdown --}}
@@ -288,6 +288,35 @@
     
     @push('scripts')
     <script>
+        // Global fallbacks for all required functions
+        window.hasSearchResults = function() {
+            console.log('[Global Fallback] hasSearchResults called');
+            return true; // Default behavior
+        };
+        
+        window.isCompanySelected = function(companyId) {
+            console.log('[Global Fallback] isCompanySelected called for:', companyId);
+            return false; // Default behavior
+        };
+        
+        window.isBranchSelected = function(branchId) {
+            console.log('[Global Fallback] isBranchSelected called for:', branchId);
+            return false; // Default behavior
+        };
+        
+        window.matchesSearch = function(text) {
+            console.log('[Global Fallback] matchesSearch called for:', text);
+            return true; // Show all by default
+        };
+        
+        window.toggleCompany = function(companyId) {
+            console.log('[Global Fallback] toggleCompany called for:', companyId);
+        };
+        
+        window.toggleBranch = function(companyId, branchId) {
+            console.log('[Global Fallback] toggleBranch called for:', companyId, branchId);
+        };
+        
         function companyBranchSelect() {
             return {
                 showDropdown: false,
@@ -301,6 +330,13 @@
                     if (this.selectedCompany) {
                         this.expandedCompanies.push(this.selectedCompany);
                     }
+                    
+                    // Ensure all methods are available in the component scope
+                    // This helps with Alpine's reactivity system
+                    this.isCompanySelected = this.isCompanySelected.bind(this);
+                    this.isBranchSelected = this.isBranchSelected.bind(this);
+                    this.hasSearchResults = this.hasSearchResults.bind(this);
+                    this.matchesSearch = this.matchesSearch.bind(this);
                 },
                 
                 matchesSearch(text) {
@@ -410,8 +446,32 @@
                 },
                 
                 hasSearchResults() {
-                    // Implementation to check if search has results
-                    return true; // Simplified for now
+                    if (!this.searchQuery || this.searchQuery.trim() === '') {
+                        return true; // No search, show all
+                    }
+                    
+                    // Check if any company or branch matches the search
+                    const companies = @json($this->getCompaniesWithBranches());
+                    
+                    if (!companies || !Array.isArray(companies)) {
+                        return true; // Show all if no data
+                    }
+                    
+                    for (const company of companies) {
+                        if (company && company.name && this.matchesSearch(company.name)) {
+                            return true;
+                        }
+                        
+                        if (company && company.branches && Array.isArray(company.branches)) {
+                            for (const branch of company.branches) {
+                                if (branch && branch.name && this.matchesSearch(branch.name)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    
+                    return false;
                 },
                 
                 getCurrentDateRange() {

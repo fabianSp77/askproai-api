@@ -1,0 +1,120 @@
+/* Operations Center Dropdown Fixes */
+
+/* Ensure dropdown panels are above everything */
+.fi-dropdown-panel,
+[x-ref="panel"],
+.fi-dropdown-list {
+    z-index: 9999 !important;
+    position: absolute !important;
+    background-color: white !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Dark mode support */
+.dark .fi-dropdown-panel,
+.dark [x-ref="panel"],
+.dark .fi-dropdown-list {
+    background-color: rgb(31, 41, 55) !important;
+}
+
+/* Ensure dropdown items are interactive */
+.fi-dropdown-item,
+[role="menuitem"] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative !important;
+}
+
+.fi-dropdown-item:hover,
+[role="menuitem"]:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.dark .fi-dropdown-item:hover,
+.dark [role="menuitem"]:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Ensure links and buttons in dropdowns work */
+.fi-dropdown-item a,
+.fi-dropdown-item button,
+[role="menuitem"] a,
+[role="menuitem"] button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+}
+
+/* Fix dropdown trigger buttons */
+button[aria-haspopup="true"],
+[x-on\:click*="toggle"],
+[x-on\:click*="open"] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    user-select: none !important;
+}
+
+/* Ensure dropdown is visible when open */
+[x-data][x-show="open"],
+[x-data] [x-show="open"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Fix overlay issues */
+.fi-modal-close-overlay {
+    z-index: 40 !important;
+}
+
+.fi-dropdown-panel {
+    z-index: 50 !important;
+}
+
+/* Ensure proper stacking context */
+.fi-topbar {
+    position: relative;
+    z-index: 30;
+}
+
+.fi-sidebar {
+    z-index: 40;
+}
+
+/* Operations Center specific fixes */
+.fi-page-simple .fi-dropdown,
+.fi-widgets-container .fi-dropdown {
+    position: relative !important;
+}
+
+/* Dropdown animation */
+.fi-dropdown-panel[x-show] {
+    transition: opacity 150ms ease-in-out, transform 150ms ease-in-out;
+}
+
+.fi-dropdown-panel[x-show="false"] {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.fi-dropdown-panel[x-show="true"] {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Ensure dropdown content is scrollable if needed */
+.fi-dropdown-list {
+    max-height: 20rem !important;
+    overflow-y: auto !important;
+}
+
+/* Fix for nested dropdowns */
+.fi-dropdown .fi-dropdown {
+    position: static !important;
+}
+
+.fi-dropdown .fi-dropdown .fi-dropdown-panel {
+    z-index: 10000 !important;
+}

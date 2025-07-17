@@ -33,13 +33,13 @@ class CompactOperationsWidget extends FilterableWidget
         $now = Carbon::now();
         $startOfDay = $now->copy()->startOfDay();
         
-        return [
+        return array_merge(parent::getViewData(), [
             'systemHealth' => $this->getSystemHealth(),
             'liveCalls' => $this->getLiveCallsData(),
             'conversion' => $this->getConversionData($startOfDay, $now),
             'costPerBooking' => $this->getCostPerBookingData($startOfDay, $now),
             'anomalies' => collect(), // Simplified for compact view
-        ];
+        ]);
     }
     
     private function getSystemHealth(): array
