@@ -101,6 +101,12 @@ return [
             'class' => \App\Services\MCP\FigmaMCPServer::class,
             'description' => 'Design-to-code conversion from Figma',
         ],
+        
+        'debug' => [
+            'enabled' => true,
+            'class' => \App\Services\MCP\DebugMCPServer::class,
+            'description' => 'Debug authentication, sessions, routes, and middleware issues',
+        ],
     ],
     
     /*

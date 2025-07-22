@@ -1,378 +1,155 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Production Monitoring Configuration
-    |--------------------------------------------------------------------------
-    |
-    | This configuration file handles all monitoring, alerting, and logging
-    | for the AskProAI platform in production.
-    |
-    */
-
-    'enabled' => env('MONITORING_ENABLED', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Error Tracking (Sentry)
-    |--------------------------------------------------------------------------
-    */
-    'sentry' => [
-        'enabled' => env('SENTRY_ENABLED', true),
-        'dsn' => env('SENTRY_LARAVEL_DSN'),
-        'environment' => env('SENTRY_ENVIRONMENT', env('APP_ENV')),
-        'release' => env('SENTRY_RELEASE', null),
-
-        // Performance monitoring
-        'traces_sample_rate' => env('SENTRY_TRACES_SAMPLE_RATE', 0.1),
-        'profiles_sample_rate' => env('SENTRY_PROFILES_SAMPLE_RATE', 0.1),
-
-        // PII and sensitive data
-        'send_default_pii' => false,
-        'before_send' => 'App\Services\Monitoring\SentryBeforeSend@handle',
-
-        // Custom contexts
-        'contexts' => [
-            'stripe' => true,
-            'customer_portal' => true,
-            'tenant' => true,
-        ],
-
-        // Alert thresholds
-        'alert_thresholds' => [
-            'error_rate' => 0.05, // 5% error rate
-            'transaction_duration' => 3000, // 3 seconds
-            'crash_free_rate' => 0.99, // 99% crash-free sessions
-        ],
-    ],
-
     /*
     |--------------------------------------------------------------------------
     | Application Performance Monitoring (APM)
     |--------------------------------------------------------------------------
+    |
+    | Configuration for application performance monitoring, including
+    | query tracking, API response times, and resource usage.
+    |
     */
     'apm' => [
         'enabled' => env('APM_ENABLED', true),
-
-        // Transaction monitoring
-        'transactions' => [
-            'stripe_webhook' => [
-                'threshold' => 1000, // 1 second
-                'sample_rate' => 1.0, // Monitor all Stripe webhooks
-            ],
-            'customer_portal' => [
-                'threshold' => 500, // 500ms
-                'sample_rate' => 0.5,
-            ],
-            'api_endpoints' => [
-                'threshold' => 300, // 300ms
-                'sample_rate' => 0.3,
-            ],
-        ],
-
-        // Database query monitoring
-        'database' => [
-            'slow_query_threshold' => 100, // 100ms
-            'log_queries' => env('LOG_QUERIES', false),
-            'explain_queries' => env('EXPLAIN_QUERIES', false),
-        ],
-
-        // External service monitoring
-        'external_services' => [
-            'stripe' => [
-                'timeout_threshold' => 5000, // 5 seconds
-                'error_rate_threshold' => 0.01, // 1% error rate
-            ],
-            'calcom' => [
-                'timeout_threshold' => 3000, // 3 seconds
-                'error_rate_threshold' => 0.05, // 5% error rate
-            ],
-            'retell' => [
-                'timeout_threshold' => 3000, // 3 seconds
-                'error_rate_threshold' => 0.05, // 5% error rate
-            ],
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Health Checks
-    |--------------------------------------------------------------------------
-    */
-    'health_checks' => [
-        'enabled' => env('HEALTH_CHECKS_ENABLED', true),
-        'endpoint' => '/health',
-        'secret' => env('HEALTH_CHECK_SECRET'),
-
-        'checks' => [
-            // Critical checks (system will be marked as down if these fail)
-            'critical' => [
-                'database' => [
-                    'enabled' => true,
-                    'timeout' => 5,
-                ],
-                'redis' => [
-                    'enabled' => true,
-                    'timeout' => 3,
-                ],
-                'stripe_api' => [
-                    'enabled' => true,
-                    'timeout' => 10,
-                ],
-            ],
-
-            // Warning checks (system operational but degraded)
-            'warning' => [
-                'queue_size' => [
-                    'enabled' => true,
-                    'threshold' => 1000,
-                ],
-                'disk_space' => [
-                    'enabled' => true,
-                    'threshold' => 90, // 90% full
-                ],
-                'memory_usage' => [
-                    'enabled' => true,
-                    'threshold' => 85, // 85% used
-                ],
-            ],
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Alerting Rules
-    |--------------------------------------------------------------------------
-    */
-    'alerts' => [
-        'channels' => [
-            'email' => [
-                'enabled' => env('ALERT_EMAIL_ENABLED', true),
-                'recipients' => explode(',', env('ALERT_EMAIL_RECIPIENTS', '')),
-            ],
-            'slack' => [
-                'enabled' => env('ALERT_SLACK_ENABLED', false),
-                'webhook_url' => env('ALERT_SLACK_WEBHOOK'),
-                'channel' => env('ALERT_SLACK_CHANNEL', '#alerts'),
-            ],
-            'sms' => [
-                'enabled' => env('ALERT_SMS_ENABLED', false),
-                'recipients' => explode(',', env('ALERT_SMS_RECIPIENTS', '')),
-            ],
-        ],
-
-        'rules' => [
-            // Payment failures
-            'payment_failure' => [
-                'enabled' => true,
-                'threshold' => 3, // Alert after 3 failures in 5 minutes
-                'window' => 300, // 5 minutes
-                'severity' => 'critical',
-                'channels' => ['email', 'slack', 'sms'],
-            ],
-
-            // Security issues
-            'security_breach_attempt' => [
-                'enabled' => true,
-                'threshold' => 5, // 5 attempts
-                'window' => 60, // 1 minute
-                'severity' => 'critical',
-                'channels' => ['email', 'slack', 'sms'],
-            ],
-
-            // Stripe webhook failures
-            'stripe_webhook_failure' => [
-                'enabled' => true,
-                'threshold' => 5,
-                'window' => 300,
-                'severity' => 'high',
-                'channels' => ['email', 'slack'],
-            ],
-
-            // High error rate
-            'high_error_rate' => [
-                'enabled' => true,
-                'threshold' => 0.05, // 5% error rate
-                'window' => 300,
-                'severity' => 'high',
-                'channels' => ['email', 'slack'],
-            ],
-
-            // Database connection issues
-            'database_connection_failure' => [
-                'enabled' => true,
-                'threshold' => 3,
-                'window' => 60,
-                'severity' => 'critical',
-                'channels' => ['email', 'slack', 'sms'],
-            ],
-
-            // Queue backlog
-            'queue_backlog' => [
-                'enabled' => true,
-                'threshold' => 1000, // 1000 jobs
-                'severity' => 'medium',
-                'channels' => ['email'],
-            ],
-
-            // Customer portal downtime
-            'portal_downtime' => [
-                'enabled' => true,
-                'threshold' => 1, // Any downtime
-                'severity' => 'critical',
-                'channels' => ['email', 'slack', 'sms'],
-            ],
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Logging Configuration
-    |--------------------------------------------------------------------------
-    */
-    'logging' => [
-        // Structured logging
-        'structured' => env('STRUCTURED_LOGGING', true),
-
-        // Log levels for different components
-        'levels' => [
-            'stripe' => env('LOG_LEVEL_STRIPE', 'info'),
-            'customer_portal' => env('LOG_LEVEL_PORTAL', 'info'),
-            'webhooks' => env('LOG_LEVEL_WEBHOOKS', 'debug'),
-            'api' => env('LOG_LEVEL_API', 'info'),
-            'security' => env('LOG_LEVEL_SECURITY', 'warning'),
-        ],
-
-        // Sensitive data masking
-        'masking' => [
-            'enabled' => true,
-            'fields' => [
-                'password',
-                'stripe_secret',
-                'api_key',
-                'token',
-                'secret',
-                'card_number',
-                'cvv',
-                'ssn',
-                'tax_id',
-            ],
-        ],
-
-        // Log retention
-        'retention' => [
-            'days' => env('LOG_RETENTION_DAYS', 30),
-            'archive' => env('LOG_ARCHIVE_ENABLED', true),
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Metrics Collection
-    |--------------------------------------------------------------------------
-    */
-    'metrics' => [
-        'enabled' => env('METRICS_ENABLED', true),
-        'endpoint' => '/metrics',
-        'secret' => env('METRICS_SECRET'),
-        'metrics_token' => env('METRICS_AUTH_TOKEN', 'askproai-metrics-token-' . Str::random(32)),
-
-        // Business metrics
-        'business' => [
-            'subscriptions_created' => true,
-            'subscriptions_cancelled' => true,
-            'revenue_processed' => true,
-            'portal_registrations' => true,
-            'portal_logins' => true,
-            'support_tickets' => true,
-        ],
-
-        // Technical metrics
-        'technical' => [
-            'request_duration' => true,
-            'database_queries' => true,
-            'cache_hits' => true,
-            'queue_jobs' => true,
-            'external_api_calls' => true,
-            'error_rates' => true,
-        ],
+        'trace_sql' => env('APM_TRACE_SQL', true),
+        'trace_api' => env('APM_TRACE_API', true),
+        'slow_threshold_ms' => env('APM_SLOW_THRESHOLD_MS', 1000),
     ],
 
     /*
     |--------------------------------------------------------------------------
     | Security Monitoring
     |--------------------------------------------------------------------------
+    |
+    | Configuration for security monitoring, including threat detection,
+    | suspicious activity tracking, and automated alerts.
+    |
     */
     'security' => [
         'enabled' => env('SECURITY_MONITORING_ENABLED', true),
+        'track_failed_logins' => env('SECURITY_TRACK_FAILED_LOGINS', true),
+        'track_suspicious_requests' => env('SECURITY_TRACK_SUSPICIOUS_REQUESTS', true),
+        'alert_threshold' => env('SECURITY_ALERT_THRESHOLD', 5),
+        'block_suspicious_ips' => env('SECURITY_BLOCK_SUSPICIOUS_IPS', false),
+    ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Query Performance Monitoring
+    |--------------------------------------------------------------------------
+    |
+    | Enable or disable query performance monitoring. When enabled, the system
+    | will track all database queries and provide performance statistics.
+    |
+    */
+    'query_performance' => env('MONITORING_QUERY_PERFORMANCE', false),
 
-        // Track security events
-        'events' => [
-            'failed_logins' => true,
-            'password_resets' => true,
-            'privilege_escalations' => true,
-            'data_exports' => true,
-            'api_key_usage' => true,
-            'suspicious_activity' => true,
-        ],
+    /*
+    |--------------------------------------------------------------------------
+    | Slow Query Threshold
+    |--------------------------------------------------------------------------
+    |
+    | Queries that take longer than this value (in milliseconds) will be
+    | logged as slow queries and shown in the performance dashboard.
+    |
+    */
+    'slow_query_threshold' => env('MONITORING_SLOW_QUERY_MS', 100),
 
-        // Rate limiting monitoring
-        'rate_limiting' => [
-            'track_violations' => true,
-            'alert_threshold' => 100, // Alert after 100 violations
-        ],
+    /*
+    |--------------------------------------------------------------------------
+    | Enable Performance Widget
+    |--------------------------------------------------------------------------
+    |
+    | Show the performance widget in the bottom right corner of the page
+    | when in debug mode. This shows query count, time, and warnings.
+    |
+    */
+    'show_performance_widget' => env('MONITORING_SHOW_WIDGET', true),
 
-        // IP monitoring
-        'ip_monitoring' => [
-            'enabled' => true,
-            'track_suspicious_ips' => true,
-            'geo_blocking_alerts' => true,
+    /*
+    |--------------------------------------------------------------------------
+    | N+1 Detection Threshold
+    |--------------------------------------------------------------------------
+    |
+    | Similar queries executed more than this number of times will be
+    | flagged as potential N+1 query problems.
+    |
+    */
+    'n_plus_one_threshold' => env('MONITORING_N_PLUS_ONE_THRESHOLD', 5),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Log Retention
+    |--------------------------------------------------------------------------
+    |
+    | How long to keep slow query logs in the cache (in hours).
+    |
+    */
+    'query_log_retention_hours' => env('MONITORING_QUERY_LOG_RETENTION', 24),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Real-time Metrics
+    |--------------------------------------------------------------------------
+    |
+    | Enable real-time metrics collection for dashboards and monitoring.
+    |
+    */
+    'realtime_metrics' => [
+        'enabled' => env('MONITORING_REALTIME_ENABLED', false),
+        'interval_seconds' => env('MONITORING_REALTIME_INTERVAL', 60),
+        'retention_days' => env('MONITORING_REALTIME_RETENTION', 7),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Rate Limiting
+    |--------------------------------------------------------------------------
+    |
+    | Configure API rate limiting per user and per IP address.
+    |
+    */
+    'rate_limiting' => [
+        'enabled' => env('MONITORING_RATE_LIMIT_ENABLED', true),
+        'per_minute' => env('MONITORING_RATE_LIMIT_PER_MINUTE', 60),
+        'per_hour' => env('MONITORING_RATE_LIMIT_PER_HOUR', 1000),
+        'burst' => env('MONITORING_RATE_LIMIT_BURST', 10),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Health Check Endpoints
+    |--------------------------------------------------------------------------
+    |
+    | Configure health check endpoints for monitoring.
+    |
+    */
+    'health_checks' => [
+        'database' => true,
+        'redis' => true,
+        'horizon' => true,
+        'disk_space' => true,
+        'memory' => true,
+        'services' => [
+            'retell' => env('MONITORING_CHECK_RETELL', true),
+            'calcom' => env('MONITORING_CHECK_CALCOM', true),
+            'stripe' => env('MONITORING_CHECK_STRIPE', true),
         ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Dashboard Configuration
+    | Alert Thresholds
     |--------------------------------------------------------------------------
+    |
+    | Configure when to trigger alerts for various metrics.
+    |
     */
-    'dashboard' => [
-        'enabled' => env('MONITORING_DASHBOARD_ENABLED', true),
-        'route' => '/admin/monitoring',
-        'middleware' => ['auth', 'can:view-monitoring'],
-
-        'widgets' => [
-            'system_health' => true,
-            'error_rates' => true,
-            'performance_metrics' => true,
-            'business_metrics' => true,
-            'security_overview' => true,
-            'alert_history' => true,
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Integration Specific Monitoring
-    |--------------------------------------------------------------------------
-    */
-    'integrations' => [
-        'stripe' => [
-            'monitor_webhooks' => true,
-            'monitor_api_calls' => true,
-            'track_payment_failures' => true,
-            'track_dispute_rates' => true,
-            'track_subscription_churn' => true,
-        ],
-
-        'customer_portal' => [
-            'track_page_views' => true,
-            'track_user_actions' => true,
-            'monitor_load_times' => true,
-            'track_errors' => true,
-            'session_analytics' => true,
-        ],
+    'alerts' => [
+        'memory_percent' => env('MONITORING_ALERT_MEMORY', 80),
+        'disk_percent' => env('MONITORING_ALERT_DISK', 90),
+        'error_rate_percent' => env('MONITORING_ALERT_ERROR_RATE', 5),
+        'response_time_ms' => env('MONITORING_ALERT_RESPONSE_TIME', 1000),
     ],
 ];

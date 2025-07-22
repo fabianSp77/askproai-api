@@ -45,7 +45,7 @@ return [
         'askproai_portal_session'
     ),
 
-    'path' => '/business',
+    'path' => '/',
 
     'domain' => env('SESSION_DOMAIN'),
 

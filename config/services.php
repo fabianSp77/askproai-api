@@ -69,6 +69,14 @@ return [
         'default_company_id' => env('RETELL_DEFAULT_COMPANY_ID', 1),
         'default_branch_id' => env('RETELL_DEFAULT_BRANCH_ID', 1),
     ],
+    
+    'retell_mcp' => [
+        'url' => env('RETELL_MCP_SERVER_URL', 'http://localhost:3001'),
+        'token' => env('RETELL_MCP_SERVER_TOKEN'),
+        'enabled' => env('RETELL_MCP_ENABLED', true),
+        'timeout' => env('RETELL_MCP_TIMEOUT', 30),
+        'default_from_number' => env('RETELL_DEFAULT_FROM_NUMBER'),
+    ],
 
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),

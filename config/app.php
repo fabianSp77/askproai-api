@@ -56,6 +56,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\DatabaseServiceProvider::class,
         App\Providers\ValidationServiceProvider::class,
+        App\Providers\PortalServiceProvider::class,
 
         /* Filament Panel */
         App\Providers\Filament\AdminPanelProvider::class,

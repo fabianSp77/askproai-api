@@ -63,6 +63,14 @@ return [
             'permission' => 0664,
         ],
 
+        'slow-queries' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/slow-queries.log'),
+            'level' => 'warning',
+            'days' => 7,
+            'permission' => 0664,
+        ],
+
         'mail' => [
             'driver' => 'daily',
             'path' => storage_path('logs/mail.log'),
@@ -85,6 +93,19 @@ return [
             'level' => 'error',
             'days' => 7,
             'permission' => 0664,
+        ],
+
+        'retell-mcp' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/retell-mcp.log'),
+            'level' => env('RETELL_LOG_LEVEL', 'info'),
+            'days' => 14,
+            'permission' => 0664,
+            'formatter' => env('LOG_STDERR_FORMATTER'),
+            'formatter_with' => [
+                'allowInlineLineBreaks' => false,
+                'ignoreEmptyContextAndExtra' => false,
+            ],
         ],
 
         'frontend' => [
