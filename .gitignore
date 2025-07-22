@@ -75,3 +75,11 @@ tests/*.log
 /tests/fixtures/temp/
 /tests/tmp/
 *.tmp
+
+# Security - Never commit these
+backups/
+storage/logs/*.json
+*credential*
+*.sql
+*.sql.gz
+archive/
