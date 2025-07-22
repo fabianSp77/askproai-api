@@ -1,24 +1,23 @@
 <?php
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V2\PortalController;
-use App\Http\Controllers\FrontendErrorController;
-use App\Http\Controllers\CalcomWebhookController;
-use App\Http\Controllers\RetellWebhookController;
-use App\Http\Controllers\HybridBookingController;
-use App\Http\Controllers\MetricsController;
-use Illuminate\Http\Request;
-use App\Services\CalcomV2Service;
-use App\Http\Controllers\UnifiedWebhookController;
+
+use App\Http\Controllers\Api\CircuitBreakerHealthController;
+use App\Http\Controllers\Api\DocumentationDataController;
+use App\Http\Controllers\Api\GitHubWebhookController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\MCPHealthCheckController;
-use App\Http\Controllers\Api\DocumentationDataController;
+use App\Http\Controllers\Api\NotionWebhookController;
+use App\Http\Controllers\Api\V2\PortalController;
+use App\Http\Controllers\CalcomWebhookController;
+use App\Http\Controllers\FrontendErrorController;
+use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\HybridBookingController;
 use App\Http\Controllers\MCPGatewayController;
 use App\Http\Controllers\RetellCustomFunctionController;
-use App\Http\Controllers\Api\CircuitBreakerHealthController;
+use App\Http\Controllers\RetellWebhookController;
 use App\Http\Controllers\TwilioWebhookController;
-use App\Http\Controllers\Api\NotionWebhookController;
-use App\Http\Controllers\Api\GitHubWebhookController;
-use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\UnifiedWebhookController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +29,28 @@ use App\Http\Controllers\HealthCheckController;
 Route::get('/health', [HealthCheckController::class, 'health']);
 Route::get('/health-check', [HealthCheckController::class, 'health']);
 Route::get('/health/detailed', [HealthCheckController::class, 'detailed']);
+
+// Authentication Routes
+Route::prefix('auth')->group(function () {
+    // Admin authentication
+    Route::post('/admin/login', [App\Http\Controllers\Api\AuthController::class, 'adminLogin']);
+
+    // Business portal authentication
+    Route::post('/portal/login', [App\Http\Controllers\Api\AuthController::class, 'portalLogin']);
+
+    // Customer authentication
+    Route::post('/customer/login', [App\Http\Controllers\Api\AuthController::class, 'customerLogin']);
+
+    // 2FA verification
+    Route::post('/verify-2fa', [App\Http\Controllers\Api\AuthController::class, 'verify2FA']);
+
+    // Protected routes requiring authentication
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/user', [App\Http\Controllers\Api\AuthController::class, 'user']);
+        Route::post('/logout', [App\Http\Controllers\Api\AuthController::class, 'logout']);
+        Route::post('/refresh', [App\Http\Controllers\Api\AuthController::class, 'refresh']);
+    });
+});
 
 // Admin API Routes (React Admin Portal)
 Route::prefix('admin')
@@ -47,7 +68,29 @@ Route::middleware('api-no-csrf')->group(function () {
 });
 
 // Load MCP Routes
-require __DIR__.'/api-mcp.php';
+require __DIR__ . '/api-mcp.php';
+
+// Session Test Routes (for validation page)
+Route::prefix('test')->group(function () {
+    Route::get('/session-check', function (Request $request) {
+        $session = $request->session();
+
+        return response()->json([
+            'session_id' => $session->getId(),
+            'has_session' => $session->isStarted(),
+            'session_data' => $session->all(),
+            'cookies' => $request->cookies->all(),
+            'headers' => $request->headers->all(),
+        ]);
+    });
+
+    Route::post('/clear-session', function (Request $request) {
+        $request->session()->flush();
+        $request->session()->regenerate();
+
+        return response()->json(['status' => 'cleared']);
+    });
+});
 
 // Retell Agent Editor API Routes
 Route::prefix('mcp/retell')->middleware(['web', 'auth'])->group(function () {
@@ -62,8 +105,8 @@ Route::prefix('mcp/retell')->middleware(['web', 'auth'])->group(function () {
 
 // Load Retell test routes - temporarily enabled for testing
 // TODO: Restrict to development environment after testing is complete
-if (file_exists(__DIR__.'/retell-test.php')) {
-    require __DIR__.'/retell-test.php';
+if (file_exists(__DIR__ . '/retell-test.php')) {
+    require __DIR__ . '/retell-test.php';
 }
 
 // Retell Monitor API Routes
@@ -95,7 +138,7 @@ Route::prefix('retell')->group(function () {
     // Test endpoint removed for security
     // Route::get('/collect-appointment/test', [App\Http\Controllers\Api\RetellAppointmentCollectorController::class, 'test'])
     //     ->name('api.retell.collect-appointment.test');
-    
+
     // Customer recognition endpoints with security
     Route::post('/identify-customer', [App\Http\Controllers\Api\RetellCustomerRecognitionController::class, 'identifyCustomer'])
         ->middleware(['verify.retell.signature', 'validate.retell', 'throttle:60,1'])
@@ -106,7 +149,7 @@ Route::prefix('retell')->group(function () {
     Route::post('/apply-vip-benefits', [App\Http\Controllers\Api\RetellCustomerRecognitionController::class, 'applyVipBenefits'])
         ->middleware(['verify.retell.signature', 'validate.retell', 'throttle:30,1'])
         ->name('api.retell.apply-vip-benefits');
-    
+
     // Call transfer and callback endpoints
     Route::post('/transfer-to-fabian', [App\Http\Controllers\Api\RetellCallTransferController::class, 'transferToFabian'])
         ->middleware(['verify.retell.signature', 'throttle:30,1'])
@@ -161,7 +204,7 @@ Route::prefix('stripe')->group(function () {
         Route::get('/payment-link/{companyId}/qr-code', [App\Http\Controllers\StripePaymentLinkController::class, 'generateQRCode'])
             ->name('api.stripe.payment-link.qr-code');
     });
-    
+
     // Public topup link generation (for admin use)
     Route::post('/generate-topup-link', [App\Http\Controllers\PublicTopupController::class, 'generateLink'])
         ->middleware(['auth:sanctum'])
@@ -173,7 +216,7 @@ Route::prefix('mcp')->group(function () {
     Route::post('/retell/webhook', function (Request $request) {
         return app(RetellWebhookController::class)->processWebhook($request);
     })->middleware(['verify.retell.signature', 'webhook.replay.protection'])
-      ->name('mcp.retell.webhook');
+        ->name('mcp.retell.webhook');
 });
 
 // Debug webhook routes removed for security
@@ -192,7 +235,7 @@ Route::get('/health/comprehensive', [HealthController::class, 'comprehensive'])
 Route::get('/health/service/{service}', [HealthController::class, 'service'])
     ->middleware(['auth:sanctum'])
     ->name('api.health.service');
-    
+
 // Legacy Cal.com specific health check (contains sensitive data - requires auth)
 Route::get('/health/calcom', [HealthController::class, 'calcomHealth'])
     ->middleware(['auth:sanctum'])
@@ -201,95 +244,95 @@ Route::get('/health/calcom', [HealthController::class, 'calcomHealth'])
 // ---- MCP Orchestrator Routes ----------------------------
 Route::prefix('mcp')->middleware(['auth:sanctum', 'throttle:100,1', 'validate.company.context'])->group(function () {
     // MCPGateway endpoints (proper JSON-RPC 2.0)
-    Route::post('/gateway', [\App\Http\Controllers\MCPGatewayController::class, 'handle'])
+    Route::post('/gateway', [MCPGatewayController::class, 'handle'])
         ->name('mcp.gateway');
-    Route::get('/gateway/health', [\App\Http\Controllers\MCPGatewayController::class, 'health'])
+    Route::get('/gateway/health', [MCPGatewayController::class, 'health'])
         ->name('mcp.gateway.health');
-    Route::get('/gateway/methods', [\App\Http\Controllers\MCPGatewayController::class, 'methods'])
+    Route::get('/gateway/methods', [MCPGatewayController::class, 'methods'])
         ->name('mcp.gateway.methods');
-    
+
     // Legacy orchestrator endpoints (kept for backward compatibility)
-    Route::post('/execute', [\App\Http\Controllers\Api\MCPController::class, 'execute']);
-    Route::post('/batch', [\App\Http\Controllers\Api\MCPController::class, 'batch']);
-    Route::get('/health', [\App\Http\Controllers\Api\MCPController::class, 'orchestratorHealth']);
-    Route::get('/metrics', [\App\Http\Controllers\Api\MCPController::class, 'orchestratorMetrics']);
-    Route::get('/info', [\App\Http\Controllers\Api\MCPController::class, 'info']);
-    
+    Route::post('/execute', [App\Http\Controllers\Api\MCPController::class, 'execute']);
+    Route::post('/batch', [App\Http\Controllers\Api\MCPController::class, 'batch']);
+    Route::get('/health', [App\Http\Controllers\Api\MCPController::class, 'orchestratorHealth']);
+    Route::get('/metrics', [App\Http\Controllers\Api\MCPController::class, 'orchestratorMetrics']);
+    Route::get('/info', [App\Http\Controllers\Api\MCPController::class, 'info']);
+
     // MCP Webhook handler (bypasses signature verification)
-    Route::post('/webhook/retell', [\App\Http\Controllers\Api\MCPWebhookController::class, 'handleRetell'])
+    Route::post('/webhook/retell', [App\Http\Controllers\Api\MCPWebhookController::class, 'handleRetell'])
         ->name('mcp.webhook.retell');
     // Test endpoint removed for security
-    
+
     // Service-specific endpoints (existing)
     Route::prefix('database')->group(function () {
-        Route::get('/schema', [\App\Http\Controllers\Api\MCPController::class, 'databaseSchema']);
-        Route::post('/query', [\App\Http\Controllers\Api\MCPController::class, 'databaseQuery']);
-        Route::post('/search', [\App\Http\Controllers\Api\MCPController::class, 'databaseSearch']);
-        Route::get('/failed-appointments', [\App\Http\Controllers\Api\MCPController::class, 'databaseFailedAppointments']);
-        Route::get('/call-stats', [\App\Http\Controllers\Api\MCPController::class, 'databaseCallStats']);
-        Route::get('/tenant-stats', [\App\Http\Controllers\Api\MCPController::class, 'databaseTenantStats']);
+        Route::get('/schema', [App\Http\Controllers\Api\MCPController::class, 'databaseSchema']);
+        Route::post('/query', [App\Http\Controllers\Api\MCPController::class, 'databaseQuery']);
+        Route::post('/search', [App\Http\Controllers\Api\MCPController::class, 'databaseSearch']);
+        Route::get('/failed-appointments', [App\Http\Controllers\Api\MCPController::class, 'databaseFailedAppointments']);
+        Route::get('/call-stats', [App\Http\Controllers\Api\MCPController::class, 'databaseCallStats']);
+        Route::get('/tenant-stats', [App\Http\Controllers\Api\MCPController::class, 'databaseTenantStats']);
     });
-    
+
     Route::prefix('calcom')->group(function () {
-        Route::get('/event-types', [\App\Http\Controllers\Api\MCPController::class, 'calcomEventTypes']);
-        Route::post('/availability', [\App\Http\Controllers\Api\MCPController::class, 'calcomAvailability']);
-        Route::get('/bookings', [\App\Http\Controllers\Api\MCPController::class, 'calcomBookings']);
-        Route::get('/assignments/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'calcomAssignments']);
-        Route::post('/sync', [\App\Http\Controllers\Api\MCPController::class, 'calcomSync']);
+        Route::get('/event-types', [App\Http\Controllers\Api\MCPController::class, 'calcomEventTypes']);
+        Route::post('/availability', [App\Http\Controllers\Api\MCPController::class, 'calcomAvailability']);
+        Route::get('/bookings', [App\Http\Controllers\Api\MCPController::class, 'calcomBookings']);
+        Route::get('/assignments/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'calcomAssignments']);
+        Route::post('/sync', [App\Http\Controllers\Api\MCPController::class, 'calcomSync']);
         // Test endpoint removed - use health check or specific diagnostic endpoints
     });
-    
+
     Route::prefix('retell')->group(function () {
-        Route::get('/agent/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellAgent']);
-        Route::get('/agents/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellAgents']);
-        Route::post('/call-stats', [\App\Http\Controllers\Api\MCPController::class, 'retellCallStats']);
-        Route::post('/recent-calls', [\App\Http\Controllers\Api\MCPController::class, 'retellRecentCalls']);
-        Route::get('/call/{callId}', [\App\Http\Controllers\Api\MCPController::class, 'retellCallDetails']);
-        Route::post('/search-calls', [\App\Http\Controllers\Api\MCPController::class, 'retellSearchCalls']);
-        Route::get('/phone-numbers/{companyId}', [\App\Http\Controllers\Api\MCPController::class, 'retellPhoneNumbers']);
+        Route::get('/agent/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellAgent']);
+        Route::get('/agents/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellAgents']);
+        Route::post('/call-stats', [App\Http\Controllers\Api\MCPController::class, 'retellCallStats']);
+        Route::post('/recent-calls', [App\Http\Controllers\Api\MCPController::class, 'retellRecentCalls']);
+        Route::get('/call/{callId}', [App\Http\Controllers\Api\MCPController::class, 'retellCallDetails']);
+        Route::post('/search-calls', [App\Http\Controllers\Api\MCPController::class, 'retellSearchCalls']);
+        Route::get('/phone-numbers/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellPhoneNumbers']);
         // Test endpoint removed - use health check or specific diagnostic endpoints
-        
+
         // Agent version management
-        Route::get('/agent-version/{agentId}/{version}', [\App\Http\Controllers\Api\RetellAgentVersionController::class, 'getVersion'])
+        Route::get('/agent-version/{agentId}/{version}', [App\Http\Controllers\Api\RetellAgentVersionController::class, 'getVersion'])
             ->name('mcp.retell.agent-version');
-        Route::post('/agent-compare/{agentId}', [\App\Http\Controllers\Api\RetellAgentVersionController::class, 'compareVersions'])
+        Route::post('/agent-compare/{agentId}', [App\Http\Controllers\Api\RetellAgentVersionController::class, 'compareVersions'])
             ->name('mcp.retell.agent-compare');
-            
+
         // Test call functionality
-        Route::post('/test-call', [\App\Http\Controllers\Api\RetellTestCallController::class, 'initiateTestCall'])
+        Route::post('/test-call', [App\Http\Controllers\Api\RetellTestCallController::class, 'initiateTestCall'])
             ->name('mcp.retell.test-call');
-        Route::get('/test-call/{callId}/status', [\App\Http\Controllers\Api\RetellTestCallController::class, 'getTestCallStatus'])
+        Route::get('/test-call/{callId}/status', [App\Http\Controllers\Api\RetellTestCallController::class, 'getTestCallStatus'])
             ->name('mcp.retell.test-call-status');
-        Route::get('/test-scenarios/{agentId}', [\App\Http\Controllers\Api\RetellTestCallController::class, 'getTestScenarios'])
+        Route::get('/test-scenarios/{agentId}', [App\Http\Controllers\Api\RetellTestCallController::class, 'getTestScenarios'])
             ->name('mcp.retell.test-scenarios');
     });
-    
+
     Route::prefix('queue')->group(function () {
-        Route::get('/overview', [\App\Http\Controllers\Api\MCPController::class, 'queueOverview']);
-        Route::get('/failed-jobs', [\App\Http\Controllers\Api\MCPController::class, 'queueFailedJobs']);
-        Route::get('/recent-jobs', [\App\Http\Controllers\Api\MCPController::class, 'queueRecentJobs']);
-        Route::get('/job/{jobId}', [\App\Http\Controllers\Api\MCPController::class, 'queueJobDetails']);
-        Route::post('/job/{jobId}/retry', [\App\Http\Controllers\Api\MCPController::class, 'queueRetryJob']);
-        Route::get('/metrics', [\App\Http\Controllers\Api\MCPController::class, 'queueMetrics']);
-        Route::get('/workers', [\App\Http\Controllers\Api\MCPController::class, 'queueWorkers']);
-        Route::post('/search', [\App\Http\Controllers\Api\MCPController::class, 'queueSearchJobs']);
+        Route::get('/overview', [App\Http\Controllers\Api\MCPController::class, 'queueOverview']);
+        Route::get('/failed-jobs', [App\Http\Controllers\Api\MCPController::class, 'queueFailedJobs']);
+        Route::get('/recent-jobs', [App\Http\Controllers\Api\MCPController::class, 'queueRecentJobs']);
+        Route::get('/job/{jobId}', [App\Http\Controllers\Api\MCPController::class, 'queueJobDetails']);
+        Route::post('/job/{jobId}/retry', [App\Http\Controllers\Api\MCPController::class, 'queueRetryJob']);
+        Route::get('/metrics', [App\Http\Controllers\Api\MCPController::class, 'queueMetrics']);
+        Route::get('/workers', [App\Http\Controllers\Api\MCPController::class, 'queueWorkers']);
+        Route::post('/search', [App\Http\Controllers\Api\MCPController::class, 'queueSearchJobs']);
     });
-    
+
     // Cache management
-    Route::delete('/cache/{service}', [\App\Http\Controllers\Api\MCPController::class, 'clearCache']);
-    
+    Route::delete('/cache/{service}', [App\Http\Controllers\Api\MCPController::class, 'clearCache']);
+
     // Real-time streaming endpoint
-    Route::get('/stream', [\App\Http\Controllers\Api\MCPStreamController::class, 'stream'])
+    Route::get('/stream', [App\Http\Controllers\Api\MCPStreamController::class, 'stream'])
         ->middleware(['auth:sanctum']);
 });
 
 // ---- Cookie Consent API ----------------------------
 Route::prefix('cookie-consent')->group(function () {
-    Route::get('/status', [\App\Http\Controllers\Api\CookieConsentController::class, 'status']);
-    Route::post('/save', [\App\Http\Controllers\Api\CookieConsentController::class, 'save']);
-    Route::post('/accept-all', [\App\Http\Controllers\Api\CookieConsentController::class, 'acceptAll']);
-    Route::post('/reject-all', [\App\Http\Controllers\Api\CookieConsentController::class, 'rejectAll']);
-    Route::post('/withdraw', [\App\Http\Controllers\Api\CookieConsentController::class, 'withdraw']);
+    Route::get('/status', [App\Http\Controllers\Api\CookieConsentController::class, 'status']);
+    Route::post('/save', [App\Http\Controllers\Api\CookieConsentController::class, 'save']);
+    Route::post('/accept-all', [App\Http\Controllers\Api\CookieConsentController::class, 'acceptAll']);
+    Route::post('/reject-all', [App\Http\Controllers\Api\CookieConsentController::class, 'rejectAll']);
+    Route::post('/withdraw', [App\Http\Controllers\Api\CookieConsentController::class, 'withdraw']);
 });
 
 // ---- Twilio Webhooks ----------------------------
@@ -297,11 +340,11 @@ Route::prefix('twilio')->group(function () {
     // Status callback for message delivery updates
     Route::post('/status-callback', [TwilioWebhookController::class, 'statusCallback'])
         ->name('twilio.status-callback');
-    
+
     // Incoming message webhook
     Route::post('/incoming-message', [TwilioWebhookController::class, 'incomingMessage'])
         ->name('twilio.incoming-message');
-    
+
     // MCP integration point for Twilio
     Route::post('/mcp/status-callback', [TwilioWebhookController::class, 'statusCallback'])
         ->name('twilio.mcp.status-callback');
@@ -324,7 +367,7 @@ Route::prefix('notion')->group(function () {
 // ---- Stripe Webhooks ----------------------------
 Route::prefix('stripe')->group(function () {
     // Webhook for payment events
-    Route::post('/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])
+    Route::post('/webhook', [App\Http\Controllers\StripeWebhookController::class, 'handleWebhook'])
         ->name('stripe.webhook');
 });
 
@@ -340,30 +383,33 @@ Route::get('calcom/webhook', [CalcomWebhookController::class, 'ping']);
 // 2) Cal.com Webhook - NOW USING MCP UnifiedWebhookController
 Route::post('calcom/webhook', function (Request $request) {
     Log::info('[MCP Migration] Legacy /calcom/webhook route used, redirecting to UnifiedWebhookController');
+
     return app(UnifiedWebhookController::class)->handle($request);
 })->middleware(['calcom.signature'])
-  ->name('calcom.webhook');
+    ->name('calcom.webhook');
 
 // ---- Retell Webhook (POST) ➜ NOW USING MCP UnifiedWebhookController
 Route::post('/retell/webhook', function (Request $request) {
     Log::info('[MCP Migration] Legacy /retell/webhook route used, redirecting to UnifiedWebhookController');
+
     return app(UnifiedWebhookController::class)->handle($request);
 })->middleware(['verify.retell.signature'])
-  ->name('retell.webhook');
+    ->name('retell.webhook');
 
 // ---- OPTIMIZED: NOW USING MCP UnifiedWebhookController ----
 Route::post('/retell/optimized-webhook', function (Request $request) {
     Log::info('[MCP Migration] Legacy /retell/optimized-webhook route used, redirecting to UnifiedWebhookController');
+
     return app(UnifiedWebhookController::class)->handle($request);
 })->middleware(['verify.retell.signature'])
-  ->name('retell.optimized.webhook');
+    ->name('retell.optimized.webhook');
 
 // ---- Notion Webhook Routes ----
 Route::prefix('notion')->group(function () {
     // Main webhook endpoint
     Route::post('/webhook', [NotionWebhookController::class, 'handleWebhook'])
         ->name('notion.webhook');
-    
+
     // Test endpoint to verify webhook configuration
     Route::post('/webhook/test', [NotionWebhookController::class, 'test'])
         ->name('notion.webhook.test');
@@ -378,9 +424,10 @@ Route::prefix('notion')->group(function () {
 // ---- ENHANCED: NOW USING MCP UnifiedWebhookController ----
 Route::post('/retell/enhanced-webhook', function (Request $request) {
     Log::info('[MCP Migration] Legacy /retell/enhanced-webhook route used, redirecting to UnifiedWebhookController');
+
     return app(UnifiedWebhookController::class)->handle($request);
 })->middleware(['verify.retell.signature'])
-  ->name('retell.enhanced.webhook');
+    ->name('retell.enhanced.webhook');
 
 // ---- [DUPLICATE REMOVED] This route was defined twice, now removed ----
 
@@ -400,13 +447,13 @@ Route::post('/retell/function-call', [App\Http\Controllers\RetellRealtimeControl
 
 // ---- NEW: Retell Real-time Routes for Live Updates ----
 Route::prefix('retell/realtime')->middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
-    Route::post('/webhook', [\App\Http\Controllers\Api\RetellRealtimeController::class, 'handleWebhook'])
+    Route::post('/webhook', [App\Http\Controllers\Api\RetellRealtimeController::class, 'handleWebhook'])
         ->name('retell.realtime.webhook');
-    Route::get('/active-calls', [\App\Http\Controllers\Api\RetellRealtimeController::class, 'getActiveCalls'])
+    Route::get('/active-calls', [App\Http\Controllers\Api\RetellRealtimeController::class, 'getActiveCalls'])
         ->name('retell.realtime.active-calls');
-    Route::get('/stream', [\App\Http\Controllers\Api\RetellRealtimeController::class, 'streamCallUpdates'])
+    Route::get('/stream', [App\Http\Controllers\Api\RetellRealtimeController::class, 'streamCallUpdates'])
         ->name('retell.realtime.stream');
-    Route::post('/sync', [\App\Http\Controllers\Api\RetellRealtimeController::class, 'syncRecentCalls'])
+    Route::post('/sync', [App\Http\Controllers\Api\RetellRealtimeController::class, 'syncRecentCalls'])
         ->name('retell.realtime.sync');
 });
 
@@ -431,7 +478,7 @@ Route::post('/billing/webhook', [App\Http\Controllers\BillingController::class, 
 // Removed duplicate route - using the one defined above at line 23-24
 
 // ---- Frontend Error Logging -------------------------------------
-Route::post('/log-frontend-error', [\App\Http\Controllers\FrontendErrorController::class, 'log'])
+Route::post('/log-frontend-error', [FrontendErrorController::class, 'log'])
     ->middleware(['throttle:10,1']); // Max 10 error reports per minute
 
 // ---- Hybrid Booking Routes (V1 für Verfügbarkeit, V2 für Buchung) ----
@@ -457,29 +504,29 @@ Route::middleware(['auth:sanctum'])->group(function () {
 Route::middleware(['auth:sanctum', 'input.validation'])->group(function () {
     // Customer API
     Route::apiResource('customers', App\Http\Controllers\API\CustomerController::class)->names('api.customers');
-    
+
     // Appointment API
     Route::apiResource('appointments', App\Http\Controllers\API\AppointmentController::class)->names('api.appointments');
-    
+
     // Staff API
     Route::apiResource('staff', App\Http\Controllers\API\StaffController::class)->names('api.staff');
-    
+
     // Service API
     Route::apiResource('services', App\Http\Controllers\API\ServiceController::class)->names('api.services');
-    
+
     // Business API
     Route::apiResource('businesses', App\Http\Controllers\API\BusinessController::class);
-    
+
     // Call API
     Route::apiResource('calls', App\Http\Controllers\API\CallController::class)->names('api.calls');
     Route::post('calls/{call}/translate-summary', [App\Http\Controllers\API\CallController::class, 'translateSummary'])
         ->name('api.calls.translate-summary');
     Route::get('calls/{call}/export-pdf', [App\Http\Controllers\API\CallController::class, 'exportPdf'])
         ->name('api.calls.export-pdf');
-    
+
     // Legacy billing route
     Route::get('/billing/checkout', [App\Http\Controllers\BillingController::class, 'checkout']);
-    
+
     // Stripe Billing API
     Route::prefix('billing')->group(function () {
         Route::get('/plans', [App\Http\Controllers\StripeBillingController::class, 'getPlans']);
@@ -498,13 +545,13 @@ Route::prefix('event-management')->middleware(['auth:sanctum'])->group(function 
     // Event-Type Sync
     Route::get('/sync/event-types/{company}', [App\Http\Controllers\API\EventManagementController::class, 'syncEventTypes']);
     Route::get('/sync/team/{company}', [App\Http\Controllers\API\EventManagementController::class, 'syncTeamMembers']);
-    
+
     // Verfügbarkeitsprüfung
     Route::post('/check-availability', [App\Http\Controllers\API\EventManagementController::class, 'checkAvailability']);
-    
+
     // Event-Type Management
     Route::get('/event-types/{company}/branch/{branch?}', [App\Http\Controllers\API\EventManagementController::class, 'getEventTypes']);
-    
+
     // Staff-Event Assignments
     Route::post('/staff-event-assignments', [App\Http\Controllers\API\EventManagementController::class, 'manageStaffEventAssignments']);
     Route::get('/staff-event-matrix/{company}', [App\Http\Controllers\API\EventManagementController::class, 'getStaffEventMatrix']);
@@ -513,24 +560,25 @@ Route::prefix('event-management')->middleware(['auth:sanctum'])->group(function 
 // Validation API Routes
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/validation/last-test/{entityId}', function ($entityId) {
-        $result = \App\Models\ValidationResult::getLatestForEntity('branch', $entityId);
+        $result = App\Models\ValidationResult::getLatestForEntity('branch', $entityId);
+
         return response()->json($result);
     });
 
     Route::post('/validation/run-test/{entityId}', function ($entityId) {
-        $branch = \App\Models\Branch::findOrFail($entityId);
-        $integration = new \App\Services\Integrations\CalcomEnhancedIntegration();
-        
+        $branch = App\Models\Branch::findOrFail($entityId);
+        $integration = new App\Services\Integrations\CalcomEnhancedIntegration;
+
         return response()->stream(function () use ($branch, $integration) {
             $results = $integration->validateAndSyncConfiguration($branch, 'branch');
-            
+
             foreach ($results['tests'] as $testName => $testResult) {
-                echo "data: " . json_encode([
+                echo 'data: ' . json_encode([
                     'test' => $testName,
                     'name' => ucfirst(str_replace('_', ' ', $testName)),
                     'status' => $testResult['status'],
                     'message' => $testResult['message'],
-                    'details' => $testResult['details'] ?? null
+                    'details' => $testResult['details'] ?? null,
                 ]) . "\n\n";
                 ob_flush();
                 flush();
@@ -539,7 +587,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         }, 200, [
             'Content-Type' => 'text/event-stream',
             'Cache-Control' => 'no-cache',
-            'X-Accel-Buffering' => 'no'
+            'X-Accel-Buffering' => 'no',
         ]);
     });
 });
@@ -555,7 +603,7 @@ Route::prefix('dashboard')->middleware(['auth:sanctum'])->group(function () {
 
 // Monitoring Dashboard API Routes
 Route::prefix('monitoring')->middleware(['auth:sanctum', 'can:view-monitoring'])->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\MonitoringController::class, 'dashboard']);
+    Route::get('/dashboard', [App\Http\Controllers\MonitoringController::class, 'dashboard']);
 });
 
 // MCP Health Check & Monitoring Routes
@@ -564,13 +612,13 @@ Route::prefix('health')->middleware(['api'])->group(function () {
     Route::get('/', [MCPHealthCheckController::class, 'health']);
     Route::get('/ready', [MCPHealthCheckController::class, 'ready']);
     Route::get('/live', [MCPHealthCheckController::class, 'live']);
-    
+
     // Detailed health checks (contain sensitive data - require auth)
     Route::get('/detailed', [MCPHealthCheckController::class, 'detailed'])
         ->middleware(['auth:sanctum']);
     Route::get('/service/{service}', [MCPHealthCheckController::class, 'service'])
         ->middleware(['auth:sanctum']);
-    
+
     // Circuit Breaker health checks
     Route::get('/circuit-breakers', [CircuitBreakerHealthController::class, 'index'])
         ->middleware(['auth:sanctum']);
@@ -589,22 +637,22 @@ Route::prefix('monitoring')->middleware(['api', 'auth:sanctum'])->group(function
 Route::prefix('mobile')->group(function () {
     // Public routes
     Route::post('/device/register', [App\Http\Controllers\API\MobileAppController::class, 'registerDevice']);
-    
+
     // Test endpoint removed for security - use health check endpoints instead
-    
+
     // Protected routes
     Route::middleware(['auth:sanctum'])->group(function () {
         // Event Types
         Route::get('/event-types', [App\Http\Controllers\API\MobileAppController::class, 'getEventTypes']);
-        
+
         // Availability
         Route::post('/availability/check', [App\Http\Controllers\API\MobileAppController::class, 'checkAvailability']);
-        
+
         // Bookings
         Route::post('/bookings', [App\Http\Controllers\API\MobileAppController::class, 'createBooking']);
         Route::get('/appointments', [App\Http\Controllers\API\MobileAppController::class, 'getAppointments']);
         Route::delete('/appointments/{id}', [App\Http\Controllers\API\MobileAppController::class, 'cancelAppointment']);
-        
+
         // Dashboard metrics for mobile
         Route::get('/dashboard', [App\Http\Controllers\Api\DashboardMetricsController::class, 'all']);
     });
@@ -615,13 +663,13 @@ Route::prefix('mcp/gateway')->group(function () {
     // Main gateway endpoint
     Route::post('/', [MCPGatewayController::class, 'handle'])
         ->name('mcp.gateway');
-    
+
     // Gateway health and discovery
     Route::get('/health', [MCPGatewayController::class, 'health'])
         ->name('mcp.gateway.health');
     Route::get('/methods', [MCPGatewayController::class, 'methods'])
         ->name('mcp.gateway.methods');
-    
+
     // Retell custom function gateway
     Route::post('/retell/functions/{function}', [RetellCustomFunctionController::class, 'handle'])
         ->name('mcp.gateway.retell.functions');
@@ -631,7 +679,31 @@ Route::prefix('mcp/gateway')->group(function () {
 Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
     // Server Info
     Route::get('info', [App\Http\Controllers\Api\MCPController::class, 'info']);
-    
+
+    // Retell AI MCP Bridge
+    Route::prefix('retell')->group(function () {
+        // Call Management
+        Route::post('initiate-call', [App\Http\Controllers\Api\RetellMCPController::class, 'initiateCall']);
+        Route::get('call/{callId}/status', [App\Http\Controllers\Api\RetellMCPController::class, 'getCallStatus']);
+
+        // Campaign Management
+        Route::post('campaign/create', [App\Http\Controllers\Api\RetellMCPController::class, 'createCampaign']);
+        Route::get('campaign/{campaignId}', [App\Http\Controllers\Api\RetellMCPController::class, 'getCampaign']);
+        Route::get('campaigns', [App\Http\Controllers\Api\RetellMCPController::class, 'listCampaigns']);
+        Route::post('campaign/{campaignId}/start', [App\Http\Controllers\Api\RetellMCPController::class, 'startCampaign']);
+        Route::post('campaign/{campaignId}/pause', [App\Http\Controllers\Api\RetellMCPController::class, 'pauseCampaign']);
+        Route::post('campaign/{campaignId}/resume', [App\Http\Controllers\Api\RetellMCPController::class, 'resumeCampaign']);
+
+        // Testing & Tools
+        Route::post('test-voice', [App\Http\Controllers\Api\RetellMCPController::class, 'testVoice']);
+        Route::get('tools', [App\Http\Controllers\Api\RetellMCPController::class, 'getAvailableTools']);
+        Route::get('health', [App\Http\Controllers\Api\RetellMCPController::class, 'healthCheck']);
+
+        // Webhook from external MCP server (no auth required for this specific route)
+        Route::post('call-created', [App\Http\Controllers\Api\RetellMCPController::class, 'callCreatedWebhook'])
+            ->withoutMiddleware(['auth:sanctum']);
+    });
+
     // Database MCP
     Route::prefix('database')->group(function () {
         Route::get('schema', [App\Http\Controllers\Api\MCPController::class, 'databaseSchema']);
@@ -641,7 +713,7 @@ Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
         Route::get('call-stats', [App\Http\Controllers\Api\MCPController::class, 'databaseCallStats']);
         Route::get('tenant-stats', [App\Http\Controllers\Api\MCPController::class, 'databaseTenantStats']);
     });
-    
+
     // Cal.com MCP
     Route::prefix('calcom')->group(function () {
         Route::get('event-types', [App\Http\Controllers\Api\MCPController::class, 'calcomEventTypes']);
@@ -651,7 +723,7 @@ Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
         Route::post('sync', [App\Http\Controllers\Api\MCPController::class, 'calcomSync']);
         // Test endpoint removed - use health check or specific diagnostic endpoints
     });
-    
+
     // Retell.ai MCP
     Route::prefix('retell')->group(function () {
         Route::get('agent/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellAgent']);
@@ -663,7 +735,7 @@ Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
         Route::get('phone-numbers/{companyId}', [App\Http\Controllers\Api\MCPController::class, 'retellPhoneNumbers']);
         // Test endpoint removed - use health check or specific diagnostic endpoints
     });
-    
+
     // Sentry MCP (existing)
     Route::prefix('sentry')->group(function () {
         Route::get('issues', [App\Http\Controllers\Api\MCPController::class, 'sentryIssues']);
@@ -672,7 +744,7 @@ Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
         Route::post('issues/search', [App\Http\Controllers\Api\MCPController::class, 'sentrySearchIssues']);
         Route::get('performance', [App\Http\Controllers\Api\MCPController::class, 'sentryPerformance']);
     });
-    
+
     // Queue MCP
     Route::prefix('queue')->group(function () {
         Route::get('overview', [App\Http\Controllers\Api\MCPController::class, 'queueOverview']);
@@ -684,7 +756,7 @@ Route::prefix('mcp')->middleware(['auth:sanctum'])->group(function () {
         Route::get('workers', [App\Http\Controllers\Api\MCPController::class, 'queueWorkers']);
         Route::post('search', [App\Http\Controllers\Api\MCPController::class, 'queueSearchJobs']);
     });
-    
+
     // Cache Management
     Route::post('{service}/cache/clear', [App\Http\Controllers\Api\MCPController::class, 'clearCache']);
 });
@@ -699,10 +771,10 @@ Route::prefix('retell')->group(function () {
         Route::post('/cancel-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'cancelAppointment']);
         Route::post('/reschedule-appointment', [App\Http\Controllers\RetellCustomFunctionsController::class, 'rescheduleAppointment']);
     });
-    
+
     // General routes (no appointment booking required)
     Route::post('/check-customer', [App\Http\Controllers\RetellCustomFunctionsController::class, 'checkCustomer']);
-    
+
     // Krückeberg Servicegruppe - Reine Datensammlung (ohne Terminbuchung)
     Route::post('/collect-data', [App\Http\Controllers\Api\RetellDataCollectionController::class, 'collectData'])
         ->name('api.retell.collect-data');
@@ -729,7 +801,7 @@ Route::middleware(['auth:sanctum'])->prefix('v2')->group(function () {
         Route::post('/{id}/execute', [App\Http\Controllers\Api\V2\CommandController::class, 'execute']);
         Route::post('/{id}/favorite', [App\Http\Controllers\Api\V2\CommandController::class, 'toggleFavorite']);
     });
-    
+
     // Workflows
     Route::prefix('workflows')->group(function () {
         Route::get('/', [App\Http\Controllers\Api\V2\WorkflowController::class, 'index']);
@@ -740,7 +812,7 @@ Route::middleware(['auth:sanctum'])->prefix('v2')->group(function () {
         Route::post('/{id}/execute', [App\Http\Controllers\Api\V2\WorkflowController::class, 'execute']);
         Route::post('/{id}/favorite', [App\Http\Controllers\Api\V2\WorkflowController::class, 'toggleFavorite']);
     });
-    
+
     // Executions
     Route::prefix('executions')->group(function () {
         Route::get('/commands', [App\Http\Controllers\Api\V2\ExecutionController::class, 'commandExecutions']);
@@ -751,13 +823,12 @@ Route::middleware(['auth:sanctum'])->prefix('v2')->group(function () {
     });
 });
 
-
 // TEMPORARY DEBUG ROUTES - REMOVE AFTER FIXING!
-Route::post('/retell/webhook-bypass', [\App\Http\Controllers\Api\RetellWebhookBypassController::class, 'handle'])
+Route::post('/retell/webhook-bypass', [App\Http\Controllers\Api\RetellWebhookBypassController::class, 'handle'])
     ->name('retell.webhook.bypass');
-    
-Route::post('/retell/webhook-simple', [\App\Http\Controllers\Api\RetellWebhookWorkingController::class, 'handle'])
-    ->name('retell.webhook.simple');
+
+Route::post('/retell/webhook-simple', [App\Http\Controllers\Api\RetellWebhookWorkingController::class, 'handle'])
+        ->name('retell.webhook.simple');
 
 // Debug endpoint for session checking
 Route::get('/debug/session', function (Request $request) {
@@ -779,7 +850,7 @@ Route::prefix('errors')->name('api.errors.')->group(function () {
     Route::get('/statistics', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'statistics'])->name('statistics');
     Route::post('/detect', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'detect'])->name('detect');
     Route::get('/{errorCode}', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'show'])->name('show');
-    
+
     // Authenticated routes for error reporting
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/report', [App\Http\Controllers\Api\ErrorCatalogApiController::class, 'reportOccurrence'])->name('report');
@@ -787,11 +858,10 @@ Route::prefix('errors')->name('api.errors.')->group(function () {
     });
 });
 
-
 // V2 Portal API Routes
 Route::prefix('v2/portal')->group(function () {
     Route::post('/auth/login', [PortalController::class, 'login']);
-    
+
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/dashboard', [PortalController::class, 'dashboard']);
         Route::get('/appointments', [PortalController::class, 'appointments']);

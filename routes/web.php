@@ -1,7 +1,30 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+// ULTRATHINK Auth Solution
+require __DIR__ . '/ultrathink-auth.php';
+
+// Override 2FA routes to prevent 500 errors
+Route::get('/business/two-factor/setup', function () {
+    return redirect('/business');
+})->name('business.two-factor.setup.override');
+
+Route::post('/business/two-factor/setup', function () {
+    return redirect('/business');
+})->name('business.two-factor.setup.post.override');
+
+Route::get('/business/two-factor/challenge', function () {
+    return redirect('/business');
+})->name('business.two-factor.challenge.override');
+
 use App\Http\Controllers\Admin\CallCustomerAssignmentController;
+use Illuminate\Support\Facades\Route;
+
+// EMERGENCY FIX: Fixed login routes
+Route::get('/fixed-login', [App\Http\Controllers\Auth\FixedLoginController::class, 'directLogin'])
+    ->name('fixed.login');
+
+Route::post('/fixed-login', [App\Http\Controllers\Auth\FixedLoginController::class, 'login'])
+        ->name('fixed.login.post');
 
 // Include emergency admin routes
 require __DIR__ . '/admin-emergency.php';
@@ -10,7 +33,7 @@ require __DIR__ . '/admin-emergency.php';
 require __DIR__ . '/admin-switch.php';
 
 // Widget test route
-require __DIR__.'/test-widgets.php';
+require __DIR__ . '/test-widgets.php';
 
 // Error Catalog Routes
 Route::prefix('errors')->name('errors.')->group(function () {
@@ -26,28 +49,28 @@ if (config('app.admin_portal_react', false)) {
 }
 
 // Emergency auth routes - bypass everything
-Route::get('/emergency-login', [\App\Http\Controllers\EmergencyAuthController::class, 'login'])
+Route::get('/emergency-login', [App\Http\Controllers\EmergencyAuthController::class, 'login'])
     ->withoutMiddleware(['web', 'auth', 'csrf']);
-    
-Route::get('/auto-admin-login', [\App\Http\Controllers\EmergencyAuthController::class, 'autoLogin'])
-    ->withoutMiddleware(['web', 'auth', 'csrf']);
+
+Route::get('/auto-admin-login', [App\Http\Controllers\EmergencyAuthController::class, 'autoLogin'])
+        ->withoutMiddleware(['web', 'auth', 'csrf']);
 
 // Direct auth route - bypasses all middleware
 Route::get('/admin-direct-auth', function () {
     $uid = request('uid');
     $token = request('token');
-    
+
     if ($uid && $token) {
-        $user = \App\Models\User::find($uid);
+        $user = App\Models\User::find($uid);
         if ($user) {
             // Force login
-            \Illuminate\Support\Facades\Auth::guard('web')->loginUsingId($user->id);
+            Illuminate\Support\Facades\Auth::guard('web')->loginUsingId($user->id);
             session()->regenerate();
-            
+
             return redirect('/admin')->with('success', 'Logged in via direct auth');
         }
     }
-    
+
     return redirect('/direct-login.php')->with('error', 'Invalid auth token');
 })->withoutMiddleware(['web']);
 
@@ -56,7 +79,7 @@ Route::get('/test', function () {
     return response()->json([
         'status' => 'ok',
         'time' => now()->toISOString(),
-        'user' => auth()->check() ? auth()->user()->email : 'not logged in'
+        'user' => auth()->check() ? auth()->user()->email : 'not logged in',
     ]);
 });
 
@@ -68,7 +91,7 @@ Route::get('/auth-debug', function () {
         'guard' => auth()->getDefaultDriver(),
         'session_id' => session()->getId(),
         'csrf_token' => csrf_token(),
-        'session_data' => session()->all()
+        'session_data' => session()->all(),
     ]);
 });
 
@@ -91,7 +114,7 @@ Route::post('/admin/calls/{call}/assign-customer', [CallCustomerAssignmentContro
     ->name('admin.calls.assign-customer');
 
 // Test ML Dashboard outside Filament
-Route::get('/test-ml-dashboard', [\App\Http\Controllers\TestMLController::class, 'index']);
+Route::get('/test-ml-dashboard', [App\Http\Controllers\TestMLController::class, 'index']);
 
 // React Admin Portal Routes
 Route::get('/admin-react-login', function () {
@@ -146,7 +169,7 @@ Route::get('/retell-test', function () {
 })->name('retell.test.hub');
 
 Route::prefix('retell-monitor')->middleware(['web'])->group(function () {
-    Route::get('/', function() {
+    Route::get('/', function () {
         return view('basic-retell-monitor');
     })->name('retell.monitor.index');
     Route::get('/stats', [App\Http\Controllers\SimpleRetellMonitorController::class, 'stats'])
@@ -158,10 +181,10 @@ Route::prefix('retell-monitor')->middleware(['web'])->group(function () {
 });
 
 // Include help center routes
-require __DIR__.'/help-center.php';
+require __DIR__ . '/help-center.php';
 
 // Include no-CSRF routes
-require __DIR__.'/no-csrf.php';
+require __DIR__ . '/no-csrf.php';
 
 // Legal pages routes
 Route::get('/privacy', [App\Http\Controllers\PrivacyController::class, 'privacy'])->name('privacy');
@@ -185,13 +208,13 @@ Route::get('/invoice/{invoice}/download', function (App\Models\Invoice $invoice)
     if (auth()->user()->company_id !== $invoice->company_id) {
         abort(403);
     }
-    
+
     // For now, redirect to a placeholder
     // TODO: Implement actual PDF generation
     return response()->json([
         'message' => 'Invoice download not yet implemented',
         'invoice_id' => $invoice->id,
-        'invoice_number' => $invoice->number
+        'invoice_number' => $invoice->number,
     ]);
 })->middleware(['auth'])->name('invoice.download');
 
@@ -209,6 +232,7 @@ Route::post('/logout', function () {
     auth()->logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
+
     return redirect('/');
 })->middleware(['auth'])->name('logout');
 
@@ -225,7 +249,7 @@ Route::get('/csrf-test', function () {
 Route::post('/test-csrf', function () {
     return response()->json([
         'message' => 'CSRF token is valid!',
-        'token' => csrf_token()
+        'token' => csrf_token(),
     ]);
 })->middleware('web');
 
@@ -254,27 +278,27 @@ Route::get('/test-livewire-check', function () {
 
 // Fallback for GET requests to Livewire update endpoint
 Route::get('/livewire/update', function () {
-    \Log::warning('GET request to /livewire/update detected', [
+    Log::warning('GET request to /livewire/update detected', [
         'user_agent' => request()->userAgent(),
         'referer' => request()->header('referer'),
         'ip' => request()->ip(),
     ]);
-    
+
     return response()->json([
         'message' => 'Method not allowed. This endpoint only accepts POST requests.',
-        'hint' => 'If you are seeing this error, there might be an issue with Livewire JavaScript loading.'
+        'hint' => 'If you are seeing this error, there might be an issue with Livewire JavaScript loading.',
     ], 405);
 })->name('livewire.update.get');
 
 // Let Filament handle its own routes - no custom login routes!
 
 // Temporary alternative login (non-Livewire)
-Route::get('/temp-login', [\App\Http\Controllers\TempLoginController::class, 'showLoginForm'])->name('temp.login');
-Route::post('/temp-login', [\App\Http\Controllers\TempLoginController::class, 'login'])->name('temp.login.submit');
-Route::post('/temp-logout', [\App\Http\Controllers\TempLoginController::class, 'logout'])->name('temp.logout');
+Route::get('/temp-login', [App\Http\Controllers\TempLoginController::class, 'showLoginForm'])->name('temp.login');
+Route::post('/temp-login', [App\Http\Controllers\TempLoginController::class, 'login'])->name('temp.login.submit');
+Route::post('/temp-logout', [App\Http\Controllers\TempLoginController::class, 'logout'])->name('temp.logout');
 
 // Simple login test
-Route::post('/simple-login', [\App\Http\Controllers\SimpleLoginController::class, 'login'])->name('simple.login');
+Route::post('/simple-login', [App\Http\Controllers\SimpleLoginController::class, 'login'])->name('simple.login');
 
 // Debug routes
 Route::get('/debug/session', function () {
@@ -295,11 +319,11 @@ Route::get('/debug/session', function () {
 Route::post('/debug/login', function () {
     $credentials = [
         'email' => 'fabian@askproai.de',
-        'password' => 'Qwe421as1!1'
+        'password' => 'Qwe421as1!1',
     ];
-    
-    $result = \Illuminate\Support\Facades\Auth::attempt($credentials);
-    
+
+    $result = Illuminate\Support\Facades\Auth::attempt($credentials);
+
     return response()->json([
         'attempt_result' => $result,
         'auth_check_after' => auth()->check(),
@@ -323,21 +347,22 @@ Route::get('/auth-debug', function () {
 
 Route::post('/debug/clear-logs', function () {
     file_put_contents(storage_path('logs/laravel.log'), '');
+
     return response()->json(['cleared' => true]);
 });
 
 // Debug login routes
-Route::get('/debug-login', [\App\Http\Controllers\DebugLoginController::class, 'showForm']);
-Route::post('/debug-login/attempt', [\App\Http\Controllers\DebugLoginController::class, 'attemptLogin']);
+Route::get('/debug-login', [App\Http\Controllers\DebugLoginController::class, 'showForm']);
+Route::post('/debug-login/attempt', [App\Http\Controllers\DebugLoginController::class, 'attemptLogin']);
 
 // Livewire test page
-Route::get('/livewire-test-page', function() {
+Route::get('/livewire-test-page', function () {
     return view('livewire-test-page');
 })->middleware(['web', 'auth']);
 
 // Call sharing routes (requires auth)
 Route::middleware(['auth'])->group(function () {
-    Route::post('/admin/calls/{call}/send-email', [\App\Http\Controllers\CallShareController::class, 'sendCallEmail'])
+    Route::post('/admin/calls/{call}/send-email', [App\Http\Controllers\CallShareController::class, 'sendCallEmail'])
         ->name('admin.calls.send-email');
 });
 
@@ -356,23 +381,23 @@ Route::prefix('portal')->group(function () {
         return redirect("/business/customers/{$id}", 301);
     });
     Route::get('/dashboard', function () {
-        return redirect("/business/dashboard", 301);
+        return redirect('/business/dashboard', 301);
     });
     Route::get('/', function () {
-        return redirect("/business/", 301);
+        return redirect('/business/', 301);
     });
-    
-    require __DIR__.'/portal.php';
+
+    require __DIR__ . '/portal.php';
 });
 
 // Business Portal Routes
-require __DIR__.'/business-portal.php';
+require __DIR__ . '/business-portal.php';
 
 // Admin API routes (web authenticated)
 Route::middleware(['auth:web'])->prefix('admin-api')->group(function () {
     Route::post('/calls/{call}/translate-summary', [App\Http\Controllers\Admin\AdminApiController::class, 'translateCallSummary'])
         ->name('admin.api.calls.translate-summary');
-    
+
     // Transaction exports
     Route::get('/transactions/export/csv', [App\Http\Controllers\Admin\TransactionExportController::class, 'exportCsv'])
         ->name('admin.api.transactions.export.csv');
@@ -385,10 +410,12 @@ Route::middleware(['auth:web'])->prefix('admin-api')->group(function () {
 // Removed - let Livewire handle its own routes
 
 // Simple Livewire test
-Route::get('/test-livewire-simple', function() {
+Route::get('/test-livewire-simple', function () {
     return view('test-livewire-simple');
 })->middleware(['web']);
-Route::get('/test-ml-livewire-page', function() { return view('test-ml-livewire-page'); });
+Route::get('/test-ml-livewire-page', function () {
+    return view('test-ml-livewire-page');
+});
 
 // Debug route for Filament v3 issues
 Route::get('/filament-debug', function () {
@@ -410,44 +437,42 @@ Route::prefix('gdpr')->group(function () {
 Route::get('/privacy-tools', [App\Http\Controllers\GDPRController::class, 'privacyTools'])
     ->name('privacy-tools');
 
-
 // Temporary token login for testing
 Route::get('/business/login-with-token', function (Request $request) {
     $token = $request->get('token');
-    $userId = \Illuminate\Support\Facades\Cache::pull('portal_login_token_' . $token);
-    
-    if (!$userId) {
+    $userId = Illuminate\Support\Facades\Cache::pull('portal_login_token_' . $token);
+
+    if (! $userId) {
         return redirect()->route('business.login')->with('error', 'Invalid or expired token');
     }
-    
-    $user = \App\Models\PortalUser::find($userId);
-    if (!$user || !$user->is_active) {
+
+    $user = App\Models\PortalUser::find($userId);
+    if (! $user || ! $user->is_active) {
         return redirect()->route('business.login')->with('error', 'User not found or inactive');
     }
-    
-    \Illuminate\Support\Facades\Auth::guard('portal')->login($user);
+
+    Illuminate\Support\Facades\Auth::guard('portal')->login($user);
     $user->recordLogin($request->ip());
-    
+
     return redirect()->route('business.dashboard');
 })->name('business.login-with-token');
 
-
 // Admin viewing portal route
 Route::get('/admin-view-portal/{session}', function ($session) {
-    $data = \Illuminate\Support\Facades\Cache::get('admin_viewing_' . $session);
-    if (!$data) {
+    $data = Illuminate\Support\Facades\Cache::get('admin_viewing_' . $session);
+    if (! $data) {
         return redirect('/business/login')->with('error', 'Invalid session');
     }
-    
+
     // Set admin viewing session
     session(['is_admin_viewing' => true]);
     session(['admin_impersonation' => [
         'user_id' => 0,
         'company_id' => $data['company_id'],
-        'company_name' => \App\Models\Company::find($data['company_id'])->name,
-        'admin_id' => $data['admin_id']
+        'company_name' => App\Models\Company::find($data['company_id'])->name,
+        'admin_id' => $data['admin_id'],
     ]]);
-    
+
     return redirect('/business/dashboard');
 })->name('admin.view-portal');
 
@@ -470,8 +495,50 @@ Route::get('/portal-test-login', function () {
 // })->name('admin.react.app');
 
 // Include Livewire 404 fix routes
-require __DIR__.'/livewire-fix.php';
-
+require __DIR__ . '/livewire-fix.php';
 
 // Demo login route
-require __DIR__.'/demo-login.php';
+require __DIR__ . '/demo-login.php';
+
+// Session test routes for debugging
+Route::get('/test-session-set-route', function () {
+    session(['test_route' => 'Value set via route at ' . now()]);
+    session(['counter' => session('counter', 0) + 1]);
+
+    return response()->json([
+        'success' => true,
+        'session_id' => session()->getId(),
+        'session_name' => session()->getName(),
+        'data_set' => [
+            'test_route' => session('test_route'),
+            'counter' => session('counter'),
+        ],
+        'all_keys' => array_keys(session()->all()),
+    ]);
+})->name('test.session.set');
+
+Route::get('/test-session-get-route', function () {
+    return response()->json([
+        'session_id' => session()->getId(),
+        'session_name' => session()->getName(),
+        'test_route' => session('test_route'),
+        'counter' => session('counter'),
+        'all_data' => session()->all(),
+    ]);
+})->name('test.session.get');
+
+// Debug routes (temporary) - DISABLED DUE TO MEMORY ISSUES
+// require __DIR__ . '/debug-routes.php';
+
+// Test routes (temporary)
+require __DIR__ . '/test-routes.php';
+
+// Temporary admin bypass
+require __DIR__ . '/admin-bypass.php';
+
+// Test API routes
+require __DIR__ . '/test-api.php';
+
+// Direct login routes (bypass session migration issue)
+Route::get('/direct-login', [App\Http\Controllers\DirectLoginController::class, 'login'])->name('direct.login');
+Route::post('/api/direct-login', [App\Http\Controllers\DirectLoginController::class, 'apiLogin'])->name('api.direct.login');

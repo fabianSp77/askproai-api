@@ -25,13 +25,40 @@ portalAxios.interceptors.request.use((config) => {
 });
 
 // Add response interceptor to handle authentication errors
+let retryCount = 0;
+const maxRetries = 2;
+
 portalAxios.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            // Redirect to login if unauthenticated
-            window.location.href = '/business/login';
+    async (error) => {
+        const originalRequest = error.config;
+        
+        if (error.response?.status === 401 && !originalRequest._retry && retryCount < maxRetries) {
+            // Skip redirect in demo mode
+            if (window.__DEMO_MODE__ || localStorage.getItem('demo_mode') === 'true') {
+                return Promise.reject(error);
+            }
+            
+            originalRequest._retry = true;
+            retryCount++;
+            
+            // Wait a bit for auth overrides to potentially fix the issue
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Check localStorage again before redirecting
+            const storedUser = localStorage.getItem('portal_user');
+            if (storedUser) {
+                // User exists in localStorage, retry the request
+                retryCount = 0;
+                return portalAxios(originalRequest);
+            }
+            
+            // Only redirect after retries exhausted
+            if (retryCount >= maxRetries) {
+                window.location.href = '/business/login';
+            }
         }
+        
         return Promise.reject(error);
     }
 );

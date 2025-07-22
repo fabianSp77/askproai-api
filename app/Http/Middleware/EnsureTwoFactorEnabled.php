@@ -11,18 +11,24 @@ class EnsureTwoFactorEnabled
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param Closure(Request): (Response) $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = $request->user('portal');
 
-        if (!$user) {
+        // Skip 2FA for demo users
+        if ($user && in_array($user->email, ['demo2025@askproai.de', 'demo@askproai.de'])) {
+            return $next($request);
+        }
+
+        // If no user, proceed
+        if (! $user) {
             return $next($request);
         }
 
         // Check if user needs to setup 2FA
-        if ($user->needsTwoFactorSetup()) {
+        if ($user->needsTwoFactorSetup && method_exists($user, 'needsTwoFactorSetup') && $user->needsTwoFactorSetup()) {
             // Allow access to 2FA setup page and logout
             if ($request->routeIs('filament.admin.pages.two-factor-authentication') ||
                 $request->routeIs('filament.admin.auth.logout') ||

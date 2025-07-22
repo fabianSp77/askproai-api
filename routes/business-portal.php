@@ -1,18 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Portal\AnalyticsController;
+use App\Http\Controllers\Portal\AppointmentController;
+use App\Http\Controllers\Portal\Auth\AjaxLoginController;
 use App\Http\Controllers\Portal\Auth\LoginController;
 use App\Http\Controllers\Portal\Auth\TwoFactorController;
-use App\Http\Controllers\Portal\DashboardController;
-use App\Http\Controllers\Portal\CallController;
-use App\Http\Controllers\Portal\AppointmentController;
 use App\Http\Controllers\Portal\BillingController;
-use App\Http\Controllers\Portal\AnalyticsController;
+use App\Http\Controllers\Portal\CallController;
+use App\Http\Controllers\Portal\DashboardController;
+use App\Http\Controllers\Portal\DemoController;
+use App\Http\Controllers\Portal\FeedbackController;
 use App\Http\Controllers\Portal\SettingsController;
 use App\Http\Controllers\Portal\TeamController;
-use App\Http\Controllers\Portal\FeedbackController;
-use App\Http\Controllers\Portal\ReactTestController;
-use App\Http\Controllers\Portal\ReactDashboardController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,687 +21,248 @@ use App\Http\Controllers\Portal\ReactDashboardController;
 |
 | Business portal routes for company users (B2B)
 |
+| Structure:
+| 1. Test/Debug Routes (should be removed in production)
+| 2. Authentication Routes
+| 3. Authenticated Portal Routes
+| 4. API Routes (authenticated)
+| 5. API Routes (optional auth)
+| 6. Catch-all Route for React SPA (must be last)
+|
 */
 
-// Simple session test - MUST BE BEFORE the business prefix group
-Route::get('/business/api/simple-session-test', [App\Http\Controllers\Portal\Api\SimpleSessionTestController::class, 'test'])
-    ->name('business.api.simple-session-test');
-    
-// Force auth test
-Route::get('/business/api/force-auth-test', [App\Http\Controllers\Portal\Api\ForceAuthController::class, 'forceAuth'])
-    ->name('business.api.force-auth-test');
+// ========================================
+// 1. TEST/DEBUG ROUTES (Remove in production)
+// ========================================
+Route::prefix('business')->name('business.')->group(function () {
+    // Simple session test
+    Route::get('/api/simple-session-test', [App\Http\Controllers\Portal\Api\SimpleSessionTestController::class, 'test'])
+        ->name('api.simple-session-test');
 
-// Debug session route
-Route::get('/business/debug-session-simple', function() {
-    return include base_path('test-business-portal-session.php');
-})->name('business.debug-session-simple');
+    // Force auth test
+    Route::get('/api/force-auth-test', [App\Http\Controllers\Portal\Api\ForceAuthController::class, 'forceAuth'])
+        ->name('api.force-auth-test');
 
-// Dashboard test without middleware
-Route::get('/business/api/dashboard-test', function() {
-    // Manual auth from session
-    $portalSessionKey = 'login_portal_' . sha1('Illuminate\Auth\SessionGuard.portal');
-    $userId = session($portalSessionKey) ?? session('portal_user_id');
-    
-    if ($userId) {
-        $user = \App\Models\PortalUser::withoutGlobalScopes()->find($userId);
-        if ($user) {
-            \Illuminate\Support\Facades\Auth::guard('portal')->login($user);
-            app()->instance('current_company_id', $user->company_id);
-        }
-    }
-    
-    // Call dashboard controller directly
-    $controller = new \App\Http\Controllers\Portal\Api\DashboardApiController();
-    return $controller->index(request());
-})->name('business.api.dashboard-test');
+    // Session test routes
+    Route::middleware(['web'])->prefix('session-test')->group(function () {
+        Route::get('/set', function () {
+            session(['test_value' => 'Session set at ' . now()]);
+            session(['counter' => session('counter', 0) + 1]);
 
-Route::middleware(['business-portal'])->prefix('business')->name('business.')->group(function () {
+            return response()->json([
+                'success' => true,
+                'session_id' => session()->getId(),
+                'session_name' => session()->getName(),
+                'data_set' => [
+                    'test_value' => session('test_value'),
+                    'counter' => session('counter'),
+                ],
+            ]);
+        })->name('session-test.set');
 
-// Auth Test Route
-Route::get("/auth-test", function() {
-    return response()->json([
-        "portal_auth" => Auth::guard('portal')->check(),
-        "portal_user" => Auth::guard('portal')->user() ? [
-            'id' => Auth::guard('portal')->user()->id,
-            'email' => Auth::guard('portal')->user()->email,
-        ] : null,
-        "session_id" => session()->getId(),
-        "portal_user_id" => session('portal_user_id'),
-    ]);
-})->name('auth-test');
-
-// Session Test Route - Fixed path
-Route::get("/test/session", function() {
-    return response()->json([
-        "session_active" => session()->isStarted(),
-        "session_id" => session()->getId(),
-        "portal_user_id" => session("portal_user_id"),
-        "portal_login" => session("portal_login"),
-        "auth_check" => Auth::guard("portal")->check(),
-        "auth_user" => Auth::guard("portal")->user() ? [
-            "id" => Auth::guard("portal")->user()->id,
-            "email" => Auth::guard("portal")->user()->email
-        ] : null,
-        "all_session_data" => session()->all()
-    ]);
-})->name("test.session");
-
-    
-    // Test route without auth
-    Route::get('/react-test', [ReactTestController::class, 'index'])->name('react.test');
-    
-    // Test login endpoint
-    Route::post('/test-login-api', [App\Http\Controllers\Portal\TestLoginController::class, 'testLogin'])->name('test-login-api');
-    
-    // Simple login without CSRF
-    Route::post('/simple-login', [App\Http\Controllers\Portal\SimpleLoginController::class, 'simpleLogin'])
-        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
-        ->name('simple-login');
-    
-    // Test login page
-    Route::get('/test-login', function() {
-        return view('portal.auth.test-login');
-    })->name('test-login');
-    
-    // Force logout page
-    Route::get('/force-logout', function() {
-        return view('portal.auth.force-logout');
-    })->name('force-logout');
-    
-    // Admin impersonation routes (with admin impersonation middleware)
-    Route::middleware(['admin.impersonation'])->group(function () {
-        Route::get('/admin-switch', [App\Http\Controllers\Portal\AdminImpersonateController::class, 'showSwitch'])
-            ->name('admin-switch');
-        Route::post('/admin-impersonate', [App\Http\Controllers\Portal\AdminImpersonateController::class, 'impersonate'])
-            ->name('admin-impersonate');
-        Route::post('/admin-stop-impersonate', [App\Http\Controllers\Portal\AdminImpersonateController::class, 'stopImpersonate'])
-            ->name('admin-stop-impersonate');
+        Route::get('/get', function () {
+            return response()->json([
+                'session_id' => session()->getId(),
+                'session_name' => session()->getName(),
+                'test_value' => session('test_value'),
+                'counter' => session('counter'),
+                'all_data' => session()->all(),
+            ]);
+        })->name('session-test.get');
     });
-    
-    // Debug route without auth to test
-    Route::get('/api/auth-debug-open', [App\Http\Controllers\Portal\Api\AuthDebugController::class, 'debug'])
-        ->name('api.auth-debug-open');
-        
-    // React SPA as main portal (catch-all route must be last)
-    // Moved to the end of the file to prevent conflicts
-    
-    // Admin access route (before auth middleware)
-    Route::get('/admin-access', [App\Http\Controllers\Portal\AdminAccessController::class, 'access'])
-        ->name('admin.access');
-    
-    // Authentication routes
-    Route::middleware('guest:portal')->group(function () {
-        Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-        Route::post('/login', [LoginController::class, 'login'])->name('login.post');
-        
-        // Registration routes
-        Route::get('/register', [App\Http\Controllers\Portal\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
-        Route::post('/register', [App\Http\Controllers\Portal\Auth\RegisterController::class, 'register'])->name('register.post');
-        Route::get('/register/success', [App\Http\Controllers\Portal\Auth\RegisterController::class, 'showSuccessPage'])->name('register.success');
-        
-        // 2FA setup/challenge (before full auth)
-        Route::get('/two-factor/setup', [TwoFactorController::class, 'showSetupForm'])->name('two-factor.setup');
-        Route::post('/two-factor/setup', [TwoFactorController::class, 'confirmSetup'])->name('two-factor.setup.post');
-        Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->name('two-factor.enable');
-        Route::get('/two-factor/challenge', [TwoFactorController::class, 'showChallengeForm'])->name('two-factor.challenge');
-        Route::post('/two-factor/challenge', [TwoFactorController::class, 'verifyChallenge'])->name('two-factor.challenge.post');
-    });
-    
-    // Authenticated routes
-    Route::middleware(['portal.auth', 'admin.impersonation'])->group(function () {
-        
-        // Admin exit route
-        Route::get('/admin-exit', [App\Http\Controllers\Portal\AdminAccessController::class, 'exitAdminAccess'])
-            ->name('admin.exit');
-        
-        // Logout
-        Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-        
-        // Guest Access (public routes)
-        Route::get('/calls/{call}/guest', [\App\Http\Controllers\Portal\GuestAccessController::class, 'showGuestLogin'])
-            ->name('guest.login')
-            ->withoutMiddleware(['portal.auth']);
-        Route::post('/guest/request-access', [\App\Http\Controllers\Portal\GuestAccessController::class, 'requestAccess'])
-            ->name('guest.request-access')
-            ->withoutMiddleware(['portal.auth']);
-            
-        // Public download routes
-        Route::get('/download/csv/{token}', [\App\Http\Controllers\Portal\PublicDownloadController::class, 'downloadCsv'])
-            ->name('public.download.csv')
-            ->withoutMiddleware(['portal.auth']);
-        
-        // Legacy routes - kept for backward compatibility
-        // Redirect to React SPA
-        Route::get('/legacy', [DashboardController::class, 'index'])->name('legacy.dashboard');
-        Route::get('/legacy/dashboard', [DashboardController::class, 'index']);
-        
-        // Calls module
-        Route::prefix('calls')->name('calls.')->group(function () {
-            Route::get('/', [CallController::class, 'index'])
-                ->middleware('portal.permission:calls.view_own')
-                ->name('index');
-                
-            Route::get('/{call}', [CallController::class, 'show'])
-                ->middleware('portal.permission:calls.view_own')
-                ->name('show');
-                
-            Route::post('/{call}/status', [CallController::class, 'updateStatus'])
-                ->middleware('portal.permission:calls.edit_own')
-                ->name('update-status');
-                
-            Route::post('/{call}/assign', [CallController::class, 'assign'])
-                ->middleware('portal.permission:calls.edit_all')
-                ->name('assign');
-                
-            Route::post('/{call}/notes', [CallController::class, 'addNote'])
-                ->middleware('portal.permission:calls.edit_own')
-                ->name('add-note');
-                
-            Route::post('/{call}/schedule-callback', [CallController::class, 'scheduleCallback'])
-                ->middleware('portal.permission:calls.edit_own')
-                ->name('schedule-callback');
-                
-            Route::get('/export/csv', [CallController::class, 'exportCsv'])
-                ->middleware('portal.permission:calls.export')
-                ->name('export');
-                
-            Route::post('/export/bulk', [CallController::class, 'exportBulk'])
-                ->middleware('portal.permission:calls.export')
-                ->name('export.bulk');
-                
-            Route::post('/column-preferences', [CallController::class, 'updateColumnPreferences'])
-                ->name('column-preferences');
-                
-            Route::post('/apply-view-template', [CallController::class, 'applyViewTemplate'])
-                ->name('apply-view-template');
-                
-            Route::post('/{call}/format', [CallController::class, 'formatCall'])
-                ->name('format');
-                
-            Route::post('/{call}/translate', [CallController::class, 'translate'])
-                ->middleware('portal.permission:calls.view_own')
-                ->name('translate');
-                
-            Route::get('/{call}/export-pdf', [CallController::class, 'exportPdf'])
-                ->middleware('portal.permission:calls.view_own')
-                ->name('export-pdf');
-        });
-        
-        // Customers module (React)
-        Route::get('/customers', function() {
-            return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
-        })->middleware('portal.permission:customers.view')->name('customers.index');
-        
-        // Appointments module (if enabled)
-        Route::prefix('appointments')->name('appointments.')->group(function () {
-            Route::get('/', function() {
-                return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
-            })->middleware('portal.permission:appointments.view_own')
-                ->name('index');
-                
-            Route::get('/{appointment}', [AppointmentController::class, 'show'])
-                ->middleware('portal.permission:appointments.view_own')
-                ->name('show');
-        });
-        
-        // Billing module
-        Route::prefix('billing')->name('billing.')->group(function () {
-            Route::get('/', [BillingController::class, 'index'])
-                ->middleware('portal.permission:billing.view')
-                ->name('index');
-                
-            // Catch-all route for React SPA sub-routes (like /billing/usage)
-            Route::get('/{any}', [BillingController::class, 'index'])
-                ->middleware('portal.permission:billing.view')
-                ->where('any', '.*')
-                ->name('catch-all');
-                
-            // Prepaid Balance Routes
-            Route::get('/topup', [BillingController::class, 'topup'])
-                ->middleware('portal.permission:billing.pay')
-                ->name('topup');
-                
-            Route::post('/topup', [BillingController::class, 'processTopup'])
-                ->middleware('portal.permission:billing.pay')
-                ->name('topup.process');
-                
-            Route::get('/topup/success', [BillingController::class, 'topupSuccess'])
-                ->middleware('portal.permission:billing.pay')
-                ->name('topup.success');
-                
-            Route::get('/topup/cancel', [BillingController::class, 'topupCancel'])
-                ->middleware('portal.permission:billing.pay')
-                ->name('topup.cancel');
-                
-            // Transaction History
-            Route::get('/transactions', [BillingController::class, 'transactions'])
-                ->middleware('portal.permission:billing.view')
-                ->name('transactions');
-                
-            Route::get('/transactions/{transaction}/invoice', [BillingController::class, 'downloadInvoice'])
-                ->middleware('portal.permission:billing.view')
-                ->name('transaction.invoice');
-                
-            // Usage Statistics
-            Route::get('/usage', [BillingController::class, 'usage'])
-                ->middleware('portal.permission:billing.view')
-                ->name('usage');
-                
-            // Auto-Topup Routes
-            Route::get('/auto-topup', [BillingController::class, 'autoTopup'])
-                ->middleware('portal.permission:billing.manage')
-                ->name('auto-topup');
-                
-            Route::put('/auto-topup', [BillingController::class, 'updateAutoTopup'])
-                ->middleware('portal.permission:billing.manage')
-                ->name('auto-topup.update');
-                
-            // Payment Methods
-            Route::get('/payment-methods', [BillingController::class, 'paymentMethods'])
-                ->middleware('portal.permission:billing.manage')
-                ->name('payment-methods');
-                
-            Route::get('/payment-methods/add', [BillingController::class, 'addPaymentMethod'])
-                ->middleware('portal.permission:billing.manage')
-                ->name('payment-methods.add');
-                
-            Route::post('/payment-methods', [BillingController::class, 'storePaymentMethod'])
-                ->middleware('portal.permission:billing.manage')
-                ->name('payment-methods.store');
-                
-            Route::delete('/payment-methods/{paymentMethodId}', [BillingController::class, 'deletePaymentMethod'])
-                ->middleware('portal.permission:billing.manage')
-                ->name('payment-methods.delete');
-                
-            // Legacy invoice routes (kept for compatibility)
-            Route::get('/invoices/{invoice}', [BillingController::class, 'showInvoice'])
-                ->middleware('portal.permission:billing.view')
-                ->name('invoice.show');
-                
-            Route::get('/invoices/{invoice}/download', [BillingController::class, 'downloadInvoice'])
-                ->middleware('portal.permission:billing.view')
-                ->name('invoice.download');
-                
-            Route::post('/invoices/{invoice}/pay', [BillingController::class, 'payInvoice'])
-                ->middleware('portal.permission:billing.pay')
-                ->name('invoice.pay');
-        });
-        
-        // Analytics module - handled by React SPA
-        Route::prefix('analytics')->name('analytics.')->group(function () {
-            // Main analytics page (handled by React SPA)
-            Route::get('/', function() {
-                return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
-            })->middleware('portal.permission:analytics.view')
-                ->name('index');
-                
-            Route::get('/export', [AnalyticsController::class, 'export'])
-                ->middleware('portal.permission:analytics.export')
-                ->name('export');
-        });
-        
-        // Team management
-        Route::prefix('team')->name('team.')->group(function () {
-            Route::get('/', function() {
-                return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
-            })->middleware('portal.permission:team.view')
-                ->name('index');
-                
-            Route::get('/invite', [TeamController::class, 'showInviteForm'])
-                ->middleware('portal.permission:team.manage')
-                ->name('invite');
-                
-            Route::post('/invite', [TeamController::class, 'sendInvite'])
-                ->middleware('portal.permission:team.manage')
-                ->name('invite.send');
-                
-            Route::post('/users/{user}/update', [TeamController::class, 'updateUser'])
-                ->middleware('portal.permission:team.manage')
-                ->name('user.update');
-                
-            Route::post('/users/{user}/deactivate', [TeamController::class, 'deactivateUser'])
-                ->middleware('portal.permission:team.manage')
-                ->name('user.deactivate');
-        });
-        
-        // Settings
-        Route::prefix('settings')->name('settings.')->group(function () {
-            Route::get('/', function() {
-                return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
-            })->name('index');
-            Route::get('/profile', [SettingsController::class, 'profile'])->name('profile');
-            Route::post('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
-            Route::get('/password', [SettingsController::class, 'password'])->name('password');
-            Route::post('/password', [SettingsController::class, 'updatePassword'])->name('password.update');
-            Route::get('/notifications', [SettingsController::class, 'notifications'])->name('notifications');
-            Route::post('/notifications', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
-            Route::post('/preferences', [SettingsController::class, 'updatePreferences'])->name('preferences.update');
-            Route::post('/two-factor/disable', [TwoFactorController::class, 'disable'])->name('two-factor.disable');
-        });
-        
-        // Feedback
-        Route::prefix('feedback')->name('feedback.')->group(function () {
-            Route::post('/', [FeedbackController::class, 'store'])
-                ->middleware('portal.permission:feedback.create')
-                ->name('store');
-                
-            Route::get('/', [FeedbackController::class, 'index'])
-                ->middleware('portal.permission:feedback.view_team')
-                ->name('index');
-                
-            Route::post('/{feedback}/respond', [FeedbackController::class, 'respond'])
-                ->middleware('portal.permission:feedback.respond')
-                ->name('respond');
-        });
-        
-        // API endpoints for React - moved inside authenticated group
-        Route::prefix('api')->name('api.')->middleware(['business-api', 'portal.auth.api'])->group(function () {
-        
-        // Debug auth endpoint
-        Route::get('/check-auth', [App\Http\Controllers\Portal\Api\DebugAuthController::class, 'checkAuth'])
-            ->name('check-auth');
-            
-        // Session debug endpoint - without auth
-        Route::get('/session-debug', [App\Http\Controllers\Portal\Api\SessionDebugController::class, 'debug'])
-            ->withoutMiddleware(['portal.auth.api'])
-            ->name('session-debug');
-        Route::get('/dashboard', [App\Http\Controllers\Portal\Api\DashboardApiController::class, 'index'])
-            ->name('dashboard');
-        Route::get('/auth-debug', [App\Http\Controllers\Portal\Api\AuthDebugController::class, 'debug'])
-            ->name('auth-debug');
-            
-        // User API
-        Route::get('/user/permissions', [App\Http\Controllers\Portal\Api\UserApiController::class, 'permissions'])
-            ->name('user.permissions');
-            
-        // Audit API
-        Route::get('/audit', [App\Http\Controllers\Portal\Api\AuditLogApiController::class, 'index'])
-            ->name('audit.index');
-        Route::get('/audit/user/{userId}', [App\Http\Controllers\Portal\Api\AuditLogApiController::class, 'userActivity'])
-            ->name('audit.user-activity');
-        Route::get('/audit/export', [App\Http\Controllers\Portal\Api\AuditLogApiController::class, 'export'])
-            ->name('audit.export');
-        Route::post('/audit/log-export', [App\Http\Controllers\Portal\Api\AuditLogApiController::class, 'logExport'])
-            ->name('audit.log-export');
-            
-        // Calls API - COMMENTED OUT DUE TO DUPLICATE ROUTES IN api-portal.php
-        // Route::get('/calls', [App\Http\Controllers\Portal\Api\CallsApiController::class, 'index'])
-        //     ->name('calls.index');
-        Route::get('/calls-debug', [App\Http\Controllers\Portal\Api\DebugCallsController::class, 'debug'])
-            ->name('calls.debug');
-        // Route::get('/calls/export-csv', [App\Http\Controllers\Portal\Api\CallsApiController::class, 'exportCsv'])
-        //     ->name('calls.export-csv');
-        // Route::get('/calls/{id}', [App\Http\Controllers\Portal\Api\CallsApiController::class, 'show'])
-        //     ->name('calls.show');
-        // Route::get('/calls/{id}/export-pdf', [App\Http\Controllers\Portal\Api\CallsApiController::class, 'exportPdf'])
-        //     ->name('calls.export-pdf');
-        // Route::post('/calls/{id}/status', [App\Http\Controllers\Portal\Api\CallsApiController::class, 'updateStatus'])
-        //     ->name('calls.update-status');
-        // Route::post('/calls/{id}/notes', [App\Http\Controllers\Portal\Api\CallsApiController::class, 'addNote'])
-        //     ->name('calls.add-note');
-        // Route::post('/calls/{id}/send-summary', [App\Http\Controllers\Portal\Api\CallsApiController::class, 'sendSummary'])
-        //     ->name('calls.send-summary');
-        // Route::post('/calls/export-batch', [App\Http\Controllers\Portal\Api\CallsApiController::class, 'exportBatch'])
-        //     ->name('calls.export-batch');
-            
-        // Appointments API
-        Route::get('/appointments', [App\Http\Controllers\Portal\Api\AppointmentsApiController::class, 'index'])
-            ->name('appointments.index');
-        Route::get('/appointments/filters', [App\Http\Controllers\Portal\Api\AppointmentsApiController::class, 'filters'])
-            ->name('appointments.filters');
-        Route::get('/appointments/{id}', [App\Http\Controllers\Portal\Api\AppointmentsApiController::class, 'show'])
-            ->name('appointments.show');
-        Route::post('/appointments', [App\Http\Controllers\Portal\Api\AppointmentsApiController::class, 'store'])
-            ->name('appointments.store');
-        Route::post('/appointments/{id}/status', [App\Http\Controllers\Portal\Api\AppointmentsApiController::class, 'updateStatus'])
-            ->name('appointments.update-status');
-        Route::put('/appointments/{id}', [App\Http\Controllers\Portal\Api\AppointmentsApiController::class, 'update'])
-            ->name('appointments.update');
-        Route::delete('/appointments/{id}', [App\Http\Controllers\Portal\Api\AppointmentsApiController::class, 'destroy'])
-            ->name('appointments.destroy');
-            
-        // Team API
-        Route::get('/team', [App\Http\Controllers\Portal\Api\TeamApiController::class, 'index'])
-            ->name('team.index');
-        Route::get('/team/filters', [App\Http\Controllers\Portal\Api\TeamApiController::class, 'filters'])
-            ->name('team.filters');
-        Route::post('/team/invite', [App\Http\Controllers\Portal\Api\TeamApiController::class, 'invite'])
-            ->name('team.invite');
-        Route::put('/team/{id}', [App\Http\Controllers\Portal\Api\TeamApiController::class, 'update'])
-            ->name('team.update');
-        Route::post('/team/{id}/status', [App\Http\Controllers\Portal\Api\TeamApiController::class, 'updateStatus'])
-            ->name('team.update-status');
-        Route::post('/team/{id}/permissions', [App\Http\Controllers\Portal\Api\TeamApiController::class, 'updatePermissions'])
-            ->name('team.update-permissions');
-        Route::delete('/team/{id}', [App\Http\Controllers\Portal\Api\TeamApiController::class, 'destroy'])
-            ->name('team.destroy');
-            
-        // Analytics API
-        Route::get('/analytics', [App\Http\Controllers\Portal\Api\AnalyticsApiController::class, 'index'])
-            ->name('analytics.index');
-        Route::get('/analytics/filters', [App\Http\Controllers\Portal\Api\AnalyticsApiController::class, 'filters'])
-            ->name('analytics.filters');
-        Route::get('/analytics/export', [App\Http\Controllers\Portal\Api\AnalyticsApiController::class, 'export'])
-            ->name('analytics.export');
-            
-        // Settings API
-        Route::get('/settings/profile', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'getProfile'])
-            ->name('settings.profile');
-        Route::put('/settings/profile', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'updateProfile'])
-            ->name('settings.profile.update');
-        Route::put('/settings/password', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'updatePassword'])
-            ->name('settings.password.update');
-        Route::get('/settings/company', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'getCompany'])
-            ->name('settings.company');
-        Route::put('/settings/company', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'updateCompany'])
-            ->name('settings.company.update');
-        Route::put('/settings/notifications', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'updateNotifications'])
-            ->name('settings.notifications.update');
-        Route::post('/settings/2fa/enable', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'enable2FA'])
-            ->name('settings.2fa.enable');
-        Route::post('/settings/2fa/confirm', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'confirm2FA'])
-            ->name('settings.2fa.confirm');
-        Route::post('/settings/2fa/disable', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'disable2FA'])
-            ->name('settings.2fa.disable');
-        Route::post('/settings/theme', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'updateTheme'])
-            ->name('settings.theme.update');
-        Route::get('/settings/call-notifications', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'getCallNotificationSettings'])
-            ->name('settings.call-notifications');
-        Route::put('/settings/call-notifications', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'updateCallNotificationSettings'])
-            ->name('settings.call-notifications.update');
-        Route::put('/settings/call-notifications/user', [App\Http\Controllers\Portal\Api\SettingsApiController::class, 'updateUserCallPreferences'])
-            ->name('settings.call-notifications.user');
-            
-        // Billing API
-        Route::get('/billing', [App\Http\Controllers\Portal\Api\BillingApiController::class, 'index'])
-            ->name('billing.index');
-        Route::get('/billing/transactions', [App\Http\Controllers\Portal\Api\BillingApiController::class, 'getTransactions'])
-            ->name('billing.transactions');
-        Route::get('/billing/usage', [App\Http\Controllers\Portal\Api\QuickFixBillingController::class, 'getUsageFixed'])
-            ->name('billing.usage');
-        Route::get('/billing/debug-auth', [App\Http\Controllers\Portal\Api\DebugBillingController::class, 'debugAuth'])
-            ->name('billing.debug-auth');
-        Route::post('/billing/topup', [App\Http\Controllers\Portal\Api\BillingApiController::class, 'topup'])
-            ->name('billing.topup');
-        Route::get('/billing/auto-topup', [App\Http\Controllers\Portal\Api\BillingApiController::class, 'getAutoTopupSettings'])
-            ->name('billing.auto-topup');
-        Route::put('/billing/auto-topup', [App\Http\Controllers\Portal\Api\BillingApiController::class, 'updateAutoTopupSettings'])
-            ->name('billing.auto-topup.update');
-        Route::post('/billing/change-plan', [App\Http\Controllers\Portal\Api\BillingApiController::class, 'changePlan'])
-            ->name('billing.change-plan');
-            
-        // Feedback API
-        Route::get('/feedback', [App\Http\Controllers\Portal\Api\FeedbackApiController::class, 'index'])
-            ->name('feedback.index');
-        Route::get('/feedback/filters', [App\Http\Controllers\Portal\Api\FeedbackApiController::class, 'getFilters'])
-            ->name('feedback.filters');
-        Route::post('/feedback', [App\Http\Controllers\Portal\Api\FeedbackApiController::class, 'store'])
-            ->name('feedback.store');
-        Route::get('/feedback/{id}', [App\Http\Controllers\Portal\Api\FeedbackApiController::class, 'show'])
-            ->name('feedback.show');
-        Route::post('/feedback/{id}/respond', [App\Http\Controllers\Portal\Api\FeedbackApiController::class, 'respond'])
-            ->name('feedback.respond');
-        Route::post('/feedback/{id}/status', [App\Http\Controllers\Portal\Api\FeedbackApiController::class, 'updateStatus'])
-            ->name('feedback.update-status');
-            
-        // Notification API
-        Route::get('/notifications', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'index'])
-            ->name('notifications.index');
-        Route::post('/notifications/{id}/read', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'markAsRead'])
-            ->name('notifications.mark-read');
-        Route::post('/notifications/read-all', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'markAllAsRead'])
-            ->name('notifications.mark-all-read');
-        Route::delete('/notifications/{id}', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'delete'])
-            ->name('notifications.delete');
-        Route::delete('/notifications/delete-all', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'deleteAll'])
-            ->name('notifications.delete-all');
-        Route::get('/notifications/preferences', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'getPreferences'])
-            ->name('notifications.preferences');
-        Route::put('/notifications/preferences', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'updatePreferences'])
-            ->name('notifications.preferences.update');
-        Route::post('/notifications/test', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'createTest'])
-            ->name('notifications.test');
-            
-        // Translation API
-        Route::post('/translate', [App\Http\Controllers\Portal\Api\TranslationApiController::class, 'translate'])
-            ->name('translate');
-        Route::post('/translate/batch', [App\Http\Controllers\Portal\Api\TranslationApiController::class, 'translateBatch'])
-            ->name('translate.batch');
-        Route::post('/translate/detect', [App\Http\Controllers\Portal\Api\TranslationApiController::class, 'detectLanguage'])
-            ->name('translate.detect');
-        Route::get('/translate/languages', [App\Http\Controllers\Portal\Api\TranslationApiController::class, 'languages'])
-            ->name('translate.languages');
-        Route::post('/translate/preference', [App\Http\Controllers\Portal\Api\TranslationApiController::class, 'updatePreference'])
-            ->name('translate.preference');
-            
-        // Customers API
-        Route::get('/customers', [App\Http\Controllers\Portal\Api\CustomersApiController::class, 'index'])
-            ->name('customers.index');
-        Route::get('/customers/tags', [App\Http\Controllers\Portal\Api\CustomersApiController::class, 'tags'])
-            ->name('customers.tags');
-        Route::get('/customers/export-csv', [App\Http\Controllers\Portal\Api\CustomersApiController::class, 'exportCsv'])
-            ->name('customers.export-csv');
-        Route::get('/customers/{id}', [App\Http\Controllers\Portal\Api\CustomersApiController::class, 'show'])
-            ->name('customers.show');
-        Route::post('/customers', [App\Http\Controllers\Portal\Api\CustomersApiController::class, 'store'])
-            ->name('customers.store');
-        Route::put('/customers/{id}', [App\Http\Controllers\Portal\Api\CustomersApiController::class, 'update'])
-            ->name('customers.update');
-        Route::delete('/customers/{id}', [App\Http\Controllers\Portal\Api\CustomersApiController::class, 'destroy'])
-            ->name('customers.destroy');
-            
-        // Goals API
-        Route::prefix('goals')->name('goals.')->group(function () {
-            // Goal management
-            Route::get('/', [App\Http\Controllers\Portal\Api\GoalApiController::class, 'index'])
-                ->name('index');
-            Route::get('/templates', [App\Http\Controllers\Portal\Api\GoalApiController::class, 'templates'])
-                ->name('templates');
-            Route::post('/', [App\Http\Controllers\Portal\Api\GoalApiController::class, 'store'])
-                ->name('store');
-            Route::get('/{goal}', [App\Http\Controllers\Portal\Api\GoalApiController::class, 'show'])
-                ->name('show');
-            Route::put('/{goal}', [App\Http\Controllers\Portal\Api\GoalApiController::class, 'update'])
-                ->name('update');
-            Route::delete('/{goal}', [App\Http\Controllers\Portal\Api\GoalApiController::class, 'destroy'])
-                ->name('destroy');
-            Route::post('/{goal}/duplicate', [App\Http\Controllers\Portal\Api\GoalApiController::class, 'duplicate'])
-                ->name('duplicate');
-            Route::post('/{goal}/toggle-active', [App\Http\Controllers\Portal\Api\GoalApiController::class, 'toggleActive'])
-                ->name('toggle-active');
-            
-            // Goal metrics and analytics
-            Route::get('/{goal}/achievement-trend', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'achievementTrend'])
-                ->name('achievement-trend');
-            Route::get('/{goal}/metric-trends', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'metricTrends'])
-                ->name('metric-trends');
-            Route::get('/{goal}/funnel-trends', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'funnelTrends'])
-                ->name('funnel-trends');
-            Route::get('/{goal}/projections', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'projections'])
-                ->name('projections');
-            Route::get('/{goal}/compare-achievements', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'compareAchievements'])
-                ->name('compare-achievements');
-            Route::get('/{goal}/achievement-report', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'achievementReport'])
-                ->name('achievement-report');
-            Route::post('/{goal}/record-achievement', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'recordAchievement'])
-                ->name('record-achievement');
-            Route::get('/{goal}/achievements', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'achievements'])
-                ->name('achievements');
-                
-            // Simple fallback endpoints
-            Route::get('/{goal}/simple-progress', [App\Http\Controllers\Portal\Api\SimpleGoalMetricsController::class, 'progress'])
-                ->name('simple-progress');
-            Route::get('/{goal}/simple-metrics', [App\Http\Controllers\Portal\Api\SimpleGoalMetricsController::class, 'metrics'])
-                ->name('simple-metrics');
-        });
-        
-        // Company-wide goal metrics
-        Route::get('/goal-metrics/top-performing', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'topPerformingMetrics'])
-            ->name('goal-metrics.top-performing');
-        Route::get('/goal-metrics/underperforming', [App\Http\Controllers\Portal\Api\GoalMetricsApiController::class, 'underperformingMetrics'])
-            ->name('goal-metrics.underperforming');
-        });
-    });
-    
-    // React SPA catch-all route (must be last within authenticated routes)
-    // Exclude API routes from catch-all
-    Route::get('/{any?}', [ReactDashboardController::class, 'index'])
-        ->where('any', '^(?!api/|api-optional/).*$')
-        ->name('dashboard');
 });
 
-// Session debug endpoint - completely outside auth
-Route::get('/business/api/session-debug-open', [App\Http\Controllers\Portal\Api\SessionDebugController::class, 'debug'])
-    ->name('business.api.session-debug-open');
-    
-// Simple auth test
-Route::get('/business/api/simple-auth-test', [App\Http\Controllers\Portal\Api\SimpleAuthTestController::class, 'test'])
-    ->name('business.api.simple-auth-test');
-    
+// ========================================
+// 2. AUTHENTICATION ROUTES
+// ========================================
+Route::prefix('business')->middleware(['web', 'portal.session'])->name('business.')->group(function () {
+    // Login routes
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// API endpoints with optional authentication (for demo/debugging)
-Route::prefix('business/api-optional')->name('business.api-optional.')->middleware(['web'])->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\Portal\Api\DashboardApiController::class, 'index'])
-        ->name('dashboard');
-    Route::get('/notifications', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'index'])
-        ->name('notifications');
-    
-    // Add missing notification endpoints
-    Route::post('/notifications/{id}/read', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'markAsRead'])
-        ->name('notifications.mark-read');
-    Route::post('/notifications/read-all', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'markAllAsRead'])
-        ->name('notifications.mark-all-read');
-    Route::delete('/notifications/{id}', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'delete'])
-        ->name('notifications.delete');
-    Route::delete('/notifications/delete-all', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'deleteAll'])
-        ->name('notifications.delete-all');
-    Route::get('/notifications/preferences', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'getPreferences'])
-        ->name('notifications.preferences');
-    Route::put('/notifications/preferences', [App\Http\Controllers\Portal\Api\NotificationApiController::class, 'updatePreferences'])
-        ->name('notifications.preferences.update');
-    
-    Route::get('/auth-check', function() {
-        $user = Auth::guard('portal')->user();
+    // AJAX Authentication Routes
+    Route::prefix('api/auth')->name('api.auth.')->group(function () {
+        Route::post('/login', [AjaxLoginController::class, 'login'])->name('login');
+        Route::post('/logout', [AjaxLoginController::class, 'logout'])->name('logout');
+        Route::get('/check', [AjaxLoginController::class, 'check'])->name('check');
+        Route::post('/refresh', [AjaxLoginController::class, 'refresh'])->name('refresh');
+    });
+
+    // 2FA routes
+    Route::get('/2fa', [TwoFactorController::class, 'show'])->name('2fa.show');
+    Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('2fa.verify');
+    Route::post('/2fa/resend', [TwoFactorController::class, 'resend'])->name('2fa.resend');
+
+    // Additional 2FA routes referenced in LoginController
+    Route::get('/two-factor/setup', [TwoFactorController::class, 'showSetupForm'])->name('two-factor.setup');
+    Route::post('/two-factor/setup', [TwoFactorController::class, 'setup'])->name('two-factor.setup.post');
+    Route::get('/two-factor/challenge', [TwoFactorController::class, 'showChallengeForm'])->name('two-factor.challenge');
+    Route::post('/two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge.post');
+});
+
+// ========================================
+// 3. AUTHENTICATED PORTAL ROUTES
+// ========================================
+Route::prefix('business')->middleware(['web', 'portal.session', 'portal.auth', 'portal.2fa'])->name('business.')->group(function () {
+    // Main portal routes
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.main');
+
+    // Calls
+    Route::prefix('calls')->name('calls.')->group(function () {
+        Route::get('/', [CallController::class, 'index'])->name('index');
+        Route::get('/{call}', [CallController::class, 'show'])->name('show');
+    });
+
+    // Appointments
+    Route::prefix('appointments')->name('appointments.')->group(function () {
+        Route::get('/', [AppointmentController::class, 'index'])->name('index');
+        Route::get('/create', [AppointmentController::class, 'create'])->name('create');
+        Route::post('/', [AppointmentController::class, 'store'])->name('store');
+        Route::get('/{appointment}', [AppointmentController::class, 'show'])->name('show');
+        Route::get('/{appointment}/edit', [AppointmentController::class, 'edit'])->name('edit');
+        Route::put('/{appointment}', [AppointmentController::class, 'update'])->name('update');
+        Route::delete('/{appointment}', [AppointmentController::class, 'destroy'])->name('destroy');
+    });
+
+    // Billing
+    Route::prefix('billing')->name('billing.')->group(function () {
+        Route::get('/', [BillingController::class, 'index'])->name('index');
+        Route::get('/topup', [BillingController::class, 'topup'])->name('topup');
+        Route::get('/invoices', [BillingController::class, 'invoices'])->name('invoices');
+        Route::get('/invoices/{invoice}', [BillingController::class, 'downloadInvoice'])->name('invoice.download');
+    });
+
+    // Analytics
+    Route::prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('/', [AnalyticsController::class, 'index'])->name('index');
+    });
+
+    // Settings
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::post('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/password', [SettingsController::class, 'updatePassword'])->name('password.update');
+        Route::post('/company', [SettingsController::class, 'updateCompany'])->name('company.update');
+    });
+
+    // Team
+    Route::prefix('team')->name('team.')->group(function () {
+        Route::get('/', [TeamController::class, 'index'])->name('index');
+        Route::get('/create', [TeamController::class, 'create'])->name('create');
+        Route::post('/', [TeamController::class, 'store'])->name('store');
+        Route::get('/{user}/edit', [TeamController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [TeamController::class, 'update'])->name('update');
+        Route::delete('/{user}', [TeamController::class, 'destroy'])->name('destroy');
+    });
+
+    // Feedback
+    Route::prefix('feedback')->name('feedback.')->group(function () {
+        Route::get('/', [FeedbackController::class, 'index'])->name('index');
+        Route::post('/', [FeedbackController::class, 'store'])->name('store');
+    });
+});
+
+// ========================================
+// 4. AUTHENTICATED API ROUTES
+// ========================================
+Route::prefix('business/api')->middleware(['web', 'portal.session', 'portal.auth', 'portal.2fa'])->name('business.api.')->group(function () {
+    // User info
+    Route::get('/user', function () {
+        $user = auth()->guard('portal')->user();
+
         return response()->json([
-            'authenticated' => $user !== null,
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'company_id' => $user->company_id,
+            'role' => $user->role ?? 'user',
+            'session_id' => session()->getId(),
+        ]);
+    })->name('user');
+
+    // Dashboard data
+    Route::get('/dashboard', [App\Http\Controllers\Portal\Api\DashboardApiControllerEnhanced::class, 'index'])->name('dashboard.data');
+
+    // Calls API
+    Route::prefix('calls')->name('calls.')->group(function () {
+        Route::get('/', [CallController::class, 'apiIndex'])->name('index');
+        Route::get('/{call}', [CallController::class, 'apiShow'])->name('show');
+        Route::get('/{call}/transcript', [CallController::class, 'transcript'])->name('transcript');
+        Route::get('/{call}/summary', [CallController::class, 'summary'])->name('summary');
+    });
+
+    // Appointments API
+    Route::prefix('appointments')->name('appointments.')->group(function () {
+        Route::get('/', [AppointmentController::class, 'apiIndex'])->name('index');
+        Route::post('/', [AppointmentController::class, 'apiStore'])->name('store');
+        Route::get('/{appointment}', [AppointmentController::class, 'apiShow'])->name('show');
+        Route::put('/{appointment}', [AppointmentController::class, 'apiUpdate'])->name('update');
+        Route::delete('/{appointment}', [AppointmentController::class, 'apiDestroy'])->name('destroy');
+    });
+
+    // Notifications API
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Portal\Api\NotificationController::class, 'index'])->name('index');
+        Route::post('/{notification}/read', [App\Http\Controllers\Portal\Api\NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/read-all', [App\Http\Controllers\Portal\Api\NotificationController::class, 'markAllAsRead'])->name('read-all');
+        Route::get('/preferences', [App\Http\Controllers\Portal\Api\NotificationController::class, 'preferences'])->name('preferences');
+        Route::post('/preferences', [App\Http\Controllers\Portal\Api\NotificationController::class, 'updatePreferences'])->name('preferences.update');
+    });
+
+    // Stats API
+    Route::get('/stats', [App\Http\Controllers\Portal\Api\StatsController::class, 'index'])->name('stats');
+
+    // Settings API
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Portal\Api\SettingsController::class, 'index'])->name('index');
+        Route::post('/profile', [App\Http\Controllers\Portal\Api\SettingsController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/password', [App\Http\Controllers\Portal\Api\SettingsController::class, 'updatePassword'])->name('password.update');
+        Route::post('/notifications', [App\Http\Controllers\Portal\Api\SettingsController::class, 'updateNotifications'])->name('notifications.update');
+    });
+});
+
+// ========================================
+// 5. OPTIONAL AUTH API ROUTES (für React Bridge)
+// ========================================
+Route::prefix('business-api')->middleware(['web', 'portal.session'])->name('business.api.optional.')->group(function () {
+    // Check auth status
+    Route::get('/auth/check', function () {
+        $user = auth()->guard('portal')->user();
+
+        return response()->json([
+            'authenticated' => ! is_null($user),
             'user' => $user ? [
                 'id' => $user->id,
-                'email' => $user->email,
                 'name' => $user->name,
-                'company_id' => $user->company_id
-            ] : null
+                'email' => $user->email,
+                'company_id' => $user->company_id,
+            ] : null,
         ]);
-    })->name('auth-check');
+    })->name('auth.check');
 });
 
-// Direct access route (no auth required)
-Route::get('/direct-access', [App\Http\Controllers\Portal\DirectAccessController::class, 'access'])
-    ->name('direct-access');
+// ========================================
+// 6. DEMO ROUTES (nur für Demo-Umgebung)
+// ========================================
+if (config('app.demo_mode', false)) {
+    Route::prefix('business')->name('business.demo.')->group(function () {
+        Route::get('/demo', [DemoController::class, 'dashboard'])->name('dashboard');
+        Route::get('/demo/bypass', [DemoController::class, 'bypass'])->name('bypass');
+    });
+}
 
-// Bypass routes that skip auth middleware completely
-Route::prefix('bypass')->name('bypass.')->group(function () {
-    Route::get('/login', [App\Http\Controllers\Portal\BypassLoginController::class, 'login'])
-        ->name('login');
-    Route::get('/dashboard', [App\Http\Controllers\Portal\BypassLoginController::class, 'dashboard'])
-        ->name('dashboard');
+// Integrated Portal Route
+Route::get('/business/portal', function () {
+    return view('portal.business-integrated');
+})->name('business.portal');
+
+// ========================================
+// 7. CATCH-ALL ROUTE FOR REACT SPA (MUST BE LAST!)
+// ========================================
+Route::prefix('business')->middleware(['web', 'portal.session'])->group(function () {
+    Route::get('/{any?}', function () {
+        return view('portal.react-app');
+    })->where('any', '.*')->name('business.spa.catchall');
 });

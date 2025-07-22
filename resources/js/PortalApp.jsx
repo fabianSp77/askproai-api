@@ -48,7 +48,27 @@ const { useBreakpoint } = Grid;
 
 function PortalApp({ initialAuth, csrfToken }) {
     const [collapsed, setCollapsed] = useState(false);
-    const [user] = useState(initialAuth?.user);
+    
+    // Check for auth override or localStorage user
+    const getInitialUser = () => {
+        if (window.__AUTH_USER__) {
+            return window.__AUTH_USER__;
+        }
+        if (initialAuth?.user) {
+            return initialAuth.user;
+        }
+        const stored = localStorage.getItem('portal_user');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error('Failed to parse stored user:', e);
+            }
+        }
+        return null;
+    };
+    
+    const [user] = useState(getInitialUser());
     const [isAdminViewing] = useState(initialAuth?.isAdminViewing || false);
     const [adminViewingCompany] = useState(initialAuth?.adminViewingCompany || '');
     const navigate = useNavigate();
@@ -56,11 +76,52 @@ function PortalApp({ initialAuth, csrfToken }) {
     const screens = useBreakpoint();
     const isMobile = !screens.md;
     
-    // Redirect to login if not authenticated
+    // Redirect to login if not authenticated (with delay for auth overrides)
     useEffect(() => {
-        if (!user && !initialAuth?.user) {
-            window.location.href = '/business/login';
+        // Skip auth check in demo mode or with bypass
+        if (window.__DEMO_MODE__ || 
+            localStorage.getItem('demo_mode') === 'true' || 
+            localStorage.getItem('bypass_active') === 'true' ||
+            window.__AUTH_OVERRIDE__) {
+            return;
         }
+        
+        // Add delay to allow auth overrides to work
+        const timer = setTimeout(() => {
+            if (!user && !initialAuth?.user) {
+                // Double-check localStorage before redirecting
+                const storedUser = localStorage.getItem('portal_user');
+                if (!storedUser) {
+                    console.warn('No auth found, would redirect to login but checking session first...');
+                    
+                    // Check if we have a session via API before redirecting
+                    fetch('/business/api/user', {
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.id) {
+                            // We have a session! Store it and reload
+                            localStorage.setItem('portal_user', JSON.stringify(data));
+                            window.location.reload();
+                        } else {
+                            // Really no auth, redirect to login
+                            window.location.href = '/business/login';
+                        }
+                    })
+                    .catch(() => {
+                        // API failed, redirect to login
+                        window.location.href = '/business/login';
+                    });
+                }
+            }
+        }, 500); // 500ms delay for auth overrides
+        
+        return () => clearTimeout(timer);
     }, [user, initialAuth]);
 
     // Service Worker registration

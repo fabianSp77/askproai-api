@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Portal - Working Version</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+            <h1 class="text-2xl font-bold mb-6">Business Portal Login</h1>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">E-Mail</label>
+                    <input type="email" id="email" value="demo@askproai.de" required
+                           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Passwort</label>
+                    <input type="password" id="password" value="DemoPass123!" required
+                           class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                
+                <button type="submit" id="loginBtn" 
+                        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                    Anmelden
+                </button>
+            </form>
+            
+            <div id="loginError" class="mt-4 p-3 bg-red-100 text-red-700 rounded-lg hidden"></div>
+            
+            <div class="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+                <strong>Demo-Zugangsdaten:</strong><br>
+                E-Mail: demo@askproai.de<br>
+                Passwort: DemoPass123!
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <div class="flex h-screen">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white shadow-lg">
+                <div class="p-6 border-b">
+                    <h1 class="text-xl font-bold">AskProAI Portal</h1>
+                </div>
+                <nav class="p-4">
+                    <a href="#" onclick="showPage('dashboard')" class="nav-item active" data-page="dashboard">
+                        <i class="fas fa-dashboard mr-3"></i>Dashboard
+                    </a>
+                    <a href="#" onclick="showPage('calls')" class="nav-item" data-page="calls">
+                        <i class="fas fa-phone mr-3"></i>Anrufe
+                    </a>
+                    <a href="#" onclick="showPage('billing')" class="nav-item" data-page="billing">
+                        <i class="fas fa-credit-card mr-3"></i>Abrechnung
+                    </a>
+                </nav>
+                <div class="absolute bottom-0 left-0 right-0 p-4 border-t">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium" id="userName">...</p>
+                            <p class="text-xs text-gray-500" id="userEmail">...</p>
+                        </div>
+                        <button onclick="logout()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1 flex flex-col">
+                <header class="bg-white shadow-sm px-6 py-4 border-b">
+                    <h2 id="pageTitle" class="text-2xl font-semibold">Dashboard</h2>
+                </header>
+
+                <main class="flex-1 p-6 overflow-y-auto">
+                    <!-- Dashboard Page -->
+                    <div id="dashboardPage" class="page">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <p class="text-sm text-gray-600">Anrufe heute</p>
+                                <p class="text-2xl font-bold" id="callsToday">-</p>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <p class="text-sm text-gray-600">Termine heute</p>
+                                <p class="text-2xl font-bold" id="appointmentsToday">-</p>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <p class="text-sm text-gray-600">Neue Kunden</p>
+                                <p class="text-2xl font-bold" id="newCustomers">-</p>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <p class="text-sm text-gray-600">Guthaben</p>
+                                <p class="text-2xl font-bold" id="balance">-</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Anrufverlauf (7 Tage)</h3>
+                            <canvas id="callsChart" height="100"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Calls Page -->
+                    <div id="callsPage" class="page hidden">
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-semibold">Anrufliste</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zeit</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nummer</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kunde</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dauer</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="callsTableBody" class="divide-y divide-gray-200">
+                                        <tr>
+                                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                                Lade Anrufe...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Billing Page -->
+                    <div id="billingPage" class="page hidden">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Guthaben & Abrechnung</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">Aktuelles Guthaben</p>
+                                    <p class="text-2xl font-bold" id="currentBalance">€0.00</p>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">Bonus Guthaben</p>
+                                    <p class="text-2xl font-bold" id="bonusBalance">€0.00</p>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">Geschätzte Reichweite</p>
+                                    <p class="text-2xl font-bold" id="estimatedCalls">0 Anrufe</p>
+                                </div>
+                            </div>
+                            <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-plus mr-2"></i>Guthaben aufladen
+                            </button>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .nav-item {
+            display: block;
+            padding: 0.75rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        .nav-item:hover {
+            background-color: #f3f4f6;
+        }
+        .nav-item.active {
+            background-color: #e5e7eb;
+            font-weight: 600;
+        }
+        .page {
+            display: none;
+        }
+        .page:not(.hidden) {
+            display: block;
+        }
+    </style>
+
+    <script>
+        let sessionToken = null;
+        let currentUser = null;
+        let chart = null;
+
+        // Check for existing session on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const storedToken = localStorage.getItem('portal_session_token');
+            const storedUser = localStorage.getItem('portal_user');
+            
+            if (storedToken && storedUser) {
+                sessionToken = storedToken;
+                currentUser = JSON.parse(storedUser);
+                showApp();
+                loadDashboard();
+            }
+        });
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const errorDiv = document.getElementById('loginError');
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Anmeldung läuft...';
+            errorDiv.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/business/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    sessionToken = data.data.session_token;
+                    currentUser = data.data.user;
+                    
+                    localStorage.setItem('portal_session_token', sessionToken);
+                    localStorage.setItem('portal_user', JSON.stringify(currentUser));
+                    
+                    showApp();
+                    loadDashboard();
+                } else {
+                    errorDiv.textContent = data.message || 'Anmeldung fehlgeschlagen';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Netzwerkfehler: ' + error.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Anmelden';
+            }
+        }
+
+        function showApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        function showPage(page) {
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.page === page);
+            });
+            
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.add('hidden');
+            });
+            
+            // Show selected page
+            document.getElementById(page + 'Page').classList.remove('hidden');
+            
+            // Update title
+            const titles = {
+                dashboard: 'Dashboard',
+                calls: 'Anrufe',
+                billing: 'Abrechnung'
+            };
+            document.getElementById('pageTitle').textContent = titles[page];
+            
+            // Load page data
+            if (page === 'dashboard') loadDashboard();
+            else if (page === 'calls') loadCalls();
+            else if (page === 'billing') loadBilling();
+        }
+
+        async function apiRequest(endpoint, options = {}) {
+            const response = await fetch('/business/api' + endpoint, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-Session-Token': sessionToken,
+                    ...options.headers
+                },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+            
+            return response.json();
+        }
+
+        async function loadDashboard() {
+            try {
+                const data = await apiRequest('/dashboard');
+                
+                // Update stats
+                document.getElementById('callsToday').textContent = data.stats?.calls_today || '0';
+                document.getElementById('appointmentsToday').textContent = data.stats?.appointments_today || '0';
+                document.getElementById('newCustomers').textContent = data.stats?.new_customers || '0';
+                document.getElementById('balance').textContent = `€${data.billing?.current_balance || '0.00'}`;
+                
+                // Update chart
+                if (chart) chart.destroy();
+                
+                const ctx = document.getElementById('callsChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.charts?.calls?.labels || ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+                        datasets: [{
+                            label: 'Anrufe',
+                            data: data.charts?.calls?.data || [0, 0, 0, 0, 0, 0, 0],
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+            }
+        }
+
+        async function loadCalls() {
+            try {
+                const data = await apiRequest('/calls?page=1&per_page=20');
+                const calls = data.data || data || [];
+                
+                const tbody = document.getElementById('callsTableBody');
+                
+                if (calls.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Keine Anrufe gefunden</td></tr>`;
+                    return;
+                }
+                
+                tbody.innerHTML = calls.map(call => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm">${new Date(call.created_at).toLocaleString('de-DE')}</td>
+                        <td class="px-6 py-4 text-sm">${call.from_number || '-'}</td>
+                        <td class="px-6 py-4 text-sm">${call.customer?.name || 'Unbekannt'}</td>
+                        <td class="px-6 py-4 text-sm">${formatDuration(call.duration || 0)}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                                ${call.status || 'completed'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Calls load error:', error);
+            }
+        }
+
+        async function loadBilling() {
+            try {
+                const data = await apiRequest('/billing');
+                
+                document.getElementById('currentBalance').textContent = `€${data.balance?.current_balance || '0.00'}`;
+                document.getElementById('bonusBalance').textContent = `€${data.balance?.bonus_balance || '0.00'}`;
+                document.getElementById('estimatedCalls').textContent = `${data.balance?.estimated_calls || '0'} Anrufe`;
+            } catch (error) {
+                console.error('Billing load error:', error);
+            }
+        }
+
+        function formatDuration(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        async function logout() {
+            try {
+                await apiRequest('/auth/logout', { method: 'POST' });
+            } catch (error) {
+                // Ignore errors
+            }
+            
+            localStorage.removeItem('portal_session_token');
+            localStorage.removeItem('portal_user');
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
