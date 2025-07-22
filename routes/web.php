@@ -1,7 +1,7 @@
 <?php
 
 // ULTRATHINK Auth Solution
-require __DIR__ . '/ultrathink-auth.php';
+// require __DIR__ . '/ultrathink-auth.php'; // Temporarily disabled - file missing
 
 // Override 2FA routes to prevent 500 errors
 Route::get('/business/two-factor/setup', function () {
@@ -531,13 +531,13 @@ Route::get('/test-session-get-route', function () {
 // require __DIR__ . '/debug-routes.php';
 
 // Test routes (temporary)
-require __DIR__ . '/test-routes.php';
+// require __DIR__ . '/test-routes.php'; // Temporarily disabled - file missing
 
 // Temporary admin bypass
-require __DIR__ . '/admin-bypass.php';
+// require __DIR__ . '/admin-bypass.php'; // Temporarily disabled - file missing
 
 // Test API routes
-require __DIR__ . '/test-api.php';
+// require __DIR__ . '/test-api.php'; // Temporarily disabled - file missing
 
 // Direct login routes (bypass session migration issue)
 Route::get('/direct-login', [App\Http\Controllers\DirectLoginController::class, 'login'])->name('direct.login');
