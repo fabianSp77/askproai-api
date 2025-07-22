@@ -7,30 +7,36 @@ use Filament\Pages\Page;
 class QuickDocs extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-bolt';
+
     protected static ?string $navigationLabel = 'Quick Docs';
+
     protected static ?string $slug = 'quick-docs';
+
     protected static string $view = 'filament.admin.pages.quick-docs';
+
     protected static ?int $navigationSort = 2;
-    
+
     public static function getNavigationGroup(): ?string
     {
         return 'System';
     }
-    
+
     public static function canAccess(): bool
     {
         return auth()->user()?->hasAnyRole([
-            'super_admin', 
+            'super_admin',
             'Super Admin',
             'company_admin',
-            'Company Admin'
-        ]);
+            'Company Admin',
+        ]) ?? false;
     }
-    
+
     public $criticalDocs = [];
+
     public $processDocs = [];
+
     public $technicalDocs = [];
-    
+
     public function mount(): void
     {
         // Kritische Business-Dokumente (mit Diagrammen)
@@ -60,7 +66,7 @@ class QuickDocs extends Page
                 'color' => 'warning',
             ],
         ];
-        
+
         // Prozess-Visualisierungen (mit Diagrammen)
         $this->processDocs = [
             [
@@ -88,7 +94,7 @@ class QuickDocs extends Page
                 'color' => 'primary',
             ],
         ];
-        
+
         // Technische Dokumentation
         $this->technicalDocs = [
             [

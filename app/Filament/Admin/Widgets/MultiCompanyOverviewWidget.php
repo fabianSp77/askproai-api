@@ -2,26 +2,31 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use Filament\Widgets\Widget;
-use App\Models\Company;
 use App\Models\Call;
-use App\Models\Appointment;
+use App\Models\Company;
+use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\DB;
 
 class MultiCompanyOverviewWidget extends Widget
 {
     protected static string $view = 'filament.admin.widgets.multi-company-overview-widget';
-    
+
     protected static ?int $sort = -3;
-    
-    protected int | string | array $columnSpan = 'full';
-    
+
+    protected int|string|array $columnSpan = 'full';
+
+    public function mount(): void
+    {
+        // Initialize widget
+    }
+
     public static function canView(): bool
     {
         $user = auth()->user();
+
         return $user && $user->hasRole('Super Admin');
     }
-    
+
     public function getCompaniesData(): array
     {
         // Get top 5 most active companies
@@ -32,15 +37,15 @@ class MultiCompanyOverviewWidget extends Widget
                 },
                 'appointments as appointments_today' => function ($query) {
                     $query->whereDate('created_at', today());
-                }
+                },
             ])
             ->orderByDesc('calls_today')
             ->limit(5)
             ->get();
-        
+
         return $companies->map(function ($company) {
             $balance = $company->prepaidBalance;
-            
+
             // Get monthly stats
             $monthlyStats = DB::table('calls')
                 ->where('company_id', $company->id)
@@ -48,7 +53,7 @@ class MultiCompanyOverviewWidget extends Widget
                 ->whereYear('created_at', now()->year)
                 ->selectRaw('COUNT(*) as total_calls, SUM(duration_sec) / 60 as total_minutes')
                 ->first();
-            
+
             return [
                 'id' => $company->id,
                 'name' => $company->name,
@@ -63,7 +68,7 @@ class MultiCompanyOverviewWidget extends Widget
             ];
         })->toArray();
     }
-    
+
     public function getTotalStats(): array
     {
         return [

@@ -7,89 +7,111 @@ use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Company;
 use App\Services\CalcomEventTypeSyncService;
 use Filament\Forms;
+use Filament\Forms\Components\ToggleButtons;
+use Filament\Forms\Components\Wizard;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Forms\Components\Wizard;
-use Filament\Infolists\Infolist;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Forms\Components\ToggleButtons;
 
 class CompanyResource extends Resource
 {
     protected static ?string $navigationGroup = 'Unternehmensstruktur';
+
     protected static ?int $navigationSort = 10;
 
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all (check both variants)
         if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
-        
+
         // Check specific permission
         return $user->can('view_any_company');
     }
-    
+
     public static function canView($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all (check both variants)
         if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('view_company')) {
             return true;
         }
-        
+
         // Users can view their own company
         return $user->company_id === $record->id;
     }
-    
+
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can edit all (check both variants)
         if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('update_company')) {
             return true;
         }
-        
+
         // Company admins can edit their own company
         return $user->company_id === $record->id && $user->hasRole('company_admin');
     }
-    
+
     public static function canCreate(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Only super admins can create new companies (check both variants)
         return $user->hasRole('super_admin') || $user->hasRole('Super Admin') || $user->can('create_company');
     }
 
     use HasConsistentNavigation;
-    
+
     protected static ?string $model = Company::class;
+
     protected static ?string $navigationLabel = 'Unternehmen';
+
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
     public static function form(Form $form): Form
     {
         return $form->schema([
             Wizard::make([
-                
                 // ===============================
                 // STEP 1: GRUNDDATEN
                 // ===============================
@@ -104,33 +126,33 @@ class CompanyResource extends Resource
                                         ->required()
                                         ->maxLength(255)
                                         ->columnSpan(1),
-                                        
+
                                     Forms\Components\TextInput::make('email')
                                         ->label('E-Mail')
                                         ->email()
                                         ->required()
                                         ->columnSpan(1),
                                 ]),
-                                
+
                                 Forms\Components\Grid::make(2)->schema([
                                     Forms\Components\TextInput::make('phone')
                                         ->label('Telefon')
                                         ->tel()
                                         ->columnSpan(1),
-                                        
+
                                     Forms\Components\TextInput::make('settings.tax_number')
                                         ->label('Steuernummer')
                                         ->columnSpan(1),
                                 ]),
-                                
+
                                 Forms\Components\TextInput::make('contact_person')
                                     ->label('Ansprechpartner')
                                     ->maxLength(255),
-                                    
+
                                 Forms\Components\Textarea::make('address')
                                     ->label('Adresse')
                                     ->rows(3),
-                                    
+
                                 Forms\Components\Toggle::make('is_active')
                                     ->label('Aktiv')
                                     ->default(true)
@@ -145,33 +167,33 @@ class CompanyResource extends Resource
                     ->icon('heroicon-o-calendar-days')
                     ->schema([
                         // Appointment booking toggle
-                        Forms\Components\ToggleButtons::make('settings.needs_appointment_booking')
+                        ToggleButtons::make('settings.needs_appointment_booking')
                             ->label('Benötigt Ihr Unternehmen Terminbuchungen?')
                             ->options([
                                 true => 'Ja, wir vereinbaren Termine',
-                                false => 'Nein, keine Terminbuchung'
+                                false => 'Nein, keine Terminbuchung',
                             ])
                             ->icons([
                                 true => 'heroicon-o-calendar-days',
-                                false => 'heroicon-o-x-circle'
+                                false => 'heroicon-o-x-circle',
                             ])
                             ->colors([
                                 true => 'success',
-                                false => 'warning'
+                                false => 'warning',
                             ])
                             ->inline()
                             ->default(true)
                             ->reactive()
                             ->helperText('Deaktivieren Sie dies, wenn Ihr Unternehmen keine Termine vereinbart')
                             ->afterStateUpdated(function ($state, $set) {
-                                if (!$state) {
+                                if (! $state) {
                                     // Clear Cal.com fields when appointment booking is disabled
                                     $set('calcom_api_key', null);
                                     $set('calcom_team_slug', null);
                                     $set('calcom_user_id', null);
                                 }
                             }),
-                            
+
                         // Info box when appointment booking is disabled
                         Forms\Components\Placeholder::make('no_appointment_info')
                             ->label('')
@@ -181,11 +203,11 @@ class CompanyResource extends Resource
                                     <p class="text-amber-700 text-sm mt-1">Sie können diese Einstellung jederzeit in den Unternehmenseinstellungen ändern.</p>
                                 </div>
                             '))
-                            ->visible(fn($get) => $get('settings.needs_appointment_booking') === false),
-                            
+                            ->visible(fn ($get) => $get('settings.needs_appointment_booking') === false),
+
                         Forms\Components\Section::make('Cal.com Master-Konfiguration')
                             ->description('Diese Einstellungen werden an alle Filialen vererbt (können aber überschrieben werden)')
-                            ->visible(fn($get) => $get('settings.needs_appointment_booking') !== false)
+                            ->visible(fn ($get) => $get('settings.needs_appointment_booking') !== false)
                             ->schema([
                                 Forms\Components\Grid::make(2)->schema([
                                     Forms\Components\TextInput::make('calcom_api_key')
@@ -214,47 +236,47 @@ class CompanyResource extends Resource
                                                 })
                                         )
                                         ->columnSpan(1),
-                                        
+
                                     Forms\Components\TextInput::make('calcom_user_id')
                                         ->label('👤 Cal.com Standard-User-ID')
                                         ->helperText('Default User für alle Buchungen')
                                         ->columnSpan(1),
                                 ]),
-                                
+
                                 Forms\Components\Grid::make(2)->schema([
                                     Forms\Components\TextInput::make('calcom_team_slug')
                                         ->label('🏢 Cal.com Team Slug')
                                         ->helperText('Falls Sie Teams verwenden')
                                         ->columnSpan(1),
-                                        
+
                                     Forms\Components\Select::make('calcom_calendar_mode')
                                         ->label('📅 Kalender-Modus')
                                         ->options([
                                             'zentral' => '🎯 Zentral (Ein Kalender für alle)',
                                             'filiale' => '🏪 Pro Filiale (Getrennte Kalender)',
-                                            'mitarbeiter' => '👥 Pro Mitarbeiter (Individuelle Kalender)'
+                                            'mitarbeiter' => '👥 Pro Mitarbeiter (Individuelle Kalender)',
                                         ])
                                         ->default('zentral')
                                         ->columnSpan(1),
                                 ]),
                             ]),
-                            
+
                         Forms\Components\Section::make('🎯 Event-Types-Verwaltung')
                             ->collapsed()
-                            ->visible(fn($get) => $get('settings.needs_appointment_booking') !== false)
+                            ->visible(fn ($get) => $get('settings.needs_appointment_booking') !== false)
                             ->schema([
                                 Forms\Components\Placeholder::make('event_types_info')
                                     ->label('')
                                     ->content(function ($get) {
                                         $apiKey = $get('calcom_api_key');
-                                        if (!$apiKey) {
+                                        if (! $apiKey) {
                                             return new \Illuminate\Support\HtmlString('
                                                 <div class="p-4 bg-yellow-50 rounded-lg">
                                                     <p class="text-yellow-800">⚠️ Bitte zuerst API-Key eingeben, um Event-Types zu laden</p>
                                                 </div>
                                             ');
                                         }
-                                        
+
                                         $eventTypes = CalcomEventTypeSyncService::fetchEventTypes($apiKey);
                                         if (empty($eventTypes)) {
                                             return new \Illuminate\Support\HtmlString('
@@ -263,21 +285,21 @@ class CompanyResource extends Resource
                                                 </div>
                                             ');
                                         }
-                                        
+
                                         $html = '<div class="space-y-3">';
                                         $html .= '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
-                                        
+
                                         foreach ($eventTypes as $event) {
-                                            $statusBadge = $event['hidden'] ? 
-                                                '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">🔒 Versteckt</span>' : 
+                                            $statusBadge = $event['hidden'] ?
+                                                '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">🔒 Versteckt</span>' :
                                                 '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">👁️ Aktiv</span>';
-                                                
+
                                             // HIER IST DIE KORREKTUR: Verwende statische Methode statt $this
                                             $webhookStatus = CalcomEventTypeSyncService::checkWebhookStatus($event['id'], $apiKey);
-                                            $webhookBadge = $webhookStatus ? 
+                                            $webhookBadge = $webhookStatus ?
                                                 '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">✅ Webhook OK</span>' :
                                                 '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">❌ Webhook fehlt</span>';
-                                            
+
                                             $html .= '<div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">';
                                             $html .= '<div class="flex justify-between items-start mb-2">';
                                             $html .= '<h4 class="font-medium text-gray-900">' . htmlspecialchars($event['title']) . '</h4>';
@@ -286,19 +308,19 @@ class CompanyResource extends Resource
                                             $html .= '<div class="text-sm text-gray-600 space-y-1">';
                                             $html .= '<p>⏱️ Dauer: ' . ($event['length'] ?? 'Unbekannt') . ' Minuten</p>';
                                             $html .= '<p>🆔 Event-ID: ' . $event['id'] . '</p>';
-                                            if (!empty($event['teamId'])) {
+                                            if (! empty($event['teamId'])) {
                                                 $html .= '<p>👥 Team-ID: ' . $event['teamId'] . '</p>';
                                             }
                                             $html .= '</div>';
                                             $html .= '</div>';
                                         }
-                                        
+
                                         $html .= '</div></div>';
-                                        
+
                                         return new \Illuminate\Support\HtmlString($html);
                                     }),
                             ]),
-Forms\Components\Section::make('🔗 Retell.ai Integration')
+                        Forms\Components\Section::make('🔗 Retell.ai Integration')
                             ->description('Telefon-KI für automatische Anrufannahme und Terminbuchung')
                             ->schema([
                                 Forms\Components\Grid::make(2)->schema([
@@ -312,14 +334,15 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                                 ->label('Testen')
                                                 ->icon('heroicon-o-check-circle')
                                                 ->action(function ($state, $set) {
-                                                    if (!$state) {
+                                                    if (! $state) {
                                                         \Filament\Notifications\Notification::make()
                                                             ->title('⚠️ Bitte API-Key eingeben')
                                                             ->warning()
                                                             ->send();
+
                                                         return;
                                                     }
-                                                    
+
                                                     // Hier würde die Validierung stattfinden
                                                     \Filament\Notifications\Notification::make()
                                                         ->title('✅ Retell.ai API-Key gespeichert')
@@ -382,7 +405,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                     ->label('📊 Retell.ai Status')
                                     ->content(function ($get) {
                                         $apiKey = $get('retell_api_key');
-                                        if (!$apiKey) {
+                                        if (! $apiKey) {
                                             return new \Illuminate\Support\HtmlString('
                                                 <div class="p-4 bg-yellow-50 rounded-lg">
                                                     <p class="text-yellow-800">⚠️ Bitte zuerst API-Key eingeben, um den Status zu prüfen</p>
@@ -412,7 +435,6 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                     ->label('Retell.ai aktivieren')
                                     ->helperText('Aktiviert die Telefon-KI für eingehende Anrufe')
                                     ->default(false),
-                     
                             ]),
                     ]),
 
@@ -433,24 +455,24 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                                 ->email()
                                                 ->required()
                                                 ->columnSpan(1),
-                                                
+
                                             Forms\Components\TextInput::make('name')
                                                 ->label('Name')
                                                 ->required()
                                                 ->columnSpan(1),
-                                                
+
                                             Forms\Components\Select::make('role')
                                                 ->label('Rolle')
                                                 ->options([
                                                     'admin' => '👑 Administrator',
                                                     'manager' => '🎯 Manager',
                                                     'staff' => '👤 Mitarbeiter',
-                                                    'customer' => '🛍️ Kunde'
+                                                    'customer' => '🛍️ Kunde',
                                                 ])
                                                 ->required()
                                                 ->columnSpan(1),
                                         ]),
-                                        
+
                                         Forms\Components\CheckboxList::make('events')
                                             ->label('Benachrichtigungen für')
                                             ->options([
@@ -462,7 +484,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                                 'no_show' => '👻 No-Show gemeldet',
                                                 'system_error' => '⚠️ Systemfehler',
                                                 'api_error' => '🔌 API-Fehler',
-                                                'daily_summary' => '📊 Tägliche Zusammenfassung'
+                                                'daily_summary' => '📊 Tägliche Zusammenfassung',
                                             ])
                                             ->columns(3)
                                             ->required(),
@@ -471,18 +493,18 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                     ->addActionLabel('📧 Weitere E-Mail hinzufügen')
                                     ->collapsible(),
                             ]),
-                            
+
                         Forms\Components\Section::make('📱 SMS & WhatsApp (Premium)')
                             ->collapsed()
                             ->schema([
                                 Forms\Components\Toggle::make('settings.sms_enabled')
                                     ->label('SMS aktivieren')
                                     ->helperText('Erfordert Twilio-Integration'),
-                                    
+
                                 Forms\Components\Toggle::make('settings.whatsapp_enabled')
                                     ->label('WhatsApp aktivieren')
                                     ->helperText('Erfordert WhatsApp Business API'),
-                                    
+
                                 Forms\Components\Textarea::make('settings.notification_template')
                                     ->label('Benachrichtigungs-Template')
                                     ->placeholder('Hallo {customer_name}, Ihr Termin am {date} um {time} wurde bestätigt...')
@@ -508,26 +530,26 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                                 ->label('Tag')
                                                 ->options([
                                                     0 => '📅 Sonntag',
-                                                    1 => '📅 Montag', 
+                                                    1 => '📅 Montag',
                                                     2 => '📅 Dienstag',
                                                     3 => '📅 Mittwoch',
                                                     4 => '📅 Donnerstag',
                                                     5 => '📅 Freitag',
-                                                    6 => '📅 Samstag'
+                                                    6 => '📅 Samstag',
                                                 ])
                                                 ->required()
                                                 ->columnSpan(1),
-                                                
+
                                             Forms\Components\TimePicker::make('start_time')
                                                 ->label('Von')
                                                 ->required()
                                                 ->columnSpan(1),
-                                                
+
                                             Forms\Components\TimePicker::make('end_time')
                                                 ->label('Bis')
                                                 ->required()
                                                 ->columnSpan(1),
-                                                
+
                                             Forms\Components\Toggle::make('is_closed')
                                                 ->label('Geschlossen')
                                                 ->columnSpan(1),
@@ -537,7 +559,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                     ->addActionLabel('🕐 Weitere Öffnungszeit')
                                     ->collapsible(),
                             ]),
-                            
+
                         Forms\Components\Section::make('🔗 Cal.com Verfügbarkeiten (Info)')
                             ->collapsed()
                             ->schema([
@@ -545,14 +567,14 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                     ->label('')
                                     ->content(function ($get) {
                                         $apiKey = $get('calcom_api_key');
-                                        if (!$apiKey) {
+                                        if (! $apiKey) {
                                             return new \Illuminate\Support\HtmlString('
                                                 <div class="p-4 bg-blue-50 rounded-lg">
                                                     <p class="text-blue-800">💡 Cal.com-Verfügbarkeiten werden hier angezeigt, sobald der API-Key eingegeben wurde</p>
                                                 </div>
                                             ');
                                         }
-                                        
+
                                         // Cal.com Verfügbarkeiten abrufen und anzeigen
                                         return new \Illuminate\Support\HtmlString('
                                             <div class="p-4 bg-green-50 rounded-lg">
@@ -567,7 +589,6 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                                     }),
                             ]),
                     ]),
-
             ])->columnSpanFull()->skippable(),
         ]);
     }
@@ -580,15 +601,15 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                     ->label('Unternehmen')
                     ->searchable()
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('email')
                     ->label('E-Mail')
                     ->searchable(),
-                    
+
                 Tables\Columns\TextColumn::make('contact_person')
                     ->label('Ansprechpartner')
                     ->searchable(),
-                    
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Status')
                     ->boolean()
@@ -596,17 +617,17 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger'),
-                    
+
                 Tables\Columns\TextColumn::make('branches_count')
                     ->label('Filialen')
                     ->counts('branches')
                     ->badge(),
-                    
+
                 Tables\Columns\TextColumn::make('staff_count')
                     ->label('Mitarbeiter')
                     ->counts('staff')
                     ->badge(),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt')
                     ->dateTime()
@@ -670,7 +691,7 @@ Forms\Components\Section::make('🔗 Retell.ai Integration')
             'manage-api-credentials' => Pages\ManageApiCredentials::route('/{record}/api-credentials'),
         ];
     }
-    
+
     public static function getRelations(): array
     {
         return [

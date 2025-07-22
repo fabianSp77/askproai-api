@@ -2,113 +2,134 @@
 
 namespace App\Filament\Admin\Resources;
 
-use App\Filament\Admin\Resources\CustomerResource\Pages;
 use App\Filament\Admin\Resources\Concerns\MultiTenantResource;
-use App\Filament\Admin\Traits\HasConsistentNavigation;
-use App\Models\Customer;
-use App\Models\Company;
-use App\Filament\Components\StatusBadge;
+use App\Filament\Admin\Resources\CustomerResource\Pages;
 use App\Filament\Components\ActionButton;
 use App\Filament\Components\DateRangePicker;
 use App\Filament\Components\SearchableSelect;
+use App\Models\Company;
+use App\Models\Customer;
+use App\Services\CustomerPortalService;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Support\Enums\IconPosition;
 use Filament\Forms\Components\Actions\Action;
-use Filament\Notifications\Notification;
-use Illuminate\Support\HtmlString;
+use Filament\Forms\Form;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
-use App\Services\CustomerPortalService;
+use Filament\Notifications\Notification;
+use Filament\Support\Enums\IconPosition;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 
 class CustomerResource extends EnhancedResourceSimple
 {
-
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission or if user belongs to a company
         return $user->can('view_any_customer') || $user->company_id !== null;
     }
-    
+
     public static function canView($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('view_customer')) {
             return true;
         }
-        
+
         // Users can view customers from their own company
         return $user->company_id === $record->company_id;
     }
-    
+
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can edit all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('update_customer')) {
             return true;
         }
-        
+
         // Company users can edit customers from their own company
         return $user->company_id === $record->company_id;
     }
-    
+
     public static function canCreate(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can create
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('create_customer')) {
             return true;
         }
-        
+
         // Any company user can create customers
         return $user->company_id !== null;
     }
 
     use MultiTenantResource;
-    
+
     protected static ?string $model = Customer::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-users';
+
     protected static ?string $navigationLabel = 'Kunden';
+
     protected static ?string $navigationGroup = 'Täglicher Betrieb';
+
     protected static ?int $navigationSort = 30;
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $user = auth()->user();
-        
-        if ($user && !$user->hasRole('super_admin') && !$user->hasRole('reseller')) {
+
+        if ($user && ! $user->hasRole('super_admin') && ! $user->hasRole('reseller')) {
             return parent::getEloquentQuery()->where('company_id', $user->company_id);
         }
-        
+
         return parent::getEloquentQuery();
     }
 
@@ -164,7 +185,7 @@ class CustomerResource extends EnhancedResourceSimple
                                     ->suffixIcon('heroicon-m-envelope')
                                     ->suffixIconColor('primary')
                                     ->suffixAction(
-                                        Forms\Components\Actions\Action::make('sendTestMail')
+                                        Action::make('sendTestMail')
                                             ->icon('heroicon-m-paper-airplane')
                                             ->label('Test-Mail')
                                             ->action(function ($state) {
@@ -188,7 +209,7 @@ class CustomerResource extends EnhancedResourceSimple
                                     ->suffixIconColor('primary')
                                     ->mask('+99 999 9999999')
                                     ->suffixAction(
-                                        Forms\Components\Actions\Action::make('callPhone')
+                                        Action::make('callPhone')
                                             ->icon('heroicon-m-phone-arrow-up-right')
                                             ->label('Anrufen')
                                             ->url(fn ($state) => $state ? "tel:{$state}" : null)
@@ -206,7 +227,7 @@ class CustomerResource extends EnhancedResourceSimple
                                         </span>
                                     '))
                                     ->suffixAction(
-                                        Forms\Components\Actions\Action::make('viewCompany')
+                                        Action::make('viewCompany')
                                             ->icon('heroicon-m-arrow-top-right-on-square')
                                             ->label('Öffnen')
                                             ->url(fn ($state) => $state ? "/admin/companies/{$state}/edit" : null)
@@ -221,7 +242,7 @@ class CustomerResource extends EnhancedResourceSimple
                             ->placeholder('Besondere Wünsche, Präferenzen oder wichtige Informationen...')
                             ->helperText('Interne Notizen - werden dem Kunden nicht angezeigt')
                             ->columnSpanFull(),
-                            
+
                         Forms\Components\Grid::make(3)
                             ->schema([
                                 Forms\Components\DatePicker::make('birthdate')
@@ -230,7 +251,7 @@ class CustomerResource extends EnhancedResourceSimple
                                     ->displayFormat('d.m.Y')
                                     ->maxDate(now())
                                     ->closeOnDateSelection(),
-                                    
+
                                 Forms\Components\TagsInput::make('tags')
                                     ->label('Tags')
                                     ->separator(',')
@@ -244,7 +265,7 @@ class CustomerResource extends EnhancedResourceSimple
                                         'Termin-Erinnerung',
                                     ])
                                     ->helperText('Verwenden Sie Tags zur besseren Organisation'),
-                                    
+
                                 Forms\Components\Select::make('preferred_contact')
                                     ->label('Bevorzugter Kontakt')
                                     ->options([
@@ -255,7 +276,7 @@ class CustomerResource extends EnhancedResourceSimple
                                     ])
                                     ->default('phone'),
                             ]),
-                            
+
                         // Communication Preferences Section
                         Forms\Components\Section::make('Kommunikationseinstellungen')
                             ->description('Verwalten Sie die Kommunikationspräferenzen des Kunden')
@@ -265,16 +286,16 @@ class CustomerResource extends EnhancedResourceSimple
                                         Forms\Components\Toggle::make('marketing_opt_in')
                                             ->label('Marketing-Einwilligung')
                                             ->helperText('Kunde darf Marketingnachrichten erhalten'),
-                                            
+
                                         Forms\Components\Toggle::make('reminder_opt_in')
                                             ->label('Terminerinnerungen')
                                             ->default(true)
                                             ->helperText('Kunde möchte Terminerinnerungen erhalten'),
-                                            
+
                                         Forms\Components\Toggle::make('sms_opt_in')
                                             ->label('SMS erlaubt')
                                             ->helperText('SMS-Nachrichten dürfen gesendet werden'),
-                                            
+
                                         Forms\Components\Toggle::make('do_not_contact')
                                             ->label('Nicht kontaktieren')
                                             ->helperText('WICHTIG: Kunde möchte nicht kontaktiert werden')
@@ -287,7 +308,7 @@ class CustomerResource extends EnhancedResourceSimple
                                                 }
                                             }),
                                     ]),
-                                    
+
                                 Forms\Components\Select::make('preferred_reminder_time')
                                     ->label('Bevorzugte Erinnerungszeit')
                                     ->options([
@@ -297,8 +318,8 @@ class CustomerResource extends EnhancedResourceSimple
                                         'morning' => 'Am Morgen des Termintags',
                                     ])
                                     ->default('24h')
-                                    ->visible(fn ($get) => $get('reminder_opt_in') && !$get('do_not_contact')),
-                                    
+                                    ->visible(fn ($get) => $get('reminder_opt_in') && ! $get('do_not_contact')),
+
                                 Forms\Components\CheckboxList::make('communication_blacklist_days')
                                     ->label('Keine Kommunikation an diesen Tagen')
                                     ->options([
@@ -311,21 +332,21 @@ class CustomerResource extends EnhancedResourceSimple
                                         'sunday' => 'Sonntag',
                                     ])
                                     ->columns(3)
-                                    ->visible(fn ($get) => !$get('do_not_contact')),
-                                    
+                                    ->visible(fn ($get) => ! $get('do_not_contact')),
+
                                 Forms\Components\TimePicker::make('quiet_hours_start')
                                     ->label('Ruhezeiten Beginn')
                                     ->native(false)
                                     ->seconds(false)
                                     ->default('20:00')
-                                    ->visible(fn ($get) => !$get('do_not_contact')),
-                                    
+                                    ->visible(fn ($get) => ! $get('do_not_contact')),
+
                                 Forms\Components\TimePicker::make('quiet_hours_end')
                                     ->label('Ruhezeiten Ende')
                                     ->native(false)
                                     ->seconds(false)
                                     ->default('09:00')
-                                    ->visible(fn ($get) => !$get('do_not_contact')),
+                                    ->visible(fn ($get) => ! $get('do_not_contact')),
                             ])
                             ->collapsed(),
                     ]),
@@ -420,10 +441,10 @@ class CustomerResource extends EnhancedResourceSimple
     public static function table(Table $table): Table
     {
         $table = parent::enhanceTable($table);
-        
+
         return $table
             ->modifyQueryUsing(fn ($query) => $query
-                ->with(['company', 'appointments' => fn($q) => $q->latest('starts_at')->limit(1)])
+                ->with(['company', 'appointments' => fn ($q) => $q->latest('starts_at')->limit(1)])
                 ->withCount(['appointments', 'calls']))
             ->striped()
             ->contentGrid([
@@ -433,7 +454,7 @@ class CustomerResource extends EnhancedResourceSimple
             ->extremePaginationLinks()
             ->paginated([10, 25, 50, 100])
             ->paginationPageOptions([10, 25, 50, 100])
-            ->recordClasses(fn ($record) => match(true) {
+            ->recordClasses(fn ($record) => match (true) {
                 $record->tags && in_array('VIP', $record->tags) => 'border-l-4 border-yellow-500',
                 $record->tags && in_array('Problemkunde', $record->tags) => 'border-l-4 border-red-500',
                 default => '',
@@ -445,7 +466,7 @@ class CustomerResource extends EnhancedResourceSimple
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->extraAttributes(['data-column-group' => 'basis']),
-                    
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
                     ->searchable()
@@ -453,7 +474,7 @@ class CustomerResource extends EnhancedResourceSimple
                     ->icon('heroicon-m-user')
                     ->iconPosition(IconPosition::Before)
                     ->iconColor('primary'),
-                    
+
                 Tables\Columns\TextColumn::make('email')
                     ->label('E-Mail')
                     ->searchable()
@@ -463,7 +484,7 @@ class CustomerResource extends EnhancedResourceSimple
                     ->copyable()
                     ->copyMessage('E-Mail kopiert!')
                     ->copyMessageDuration(1500),
-                    
+
                 Tables\Columns\TextColumn::make('phone')
                     ->label('Telefon')
                     ->searchable()
@@ -473,34 +494,34 @@ class CustomerResource extends EnhancedResourceSimple
                     ->copyable()
                     ->copyMessage('Telefonnummer kopiert!')
                     ->url(fn ($record) => $record->phone ? "tel:{$record->phone}" : null),
-                    
+
                 static::getCompanyColumn(),
                 static::getBranchColumn(),
-                    
+
                 Tables\Columns\TextColumn::make('appointments_count')
                     ->label('Termine')
                     ->badge()
-                    ->color(fn ($state) => match(true) {
+                    ->color(fn ($state) => match (true) {
                         $state === 0 => 'gray',
                         $state < 5 => 'warning',
                         default => 'success'
                     })
                     ->formatStateUsing(fn ($state) => $state . ' Termine'),
-                    
+
                 Tables\Columns\TextColumn::make('last_appointment')
                     ->label('Letzter Termin')
                     ->getStateUsing(fn ($record) => $record->appointments->first()?->starts_at)
                     ->dateTime('d.m.Y')
                     ->placeholder('Noch kein Termin')
                     ->toggleable(),
-                    
+
                 Tables\Columns\TextColumn::make('tags')
                     ->label('Tags')
                     ->badge()
                     ->separator(',')
                     ->color('info')
                     ->toggleable(),
-                    
+
                 Tables\Columns\IconColumn::make('portal_enabled')
                     ->label('Portal')
                     ->boolean()
@@ -509,7 +530,7 @@ class CustomerResource extends EnhancedResourceSimple
                     ->trueColor('success')
                     ->falseColor('gray')
                     ->tooltip(fn ($record) => $record->portal_enabled ? 'Portal aktiviert' : 'Portal deaktiviert'),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime('d.m.Y H:i')
@@ -519,26 +540,25 @@ class CustomerResource extends EnhancedResourceSimple
             ->filters(array_merge(
                 static::getMultiTenantFilters(),
                 [
-                    
-                Tables\Filters\Filter::make('has_appointments')
-                    ->label('Mit Terminen')
-                    ->query(fn ($query) => $query->has('appointments')),
-                    
-                Tables\Filters\Filter::make('no_appointments')
-                    ->label('Ohne Termine')
-                    ->query(fn ($query) => $query->doesntHave('appointments')),
-                    
-                DateRangePicker::make('created_at', 'Registriert'),
-                
-                Tables\Filters\SelectFilter::make('tags')
-                    ->label('Tags')
-                    ->options([
-                        'VIP' => 'VIP',
-                        'Stammkunde' => 'Stammkunde',
-                        'Neukunde' => 'Neukunde',
-                        'Problemkunde' => 'Problemkunde',
-                    ])
-                    ->multiple(),
+                    Tables\Filters\Filter::make('has_appointments')
+                        ->label('Mit Terminen')
+                        ->query(fn ($query) => $query->has('appointments')),
+
+                    Tables\Filters\Filter::make('no_appointments')
+                        ->label('Ohne Termine')
+                        ->query(fn ($query) => $query->doesntHave('appointments')),
+
+                    DateRangePicker::make('created_at', 'Registriert'),
+
+                    Tables\Filters\SelectFilter::make('tags')
+                        ->label('Tags')
+                        ->options([
+                            'VIP' => 'VIP',
+                            'Stammkunde' => 'Stammkunde',
+                            'Neukunde' => 'Neukunde',
+                            'Problemkunde' => 'Problemkunde',
+                        ])
+                        ->multiple(),
                 ]
             ), layout: Tables\Enums\FiltersLayout::AboveContentCollapsible)
             ->actions([
@@ -556,19 +576,19 @@ class CustomerResource extends EnhancedResourceSimple
                         ->modalWidth('7xl')
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Schließen'),
-                        
+
                     ActionButton::quickBooking(),
-                    
+
                     Tables\Actions\Action::make('showAppointments')
                         ->label('Termine anzeigen')
                         ->icon('heroicon-m-calendar')
                         ->url(fn ($record) => "/admin/appointments?tableFilters[customer][value]={$record->id}")
                         ->openUrlInNewTab(),
-                        
+
                     ActionButton::sendEmail(),
                     ActionButton::sendSms(),
                     ActionButton::call(),
-                    
+
                     // Portal Actions
                     Tables\Actions\Action::make('enablePortal')
                         ->label('Portal aktivieren')
@@ -577,13 +597,13 @@ class CustomerResource extends EnhancedResourceSimple
                         ->requiresConfirmation()
                         ->modalHeading('Portal-Zugang aktivieren')
                         ->modalDescription('Dem Kunden wird ein Login-Link per E-Mail gesendet.')
-                        ->visible(fn ($record) => !$record->portal_enabled && !empty($record->email))
+                        ->visible(fn ($record) => ! $record->portal_enabled && ! empty($record->email))
                         ->action(function ($record) {
                             $portalService = app(CustomerPortalService::class);
-                            
+
                             // Need to use CustomerAuth model for portal
                             $customerAuth = \App\Models\CustomerAuth::find($record->id);
-                            
+
                             if ($portalService->enablePortalAccess($customerAuth)) {
                                 Notification::make()
                                     ->title('Portal-Zugang aktiviert')
@@ -598,7 +618,7 @@ class CustomerResource extends EnhancedResourceSimple
                                     ->send();
                             }
                         }),
-                        
+
                     Tables\Actions\Action::make('disablePortal')
                         ->label('Portal deaktivieren')
                         ->icon('heroicon-o-x-circle')
@@ -607,10 +627,10 @@ class CustomerResource extends EnhancedResourceSimple
                         ->visible(fn ($record) => $record->portal_enabled)
                         ->action(function ($record) {
                             $portalService = app(CustomerPortalService::class);
-                            
+
                             // Need to use CustomerAuth model for portal
                             $customerAuth = \App\Models\CustomerAuth::find($record->id);
-                            
+
                             if ($portalService->disablePortalAccess($customerAuth)) {
                                 Notification::make()
                                     ->title('Portal-Zugang deaktiviert')
@@ -619,7 +639,7 @@ class CustomerResource extends EnhancedResourceSimple
                                     ->send();
                             }
                         }),
-                    
+
                     Tables\Actions\Action::make('merge')
                         ->label('Zusammenführen')
                         ->icon('heroicon-m-arrows-pointing-in')
@@ -632,8 +652,8 @@ class CustomerResource extends EnhancedResourceSimple
                                 ->helperText('Wählen Sie den Kunden, mit dem dieser zusammengeführt werden soll')
                                 ->required()
                                 ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-                                ->getSearchResultsUsing(fn (string $search, $record) => 
-                                    \App\Models\Customer::where('id', '!=', $record->id)
+                                ->getSearchResultsUsing(
+                                    fn (string $search, $record) => Customer::where('id', '!=', $record->id)
                                         ->where(function ($query) use ($search) {
                                             $query->where('name', 'like', "%{$search}%")
                                                 ->orWhere('email', 'like', "%{$search}%")
@@ -645,30 +665,30 @@ class CustomerResource extends EnhancedResourceSimple
                         ])
                         ->action(function ($record, array $data) {
                             // Merge logic
-                            $targetCustomer = \App\Models\Customer::find($data['target_customer_id']);
-                            
+                            $targetCustomer = Customer::find($data['target_customer_id']);
+
                             // Transfer appointments
                             $record->appointments()->update(['customer_id' => $targetCustomer->id]);
-                            
+
                             // Merge contact info if target is missing
-                            if (empty($targetCustomer->email) && !empty($record->email)) {
+                            if (empty($targetCustomer->email) && ! empty($record->email)) {
                                 $targetCustomer->email = $record->email;
                             }
-                            if (empty($targetCustomer->phone) && !empty($record->phone)) {
+                            if (empty($targetCustomer->phone) && ! empty($record->phone)) {
                                 $targetCustomer->phone = $record->phone;
                             }
-                            
+
                             $targetCustomer->save();
-                            
+
                             // Delete the source customer
                             $record->delete();
-                            
+
                             Notification::make()
                                 ->title('Kunden zusammengeführt')
                                 ->body('Die Kunden wurden erfolgreich zusammengeführt.')
                                 ->success()
                                 ->send();
-                                
+
                             return redirect(CustomerResource::getUrl('edit', ['record' => $targetCustomer]));
                         })
                         ->requiresConfirmation(),
@@ -702,14 +722,14 @@ class CustomerResource extends EnhancedResourceSimple
             CustomerResource\RelationManagers\NotesRelationManager::class,
         ];
     }
-    
+
     public static function getWidgets(): array
     {
         return [
             CustomerResource\Widgets\CustomerInsightsWidget::class,
         ];
     }
-    
+
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
@@ -719,34 +739,34 @@ class CustomerResource extends EnhancedResourceSimple
                         Infolists\Components\TextEntry::make('name')
                             ->label('Name')
                             ->icon('heroicon-m-user'),
-                            
+
                         Infolists\Components\TextEntry::make('email')
                             ->label('E-Mail')
                             ->icon('heroicon-m-envelope')
                             ->copyable(),
-                            
+
                         Infolists\Components\TextEntry::make('phone')
                             ->label('Telefon')
                             ->icon('heroicon-m-phone')
                             ->copyable()
                             ->url(fn ($record) => "tel:{$record->phone}"),
-                            
+
                         Infolists\Components\TextEntry::make('company.name')
                             ->label('Unternehmen')
                             ->badge(),
-                            
+
                         Infolists\Components\TextEntry::make('birthdate')
                             ->label('Geburtsdatum')
                             ->date('d.m.Y')
                             ->placeholder('Nicht angegeben'),
-                            
+
                         Infolists\Components\TextEntry::make('tags')
                             ->label('Tags')
                             ->badge()
                             ->separator(','),
                     ])
                     ->columns(2),
-                    
+
                 Infolists\Components\Section::make('Statistiken')
                     ->schema([
                         Infolists\Components\TextEntry::make('appointments_count')
@@ -754,19 +774,19 @@ class CustomerResource extends EnhancedResourceSimple
                             ->state(fn ($record) => $record->appointments()->count())
                             ->badge()
                             ->color('success'),
-                            
+
                         Infolists\Components\TextEntry::make('completed_appointments')
                             ->label('Abgeschlossene Termine')
                             ->state(fn ($record) => $record->appointments()->where('status', 'completed')->count())
                             ->badge()
                             ->color('info'),
-                            
+
                         Infolists\Components\TextEntry::make('no_shows')
                             ->label('Nicht erschienen')
                             ->state(fn ($record) => $record->appointments()->where('status', 'no_show')->count())
                             ->badge()
                             ->color('danger'),
-                            
+
                         Infolists\Components\TextEntry::make('total_revenue')
                             ->label('Gesamtumsatz')
                             ->state(function ($record) {
@@ -774,6 +794,7 @@ class CustomerResource extends EnhancedResourceSimple
                                     ->where('status', 'completed')
                                     ->join('services', 'appointments.service_id', '=', 'services.id')
                                     ->sum('services.price') / 100;
+
                                 return '€ ' . number_format($total, 2, ',', '.');
                             })
                             ->badge()
@@ -803,12 +824,12 @@ class CustomerResource extends EnhancedResourceSimple
     {
         return 'Kunden';
     }
-    
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['name', 'email', 'phone', 'company.name', 'tags'];
     }
-    
+
     public static function getGlobalSearchResultDetails($record): array
     {
         return [
@@ -817,7 +838,7 @@ class CustomerResource extends EnhancedResourceSimple
             'Unternehmen' => $record->company?->name,
         ];
     }
-    
+
     protected static function getExportColumns(): array
     {
         return [

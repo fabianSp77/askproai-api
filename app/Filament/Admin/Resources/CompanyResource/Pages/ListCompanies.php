@@ -49,7 +49,8 @@ class ListCompanies extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            CompanyDashboardWidget::class,
+            // Temporarily disabled to debug loading issue
+            // CompanyDashboardWidget::class,
         ];
     }
     

@@ -7,28 +7,32 @@ use Filament\Pages\Page;
 class QuickDocsSimple extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?string $navigationLabel = 'Quick Docs (Simple)';
+
     protected static ?string $slug = 'quick-docs-simple';
+
     protected static string $view = 'filament.admin.pages.quick-docs-simple';
+
     protected static ?int $navigationSort = 2;
-    
+
     public string $search = '';
-    
+
     public static function getNavigationGroup(): ?string
     {
         return 'System';
     }
-    
+
     public static function canAccess(): bool
     {
         return auth()->user()?->hasAnyRole([
-            'super_admin', 
+            'super_admin',
             'Super Admin',
             'company_admin',
-            'Company Admin'
-        ]);
+            'Company Admin',
+        ]) ?? false;
     }
-    
+
     public function getDocuments(): array
     {
         return [
@@ -98,17 +102,17 @@ class QuickDocsSimple extends Page
             ],
         ];
     }
-    
+
     public function getFilteredDocuments(): array
     {
         $documents = $this->getDocuments();
-        
+
         if (empty($this->search)) {
             return $documents;
         }
-        
+
         $searchLower = strtolower($this->search);
-        
+
         return array_filter($documents, function ($doc) use ($searchLower) {
             return str_contains(strtolower($doc['title']), $searchLower) ||
                    str_contains(strtolower($doc['description']), $searchLower) ||

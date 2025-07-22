@@ -4,21 +4,20 @@ namespace App\Filament\Admin\Widgets;
 
 use App\Models\Appointment;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Carbon;
 
 class AppointmentTrendWidget extends ChartWidget
 {
     protected static ?string $heading = 'Termintrend (Letzte 30 Tage)';
-    
+
     protected static ?int $sort = 2;
-    
+
     protected static ?string $pollingInterval = '60s';
-    
+
     protected function getData(): array
     {
-        $company = auth()->user()->company;
-        
-        if (!$company) {
+        $company = auth()->user()?->company;
+
+        if (! $company) {
             return [
                 'datasets' => [],
                 'labels' => [],
@@ -42,11 +41,11 @@ class AppointmentTrendWidget extends ChartWidget
 
         // Fill in missing dates
         $period = now()->subDays(30)->toPeriod(now(), '1 day');
-        
+
         foreach ($period as $date) {
             $dateStr = $date->format('Y-m-d');
             $dayData = $data->firstWhere('date', $dateStr);
-            
+
             $labels[] = $date->format('d.m');
             $totals[] = $dayData ? $dayData->total : 0;
             $completed[] = $dayData ? $dayData->completed : 0;
@@ -91,7 +90,7 @@ class AppointmentTrendWidget extends ChartWidget
     {
         return 'line';
     }
-    
+
     protected function getOptions(): array
     {
         return [
@@ -112,12 +111,12 @@ class AppointmentTrendWidget extends ChartWidget
             'maintainAspectRatio' => false,
         ];
     }
-    
+
     public function getColumnSpan(): int|string|array
     {
         return 'full';
     }
-    
+
     protected function getHeight(): int
     {
         return 300;

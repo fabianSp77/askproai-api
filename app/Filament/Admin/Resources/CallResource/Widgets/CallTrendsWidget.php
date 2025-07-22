@@ -23,7 +23,7 @@ class CallTrendsWidget extends ChartWidget
         try {
             Log::info('CallTrendsWidget: Starting data collection');
             
-            $cacheKey = 'call_trends_widget_' . auth()->user()->company_id . '_' . today()->format('Y-m-d');
+            $cacheKey = 'call_trends_widget_' . (auth()->user()?->company_id ?? 'all') . '_' . today()->format('Y-m-d');
             
             return Cache::remember($cacheKey, 600, function () {
                 $data = [];

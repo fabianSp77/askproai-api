@@ -6,133 +6,164 @@ use App\Filament\Admin\Resources\BranchResource\Pages;
 use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Branch;
 use App\Models\Company;
-use App\Models\RetellAgent;
-use App\Services\RetellAgentService;
 use Filament\Forms;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\ToggleButtons;
+use Filament\Forms\Components\ViewField;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Notifications\Notification;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\ViewField;
-use Filament\Support\Enums\MaxWidth;
-use Filament\Forms\Components\ToggleButtons;
-use Filament\Forms\Get;
 use Illuminate\Support\HtmlString;
 
 class BranchResource extends Resource
 {
     use HasConsistentNavigation;
-    
+
     protected static ?string $model = Branch::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
+
     protected static ?string $navigationLabel = 'Filialen';
+
     protected static ?string $navigationGroup = 'Unternehmensstruktur';
+
     protected static ?int $navigationSort = 20;
-    
+
     protected static ?string $pluralLabel = 'Filialen';
-    
+
     protected static ?string $label = 'Filiale';
 
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission or if user belongs to a company
         return $user->can('view_any_branch') || $user->company_id !== null;
     }
-    
+
     public static function canView($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('view_branch')) {
             return true;
         }
-        
+
         // Users can view branches from their own company
         return $user->company_id === $record->company_id;
     }
-    
+
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can edit all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('update_branch')) {
             return true;
         }
-        
+
         // Company admins can edit branches from their own company
         return $user->company_id === $record->company_id && $user->hasRole('company_admin');
     }
-    
+
     public static function canCreate(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can create
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('create_branch')) {
             return true;
         }
-        
+
         // Company admins can create branches for their company
         return $user->company_id !== null && $user->hasRole('company_admin');
     }
-    
+
     public static function canDelete($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can delete all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('delete_branch')) {
             return true;
         }
-        
+
         // Company admins can delete branches from their own company
         return $user->company_id === $record->company_id && $user->hasRole('company_admin');
     }
-    
+
     public static function canDeleteAny(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can delete
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         return $user->can('delete_any_branch') || ($user->hasRole('company_admin') && $user->company_id !== null);
     }
@@ -164,10 +195,10 @@ class BranchResource extends Resource
                                             ->preload()
                                             ->live()
                                             ->afterStateUpdated(function ($state, Forms\Set $set, $record) {
-                                                if (!$record && $state) {
+                                                if (! $record && $state) {
                                                     // Bei neuer Filiale: E-Mail vom Unternehmen übernehmen
                                                     $company = Company::find($state);
-                                                    if ($company && $company->email && !$set->get('notification_email')) {
+                                                    if ($company && $company->email && ! $set->get('notification_email')) {
                                                         $set('notification_email', $company->email);
                                                     }
                                                 }
@@ -193,7 +224,7 @@ class BranchResource extends Resource
                                             ->required()
                                             ->maxLength(255)
                                             ->placeholder('z.B. Hauptstraße 123'),
-                                        
+
                                         Grid::make(3)
                                             ->schema([
                                                 Forms\Components\TextInput::make('postal_code')
@@ -201,20 +232,20 @@ class BranchResource extends Resource
                                                     ->required()
                                                     ->maxLength(10)
                                                     ->placeholder('12345'),
-                                                
+
                                                 Forms\Components\TextInput::make('city')
                                                     ->label('Stadt')
                                                     ->required()
                                                     ->maxLength(255)
                                                     ->placeholder('Berlin'),
-                                                
+
                                                 Forms\Components\TextInput::make('country')
                                                     ->label('Land')
                                                     ->default('Deutschland')
                                                     ->required()
                                                     ->maxLength(255),
                                             ]),
-                                        
+
                                         // Google Maps Link
                                         Forms\Components\Placeholder::make('google_maps_link')
                                             ->label('')
@@ -222,7 +253,8 @@ class BranchResource extends Resource
                                                 if ($record && $record->address && $record->city && $record->postal_code) {
                                                     $address = urlencode("{$record->address}, {$record->postal_code} {$record->city}, {$record->country}");
                                                     $url = "https://www.google.com/maps/search/?api=1&query={$address}";
-                                                    return new \Illuminate\Support\HtmlString(
+
+                                                    return new HtmlString(
                                                         '<a href="' . $url . '" target="_blank" class="text-primary-600 hover:text-primary-500 font-medium flex items-center gap-2">
                                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -232,6 +264,7 @@ class BranchResource extends Resource
                                                         </a>'
                                                     );
                                                 }
+
                                                 return 'Bitte geben Sie zuerst eine vollständige Adresse ein.';
                                             })
                                             ->columnSpanFull(),
@@ -246,7 +279,7 @@ class BranchResource extends Resource
                                             ->helperText('Diese Nummer rufen die Kunden an')
                                             ->placeholder('+49 30 12345678')
                                             ->maxLength(255),
-                                        
+
                                         Forms\Components\TextInput::make('notification_email')
                                             ->label('E-Mail für Benachrichtigungen')
                                             ->email()
@@ -275,13 +308,13 @@ class BranchResource extends Resource
                                         Forms\Components\Toggle::make('active')
                                             ->label('Filiale aktivieren')
                                             ->default(false)
-                                            ->disabled(fn ($record) => !$record || !$record->canBeActivated())
-                                            ->helperText(fn ($record) => 
-                                                !$record || !$record->canBeActivated() 
-                                                    ? 'Die Filiale kann erst aktiviert werden, wenn alle Pflichtfelder ausgefüllt sind.' 
+                                            ->disabled(fn ($record) => ! $record || ! $record->canBeActivated())
+                                            ->helperText(
+                                                fn ($record) => ! $record || ! $record->canBeActivated()
+                                                    ? 'Die Filiale kann erst aktiviert werden, wenn alle Pflichtfelder ausgefüllt sind.'
                                                     : 'Aktivierte Filialen können Termine entgegennehmen'
                                             ),
-                                        
+
                                         Forms\Components\Toggle::make('notify_on_booking')
                                             ->label('E-Mail-Benachrichtigung bei Buchungen')
                                             ->default(true)
@@ -291,39 +324,39 @@ class BranchResource extends Resource
                             ]),
 
                         // Tab 2: Öffnungszeiten
-Tabs\Tab::make('Öffnungszeiten')
-    ->icon('heroicon-o-clock')
-    ->schema([
-        Section::make()
-            ->heading('Geschäftszeiten konfigurieren')
-            ->description('Legen Sie die Öffnungszeiten für diese Filiale fest')
-            ->schema([
-                Forms\Components\ViewField::make('business_hours')
-                    ->label('')
-                    ->view('filament.forms.components.business-hours-field')
-                    ->columnSpanFull(),
-            ]),
-    ]),
+                        Tabs\Tab::make('Öffnungszeiten')
+                            ->icon('heroicon-o-clock')
+                            ->schema([
+                                Section::make()
+                                    ->heading('Geschäftszeiten konfigurieren')
+                                    ->description('Legen Sie die Öffnungszeiten für diese Filiale fest')
+                                    ->schema([
+                                        ViewField::make('business_hours')
+                                            ->label('')
+                                            ->view('filament.forms.components.business-hours-field')
+                                            ->columnSpanFull(),
+                                    ]),
+                            ]),
 
                         // Tab 3: KI-Telefonie
-Tabs\Tab::make('KI-Telefonie (Retell.ai)')
-    ->icon('heroicon-o-phone')
-    ->schema([
-        Section::make('Retell.ai Agent Konfiguration')
-            ->description('Verwalten Sie den KI-Agenten für diese Filiale')
-            ->schema([
-                Forms\Components\ViewField::make('retell_agent_info')
-                    ->label('')
-                    ->view('filament.forms.components.retell-agent-info')
-                    ->columnSpanFull(),
-                    
-                Forms\Components\TextInput::make('retell_agent_id')
-                    ->label('Agent ID')
-                    ->placeholder('agent_xxxxxx')
-                    ->helperText('Die Retell.ai Agent ID für diese Filiale')
-                    ->maxLength(255),
-            ]),
-    ]),
+                        Tabs\Tab::make('KI-Telefonie (Retell.ai)')
+                            ->icon('heroicon-o-phone')
+                            ->schema([
+                                Section::make('Retell.ai Agent Konfiguration')
+                                    ->description('Verwalten Sie den KI-Agenten für diese Filiale')
+                                    ->schema([
+                                        ViewField::make('retell_agent_info')
+                                            ->label('')
+                                            ->view('filament.forms.components.retell-agent-info')
+                                            ->columnSpanFull(),
+
+                                        Forms\Components\TextInput::make('retell_agent_id')
+                                            ->label('Agent ID')
+                                            ->placeholder('agent_xxxxxx')
+                                            ->helperText('Die Retell.ai Agent ID für diese Filiale')
+                                            ->maxLength(255),
+                                    ]),
+                            ]),
                         // Tab 4: Services & Mitarbeiter
                         Tabs\Tab::make('Services & Mitarbeiter')
                             ->icon('heroicon-o-briefcase')
@@ -348,21 +381,21 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                                 Forms\Components\TextInput::make('name')
                                                     ->label('Name')
                                                     ->required(),
-                                                
+
                                                 Forms\Components\TextInput::make('email')
                                                     ->label('E-Mail')
                                                     ->email(),
-                                                
+
                                                 Forms\Components\Select::make('calcom_user_id')
                                                     ->label('Cal.com Benutzer-ID')
                                                     ->helperText('Die Benutzer-ID in Cal.com für diesen Mitarbeiter'),
-                                                
+
                                                 Forms\Components\Select::make('services')
                                                     ->label('Verfügbare Services')
                                                     ->multiple()
                                                     ->relationship('services', 'name')
                                                     ->helperText('Welche Services kann dieser Mitarbeiter durchführen?'),
-                                                
+
                                                 Forms\Components\Toggle::make('active')
                                                     ->label('Aktiv')
                                                     ->default(true),
@@ -389,46 +422,48 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                             ->default('inherit')
                                             ->live()
                                             ->reactive()
-                                            ->helperText(function($record) {
+                                            ->helperText(function ($record) {
                                                 if ($record && $record->company) {
                                                     $companyNeedsAppointments = $record->company->settings['needs_appointment_booking'] ?? true;
-                                                    return $companyNeedsAppointments 
-                                                        ? '✅ Unternehmen hat Terminbuchung aktiviert' 
+
+                                                    return $companyNeedsAppointments
+                                                        ? '✅ Unternehmen hat Terminbuchung aktiviert'
                                                         : '❌ Unternehmen hat Terminbuchung deaktiviert';
                                                 }
+
                                                 return '';
                                             }),
-                                            
-                                        Forms\Components\ToggleButtons::make('settings.needs_appointment_booking')
+
+                                        ToggleButtons::make('settings.needs_appointment_booking')
                                             ->label('Benötigt diese Filiale Terminbuchungen?')
                                             ->options([
                                                 true => 'Ja, wir vereinbaren Termine',
-                                                false => 'Nein, keine Terminbuchung'
+                                                false => 'Nein, keine Terminbuchung',
                                             ])
                                             ->icons([
                                                 true => 'heroicon-o-calendar-days',
-                                                false => 'heroicon-o-x-circle'
+                                                false => 'heroicon-o-x-circle',
                                             ])
                                             ->colors([
                                                 true => 'success',
-                                                false => 'warning'
+                                                false => 'warning',
                                             ])
                                             ->inline()
                                             ->default(true)
                                             ->reactive()
-                                            ->visible(fn(Forms\Get $get) => $get('appointment_booking_mode') === 'override'),
+                                            ->visible(fn (Get $get) => $get('appointment_booking_mode') === 'override'),
                                     ]),
-                                    
+
                                 // Info box when appointment booking is disabled
                                 Forms\Components\Placeholder::make('no_appointment_info')
                                     ->label('')
-                                    ->content(new \Illuminate\Support\HtmlString('
+                                    ->content(new HtmlString('
                                         <div class="p-4 bg-amber-50 rounded-lg">
                                             <p class="text-amber-800">ℹ️ Terminbuchungsfunktionen sind für diese Filiale deaktiviert.</p>
                                             <p class="text-amber-700 text-sm mt-1">Kalendereinstellungen werden nicht benötigt.</p>
                                         </div>
                                     '))
-                                    ->visible(function(Forms\Get $get, $record) {
+                                    ->visible(function (Get $get, $record) {
                                         if ($get('appointment_booking_mode') === 'override') {
                                             return $get('settings.needs_appointment_booking') === false;
                                         }
@@ -436,11 +471,12 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                         if ($record && $record->company) {
                                             return ($record->company->settings['needs_appointment_booking'] ?? true) === false;
                                         }
+
                                         return false;
                                     }),
-                                
+
                                 Section::make('Kalendermodus')
-                                    ->visible(function(Forms\Get $get, $record) {
+                                    ->visible(function (Get $get, $record) {
                                         // Show only if appointment booking is enabled
                                         if ($get('appointment_booking_mode') === 'override') {
                                             return $get('settings.needs_appointment_booking') !== false;
@@ -449,6 +485,7 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                         if ($record && $record->company) {
                                             return ($record->company->settings['needs_appointment_booking'] ?? true) !== false;
                                         }
+
                                         return true;
                                     })
                                     ->schema([
@@ -464,12 +501,12 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                     ]),
 
                                 Section::make('Cal.com Konfiguration')
-                                    ->visible(function(Forms\Get $get, $record) {
+                                    ->visible(function (Get $get, $record) {
                                         // Show only if appointment booking is enabled AND calendar mode is override
                                         if ($get('calendar_mode') !== 'override') {
                                             return false;
                                         }
-                                        
+
                                         if ($get('appointment_booking_mode') === 'override') {
                                             return $get('settings.needs_appointment_booking') !== false;
                                         }
@@ -477,6 +514,7 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                         if ($record && $record->company) {
                                             return ($record->company->settings['needs_appointment_booking'] ?? true) !== false;
                                         }
+
                                         return true;
                                     })
                                     ->schema([
@@ -485,19 +523,19 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                             ->password()
                                             ->revealable()
                                             ->maxLength(255),
-                                        
+
                                         Forms\Components\TextInput::make('calcom_event_type_id')
                                             ->label('Event Type ID')
                                             ->numeric()
                                             ->helperText('Die ID des Event-Typs in Cal.com'),
-                                        
+
                                         Forms\Components\TextInput::make('calcom_team_slug')
                                             ->label('Team Slug')
                                             ->maxLength(64)
                                             ->helperText('Der Team-Slug in Cal.com (optional)'),
                                     ])
                                     ->columns(3)
-                                    ->visible(fn (Forms\Get $get) => $get('calendar_mode') === 'override'),
+                                    ->visible(fn (Get $get) => $get('calendar_mode') === 'override'),
 
                                 // Test-Aktionen
                                 Section::make('Kalender-Test')
@@ -509,7 +547,7 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                                 ->action(function ($record) {
                                                     if ($record) {
                                                         $results = $record->testIntegrations();
-                                                        
+
                                                         if ($results['calcom']['success'] ?? false) {
                                                             Notification::make()
                                                                 ->title('Kalender-Test erfolgreich')
@@ -524,7 +562,7 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                                                         }
                                                     }
                                                 })
-                                                ->disabled(fn ($record) => !$record),
+                                                ->disabled(fn ($record) => ! $record),
                                         ]),
                                     ]),
                             ]),
@@ -544,25 +582,25 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
-                
+
                 Tables\Columns\TextColumn::make('company.name')
                     ->label('Unternehmen')
                     ->searchable()
                     ->sortable()
                     ->toggleable()
                     ->getStateUsing(fn ($record) => $record?->company?->name ?? '-'),
-                
+
                 Tables\Columns\TextColumn::make('city')
                     ->label('Stadt')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('phone_number')
                     ->label('Telefon')
                     ->searchable()
                     ->copyable()
                     ->icon('heroicon-o-phone'),
-                
+
                 Tables\Columns\TextColumn::make('configuration_progress.percentage')
                     ->label('Konfiguration')
                     ->formatStateUsing(fn ($state) => $state . '%')
@@ -572,11 +610,11 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                         $state >= 75 => 'warning',
                         default => 'danger',
                     }),
-                
+
                 Tables\Columns\IconColumn::make('active')
                     ->label('Aktiv')
                     ->boolean(),
-                
+
                 Tables\Columns\IconColumn::make('retell_agent_id')
                     ->label('KI-Agent')
                     ->boolean()
@@ -584,7 +622,7 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger'),
-                
+
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Aktualisiert')
                     ->dateTime('d.m.Y H:i')
@@ -596,22 +634,22 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
                     ->relationship('company', 'name')
                     ->searchable()
                     ->preload()
-                    ->visible(fn ($livewire): bool => !$livewire instanceof \Filament\Resources\Pages\CreateRecord),
-                
+                    ->visible(fn ($livewire): bool => ! $livewire instanceof \Filament\Resources\Pages\CreateRecord),
+
                 Tables\Filters\TernaryFilter::make('active')
                     ->label('Status')
                     ->placeholder('Alle Filialen')
                     ->trueLabel('Nur aktive')
                     ->falseLabel('Nur inaktive'),
-                
+
                 Tables\Filters\Filter::make('fully_configured')
                     ->label('Vollständig konfiguriert')
-                    ->query(fn (Builder $query): Builder => 
-                        $query->whereNotNull('retell_agent_id')
-                              ->where('phone_number', '!=', '')
-                              ->whereNotNull('phone_number')
+                    ->query(
+                        fn (Builder $query): Builder => $query->whereNotNull('retell_agent_id')
+                            ->where('phone_number', '!=', '')
+                            ->whereNotNull('phone_number')
                     ),
-                
+
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
@@ -660,15 +698,15 @@ Tabs\Tab::make('KI-Telefonie (Retell.ai)')
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
-            
+
         // Filter by user's company if not super admin
         $user = auth()->user();
-        if ($user && !$user->hasRole('super_admin') && !$user->can('view_any_branch')) {
+        if ($user && ! $user->hasRole('super_admin') && ! $user->can('view_any_branch')) {
             if ($user->company_id) {
                 $query->where('company_id', $user->company_id);
             }
         }
-        
+
         return $query;
     }
 }

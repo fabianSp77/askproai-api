@@ -2,100 +2,124 @@
 
 namespace App\Filament\Admin\Resources;
 
-use App\Models\PhoneNumber;
+use App\Filament\Admin\Resources\PhoneNumberResource\Pages;
 use App\Models\Branch;
+use App\Models\PhoneNumber;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Filament\Admin\Resources\PhoneNumberResource\Pages;
 use Illuminate\Database\Eloquent\Builder;
 
 class PhoneNumberResource extends Resource
 {
     protected static ?string $model = PhoneNumber::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-phone';
+
     protected static ?string $navigationGroup = 'Unternehmensstruktur';
+
     protected static ?string $navigationLabel = 'Telefonnummern';
+
     protected static ?int $navigationSort = 50;
 
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('view_any_phone_number')) {
             return true;
         }
-        
+
         // Company admins can view phone numbers
         return $user->company_id !== null && $user->hasRole('company_admin');
     }
-    
+
     public static function canView($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('view_phone_number')) {
             return true;
         }
-        
+
         // Company admins can view phone numbers from their branches
         if ($record->branch && $user->company_id === $record->branch->company_id) {
             return $user->hasRole('company_admin');
         }
-        
+
         return false;
     }
-    
+
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can edit all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('update_phone_number')) {
             return true;
         }
-        
+
         // Company admins can edit phone numbers from their branches
         if ($record->branch && $user->company_id === $record->branch->company_id) {
             return $user->hasRole('company_admin');
         }
-        
+
         return false;
     }
-    
+
     public static function canCreate(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can create
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('create_phone_number')) {
             return true;
         }
-        
+
         // Company admins can create phone numbers
         return $user->company_id !== null && $user->hasRole('company_admin');
     }
@@ -112,7 +136,7 @@ class PhoneNumberResource extends Resource
                         ->helperText('International format (e.g., +49 for Germany)')
                         ->tel()
                         ->unique(ignoreRecord: true),
-                        
+
                     Forms\Components\Select::make('branch_id')
                         ->label('Filiale')
                         ->relationship('branch', 'name')
@@ -131,9 +155,9 @@ class PhoneNumberResource extends Resource
                                 }
                             }
                         }),
-                        
+
                     Forms\Components\Hidden::make('company_id'),
-                    
+
                     Forms\Components\Select::make('type')
                         ->label('Type')
                         ->options([
@@ -145,26 +169,26 @@ class PhoneNumberResource extends Resource
                         ])
                         ->default('main')
                         ->required(),
-                        
+
                     Forms\Components\Toggle::make('is_primary')
                         ->label('Primäre Nummer')
                         ->helperText('Dies wird die Hauptkontaktnummer für die Filiale')
                         ->default(false),
-                        
+
                     Forms\Components\Toggle::make('is_active')
                         ->label('Aktiv')
                         ->default(true)
                         ->required(),
                 ])
                 ->columns(2),
-                
+
             Forms\Components\Section::make('Retell Configuration')
                 ->schema([
                     Forms\Components\TextInput::make('retell_agent_id')
                         ->label('Retell Agent ID')
                         ->placeholder('agent_xxxxxxxxxxxxx')
                         ->helperText('Der Retell AI Agent für diese Nummer'),
-                        
+
                     Forms\Components\TextInput::make('retell_phone_id')
                         ->label('Retell Phone ID')
                         ->placeholder('phone_xxxxxxxxxxxxx')
@@ -184,18 +208,18 @@ class PhoneNumberResource extends Resource
                     ->sortable()
                     ->copyable()
                     ->icon('heroicon-m-phone'),
-                    
+
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
                     ->searchable()
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('branch.company.name')
                     ->label('Unternehmen')
                     ->searchable()
                     ->sortable()
                     ->toggleable(),
-                    
+
                 Tables\Columns\BadgeColumn::make('type')
                     ->label('Type')
                     ->colors([
@@ -205,7 +229,7 @@ class PhoneNumberResource extends Resource
                         'warning' => 'mobile',
                         'danger' => 'test',
                     ]),
-                    
+
                 Tables\Columns\IconColumn::make('is_primary')
                     ->label('Primär')
                     ->boolean()
@@ -213,11 +237,11 @@ class PhoneNumberResource extends Resource
                     ->falseIcon('heroicon-o-star')
                     ->trueColor('warning')
                     ->falseColor('gray'),
-                    
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Aktiv')
                     ->boolean(),
-                    
+
                 Tables\Columns\TextColumn::make('retell_agent_id')
                     ->label('Retell Agent')
                     ->searchable()
@@ -226,7 +250,7 @@ class PhoneNumberResource extends Resource
                     ->tooltip(function (PhoneNumber $record): ?string {
                         return $record->retell_agent_id;
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt')
                     ->dateTime()
@@ -242,13 +266,13 @@ class PhoneNumberResource extends Resource
                         'mobile' => 'Mobil',
                         'test' => 'Test',
                     ]),
-                    
+
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Aktiv'),
-                    
+
                 Tables\Filters\TernaryFilter::make('is_primary')
                     ->label('Primär'),
-                    
+
                 Tables\Filters\Filter::make('has_retell_agent')
                     ->query(fn (Builder $query): Builder => $query->whereNotNull('retell_agent_id'))
                     ->label('Hat Retell Agent'),
@@ -262,7 +286,7 @@ class PhoneNumberResource extends Resource
                     ->color('info')
                     ->action(function (PhoneNumber $record) {
                         $output = shell_exec("php artisan phone:test-resolution {$record->number} 2>&1");
-                        
+
                         \Filament\Notifications\Notification::make()
                             ->title('Phone Resolution Test')
                             ->body("Test abgeschlossen für {$record->number}. Details in den Logs.")
@@ -303,12 +327,12 @@ class PhoneNumberResource extends Resource
             'edit' => Pages\EditPhoneNumber::route('/{record}/edit'),
         ];
     }
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::where('is_active', true)->count();
     }
-    
+
     public static function getNavigationBadgeColor(): ?string
     {
         return static::getModel()::where('is_active', true)->count() > 0 ? 'success' : 'danger';

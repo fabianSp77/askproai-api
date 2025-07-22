@@ -7,23 +7,26 @@ use Filament\Pages\Page;
 class SystemDebug extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-bug-ant';
+
     protected static ?string $navigationLabel = 'System Debug';
+
     protected static ?string $navigationGroup = 'System';
+
     protected static string $view = 'filament.admin.pages.system-debug';
-    
+
     public static function canAccess(): bool
     {
-        return auth()->user()->hasRole('Super Admin');
+        return auth()->user()?->hasRole('Super Admin') ?? false;
     }
-    
+
     public function testDropdown(): void
     {
         $this->dispatch('notify', [
             'type' => 'success',
-            'message' => 'Dropdown test executed'
+            'message' => 'Dropdown test executed',
         ]);
     }
-    
+
     public function getSystemInfo(): array
     {
         return [

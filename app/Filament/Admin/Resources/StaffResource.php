@@ -5,108 +5,134 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\StaffResource\Pages;
 use App\Filament\Admin\Resources\StaffResource\RelationManagers;
 use App\Filament\Admin\Traits\HasConsistentNavigation;
-use App\Models\Staff;
-use App\Models\Service;
-use App\Models\Branch;
-use App\Filament\Components\StatusBadge;
 use App\Filament\Components\ActionButton;
 use App\Filament\Components\SearchableSelect;
+use App\Filament\Components\StatusBadge;
+use App\Models\Branch;
+use App\Models\Service;
+use App\Models\Staff;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Illuminate\Support\Facades\DB;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Grid;
-use Filament\Support\Enums\IconPosition;
-use Filament\Tables\Columns\Layout\Split;
-use Filament\Tables\Columns\Layout\Stack;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Form;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
-use Illuminate\Support\HtmlString;
+use Filament\Support\Enums\IconPosition;
+use Filament\Tables;
+use Filament\Tables\Columns\Layout\Split;
+use Filament\Tables\Columns\Layout\Stack;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class StaffResource extends EnhancedResourceSimple
 {
-
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission or if user belongs to a company
         return $user->can('view_any_staff') || $user->company_id !== null;
     }
-    
+
     public static function canView($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('view_staff')) {
             return true;
         }
-        
+
         // Users can view staff from their own company
         return $user->company_id === $record->company_id;
     }
-    
+
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can edit all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('update_staff')) {
             return true;
         }
-        
+
         // Company admins can edit staff from their own company
-        return $user->company_id === $record->company_id && 
+        return $user->company_id === $record->company_id &&
                ($user->hasRole('company_admin') || $user->hasRole('branch_manager'));
     }
-    
+
     public static function canCreate(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can create
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('create_staff')) {
             return true;
         }
-        
+
         // Company admins and branch managers can create staff
-        return $user->company_id !== null && 
+        return $user->company_id !== null &&
                ($user->hasRole('company_admin') || $user->hasRole('branch_manager'));
     }
 
     use HasConsistentNavigation;
+
     protected static ?string $model = Staff::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+
     protected static ?string $navigationLabel = 'Mitarbeiter';
+
     protected static ?string $navigationGroup = 'Unternehmensstruktur';
+
     protected static ?int $navigationSort = 30;
+
     protected static ?string $modelLabel = 'Mitarbeiter';
+
     protected static ?string $pluralModelLabel = 'Mitarbeiter';
+
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Form $form): Form
@@ -137,15 +163,14 @@ class StaffResource extends EnhancedResourceSimple
                                                     ->relationship(
                                                         name: 'homeBranch',
                                                         titleAttribute: 'name',
-                                                        modifyQueryUsing: fn (Builder $query, Forms\Get $get) => 
-                                                            $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->where(DB::raw('1'), '=', DB::raw('0'))
+                                                        modifyQueryUsing: fn (Builder $query, Forms\Get $get) => $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->where(DB::raw('1'), '=', DB::raw('0'))
                                                     )
                                                     ->label('Stammfiliale')
                                                     ->required()
                                                     ->searchable()
                                                     ->preload()
                                                     ->reactive()
-                                                    ->disabled(fn (Forms\Get $get) => !$get('company_id'))
+                                                    ->disabled(fn (Forms\Get $get) => ! $get('company_id'))
                                                     ->helperText('Die Hauptfiliale, in der der Mitarbeiter primär arbeitet. Diese Filiale wird für die Standard-Terminbuchungen verwendet.'),
                                             ]),
 
@@ -165,7 +190,7 @@ class StaffResource extends EnhancedResourceSimple
                                                     ->prefixIcon('heroicon-o-envelope')
                                                     ->helperText('E-Mail-Adresse für Terminbestätigungen und Benachrichtigungen')
                                                     ->unique(
-                                                        table: \App\Models\Staff::class,
+                                                        table: Staff::class,
                                                         column: 'email',
                                                         ignoreRecord: true,
                                                         modifyRuleUsing: function (\Illuminate\Validation\Rules\Unique $rule, Forms\Get $get) {
@@ -212,14 +237,13 @@ class StaffResource extends EnhancedResourceSimple
                                             ->relationship(
                                                 name: 'branches',
                                                 titleAttribute: 'name',
-                                                modifyQueryUsing: fn (Builder $query, Forms\Get $get) =>
-                                                    $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->where(DB::raw('1'), '=', DB::raw('0'))
+                                                modifyQueryUsing: fn (Builder $query, Forms\Get $get) => $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->where(DB::raw('1'), '=', DB::raw('0'))
                                             )
                                             ->label('Arbeitet in Filialen')
                                             ->columns(2)
                                             ->searchable()
                                             ->bulkToggleable()
-                                            ->disabled(fn (Forms\Get $get) => !$get('company_id'))
+                                            ->disabled(fn (Forms\Get $get) => ! $get('company_id'))
                                             ->helperText('Der Mitarbeiter kann in mehreren Filialen arbeiten. Die Stammfiliale ist automatisch ausgewählt.')
                                             ->hint('Info')
                                             ->hintIcon('heroicon-o-information-circle')
@@ -233,19 +257,18 @@ class StaffResource extends EnhancedResourceSimple
                                             ->relationship(
                                                 name: 'services',
                                                 titleAttribute: 'name',
-                                                modifyQueryUsing: fn (Builder $query, Forms\Get $get) => 
-                                                    $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->where(DB::raw('1'), '=', DB::raw('0'))
+                                                modifyQueryUsing: fn (Builder $query, Forms\Get $get) => $get('company_id') ? $query->where('company_id', $get('company_id')) : $query->where(DB::raw('1'), '=', DB::raw('0'))
                                             )
                                             ->label('Bietet Services an')
                                             ->columns(2)
                                             ->searchable()
                                             ->bulkToggleable()
-                                            ->disabled(fn (Forms\Get $get) => !$get('company_id'))
-->getOptionLabelFromRecordUsing(fn (Service $record) => 
-    "{$record->name}" . 
-    ($record->duration ? " ({$record->duration} Min.)" : "") . 
-    ($record->price ? " - {$record->price}€" : "")
-)
+                                            ->disabled(fn (Forms\Get $get) => ! $get('company_id'))
+                                            ->getOptionLabelFromRecordUsing(
+                                                fn (Service $record) => "{$record->name}" .
+                                                ($record->duration ? " ({$record->duration} Min.)" : '') .
+                                                ($record->price ? " - {$record->price}€" : '')
+                                            )
 
                                             ->helperText('Wählen Sie alle Dienstleistungen aus, die dieser Mitarbeiter durchführen kann.')
                                             ->hint('Wichtig')
@@ -302,7 +325,7 @@ class StaffResource extends EnhancedResourceSimple
     public static function table(Table $table): Table
     {
         $table = parent::enhanceTable($table);
-        
+
         return $table
             ->modifyQueryUsing(fn ($query) => $query
                 ->with(['company', 'homeBranch'])
@@ -317,7 +340,7 @@ class StaffResource extends EnhancedResourceSimple
                     ->defaultImageUrl(url('/images/default-avatar.png'))
                     ->circular()
                     ->size(40),
-                
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Mitarbeiter')
                     ->searchable()
@@ -361,13 +384,13 @@ class StaffResource extends EnhancedResourceSimple
                     ->color('warning'),
 
                 StatusBadge::activityStatus('active'),
-                
+
                 Tables\Columns\TextColumn::make('appointments_count')
                     ->label('Termine gesamt')
                     ->badge()
                     ->color('success')
                     ->toggleable(),
-                    
+
                 Tables\Columns\TextColumn::make('upcoming_appointments_count')
                     ->label('Anstehend')
                     ->badge()
@@ -415,7 +438,7 @@ class StaffResource extends EnhancedResourceSimple
                         ->icon('heroicon-o-calendar')
                         ->color('info')
                         ->url(fn ($record) => static::getUrl('availability', ['record' => $record])),
-                        
+
                     Tables\Actions\Action::make('performance')
                         ->label('Leistung')
                         ->icon('heroicon-o-chart-bar')
@@ -425,16 +448,16 @@ class StaffResource extends EnhancedResourceSimple
                         ->modalWidth('5xl')
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Schließen'),
-                        
+
                     Tables\Actions\Action::make('schedule')
                         ->label('Zeitplan')
                         ->icon('heroicon-o-clock')
                         ->color('warning')
                         ->url(fn ($record) => "/admin/working-hours?tableFilters[staff][value]={$record->id}"),
-                        
+
                     ActionButton::sendEmail(),
                     ActionButton::call(),
-                    
+
                     Tables\Actions\DeleteAction::make()
                         ->requiresConfirmation()
                         ->modalHeading('Mitarbeiter löschen')
@@ -487,7 +510,7 @@ class StaffResource extends EnhancedResourceSimple
             'availability' => Pages\StaffAvailability::route('/{record}/availability'),
         ];
     }
-    
+
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
@@ -499,27 +522,27 @@ class StaffResource extends EnhancedResourceSimple
                                 Infolists\Components\TextEntry::make('name')
                                     ->label('Name')
                                     ->icon('heroicon-m-user'),
-                                    
+
                                 Infolists\Components\TextEntry::make('email')
                                     ->label('E-Mail')
                                     ->icon('heroicon-m-envelope')
                                     ->copyable(),
-                                    
+
                                 Infolists\Components\TextEntry::make('phone')
                                     ->label('Telefon')
                                     ->icon('heroicon-m-phone')
                                     ->copyable(),
-                                    
+
                                 Infolists\Components\TextEntry::make('company.name')
                                     ->label('Unternehmen')
                                     ->badge()
                                     ->color('primary'),
-                                    
+
                                 Infolists\Components\TextEntry::make('homeBranch.name')
                                     ->label('Stammfiliale')
                                     ->badge()
                                     ->color('success'),
-                                    
+
                                 Infolists\Components\IconEntry::make('active')
                                     ->label('Status')
                                     ->boolean()
@@ -529,7 +552,7 @@ class StaffResource extends EnhancedResourceSimple
                                     ->falseColor('danger'),
                             ]),
                     ]),
-                    
+
                 Infolists\Components\Section::make('Leistungsmetriken')
                     ->schema([
                         Infolists\Components\Grid::make(4)
@@ -539,36 +562,39 @@ class StaffResource extends EnhancedResourceSimple
                                     ->state(fn ($record) => $record->appointments()->count())
                                     ->badge()
                                     ->color('info'),
-                                    
+
                                 Infolists\Components\TextEntry::make('completed_appointments')
                                     ->label('Abgeschlossen')
                                     ->state(fn ($record) => $record->appointments()->where('status', 'completed')->count())
                                     ->badge()
                                     ->color('success'),
-                                    
+
                                 Infolists\Components\TextEntry::make('cancelled_appointments')
                                     ->label('Abgesagt')
                                     ->state(fn ($record) => $record->appointments()->where('status', 'cancelled')->count())
                                     ->badge()
                                     ->color('danger'),
-                                    
+
                                 Infolists\Components\TextEntry::make('completion_rate')
                                     ->label('Abschlussrate')
                                     ->state(function ($record) {
                                         $total = $record->appointments()->count();
-                                        if ($total === 0) return '0%';
+                                        if ($total === 0) {
+                                            return '0%';
+                                        }
                                         $completed = $record->appointments()->where('status', 'completed')->count();
+
                                         return round(($completed / $total) * 100) . '%';
                                     })
                                     ->badge()
-                                    ->color(fn ($state) => match(true) {
+                                    ->color(fn ($state) => match (true) {
                                         str_replace('%', '', $state) >= 80 => 'success',
                                         str_replace('%', '', $state) >= 60 => 'warning',
                                         default => 'danger'
                                     }),
                             ]),
                     ]),
-                    
+
                 Infolists\Components\Section::make('Zuweisung')
                     ->schema([
                         Infolists\Components\TextEntry::make('branches')
@@ -576,13 +602,13 @@ class StaffResource extends EnhancedResourceSimple
                             ->listWithLineBreaks()
                             ->bulleted()
                             ->state(fn ($record) => $record->branches->pluck('name')),
-                            
+
                         Infolists\Components\TextEntry::make('services')
                             ->label('Bietet Services an')
                             ->listWithLineBreaks()
                             ->bulleted()
-                            ->state(fn ($record) => $record->services->map(fn ($service) => 
-                                $service->name . ($service->duration ? ' (' . $service->duration . ' Min.)' : '')
+                            ->state(fn ($record) => $record->services->map(
+                                fn ($service) => $service->name . ($service->duration ? ' (' . $service->duration . ' Min.)' : '')
                             )),
                     ])
                     ->columns(2),
@@ -604,12 +630,12 @@ class StaffResource extends EnhancedResourceSimple
             'Status' => $record->active ? 'Aktiv' : 'Inaktiv',
         ];
     }
-    
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['name', 'email', 'phone', 'company.name', 'homeBranch.name'];
     }
-    
+
     protected static function getExportColumns(): array
     {
         return [

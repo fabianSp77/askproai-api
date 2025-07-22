@@ -4,98 +4,109 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\AppointmentResource\Pages;
 use App\Filament\Admin\Resources\Concerns\MultiTenantResource;
-use App\Filament\Admin\Traits\HasConsistentNavigation;
 use App\Models\Appointment;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Resources\Resource;
-use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
-use Filament\Tables\Enums\FiltersLayout;
-use Filament\Support\Enums\Alignment;
+use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Filament\Forms\Components\DatePicker;
 
 class AppointmentResource extends Resource
 {
-
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
-        
+
         // Check specific permission or if user belongs to a company
         return $user->can('view_any_appointment') || $user->company_id !== null;
     }
-    
+
     public static function canView($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('view_appointment')) {
             return true;
         }
-        
+
         // Users can view appointments from their own company
         return $user->company_id === $record->company_id;
     }
-    
+
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        
+
         // Super admin can edit all
         if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('update_appointment')) {
             return true;
         }
-        
+
         // Company users can edit appointments from their own company
         return $user->company_id === $record->company_id;
     }
-    
+
     public static function canCreate(): bool
     {
         $user = auth()->user();
-        
+
         // Super admin can create
         if ($user->hasRole('super_admin') || $user->hasRole('Super Admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('create_appointment')) {
             return true;
         }
-        
+
         // Any company user can create appointments
         return $user->company_id !== null;
     }
 
     use MultiTenantResource;
-    
+
     protected static ?string $model = Appointment::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
+
     protected static ?string $navigationLabel = 'Termine';
+
     protected static ?string $navigationGroup = 'Täglicher Betrieb';
+
     protected static ?int $navigationSort = 20;
 
     public static function form(Form $form): Form
@@ -119,14 +130,14 @@ class AppointmentResource extends Resource
                                             ->email(),
                                         Forms\Components\TextInput::make('phone'),
                                     ]),
-                                    
+
                                 Forms\Components\Select::make('staff_id')
                                     ->label('Mitarbeiter')
                                     ->relationship('staff', 'name')
                                     ->searchable()
                                     ->preload(),
                             ]),
-                            
+
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('service_id')
@@ -134,7 +145,7 @@ class AppointmentResource extends Resource
                                     ->relationship('service', 'name')
                                     ->searchable()
                                     ->preload(),
-                                    
+
                                 Forms\Components\Select::make('branch_id')
                                     ->label('Filiale')
                                     ->relationship('branch', 'name')
@@ -142,7 +153,7 @@ class AppointmentResource extends Resource
                                     ->preload(),
                             ]),
                     ]),
-                    
+
                 Forms\Components\Section::make('Zeitplanung')
                     ->description('Datum, Uhrzeit und Status')
                     ->schema([
@@ -152,11 +163,11 @@ class AppointmentResource extends Resource
                                     ->label('Beginn')
                                     ->required()
                                     ->native(false),
-                                    
+
                                 Forms\Components\DateTimePicker::make('ends_at')
                                     ->label('Ende')
                                     ->native(false),
-                                    
+
                                 Forms\Components\Select::make('status')
                                     ->label('Status')
                                     ->options([
@@ -169,7 +180,7 @@ class AppointmentResource extends Resource
                                     ->required(),
                             ]),
                     ]),
-                    
+
                 Forms\Components\Section::make('Notizen')
                     ->schema([
                         Forms\Components\Textarea::make('notes')
@@ -195,7 +206,7 @@ class AppointmentResource extends Resource
                     ->copyable()
                     ->copyMessage('ID kopiert')
                     ->copyMessageDuration(1500),
-                    
+
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Kunde')
                     ->sortable()
@@ -205,7 +216,7 @@ class AppointmentResource extends Resource
                     ->description(fn ($record) => $record->customer?->phone)
                     ->wrap()
                     ->getStateUsing(fn ($record) => $record?->customer?->name ?? '-'),
-                    
+
                 Tables\Columns\TextColumn::make('service.name')
                     ->label('Leistung')
                     ->searchable()
@@ -214,7 +225,7 @@ class AppointmentResource extends Resource
                     ->default('—')
                     ->size('sm')
                     ->getStateUsing(fn ($record) => $record?->service?->name ?? '-'),
-                    
+
                 Tables\Columns\TextColumn::make('staff.name')
                     ->label('Mitarbeiter')
                     ->sortable()
@@ -224,7 +235,7 @@ class AppointmentResource extends Resource
                     ->iconPosition('before')
                     ->size('sm')
                     ->getStateUsing(fn ($record) => $record?->staff?->name ?? '-'),
-                    
+
                 Tables\Columns\TextColumn::make('starts_at')
                     ->label('Termin')
                     ->dateTime('d.m.Y H:i')
@@ -232,26 +243,35 @@ class AppointmentResource extends Resource
                     ->size('sm')
                     ->weight('medium')
                     ->description(function ($record) {
-                        if (!$record->starts_at) return null;
+                        if (! $record->starts_at) {
+                            return null;
+                        }
                         $startsAt = Carbon::parse($record->starts_at);
-                        if ($startsAt->isToday()) return 'Heute';
-                        if ($startsAt->isTomorrow()) return 'Morgen';
-                        if ($startsAt->isPast()) return 'Vergangen';
+                        if ($startsAt->isToday()) {
+                            return 'Heute';
+                        }
+                        if ($startsAt->isTomorrow()) {
+                            return 'Morgen';
+                        }
+                        if ($startsAt->isPast()) {
+                            return 'Vergangen';
+                        }
+
                         return $startsAt->diffForHumans();
                     })
-                    ->icon(fn ($record) => match(true) {
-                        !$record->starts_at => null,
+                    ->icon(fn ($record) => match (true) {
+                        ! $record->starts_at => null,
                         Carbon::parse($record->starts_at)->isToday() => 'heroicon-m-calendar',
                         Carbon::parse($record->starts_at)->isPast() => 'heroicon-m-clock',
                         default => 'heroicon-m-calendar-days'
                     })
-                    ->iconColor(fn ($record) => match(true) {
-                        !$record->starts_at => 'gray',
+                    ->iconColor(fn ($record) => match (true) {
+                        ! $record->starts_at => 'gray',
                         Carbon::parse($record->starts_at)->isToday() => 'primary',
                         Carbon::parse($record->starts_at)->isPast() => 'warning',
                         default => 'success'
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -271,10 +291,10 @@ class AppointmentResource extends Resource
                         'no_show' => 'Nicht erschienen',
                         default => $state,
                     }),
-                    
+
                 static::getCompanyColumn(),
                 static::getBranchColumn(),
-                    
+
                 Tables\Columns\TextColumn::make('duration')
                     ->label('Dauer')
                     ->getStateUsing(fn ($record) => $record->service?->duration ? $record->service->duration . ' Min.' : '—')
@@ -282,7 +302,7 @@ class AppointmentResource extends Resource
                     ->color('gray')
                     ->size('sm')
                     ->toggleable(),
-                    
+
                 Tables\Columns\TextColumn::make('price')
                     ->label('Preis')
                     ->getStateUsing(fn ($record) => $record->service?->price ? number_format($record->service->price / 100, 2, ',', '.') . ' €' : '—')
@@ -290,15 +310,18 @@ class AppointmentResource extends Resource
                     ->color('success')
                     ->size('sm')
                     ->toggleable(),
-                    
+
                 Tables\Columns\TextColumn::make('payment_status')
                     ->label('Bezahlung')
                     ->getStateUsing(function ($record) {
                         // This would check the payment relation
                         $hasPayment = false; // $record->payments()->exists();
                         $isPaid = false; // $record->payments()->where('status', 'completed')->exists();
-                        
-                        if (!$hasPayment) return 'Offen';
+
+                        if (! $hasPayment) {
+                            return 'Offen';
+                        }
+
                         return $isPaid ? 'Bezahlt' : 'Ausstehend';
                     })
                     ->badge()
@@ -314,16 +337,22 @@ class AppointmentResource extends Resource
                         'Offen' => 'heroicon-m-minus-circle',
                         default => 'heroicon-m-question-mark-circle',
                     }),
-                    
+
                 Tables\Columns\IconColumn::make('reminder_status')
                     ->label('Erinnerungen')
                     ->getStateUsing(function ($record) {
                         $icons = [];
-                        if ($record->reminder_24h_sent_at) $icons[] = '24h';
-                        if ($record->reminder_2h_sent_at) $icons[] = '2h';
-                        if ($record->reminder_30m_sent_at) $icons[] = '30m';
-                        
-                        return !empty($icons) ? implode(', ', $icons) : null;
+                        if ($record->reminder_24h_sent_at) {
+                            $icons[] = '24h';
+                        }
+                        if ($record->reminder_2h_sent_at) {
+                            $icons[] = '2h';
+                        }
+                        if ($record->reminder_30m_sent_at) {
+                            $icons[] = '30m';
+                        }
+
+                        return ! empty($icons) ? implode(', ', $icons) : null;
                     })
                     ->icon('heroicon-m-bell')
                     ->color('info')
@@ -338,14 +367,14 @@ class AppointmentResource extends Resource
                         if ($record->reminder_30m_sent_at) {
                             $tooltips[] = '30m: ' . $record->reminder_30m_sent_at->format('d.m.Y H:i');
                         }
-                        
-                        return !empty($tooltips) ? implode("\n", $tooltips) : 'Keine Erinnerungen gesendet';
+
+                        return ! empty($tooltips) ? implode("\n", $tooltips) : 'Keine Erinnerungen gesendet';
                     })
                     ->toggleable(),
-                    
+
                 Tables\Columns\TextColumn::make('customer.no_show_count')
                     ->label('No-Shows')
-                    ->getStateUsing(fn ($record) => $record->customer ? 
+                    ->getStateUsing(fn ($record) => $record->customer ?
                         $record->customer->appointments()->where('status', 'no_show')->count() : 0)
                     ->badge()
                     ->color(fn ($state): string => match (true) {
@@ -364,7 +393,7 @@ class AppointmentResource extends Resource
                         default => 'Kunde erscheint zuverlässig',
                     })
                     ->toggleable(isToggledHiddenByDefault: true),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt am')
                     ->dateTime('d.m.Y H:i')
@@ -374,7 +403,7 @@ class AppointmentResource extends Resource
                     ->iconColor('gray')
                     ->tooltip('Wann wurde der Termin vereinbart')
                     ->toggleable(isToggledHiddenByDefault: false),
-                    
+
                 Tables\Columns\TextColumn::make('source')
                     ->label('Quelle')
                     ->badge()
@@ -415,35 +444,35 @@ class AppointmentResource extends Resource
                             'no_show' => 'Nicht erschienen',
                         ])
                         ->multiple(),
-                        
+
                     Tables\Filters\SelectFilter::make('staff_id')
                         ->label('Mitarbeiter')
                         ->relationship('staff', 'name')
                         ->searchable()
                         ->preload(),
-                        
+
                     Tables\Filters\SelectFilter::make('service_id')
                         ->label('Leistung')
                         ->relationship('service', 'name')
                         ->searchable()
                         ->preload(),
-                        
+
                     Tables\Filters\TernaryFilter::make('calcom_sync')
                         ->label('Cal.com Sync')
                         ->placeholder('Alle')
                         ->trueLabel('Mit Cal.com')
                         ->falseLabel('Ohne Cal.com')
                         ->queries(
-                            true: fn (Builder $query) => $query->where(function($q) {
+                            true: fn (Builder $query) => $query->where(function ($q) {
                                 $q->whereNotNull('calcom_booking_id')
-                                  ->orWhereNotNull('calcom_v2_booking_id');
+                                    ->orWhereNotNull('calcom_v2_booking_id');
                             }),
-                            false: fn (Builder $query) => $query->where(function($q) {
+                            false: fn (Builder $query) => $query->where(function ($q) {
                                 $q->whereNull('calcom_booking_id')
-                                  ->whereNull('calcom_v2_booking_id');
+                                    ->whereNull('calcom_v2_booking_id');
                             }),
                         ),
-                        
+
                     Tables\Filters\TernaryFilter::make('has_call')
                         ->label('Mit Anruf')
                         ->placeholder('Alle')
@@ -453,69 +482,70 @@ class AppointmentResource extends Resource
                             true: fn (Builder $query) => $query->whereNotNull('call_id'),
                             false: fn (Builder $query) => $query->whereNull('call_id'),
                         ),
-                        
+
                     Tables\Filters\Filter::make('today')
                         ->label('Heute')
                         ->query(fn (Builder $query): Builder => $query->whereDate('starts_at', today()))
                         ->toggle(),
-                        
+
                     Tables\Filters\Filter::make('tomorrow')
                         ->label('Morgen')
                         ->query(fn (Builder $query): Builder => $query->whereDate('starts_at', today()->addDay()))
                         ->toggle(),
-                        
+
                     Tables\Filters\Filter::make('this_week')
                         ->label('Diese Woche')
                         ->query(fn (Builder $query): Builder => $query->whereBetween('starts_at', [
                             now()->startOfWeek(),
-                            now()->endOfWeek()
+                            now()->endOfWeek(),
                         ]))
                         ->toggle(),
-                        
+
                     Tables\Filters\Filter::make('past_due')
                         ->label('Überfällig')
                         ->query(fn (Builder $query): Builder => $query
                             ->where('starts_at', '<', now())
                             ->whereIn('status', ['pending', 'confirmed']))
                         ->toggle(),
-                        
+
                     Tables\Filters\Filter::make('created_today')
                         ->label('Heute erstellt')
                         ->query(fn (Builder $query): Builder => $query->whereDate('created_at', today()))
                         ->toggle(),
-                    
+
                     Tables\Filters\Filter::make('date_range')
-                    ->form([
-                        DatePicker::make('from')
-                            ->label('Von')
-                            ->native(false)
-                            ->displayFormat('d.m.Y'),
-                        DatePicker::make('until')
-                            ->label('Bis')
-                            ->native(false)
-                            ->displayFormat('d.m.Y'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('starts_at', '>=', $date),
-                            )
-                            ->when(
-                                $data['until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('starts_at', '<=', $date),
-                            );
-                    })
-                    ->indicateUsing(function (array $data): array {
-                        $indicators = [];
-                        if ($data['from'] ?? null) {
-                            $indicators[] = 'Von: ' . Carbon::parse($data['from'])->format('d.m.Y');
-                        }
-                        if ($data['until'] ?? null) {
-                            $indicators[] = 'Bis: ' . Carbon::parse($data['until'])->format('d.m.Y');
-                        }
-                        return $indicators;
-                    }),
+                        ->form([
+                            DatePicker::make('from')
+                                ->label('Von')
+                                ->native(false)
+                                ->displayFormat('d.m.Y'),
+                            DatePicker::make('until')
+                                ->label('Bis')
+                                ->native(false)
+                                ->displayFormat('d.m.Y'),
+                        ])
+                        ->query(function (Builder $query, array $data): Builder {
+                            return $query
+                                ->when(
+                                    $data['from'],
+                                    fn (Builder $query, $date): Builder => $query->whereDate('starts_at', '>=', $date),
+                                )
+                                ->when(
+                                    $data['until'],
+                                    fn (Builder $query, $date): Builder => $query->whereDate('starts_at', '<=', $date),
+                                );
+                        })
+                        ->indicateUsing(function (array $data): array {
+                            $indicators = [];
+                            if ($data['from'] ?? null) {
+                                $indicators[] = 'Von: ' . Carbon::parse($data['from'])->format('d.m.Y');
+                            }
+                            if ($data['until'] ?? null) {
+                                $indicators[] = 'Bis: ' . Carbon::parse($data['until'])->format('d.m.Y');
+                            }
+
+                            return $indicators;
+                        }),
                 ]
             ), layout: FiltersLayout::AboveContentCollapsible)
             ->filtersFormColumns([
@@ -543,10 +573,10 @@ class AppointmentResource extends Resource
                         ->action(function ($record) {
                             $record->update([
                                 'checked_in_at' => now(),
-                                'notes' => ($record->notes ? $record->notes . "\n\n" : '') . 
-                                          "Check-in: " . now()->format('d.m.Y H:i') . " Uhr"
+                                'notes' => ($record->notes ? $record->notes . "\n\n" : '') .
+                                          'Check-in: ' . now()->format('d.m.Y H:i') . ' Uhr',
                             ]);
-                            
+
                             \Filament\Notifications\Notification::make()
                                 ->title('Check-in erfolgreich')
                                 ->body('Der Kunde wurde eingecheckt.')
@@ -558,14 +588,14 @@ class AppointmentResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->visible(fn ($record) => !in_array($record->status, ['completed', 'cancelled']))
+                        ->visible(fn ($record) => ! in_array($record->status, ['completed', 'cancelled']))
                         ->action(fn ($record) => $record->update(['status' => 'completed'])),
                     Action::make('cancel')
                         ->label('Absagen')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
                         ->requiresConfirmation()
-                        ->visible(fn ($record) => !in_array($record->status, ['completed', 'cancelled']))
+                        ->visible(fn ($record) => ! in_array($record->status, ['completed', 'cancelled']))
                         ->action(fn ($record) => $record->update(['status' => 'cancelled'])),
                     Action::make('noShow')
                         ->label('Nicht erschienen')
@@ -577,22 +607,22 @@ class AppointmentResource extends Resource
                         ->visible(fn ($record) => $record->status === 'confirmed' && $record->starts_at->isPast())
                         ->action(function ($record) {
                             $record->update(['status' => 'no_show']);
-                            
+
                             // Track no-shows for customer
                             if ($record->customer) {
                                 $noShowCount = $record->customer->appointments()
                                     ->where('status', 'no_show')
                                     ->count();
-                                
+
                                 if ($noShowCount >= 3) {
                                     $tags = $record->customer->tags ?? [];
-                                    if (!in_array('Häufige No-Shows', $tags)) {
+                                    if (! in_array('Häufige No-Shows', $tags)) {
                                         $tags[] = 'Häufige No-Shows';
                                         $record->customer->update(['tags' => $tags]);
                                     }
                                 }
                             }
-                            
+
                             \Filament\Notifications\Notification::make()
                                 ->title('Status aktualisiert')
                                 ->body('Der Termin wurde als "Nicht erschienen" markiert.')
@@ -657,18 +687,18 @@ class AppointmentResource extends Resource
                         ->action(function ($record, array $data) {
                             $oldStart = $record->starts_at;
                             $duration = $record->starts_at->diffInMinutes($record->ends_at);
-                            
+
                             $record->update([
                                 'starts_at' => $data['new_start'],
-                                'ends_at' => \Carbon\Carbon::parse($data['new_start'])->addMinutes($duration),
-                                'notes' => ($record->notes ? $record->notes . "\n\n" : '') . 
+                                'ends_at' => Carbon::parse($data['new_start'])->addMinutes($duration),
+                                'notes' => ($record->notes ? $record->notes . "\n\n" : '') .
                                           "Verschoben von {$oldStart->format('d.m.Y H:i')} auf {$data['new_start']->format('d.m.Y H:i')}. " .
                                           ($data['reason'] ? "Grund: {$data['reason']}" : ''),
                             ]);
-                            
+
                             \Filament\Notifications\Notification::make()
                                 ->title('Termin verschoben')
-                                ->body("Der Termin wurde erfolgreich verschoben.")
+                                ->body('Der Termin wurde erfolgreich verschoben.')
                                 ->success()
                                 ->send();
                         }),
@@ -724,7 +754,7 @@ class AppointmentResource extends Resource
                                     $sent++;
                                 }
                             }
-                            
+
                             \Filament\Notifications\Notification::make()
                                 ->title('Erinnerungen versendet')
                                 ->body("{$sent} Erinnerungen wurden erfolgreich versendet.")
@@ -772,8 +802,8 @@ class AppointmentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //RelationManagers\CommunicationLogsRelationManager::class,
-            //RelationManagers\PaymentHistoryRelationManager::class,
+            // RelationManagers\CommunicationLogsRelationManager::class,
+            // RelationManagers\PaymentHistoryRelationManager::class,
         ];
     }
 
@@ -786,17 +816,17 @@ class AppointmentResource extends Resource
             'edit' => Pages\EditAppointment::route('/{record}/edit'),
         ];
     }
-    
+
     public static function getGloballySearchableAttributes(): array
     {
         return ['id', 'customer.name', 'staff.name', 'service.name', 'notes'];
     }
-    
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::whereDate('starts_at', today())->count();
     }
-    
+
     public static function getNavigationBadgeColor(): ?string
     {
         return static::getModel()::whereDate('starts_at', today())->count() > 0 ? 'primary' : 'gray';

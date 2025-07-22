@@ -2,93 +2,116 @@
 
 namespace App\Filament\Admin\Resources;
 
-use Filament\Resources\Resource;
-use Filament\Forms;
-use Filament\Tables;
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-use App\Models\Service;
 use App\Filament\Admin\Traits\HasConsistentNavigation;
+use App\Models\Service;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 
 class ServiceResource extends Resource
 {
     protected static ?string $navigationGroup = 'Unternehmensstruktur';
+
     protected static ?int $navigationSort = 40;
 
     public static function canViewAny(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission or if user belongs to a company
         return $user->can('view_any_service') || $user->company_id !== null;
     }
-    
+
     public static function canView($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can view all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('view_service')) {
             return true;
         }
-        
+
         // Users can view services from their own company
         return $user->company_id === $record->company_id;
     }
-    
+
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can edit all
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('update_service')) {
             return true;
         }
-        
+
         // Company admins and branch managers can edit services
-        return $user->company_id === $record->company_id && 
+        return $user->company_id === $record->company_id &&
                ($user->hasRole('company_admin') || $user->hasRole('branch_manager'));
     }
-    
+
     public static function canCreate(): bool
     {
         $user = auth()->user();
-        
+
+        // No user logged in
+        if (! $user) {
+            return false;
+        }
+
         // Super admin can create
         if ($user->hasRole('super_admin')) {
             return true;
         }
-        
+
         // Check specific permission
         if ($user->can('create_service')) {
             return true;
         }
-        
+
         // Company admins and branch managers can create services
-        return $user->company_id !== null && 
+        return $user->company_id !== null &&
                ($user->hasRole('company_admin') || $user->hasRole('branch_manager'));
     }
 
     use HasConsistentNavigation;
-    
+
     protected static ?string $model = Service::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
+
     protected static ?string $navigationLabel = 'Leistungen';
 
     public static function form(Form $form): Form
@@ -98,7 +121,7 @@ class ServiceResource extends Resource
         $apiKey = env('CALCOM_API_KEY');
         $eventTypeOptions = [];
         $companyEventTypeIds = [];
-        if (!empty($companies)) {
+        if (! empty($companies)) {
             $firstCompany = \App\Models\Company::first();
             if ($firstCompany && $firstCompany->calcom_api_key) {
                 $apiKey = $firstCompany->calcom_api_key;
@@ -144,10 +167,10 @@ class ServiceResource extends Resource
                 Tables\Columns\TextColumn::make('calcom_event_type_id')
                     ->label('EventType (Override)')
                     ->default('Von Unternehmen')
-                    ->getStateUsing(fn($record) => $record->calcom_event_type_id ?: 'Von Unternehmen'),
+                    ->getStateUsing(fn ($record) => $record->calcom_event_type_id ?: 'Von Unternehmen'),
                 Tables\Columns\TextColumn::make('company.calcom_event_type_id')
                     ->label('Company-Default EventType')
-                    ->sortable()
+                    ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('company_id')
@@ -170,9 +193,9 @@ class ServiceResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => \App\Filament\Admin\Resources\ServiceResource\Pages\ListServices::route('/'),
-            'create' => \App\Filament\Admin\Resources\ServiceResource\Pages\CreateService::route('/create'),
-            'edit' => \App\Filament\Admin\Resources\ServiceResource\Pages\EditService::route('/{record}/edit'),
+            'index' => ServiceResource\Pages\ListServices::route('/'),
+            'create' => ServiceResource\Pages\CreateService::route('/create'),
+            'edit' => ServiceResource\Pages\EditService::route('/{record}/edit'),
         ];
     }
 }

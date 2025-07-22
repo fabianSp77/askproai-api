@@ -8,35 +8,40 @@ use Illuminate\Support\Facades\Process;
 class DocumentationHub extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
+
     protected static ?string $navigationLabel = 'Dokumentation';
+
     protected static ?string $slug = 'documentation';
+
     protected static string $view = 'filament.admin.pages.documentation-hub';
-    
+
     public static function getNavigationGroup(): ?string
     {
         return 'System & Verwaltung';
     }
-    
+
     public static function getNavigationSort(): ?int
     {
         return 99;
     }
-    
+
     public static function canAccess(): bool
     {
         // Check for both variations of role names (with spaces and underscores)
         return auth()->user()?->hasAnyRole([
-            'super_admin', 
+            'super_admin',
             'Super Admin',
             'company_admin',
-            'Company Admin'
-        ]);
+            'Company Admin',
+        ]) ?? false;
     }
-    
+
     public $documentationLinks = [];
+
     public $processLinks = [];
+
     public $quickCommands = [];
-    
+
     public function mount(): void
     {
         // Hauptdokumentation
@@ -66,7 +71,7 @@ class DocumentationHub extends Page
                 'internal' => true,
             ],
         ];
-        
+
         // Prozessdokumentation
         $this->processLinks = [
             [
@@ -112,7 +117,7 @@ class DocumentationHub extends Page
                 'internal' => true,
             ],
         ];
-        
+
         // Quick Commands
         $this->quickCommands = [
             [
@@ -137,11 +142,11 @@ class DocumentationHub extends Page
             ],
         ];
     }
-    
+
     public function runCommand(string $command): void
     {
         $result = Process::run($command);
-        
+
         if ($result->successful()) {
             $this->notify('success', 'Befehl erfolgreich ausgeführt');
         } else {

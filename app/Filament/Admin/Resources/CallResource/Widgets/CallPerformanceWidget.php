@@ -20,7 +20,7 @@ class CallPerformanceWidget extends BaseWidget
             Log::info('CallPerformanceWidget: Starting data collection');
             
             // Cache key mit aktuellem Tag für tägliche Invalidierung
-            $cacheKey = 'call_performance_widget_' . auth()->user()->company_id . '_' . today()->format('Y-m-d');
+            $cacheKey = 'call_performance_widget_' . (auth()->user()?->company_id ?? 'all') . '_' . today()->format('Y-m-d');
             
             return Cache::remember($cacheKey, 300, function () {
                 $stats = [];

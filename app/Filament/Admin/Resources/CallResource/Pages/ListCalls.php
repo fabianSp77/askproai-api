@@ -19,10 +19,66 @@ class ListCalls extends ListRecords
     
     protected function getViewData(): array
     {
-        return [
-            ...parent::getViewData(),
-            'contentContainerClasses' => 'fi-resource-calls',
-        ];
+        $data = parent::getViewData();
+        $user = auth()->user();
+        $company = $user?->company;
+        
+        // Initialize default values
+        $data['company'] = $company;
+        $data['todayCount'] = 0;
+        $data['weekCount'] = 0;
+        $data['avgDuration'] = 0;
+        $data['avgDurationFormatted'] = '0:00';
+        $data['conversionRate'] = 0;
+        $data['conversionData'] = (object)['total' => 0, 'with_appointments' => 0];
+        
+        if ($company && $user) {
+            // Cache widget data for 60 seconds to avoid multiple queries
+            $widgetData = \Illuminate\Support\Facades\Cache::remember('call_widget_data_' . $company->id, 60, function() use ($company) {
+                $berlinTz = 'Europe/Berlin';
+                
+                return [
+                    'todayCount' => \App\Models\Call::where('company_id', $company->id)
+                        ->whereDate('start_timestamp', today($berlinTz))
+                        ->count(),
+                    
+                    'weekCount' => \App\Models\Call::where('company_id', $company->id)
+                        ->whereBetween('start_timestamp', [
+                            now($berlinTz)->startOfWeek(),
+                            now($berlinTz)->endOfWeek()
+                        ])
+                        ->count(),
+                    
+                    'avgDuration' => \App\Models\Call::where('company_id', $company->id)
+                        ->whereNotNull('duration_sec')
+                        ->where('duration_sec', '>', 0)
+                        ->avg('duration_sec'),
+                    
+                    'conversionData' => \Illuminate\Support\Facades\DB::table('calls')
+                        ->where('company_id', $company->id)
+                        ->where('start_timestamp', '>=', now($berlinTz)->startOfMonth())
+                        ->selectRaw('COUNT(*) as total, COUNT(appointment_id) as with_appointments')
+                        ->first(),
+                ];
+            });
+            
+            // Format average duration
+            $widgetData['avgDurationFormatted'] = $widgetData['avgDuration'] 
+                ? gmdate('i:s', $widgetData['avgDuration']) 
+                : '0:00';
+            
+            // Calculate conversion rate
+            $widgetData['conversionRate'] = $widgetData['conversionData']->total > 0 
+                ? round(($widgetData['conversionData']->with_appointments / $widgetData['conversionData']->total) * 100) 
+                : 0;
+            
+            $data = array_merge($data, $widgetData);
+            $data['conversionData'] = $widgetData['conversionData'];
+        }
+        
+        $data['contentContainerClasses'] = 'fi-resource-calls';
+        
+        return $data;
     }
 
     protected function getHeaderActions(): array
@@ -40,7 +96,18 @@ class ListCalls extends ListRecords
                     'class' => 'fi-btn-premium',
                 ])
                 ->action(function () {
-                    $company = auth()->user()->company;
+                    $user = auth()->user();
+                    
+                    if (!$user) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Fehler')
+                            ->body('Nicht angemeldet.')
+                            ->danger()
+                            ->send();
+                        return;
+                    }
+                    
+                    $company = $user->company;
                     
                     if (!$company) {
                         \Filament\Notifications\Notification::make()
@@ -115,9 +182,15 @@ class ListCalls extends ListRecords
     
     public function getTabs(): array
     {
+        // Check if user is authenticated
+        $user = auth()->user();
+        if (!$user || !$user->company_id) {
+            return [];
+        }
+        
         // Cache tab counts for 60 seconds to avoid multiple queries
-        $counts = Cache::remember('call_tab_counts_' . auth()->user()->company_id, 60, function() {
-            $companyId = auth()->user()->company_id;
+        $counts = Cache::remember('call_tab_counts_' . $user->company_id, 60, function() use ($user) {
+            $companyId = $user->company_id;
             
             return DB::table('calls')
                 ->where('company_id', $companyId)
