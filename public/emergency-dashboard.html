@@ -1,208 +1,351 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emergency Dashboard - AskProAI</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AskProAI Business Portal - Emergency Dashboard</title>
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
-            line-height: 1.6;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            color: #333;
         }
-        
-        .header {
-            background-color: #1f2937;
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 250px;
+            background: #001529;
+            padding: 20px;
+        }
+        .logo {
             color: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            text-align: center;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
+        .menu {
+            list-style: none;
         }
-        
-        .alert {
-            background-color: #fef3c7;
-            border: 1px solid #f59e0b;
-            color: #92400e;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 2rem;
+        .menu li {
+            margin-bottom: 5px;
         }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-        
-        .card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .card h2 {
-            color: #3b82f6;
-            margin-bottom: 1rem;
-            font-size: 1.25rem;
-        }
-        
-        .button {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            background-color: #3b82f6;
-            color: white;
+        .menu a {
+            color: rgba(255,255,255,0.65);
             text-decoration: none;
-            border-radius: 0.375rem;
-            font-weight: 500;
-            transition: background-color 0.2s;
-            margin: 0.25rem;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 6px;
+            transition: all 0.3s;
         }
-        
-        .button:hover {
-            background-color: #2563eb;
+        .menu a:hover, .menu a.active {
+            background: #1890ff;
+            color: white;
         }
-        
-        .button.secondary {
-            background-color: #6b7280;
+        .content {
+            margin-left: 250px;
+            min-height: 100vh;
         }
-        
-        .button.secondary:hover {
-            background-color: #4b5563;
-        }
-        
-        .status {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #f9fafb;
-            border-radius: 0.375rem;
-        }
-        
-        .status-item {
+        .header {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
             display: flex;
             justify-content: space-between;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid #e5e7eb;
+            align-items: center;
         }
-        
-        .status-item:last-child {
-            border-bottom: none;
+        .main {
+            padding: 24px;
         }
-        
-        .check-mark {
-            color: #10b981;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
-        
-        .x-mark {
-            color: #ef4444;
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .stat-card h3 {
+            font-size: 14px;
+            color: rgba(0,0,0,0.45);
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 30px;
+            font-weight: 600;
+            color: rgba(0,0,0,0.85);
+        }
+        .stat-card .trend {
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .trend.up { color: #52c41a; }
+        .trend.down { color: #ff4d4f; }
+        .recent-section {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+        .recent-section h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: rgba(0,0,0,0.85);
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th {
+            text-align: left;
+            padding: 12px;
+            font-weight: 500;
+            color: rgba(0,0,0,0.85);
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .table tr:hover {
+            background: #fafafa;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge.success { background: #f6ffed; color: #52c41a; }
+        .badge.processing { background: #e6f7ff; color: #1890ff; }
+        .badge.error { background: #fff2e8; color: #fa8c16; }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            border-color: #40a9ff;
+            color: #40a9ff;
+        }
+        .btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+        .warning-banner {
+            background: #fff7e6;
+            border: 1px solid #ffd591;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .content { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🚨 Emergency Dashboard - AskProAI</h1>
+    <div class="sidebar">
+        <div class="logo">AskProAI</div>
+        <ul class="menu">
+            <li><a href="#" class="active" onclick="showPage('dashboard')">📊 Dashboard</a></li>
+            <li><a href="#" onclick="showPage('calls')">📞 Anrufe</a></li>
+            <li><a href="#" onclick="showPage('appointments')">📅 Termine</a></li>
+            <li><a href="#" onclick="showPage('customers')">👥 Kunden</a></li>
+            <li><a href="#" onclick="showPage('analytics')">📈 Analytics</a></li>
+            <li><a href="#" onclick="showPage('billing')">💳 Abrechnung</a></li>
+            <li><a href="#" onclick="showPage('team')">👤 Team</a></li>
+            <li><a href="#" onclick="showPage('settings')">⚙️ Einstellungen</a></li>
+        </ul>
     </div>
     
-    <div class="container">
-        <div class="alert">
-            <strong>⚠️ Technisches Problem erkannt</strong><br>
-            Das normale Admin-Interface hat Darstellungsprobleme. Dies ist ein statisches HTML-Dashboard als Notlösung.
-        </div>
-        
-        <div class="grid">
-            <div class="card">
-                <h2>📊 Verwaltung</h2>
-                <a href="/admin/companies" class="button">Firmen</a>
-                <a href="/admin/branches" class="button">Filialen</a>
-                <a href="/admin/users" class="button">Benutzer</a>
-                <a href="/admin/portal-users" class="button">Portal Benutzer</a>
-            </div>
-            
-            <div class="card">
-                <h2>📞 Kommunikation</h2>
-                <a href="/admin/calls" class="button">Anrufe</a>
-                <a href="/admin/appointments" class="button">Termine</a>
-                <a href="/admin/customers" class="button">Kunden</a>
-                <a href="/admin/phone-numbers" class="button">Telefonnummern</a>
-            </div>
-            
-            <div class="card">
-                <h2>⚙️ System</h2>
-                <a href="/horizon" class="button secondary">Laravel Horizon</a>
-                <a href="/admin/settings" class="button secondary">Einstellungen</a>
-                <a href="/admin/logs" class="button secondary">System Logs</a>
-                <a href="/telescope" class="button secondary">Laravel Telescope</a>
-            </div>
-            
-            <div class="card">
-                <h2>🔧 Direktzugriff</h2>
-                <a href="/admin?disable_middleware=1" class="button secondary">Admin ohne Middleware</a>
-                <a href="/admin-simple.php" class="button secondary">Simple Admin PHP</a>
-                <a href="/login-standalone.php" class="button secondary">Standalone Login</a>
-                <a href="/test-basic.php" class="button secondary">PHP Test</a>
+    <div class="content">
+        <div class="header">
+            <h1>Dashboard</h1>
+            <div class="user-menu">
+                <button class="btn" onclick="goToReact()">🚀 React Version</button>
+                <div class="avatar">D</div>
+                <span>demo@askproai.de</span>
             </div>
         </div>
         
-        <div class="card" style="margin-top: 2rem;">
-            <h2>System Status</h2>
-            <div class="status">
-                <div class="status-item">
-                    <span>PHP Funktionsfähig</span>
-                    <span class="check-mark">✓</span>
+        <div class="main">
+            <div class="warning-banner">
+                ⚠️ <strong>Emergency Dashboard:</strong> Dies ist eine statische HTML-Version. Die React App hatte Auth-Probleme.
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>📞 Anrufe heute</h3>
+                    <div class="value">24</div>
+                    <div class="trend up">↑ 12% vs. gestern</div>
                 </div>
-                <div class="status-item">
-                    <span>Statisches HTML</span>
-                    <span class="check-mark">✓</span>
+                <div class="stat-card">
+                    <h3>📅 Termine diese Woche</h3>
+                    <div class="value">156</div>
+                    <div class="trend up">↑ 8% vs. letzte Woche</div>
                 </div>
-                <div class="status-item">
-                    <span>JavaScript erforderlich</span>
-                    <span class="x-mark">✗</span>
+                <div class="stat-card">
+                    <h3>👥 Neue Kunden</h3>
+                    <div class="value">18</div>
+                    <div class="trend down">↓ 3% vs. letzten Monat</div>
                 </div>
-                <div class="status-item">
-                    <span>Keine externen Dependencies</span>
-                    <span class="check-mark">✓</span>
+                <div class="stat-card">
+                    <h3>💰 Guthaben</h3>
+                    <div class="value">€547.30</div>
+                    <div class="trend">Genug für ~2000 Anrufe</div>
                 </div>
             </div>
-        </div>
-        
-        <div class="card" style="margin-top: 2rem;">
-            <h2>Fehlerbehebung</h2>
-            <ol>
-                <li>Browser-Cache leeren: Strg+Shift+F5 (Windows) oder Cmd+Shift+R (Mac)</li>
-                <li>Alle Cookies für api.askproai.de löschen</li>
-                <li>Browser neu starten</li>
-                <li>Anderen Browser verwenden (Chrome, Firefox, Safari)</li>
-                <li>Browser-Erweiterungen deaktivieren (besonders Ad-Blocker)</li>
-            </ol>
+            
+            <div class="recent-section">
+                <h2>Letzte Anrufe</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Zeit</th>
+                            <th>Nummer</th>
+                            <th>Dauer</th>
+                            <th>Status</th>
+                            <th>Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>14:23</td>
+                            <td>+49 151 12345678</td>
+                            <td>3:45</td>
+                            <td><span class="badge success">Termin gebucht</span></td>
+                            <td><button class="btn">Details</button></td>
+                        </tr>
+                        <tr>
+                            <td>13:56</td>
+                            <td>+49 170 98765432</td>
+                            <td>2:12</td>
+                            <td><span class="badge processing">Info gegeben</span></td>
+                            <td><button class="btn">Details</button></td>
+                        </tr>
+                        <tr>
+                            <td>12:34</td>
+                            <td>+49 160 11223344</td>
+                            <td>5:01</td>
+                            <td><span class="badge success">Termin gebucht</span></td>
+                            <td><button class="btn">Details</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="recent-section">
+                <h2>Kommende Termine</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Zeit</th>
+                            <th>Kunde</th>
+                            <th>Service</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Heute</td>
+                            <td>15:00</td>
+                            <td>Max Mustermann</td>
+                            <td>Beratung</td>
+                            <td><span class="badge processing">Bestätigt</span></td>
+                        </tr>
+                        <tr>
+                            <td>Heute</td>
+                            <td>16:30</td>
+                            <td>Erika Musterfrau</td>
+                            <td>Erstgespräch</td>
+                            <td><span class="badge processing">Bestätigt</span></td>
+                        </tr>
+                        <tr>
+                            <td>Morgen</td>
+                            <td>09:00</td>
+                            <td>Hans Schmidt</td>
+                            <td>Follow-up</td>
+                            <td><span class="badge error">Unbestätigt</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     
     <script>
-        // Minimaler JavaScript Test
-        console.log('Emergency Dashboard loaded successfully');
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM ready');
-            // Füge Zeitstempel hinzu
-            const timeElement = document.createElement('div');
-            timeElement.style.padding = '1rem';
-            timeElement.style.textAlign = 'center';
-            timeElement.style.color = '#6b7280';
-            timeElement.textContent = 'Geladen um: ' + new Date().toLocaleString('de-DE');
-            document.body.appendChild(timeElement);
-        });
+        // Emergency dashboard functions
+        function showPage(page) {
+            alert(`Navigation zu: ${page}\n\nDiese Funktion ist im Emergency Dashboard nicht verfügbar.`);
+            
+            // Update active menu
+            document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        
+        function goToReact() {
+            // Set demo mode before going to React
+            localStorage.setItem('demo_mode', 'true');
+            window.__DEMO_MODE__ = true;
+            localStorage.setItem('portal_user', JSON.stringify({
+                id: 1,
+                name: 'Demo User',
+                email: 'demo@askproai.de',
+                company_id: 1
+            }));
+            
+            if (confirm('Möchten Sie die React Version versuchen?\n\nHinweis: Falls es nicht funktioniert, kommen Sie mit dem Browser-Zurück-Button hierher zurück.')) {
+                window.location.href = '/business';
+            }
+        }
+        
+        console.log('🚨 Emergency Dashboard aktiv!');
+        console.log('Dies ist eine statische HTML-Version ohne Backend-Verbindung.');
     </script>
 </body>
 </html>

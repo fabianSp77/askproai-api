@@ -26,10 +26,16 @@
 @import './retell-ultimate-modern.css';
 
 /* Layout fixes */
+/* DISABLED - Causing horizontal scroll issues
 @import './table-responsive-fix.css';
 @import './table-column-optimization.css';
 @import './staff-table-fix.css';
 @import './call-detail.css';
+@import './table-layout-fix.css';
+*/
+
+/* NEW: Clean responsive layout without horizontal scrolling */
+@import './clean-responsive-layout.css';
 
 /* Theme customization */
 @import './askproai-theme.css';

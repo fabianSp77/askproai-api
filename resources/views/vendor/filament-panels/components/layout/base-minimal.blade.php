@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html
-    lang="{{ filament()->getLocale() }}"
-    dir="{{ filament()->getDirection() }}"
+    lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    dir="{{ in_array(app()->getLocale(), ['ar', 'he', 'fa']) ? 'rtl' : 'ltr' }}"
     @class([
         'fi',
         'fi min-h-screen',
@@ -46,32 +46,26 @@
 
         @stack('styles')
 
-        @include('filament.admin.resources.layouts.assets')
-        @include('filament.admin.resources.layouts.css-fix')
-
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_END, scopes: $livewire->getRenderHookScopes()) }}
     </head>
 
-    <body class="fi-body {{ \Filament\Support\get_body_classes($livewire->getRenderHookScopes()) }}">
+    <body class="fi-body">
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_START, scopes: $livewire->getRenderHookScopes()) }}
 
         {{ $slot }}
 
-        {{-- MINIMAL SCRIPTS - Nur das Nötigste für Demo --}}
         @filamentScripts(withCore: true)
-        
-        @if (filament()->hasDarkMode() && (! filament()->hasDarkModeForced()))
+
+        @if (config('filament.broadcasting.echo'))
             <script>
-                const theme = localStorage.getItem('theme') ?? @js(filament()->getDefaultThemeMode()->value)
-                if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark')
-                }
+                window.Echo = new window.EchoFactory(@js(config('filament.broadcasting.echo')))
+
+                window.dispatchEvent(new CustomEvent('EchoLoaded'))
             </script>
         @endif
 
         @stack('scripts')
 
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_AFTER, scopes: $livewire->getRenderHookScopes()) }}
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_END, scopes: $livewire->getRenderHookScopes()) }}
     </body>
 </html>

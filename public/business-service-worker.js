@@ -12,8 +12,8 @@ const STATIC_ASSETS = [
     '/business/login',
     '/offline.html',
     '/manifest.json',
-    '/build/assets/app.css',
-    '/build/assets/app.js',
+    // // ''/build/assets/app.css'' // Removed - removed,
+    // // ''/build/assets/app.js'' // Removed - removed,
     // Add more static assets as needed
 ];
 

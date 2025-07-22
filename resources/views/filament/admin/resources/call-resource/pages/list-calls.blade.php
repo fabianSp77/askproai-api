@@ -1,44 +1,5 @@
 <x-filament-panels::page>
-    @php
-        // Get data for widgets directly
-        $company = auth()->user()->company;
-        
-        if ($company) {
-            // Use Berlin timezone for date calculations
-            $todayCount = \App\Models\Call::where('company_id', $company->id)
-                ->whereDate('start_timestamp', today('Europe/Berlin'))
-                ->count();
-                
-            $weekCount = \App\Models\Call::where('company_id', $company->id)
-                ->whereBetween('start_timestamp', [
-                    now('Europe/Berlin')->startOfWeek(),
-                    now('Europe/Berlin')->endOfWeek()
-                ])
-                ->count();
-                
-            $avgDuration = \App\Models\Call::where('company_id', $company->id)
-                ->whereNotNull('duration_sec')
-                ->where('duration_sec', '>', 0)
-                ->avg('duration_sec');
-                
-            $avgDurationFormatted = $avgDuration 
-                ? gmdate('i:s', $avgDuration) 
-                : '0:00';
-                
-            $totalCalls = \App\Models\Call::where('company_id', $company->id)
-                ->where('start_timestamp', '>=', now('Europe/Berlin')->startOfMonth())
-                ->count();
-                
-            $callsWithAppointments = \App\Models\Call::where('company_id', $company->id)
-                ->where('start_timestamp', '>=', now('Europe/Berlin')->startOfMonth())
-                ->whereNotNull('appointment_id')
-                ->count();
-                
-            $conversionRate = $totalCalls > 0 
-                ? round(($callsWithAppointments / $totalCalls) * 100) 
-                : 0;
-        }
-    @endphp
+    {{-- Data is now provided by the controller --}}
 
     {{-- Static Widget Rendering --}}
     @if($company)
@@ -146,12 +107,12 @@
         <div style="background: #f3f4f6; padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem;">
             <p><strong>Debug Info:</strong></p>
             <p>Has Company: {{ $company ? 'Yes' : 'No' }}</p>
-            <p>Auth User: {{ auth()->user()->email ?? 'Not authenticated' }}</p>
+            <p>Auth User: {{ auth()->user() ? auth()->user()->email : 'Not authenticated' }}</p>
             <p>Company: {{ $company->name ?? 'No company' }} (ID: {{ $company->id ?? 'N/A' }})</p>
             <p>Static widgets rendered: Yes</p>
             <p>Today calls: {{ $todayCount ?? 0 }}</p>
             <p>Week calls: {{ $weekCount ?? 0 }}</p>
-            <p>Total calls (all time): {{ $company ? \App\Models\Call::where('company_id', $company->id)->count() : 0 }}</p>
+            <p>Total calls (month): {{ isset($conversionData) ? $conversionData->total : 0 }}</p>
             <p>Current time (Berlin): {{ now('Europe/Berlin')->format('Y-m-d H:i:s') }}</p>
             <p>Today date (Berlin): {{ today('Europe/Berlin')->format('Y-m-d') }}</p>
         </div>

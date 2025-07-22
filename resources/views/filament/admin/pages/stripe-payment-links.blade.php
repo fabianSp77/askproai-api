@@ -30,7 +30,7 @@
                 
                 <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded">
                     <div class="flex items-center">
-                        <x-heroicon-o-refresh class="w-8 h-8 text-purple-600 dark:text-purple-400 mr-3" />
+                        <x-heroicon-o-arrow-path class="w-8 h-8 text-purple-600 dark:text-purple-400 mr-3" />
                         <div>
                             <h3 class="font-medium">Wiederverwendbar</h3>
                             <p class="text-sm text-gray-600 dark:text-gray-400">Dauerhaft gültig</p>

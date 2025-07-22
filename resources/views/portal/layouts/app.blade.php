@@ -46,7 +46,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if(file_exists(public_path('build/manifest.json')))
+        <link rel="stylesheet" href="{{ asset('build/assets/app-CAAkOUKa.css') }}">
+        <script src="{{ asset('build/assets/app-Cfj5Fmmu.js') }}" defer></script>
+    @else
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    @endif
 </head>
 <body class="font-sans antialiased">
     {{-- Admin banner removed - using React portal now --}}

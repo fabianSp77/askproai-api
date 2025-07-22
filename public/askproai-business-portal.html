@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI Business Portal - State of the Art Implementation</title>
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Day.js -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/locale/de.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/relativeTime.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        /* Root Variables */
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #6366f1;
+        }
+
+        /* Smooth Transitions */
+        * {
+            transition: all 0.2s ease;
+        }
+
+        /* Sidebar Styles */
+        .sidebar-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(4px);
+        }
+        
+        .sidebar-item.active {
+            background-color: #e5e7eb;
+            border-left: 4px solid var(--primary);
+            font-weight: 600;
+        }
+
+        /* Card Hover Effects */
+        .stat-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* Page Transitions */
+        .page {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 9999;
+        }
+        
+        .loading.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Badge Styles */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-warning { background-color: #fef3c7; color: #92400e; }
+        .badge-info { background-color: #dbeafe; color: #1e40af; }
+        .badge-error { background-color: #fee2e2; color: #991b1b; }
+        .badge-primary { background-color: #dbeafe; color: #1e40af; }
+
+        /* Table Styles */
+        .table-row:hover {
+            background-color: #f9fafb;
+            cursor: pointer;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            inset: 0;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.2s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: scale(0.95) translateY(20px); }
+            to { transform: scale(1) translateY(0); }
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Audio Player */
+        .audio-player {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                z-index: 1000;
+                height: 100%;
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Loading Overlay -->
+    <div class="loading" id="loadingOverlay">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+            <p class="mt-4 text-gray-600 text-lg">Lade Daten...</p>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification" class="notification">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+            <span id="notificationText"></span>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar w-64 bg-white shadow-lg flex-shrink-0" id="sidebar">
+            <div class="p-6 border-b">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-800">AskProAI</h1>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-2">
+                <a href="#dashboard" class="sidebar-item active flex items-center p-3 rounded-lg" data-page="dashboard">
+                    <i class="fas fa-dashboard mr-3 text-gray-600 w-5"></i>
+                    <span class="text-gray-700">Dashboard</span>
+                </a>
+                <a href="#calls" class="sidebar-item flex items-center p-3 rounded-lg" data-page="calls">
+                    <i class="fas fa-phone mr-3 text-gray-600 w-5"></i>
+                    <span class="text-gray-700">Anrufe</span>
+                    <span class="ml-auto badge badge-info" id="newCallsBadge">0</span>
+                </a>
+                <a href="#appointments" class="sidebar-item flex items-center p-3 rounded-lg" data-page="appointments">
+                    <i class="fas fa-calendar mr-3 text-gray-600 w-5"></i>
+                    <span class="text-gray-700">Termine</span>
+                </a>
+                <a href="#customers" class="sidebar-item flex items-center p-3 rounded-lg" data-page="customers">
+                    <i class="fas fa-users mr-3 text-gray-600 w-5"></i>
+                    <span class="text-gray-700">Kunden</span>
+                </a>
+                <a href="#team" class="sidebar-item flex items-center p-3 rounded-lg" data-page="team">
+                    <i class="fas fa-user-friends mr-3 text-gray-600 w-5"></i>
+                    <span class="text-gray-700">Team</span>
+                </a>
+                <a href="#analytics" class="sidebar-item flex items-center p-3 rounded-lg" data-page="analytics">
+                    <i class="fas fa-chart-bar mr-3 text-gray-600 w-5"></i>
+                    <span class="text-gray-700">Analysen</span>
+                </a>
+                <a href="#billing" class="sidebar-item flex items-center p-3 rounded-lg" data-page="billing">
+                    <i class="fas fa-credit-card mr-3 text-gray-600 w-5"></i>
+                    <span class="text-gray-700">Abrechnung</span>
+                    <span class="ml-auto badge badge-warning" id="lowBalanceBadge" style="display:none;">!</span>
+                </a>
+                <a href="#feedback" class="sidebar-item flex items-center p-3 rounded-lg" data-page="feedback">
+                    <i class="fas fa-comment-dots mr-3 text-gray-600 w-5"></i>
+                    <span class="text-gray-700">Feedback</span>
+                </a>
+                <a href="#settings" class="sidebar-item flex items-center p-3 rounded-lg" data-page="settings">
+                    <i class="fas fa-cog mr-3 text-gray-600 w-5"></i>
+                    <span class="text-gray-700">Einstellungen</span>
+                </a>
+            </nav>
+
+            <!-- User Section -->
+            <div class="absolute bottom-0 w-full p-4 border-t bg-gray-50">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-gray-600"></i>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <p class="text-sm font-medium text-gray-700">Demo Benutzer</p>
+                        <p class="text-xs text-gray-500">demo@askproai.de</p>
+                    </div>
+                    <button onclick="logout()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button class="md:hidden mr-4" onclick="toggleMobileSidebar()">
+                            <i class="fas fa-bars text-gray-600"></i>
+                        </button>
+                        <h2 id="pageTitle" class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- Search -->
+                        <div class="relative hidden md:block">
+                            <input type="text" placeholder="Suchen..." class="pl-10 pr-4 py-2 border rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        
+                        <!-- Notifications -->
+                        <button class="relative p-2 text-gray-600 hover:text-gray-800" onclick="toggleNotifications()">
+                            <i class="fas fa-bell"></i>
+                            <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        
+                        <!-- Settings -->
+                        <button class="p-2 text-gray-600 hover:text-gray-800" onclick="navigateTo('settings')">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <!-- Welcome Section -->
+                    <div class="mb-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                        <h3 class="text-2xl font-bold mb-2">Willkommen zurück!</h3>
+                        <p class="opacity-90">Hier ist Ihre Übersicht für heute, <span id="currentDate"></span></p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="stat-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-blue-100 rounded-full">
+                                    <i class="fas fa-phone text-blue-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-500 text-sm font-semibold">+12%</span>
+                            </div>
+                            <h3 id="callsToday" class="text-3xl font-bold text-gray-800">0</h3>
+                            <p class="text-gray-600 mt-1">Anrufe heute</p>
+                        </div>
+
+                        <div class="stat-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-green-100 rounded-full">
+                                    <i class="fas fa-calendar-check text-green-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-500 text-sm font-semibold">+8%</span>
+                            </div>
+                            <h3 id="appointmentsToday" class="text-3xl font-bold text-gray-800">0</h3>
+                            <p class="text-gray-600 mt-1">Termine heute</p>
+                        </div>
+
+                        <div class="stat-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-purple-100 rounded-full">
+                                    <i class="fas fa-user-plus text-purple-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-500 text-sm font-semibold">+15%</span>
+                            </div>
+                            <h3 id="newCustomers" class="text-3xl font-bold text-gray-800">0</h3>
+                            <p class="text-gray-600 mt-1">Neue Kunden</p>
+                        </div>
+
+                        <div class="stat-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-yellow-100 rounded-full">
+                                    <i class="fas fa-euro-sign text-yellow-600 text-xl"></i>
+                                </div>
+                                <span class="text-green-500 text-sm font-semibold">+22%</span>
+                            </div>
+                            <h3 id="revenueToday" class="text-3xl font-bold text-gray-800">€0</h3>
+                            <p class="text-gray-600 mt-1">Umsatz heute</p>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <!-- Call Trend Chart -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">Anruf-Trend (7 Tage)</h3>
+                                <button class="text-sm text-blue-600 hover:text-blue-700">
+                                    <i class="fas fa-expand-alt"></i>
+                                </button>
+                            </div>
+                            <canvas id="callTrendChart" height="150"></canvas>
+                        </div>
+
+                        <!-- Success Rate Chart -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">Erfolgsquote</h3>
+                                <button class="text-sm text-blue-600 hover:text-blue-700">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </div>
+                            <canvas id="successRateChart" height="150"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Recent Calls -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b flex justify-between items-center">
+                                <h3 class="text-lg font-semibold text-gray-800">Letzte Anrufe</h3>
+                                <a href="#" onclick="navigateTo('calls')" class="text-sm text-blue-600 hover:text-blue-700">
+                                    Alle anzeigen →
+                                </a>
+                            </div>
+                            <div class="p-6">
+                                <div id="recentCalls" class="space-y-4">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upcoming Appointments -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b flex justify-between items-center">
+                                <h3 class="text-lg font-semibold text-gray-800">Nächste Termine</h3>
+                                <a href="#" onclick="navigateTo('appointments')" class="text-sm text-blue-600 hover:text-blue-700">
+                                    Alle anzeigen →
+                                </a>
+                            </div>
+                            <div class="p-6">
+                                <div id="upcomingAppointments" class="space-y-4">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calls Page -->
+                <div id="calls-page" class="page">
+                    <!-- Page Header -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                                    <i class="fas fa-phone mr-3"></i>
+                                    Anrufe
+                                </h1>
+                                <p class="text-gray-600 mt-1">Übersicht aller eingegangenen Anrufe mit detaillierten Informationen</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="refreshCalls()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center">
+                                    <i class="fas fa-sync-alt mr-2"></i>
+                                    Aktualisieren
+                                </button>
+                                <button onclick="exportCalls()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Exportieren
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Anrufe heute</p>
+                                    <p class="text-2xl font-bold" id="callsTodayStats">0</p>
+                                </div>
+                                <i class="fas fa-phone text-blue-500 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Neue Anrufe</p>
+                                    <p class="text-2xl font-bold text-blue-600" id="newCallsStats">0</p>
+                                </div>
+                                <i class="fas fa-bell text-blue-500 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Aktion erforderlich</p>
+                                    <p class="text-2xl font-bold text-yellow-600" id="actionRequiredStats">0</p>
+                                </div>
+                                <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Ø Dauer</p>
+                                    <p class="text-2xl font-bold" id="avgDurationStats">0:00</p>
+                                </div>
+                                <i class="fas fa-clock text-gray-500 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="bg-white rounded-lg shadow mb-6">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-semibold">Filter & Suche</h3>
+                                <button onclick="toggleCallFilters()" class="text-sm text-blue-600 hover:text-blue-700">
+                                    <i class="fas fa-filter mr-1"></i>
+                                    Filter anzeigen
+                                </button>
+                            </div>
+                            <div id="callFilters" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="relative">
+                                    <input type="text" id="callSearch" placeholder="Suche nach Nummer, Name..." 
+                                           class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           onkeyup="filterCalls()">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                                <select id="callStatus" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="filterCalls()">
+                                    <option value="">Alle Status</option>
+                                    <option value="completed">Abgeschlossen</option>
+                                    <option value="ongoing">Laufend</option>
+                                    <option value="missed">Verpasst</option>
+                                    <option value="error">Fehler</option>
+                                </select>
+                                <select id="callBranch" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="filterCalls()">
+                                    <option value="">Alle Filialen</option>
+                                    <option value="hauptfiliale">Hauptfiliale</option>
+                                    <option value="zweigstelle-nord">Zweigstelle Nord</option>
+                                    <option value="zweigstelle-sued">Zweigstelle Süd</option>
+                                </select>
+                                <input type="date" id="callDate" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="filterCalls()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calls Table -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <input type="checkbox" id="selectAllCalls" class="rounded">
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Typ</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anrufer</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Filiale</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum & Zeit</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dauer</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="callsTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="px-6 py-4 bg-gray-50 border-t flex items-center justify-between">
+                            <div class="text-sm text-gray-700">
+                                Zeige <span id="callsFrom">1</span> bis <span id="callsTo">10</span> von <span id="callsTotal">0</span> Einträgen
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="previousCallsPage()" class="px-3 py-1 border rounded hover:bg-gray-100">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button onclick="nextCallsPage()" class="px-3 py-1 border rounded hover:bg-gray-100">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointments Page -->
+                <div id="appointments-page" class="page">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-calendar mr-3"></i>
+                                Termine
+                            </h1>
+                            <button onclick="showNewAppointmentModal()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center">
+                                <i class="fas fa-plus mr-2"></i>
+                                Neuer Termin
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Calendar View Toggle -->
+                    <div class="bg-white rounded-lg shadow mb-6">
+                        <div class="p-4 flex gap-2">
+                            <button onclick="setCalendarView('month')" class="px-4 py-2 rounded-lg bg-blue-500 text-white" id="monthViewBtn">
+                                <i class="fas fa-calendar-alt mr-2"></i>Monat
+                            </button>
+                            <button onclick="setCalendarView('week')" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200" id="weekViewBtn">
+                                <i class="fas fa-calendar-week mr-2"></i>Woche
+                            </button>
+                            <button onclick="setCalendarView('day')" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200" id="dayViewBtn">
+                                <i class="fas fa-calendar-day mr-2"></i>Tag
+                            </button>
+                            <button onclick="setCalendarView('list')" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200" id="listViewBtn">
+                                <i class="fas fa-list mr-2"></i>Liste
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Calendar -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6">
+                            <div id="calendarContainer">
+                                <!-- Dynamic calendar content -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customers Page -->
+                <div id="customers-page" class="page">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-users mr-3"></i>
+                                Kunden
+                            </h1>
+                            <div class="flex gap-3">
+                                <button onclick="exportCustomers()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Export
+                                </button>
+                                <button onclick="showNewCustomerModal()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Neuer Kunde
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">Gesamt Kunden</p>
+                            <p class="text-2xl font-bold" id="totalCustomers">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">Aktive Kunden</p>
+                            <p class="text-2xl font-bold text-green-600" id="activeCustomers">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">Neue diese Woche</p>
+                            <p class="text-2xl font-bold text-blue-600" id="newCustomersWeek">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Customer Search -->
+                    <div class="bg-white rounded-lg shadow mb-6">
+                        <div class="p-6">
+                            <div class="flex gap-4">
+                                <div class="flex-1 relative">
+                                    <input type="text" id="customerSearch" placeholder="Suche nach Name, Telefon, Email..." 
+                                           class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                                <select id="customerTag" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Alle Tags</option>
+                                    <option value="vip">VIP</option>
+                                    <option value="neu">Neu</option>
+                                    <option value="stammkunde">Stammkunde</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customers Table -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefon</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Termine</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customersTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Page -->
+                <div id="team-page" class="page">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-user-friends mr-3"></i>
+                                Team
+                            </h1>
+                            <button onclick="showInviteModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                Mitglied einladen
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Team Grid -->
+                    <div id="teamGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Dynamic team members -->
+                    </div>
+                </div>
+
+                <!-- Analytics Page -->
+                <div id="analytics-page" class="page">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            Analysen
+                        </h1>
+                    </div>
+
+                    <!-- Date Range Selector -->
+                    <div class="bg-white rounded-lg shadow mb-6 p-4">
+                        <div class="flex gap-4 items-center">
+                            <label class="text-sm font-medium text-gray-700">Zeitraum:</label>
+                            <select id="analyticsDateRange" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="updateAnalytics()">
+                                <option value="7">Letzte 7 Tage</option>
+                                <option value="30" selected>Letzte 30 Tage</option>
+                                <option value="90">Letzte 90 Tage</option>
+                                <option value="365">Letztes Jahr</option>
+                            </select>
+                            <button onclick="exportAnalytics()" class="ml-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                <i class="fas fa-download mr-2"></i>
+                                Export Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Gesamtanrufe</p>
+                                <i class="fas fa-phone text-blue-500"></i>
+                            </div>
+                            <p class="text-3xl font-bold" id="totalCallsAnalytics">0</p>
+                            <p class="text-sm text-green-600 mt-2">+12% vs. Vorperiode</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Konversionsrate</p>
+                                <i class="fas fa-percentage text-green-500"></i>
+                            </div>
+                            <p class="text-3xl font-bold" id="conversionRate">0%</p>
+                            <p class="text-sm text-green-600 mt-2">+5% vs. Vorperiode</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Ø Anrufdauer</p>
+                                <i class="fas fa-clock text-purple-500"></i>
+                            </div>
+                            <p class="text-3xl font-bold" id="avgCallDuration">0:00</p>
+                            <p class="text-sm text-red-600 mt-2">-10s vs. Vorperiode</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Kundenzufriedenheit</p>
+                                <i class="fas fa-smile text-yellow-500"></i>
+                            </div>
+                            <p class="text-3xl font-bold" id="customerSatisfaction">0</p>
+                            <p class="text-sm text-gray-600 mt-2">von 5.0</p>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Anrufvolumen</h3>
+                            <canvas id="callVolumeChart"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Terminbuchungen</h3>
+                            <canvas id="appointmentChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Performance Table -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Mitarbeiter Performance</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mitarbeiter</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anrufe</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Termine</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Konversionsrate</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ø Dauer</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="performanceTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Page -->
+                <div id="billing-page" class="page">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-credit-card mr-3"></i>
+                            Abrechnung & Guthaben
+                        </h1>
+                    </div>
+
+                    <!-- Balance Overview -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <!-- Current Balance -->
+                        <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Guthaben Übersicht</h3>
+                            <div class="mb-6">
+                                <div class="flex justify-between items-end mb-2">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Aktuelles Guthaben</p>
+                                        <p class="text-4xl font-bold text-gray-800">€<span id="currentBalance">0.00</span></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-600">Bonus Guthaben</p>
+                                        <p class="text-2xl font-semibold text-green-600">+€<span id="bonusBalance">0.00</span></p>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div id="balanceBar" class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">Niedrig ab €20.00</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="showTopupModal()" class="flex-1 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold">
+                                    <i class="fas fa-plus-circle mr-2"></i>
+                                    Guthaben aufladen
+                                </button>
+                                <button onclick="showBonusMatrixModal()" class="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                    <i class="fas fa-gift mr-2"></i>
+                                    Bonus Matrix
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Auto-Topup Settings -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Auto-Topup</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-700">Aktiviert</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="autoTopupToggle" class="sr-only peer" onchange="toggleAutoTopup()">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                <div id="autoTopupSettings" class="space-y-3">
+                                    <div>
+                                        <label class="text-sm text-gray-600">Aufladebetrag</label>
+                                        <select id="autoTopupAmount" class="w-full mt-1 px-3 py-2 border rounded-lg">
+                                            <option value="50">€50</option>
+                                            <option value="100">€100</option>
+                                            <option value="250">€250</option>
+                                            <option value="500">€500</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm text-gray-600">Auslöser bei</label>
+                                        <select id="autoTopupThreshold" class="w-full mt-1 px-3 py-2 border rounded-lg">
+                                            <option value="10">€10</option>
+                                            <option value="20">€20</option>
+                                            <option value="50">€50</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button onclick="saveAutoTopupSettings()" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">
+                                    Einstellungen speichern
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Usage Statistics -->
+                    <div class="bg-white rounded-lg shadow mb-6">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Nutzungsstatistiken</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-2">Anrufe diesen Monat</p>
+                                    <div class="flex items-end gap-2">
+                                        <p class="text-3xl font-bold">1,234</p>
+                                        <p class="text-sm text-gray-600 mb-1">von 5,000</p>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 24.68%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-2">Minuten verbraucht</p>
+                                    <div class="flex items-end gap-2">
+                                        <p class="text-3xl font-bold">3,456</p>
+                                        <p class="text-sm text-gray-600 mb-1">von 10,000</p>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 34.56%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-2">Geschätzte Kosten</p>
+                                    <div class="flex items-end gap-2">
+                                        <p class="text-3xl font-bold">€89.50</p>
+                                    </div>
+                                    <p class="text-sm text-green-600 mt-2">-12% vs. letzter Monat</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction History -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h3 class="text-lg font-semibold">Transaktionsverlauf</h3>
+                            <button onclick="exportTransactions()" class="text-sm text-blue-600 hover:text-blue-700">
+                                <i class="fas fa-download mr-1"></i>
+                                Export
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beschreibung</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Betrag</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionsTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Page -->
+                <div id="feedback-page" class="page">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-comment-dots mr-3"></i>
+                                Feedback
+                            </h1>
+                            <button onclick="showNewFeedbackModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                                <i class="fas fa-plus mr-2"></i>
+                                Neues Feedback
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Feedback Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">Gesamt</p>
+                            <p class="text-2xl font-bold">42</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">Offen</p>
+                            <p class="text-2xl font-bold text-yellow-600">5</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">In Bearbeitung</p>
+                            <p class="text-2xl font-bold text-blue-600">3</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">Gelöst</p>
+                            <p class="text-2xl font-bold text-green-600">34</p>
+                        </div>
+                    </div>
+
+                    <!-- Feedback List -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-lg font-semibold">Feedback Liste</h3>
+                                <select class="px-4 py-2 border rounded-lg">
+                                    <option>Alle Status</option>
+                                    <option>Offen</option>
+                                    <option>In Bearbeitung</option>
+                                    <option>Gelöst</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="feedbackList" class="divide-y">
+                            <!-- Dynamic content -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settings-page" class="page">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-cog mr-3"></i>
+                            Einstellungen
+                        </h1>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Settings Navigation -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <nav class="space-y-2">
+                                <button onclick="showSettingsSection('profile')" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center">
+                                    <i class="fas fa-user mr-3"></i>
+                                    Profil
+                                </button>
+                                <button onclick="showSettingsSection('notifications')" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center">
+                                    <i class="fas fa-bell mr-3"></i>
+                                    Benachrichtigungen
+                                </button>
+                                <button onclick="showSettingsSection('security')" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center">
+                                    <i class="fas fa-lock mr-3"></i>
+                                    Sicherheit
+                                </button>
+                                <button onclick="showSettingsSection('company')" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center">
+                                    <i class="fas fa-building mr-3"></i>
+                                    Unternehmen
+                                </button>
+                                <button onclick="showSettingsSection('integrations')" class="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center">
+                                    <i class="fas fa-plug mr-3"></i>
+                                    Integrationen
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Settings Content -->
+                        <div class="lg:col-span-2">
+                            <!-- Profile Settings -->
+                            <div id="profileSettings" class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-6">Profil Einstellungen</h3>
+                                <form id="profileForm" class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Vorname</label>
+                                            <input type="text" id="firstName" value="Demo" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Nachname</label>
+                                            <input type="text" id="lastName" value="Benutzer" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input type="email" id="email" value="demo@askproai.de" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                                        <input type="tel" id="phone" value="+49 123 456789" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Sprache</label>
+                                        <select id="language" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="de" selected>Deutsch</option>
+                                            <option value="en">English</option>
+                                            <option value="fr">Français</option>
+                                        </select>
+                                    </div>
+                                    <div class="pt-4">
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                            Änderungen speichern
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Other settings sections hidden by default -->
+                            <div id="notificationSettings" class="bg-white rounded-lg shadow p-6" style="display:none;">
+                                <h3 class="text-lg font-semibold mb-6">Benachrichtigungs-Einstellungen</h3>
+                                <!-- Notification settings content -->
+                            </div>
+
+                            <div id="securitySettings" class="bg-white rounded-lg shadow p-6" style="display:none;">
+                                <h3 class="text-lg font-semibold mb-6">Sicherheits-Einstellungen</h3>
+                                <!-- Security settings content -->
+                            </div>
+
+                            <div id="companySettings" class="bg-white rounded-lg shadow p-6" style="display:none;">
+                                <h3 class="text-lg font-semibold mb-6">Unternehmens-Einstellungen</h3>
+                                <!-- Company settings content -->
+                            </div>
+
+                            <div id="integrationSettings" class="bg-white rounded-lg shadow p-6" style="display:none;">
+                                <h3 class="text-lg font-semibold mb-6">Integrationen</h3>
+                                <!-- Integration settings content -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Call Details Modal -->
+    <div id="callDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">Anruf Details</h3>
+                <button onclick="closeModal('callDetailsModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="callDetailsContent">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- New Appointment Modal -->
+    <div id="newAppointmentModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">Neuer Termin</h3>
+                <button onclick="closeModal('newAppointmentModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="newAppointmentForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kunde</label>
+                    <select class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Wählen Sie einen Kunden...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Service</label>
+                    <select class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Wählen Sie einen Service...</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+                        <input type="date" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Zeit</label>
+                        <input type="time" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+                    <textarea rows="3" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                        Termin erstellen
+                    </button>
+                    <button type="button" onclick="closeModal('newAppointmentModal')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                        Abbrechen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Topup Modal -->
+    <div id="topupModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">Guthaben aufladen</h3>
+                <button onclick="closeModal('topupModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div>
+                <p class="text-gray-600 mb-6">Wählen Sie einen Betrag zum Aufladen:</p>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <button onclick="selectTopupAmount(50)" class="topup-amount-btn p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50">
+                        <p class="text-2xl font-bold">€50</p>
+                        <p class="text-sm text-gray-600">Standard</p>
+                    </button>
+                    <button onclick="selectTopupAmount(100)" class="topup-amount-btn p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50">
+                        <p class="text-2xl font-bold">€100</p>
+                        <p class="text-sm text-green-600">+10% Bonus</p>
+                    </button>
+                    <button onclick="selectTopupAmount(250)" class="topup-amount-btn p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50">
+                        <p class="text-2xl font-bold">€250</p>
+                        <p class="text-sm text-green-600">+15% Bonus</p>
+                    </button>
+                    <button onclick="selectTopupAmount(500)" class="topup-amount-btn p-4 border rounded-lg hover:border-blue-500 hover:bg-blue-50">
+                        <p class="text-2xl font-bold">€500</p>
+                        <p class="text-sm text-green-600">+20% Bonus</p>
+                    </button>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Oder eigenen Betrag eingeben:</label>
+                    <input type="number" id="customTopupAmount" placeholder="Betrag in €" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="processTopup()" class="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold">
+                    Jetzt aufladen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize Day.js
+        dayjs.locale('de');
+        dayjs.extend(window.dayjs_plugin_relativeTime);
+
+        // Global State
+        let currentPage = 'dashboard';
+        let selectedTopupAmount = 0;
+        let calendarView = 'month';
+        let callsData = [];
+        let customersData = [];
+        let teamData = [];
+        let charts = {};
+
+        // Mock Data
+        const mockData = {
+            dashboard: {
+                stats: {
+                    calls_today: 12,
+                    appointments_today: 8,
+                    new_customers: 3,
+                    revenue_today: 856.50
+                },
+                recentCalls: [
+                    { id: 1, from: '+49 123 456789', name: 'Max Mustermann', time: '15 Minuten', status: 'completed', result: 'appointment' },
+                    { id: 2, from: '+49 987 654321', name: 'Anna Schmidt', time: '1 Stunde', status: 'completed', result: 'info' },
+                    { id: 3, from: '+49 555 123456', name: 'Unbekannt', time: '2 Stunden', status: 'missed', result: null }
+                ],
+                upcomingAppointments: [
+                    { id: 1, customer: 'Max Mustermann', service: 'Beratung', time: 'Heute, 14:00 Uhr', staff: 'Dr. Weber' },
+                    { id: 2, customer: 'Anna Schmidt', service: 'Erstgespräch', time: 'Heute, 16:30 Uhr', staff: 'Dr. Meyer' },
+                    { id: 3, customer: 'Peter Müller', service: 'Follow-up', time: 'Morgen, 10:00 Uhr', staff: 'Dr. Weber' }
+                ],
+                callTrend: [
+                    { date: 'Mo', calls: 18 },
+                    { date: 'Di', calls: 22 },
+                    { date: 'Mi', calls: 15 },
+                    { date: 'Do', calls: 25 },
+                    { date: 'Fr', calls: 20 },
+                    { date: 'Sa', calls: 8 },
+                    { date: 'So', calls: 12 }
+                ]
+            },
+            calls: {
+                stats: {
+                    total_today: 12,
+                    new: 3,
+                    action_required: 2,
+                    avg_duration: 245
+                },
+                data: [
+                    { 
+                        id: 1, 
+                        type: 'inbound', 
+                        from: '+49 123 456789', 
+                        name: 'Max Mustermann',
+                        branch: 'Hauptfiliale',
+                        date: '2024-01-21 14:23:45',
+                        duration: 245,
+                        status: 'completed',
+                        transcript: 'Kunde: Guten Tag, ich möchte gerne einen Termin vereinbaren...\nAgent: Sehr gerne! Wann würde es Ihnen denn passen?',
+                        recording_url: '#',
+                        appointment_id: 123
+                    },
+                    { 
+                        id: 2, 
+                        type: 'inbound', 
+                        from: '+49 987 654321', 
+                        name: 'Anna Schmidt',
+                        branch: 'Zweigstelle Nord',
+                        date: '2024-01-21 13:15:22',
+                        duration: 312,
+                        status: 'completed',
+                        transcript: 'Kunde: Hallo, ich habe eine Frage zu meinem Termin...',
+                        recording_url: '#'
+                    }
+                ]
+            },
+            customers: [
+                { id: 1, name: 'Max Mustermann', phone: '+49 123 456789', email: 'max@example.com', appointments: 5, tags: ['VIP', 'Stammkunde'] },
+                { id: 2, name: 'Anna Schmidt', phone: '+49 987 654321', email: 'anna@example.com', appointments: 2, tags: ['Neu'] },
+                { id: 3, name: 'Peter Müller', phone: '+49 555 123456', email: 'peter@example.com', appointments: 8, tags: ['Stammkunde'] }
+            ],
+            team: [
+                { id: 1, name: 'Dr. Sarah Weber', role: 'Ärztin', avatar: 'SW', status: 'active', calls: 45, appointments: 32 },
+                { id: 2, name: 'Tom Meyer', role: 'Rezeption', avatar: 'TM', status: 'busy', calls: 89, appointments: 0 },
+                { id: 3, name: 'Julia Schneider', role: 'Assistenz', avatar: 'JS', status: 'away', calls: 23, appointments: 15 }
+            ],
+            billing: {
+                current_balance: 125.50,
+                bonus_balance: 25.00,
+                transactions: [
+                    { id: 1, date: '2024-01-20', description: 'Guthaben Aufladung', amount: 100.00, type: 'credit', balance_after: 225.50 },
+                    { id: 2, date: '2024-01-19', description: 'Anrufgebühren', amount: -2.50, type: 'debit', balance_after: 125.50 },
+                    { id: 3, date: '2024-01-18', description: 'Monatsgebühr', amount: -29.99, type: 'debit', balance_after: 128.00 }
+                ]
+            },
+            feedback: [
+                { id: 1, date: '2024-01-20', subject: 'Toller Service!', status: 'resolved', priority: 'low', from: 'Max Mustermann' },
+                { id: 2, date: '2024-01-19', subject: 'Problem mit Terminbuchung', status: 'open', priority: 'high', from: 'Anna Schmidt' },
+                { id: 3, date: '2024-01-18', subject: 'Verbesserungsvorschlag', status: 'in_progress', priority: 'medium', from: 'Peter Müller' }
+            ]
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Set current date
+            document.getElementById('currentDate').textContent = dayjs().format('dddd, D. MMMM YYYY');
+            
+            // Initialize navigation
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.dataset.page;
+                    navigateTo(page);
+                });
+            });
+
+            // Load initial data
+            loadDashboard();
+            
+            // Initialize charts
+            initializeCharts();
+            
+            // Start real-time updates
+            startRealTimeUpdates();
+        }
+
+        // Navigation
+        function navigateTo(page) {
+            // Update active states
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            
+            // Show new page
+            document.getElementById(`${page}-page`).classList.add('active');
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            
+            // Update page title
+            const title = document.querySelector(`[data-page="${page}"] span`).textContent;
+            document.getElementById('pageTitle').textContent = title;
+            
+            currentPage = page;
+            
+            // Load page data
+            loadPageData(page);
+        }
+
+        // Page Data Loading
+        function loadPageData(page) {
+            showLoading();
+            
+            // Simulate API call
+            setTimeout(() => {
+                switch(page) {
+                    case 'dashboard':
+                        loadDashboard();
+                        break;
+                    case 'calls':
+                        loadCalls();
+                        break;
+                    case 'appointments':
+                        loadAppointments();
+                        break;
+                    case 'customers':
+                        loadCustomers();
+                        break;
+                    case 'team':
+                        loadTeam();
+                        break;
+                    case 'analytics':
+                        loadAnalytics();
+                        break;
+                    case 'billing':
+                        loadBilling();
+                        break;
+                    case 'feedback':
+                        loadFeedback();
+                        break;
+                    case 'settings':
+                        loadSettings();
+                        break;
+                }
+                hideLoading();
+            }, 500);
+        }
+
+        // Dashboard
+        function loadDashboard() {
+            const data = mockData.dashboard;
+            
+            // Update stats
+            document.getElementById('callsToday').textContent = data.stats.calls_today;
+            document.getElementById('appointmentsToday').textContent = data.stats.appointments_today;
+            document.getElementById('newCustomers').textContent = data.stats.new_customers;
+            document.getElementById('revenueToday').textContent = '€' + data.stats.revenue_today.toFixed(2);
+            
+            // Recent calls
+            const recentCallsHtml = data.recentCalls.map(call => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer" onclick="showCallDetails(${call.id})">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-${call.status === 'completed' ? 'green' : 'red'}-100 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-phone ${call.status === 'completed' ? '' : 'fa-slash'} text-${call.status === 'completed' ? 'green' : 'red'}-600"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">${call.name || call.from}</p>
+                            <p class="text-sm text-gray-600">vor ${call.time}</p>
+                        </div>
+                    </div>
+                    ${call.result ? `<span class="badge ${call.result === 'appointment' ? 'badge-success' : 'badge-info'}">${call.result === 'appointment' ? 'Termin gebucht' : 'Info erhalten'}</span>` : ''}
+                </div>
+            `).join('');
+            document.getElementById('recentCalls').innerHTML = recentCallsHtml;
+            
+            // Upcoming appointments
+            const appointmentsHtml = data.upcomingAppointments.map(apt => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                    <div>
+                        <p class="font-medium text-gray-800">${apt.customer}</p>
+                        <p class="text-sm text-gray-600">${apt.time} • ${apt.staff}</p>
+                    </div>
+                    <span class="badge badge-primary">${apt.service}</span>
+                </div>
+            `).join('');
+            document.getElementById('upcomingAppointments').innerHTML = appointmentsHtml;
+            
+            // Update charts
+            updateDashboardCharts(data);
+        }
+
+        // Calls
+        function loadCalls() {
+            const data = mockData.calls;
+            
+            // Update stats
+            document.getElementById('callsTodayStats').textContent = data.stats.total_today;
+            document.getElementById('newCallsStats').textContent = data.stats.new;
+            document.getElementById('actionRequiredStats').textContent = data.stats.action_required;
+            document.getElementById('avgDurationStats').textContent = formatDuration(data.stats.avg_duration);
+            
+            // Update badge
+            document.getElementById('newCallsBadge').textContent = data.stats.new;
+            
+            // Populate table
+            callsData = data.data;
+            renderCallsTable();
+        }
+
+        function renderCallsTable() {
+            const tbody = document.getElementById('callsTableBody');
+            const html = callsData.map(call => `
+                <tr class="table-row">
+                    <td class="px-6 py-4">
+                        <input type="checkbox" class="rounded">
+                    </td>
+                    <td class="px-6 py-4">
+                        <i class="fas fa-phone${call.type === 'inbound' ? '-alt' : ''} text-${call.type === 'inbound' ? 'green' : 'blue'}-500"></i>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div>
+                            <p class="font-medium">${call.from}</p>
+                            ${call.name ? `<p class="text-sm text-gray-500">${call.name}</p>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm">${call.branch}</td>
+                    <td class="px-6 py-4 text-sm">
+                        <div>
+                            <p>${dayjs(call.date).format('DD.MM.YYYY')}</p>
+                            <p class="text-xs text-gray-500">${dayjs(call.date).format('HH:mm')} Uhr</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm">${formatDuration(call.duration)}</td>
+                    <td class="px-6 py-4">
+                        <span class="badge ${call.status === 'completed' ? 'badge-success' : 'badge-warning'}">${call.status === 'completed' ? 'Abgeschlossen' : 'Laufend'}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2">
+                            ${call.recording_url ? `<button onclick="playRecording('${call.recording_url}')" class="text-gray-600 hover:text-gray-800"><i class="fas fa-play"></i></button>` : ''}
+                            ${call.transcript ? `<button onclick="showTranscript(${call.id})" class="text-gray-600 hover:text-gray-800"><i class="fas fa-file-alt"></i></button>` : ''}
+                            <button onclick="showCallDetails(${call.id})" class="text-blue-600 hover:text-blue-800">Details</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            tbody.innerHTML = html;
+            
+            // Update pagination
+            document.getElementById('callsTotal').textContent = callsData.length;
+        }
+
+        // Customers
+        function loadCustomers() {
+            customersData = mockData.customers;
+            
+            // Update stats
+            document.getElementById('totalCustomers').textContent = customersData.length;
+            document.getElementById('activeCustomers').textContent = customersData.filter(c => c.appointments > 0).length;
+            document.getElementById('newCustomersWeek').textContent = customersData.filter(c => c.tags.includes('Neu')).length;
+            
+            // Render table
+            renderCustomersTable();
+        }
+
+        function renderCustomersTable() {
+            const tbody = document.getElementById('customersTableBody');
+            const html = customersData.map(customer => `
+                <tr class="table-row">
+                    <td class="px-6 py-4 font-medium">${customer.name}</td>
+                    <td class="px-6 py-4">${customer.phone}</td>
+                    <td class="px-6 py-4">${customer.email}</td>
+                    <td class="px-6 py-4">${customer.appointments}</td>
+                    <td class="px-6 py-4">
+                        ${customer.tags.map(tag => `<span class="badge ${tag === 'VIP' ? 'badge-warning' : tag === 'Neu' ? 'badge-info' : 'badge-primary'} mr-1">${tag}</span>`).join('')}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2">
+                            <button onclick="editCustomer(${customer.id})" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="viewCustomerHistory(${customer.id})" class="text-gray-600 hover:text-gray-800">
+                                <i class="fas fa-history"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            tbody.innerHTML = html;
+        }
+
+        // Team
+        function loadTeam() {
+            teamData = mockData.team;
+            
+            const html = teamData.map(member => `
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="text-center">
+                        <div class="w-20 h-20 bg-${member.status === 'active' ? 'green' : member.status === 'busy' ? 'yellow' : 'gray'}-100 rounded-full flex items-center justify-center text-2xl font-bold text-${member.status === 'active' ? 'green' : member.status === 'busy' ? 'yellow' : 'gray'}-600 mx-auto mb-4">
+                            ${member.avatar}
+                        </div>
+                        <h4 class="font-semibold text-lg">${member.name}</h4>
+                        <p class="text-gray-600 mb-2">${member.role}</p>
+                        <span class="badge ${member.status === 'active' ? 'badge-success' : member.status === 'busy' ? 'badge-warning' : 'badge-error'}">
+                            ${member.status === 'active' ? 'Verfügbar' : member.status === 'busy' ? 'Beschäftigt' : 'Abwesend'}
+                        </span>
+                    </div>
+                    <div class="mt-6 pt-6 border-t grid grid-cols-2 gap-4 text-center">
+                        <div>
+                            <p class="text-2xl font-bold">${member.calls}</p>
+                            <p class="text-sm text-gray-600">Anrufe</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold">${member.appointments}</p>
+                            <p class="text-sm text-gray-600">Termine</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button class="flex-1 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                            <i class="fas fa-edit mr-1"></i>
+                            Bearbeiten
+                        </button>
+                        <button class="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm">
+                            <i class="fas fa-calendar mr-1"></i>
+                            Zeitplan
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('teamGrid').innerHTML = html;
+        }
+
+        // Analytics
+        function loadAnalytics() {
+            // Update KPIs
+            document.getElementById('totalCallsAnalytics').textContent = '1,234';
+            document.getElementById('conversionRate').textContent = '32%';
+            document.getElementById('avgCallDuration').textContent = '3:45';
+            document.getElementById('customerSatisfaction').textContent = '4.8';
+            
+            // Update charts
+            updateAnalyticsCharts();
+            
+            // Performance table
+            const performanceData = [
+                { name: 'Dr. Sarah Weber', calls: 245, appointments: 78, conversion: '31.8%', duration: '3:12' },
+                { name: 'Tom Meyer', calls: 189, appointments: 45, conversion: '23.8%', duration: '2:45' },
+                { name: 'Julia Schneider', calls: 156, appointments: 52, conversion: '33.3%', duration: '4:23' }
+            ];
+            
+            const tbody = document.getElementById('performanceTableBody');
+            tbody.innerHTML = performanceData.map(p => `
+                <tr>
+                    <td class="px-6 py-4 font-medium">${p.name}</td>
+                    <td class="px-6 py-4">${p.calls}</td>
+                    <td class="px-6 py-4">${p.appointments}</td>
+                    <td class="px-6 py-4">${p.conversion}</td>
+                    <td class="px-6 py-4">${p.duration}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Billing
+        function loadBilling() {
+            const data = mockData.billing;
+            
+            // Update balance
+            document.getElementById('currentBalance').textContent = data.current_balance.toFixed(2);
+            document.getElementById('bonusBalance').textContent = data.bonus_balance.toFixed(2);
+            
+            // Update balance bar
+            const percentage = (data.current_balance / 200) * 100;
+            document.getElementById('balanceBar').style.width = `${Math.min(percentage, 100)}%`;
+            
+            // Show low balance warning
+            if (data.current_balance < 20) {
+                document.getElementById('lowBalanceBadge').style.display = 'inline-block';
+            }
+            
+            // Transactions
+            const tbody = document.getElementById('transactionsTableBody');
+            tbody.innerHTML = data.transactions.map(tx => `
+                <tr class="table-row">
+                    <td class="px-6 py-4">${dayjs(tx.date).format('DD.MM.YYYY')}</td>
+                    <td class="px-6 py-4">${tx.description}</td>
+                    <td class="px-6 py-4 font-medium ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}">
+                        ${tx.type === 'credit' ? '+' : ''}€${Math.abs(tx.amount).toFixed(2)}
+                    </td>
+                    <td class="px-6 py-4">€${tx.balance_after.toFixed(2)}</td>
+                    <td class="px-6 py-4">
+                        <span class="badge badge-success">Abgeschlossen</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <button class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Feedback
+        function loadFeedback() {
+            const feedbackHtml = mockData.feedback.map(item => `
+                <div class="p-6 hover:bg-gray-50 cursor-pointer">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h4 class="font-semibold">${item.subject}</h4>
+                            <p class="text-sm text-gray-600 mt-1">von ${item.from} • ${dayjs(item.date).format('DD.MM.YYYY')}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="badge ${item.priority === 'high' ? 'badge-error' : item.priority === 'medium' ? 'badge-warning' : 'badge-info'}">
+                                ${item.priority === 'high' ? 'Hoch' : item.priority === 'medium' ? 'Mittel' : 'Niedrig'}
+                            </span>
+                            <span class="badge ${item.status === 'open' ? 'badge-warning' : item.status === 'in_progress' ? 'badge-info' : 'badge-success'}">
+                                ${item.status === 'open' ? 'Offen' : item.status === 'in_progress' ? 'In Bearbeitung' : 'Gelöst'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('feedbackList').innerHTML = feedbackHtml;
+        }
+
+        // Settings
+        function loadSettings() {
+            // Default to profile section
+            showSettingsSection('profile');
+        }
+
+        function showSettingsSection(section) {
+            // Hide all sections
+            document.querySelectorAll('[id$="Settings"]').forEach(el => el.style.display = 'none');
+            
+            // Show selected section
+            document.getElementById(section + 'Settings').style.display = 'block';
+            
+            // Update active button
+            document.querySelectorAll('[onclick^="showSettingsSection"]').forEach(btn => {
+                btn.classList.remove('bg-gray-100');
+            });
+            event.target.classList.add('bg-gray-100');
+        }
+
+        // Charts
+        function initializeCharts() {
+            // Dashboard Call Trend Chart
+            const callTrendCtx = document.getElementById('callTrendChart');
+            if (callTrendCtx) {
+                charts.callTrend = new Chart(callTrendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Anrufe',
+                            data: [],
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            // Success Rate Chart
+            const successRateCtx = document.getElementById('successRateChart');
+            if (successRateCtx) {
+                charts.successRate = new Chart(successRateCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Erfolgreich', 'Ausstehend'],
+                        datasets: [{
+                            data: [89, 11],
+                            backgroundColor: ['rgb(34, 197, 94)', 'rgb(229, 231, 235)']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateDashboardCharts(data) {
+            // Update call trend chart
+            if (charts.callTrend) {
+                charts.callTrend.data.labels = data.callTrend.map(d => d.date);
+                charts.callTrend.data.datasets[0].data = data.callTrend.map(d => d.calls);
+                charts.callTrend.update();
+            }
+        }
+
+        function updateAnalyticsCharts() {
+            // Call Volume Chart
+            const callVolumeCtx = document.getElementById('callVolumeChart');
+            if (!charts.callVolume && callVolumeCtx) {
+                charts.callVolume = new Chart(callVolumeCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun'],
+                        datasets: [{
+                            label: 'Anrufe',
+                            data: [650, 780, 820, 900, 950, 1100],
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
+            // Appointment Chart
+            const appointmentCtx = document.getElementById('appointmentChart');
+            if (!charts.appointments && appointmentCtx) {
+                charts.appointments = new Chart(appointmentCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun'],
+                        datasets: [{
+                            label: 'Termine',
+                            data: [280, 320, 350, 380, 420, 480],
+                            borderColor: 'rgb(34, 197, 94)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Helper Functions
+        function formatDuration(seconds) {
+            if (!seconds) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const icon = notification.querySelector('i');
+            
+            // Update icon based on type
+            icon.className = type === 'success' ? 'fas fa-check-circle text-green-500 mr-3' : 
+                           type === 'error' ? 'fas fa-exclamation-circle text-red-500 mr-3' : 
+                           'fas fa-info-circle text-blue-500 mr-3';
+            
+            document.getElementById('notificationText').textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Modal Functions
+        function showCallDetails(callId) {
+            const call = callsData.find(c => c.id === callId) || mockData.dashboard.recentCalls.find(c => c.id === callId);
+            if (!call) return;
+            
+            const content = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Anrufer</p>
+                            <p class="font-medium">${call.from}</p>
+                            ${call.name ? `<p class="text-sm text-gray-500">${call.name}</p>` : ''}
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Status</p>
+                            <span class="badge ${call.status === 'completed' ? 'badge-success' : 'badge-warning'}">
+                                ${call.status === 'completed' ? 'Abgeschlossen' : 'Laufend'}
+                            </span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Datum & Zeit</p>
+                            <p class="font-medium">${call.date ? dayjs(call.date).format('DD.MM.YYYY HH:mm') : 'Vor ' + call.time}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Dauer</p>
+                            <p class="font-medium">${call.duration ? formatDuration(call.duration) : 'N/A'}</p>
+                        </div>
+                    </div>
+                    
+                    ${call.transcript ? `
+                        <div>
+                            <h4 class="font-medium mb-2">Transkript</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg text-sm">
+                                ${call.transcript.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${call.appointment_id ? `
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="text-green-800">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                Termin gebucht - ID: ${call.appointment_id}
+                            </p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex gap-3 pt-4">
+                        ${call.recording_url ? `
+                            <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                <i class="fas fa-play mr-2"></i>
+                                Aufnahme abspielen
+                            </button>
+                        ` : ''}
+                        <button onclick="exportCallDetails(${call.id})" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                            <i class="fas fa-download mr-2"></i>
+                            Export
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('callDetailsContent').innerHTML = content;
+            document.getElementById('callDetailsModal').classList.add('active');
+        }
+
+        function showNewAppointmentModal() {
+            document.getElementById('newAppointmentModal').classList.add('active');
+        }
+
+        function showNewCustomerModal() {
+            // Would show new customer modal
+            showNotification('Neuer Kunde Dialog wird geöffnet...');
+        }
+
+        function showInviteModal() {
+            // Would show invite modal
+            showNotification('Einladungs-Dialog wird geöffnet...');
+        }
+
+        function showTopupModal() {
+            document.getElementById('topupModal').classList.add('active');
+        }
+
+        function showNewFeedbackModal() {
+            // Would show feedback modal
+            showNotification('Neues Feedback Dialog wird geöffnet...');
+        }
+
+        // Action Functions
+        function refreshCalls() {
+            showNotification('Anrufe werden aktualisiert...');
+            loadCalls();
+        }
+
+        function exportCalls() {
+            showNotification('Export wird vorbereitet...');
+            // Would trigger download
+        }
+
+        function exportCustomers() {
+            showNotification('Kunden-Export wird vorbereitet...');
+        }
+
+        function exportAnalytics() {
+            showNotification('Analytics-Report wird generiert...');
+        }
+
+        function exportTransactions() {
+            showNotification('Transaktions-Export wird vorbereitet...');
+        }
+
+        function filterCalls() {
+            // Would filter calls based on inputs
+            const search = document.getElementById('callSearch').value.toLowerCase();
+            const status = document.getElementById('callStatus').value;
+            const branch = document.getElementById('callBranch').value;
+            const date = document.getElementById('callDate').value;
+            
+            // Filter logic would go here
+            showNotification('Filter angewendet');
+        }
+
+        function toggleCallFilters() {
+            const filters = document.getElementById('callFilters');
+            filters.style.display = filters.style.display === 'none' ? 'grid' : 'none';
+        }
+
+        function setCalendarView(view) {
+            calendarView = view;
+            
+            // Update button states
+            document.querySelectorAll('[id$="ViewBtn"]').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            document.getElementById(view + 'ViewBtn').classList.remove('bg-gray-100', 'text-gray-700');
+            document.getElementById(view + 'ViewBtn').classList.add('bg-blue-500', 'text-white');
+            
+            // Update calendar display
+            loadAppointments();
+        }
+
+        function loadAppointments() {
+            // Would load appointments based on view
+            const container = document.getElementById('calendarContainer');
+            
+            if (calendarView === 'list') {
+                container.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium">Max Mustermann - Beratung</p>
+                                <p class="text-sm text-gray-600">Heute, 14:00 - 15:00 Uhr</p>
+                            </div>
+                            <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                Details
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium">Anna Schmidt - Erstgespräch</p>
+                                <p class="text-sm text-gray-600">Heute, 16:30 - 17:30 Uhr</p>
+                            </div>
+                            <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = '<div class="text-center text-gray-500 py-8">Kalenderansicht wird geladen...</div>';
+            }
+        }
+
+        function selectTopupAmount(amount) {
+            selectedTopupAmount = amount;
+            document.querySelectorAll('.topup-amount-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-blue-50');
+            });
+            event.target.closest('button').classList.add('border-blue-500', 'bg-blue-50');
+        }
+
+        function processTopup() {
+            const amount = selectedTopupAmount || document.getElementById('customTopupAmount').value;
+            if (!amount) {
+                showNotification('Bitte wählen Sie einen Betrag', 'error');
+                return;
+            }
+            
+            showNotification(`Aufladung von €${amount} wird verarbeitet...`);
+            closeModal('topupModal');
+            
+            // Would process payment
+            setTimeout(() => {
+                showNotification(`€${amount} erfolgreich aufgeladen!`, 'success');
+                loadBilling();
+            }, 2000);
+        }
+
+        function toggleAutoTopup() {
+            const enabled = document.getElementById('autoTopupToggle').checked;
+            document.getElementById('autoTopupSettings').style.opacity = enabled ? '1' : '0.5';
+            document.getElementById('autoTopupSettings').style.pointerEvents = enabled ? 'auto' : 'none';
+        }
+
+        function saveAutoTopupSettings() {
+            showNotification('Auto-Topup Einstellungen gespeichert');
+        }
+
+        function toggleMobileSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+
+        function logout() {
+            if (confirm('Möchten Sie sich wirklich abmelden?')) {
+                showNotification('Abmeldung...');
+                setTimeout(() => {
+                    window.location.href = '/business/login';
+                }, 1000);
+            }
+        }
+
+        // Real-time updates
+        function startRealTimeUpdates() {
+            // Simulate real-time updates
+            setInterval(() => {
+                if (currentPage === 'dashboard') {
+                    // Update random stat
+                    const stats = ['callsToday', 'appointmentsToday'];
+                    const stat = stats[Math.floor(Math.random() * stats.length)];
+                    const el = document.getElementById(stat);
+                    const current = parseInt(el.textContent);
+                    if (Math.random() > 0.8) {
+                        el.textContent = current + 1;
+                        
+                        // Animate
+                        el.style.transform = 'scale(1.2)';
+                        setTimeout(() => {
+                            el.style.transform = 'scale(1)';
+                        }, 300);
+                    }
+                }
+            }, 30000); // Every 30 seconds
+        }
+
+        // Form submissions
+        document.getElementById('profileForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            showNotification('Profil wurde aktualisiert');
+        });
+
+        document.getElementById('newAppointmentForm')?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            showNotification('Termin wurde erstellt');
+            closeModal('newAppointmentModal');
+        });
+
+        // Export call details
+        function exportCallDetails(callId) {
+            showNotification(`Anrufdetails ${callId} werden exportiert...`);
+        }
+
+        // Additional functions for completeness
+        function playRecording(url) {
+            showNotification('Audio-Player wird geöffnet...');
+        }
+
+        function showTranscript(callId) {
+            const call = callsData.find(c => c.id === callId);
+            if (call && call.transcript) {
+                alert('Transkript:\n\n' + call.transcript);
+            }
+        }
+
+        function editCustomer(customerId) {
+            showNotification(`Kunde ${customerId} bearbeiten...`);
+        }
+
+        function viewCustomerHistory(customerId) {
+            showNotification(`Historie für Kunde ${customerId} wird geladen...`);
+        }
+
+        function toggleNotifications() {
+            showNotification('Benachrichtigungscenter wird entwickelt...');
+        }
+
+        function updateAnalytics() {
+            const range = document.getElementById('analyticsDateRange').value;
+            showNotification(`Analytics für ${range} Tage werden geladen...`);
+            loadAnalytics();
+        }
+
+        function previousCallsPage() {
+            showNotification('Vorherige Seite...');
+        }
+
+        function nextCallsPage() {
+            showNotification('Nächste Seite...');
+        }
+
+        // Mobile responsiveness
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI Business Portal - Vollständige Version</title>
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Day.js -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/locale/de.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/relativeTime.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        /* Prevent dashboard duplication bug */
+        #dashboard-page > * {
+            max-width: 100%;
+        }
+        
+        /* Sidebar styles */
+        .sidebar-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(2px);
+        }
+        
+        .sidebar-item.active {
+            background-color: #e5e7eb;
+            border-left: 4px solid #3b82f6;
+            font-weight: 600;
+        }
+
+        /* Page transitions */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+
+        /* Badge styles */
+        .badge {
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-warning { background-color: #fef3c7; color: #92400e; }
+        .badge-info { background-color: #dbeafe; color: #1e40af; }
+        .badge-error { background-color: #fee2e2; color: #991b1b; }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            inset: 0;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Transcript box */
+        .transcript-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Main Layout -->
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-lg flex-shrink-0">
+            <div class="p-6 border-b">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-800">AskProAI</h1>
+                </div>
+            </div>
+            
+            <nav class="p-4 space-y-1">
+                <a href="#dashboard" class="sidebar-item active flex items-center p-3 rounded-lg" data-page="dashboard">
+                    <i class="fas fa-dashboard mr-3 text-gray-600 w-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#calls" class="sidebar-item flex items-center p-3 rounded-lg" data-page="calls">
+                    <i class="fas fa-phone mr-3 text-gray-600 w-5"></i>
+                    <span>Anrufe</span>
+                    <span class="ml-auto badge badge-info" id="newCallsBadge">3</span>
+                </a>
+                <a href="#appointments" class="sidebar-item flex items-center p-3 rounded-lg" data-page="appointments">
+                    <i class="fas fa-calendar mr-3 text-gray-600 w-5"></i>
+                    <span>Termine</span>
+                </a>
+                <a href="#customers" class="sidebar-item flex items-center p-3 rounded-lg" data-page="customers">
+                    <i class="fas fa-users mr-3 text-gray-600 w-5"></i>
+                    <span>Kunden</span>
+                </a>
+                <a href="#team" class="sidebar-item flex items-center p-3 rounded-lg" data-page="team">
+                    <i class="fas fa-user-friends mr-3 text-gray-600 w-5"></i>
+                    <span>Team</span>
+                </a>
+                <a href="#analytics" class="sidebar-item flex items-center p-3 rounded-lg" data-page="analytics">
+                    <i class="fas fa-chart-bar mr-3 text-gray-600 w-5"></i>
+                    <span>Analysen</span>
+                </a>
+                <a href="#billing" class="sidebar-item flex items-center p-3 rounded-lg" data-page="billing">
+                    <i class="fas fa-credit-card mr-3 text-gray-600 w-5"></i>
+                    <span>Abrechnung</span>
+                </a>
+                <a href="#settings" class="sidebar-item flex items-center p-3 rounded-lg" data-page="settings">
+                    <i class="fas fa-cog mr-3 text-gray-600 w-5"></i>
+                    <span>Einstellungen</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <h2 id="pageTitle" class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                    <div class="flex items-center space-x-4">
+                        <button class="relative p-2 text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-bell"></i>
+                            <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-gray-600"></i>
+                            </div>
+                            <span class="text-gray-700">Demo Benutzer</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <!-- Welcome Section -->
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Willkommen zurück!</h3>
+                        <p class="text-gray-600">Hier ist Ihre Übersicht für heute</p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-blue-100 rounded-full">
+                                    <i class="fas fa-phone text-blue-600"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">8</h3>
+                            <p class="text-gray-600">Anrufe heute</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-green-100 rounded-full">
+                                    <i class="fas fa-calendar-check text-green-600"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">5</h3>
+                            <p class="text-gray-600">Termine heute</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-purple-100 rounded-full">
+                                    <i class="fas fa-user-plus text-purple-600"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">3</h3>
+                            <p class="text-gray-600">Neue Kunden</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-yellow-100 rounded-full">
+                                    <i class="fas fa-euro-sign text-yellow-600"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">€0.00</h3>
+                            <p class="text-gray-600">Umsatz heute</p>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Anruf-Trend (letzte 7 Tage)</h3>
+                            <canvas id="callTrendChart" height="200"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Anruf-Statistiken</h3>
+                            <canvas id="callStatsChart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-semibold">Letzte Anrufe</h3>
+                            </div>
+                            <div class="p-6">
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <p class="font-medium">+49 123 456789</p>
+                                            <p class="text-sm text-gray-600">vor 15 Minuten</p>
+                                        </div>
+                                        <span class="badge badge-success">Termin gebucht</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <p class="font-medium">+49 987 654321</p>
+                                            <p class="text-sm text-gray-600">vor 1 Stunde</p>
+                                        </div>
+                                        <span class="badge badge-info">Info erhalten</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <p class="font-medium">+49 555 123456</p>
+                                            <p class="text-sm text-gray-600">vor 2 Stunden</p>
+                                        </div>
+                                        <span class="badge badge-warning">Rückruf</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-semibold">Nächste Termine</h3>
+                            </div>
+                            <div class="p-6">
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <p class="font-medium">Max Mustermann</p>
+                                            <p class="text-sm text-gray-600">Heute, 14:00 Uhr</p>
+                                        </div>
+                                        <span class="badge badge-info">Beratung</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <p class="font-medium">Anna Schmidt</p>
+                                            <p class="text-sm text-gray-600">Heute, 16:30 Uhr</p>
+                                        </div>
+                                        <span class="badge badge-info">Erstgespräch</span>
+                                    </div>
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                        <div>
+                                            <p class="font-medium">Peter Weber</p>
+                                            <p class="text-sm text-gray-600">Morgen, 10:00 Uhr</p>
+                                        </div>
+                                        <span class="badge badge-info">Follow-up</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calls Page -->
+                <div id="calls-page" class="page">
+                    <!-- Page Header -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                                    <i class="fas fa-phone mr-3"></i>
+                                    Anrufe
+                                </h1>
+                                <p class="text-gray-600 mt-1">Übersicht aller eingegangenen Anrufe mit detaillierten Informationen</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="refreshData()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center">
+                                    <i class="fas fa-sync-alt mr-2"></i>
+                                    Aktualisieren
+                                </button>
+                                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Exportieren
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Anrufe heute</p>
+                                    <p class="text-2xl font-bold">8</p>
+                                </div>
+                                <i class="fas fa-phone text-blue-500 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Neue Anrufe</p>
+                                    <p class="text-2xl font-bold text-blue-600">3</p>
+                                </div>
+                                <i class="fas fa-bell text-blue-500 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Aktion erforderlich</p>
+                                    <p class="text-2xl font-bold text-yellow-600">2</p>
+                                </div>
+                                <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Ø Dauer</p>
+                                    <p class="text-2xl font-bold">3:45</p>
+                                </div>
+                                <i class="fas fa-clock text-gray-500 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="bg-white rounded-lg shadow mb-6 p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="relative">
+                                <input type="text" placeholder="Suche nach Nummer, Name..." 
+                                       class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                            <select class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Alle Status</option>
+                                <option value="completed">Abgeschlossen</option>
+                                <option value="analyzed">Analysiert</option>
+                                <option value="error">Fehler</option>
+                            </select>
+                            <select class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Alle Filialen</option>
+                                <option value="1">Hauptfiliale</option>
+                                <option value="2">Filiale Nord</option>
+                                <option value="3">Filiale Süd</option>
+                            </select>
+                            <input type="date" class="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Calls Table -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <input type="checkbox" class="rounded">
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Typ</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anrufer</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Filiale</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum & Zeit</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dauer</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <input type="checkbox" class="rounded">
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <i class="fas fa-phone-alt text-green-500"></i>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div>
+                                                <p class="font-medium">+49 123 456789</p>
+                                                <p class="text-sm text-gray-500">Max Mustermann</p>
+                                                <span class="badge badge-success mt-1">
+                                                    <i class="fas fa-calendar-check mr-1"></i>
+                                                    Termin gebucht
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <i class="fas fa-building mr-1 text-gray-400"></i>
+                                            Hauptfiliale
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <div>
+                                                <p>21.01.2024</p>
+                                                <p class="text-xs text-gray-500">14:23 Uhr</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <i class="fas fa-clock mr-1 text-gray-400"></i>
+                                            3:45
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="badge badge-success">Abgeschlossen</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex gap-2">
+                                                <button onclick="playAudio(1)" class="text-gray-600 hover:text-gray-800" title="Aufnahme abspielen">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                                <button onclick="showTranscript(1)" class="text-gray-600 hover:text-gray-800" title="Transkript">
+                                                    <i class="fas fa-file-alt"></i>
+                                                </button>
+                                                <button onclick="translateCall(1)" class="text-gray-600 hover:text-gray-800" title="Übersetzen">
+                                                    <i class="fas fa-globe"></i>
+                                                </button>
+                                                <button onclick="showCallDetails(1)" class="text-blue-600 hover:text-blue-800">
+                                                    Details
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <input type="checkbox" class="rounded">
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <i class="fas fa-phone-alt text-green-500"></i>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div>
+                                                <p class="font-medium">+49 987 654321</p>
+                                                <p class="text-sm text-gray-500">Anna Schmidt</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <i class="fas fa-building mr-1 text-gray-400"></i>
+                                            Filiale Nord
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <div>
+                                                <p>21.01.2024</p>
+                                                <p class="text-xs text-gray-500">13:15 Uhr</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <i class="fas fa-clock mr-1 text-gray-400"></i>
+                                            5:12
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="badge badge-success">Abgeschlossen</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex gap-2">
+                                                <button class="text-gray-600 hover:text-gray-800" title="Aufnahme abspielen">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                                <button class="text-gray-600 hover:text-gray-800" title="Transkript">
+                                                    <i class="fas fa-file-alt"></i>
+                                                </button>
+                                                <button class="text-gray-600 hover:text-gray-800" title="Übersetzen">
+                                                    <i class="fas fa-globe"></i>
+                                                </button>
+                                                <button class="text-blue-600 hover:text-blue-800">
+                                                    Details
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <input type="checkbox" class="rounded">
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <i class="fas fa-phone-slash text-red-500"></i>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div>
+                                                <p class="font-medium">+49 555 123456</p>
+                                                <p class="text-sm text-gray-500">Unbekannt</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <i class="fas fa-building mr-1 text-gray-400"></i>
+                                            Hauptfiliale
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <div>
+                                                <p>21.01.2024</p>
+                                                <p class="text-xs text-gray-500">11:30 Uhr</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <i class="fas fa-clock mr-1 text-gray-400"></i>
+                                            0:00
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="badge badge-error">Keine Antwort</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex gap-2">
+                                                <button class="text-blue-600 hover:text-blue-800">
+                                                    Details
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="px-6 py-4 bg-gray-50 border-t flex items-center justify-between">
+                            <div class="text-sm text-gray-700">
+                                Zeige 1 bis 3 von 125 Einträgen
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="px-3 py-1 border rounded hover:bg-gray-100">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button class="px-3 py-1 border rounded bg-blue-500 text-white">1</button>
+                                <button class="px-3 py-1 border rounded hover:bg-gray-100">2</button>
+                                <button class="px-3 py-1 border rounded hover:bg-gray-100">3</button>
+                                <button class="px-3 py-1 border rounded hover:bg-gray-100">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transcript Display (Hidden by default) -->
+                    <div id="transcript-1" class="hidden mt-4 bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">Transkript</h3>
+                            <button onclick="hideTranscript(1)" class="text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="transcript-box">
+Kunde: Guten Tag, ich möchte gerne einen Termin vereinbaren.
+Agent: Guten Tag! Sehr gerne helfe ich Ihnen bei der Terminvereinbarung. Um was für einen Termin handelt es sich denn?
+Kunde: Ich bräuchte einen Termin für eine Beratung.
+Agent: Perfekt! Wann würde es Ihnen denn zeitlich passen?
+Kunde: Am besten diese Woche noch, vielleicht Donnerstag oder Freitag?
+Agent: Lassen Sie mich kurz schauen... Ich hätte am Donnerstag um 14:00 Uhr noch einen Termin frei. Würde Ihnen das passen?
+Kunde: Ja, das passt perfekt!
+Agent: Wunderbar! Dann habe ich Sie für Donnerstag, den 25. Januar um 14:00 Uhr eingetragen. Sie erhalten gleich eine Bestätigungs-E-Mail.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointments Page -->
+                <div id="appointments-page" class="page">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-calendar mr-3"></i>
+                                Termine
+                            </h1>
+                            <button class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center">
+                                <i class="fas fa-plus mr-2"></i>
+                                Neuer Termin
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Calendar View -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="mb-4 flex gap-2">
+                            <button class="px-4 py-2 bg-blue-500 text-white rounded-lg">Monat</button>
+                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Woche</button>
+                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Tag</button>
+                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Liste</button>
+                        </div>
+
+                        <!-- Appointments List -->
+                        <div class="space-y-4">
+                            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-semibold">Max Mustermann - Beratung</h4>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            Heute, 14:00 - 15:00 Uhr
+                                        </p>
+                                        <p class="text-sm text-gray-600">
+                                            <i class="fas fa-user-md mr-1"></i>
+                                            Dr. Weber
+                                        </p>
+                                        <p class="text-sm text-gray-600">
+                                            <i class="fas fa-building mr-1"></i>
+                                            Hauptfiliale
+                                        </p>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <span class="badge badge-info">Bestätigt</span>
+                                        <div class="flex gap-2">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Bearbeiten">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800" title="Absagen">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-semibold">Anna Schmidt - Erstgespräch</h4>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            Heute, 16:30 - 17:30 Uhr
+                                        </p>
+                                        <p class="text-sm text-gray-600">
+                                            <i class="fas fa-user-md mr-1"></i>
+                                            Dr. Meyer
+                                        </p>
+                                        <p class="text-sm text-gray-600">
+                                            <i class="fas fa-building mr-1"></i>
+                                            Filiale Nord
+                                        </p>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <span class="badge badge-warning">Unbestätigt</span>
+                                        <div class="flex gap-2">
+                                            <button class="text-green-600 hover:text-green-800" title="Bestätigen">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="text-blue-600 hover:text-blue-800" title="Bearbeiten">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border rounded-lg p-4 hover:bg-gray-50">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-semibold">Peter Weber - Follow-up</h4>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            Morgen, 10:00 - 10:30 Uhr
+                                        </p>
+                                        <p class="text-sm text-gray-600">
+                                            <i class="fas fa-user-md mr-1"></i>
+                                            Dr. Weber
+                                        </p>
+                                        <p class="text-sm text-gray-600">
+                                            <i class="fas fa-building mr-1"></i>
+                                            Hauptfiliale
+                                        </p>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <span class="badge badge-info">Bestätigt</span>
+                                        <div class="flex gap-2">
+                                            <button class="text-blue-600 hover:text-blue-800" title="Bearbeiten">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800" title="Absagen">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customers Page -->
+                <div id="customers-page" class="page">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-users mr-3"></i>
+                                Kunden
+                            </h1>
+                            <div class="flex gap-3">
+                                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Export
+                                </button>
+                                <button class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Neuer Kunde
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">Gesamt Kunden</p>
+                            <p class="text-2xl font-bold">342</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">Aktive Kunden</p>
+                            <p class="text-2xl font-bold text-green-600">289</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow">
+                            <p class="text-sm text-gray-600">Neue diese Woche</p>
+                            <p class="text-2xl font-bold text-blue-600">12</p>
+                        </div>
+                    </div>
+
+                    <!-- Customers Table -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-4 border-b">
+                            <div class="flex gap-4">
+                                <div class="flex-1 relative">
+                                    <input type="text" placeholder="Suche nach Name, Telefon, Email..." 
+                                           class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                                <select class="px-4 py-2 border rounded-lg">
+                                    <option value="">Alle Tags</option>
+                                    <option value="vip">VIP</option>
+                                    <option value="neu">Neu</option>
+                                    <option value="stammkunde">Stammkunde</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefon</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Termine</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tags</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 font-medium">Max Mustermann</td>
+                                        <td class="px-6 py-4">+49 123 456789</td>
+                                        <td class="px-6 py-4">max@example.com</td>
+                                        <td class="px-6 py-4">5</td>
+                                        <td class="px-6 py-4">
+                                            <span class="badge badge-warning mr-1">VIP</span>
+                                            <span class="badge badge-info">Stammkunde</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex gap-2">
+                                                <button class="text-blue-600 hover:text-blue-800">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="text-gray-600 hover:text-gray-800">
+                                                    <i class="fas fa-history"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 font-medium">Anna Schmidt</td>
+                                        <td class="px-6 py-4">+49 987 654321</td>
+                                        <td class="px-6 py-4">anna@example.com</td>
+                                        <td class="px-6 py-4">2</td>
+                                        <td class="px-6 py-4">
+                                            <span class="badge badge-info">Neu</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex gap-2">
+                                                <button class="text-blue-600 hover:text-blue-800">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="text-gray-600 hover:text-gray-800">
+                                                    <i class="fas fa-history"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 font-medium">Peter Weber</td>
+                                        <td class="px-6 py-4">+49 555 123456</td>
+                                        <td class="px-6 py-4">peter@example.com</td>
+                                        <td class="px-6 py-4">8</td>
+                                        <td class="px-6 py-4">
+                                            <span class="badge badge-info">Stammkunde</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex gap-2">
+                                                <button class="text-blue-600 hover:text-blue-800">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="text-gray-600 hover:text-gray-800">
+                                                    <i class="fas fa-history"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Page -->
+                <div id="team-page" class="page">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center">
+                            <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-user-friends mr-3"></i>
+                                Team
+                            </h1>
+                            <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                Mitglied einladen
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="text-center">
+                                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-2xl font-bold text-green-600 mx-auto mb-4">
+                                    SW
+                                </div>
+                                <h4 class="font-semibold text-lg">Dr. Sarah Weber</h4>
+                                <p class="text-gray-600 mb-2">Ärztin</p>
+                                <span class="badge badge-success">Verfügbar</span>
+                            </div>
+                            <div class="mt-6 pt-6 border-t grid grid-cols-2 gap-4 text-center">
+                                <div>
+                                    <p class="text-2xl font-bold">45</p>
+                                    <p class="text-sm text-gray-600">Anrufe</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-bold">32</p>
+                                    <p class="text-sm text-gray-600">Termine</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="text-center">
+                                <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center text-2xl font-bold text-yellow-600 mx-auto mb-4">
+                                    TM
+                                </div>
+                                <h4 class="font-semibold text-lg">Tom Meyer</h4>
+                                <p class="text-gray-600 mb-2">Rezeption</p>
+                                <span class="badge badge-warning">Beschäftigt</span>
+                            </div>
+                            <div class="mt-6 pt-6 border-t grid grid-cols-2 gap-4 text-center">
+                                <div>
+                                    <p class="text-2xl font-bold">89</p>
+                                    <p class="text-sm text-gray-600">Anrufe</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-bold">0</p>
+                                    <p class="text-sm text-gray-600">Termine</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="text-center">
+                                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center text-2xl font-bold text-gray-600 mx-auto mb-4">
+                                    JS
+                                </div>
+                                <h4 class="font-semibold text-lg">Julia Schneider</h4>
+                                <p class="text-gray-600 mb-2">Assistenz</p>
+                                <span class="badge badge-error">Abwesend</span>
+                            </div>
+                            <div class="mt-6 pt-6 border-t grid grid-cols-2 gap-4 text-center">
+                                <div>
+                                    <p class="text-2xl font-bold">23</p>
+                                    <p class="text-sm text-gray-600">Anrufe</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-bold">15</p>
+                                    <p class="text-sm text-gray-600">Termine</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Page -->
+                <div id="analytics-page" class="page">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            Analysen
+                        </h1>
+                    </div>
+
+                    <!-- Date Range Selector -->
+                    <div class="bg-white rounded-lg shadow mb-6 p-4">
+                        <div class="flex gap-4 items-center">
+                            <label class="text-sm font-medium text-gray-700">Zeitraum:</label>
+                            <select class="px-4 py-2 border rounded-lg">
+                                <option value="7">Letzte 7 Tage</option>
+                                <option value="30" selected>Letzte 30 Tage</option>
+                                <option value="90">Letzte 90 Tage</option>
+                                <option value="365">Letztes Jahr</option>
+                            </select>
+                            <button class="ml-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                <i class="fas fa-download mr-2"></i>
+                                Export Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Gesamtanrufe</p>
+                                <i class="fas fa-phone text-blue-500"></i>
+                            </div>
+                            <p class="text-3xl font-bold">1,234</p>
+                            <p class="text-sm text-green-600 mt-2">+12% vs. Vorperiode</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Konversionsrate</p>
+                                <i class="fas fa-percentage text-green-500"></i>
+                            </div>
+                            <p class="text-3xl font-bold">32%</p>
+                            <p class="text-sm text-green-600 mt-2">+5% vs. Vorperiode</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Ø Anrufdauer</p>
+                                <i class="fas fa-clock text-purple-500"></i>
+                            </div>
+                            <p class="text-3xl font-bold">3:45</p>
+                            <p class="text-sm text-red-600 mt-2">-10s vs. Vorperiode</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm text-gray-600">Kundenzufriedenheit</p>
+                                <i class="fas fa-smile text-yellow-500"></i>
+                            </div>
+                            <p class="text-3xl font-bold">4.8</p>
+                            <p class="text-sm text-gray-600 mt-2">von 5.0</p>
+                        </div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Anrufvolumen</h3>
+                            <canvas id="callVolumeChart"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Terminbuchungen</h3>
+                            <canvas id="appointmentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Page -->
+                <div id="billing-page" class="page">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-credit-card mr-3"></i>
+                            Abrechnung & Guthaben
+                        </h1>
+                    </div>
+
+                    <!-- Balance Overview -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Guthaben Übersicht</h3>
+                            <div class="mb-6">
+                                <div class="flex justify-between items-end mb-2">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Aktuelles Guthaben</p>
+                                        <p class="text-4xl font-bold text-gray-800">€125.50</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-gray-600">Bonus Guthaben</p>
+                                        <p class="text-2xl font-semibold text-green-600">+€25.00</p>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full" style="width: 63%"></div>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">Niedrig ab €20.00</p>
+                            </div>
+                            <button class="w-full px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Guthaben aufladen
+                            </button>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Auto-Topup</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-700">Aktiviert</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    Lädt automatisch €50 auf, wenn das Guthaben unter €10 fällt.
+                                </div>
+                                <button class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">
+                                    Einstellungen anpassen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Transaktionsverlauf</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50 border-b">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beschreibung</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Betrag</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4">20.01.2024</td>
+                                        <td class="px-6 py-4">Guthaben Aufladung</td>
+                                        <td class="px-6 py-4 font-medium text-green-600">+€50.00</td>
+                                        <td class="px-6 py-4">
+                                            <span class="badge badge-success">Abgeschlossen</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4">19.01.2024</td>
+                                        <td class="px-6 py-4">Anrufgebühren</td>
+                                        <td class="px-6 py-4 font-medium text-red-600">-€2.50</td>
+                                        <td class="px-6 py-4">
+                                            <span class="badge badge-success">Abgeschlossen</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4">18.01.2024</td>
+                                        <td class="px-6 py-4">Monatsgebühr</td>
+                                        <td class="px-6 py-4 font-medium text-red-600">-€29.99</td>
+                                        <td class="px-6 py-4">
+                                            <span class="badge badge-success">Abgeschlossen</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settings-page" class="page">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-cog mr-3"></i>
+                            Einstellungen
+                        </h1>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Settings Navigation -->
+                        <div class="bg-white rounded-lg shadow p-6 h-fit">
+                            <nav class="space-y-2">
+                                <button onclick="showSettingsTab('profile')" class="settings-tab active w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center bg-gray-100">
+                                    <i class="fas fa-user mr-3"></i>
+                                    Profil
+                                </button>
+                                <button onclick="showSettingsTab('notifications')" class="settings-tab w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center">
+                                    <i class="fas fa-bell mr-3"></i>
+                                    Benachrichtigungen
+                                </button>
+                                <button onclick="showSettingsTab('security')" class="settings-tab w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center">
+                                    <i class="fas fa-lock mr-3"></i>
+                                    Sicherheit
+                                </button>
+                                <button onclick="showSettingsTab('company')" class="settings-tab w-full text-left px-4 py-2 rounded-lg hover:bg-gray-100 flex items-center">
+                                    <i class="fas fa-building mr-3"></i>
+                                    Unternehmen
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Settings Content -->
+                        <div class="lg:col-span-2">
+                            <!-- Profile Settings -->
+                            <div id="profileSettings" class="settings-content bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-6">Profil Einstellungen</h3>
+                                <form class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Vorname</label>
+                                            <input type="text" value="Demo" class="w-full px-3 py-2 border rounded-lg">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Nachname</label>
+                                            <input type="text" value="Benutzer" class="w-full px-3 py-2 border rounded-lg">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input type="email" value="demo@askproai.de" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                                        <input type="tel" value="+49 123 456789" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                                        <input type="text" value="Account Manager" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <div class="pt-4">
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                            Änderungen speichern
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Notification Settings -->
+                            <div id="notificationSettings" class="settings-content hidden bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-6">Benachrichtigungs-Einstellungen</h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between py-2">
+                                        <div>
+                                            <p class="font-medium">Email-Benachrichtigungen</p>
+                                            <p class="text-sm text-gray-600">Erhalten Sie Email-Updates über neue Anrufe</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center justify-between py-2">
+                                        <div>
+                                            <p class="font-medium">Push-Benachrichtigungen</p>
+                                            <p class="text-sm text-gray-600">Browser-Benachrichtigungen aktivieren</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center justify-between py-2">
+                                        <div>
+                                            <p class="font-medium">SMS-Benachrichtigungen</p>
+                                            <p class="text-sm text-gray-600">SMS bei wichtigen Ereignissen</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" class="sr-only peer" checked>
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security Settings -->
+                            <div id="securitySettings" class="settings-content hidden bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-6">Sicherheits-Einstellungen</h3>
+                                <div class="space-y-6">
+                                    <div>
+                                        <h4 class="font-medium mb-2">Passwort ändern</h4>
+                                        <form class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Aktuelles Passwort</label>
+                                                <input type="password" class="w-full px-3 py-2 border rounded-lg">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Neues Passwort</label>
+                                                <input type="password" class="w-full px-3 py-2 border rounded-lg">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Passwort bestätigen</label>
+                                                <input type="password" class="w-full px-3 py-2 border rounded-lg">
+                                            </div>
+                                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                                Passwort ändern
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-medium mb-2">Zwei-Faktor-Authentifizierung</h4>
+                                        <p class="text-sm text-gray-600 mb-4">Erhöhen Sie die Sicherheit Ihres Kontos</p>
+                                        <button class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                            2FA aktivieren
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Company Settings -->
+                            <div id="companySettings" class="settings-content hidden bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-6">Unternehmens-Einstellungen</h3>
+                                <form class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Firmenname</label>
+                                        <input type="text" value="Demo GmbH" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                                        <input type="text" value="Musterstraße 123" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
+                                            <input type="text" value="12345" class="w-full px-3 py-2 border rounded-lg">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+                                            <input type="text" value="Berlin" class="w-full px-3 py-2 border rounded-lg">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Steuernummer</label>
+                                        <input type="text" value="DE123456789" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <div class="pt-4">
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                            Änderungen speichern
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Call Details Modal -->
+    <div id="callDetailsModal" class="modal">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">Anruf Details</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Anrufer</p>
+                        <p class="font-medium">+49 123 456789</p>
+                        <p class="text-sm text-gray-500">Max Mustermann</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Status</p>
+                        <span class="badge badge-success">Abgeschlossen</span>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Datum & Zeit</p>
+                        <p class="font-medium">21.01.2024 14:23</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Dauer</p>
+                        <p class="font-medium">3:45</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium mb-2">Transkript</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg text-sm">
+                        <p>Kunde: Guten Tag, ich möchte gerne einen Termin vereinbaren...</p>
+                        <p class="mt-2">Agent: Sehr gerne! Wann würde es Ihnen denn passen?</p>
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <p class="text-green-800">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Termin erfolgreich gebucht für Donnerstag, 25.01.2024 um 14:00 Uhr
+                    </p>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        <i class="fas fa-play mr-2"></i>
+                        Aufnahme abspielen
+                    </button>
+                    <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                        <i class="fas fa-download mr-2"></i>
+                        Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize Day.js
+        dayjs.locale('de');
+        dayjs.extend(window.dayjs_plugin_relativeTime);
+
+        // Global State
+        let currentPage = 'dashboard';
+        let charts = {};
+        let updateInterval = null;
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Setup navigation
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.dataset.page;
+                    navigateTo(page);
+                });
+            });
+
+            // Initialize dashboard
+            initializeDashboard();
+            
+            // Stop any existing intervals
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        }
+
+        function navigateTo(page) {
+            // Clear any existing intervals when changing pages
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+
+            // Update active states
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            
+            // Show new page
+            document.getElementById(`${page}-page`).classList.add('active');
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            
+            // Update page title
+            const title = document.querySelector(`[data-page="${page}"] span`).textContent;
+            document.getElementById('pageTitle').textContent = title;
+            
+            currentPage = page;
+            
+            // Initialize page specific features
+            if (page === 'dashboard') {
+                initializeDashboard();
+            } else if (page === 'analytics') {
+                initializeAnalytics();
+            }
+        }
+
+        function initializeDashboard() {
+            // Initialize dashboard charts
+            const callTrendCtx = document.getElementById('callTrendChart');
+            if (callTrendCtx && !charts.callTrend) {
+                charts.callTrend = new Chart(callTrendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+                        datasets: [{
+                            label: 'Anrufe',
+                            data: [12, 19, 15, 25, 22, 8, 10],
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
+            const callStatsCtx = document.getElementById('callStatsChart');
+            if (callStatsCtx && !charts.callStats) {
+                charts.callStats = new Chart(callStatsCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Erfolgreich', 'Verpasst', 'Fehler'],
+                        datasets: [{
+                            data: [89, 8, 3],
+                            backgroundColor: [
+                                'rgb(34, 197, 94)',
+                                'rgb(251, 146, 60)',
+                                'rgb(239, 68, 68)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+        }
+
+        function initializeAnalytics() {
+            const volumeCtx = document.getElementById('callVolumeChart');
+            if (volumeCtx && !charts.callVolume) {
+                charts.callVolume = new Chart(volumeCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun'],
+                        datasets: [{
+                            label: 'Anrufe',
+                            data: [650, 780, 820, 900, 950, 1100],
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
+            const appointmentCtx = document.getElementById('appointmentChart');
+            if (appointmentCtx && !charts.appointments) {
+                charts.appointments = new Chart(appointmentCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun'],
+                        datasets: [{
+                            label: 'Termine',
+                            data: [280, 320, 350, 380, 420, 480],
+                            borderColor: 'rgb(34, 197, 94)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Modal functions
+        function showCallDetails(id) {
+            document.getElementById('callDetailsModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('callDetailsModal').classList.remove('active');
+        }
+
+        // Transcript functions
+        function showTranscript(id) {
+            const transcript = document.getElementById(`transcript-${id}`);
+            if (transcript) {
+                transcript.classList.toggle('hidden');
+            }
+        }
+
+        function hideTranscript(id) {
+            const transcript = document.getElementById(`transcript-${id}`);
+            if (transcript) {
+                transcript.classList.add('hidden');
+            }
+        }
+
+        // Settings tabs
+        function showSettingsTab(tab) {
+            // Hide all content
+            document.querySelectorAll('.settings-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.settings-tab').forEach(btn => {
+                btn.classList.remove('bg-gray-100');
+            });
+            
+            // Show selected content
+            document.getElementById(tab + 'Settings').classList.remove('hidden');
+            
+            // Mark tab as active
+            event.target.classList.add('bg-gray-100');
+        }
+
+        // Utility functions
+        function refreshData() {
+            console.log('Refreshing data...');
+            // Would refresh current page data
+        }
+
+        function playAudio(id) {
+            console.log('Playing audio for call', id);
+            // Would play audio
+        }
+
+        function translateCall(id) {
+            console.log('Translating call', id);
+            // Would translate call
+        }
+
+        // Prevent form submissions
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                alert('Änderungen gespeichert!');
+            });
+        });
+    </script>
+</body>
+</html>

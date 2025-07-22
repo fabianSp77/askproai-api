@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
+    <title>AskProAI Business Portal</title>
+    
+    <!-- Tailwind CSS (for development only) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Day.js -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/locale/de.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/relativeTime.js"></script>
+    
+    <!-- API Client -->
+    <script src="/js/askproai-api-client.js"></script>
+    
+    <style>
+        /* Custom styles for production */
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        .sidebar-item {
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(2px);
+        }
+        
+        .sidebar-item.active {
+            background-color: #e5e7eb;
+            border-left: 4px solid #3b82f6;
+            font-weight: 600;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            inset: 0;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .notification-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            height: 8px;
+            width: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal active">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6">Anmelden</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">E-Mail</label>
+                    <input type="email" id="loginEmail" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                           placeholder="ihre-email@beispiel.de">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Passwort</label>
+                    <input type="password" id="loginPassword" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                           placeholder="••••••••">
+                </div>
+                <div class="mb-6 flex items-center">
+                    <input type="checkbox" id="rememberMe" class="mr-2">
+                    <label for="rememberMe" class="text-sm text-gray-700">Angemeldet bleiben</label>
+                </div>
+                <div id="loginError" class="mb-4 p-3 bg-red-100 text-red-700 rounded-lg hidden"></div>
+                <button type="submit" id="loginButton" 
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+                    <span id="loginButtonText">Anmelden</span>
+                    <span id="loginButtonLoading" class="hidden">
+                        <i class="fas fa-spinner fa-spin"></i> Anmeldung läuft...
+                    </span>
+                </button>
+            </form>
+            <div class="mt-4 text-center">
+                <a href="#" class="text-sm text-blue-600 hover:underline">Passwort vergessen?</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="appContainer" class="hidden">
+        <div class="flex h-screen overflow-hidden">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white shadow-lg flex-shrink-0">
+                <div class="p-6 border-b">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                        <h1 class="text-xl font-bold text-gray-800">AskProAI</h1>
+                    </div>
+                </div>
+                
+                <nav class="p-4 space-y-1">
+                    <a href="#dashboard" class="sidebar-item active flex items-center p-3 rounded-lg" data-page="dashboard">
+                        <i class="fas fa-dashboard mr-3 text-gray-600 w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#calls" class="sidebar-item flex items-center p-3 rounded-lg relative" data-page="calls">
+                        <i class="fas fa-phone mr-3 text-gray-600 w-5"></i>
+                        <span>Anrufe</span>
+                        <span id="newCallsCount" class="ml-auto bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-semibold hidden">0</span>
+                    </a>
+                    <a href="#appointments" class="sidebar-item flex items-center p-3 rounded-lg" data-page="appointments">
+                        <i class="fas fa-calendar mr-3 text-gray-600 w-5"></i>
+                        <span>Termine</span>
+                    </a>
+                    <a href="#customers" class="sidebar-item flex items-center p-3 rounded-lg" data-page="customers">
+                        <i class="fas fa-users mr-3 text-gray-600 w-5"></i>
+                        <span>Kunden</span>
+                    </a>
+                    <a href="#team" class="sidebar-item flex items-center p-3 rounded-lg" data-page="team">
+                        <i class="fas fa-user-friends mr-3 text-gray-600 w-5"></i>
+                        <span>Team</span>
+                    </a>
+                    <a href="#analytics" class="sidebar-item flex items-center p-3 rounded-lg" data-page="analytics">
+                        <i class="fas fa-chart-bar mr-3 text-gray-600 w-5"></i>
+                        <span>Analysen</span>
+                    </a>
+                    <a href="#billing" class="sidebar-item flex items-center p-3 rounded-lg" data-page="billing">
+                        <i class="fas fa-credit-card mr-3 text-gray-600 w-5"></i>
+                        <span>Abrechnung</span>
+                    </a>
+                    <a href="#settings" class="sidebar-item flex items-center p-3 rounded-lg" data-page="settings">
+                        <i class="fas fa-cog mr-3 text-gray-600 w-5"></i>
+                        <span>Einstellungen</span>
+                    </a>
+                </nav>
+                
+                <!-- User Info -->
+                <div class="absolute bottom-0 left-0 right-0 p-4 border-t bg-gray-50">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-600 text-sm"></i>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-gray-700" id="userName">Lädt...</p>
+                            <p class="text-xs text-gray-500" id="userEmail">...</p>
+                        </div>
+                        <button id="logoutButton" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col">
+                <!-- Header -->
+                <header class="bg-white shadow-sm border-b px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <h2 id="pageTitle" class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                        <div class="flex items-center space-x-4">
+                            <!-- Notification Bell -->
+                            <button class="relative p-2 text-gray-600 hover:text-gray-800" id="notificationBell">
+                                <i class="fas fa-bell"></i>
+                                <span id="notificationDot" class="notification-dot hidden"></span>
+                            </button>
+                            
+                            <!-- Quick Actions -->
+                            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                                <i class="fas fa-plus mr-2"></i>
+                                Neuer Termin
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Main Content -->
+                <main class="flex-1 overflow-y-auto p-6">
+                    <!-- Dashboard Page -->
+                    <div id="dashboardPage" class="page active">
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Anrufe heute</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="callsToday">-</p>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            <span id="callsTrend">-</span>
+                                        </p>
+                                    </div>
+                                    <div class="p-3 bg-blue-100 rounded-lg">
+                                        <i class="fas fa-phone text-blue-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Termine heute</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="appointmentsToday">-</p>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            <span id="appointmentsTrend">-</span>
+                                        </p>
+                                    </div>
+                                    <div class="p-3 bg-green-100 rounded-lg">
+                                        <i class="fas fa-calendar-check text-green-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Neue Kunden</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="newCustomers">-</p>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            <span id="customersTrend">-</span>
+                                        </p>
+                                    </div>
+                                    <div class="p-3 bg-purple-100 rounded-lg">
+                                        <i class="fas fa-user-plus text-purple-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-600">Guthaben</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="currentBalance">-</p>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            <span id="balanceStatus">-</span>
+                                        </p>
+                                    </div>
+                                    <div class="p-3 bg-yellow-100 rounded-lg">
+                                        <i class="fas fa-euro-sign text-yellow-600"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4">Anrufverlauf (7 Tage)</h3>
+                                <canvas id="callsChart"></canvas>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4">Terminübersicht</h3>
+                                <canvas id="appointmentsChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="mt-6 bg-white rounded-lg shadow">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-semibold">Letzte Aktivitäten</h3>
+                            </div>
+                            <div class="p-6">
+                                <div id="recentActivity" class="space-y-4">
+                                    <div class="text-center text-gray-500 py-8">
+                                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                        <p>Lade Aktivitäten...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calls Page -->
+                    <div id="callsPage" class="page">
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold">Anrufliste</h3>
+                                    <div class="flex space-x-2">
+                                        <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                                            <i class="fas fa-filter mr-2"></i>
+                                            Filter
+                                        </button>
+                                        <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                                            <i class="fas fa-download mr-2"></i>
+                                            Export
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zeit</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefonnummer</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kunde</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dauer</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="callsTableBody" class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                                <p>Lade Anrufe...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other pages will be added here -->
+                    <div id="appointmentsPage" class="page">
+                        <div class="text-center py-12">
+                            <i class="fas fa-calendar text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">Termine werden geladen...</p>
+                        </div>
+                    </div>
+
+                    <div id="customersPage" class="page">
+                        <div class="text-center py-12">
+                            <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">Kunden werden geladen...</p>
+                        </div>
+                    </div>
+
+                    <div id="teamPage" class="page">
+                        <div class="text-center py-12">
+                            <i class="fas fa-user-friends text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">Team wird geladen...</p>
+                        </div>
+                    </div>
+
+                    <div id="analyticsPage" class="page">
+                        <div class="text-center py-12">
+                            <i class="fas fa-chart-bar text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">Analysen werden geladen...</p>
+                        </div>
+                    </div>
+
+                    <div id="billingPage" class="page">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Guthaben & Abrechnung</h3>
+                            <div id="billingContent">
+                                <div class="text-center py-8">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>Lade Abrechnungsdaten...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="settingsPage" class="page">
+                        <div class="text-center py-12">
+                            <i class="fas fa-cog text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">Einstellungen werden geladen...</p>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+    <script>
+        // Initialize Day.js
+        dayjs.locale('de');
+        dayjs.extend(window.dayjs_plugin_relativeTime);
+
+        // Initialize API Client
+        let apiClient;
+        let currentUser = null;
+        let dashboardInterval = null;
+        let charts = {};
+
+        // Application State
+        const appState = {
+            currentPage: 'dashboard',
+            isAuthenticated: false,
+            notifications: [],
+            filters: {}
+        };
+
+        // Initialize Application
+        async function initApp() {
+            // Check for existing session
+            const sessionToken = localStorage.getItem('portal_session_token');
+            if (sessionToken) {
+                apiClient = new AskProAPIClient({
+                    debug: true,
+                    onAuthError: handleAuthError
+                });
+
+                try {
+                    const authCheck = await apiClient.checkAuth();
+                    if (authCheck.authenticated) {
+                        currentUser = authCheck.user;
+                        showApp();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                }
+            }
+
+            // Show login modal
+            showLogin();
+        }
+
+        // Show login modal
+        function showLogin() {
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('appContainer').classList.add('hidden');
+            
+            // Setup login form
+            const loginForm = document.getElementById('loginForm');
+            loginForm.addEventListener('submit', handleLogin);
+        }
+
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const remember = document.getElementById('rememberMe').checked;
+            
+            // Show loading state
+            document.getElementById('loginButton').disabled = true;
+            document.getElementById('loginButtonText').classList.add('hidden');
+            document.getElementById('loginButtonLoading').classList.remove('hidden');
+            document.getElementById('loginError').classList.add('hidden');
+            
+            try {
+                apiClient = new AskProAPIClient({
+                    debug: true,
+                    onAuthError: handleAuthError
+                });
+                
+                const response = await apiClient.login(email, password, remember);
+                
+                if (response.success) {
+                    currentUser = response.data.user;
+                    showApp();
+                    showToast('Erfolgreich angemeldet!', 'success');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                const errorMsg = error.data?.message || 'Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.';
+                document.getElementById('loginError').textContent = errorMsg;
+                document.getElementById('loginError').classList.remove('hidden');
+            } finally {
+                document.getElementById('loginButton').disabled = false;
+                document.getElementById('loginButtonText').classList.remove('hidden');
+                document.getElementById('loginButtonLoading').classList.add('hidden');
+            }
+        }
+
+        // Show main app
+        function showApp() {
+            document.getElementById('loginModal').classList.remove('active');
+            document.getElementById('appContainer').classList.remove('hidden');
+            
+            // Update user info
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            
+            // Setup navigation
+            setupNavigation();
+            
+            // Setup logout
+            document.getElementById('logoutButton').addEventListener('click', handleLogout);
+            
+            // Load initial data
+            loadDashboard();
+            
+            // Start auto-refresh
+            startAutoRefresh();
+        }
+
+        // Setup navigation
+        function setupNavigation() {
+            const navItems = document.querySelectorAll('.sidebar-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.dataset.page;
+                    navigateToPage(page);
+                });
+            });
+        }
+
+        // Navigate to page
+        function navigateToPage(page) {
+            // Update state
+            appState.currentPage = page;
+            
+            // Update UI
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.page === page);
+            });
+            
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.toggle('active', p.id === `${page}Page`);
+            });
+            
+            // Update page title
+            const titles = {
+                dashboard: 'Dashboard',
+                calls: 'Anrufe',
+                appointments: 'Termine',
+                customers: 'Kunden',
+                team: 'Team',
+                analytics: 'Analysen',
+                billing: 'Abrechnung',
+                settings: 'Einstellungen'
+            };
+            document.getElementById('pageTitle').textContent = titles[page] || page;
+            
+            // Load page data
+            loadPageData(page);
+        }
+
+        // Load page data
+        async function loadPageData(page) {
+            switch (page) {
+                case 'dashboard':
+                    await loadDashboard();
+                    break;
+                case 'calls':
+                    await loadCalls();
+                    break;
+                case 'appointments':
+                    await loadAppointments();
+                    break;
+                case 'billing':
+                    await loadBilling();
+                    break;
+                // Add other pages as needed
+            }
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const data = await apiClient.getDashboard();
+                updateDashboardStats(data);
+                updateCharts(data);
+                updateRecentActivity(data.recent_activity || []);
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+                showToast('Dashboard konnte nicht geladen werden', 'error');
+            }
+        }
+
+        // Update dashboard stats
+        function updateDashboardStats(data) {
+            // Update calls
+            document.getElementById('callsToday').textContent = data.stats?.calls_today || '0';
+            updateTrend('callsTrend', data.stats?.calls_trend);
+            
+            // Update appointments
+            document.getElementById('appointmentsToday').textContent = data.stats?.appointments_today || '0';
+            updateTrend('appointmentsTrend', data.stats?.appointments_trend);
+            
+            // Update customers
+            document.getElementById('newCustomers').textContent = data.stats?.new_customers || '0';
+            updateTrend('customersTrend', data.stats?.customers_trend);
+            
+            // Update balance
+            const balance = data.billing?.current_balance || 0;
+            document.getElementById('currentBalance').textContent = `€${balance.toFixed(2)}`;
+            
+            const balanceStatus = balance < 10 ? 'Niedriger Kontostand' : 'Ausreichend';
+            const statusClass = balance < 10 ? 'text-red-500' : 'text-green-500';
+            document.getElementById('balanceStatus').innerHTML = `<span class="${statusClass}">${balanceStatus}</span>`;
+        }
+
+        // Update trend indicator
+        function updateTrend(elementId, trend) {
+            const element = document.getElementById(elementId);
+            if (!element || !trend) return;
+            
+            const value = trend.value || 0;
+            const isPositive = value >= 0;
+            const icon = isPositive ? '↑' : '↓';
+            const colorClass = isPositive ? 'text-green-500' : 'text-red-500';
+            
+            element.innerHTML = `<span class="${colorClass}">${icon} ${Math.abs(value)}%</span>`;
+        }
+
+        // Update charts
+        function updateCharts(data) {
+            // Calls chart
+            if (charts.calls) {
+                charts.calls.destroy();
+            }
+            
+            const callsCtx = document.getElementById('callsChart').getContext('2d');
+            charts.calls = new Chart(callsCtx, {
+                type: 'line',
+                data: {
+                    labels: data.charts?.calls?.labels || [],
+                    datasets: [{
+                        label: 'Anrufe',
+                        data: data.charts?.calls?.data || [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Appointments chart
+            if (charts.appointments) {
+                charts.appointments.destroy();
+            }
+            
+            const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+            charts.appointments = new Chart(appointmentsCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.charts?.appointments?.labels || [],
+                    datasets: [{
+                        label: 'Termine',
+                        data: data.charts?.appointments?.data || [],
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update recent activity
+        function updateRecentActivity(activities) {
+            const container = document.getElementById('recentActivity');
+            
+            if (!activities.length) {
+                container.innerHTML = '<p class="text-center text-gray-500">Keine aktuellen Aktivitäten</p>';
+                return;
+            }
+            
+            container.innerHTML = activities.map(activity => `
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 ${activity.color || 'bg-gray-100'} rounded-full flex items-center justify-center">
+                            <i class="${activity.icon || 'fas fa-info'} text-sm ${activity.iconColor || 'text-gray-600'}"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-800">${activity.title}</p>
+                        <p class="text-xs text-gray-500">${dayjs(activity.time).fromNow()}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load calls
+        async function loadCalls() {
+            try {
+                const response = await apiClient.getCalls({ page: 1, per_page: 20 });
+                displayCalls(response.data || []);
+                
+                // Update new calls count
+                const newCallsCount = response.meta?.new_calls || 0;
+                updateNewCallsCount(newCallsCount);
+            } catch (error) {
+                console.error('Failed to load calls:', error);
+                showToast('Anrufe konnten nicht geladen werden', 'error');
+            }
+        }
+
+        // Display calls
+        function displayCalls(calls) {
+            const tbody = document.getElementById('callsTableBody');
+            
+            if (!calls.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            Keine Anrufe gefunden
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = calls.map(call => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${dayjs(call.created_at).format('DD.MM.YYYY HH:mm')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${call.from_number || '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${call.customer?.name || 'Unbekannt'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${formatDuration(call.duration)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${getCallStatusBadge(call.status)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <button class="text-blue-600 hover:text-blue-800" onclick="viewCall('${call.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Load appointments
+        async function loadAppointments() {
+            try {
+                const response = await apiClient.getAppointments({ page: 1, per_page: 20 });
+                // Display appointments (implementation needed)
+                console.log('Appointments:', response);
+            } catch (error) {
+                console.error('Failed to load appointments:', error);
+                showToast('Termine konnten nicht geladen werden', 'error');
+            }
+        }
+
+        // Load billing
+        async function loadBilling() {
+            try {
+                const billing = await apiClient.getBilling();
+                displayBilling(billing);
+            } catch (error) {
+                console.error('Failed to load billing:', error);
+                showToast('Abrechnungsdaten konnten nicht geladen werden', 'error');
+            }
+        }
+
+        // Display billing
+        function displayBilling(billing) {
+            const content = document.getElementById('billingContent');
+            
+            content.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Aktuelles Guthaben</p>
+                        <p class="text-2xl font-bold text-gray-800">€${(billing.current_balance || 0).toFixed(2)}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Bonus Guthaben</p>
+                        <p class="text-2xl font-bold text-gray-800">€${(billing.bonus_balance || 0).toFixed(2)}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600">Geschätzte Reichweite</p>
+                        <p class="text-2xl font-bold text-gray-800">${billing.estimated_calls || 0} Anrufe</p>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" onclick="showTopupModal()">
+                        <i class="fas fa-plus mr-2"></i>
+                        Guthaben aufladen
+                    </button>
+                    <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
+                        <i class="fas fa-cog mr-2"></i>
+                        Auto-Topup Einstellungen
+                    </button>
+                </div>
+            `;
+        }
+
+        // Handle logout
+        async function handleLogout() {
+            try {
+                await apiClient.logout();
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Force logout even on error
+                localStorage.clear();
+                window.location.href = '/business/login';
+            }
+        }
+
+        // Handle auth error
+        function handleAuthError() {
+            showToast('Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.', 'error');
+            setTimeout(() => {
+                window.location.href = '/business/login';
+            }, 2000);
+        }
+
+        // Auto refresh
+        function startAutoRefresh() {
+            // Refresh dashboard every 60 seconds
+            dashboardInterval = setInterval(() => {
+                if (appState.currentPage === 'dashboard') {
+                    loadDashboard();
+                }
+            }, 60000);
+        }
+
+        // Utility functions
+        function formatDuration(seconds) {
+            if (!seconds) return '-';
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function getCallStatusBadge(status) {
+            const badges = {
+                completed: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Abgeschlossen</span>',
+                in_progress: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Läuft</span>',
+                missed: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Verpasst</span>',
+                failed: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Fehlgeschlagen</span>'
+            };
+            return badges[status] || badges.failed;
+        }
+
+        function updateNewCallsCount(count) {
+            const element = document.getElementById('newCallsCount');
+            if (count > 0) {
+                element.textContent = count;
+                element.classList.remove('hidden');
+            } else {
+                element.classList.add('hidden');
+            }
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgColor = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            }[type] || 'bg-gray-500';
+            
+            toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg mb-2 transition-all duration-300 transform translate-x-full`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : 'info'}-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            const container = document.getElementById('toastContainer');
+            container.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // View call details
+        function viewCall(callId) {
+            // This would open a modal or navigate to call details
+            console.log('View call:', callId);
+        }
+
+        // Show topup modal
+        function showTopupModal() {
+            // This would show the topup modal
+            console.log('Show topup modal');
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Cleanup on unload
+        window.addEventListener('beforeunload', () => {
+            if (dashboardInterval) {
+                clearInterval(dashboardInterval);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -74,6 +74,8 @@ export default defineConfig({
                 'resources/js/portal-billing-optimized.jsx',
                 // Admin React Portal
                 'resources/js/admin.jsx',
+                // Login
+                'resources/js/login.jsx',
                 // Dropdown Close Fix
                 'resources/js/dropdown-close-fix.js'
             ],

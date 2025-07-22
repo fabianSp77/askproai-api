@@ -1,4 +1,9 @@
 @php
+    // Check if user is authenticated first
+    if (!auth()->check()) {
+        return; // Don't render anything if not authenticated
+    }
+    
     try {
         $branchContext = app(\App\Services\BranchContextManager::class);
         $currentBranch = $branchContext->getCurrentBranch();
