@@ -4,11 +4,11 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
             <div class="flex flex-wrap items-center gap-3">
                 {{-- Company & Branch Filter --}}
-                <div class="flex-1 min-w-[200px]" x-data="companyBranchSelect()">
+                <div class="flex-1 min-w-[200px]" x-data="companyBranchSelect()" data-dropdown-id="companyBranch">
                     <div class="relative">
                         <button 
-                            @click="showDropdown = !showDropdown"
-                            @click.away="showDropdown = false"
+                            @click="toggleDropdown()"
+                            @click.outside="closeDropdown()"
                             type="button"
                             class="relative w-full px-3 py-2 text-left bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-150"
                         >
@@ -158,10 +158,10 @@
                 </div>
                 
                 {{-- Date Filter Dropdown --}}
-                <div class="relative" x-data="{ showDateFilter: false }">
+                <div class="relative" x-data="dateFilterDropdownEnhanced()" data-dropdown-id="dateFilter">
                     <button 
-                        @click="showDateFilter = !showDateFilter"
-                        @click.away="showDateFilter = false"
+                        @click="toggleDropdown()"
+                        @click.outside="closeDropdown()"
                         type="button"
                         class="px-3 py-2 text-sm font-medium bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-150 flex items-center gap-2"
                     >
@@ -188,7 +188,7 @@
                         @foreach(['today' => 'Heute', 'yesterday' => 'Gestern', 'last7days' => 'Letzte 7 Tage', 'last30days' => 'Letzte 30 Tage', 'thisMonth' => 'Dieser Monat', 'lastMonth' => 'Letzter Monat', 'thisYear' => 'Dieses Jahr'] as $key => $label)
                             <button 
                                 wire:click="setDateFilter('{{ $key }}')"
-                                @click="showDateFilter = false"
+                                @click="closeDropdown()"
                                 class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors {{ $dateFilter === $key ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium' : 'text-gray-700 dark:text-gray-300' }}"
                             >
                                 {{ $label }}
@@ -197,7 +197,7 @@
                         <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                         <button 
                             wire:click="setDateFilter('custom')"
-                            @click="showDateFilter = false"
+                            @click="closeDropdown()"
                             class="w-full px-4 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 {{ $dateFilter === 'custom' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium' : 'text-gray-700 dark:text-gray-300' }}"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -317,6 +317,11 @@
             console.log('[Global Fallback] toggleBranch called for:', companyId, branchId);
         };
         
+        // Removed - script was moved to deprecated folder
+        // const dropdownScript = document.createElement('script');
+        // dropdownScript.src = '/js/dropdown-fix-global.js';
+        // document.head.appendChild(dropdownScript);
+        
         function companyBranchSelect() {
             return {
                 showDropdown: false,
@@ -337,6 +342,19 @@
                     this.isBranchSelected = this.isBranchSelected.bind(this);
                     this.hasSearchResults = this.hasSearchResults.bind(this);
                     this.matchesSearch = this.matchesSearch.bind(this);
+                },
+                
+                // Dropdown control methods
+                toggleDropdown() {
+                    this.showDropdown = !this.showDropdown;
+                },
+                
+                closeDropdown() {
+                    this.showDropdown = false;
+                },
+                
+                openDropdown() {
+                    this.showDropdown = true;
                 },
                 
                 matchesSearch(text) {
@@ -481,6 +499,9 @@
             }
         }
     </script>
+    
+    {{-- Operations Center Fix - Defines missing Alpine components --}}
+    <script src="{{ asset('js/operations-center-fix.js') }}?v={{ time() }}"></script>
     @endpush
 
 </x-filament-panels::page>

@@ -1,16 +1,17 @@
 #!/bin/bash
-# Simple Uptime Monitor for AskProAI
-# Checks critical services and logs status
+# Improved Uptime Monitor for AskProAI with debugging
+# Logs PID to identify overlapping processes
 
 set -e
 
 LOG_FILE="/var/www/api-gateway/storage/logs/uptime-monitor.log"
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
 ALERT_EMAIL="admin@askproai.de"
+PID=$$
 
-# Function to log messages
+# Function to log messages with PID
 log_message() {
-    echo "[$TIMESTAMP] $1" >> "$LOG_FILE"
+    echo "[$TIMESTAMP] [PID:$PID] $1" >> "$LOG_FILE"
 }
 
 # Check if service is running
@@ -34,12 +35,16 @@ log_message "=== Starting uptime check ==="
 # Initialize status
 all_good=true
 
-# 1. Check main website (health.php existiert)
-if ! check_service "Main Website" "https://api.askproai.de/health.php" "200"; then
+# 1. Check main website (redirect to admin is OK)
+http_code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.askproai.de/")
+if [[ "$http_code" =~ ^(200|301|302)$ ]]; then
+    log_message "✓ Main Website is UP"
+else
+    log_message "✗ Main Website is DOWN (HTTP $http_code)"
     all_good=false
 fi
 
-# 2. Check Admin Panel (200, 301, 302 redirects sind OK, 500 ist NICHT OK!)
+# 2. Check Admin Panel (200, 301, 302 redirects sind OK)
 http_code=$(curl -s -o /dev/null -w "%{http_code}" "https://api.askproai.de/admin")
 if [[ "$http_code" =~ ^(200|301|302)$ ]]; then
     log_message "✓ Admin Panel is UP (HTTP $http_code)"
@@ -48,9 +53,12 @@ else
     all_good=false
 fi
 
-# 3. Check API endpoint (nutze health.php)
-if ! check_service "API Endpoint" "https://api.askproai.de/health.php" "200"; then
-    all_good=false
+# 3. Check API endpoint (use Laravel health endpoint)
+if ! check_service "API Endpoint" "https://api.askproai.de/api/health" "200"; then
+    # Fallback: Try alternative endpoint
+    if ! check_service "API Endpoint (alt)" "https://api.askproai.de/api/status" "200"; then
+        all_good=false
+    fi
 fi
 
 # 4. Check MySQL
@@ -91,7 +99,6 @@ if [ "$all_good" = true ]; then
     log_message "=== All systems operational ==="
 else
     log_message "=== ALERT: Some services are down ==="
-    # Here you could add email notification
 fi
 
 # Keep only last 1000 lines in log

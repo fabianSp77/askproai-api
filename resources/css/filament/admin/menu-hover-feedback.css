@@ -1,0 +1,178 @@
+/* Menu Hover und Transition Verbesserungen */
+
+/* Smooth Transitions für alle Menü-Elemente */
+.fi-sidebar-group-button,
+.fi-sidebar-item-button,
+.fi-sidebar-group-collapse-button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Hover-States für Gruppen */
+.fi-sidebar-group-button:hover {
+    background-color: rgba(59, 130, 246, 0.05) !important;
+    transform: translateX(2px);
+}
+
+.dark .fi-sidebar-group-button:hover {
+    background-color: rgba(96, 165, 250, 0.1) !important;
+}
+
+/* Hover-States für Items */
+.fi-sidebar-item-button:hover {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+    transform: translateX(4px);
+}
+
+.dark .fi-sidebar-item-button:hover {
+    background-color: rgba(96, 165, 250, 0.12) !important;
+}
+
+/* Aktive Items - stärkere Hervorhebung */
+.fi-sidebar-item.fi-active .fi-sidebar-item-button {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+    border-left: 4px solid rgb(59, 130, 246) !important;
+    padding-left: 12px !important;
+    font-weight: 600 !important;
+}
+
+.dark .fi-sidebar-item.fi-active .fi-sidebar-item-button {
+    background-color: rgba(96, 165, 250, 0.2) !important;
+    border-left-color: rgb(96, 165, 250) !important;
+}
+
+/* Collapse Button Hover */
+.fi-sidebar-group-collapse-button:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    transform: scale(1.1);
+}
+
+.dark .fi-sidebar-group-collapse-button:hover {
+    background-color: rgba(96, 165, 250, 0.15) !important;
+}
+
+/* Icon Animations */
+.fi-sidebar-group-collapse-button svg {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Hover-Effekt für Icons */
+.fi-sidebar-group-button:hover .fi-sidebar-group-icon,
+.fi-sidebar-item-button:hover .fi-sidebar-item-icon {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+/* Aktive Gruppe - subtile Hervorhebung */
+.fi-sidebar-group.fi-active > .fi-sidebar-group-button {
+    background-color: rgba(59, 130, 246, 0.03) !important;
+    position: relative;
+}
+
+.fi-sidebar-group.fi-active > .fi-sidebar-group-button::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: rgb(59, 130, 246);
+    border-radius: 0 3px 3px 0;
+}
+
+/* Fokus-States verbessern */
+.fi-sidebar-group-button:focus-visible,
+.fi-sidebar-item-button:focus-visible,
+.fi-sidebar-group-collapse-button:focus-visible {
+    outline: 2px solid rgb(59, 130, 246) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Keyboard Navigation Indicator */
+.fi-sidebar-group-button:focus-visible::after,
+.fi-sidebar-item-button:focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border: 2px solid rgb(59, 130, 246);
+    border-radius: 10px;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Disabled States */
+.fi-sidebar-item-button[disabled],
+.fi-sidebar-group-button[disabled] {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.fi-sidebar-item-button[disabled]:hover,
+.fi-sidebar-group-button[disabled]:hover {
+    background-color: transparent !important;
+    transform: none !important;
+}
+
+/* Badge Animations */
+.fi-sidebar-item-button .fi-badge {
+    transition: all 0.2s ease;
+}
+
+.fi-sidebar-item-button:hover .fi-badge {
+    transform: scale(1.1);
+}
+
+/* Nested Items - indentation feedback */
+.fi-sidebar-sub-group-items .fi-sidebar-item-button {
+    margin-left: 1.5rem;
+    position: relative;
+}
+
+.fi-sidebar-sub-group-items .fi-sidebar-item-button::before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    top: 50%;
+    width: 0.5rem;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.1);
+    transition: width 0.2s ease;
+}
+
+.dark .fi-sidebar-sub-group-items .fi-sidebar-item-button::before {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.fi-sidebar-sub-group-items .fi-sidebar-item-button:hover::before {
+    width: 0.75rem;
+    background-color: rgb(59, 130, 246);
+}
+
+/* Loading States */
+.fi-sidebar-group-button.loading,
+.fi-sidebar-item-button.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.fi-sidebar-group-button.loading::after,
+.fi-sidebar-item-button.loading::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    border-top-color: rgb(59, 130, 246);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: translateY(-50%) rotate(360deg);
+    }
+}

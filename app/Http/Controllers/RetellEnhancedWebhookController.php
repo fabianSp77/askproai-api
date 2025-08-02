@@ -68,8 +68,7 @@ class RetellEnhancedWebhookController extends Controller
             }
             
             // Check if call already exists
-            $existingCall = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)
-                ->where('retell_call_id', $callData['call_id'])
+            $existingCall = Call::where('retell_call_id', $callData['call_id'])
                 ->first();
             
             if ($existingCall) {
@@ -148,8 +147,7 @@ class RetellEnhancedWebhookController extends Controller
             
             // Create/find customer if phone number exists
             if ($call->from_number) {
-                $customer = Customer::withoutGlobalScope(\App\Scopes\TenantScope::class)
-                    ->where('phone', $call->from_number)
+                $customer = Customer::where('phone', $call->from_number)
                     ->where('company_id', $companyId)
                     ->first();
                 
@@ -166,7 +164,7 @@ class RetellEnhancedWebhookController extends Controller
                         'updated_at' => now()
                     ]);
                     
-                    $customer = Customer::withoutGlobalScope(\App\Scopes\TenantScope::class)->find($customerId);
+                    $customer = Customer::find($customerId);
                 }
                 
                 $call->customer_id = $customer->id;
@@ -270,8 +268,7 @@ class RetellEnhancedWebhookController extends Controller
             $endTime = $startTime->copy()->addMinutes(30); // Default 30 min duration
             
             // Get branch for Cal.com booking
-            $branch = Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
-                ->find($resolution['branch_id'] ?? $call->branch_id);
+            $branch = Branch::find($resolution['branch_id'] ?? $call->branch_id);
                 
             if (!$branch || !$branch->calcom_event_type_id) {
                 Log::error('Branch missing or no Cal.com event type configured', [
@@ -281,8 +278,7 @@ class RetellEnhancedWebhookController extends Controller
             }
             
             // Get customer data
-            $customer = Customer::withoutGlobalScope(\App\Scopes\TenantScope::class)
-                ->find($call->customer_id);
+            $customer = Customer::find($call->customer_id);
                 
             if (!$customer) {
                 Log::error('Customer not found for appointment', [

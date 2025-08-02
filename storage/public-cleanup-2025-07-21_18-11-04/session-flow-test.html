@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Flow Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .step {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button:hover { background: #2980b9; }
+        button:disabled { background: #95a5a6; cursor: not-allowed; }
+        pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        .success { color: #27ae60; font-weight: bold; }
+        .error { color: #e74c3c; font-weight: bold; }
+        .warning { color: #f39c12; font-weight: bold; }
+        .info { color: #3498db; font-weight: bold; }
+        h2 { color: #2c3e50; margin-top: 0; }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-success { background: #27ae60; }
+        .status-error { background: #e74c3c; }
+        .status-pending { background: #f39c12; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Session Flow Test - Complete Analysis</h1>
+        
+        <div class="step">
+            <h2>Step 1: Check Initial State</h2>
+            <button onclick="checkInitialState()">Check Initial State</button>
+            <pre id="initial-state">Click to check...</pre>
+        </div>
+        
+        <div class="step">
+            <h2>Step 2: Perform Login</h2>
+            <button onclick="performLogin()" id="login-btn">Login as demo@askproai.de</button>
+            <pre id="login-result">Click to login...</pre>
+        </div>
+        
+        <div class="step">
+            <h2>Step 3: Check Session After Login</h2>
+            <button onclick="checkSessionAfterLogin()" id="check-after-login-btn" disabled>Check Session</button>
+            <pre id="session-after-login">Login first...</pre>
+        </div>
+        
+        <div class="step">
+            <h2>Step 4: Test Protected Routes</h2>
+            <button onclick="testProtectedRoute('/business/dashboard')" disabled class="route-test-btn">Test Dashboard</button>
+            <button onclick="testProtectedRoute('/business/calls')" disabled class="route-test-btn">Test Calls</button>
+            <button onclick="testProtectedRoute('/business/appointments')" disabled class="route-test-btn">Test Appointments</button>
+            <pre id="route-test">Login first...</pre>
+        </div>
+        
+        <div class="step">
+            <h2>Step 5: Test Session Persistence</h2>
+            <button onclick="testPersistence()" disabled id="persistence-btn">Test New Request</button>
+            <pre id="persistence-test">Complete previous steps...</pre>
+        </div>
+        
+        <div class="step">
+            <h2>Session Summary</h2>
+            <pre id="summary">Complete all tests to see summary...</pre>
+        </div>
+    </div>
+    
+    <script>
+    let sessionData = {};
+    
+    async function checkInitialState() {
+        const result = document.getElementById('initial-state');
+        result.textContent = 'Checking initial state...';
+        
+        try {
+            // Check Laravel session
+            const laravelResponse = await fetch('/laravel-session-test.php?action=check-auth');
+            const laravelData = await laravelResponse.json();
+            
+            // Check PHP session
+            const phpResponse = await fetch('/simple-session-test.php?action=get');
+            const phpData = await phpResponse.json();
+            
+            result.textContent = '=== INITIAL STATE ===\n\n';
+            result.textContent += 'Laravel Session:\n';
+            result.textContent += '  Auth Check: ' + (laravelData.auth_check.auth_guard_check ? 'YES' : 'NO') + '\n';
+            result.textContent += '  Session ID: ' + laravelData.auth_check.session_id + '\n';
+            result.textContent += '  Portal User ID: ' + (laravelData.auth_check.portal_user_id || 'null') + '\n';
+            result.textContent += '\nPHP Session:\n';
+            result.textContent += '  Session ID: ' + phpData.session_id + '\n';
+            result.textContent += '  Data: ' + JSON.stringify(phpData.data_retrieved) + '\n';
+            
+            document.getElementById('login-btn').disabled = false;
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function performLogin() {
+        const result = document.getElementById('login-result');
+        result.textContent = 'Performing login...';
+        
+        try {
+            // Login via form submission
+            const formData = new FormData();
+            formData.append('email', 'demo@askproai.de');
+            formData.append('password', 'password');
+            
+            const response = await fetch('/business/login', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                redirect: 'manual'
+            });
+            
+            result.textContent = '=== LOGIN RESULT ===\n\n';
+            result.textContent += 'Status: ' + response.status + '\n';
+            result.textContent += 'Type: ' + response.type + '\n';
+            
+            if (response.status === 302 || response.type === 'opaqueredirect') {
+                result.innerHTML += '<span class="success">\n✅ Login successful (redirected)</span>\n';
+                
+                // Enable next steps
+                document.getElementById('check-after-login-btn').disabled = false;
+                document.querySelectorAll('.route-test-btn').forEach(btn => btn.disabled = false);
+                
+                // Check session immediately
+                await checkSessionAfterLogin();
+            } else {
+                const text = await response.text();
+                result.innerHTML += '<span class="error">\n❌ Login failed</span>\n';
+                result.textContent += '\nResponse: ' + text.substring(0, 500);
+            }
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function checkSessionAfterLogin() {
+        const result = document.getElementById('session-after-login');
+        result.textContent = 'Checking session after login...';
+        
+        try {
+            const response = await fetch('/laravel-session-test.php?action=check-auth');
+            const data = await response.json();
+            
+            sessionData = data.auth_check;
+            
+            result.textContent = '=== SESSION AFTER LOGIN ===\n\n';
+            result.textContent += 'Auth Guard Check: ' + (data.auth_check.auth_guard_check ? 'YES' : 'NO') + '\n';
+            result.textContent += 'Session ID: ' + data.auth_check.session_id + '\n';
+            result.textContent += 'Portal User ID: ' + (data.auth_check.portal_user_id || 'null') + '\n';
+            result.textContent += 'Auth Key: ' + (data.auth_check.auth_key || 'null') + '\n';
+            result.textContent += 'Session Keys: ' + JSON.stringify(data.auth_check.all_session_keys) + '\n';
+            
+            if (data.auth_check.user) {
+                result.textContent += '\nAuthenticated User:\n';
+                result.textContent += '  ID: ' + data.auth_check.user.id + '\n';
+                result.textContent += '  Email: ' + data.auth_check.user.email + '\n';
+                result.innerHTML += '<span class="success">\n✅ Authentication persisted!</span>';
+            } else {
+                result.innerHTML += '<span class="error">\n❌ Authentication NOT persisted!</span>';
+            }
+            
+            document.getElementById('persistence-btn').disabled = false;
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testProtectedRoute(route) {
+        const result = document.getElementById('route-test');
+        result.textContent = 'Testing route: ' + route + '...';
+        
+        try {
+            const response = await fetch(route, {
+                credentials: 'same-origin',
+                redirect: 'manual'
+            });
+            
+            result.textContent = '=== ROUTE TEST: ' + route + ' ===\n\n';
+            result.textContent += 'Status: ' + response.status + '\n';
+            result.textContent += 'Type: ' + response.type + '\n';
+            
+            if (response.status === 200) {
+                result.innerHTML += '<span class="success">✅ Access granted!</span>\n';
+            } else if (response.status === 302 || response.type === 'opaqueredirect') {
+                result.innerHTML += '<span class="error">❌ Redirected (not authenticated)</span>\n';
+            } else {
+                result.innerHTML += '<span class="warning">⚠️ Status: ' + response.status + '</span>\n';
+            }
+            
+        } catch (error) {
+            result.innerHTML += '\n<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testPersistence() {
+        const result = document.getElementById('persistence-test');
+        result.textContent = 'Testing session persistence with new request...';
+        
+        try {
+            // Make a completely new request
+            const response = await fetch('/test-share-session.php?action=check');
+            const data = await response.json();
+            
+            result.textContent = '=== PERSISTENCE TEST ===\n\n';
+            result.textContent += 'PHP Session:\n';
+            result.textContent += '  ID: ' + data.php_session.id + '\n';
+            result.textContent += '  Portal User ID: ' + (data.php_session.portal_user_id || 'null') + '\n';
+            
+            result.textContent += '\nLaravel Session:\n';
+            result.textContent += '  ID: ' + data.laravel_session.id + '\n';
+            result.textContent += '  Portal User ID: ' + (data.laravel_session.portal_user_id || 'null') + '\n';
+            result.textContent += '  All Keys: ' + JSON.stringify(data.laravel_session.all_keys) + '\n';
+            
+            result.textContent += '\nAuth Status:\n';
+            result.textContent += '  Guard Check: ' + (data.auth_check ? 'YES' : 'NO') + '\n';
+            result.textContent += '  Share Session Result: ' + data.share_session_result + '\n';
+            
+            if (data.auth_user) {
+                result.innerHTML += '\n<span class="success">✅ Session persisted correctly!</span>';
+            } else {
+                result.innerHTML += '\n<span class="error">❌ Session did not persist!</span>';
+            }
+            
+            updateSummary();
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    function updateSummary() {
+        const summary = document.getElementById('summary');
+        summary.innerHTML = '<h3>Test Summary</h3>\n';
+        summary.innerHTML += 'Complete the full test flow to identify session persistence issues.\n';
+        summary.innerHTML += '\n<span class="info">Key findings will appear here after all tests complete.</span>';
+    }
+    </script>
+</body>
+</html>

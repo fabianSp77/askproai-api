@@ -8,31 +8,31 @@ use Illuminate\Http\Request;
 class FixSessionCookieAfterRegeneration
 {
     /**
-     * This middleware runs BEFORE EncryptCookies to ensure session cookie is properly set
+     * This middleware runs BEFORE EncryptCookies to ensure session cookie is properly set.
      */
     public function handle(Request $request, Closure $next)
     {
         // Let the request process first
         $response = $next($request);
-        
+
         // Check if session was started
         if ($request->hasSession()) {
             $session = $request->session();
             $sessionId = $session->getId();
             $cookieName = config('session.cookie');
-            
+
             // Check if a new session ID was generated (e.g., after login)
             $sessionIdChanged = false;
-            
+
             // Get current cookie value
             $currentCookieValue = $request->cookie($cookieName);
-            
+
             if ($currentCookieValue) {
                 try {
                     // Try to decrypt current cookie
                     $encrypter = app(\Illuminate\Contracts\Encryption\Encrypter::class);
                     $decryptedValue = $encrypter->decrypt($currentCookieValue, false);
-                    
+
                     if ($decryptedValue !== $sessionId) {
                         $sessionIdChanged = true;
                     }
@@ -44,7 +44,7 @@ class FixSessionCookieAfterRegeneration
                 // No cookie present
                 $sessionIdChanged = true;
             }
-            
+
             // If session ID changed, queue a new cookie
             if ($sessionIdChanged) {
                 \Cookie::queue(
@@ -60,7 +60,7 @@ class FixSessionCookieAfterRegeneration
                 );
             }
         }
-        
+
         return $response;
     }
 }

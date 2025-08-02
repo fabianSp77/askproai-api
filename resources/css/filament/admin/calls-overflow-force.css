@@ -1,0 +1,74 @@
+/* FORCE Calls Table Overflow - Ultimate Priority */
+
+/* Target Filament's table content wrapper with maximum specificity */
+html body .fi-body .fi-layout .fi-main-ctn .fi-main .fi-page .fi-ta-ctn .fi-ta-content-ctn .fi-ta-content {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Shorter but still specific */
+.fi-body .fi-ta-content {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Target by component attribute */
+[wire\:id*="list-records"] .fi-ta-content {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Target calls resource specifically */
+.fi-resource-calls .fi-ta-content,
+.fi-resource-call .fi-ta-content,
+body:has(.fi-resource-calls) .fi-ta-content {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Use CSS custom properties to override Tailwind */
+.fi-ta-content {
+    --tw-overflow-x: auto !important;
+    --tw-overflow-y: visible !important;
+    overflow-x: var(--tw-overflow-x) !important;
+    overflow-y: var(--tw-overflow-y) !important;
+}
+
+/* Target the specific class that Filament uses */
+.fi-ta-content.overflow-x-auto {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Ensure table can expand */
+.fi-ta-content table,
+.fi-ta-content .fi-ta-table {
+    width: max-content !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+}
+
+/* Remove any conflicting overflow from parents */
+.fi-ta-ctn,
+.fi-ta-content-ctn {
+    overflow: visible !important;
+}
+
+/* Last resort - use ID if available */
+#calls-table .fi-ta-content,
+[id*="calls"] .fi-ta-content {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Debug mode - uncomment to see borders */
+/*
+.fi-ta-content {
+    border: 3px solid red !important;
+    background: rgba(255,0,0,0.1) !important;
+}
+.fi-ta-table {
+    border: 3px solid blue !important;
+    background: rgba(0,0,255,0.1) !important;
+}
+*/

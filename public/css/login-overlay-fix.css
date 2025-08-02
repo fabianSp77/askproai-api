@@ -1,0 +1,78 @@
+/**
+ * Login Page Overlay Fix
+ * Removes blocking overlays on login page
+ */
+
+/* Hide any modal overlays on login page */
+.fi-simple-main .fi-modal-close-overlay,
+.fi-simple-layout .fi-modal-close-overlay,
+body:has(form[wire\:submit="authenticate"]) .fi-modal-close-overlay {
+    display: none !important;
+}
+
+/* Hide modals on login page */
+.fi-simple-main .fi-modal[x-data],
+.fi-simple-layout .fi-modal[x-data],
+body:has(form[wire\:submit="authenticate"]) .fi-modal[x-data] {
+    display: none !important;
+}
+
+/* Remove any blocking overlays with high z-index */
+.fi-simple-main [class*="overlay"]:not(.fi-simple-main),
+.fi-simple-layout [class*="overlay"]:not(.fi-simple-layout) {
+    pointer-events: none !important;
+}
+
+/* Ensure login form is clickable */
+.fi-simple-main form,
+.fi-simple-layout form,
+form[wire\:submit="authenticate"] {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto !important;
+}
+
+/* Fix any invisible blocking elements */
+.fi-simple-main *[style*="position: fixed"],
+.fi-simple-layout *[style*="position: fixed"] {
+    pointer-events: none !important;
+}
+
+/* Ensure inputs are clickable */
+.fi-simple-main input,
+.fi-simple-main button,
+.fi-simple-main a,
+.fi-simple-layout input,
+.fi-simple-layout button,
+.fi-simple-layout a {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 20;
+}
+
+/* Force remove ALL overlays on login page */
+body:has(.fi-login-panel) .fi-modal,
+body:has(.fi-login-panel) .fi-modal-close-overlay,
+body:has(.fi-login-panel) [class*="backdrop"],
+body:has(.fi-login-panel) [class*="overlay"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Emergency override for any fixed position element */
+body:has(.fi-login-panel) *[style*="position: fixed"]:not(.fi-no-notification) {
+    display: none !important;
+}
+
+/* Ensure the login panel itself is always on top and clickable */
+.fi-login-panel {
+    position: relative !important;
+    z-index: 9999 !important;
+    isolation: isolate !important;
+}
+
+.fi-login-panel * {
+    pointer-events: auto !important;
+}

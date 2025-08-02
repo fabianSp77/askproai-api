@@ -83,3 +83,16 @@ storage/logs/*.json
 *.sql
 *.sql.gz
 archive/
+*password*
+*secret*
+*cookie*.txt
+*session*.txt
+*auth_key*
+backup-*
+admin-session-cookies.txt
+cookies.txt
+complete-flow-cookies.txt
+.claude-agents-backup-*
+.tmp-*
+storage/logs/*.txt
+*.htpasswd

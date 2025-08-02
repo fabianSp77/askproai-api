@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Cookie Final Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2d3748; border-bottom: 3px solid #4299e1; padding-bottom: 10px; }
+        h2 { color: #4a5568; margin-top: 30px; }
+        .test-section {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .status { 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .status.success { background: #48bb78; color: white; }
+        .status.error { background: #f56565; color: white; }
+        .status.warning { background: #ed8936; color: white; }
+        .status.pending { background: #718096; color: white; }
+        pre {
+            background: #2d3748;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover { background: #3182ce; }
+        button:disabled { background: #a0aec0; cursor: not-allowed; }
+        .log-entry {
+            border-left: 3px solid #e2e8f0;
+            padding: 10px;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry.success { border-color: #48bb78; background: #f0fff4; }
+        .log-entry.error { border-color: #f56565; background: #fff5f5; }
+        .log-entry.info { border-color: #4299e1; background: #ebf8ff; }
+        #results { margin-top: 20px; }
+        .cookie-info {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .fix-suggestion {
+            background: #fef5e7;
+            border: 1px solid #f6ad55;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Session Cookie Final Test</h1>
+        <p>Comprehensive test to diagnose and fix session persistence issues</p>
+
+        <div class="test-section">
+            <h2>Test Controls</h2>
+            <button onclick="runAllTests()">🚀 Run All Tests</button>
+            <button onclick="clearAllData()">🗑️ Clear All Data</button>
+            <button onclick="testLogin()">🔐 Test Login Only</button>
+            <button onclick="testSession()">📊 Test Session Only</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Current Browser State</h2>
+            <div id="browser-state"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Results</h2>
+            <div id="results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Debug Log</h2>
+            <div id="debug-log"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://api.askproai.de';
+        const debugLog = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toISOString();
+            debugLog.push({ timestamp, message, type });
+            updateDebugLog();
+        }
+
+        function updateDebugLog() {
+            const logDiv = document.getElementById('debug-log');
+            logDiv.innerHTML = debugLog.map(entry => 
+                `<div class="log-entry ${entry.type}">[${entry.timestamp}] ${entry.message}</div>`
+            ).join('');
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateBrowserState() {
+            const state = {
+                cookies: document.cookie,
+                localStorage: Object.keys(localStorage).length,
+                sessionStorage: Object.keys(sessionStorage).length,
+                protocol: location.protocol,
+                host: location.host
+            };
+
+            document.getElementById('browser-state').innerHTML = `
+                <div class="cookie-info">
+                    <strong>Cookies:</strong> ${state.cookies || '(none)'}<br>
+                    <strong>LocalStorage Items:</strong> ${state.localStorage}<br>
+                    <strong>SessionStorage Items:</strong> ${state.sessionStorage}<br>
+                    <strong>Protocol:</strong> ${state.protocol}<br>
+                    <strong>Host:</strong> ${state.host}
+                </div>
+            `;
+        }
+
+        async function runAllTests() {
+            log('Starting comprehensive session tests...', 'info');
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Running tests...</p>';
+
+            const tests = [
+                testCookieSupport,
+                testBasicSession,
+                testLogin,
+                testSessionPersistence,
+                testCrossDomainCookies,
+                testSecureCookies
+            ];
+
+            const testResults = [];
+            for (const test of tests) {
+                try {
+                    const result = await test();
+                    testResults.push(result);
+                } catch (error) {
+                    testResults.push({
+                        name: test.name,
+                        status: 'error',
+                        message: error.message
+                    });
+                }
+            }
+
+            displayResults(testResults);
+            provideFixes(testResults);
+        }
+
+        async function testCookieSupport() {
+            log('Testing cookie support...', 'info');
+            
+            // Test setting a cookie
+            document.cookie = 'test_cookie=test_value; path=/; SameSite=Lax';
+            const hasCookie = document.cookie.includes('test_cookie=test_value');
+            
+            // Clean up
+            document.cookie = 'test_cookie=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            return {
+                name: 'Cookie Support',
+                status: hasCookie ? 'success' : 'error',
+                message: hasCookie ? 'Browser supports cookies' : 'Browser does not support cookies or they are disabled'
+            };
+        }
+
+        async function testBasicSession() {
+            log('Testing basic session functionality...', 'info');
+            
+            try {
+                // Set a session value
+                const setResponse = await fetch(`${API_BASE}/business/session-test/set`, {
+                    credentials: 'include'
+                });
+                const setData = await setResponse.json();
+                
+                // Get the session value
+                const getResponse = await fetch(`${API_BASE}/business/session-test/get`, {
+                    credentials: 'include'
+                });
+                const getData = await getResponse.json();
+                
+                const success = setData.success && getData.success && getData.test_value;
+                
+                return {
+                    name: 'Basic Session',
+                    status: success ? 'success' : 'error',
+                    message: success ? 'Session working correctly' : 'Session not persisting',
+                    details: { setData, getData }
+                };
+            } catch (error) {
+                return {
+                    name: 'Basic Session',
+                    status: 'error',
+                    message: `Failed: ${error.message}`
+                };
+            }
+        }
+
+        async function testLogin() {
+            log('Testing login API...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/business/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'password123'
+                    })
+                });
+
+                const data = await response.json();
+                const cookies = document.cookie;
+                
+                log(`Login response: ${response.status}`, response.ok ? 'success' : 'error');
+                log(`Cookies after login: ${cookies || '(none)'}`, 'info');
+
+                return {
+                    name: 'Login API',
+                    status: response.ok ? 'success' : 'error',
+                    message: response.ok ? 'Login successful' : `Login failed: ${data.message || 'Unknown error'}`,
+                    details: { status: response.status, data, cookies }
+                };
+            } catch (error) {
+                return {
+                    name: 'Login API',
+                    status: 'error',
+                    message: `Network error: ${error.message}`
+                };
+            }
+        }
+
+        async function testSession() {
+            log('Testing authenticated session...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/business/api/user`, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                return {
+                    name: 'Session Check',
+                    status: response.ok ? 'success' : 'error',
+                    message: response.ok ? 'Session is active' : 'Not authenticated',
+                    details: { status: response.status, data }
+                };
+            } catch (error) {
+                return {
+                    name: 'Session Check',
+                    status: 'error',
+                    message: `Failed: ${error.message}`
+                };
+            }
+        }
+
+        async function testSessionPersistence() {
+            log('Testing session persistence...', 'info');
+            
+            // First login
+            await testLogin();
+            
+            // Wait a bit
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Check if still authenticated
+            const result = await testSession();
+            
+            return {
+                name: 'Session Persistence',
+                status: result.status,
+                message: result.status === 'success' ? 'Session persists correctly' : 'Session lost after login',
+                details: result.details
+            };
+        }
+
+        async function testCrossDomainCookies() {
+            log('Testing cross-domain cookie settings...', 'info');
+            
+            const cookies = document.cookie;
+            const sessionCookie = cookies.split(';').find(c => c.trim().startsWith('askproai_session'));
+            
+            if (!sessionCookie) {
+                return {
+                    name: 'Cross-Domain Cookies',
+                    status: 'warning',
+                    message: 'No session cookie found to test'
+                };
+            }
+
+            // Check if cookie is accessible
+            return {
+                name: 'Cross-Domain Cookies',
+                status: 'success',
+                message: 'Cookie accessible in current domain',
+                details: { cookie: sessionCookie }
+            };
+        }
+
+        async function testSecureCookies() {
+            log('Testing secure cookie settings...', 'info');
+            
+            const isHttps = location.protocol === 'https:';
+            
+            return {
+                name: 'Secure Cookies',
+                status: isHttps ? 'success' : 'warning',
+                message: isHttps ? 'Using HTTPS - secure cookies supported' : 'Not using HTTPS - secure cookies will fail',
+                details: { protocol: location.protocol }
+            };
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = results.map(result => `
+                <div class="test-result">
+                    <h3>${result.name} <span class="status ${result.status}">${result.status.toUpperCase()}</span></h3>
+                    <p>${result.message}</p>
+                    ${result.details ? `<pre>${JSON.stringify(result.details, null, 2)}</pre>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function provideFixes(results) {
+            const hasErrors = results.some(r => r.status === 'error');
+            if (!hasErrors) return;
+
+            const fixes = [];
+            
+            // Analyze specific failures
+            const loginFailed = results.find(r => r.name === 'Login API' && r.status === 'error');
+            const sessionFailed = results.find(r => r.name === 'Session Persistence' && r.status === 'error');
+            const cookieFailed = results.find(r => r.name === 'Cookie Support' && r.status === 'error');
+
+            if (cookieFailed) {
+                fixes.push('Enable cookies in your browser settings');
+            }
+
+            if (loginFailed) {
+                fixes.push('Check user credentials are correct');
+                fixes.push('Verify the API endpoint is accessible');
+            }
+
+            if (sessionFailed) {
+                fixes.push('Check SESSION_DOMAIN in .env (should be empty or match current domain)');
+                fixes.push('Ensure SESSION_SECURE_COOKIE=false for non-HTTPS');
+                fixes.push('Verify SESSION_SAME_SITE=lax');
+                fixes.push('Clear browser cookies and try again');
+            }
+
+            if (fixes.length > 0) {
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML += `
+                    <div class="fix-suggestion">
+                        <h3>🔧 Suggested Fixes:</h3>
+                        <ul>
+                            ${fixes.map(fix => `<li>${fix}</li>`).join('')}
+                        </ul>
+                        <h4>Quick Fix Command:</h4>
+                        <pre>php fix-session-issues.php</pre>
+                    </div>
+                `;
+            }
+        }
+
+        function clearAllData() {
+            log('Clearing all browser data...', 'info');
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(c => {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+            
+            // Clear storage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            log('All data cleared', 'success');
+            updateBrowserState();
+        }
+
+        // Initialize
+        updateBrowserState();
+        setInterval(updateBrowserState, 2000);
+        log('Session test page loaded', 'info');
+    </script>
+</body>
+</html>

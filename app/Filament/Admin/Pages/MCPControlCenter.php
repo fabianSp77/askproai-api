@@ -17,6 +17,17 @@ class MCPControlCenter extends Page
     protected static ?string $slug = 'mcp-control';
     protected static string $view = 'filament.admin.pages.mcp-control-center';
     
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->hasRole(['Super Admin', 'super_admin', 'developer']) || $user->email === 'dev@askproai.de');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+    
     // Live Data
     public array $systemStatus = [];
     public array $liveMetrics = [];

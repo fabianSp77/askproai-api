@@ -33,7 +33,7 @@ return [
         'alert_threshold' => env('SECURITY_ALERT_THRESHOLD', 5),
         'block_suspicious_ips' => env('SECURITY_BLOCK_SUSPICIOUS_IPS', false),
     ],
-    
+
     /*
     |--------------------------------------------------------------------------
     | Query Performance Monitoring

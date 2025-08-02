@@ -11,10 +11,10 @@ class ServiceController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Service::withoutGlobalScopes()
+        $query = Service::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
-                'staff' => function($q) { $q->withoutGlobalScopes(); }
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'staff' => function($q) { $q->where("company_id", auth()->user()->company_id); }
             ])
             ->withCount(['appointments']);
 
@@ -44,10 +44,10 @@ class ServiceController extends Controller
 
     public function show($id): JsonResponse
     {
-        $service = Service::withoutGlobalScopes()
+        $service = Service::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
-                'staff' => function($q) { $q->withoutGlobalScopes(); }
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'staff' => function($q) { $q->where("company_id", auth()->user()->company_id); }
             ])
             ->withCount(['appointments'])
             ->findOrFail($id);
@@ -74,7 +74,7 @@ class ServiceController extends Controller
 
     public function update(Request $request, $id): JsonResponse
     {
-        $service = Service::withoutGlobalScopes()->findOrFail($id);
+        $service = Service::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -92,7 +92,7 @@ class ServiceController extends Controller
 
     public function destroy($id): JsonResponse
     {
-        $service = Service::withoutGlobalScopes()->findOrFail($id);
+        $service = Service::where("company_id", auth()->user()->company_id)->findOrFail($id);
         
         // Check if service has appointments
         if ($service->appointments()->exists()) {
@@ -108,7 +108,7 @@ class ServiceController extends Controller
 
     public function assignStaff(Request $request, $id): JsonResponse
     {
-        $service = Service::withoutGlobalScopes()->findOrFail($id);
+        $service = Service::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'staff_ids' => 'required|array',

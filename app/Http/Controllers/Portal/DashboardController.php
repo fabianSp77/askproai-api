@@ -3,372 +3,221 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Appointment;
-use App\Models\Call;
-use App\Models\Invoice;
-use App\Models\PhoneNumber;
+use App\Traits\UsesMCPServers;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
+    use UsesMCPServers;
+
+    public function __construct()
+    {
+        $this->setMCPPreferences([
+            'dashboard' => true,
+            'analytics' => true,
+            'call' => true,
+            'billing' => true
+        ]);
+    }
+
     /**
      * Show portal dashboard.
      */
-    public function index()
-    {
-        // Always use React version
-        return $this->indexReact();
-    }
-
-    /**
-     * React version of dashboard.
-     */
-    protected function indexReact()
+    public function index(Request $request)
     {
         $user = Auth::guard('portal')->user();
-
-        // Redirect to login if not authenticated
-        if (! $user) {
-            return redirect()->route('business.login');
+        
+        // Check if user is authenticated
+        if (!$user && !session('is_admin_viewing')) {
+            return redirect('/business/login');
         }
-
-        return view('portal.react-dashboard-production');
-    }
-
-    /**
-     * Original Blade version.
-     */
-    protected function indexBlade()
-    {
-        // Check admin viewing FIRST - before checking portal user
-        if (session('is_admin_viewing') && session('admin_impersonation')) {
-            \Log::info('DashboardController::index - Admin viewing mode', [
-                'is_admin_viewing' => true,
-                'admin_impersonation' => session('admin_impersonation'),
-                'admin_viewing_company' => session('admin_viewing_company'),
-                'session_id' => session()->getId(),
-            ]);
-
-            $adminImpersonation = session('admin_impersonation');
-            if (isset($adminImpersonation['company_id'])) {
-                // Admin is viewing - ignore any portal user login
-                return $this->handleAdminViewing($adminImpersonation);
-            }
+        
+        // Handle admin viewing mode
+        if (session('is_admin_viewing') && !$user) {
+            return $this->handleAdminViewing();
         }
-
-        // Normal portal user flow
-        $user = Auth::guard('portal')->user();
-
-        // Debug output
-        \Log::info('DashboardController::index - Normal flow', [
-            'portal_user' => $user ? $user->id : 'none',
-            'portal_user_company' => $user ? $user->company_id : 'none',
+        
+        $companyId = $this->getCompanyId();
+        $userId = $this->getCurrentUserId();
+        
+        // Get dashboard statistics via MCP
+        $statsResult = $this->executeMCPTask('getDashboardStatistics', [
+            'company_id' => $companyId,
+            'user_id' => $userId,
+            'include_billing' => $user->canViewBilling(),
+            'include_appointments' => $user->company->needsAppointmentBooking()
         ]);
 
-        // Original logic for non-admin viewing
-        if (! $user) {
-            $adminImpersonation = session('admin_impersonation');
-            if ($adminImpersonation && isset($adminImpersonation['company_id'])) {
-                $company = \App\Models\Company::withoutGlobalScope(\App\Scopes\TenantScope::class)->find($adminImpersonation['company_id']);
-                if (! $company) {
-                    abort(404, 'Company not found');
-                }
+        $stats = $statsResult['result']['data'] ?? [];
 
-                \Log::info('DashboardController - Admin viewing company', [
-                    'requested_company_id' => $adminImpersonation['company_id'],
-                    'loaded_company_id' => $company->id,
-                    'loaded_company_name' => $company->name,
-                ]);
+        // Get recent calls via MCP
+        $recentCallsResult = $this->executeMCPTask('getRecentCalls', [
+            'company_id' => $companyId,
+            'user_id' => $userId,
+            'limit' => 10,
+            'only_assigned' => $user->hasPermission('calls.view_own') && !$user->hasPermission('calls.view_all')
+        ]);
 
-                // Create a dummy user object for the view with proper methods
-                $user = new class($company)
-                {
-                    public $company;
+        $recentCalls = $recentCallsResult['result']['data'] ?? [];
 
-                    public $company_id;
+        // Get upcoming tasks via MCP
+        $tasksResult = $this->executeMCPTask('getUpcomingTasks', [
+            'company_id' => $companyId,
+            'user_id' => $userId,
+            'days_ahead' => 3,
+            'limit' => 5
+        ]);
 
-                    public $id = 'admin';
+        $upcomingTasks = $tasksResult['result']['data'] ?? [];
 
-                    public function __construct($company)
-                    {
-                        $this->company = $company;
-                        $this->company_id = $company->id;
-                    }
-
-                    public function hasPermission($permission)
-                    {
-                        return true; // Admin has all permissions
-                    }
-
-                    public function canViewBilling()
-                    {
-                        return true;
-                    }
-
-                    public function teamMembers()
-                    {
-                        return collect();
-                    }
-                };
-            } else {
-                abort(403, 'Invalid admin session');
-            }
-        } elseif ($user) {
-            $company = $user->company;
-
-            \Log::info('DashboardController - Regular portal user', [
-                'user_id' => $user->id,
-                'user_company_id' => $user->company_id,
-                'company_name' => $company->name,
-            ]);
-        } else {
-            abort(403, 'Unauthorized');
-        }
-
-        // Get statistics based on user permissions
-        $stats = $this->getStatistics($user);
-
-        // Get recent calls
-        $recentCalls = $this->getRecentCalls($user);
-
-        // Get upcoming tasks
-        $upcomingTasks = $this->getUpcomingTasks($user);
-
-        // Get team performance (for managers/owners)
+        // Get team performance if permitted
         $teamPerformance = null;
         if ($user->hasPermission('analytics.view_team')) {
-            $teamPerformance = $this->getTeamPerformance($user);
-        }
-
-        // Redirect to React dashboard
-        return redirect()->route('business.dashboard');
-    }
-
-    /**
-     * Get statistics based on permissions.
-     */
-    protected function getStatistics($user)
-    {
-        $cacheKey = "portal.stats.{$user->company_id}.{$user->id}";
-
-        return Cache::remember($cacheKey, 300, function () use ($user) {
-            $stats = [];
-
-            // Get company phone numbers for filtering
-            $companyPhoneNumbers = PhoneNumber::where('company_id', $user->company_id)
-                ->where('is_active', true)
-                ->pluck('number')
-                ->toArray();
-
-            // Call statistics
-            if ($user->hasPermission('calls.view_all')) {
-                $stats['total_calls_today'] = Call::where('company_id', $user->company_id)
-                    ->whereIn('to_number', $companyPhoneNumbers)
-                    ->whereDate('created_at', today())
-                    ->count();
-
-                $stats['open_calls'] = DB::table('calls')
-                    ->join('call_portal_data', 'calls.id', '=', 'call_portal_data.call_id')
-                    ->where('calls.company_id', $user->company_id)
-                    ->whereIn('calls.to_number', $companyPhoneNumbers)
-                    ->whereNotIn('call_portal_data.status', ['completed', 'abandoned'])
-                    ->count();
-            } elseif ($user->hasPermission('calls.view_own')) {
-                $stats['my_calls_today'] = DB::table('calls')
-                    ->join('call_portal_data', 'calls.id', '=', 'call_portal_data.call_id')
-                    ->where('calls.company_id', $user->company_id)
-                    ->whereIn('calls.to_number', $companyPhoneNumbers)
-                    ->where('call_portal_data.assigned_to', $user->id)
-                    ->whereDate('calls.created_at', today())
-                    ->count();
-
-                $stats['my_open_calls'] = DB::table('calls')
-                    ->join('call_portal_data', 'calls.id', '=', 'call_portal_data.call_id')
-                    ->where('calls.company_id', $user->company_id)
-                    ->whereIn('calls.to_number', $companyPhoneNumbers)
-                    ->where('call_portal_data.assigned_to', $user->id)
-                    ->whereNotIn('call_portal_data.status', ['completed', 'abandoned'])
-                    ->count();
-            }
-
-            // Appointment statistics (if enabled)
-            if ($user->company->needsAppointmentBooking()) {
-                if ($user->hasPermission('appointments.view_all')) {
-                    $stats['upcoming_appointments'] = Appointment::where('company_id', $user->company_id)
-                        ->where('starts_at', '>=', now())
-                        ->count();
-                }
-            }
-
-            // Billing statistics (if permitted)
-            if ($user->canViewBilling()) {
-                $stats['open_invoices'] = Invoice::where('company_id', $user->company_id)
-                    ->where('status', 'open')
-                    ->count();
-
-                $stats['total_due'] = Invoice::where('company_id', $user->company_id)
-                    ->where('status', 'open')
-                    ->sum('total');
-            }
-
-            return $stats;
-        });
-    }
-
-    /**
-     * Get recent calls based on permissions.
-     */
-    protected function getRecentCalls($user)
-    {
-        // Get company phone numbers for filtering
-        $companyPhoneNumbers = PhoneNumber::where('company_id', $user->company_id)
-            ->where('is_active', true)
-            ->pluck('number')
-            ->toArray();
-
-        $query = Call::with(['branch', 'customer', 'callPortalData', 'appointment'])
-            ->where('company_id', $user->company_id)
-            ->whereIn('to_number', $companyPhoneNumbers);
-
-        // Apply permission-based filtering
-        if ($user->hasPermission('calls.view_own') && ! $user->hasPermission('calls.view_all')) {
-            $query->whereHas('callPortalData', function ($q) use ($user) {
-                $q->where('assigned_to', $user->id);
-            });
-        }
-
-        return $query->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($call) {
-                // Load portal data
-                $portalData = DB::table('call_portal_data')
-                    ->where('call_id', $call->id)
-                    ->first();
-
-                $call->portal_status = $portalData->status ?? 'new';
-                $call->portal_priority = $portalData->priority ?? 'medium';
-
-                return $call;
-            });
-    }
-
-    /**
-     * Get upcoming tasks.
-     */
-    protected function getUpcomingTasks($user)
-    {
-        $tasks = collect();
-
-        // Get company phone numbers for filtering
-        $companyPhoneNumbers = PhoneNumber::where('company_id', $user->company_id)
-            ->where('is_active', true)
-            ->pluck('number')
-            ->toArray();
-
-        // Get calls requiring action
-        $callsQuery = DB::table('calls')
-            ->join('call_portal_data', 'calls.id', '=', 'call_portal_data.call_id')
-            ->where('calls.company_id', $user->company_id)
-            ->whereIn('calls.to_number', $companyPhoneNumbers)
-            ->whereNotNull('call_portal_data.next_action_date')
-            ->where('call_portal_data.next_action_date', '<=', now()->addDays(3));
-
-        if (! $user->hasPermission('calls.view_all')) {
-            $callsQuery->where('call_portal_data.assigned_to', $user->id);
-        }
-
-        $calls = $callsQuery->select([
-            'calls.id as call_id',
-            'calls.phone_number',
-            'call_portal_data.status',
-            'call_portal_data.next_action_date',
-            'call_portal_data.internal_notes',
-        ])->get();
-
-        foreach ($calls as $call) {
-            $tasks->push([
-                'type' => 'call_followup',
-                'title' => "Anruf nachverfolgen: {$call->phone_number}",
-                'due_date' => $call->next_action_date,
-                'priority' => 'medium',
-                'link' => route('business.calls.show', $call->call_id),
+            $performanceResult = $this->executeMCPTask('getTeamPerformance', [
+                'company_id' => $companyId,
+                'days' => 7,
+                'include_details' => false
             ]);
+            $teamPerformance = $performanceResult['result']['data'] ?? [];
         }
 
-        return $tasks->sortBy('due_date')->take(5);
+        // Pass data to the unified dashboard view
+        return view('portal.dashboard-unified', compact(
+            'user',
+            'stats',
+            'recentCalls',
+            'upcomingTasks',
+            'teamPerformance'
+        ));
     }
 
     /**
-     * Get team performance metrics.
+     * API endpoint for dashboard data.
      */
-    protected function getTeamPerformance($user)
+    public function apiDashboard(Request $request)
     {
-        $teamMembers = $user->teamMembers();
-
-        // Get company phone numbers for filtering
-        $companyPhoneNumbers = PhoneNumber::where('company_id', $user->company_id)
-            ->where('is_active', true)
-            ->pluck('number')
-            ->toArray();
-
-        $performance = [];
-
-        foreach ($teamMembers as $member) {
-            $stats = DB::table('calls')
-                ->join('call_portal_data', 'calls.id', '=', 'call_portal_data.call_id')
-                ->where('calls.company_id', $user->company_id)
-                ->whereIn('calls.to_number', $companyPhoneNumbers)
-                ->where('call_portal_data.assigned_to', $member->id)
-                ->whereDate('calls.created_at', '>=', now()->subDays(7))
-                ->selectRaw('
-                    COUNT(*) as total_calls,
-                    SUM(CASE WHEN call_portal_data.status = "completed" THEN 1 ELSE 0 END) as completed_calls,
-                    AVG(CASE WHEN call_portal_data.status = "completed" 
-                        THEN TIMESTAMPDIFF(HOUR, calls.created_at, call_portal_data.updated_at) 
-                        ELSE NULL END) as avg_resolution_hours
-                ')
-                ->first();
-
-            $performance[] = [
-                'user' => $member,
-                'total_calls' => $stats->total_calls,
-                'completed_calls' => $stats->completed_calls,
-                'completion_rate' => $stats->total_calls > 0
-                    ? round(($stats->completed_calls / $stats->total_calls) * 100)
-                    : 0,
-                'avg_resolution_hours' => round($stats->avg_resolution_hours ?? 0, 1),
-            ];
+        $companyId = $this->getCompanyId();
+        $userId = $this->getCurrentUserId();
+        
+        if (!$companyId) {
+            return response()->json(['error' => 'No company context'], 403);
         }
 
-        return collect($performance)->sortByDesc('completion_rate');
+        // Get all dashboard data via MCP
+        $data = [];
+
+        // Statistics
+        $statsResult = $this->executeMCPTask('getDashboardStatistics', [
+            'company_id' => $companyId,
+            'user_id' => $userId
+        ]);
+        $data['statistics'] = $statsResult['result']['data'] ?? [];
+
+        // Call trends
+        $trendsResult = $this->executeMCPTask('getCallTrends', [
+            'company_id' => $companyId,
+            'period' => $request->get('trend_period', 'week'),
+            'intervals' => 7
+        ]);
+        $data['call_trends'] = $trendsResult['result']['data'] ?? [];
+
+        // Quick insights
+        $insightsResult = $this->executeMCPTask('getQuickInsights', [
+            'company_id' => $companyId,
+            'focus_area' => 'all'
+        ]);
+        $data['insights'] = $insightsResult['result']['data'] ?? [];
+
+        // Recent calls
+        $callsResult = $this->executeMCPTask('getRecentCalls', [
+            'company_id' => $companyId,
+            'user_id' => $userId,
+            'limit' => 5
+        ]);
+        $data['recent_calls'] = $callsResult['result']['data'] ?? [];
+
+        return response()->json($data);
+    }
+
+    /**
+     * API endpoint for analytics data.
+     */
+    public function apiAnalytics(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        
+        if (!$companyId) {
+            return response()->json(['error' => 'No company context'], 403);
+        }
+
+        $type = $request->get('type', 'overview');
+        $data = [];
+
+        switch ($type) {
+            case 'conversion':
+                $result = $this->executeMCPTask('getConversionMetrics', [
+                    'company_id' => $companyId,
+                    'date_from' => $request->get('date_from'),
+                    'date_to' => $request->get('date_to')
+                ]);
+                $data = $result['result']['data'] ?? [];
+                break;
+
+            case 'revenue':
+                $result = $this->executeMCPTask('getRevenueSummary', [
+                    'company_id' => $companyId,
+                    'period' => $request->get('period', 'month')
+                ]);
+                $data = $result['result']['data'] ?? [];
+                break;
+
+            case 'team':
+                $result = $this->executeMCPTask('getTeamPerformance', [
+                    'company_id' => $companyId,
+                    'days' => $request->get('days', 7),
+                    'include_details' => true
+                ]);
+                $data = $result['result']['data'] ?? [];
+                break;
+
+            default:
+                // Return overview with multiple metrics
+                $statsResult = $this->executeMCPTask('getDashboardStatistics', [
+                    'company_id' => $companyId
+                ]);
+                $data['statistics'] = $statsResult['result']['data'] ?? [];
+
+                $trendsResult = $this->executeMCPTask('getCallTrends', [
+                    'company_id' => $companyId
+                ]);
+                $data['trends'] = $trendsResult['result']['data'] ?? [];
+        }
+
+        return response()->json($data);
     }
 
     /**
      * Handle admin viewing mode.
      */
-    protected function handleAdminViewing($adminImpersonation)
+    protected function handleAdminViewing()
     {
-        $company = \App\Models\Company::withoutGlobalScope(\App\Scopes\TenantScope::class)->find($adminImpersonation['company_id']);
-        if (! $company) {
+        $adminImpersonation = session('admin_impersonation');
+        if (!isset($adminImpersonation['company_id'])) {
+            abort(403, 'Invalid admin session');
+        }
+
+        $company = \App\Models\Company::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->find($adminImpersonation['company_id']);
+        
+        if (!$company) {
             abort(404, 'Company not found');
         }
 
-        \Log::info('DashboardController - Admin viewing company', [
-            'requested_company_id' => $adminImpersonation['company_id'],
-            'loaded_company_id' => $company->id,
-            'loaded_company_name' => $company->name,
-        ]);
-
-        // Create a dummy user object for the view with proper methods
-        $user = new class($company)
-        {
+        // Create admin user object
+        $user = new class($company) {
             public $company;
-
             public $company_id;
-
             public $id = 'admin';
 
             public function __construct($company)
@@ -387,25 +236,79 @@ class DashboardController extends Controller
                 return true;
             }
 
-            public function teamMembers()
+            public function needsAppointmentBooking()
             {
-                return collect();
+                return $this->company->needsAppointmentBooking();
             }
         };
 
-        // Get statistics based on user permissions
-        $stats = $this->getStatistics($user);
+        // Get all dashboard data via MCP
+        $companyId = $company->id;
+        
+        // Get dashboard statistics
+        $statsResult = $this->executeMCPTask('getDashboardStatistics', [
+            'company_id' => $companyId,
+            'include_billing' => true,
+            'include_appointments' => $company->needsAppointmentBooking()
+        ]);
+
+        $stats = $statsResult['result']['data'] ?? [];
 
         // Get recent calls
-        $recentCalls = $this->getRecentCalls($user);
+        $recentCallsResult = $this->executeMCPTask('getRecentCalls', [
+            'company_id' => $companyId,
+            'limit' => 10
+        ]);
+
+        $recentCalls = $recentCallsResult['result']['data'] ?? [];
 
         // Get upcoming tasks
-        $upcomingTasks = $this->getUpcomingTasks($user);
+        $tasksResult = $this->executeMCPTask('getUpcomingTasks', [
+            'company_id' => $companyId,
+            'days_ahead' => 3,
+            'limit' => 5
+        ]);
 
-        // Get team performance (for managers/owners)
-        $teamPerformance = $this->getTeamPerformance($user);
+        $upcomingTasks = $tasksResult['result']['data'] ?? [];
 
-        // Redirect to React dashboard
-        return redirect()->route('business.dashboard');
+        // Get team performance
+        $performanceResult = $this->executeMCPTask('getTeamPerformance', [
+            'company_id' => $companyId,
+            'days' => 7,
+            'include_details' => false
+        ]);
+
+        $teamPerformance = $performanceResult['result']['data'] ?? [];
+
+        // Pass data to view
+        return view('portal.dashboard-unified', compact(
+            'user',
+            'stats',
+            'recentCalls',
+            'upcomingTasks',
+            'teamPerformance'
+        ));
+    }
+
+    /**
+     * Get company ID for current context.
+     */
+    protected function getCompanyId(): ?int
+    {
+        if (session('is_admin_viewing')) {
+            return session('admin_impersonation.company_id');
+        }
+        
+        $user = Auth::guard('portal')->user();
+        return $user ? $user->company_id : null;
+    }
+    
+    /**
+     * Get current user ID.
+     */
+    protected function getCurrentUserId(): ?int
+    {
+        $user = Auth::guard('portal')->user();
+        return $user ? $user->id : null;
     }
 }

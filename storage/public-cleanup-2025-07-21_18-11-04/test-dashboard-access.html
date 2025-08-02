@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Access Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1200px; 
+            margin: 20px auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            cursor: pointer;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        .success { 
+            color: green; 
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error { 
+            color: red;
+            background: #fef2f2;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            color: #1e40af;
+            background: #dbeafe;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        pre { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            overflow-x: auto;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .status-card {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .status-card h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Dashboard Access Test</h1>
+        <p>Test verschiedene Dashboard-Routen nach erfolgreichem Login</p>
+        
+        <div>
+            <button onclick="testAllRoutes()">Test All Routes</button>
+            <button onclick="testDashboard()">Test Dashboard Direct</button>
+            <button onclick="testApiEndpoints()">Test API Endpoints</button>
+            <button onclick="loadDashboardInIframe()">Load Dashboard in iFrame</button>
+        </div>
+        
+        <div id="authStatus" class="info" style="margin-top: 20px;">
+            Checking authentication status...
+        </div>
+        
+        <div id="results"></div>
+        
+        <iframe id="dashboardFrame" style="display: none;"></iframe>
+    </div>
+    
+    <script>
+        // Check auth status on load
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/business/auth/check', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('authStatus');
+                if (data.authenticated) {
+                    statusDiv.className = 'success';
+                    statusDiv.innerHTML = `
+                        ✅ Authenticated as: ${data.user.email} (ID: ${data.user.id})
+                        <br>Session ID: ${data.session_id}
+                    `;
+                } else {
+                    statusDiv.className = 'error';
+                    statusDiv.innerHTML = '❌ Not authenticated - Please login first';
+                }
+            } catch (error) {
+                document.getElementById('authStatus').innerHTML = `Error checking auth: ${error.message}`;
+            }
+        }
+        
+        async function testAllRoutes() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Testing all routes...</div>';
+            
+            const routes = [
+                { path: '/business/', name: 'Business Root' },
+                { path: '/business/dashboard', name: 'Business Dashboard' },
+                { path: '/business/api/dashboard', name: 'Dashboard API' },
+                { path: '/business/api/user', name: 'User API' },
+                { path: '/business/calls', name: 'Calls Page' },
+                { path: '/business/api/calls', name: 'Calls API' },
+                { path: '/business/billing', name: 'Billing Page' },
+                { path: '/business/api/billing', name: 'Billing API' },
+                { path: '/business/settings', name: 'Settings Page' },
+                { path: '/business/team', name: 'Team Page' }
+            ];
+            
+            const testResults = [];
+            
+            for (const route of routes) {
+                try {
+                    const response = await fetch(route.path, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json, text/html'
+                        }
+                    });
+                    
+                    const contentType = response.headers.get('content-type');
+                    let result = {
+                        route: route,
+                        status: response.status,
+                        ok: response.ok,
+                        type: contentType?.includes('json') ? 'JSON' : 'HTML',
+                        redirected: response.redirected
+                    };
+                    
+                    if (contentType?.includes('json') && response.ok) {
+                        try {
+                            result.data = await response.json();
+                        } catch (e) {
+                            result.parseError = true;
+                        }
+                    }
+                    
+                    testResults.push(result);
+                } catch (error) {
+                    testResults.push({
+                        route: route,
+                        error: error.message
+                    });
+                }
+            }
+            
+            displayResults(testResults);
+        }
+        
+        async function testDashboard() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Testing dashboard access...</div>';
+            
+            try {
+                const response = await fetch('/business/dashboard', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'text/html'
+                    }
+                });
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    results.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Dashboard Accessible!</h3>
+                            <p>Status: ${response.status}</p>
+                            <p>Response length: ${text.length} characters</p>
+                            <p>Contains React app: ${text.includes('react') ? 'Yes' : 'No'}</p>
+                        </div>
+                    `;
+                } else if (response.status === 302 || response.redirected) {
+                    results.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Redirected</h3>
+                            <p>Status: ${response.status}</p>
+                            <p>You were redirected, probably to login page</p>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Error accessing dashboard</h3>
+                            <p>Status: ${response.status}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="error">Network error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testApiEndpoints() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="loading">Testing API endpoints...</div>';
+            
+            const endpoints = [
+                '/business/api/dashboard',
+                '/business/api/user',
+                '/business/api/calls',
+                '/business/api/billing'
+            ];
+            
+            const apiResults = [];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    let data = null;
+                    if (response.ok) {
+                        try {
+                            data = await response.json();
+                        } catch (e) {
+                            data = 'Failed to parse JSON';
+                        }
+                    }
+                    
+                    apiResults.push({
+                        endpoint,
+                        status: response.status,
+                        ok: response.ok,
+                        data
+                    });
+                } catch (error) {
+                    apiResults.push({
+                        endpoint,
+                        error: error.message
+                    });
+                }
+            }
+            
+            results.innerHTML = '<h3>API Endpoint Test Results:</h3>';
+            apiResults.forEach(result => {
+                const statusClass = result.ok ? 'success' : 'error';
+                results.innerHTML += `
+                    <div class="${statusClass}">
+                        <strong>${result.endpoint}</strong>
+                        <br>Status: ${result.status || 'Error'}
+                        ${result.data ? '<br>Data received: Yes' : ''}
+                        ${result.error ? `<br>Error: ${result.error}` : ''}
+                    </div>
+                `;
+            });
+        }
+        
+        function loadDashboardInIframe() {
+            const iframe = document.getElementById('dashboardFrame');
+            iframe.style.display = 'block';
+            iframe.src = '/business/dashboard';
+            
+            document.getElementById('results').innerHTML = `
+                <div class="info">
+                    <h3>Loading Dashboard in iFrame</h3>
+                    <p>If you see the dashboard below, authentication is working!</p>
+                    <p>If you see a login page, the session is not persisting.</p>
+                </div>
+            `;
+        }
+        
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>Route Test Results:</h2><div class="status-grid"></div>';
+            const grid = resultsDiv.querySelector('.status-grid');
+            
+            results.forEach(result => {
+                const card = document.createElement('div');
+                card.className = 'status-card';
+                
+                const statusClass = result.ok ? 'success' : (result.status === 401 || result.status === 302 ? 'error' : 'info');
+                
+                card.innerHTML = `
+                    <h3>${result.route.name}</h3>
+                    <div class="${statusClass}">
+                        <strong>${result.route.path}</strong>
+                        <br>Status: ${result.status || 'Error'}
+                        <br>Type: ${result.type || 'Unknown'}
+                        ${result.redirected ? '<br>Redirected: Yes' : ''}
+                        ${result.error ? `<br>Error: ${result.error}` : ''}
+                        ${result.data ? `<br>Data: ${JSON.stringify(result.data).substring(0, 100)}...` : ''}
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        // Check auth on load
+        window.onload = checkAuthStatus;
+    </script>
+</body>
+</html>

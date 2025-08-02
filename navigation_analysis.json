@@ -1,0 +1,1414 @@
+{
+    "resources": [
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/AppointmentResource.php",
+            "class": "AppointmentResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "2",
+            "navigation_icon": "heroicon-o-calendar",
+            "should_register": true,
+            "model": "Appointment::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/BaseResource.php",
+            "class": "BaseResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": null,
+            "should_register": true,
+            "model": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/BillingPeriodResource.php",
+            "class": "BillingPeriodResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "10",
+            "navigation_icon": "heroicon-o-calendar-days",
+            "should_register": true,
+            "model": "BillingPeriod::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/BranchResource.php",
+            "class": "BranchResource",
+            "navigation_group": null,
+            "navigation_label": "Filiale",
+            "navigation_sort": "20",
+            "navigation_icon": "heroicon-o-building-storefront",
+            "should_register": true,
+            "model": "Branch::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/CalcomEventTypeResource.php",
+            "class": "CalcomEventTypeResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "30",
+            "navigation_icon": "heroicon-o-calendar-days",
+            "should_register": true,
+            "model": "CalcomEventType::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/CallResource.php",
+            "class": "CallResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "1",
+            "navigation_icon": "heroicon-o-phone-arrow-down-left",
+            "should_register": true,
+            "model": "Call::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/CompanyPricingResource.php",
+            "class": "CompanyPricingResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "5",
+            "navigation_icon": "heroicon-o-currency-euro",
+            "should_register": true,
+            "model": "CompanyPricing::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/CompanyResource.php",
+            "class": "CompanyResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "10",
+            "navigation_icon": "heroicon-o-building-office",
+            "should_register": true,
+            "model": "Company::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/CustomerResource.php",
+            "class": "CustomerResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "1",
+            "navigation_icon": "heroicon-o-users",
+            "should_register": true,
+            "model": "Customer::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/DummyCompanyResource.php",
+            "class": "DummyCompanyResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-rectangle-stack",
+            "should_register": true,
+            "model": "DummyCompany::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/EnhancedResource.php",
+            "class": "EnhancedResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": null,
+            "should_register": true,
+            "model": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/ErrorCatalogResource.php",
+            "class": "ErrorCatalogResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "50",
+            "navigation_icon": "heroicon-o-exclamation-triangle",
+            "should_register": true,
+            "model": "ErrorCatalog::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/GdprRequestResource.php",
+            "class": "GdprRequestResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "50",
+            "navigation_icon": "heroicon-o-shield-check",
+            "should_register": true,
+            "model": "GdprRequest::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/IntegrationResource.php",
+            "class": "IntegrationResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "20",
+            "navigation_icon": "heroicon-o-puzzle-piece",
+            "should_register": true,
+            "model": "Integration::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/InvoiceResource.php",
+            "class": "InvoiceResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "200",
+            "navigation_icon": "heroicon-o-document-text",
+            "should_register": true,
+            "model": "Invoice::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/MasterServiceResource.php",
+            "class": "MasterServiceResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "40",
+            "navigation_icon": null,
+            "should_register": true,
+            "model": "MasterService::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/PhoneNumberResource.php",
+            "class": "PhoneNumberResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "50",
+            "navigation_icon": "heroicon-o-phone",
+            "should_register": true,
+            "model": "PhoneNumber::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/PortalUserResource.php",
+            "class": "PortalUserResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "3",
+            "navigation_icon": "heroicon-o-users",
+            "should_register": true,
+            "model": "PortalUser::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/PrepaidBalanceResource.php",
+            "class": "PrepaidBalanceResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "20",
+            "navigation_icon": "heroicon-o-currency-euro",
+            "should_register": true,
+            "model": "PrepaidBalance::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/PromptTemplateResource.php",
+            "class": "PromptTemplateResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "40",
+            "navigation_icon": "heroicon-o-document-text",
+            "should_register": true,
+            "model": "PromptTemplate::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/RetellAgentResource.php",
+            "class": "RetellAgentResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "2",
+            "navigation_icon": "heroicon-o-cpu-chip",
+            "should_register": true,
+            "model": "RetellAgent::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/ServiceResource.php",
+            "class": "ServiceResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "40",
+            "navigation_icon": "heroicon-o-briefcase",
+            "should_register": true,
+            "model": "Service::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/StaffResource.php",
+            "class": "StaffResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "30",
+            "navigation_icon": "heroicon-o-user-group",
+            "should_register": true,
+            "model": "Staff::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/SubscriptionResource.php",
+            "class": "SubscriptionResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "20",
+            "navigation_icon": "heroicon-o-credit-card",
+            "should_register": true,
+            "model": "Subscription::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/TenantResource.php",
+            "class": "TenantResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "40",
+            "navigation_icon": "heroicon-o-building-library",
+            "should_register": true,
+            "model": "Tenant::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/UnifiedEventTypeResource.php",
+            "class": "UnifiedEventTypeResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "15",
+            "navigation_icon": "heroicon-o-calendar-days",
+            "should_register": false,
+            "model": "UnifiedEventType::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/UserResource.php",
+            "class": "UserResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "10",
+            "navigation_icon": "heroicon-o-user",
+            "should_register": true,
+            "model": "User::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/WorkingHourResource.php",
+            "class": "WorkingHourResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "250",
+            "navigation_icon": "heroicon-o-clock",
+            "should_register": true,
+            "model": "WorkingHour::class"
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Resources\/WorkingHoursResource.php",
+            "class": "WorkingHoursResource",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-clock",
+            "should_register": true,
+            "model": "WorkingHours::class"
+        }
+    ],
+    "pages": [
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/AICallCenter.php",
+            "class": "AICallCenter",
+            "navigation_group": null,
+            "navigation_label": "AI Call Center",
+            "navigation_sort": "1",
+            "navigation_icon": "heroicon-o-phone-arrow-up-right",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/ApiHealthMonitor.php",
+            "class": "ApiHealthMonitor",
+            "navigation_group": null,
+            "navigation_label": "API Health Monitor",
+            "navigation_sort": "115",
+            "navigation_icon": "heroicon-o-heart",
+            "should_register": true,
+            "title": "API Health Monitor",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/BasicCompanyConfig.php",
+            "class": "BasicCompanyConfig",
+            "navigation_group": null,
+            "navigation_label": "Basic Company Configuration",
+            "navigation_sort": "3",
+            "navigation_icon": "heroicon-o-cog-6-tooth",
+            "should_register": false,
+            "title": "Basic Company Configuration",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/BusinessPortalAdmin.php",
+            "class": "BusinessPortalAdmin",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-building-office-2",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/CalcomSyncStatus.php",
+            "class": "CalcomSyncStatus",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "5",
+            "navigation_icon": "heroicon-o-arrow-path",
+            "should_register": false,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/CompanyConfigStatus.php",
+            "class": "CompanyConfigStatus",
+            "navigation_group": null,
+            "navigation_label": "Company Configuration Status",
+            "navigation_sort": "4",
+            "navigation_icon": "heroicon-o-information-circle",
+            "should_register": false,
+            "title": "Company Configuration Status",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/CompanyIntegrationPortal.php",
+            "class": "CompanyIntegrationPortal",
+            "navigation_group": null,
+            "navigation_label": "Company Integration Portal",
+            "navigation_sort": "1",
+            "navigation_icon": "heroicon-o-link",
+            "should_register": true,
+            "title": "Company Integration Portal",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/CustomerPortalManagement.php",
+            "class": "CustomerPortalManagement",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "50",
+            "navigation_icon": "heroicon-o-key",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/DataSync.php",
+            "class": "DataSync",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "80",
+            "navigation_icon": "heroicon-o-arrow-path",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/DocumentationHub.php",
+            "class": "DocumentationHub",
+            "navigation_group": "System & Verwaltung",
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-book-open",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/EventAnalyticsDashboard.php",
+            "class": "EventAnalyticsDashboard",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "35",
+            "navigation_icon": "heroicon-o-chart-bar",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/EventTypeImportWizard.php",
+            "class": "EventTypeImportWizard",
+            "navigation_group": null,
+            "navigation_label": "Event-Type Import Wizard",
+            "navigation_sort": "60",
+            "navigation_icon": "heroicon-o-arrow-down-tray",
+            "should_register": true,
+            "title": "Event-Type Import Wizard",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/EventTypeSetupWizard.php",
+            "class": "EventTypeSetupWizard",
+            "navigation_group": null,
+            "navigation_label": "Event-Type Konfiguration",
+            "navigation_sort": "15",
+            "navigation_icon": "heroicon-o-cog-6-tooth",
+            "should_register": true,
+            "title": "Event-Type Konfiguration",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/FeatureFlagManager.php",
+            "class": "FeatureFlagManager",
+            "navigation_group": null,
+            "navigation_label": "Feature Flag Management",
+            "navigation_sort": "50",
+            "navigation_icon": "heroicon-o-adjustments-horizontal",
+            "should_register": true,
+            "title": "Feature Flag Management",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/IntelligentSyncManager.php",
+            "class": "IntelligentSyncManager",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "100",
+            "navigation_icon": "heroicon-o-arrow-path",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/KnowledgeBaseManager.php",
+            "class": "KnowledgeBaseManager",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "20",
+            "navigation_icon": "heroicon-o-book-open",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/LanguageSettings.php",
+            "class": "LanguageSettings",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "50",
+            "navigation_icon": "heroicon-o-language",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/MCPControlCenter.php",
+            "class": "MCPControlCenter",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "99",
+            "navigation_icon": "heroicon-o-rocket-launch",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/MCPDashboard.php",
+            "class": "MCPDashboard",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "100",
+            "navigation_icon": "heroicon-o-server-stack",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/MCPServerDashboard.php",
+            "class": "MCPServerDashboard",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "90",
+            "navigation_icon": "heroicon-o-cpu-chip",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/OnboardingWizardPage.php",
+            "class": "OnboardingWizardPage",
+            "navigation_group": null,
+            "navigation_label": "5-Minuten Onboarding Setup",
+            "navigation_sort": "1",
+            "navigation_icon": "heroicon-o-rocket-launch",
+            "should_register": false,
+            "title": "5-Minuten Onboarding Setup",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/OptimizedDashboard.php",
+            "class": "OptimizedDashboard",
+            "navigation_group": null,
+            "navigation_label": "Optimized Dashboard",
+            "navigation_sort": "998",
+            "navigation_icon": "heroicon-o-cpu-chip",
+            "should_register": true,
+            "title": "Optimized Dashboard",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/PerformanceOptimizedDashboard.php",
+            "class": "PerformanceOptimizedDashboard",
+            "navigation_group": null,
+            "navigation_label": "Performance Optimized Dashboard",
+            "navigation_sort": "999",
+            "navigation_icon": "heroicon-o-cpu-chip",
+            "should_register": true,
+            "title": "Performance Optimized Dashboard",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/PricingCalculator.php",
+            "class": "PricingCalculator",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "2",
+            "navigation_icon": "heroicon-o-calculator",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/QuickDocs.php",
+            "class": "QuickDocs",
+            "navigation_group": "System",
+            "navigation_label": null,
+            "navigation_sort": "2",
+            "navigation_icon": "heroicon-o-bolt",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/QuickDocsEnhanced.php",
+            "class": "QuickDocsEnhanced",
+            "navigation_group": "System",
+            "navigation_label": null,
+            "navigation_sort": "1",
+            "navigation_icon": "heroicon-o-sparkles",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/QuickDocsSimple.php",
+            "class": "QuickDocsSimple",
+            "navigation_group": "System",
+            "navigation_label": null,
+            "navigation_sort": "2",
+            "navigation_icon": "heroicon-o-document-text",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/QuickSetupWizard.php",
+            "class": "QuickSetupWizard",
+            "navigation_group": null,
+            "navigation_label": "Schnell-Setup Assistent",
+            "navigation_sort": "55",
+            "navigation_icon": "heroicon-o-rocket-launch",
+            "should_register": true,
+            "title": "Schnell-Setup Assistent",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/QuickSetupWizardV2.php",
+            "class": "QuickSetupWizardV2",
+            "navigation_group": null,
+            "navigation_label": "\ud83d\ude80 Firmen-Setup Wizard",
+            "navigation_sort": "1",
+            "navigation_icon": "heroicon-o-sparkles",
+            "should_register": true,
+            "title": "\ud83d\ude80 Firmen-Setup Wizard",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/RetellAgentEditor.php",
+            "class": "RetellAgentEditor",
+            "navigation_group": null,
+            "navigation_label": "Retell Agent Editor",
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-cog-6-tooth",
+            "should_register": true,
+            "title": "Retell Agent Editor",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/RetellAgentEditorNext.php",
+            "class": "RetellAgentEditorNext",
+            "navigation_group": null,
+            "navigation_label": "Retell Agent Editor Next",
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-sparkles",
+            "should_register": true,
+            "title": "Retell Agent Editor Next",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/RetellAgentEditorUnified.php",
+            "class": "RetellAgentEditorUnified",
+            "navigation_group": null,
+            "navigation_label": "Retell Agent Editor - Live Edit",
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-pencil-square",
+            "should_register": true,
+            "title": "Retell Agent Editor - Live Edit",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/RetellAgentImportWizard.php",
+            "class": "RetellAgentImportWizard",
+            "navigation_group": null,
+            "navigation_label": "Retell Agent Import & Konfiguration",
+            "navigation_sort": "15",
+            "navigation_icon": "heroicon-o-phone-arrow-down-left",
+            "should_register": false,
+            "title": "Retell Agent Import & Konfiguration",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/RetellConfigurationCenter.php",
+            "class": "RetellConfigurationCenter",
+            "navigation_group": null,
+            "navigation_label": "Retell Configuration Center",
+            "navigation_sort": "2",
+            "navigation_icon": "heroicon-o-phone-arrow-up-right",
+            "should_register": false,
+            "title": "Retell Configuration Center",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/RetellUltimateControlCenter.php",
+            "class": "RetellUltimateControlCenter",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "10",
+            "navigation_icon": "heroicon-o-command-line",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/SimpleCalls.php",
+            "class": "SimpleCalls",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "99",
+            "navigation_icon": "heroicon-o-phone",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/SimpleDashboard.php",
+            "class": "SimpleDashboard",
+            "navigation_group": null,
+            "navigation_label": "Dashboard",
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-home",
+            "should_register": true,
+            "title": "Dashboard",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/SimpleOnboarding.php",
+            "class": "SimpleOnboarding",
+            "navigation_group": null,
+            "navigation_label": "AskProAI Schnellstart",
+            "navigation_sort": "1",
+            "navigation_icon": "heroicon-o-rocket-launch",
+            "should_register": false,
+            "title": "AskProAI Schnellstart",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/SimpleSyncManager.php",
+            "class": "SimpleSyncManager",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "90",
+            "navigation_icon": "heroicon-o-arrow-path",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/SimplestDashboard.php",
+            "class": "SimplestDashboard",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "997",
+            "navigation_icon": "heroicon-o-chart-bar",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/StaffEventAssignment.php",
+            "class": "StaffEventAssignment",
+            "navigation_group": null,
+            "navigation_label": "Mitarbeiter zu Event-Types zuordnen",
+            "navigation_sort": "20",
+            "navigation_icon": "heroicon-o-user-group",
+            "should_register": false,
+            "title": "Mitarbeiter zu Event-Types zuordnen",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/StaffEventAssignmentModern.php",
+            "class": "StaffEventAssignmentModern",
+            "navigation_group": null,
+            "navigation_label": "Intelligente Mitarbeiter-Zuordnung",
+            "navigation_sort": "230",
+            "navigation_icon": "heroicon-o-user-group",
+            "should_register": true,
+            "title": "Intelligente Mitarbeiter-Zuordnung",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/StripePaymentLinks.php",
+            "class": "StripePaymentLinks",
+            "navigation_group": null,
+            "navigation_label": "Payment Links",
+            "navigation_sort": "45",
+            "navigation_icon": "heroicon-o-link",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/SystemDebug.php",
+            "class": "SystemDebug",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-bug-ant",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/SystemMonitoringDashboard.php",
+            "class": "SystemMonitoringDashboard",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-computer-desktop",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/TestLivewirePage.php",
+            "class": "TestLivewirePage",
+            "navigation_group": null,
+            "navigation_label": "Test Livewire",
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-beaker",
+            "should_register": true,
+            "title": "Test Livewire",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/TestMinimalDashboard.php",
+            "class": "TestMinimalDashboard",
+            "navigation_group": null,
+            "navigation_label": "Test Minimal Dashboard",
+            "navigation_sort": "999",
+            "navigation_icon": "heroicon-o-beaker",
+            "should_register": true,
+            "title": "Test Minimal Dashboard",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/UserLanguageSettings.php",
+            "class": "UserLanguageSettings",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "50",
+            "navigation_icon": "heroicon-o-language",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/WebhookAnalysis.php",
+            "class": "WebhookAnalysis",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-chart-bar",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/WebhookMonitor.php",
+            "class": "WebhookMonitor",
+            "navigation_group": null,
+            "navigation_label": "Webhook Monitoring Dashboard",
+            "navigation_sort": "120",
+            "navigation_icon": "heroicon-o-signal",
+            "should_register": true,
+            "title": "Webhook Monitoring Dashboard",
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/WidgetTestPage.php",
+            "class": "WidgetTestPage",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": null,
+            "navigation_icon": "heroicon-o-beaker",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        },
+        {
+            "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/WorkingCalls.php",
+            "class": "WorkingCalls",
+            "navigation_group": null,
+            "navigation_label": null,
+            "navigation_sort": "98",
+            "navigation_icon": "heroicon-o-phone",
+            "should_register": true,
+            "title": null,
+            "slug": null
+        }
+    ],
+    "groups": {
+        "System & Verwaltung": [
+            {
+                "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/DocumentationHub.php",
+                "class": "DocumentationHub",
+                "navigation_group": "System & Verwaltung",
+                "navigation_label": null,
+                "navigation_sort": null,
+                "navigation_icon": "heroicon-o-book-open",
+                "should_register": true,
+                "title": null,
+                "slug": null
+            }
+        ],
+        "System": [
+            {
+                "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/QuickDocs.php",
+                "class": "QuickDocs",
+                "navigation_group": "System",
+                "navigation_label": null,
+                "navigation_sort": "2",
+                "navigation_icon": "heroicon-o-bolt",
+                "should_register": true,
+                "title": null,
+                "slug": null
+            },
+            {
+                "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/QuickDocsEnhanced.php",
+                "class": "QuickDocsEnhanced",
+                "navigation_group": "System",
+                "navigation_label": null,
+                "navigation_sort": "1",
+                "navigation_icon": "heroicon-o-sparkles",
+                "should_register": true,
+                "title": null,
+                "slug": null
+            },
+            {
+                "file": "\/var\/www\/api-gateway\/app\/Filament\/Admin\/Pages\/QuickDocsSimple.php",
+                "class": "QuickDocsSimple",
+                "navigation_group": "System",
+                "navigation_label": null,
+                "navigation_sort": "2",
+                "navigation_icon": "heroicon-o-document-text",
+                "should_register": true,
+                "title": null,
+                "slug": null
+            }
+        ]
+    },
+    "conflicts": [
+        {
+            "type": "duplicate_sort",
+            "group": "System",
+            "position": "2",
+            "items": [
+                "QuickDocs",
+                "QuickDocsSimple"
+            ]
+        }
+    ],
+    "missing_configs": [
+        {
+            "class": "AppointmentResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "BaseResource",
+            "missing": [
+                "navigation_group",
+                "navigation_icon",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "BillingPeriodResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "BranchResource",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "CalcomEventTypeResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "CallResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "CompanyPricingResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "CompanyResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "CustomerResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "DummyCompanyResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "EnhancedResource",
+            "missing": [
+                "navigation_group",
+                "navigation_icon",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "ErrorCatalogResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "GdprRequestResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "IntegrationResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "InvoiceResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "MasterServiceResource",
+            "missing": [
+                "navigation_group",
+                "navigation_icon",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "PhoneNumberResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "PortalUserResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "PrepaidBalanceResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "PromptTemplateResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "RetellAgentResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "ServiceResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "StaffResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "SubscriptionResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "TenantResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "UserResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "WorkingHourResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "WorkingHoursResource",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "AICallCenter",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "ApiHealthMonitor",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "BusinessPortalAdmin",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "CompanyIntegrationPortal",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "CustomerPortalManagement",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "DataSync",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "DocumentationHub",
+            "missing": [
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "EventAnalyticsDashboard",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "EventTypeImportWizard",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "EventTypeSetupWizard",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "FeatureFlagManager",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "IntelligentSyncManager",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "KnowledgeBaseManager",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "LanguageSettings",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "MCPControlCenter",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "MCPDashboard",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "MCPServerDashboard",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "OptimizedDashboard",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "PerformanceOptimizedDashboard",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "PricingCalculator",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "QuickDocs",
+            "missing": [
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "QuickDocsEnhanced",
+            "missing": [
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "QuickDocsSimple",
+            "missing": [
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "QuickSetupWizard",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "QuickSetupWizardV2",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "RetellAgentEditor",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "RetellAgentEditorNext",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "RetellAgentEditorUnified",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "RetellUltimateControlCenter",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "SimpleCalls",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "SimpleDashboard",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "SimpleSyncManager",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "SimplestDashboard",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "StaffEventAssignmentModern",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "StripePaymentLinks",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "SystemDebug",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "SystemMonitoringDashboard",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "TestLivewirePage",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "TestMinimalDashboard",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "UserLanguageSettings",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "WebhookAnalysis",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "WebhookMonitor",
+            "missing": [
+                "navigation_group"
+            ]
+        },
+        {
+            "class": "WidgetTestPage",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        },
+        {
+            "class": "WorkingCalls",
+            "missing": [
+                "navigation_group",
+                "navigation_label"
+            ]
+        }
+    ]
+}

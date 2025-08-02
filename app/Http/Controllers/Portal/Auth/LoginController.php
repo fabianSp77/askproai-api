@@ -73,17 +73,40 @@ class LoginController extends Controller
             return redirect()->route('business.two-factor.challenge');
         }
 
-        // Login user
+        // Login user - CustomSessionGuard will handle session regeneration
         Auth::guard('portal')->login($user, $request->boolean('remember'));
 
         // Record login
         $user->recordLogin($request->ip());
 
-        // Laravel handles session management automatically
-        // No need for manual session manipulation
+        // Store important data in session
+        session(['portal_user_id' => $user->id]);
+        session(['company_id' => $user->company_id]);
+        
+        // Force save the session to ensure it persists
+        $request->session()->save();
+        
+        // Log successful login for debugging
+        \Log::info('Portal user logged in successfully', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'session_id' => session()->getId(),
+            'portal_user_id' => session('portal_user_id'),
+            'company_id' => session('company_id'),
+            'auth_check' => auth()->guard('portal')->check(),
+            'auth_id' => auth()->guard('portal')->id(),
+        ]);
+        
+        // Get intended URL or default to dashboard
+        $intendedUrl = $request->session()->pull('url.intended', route('business.dashboard'));
+        
+        // Ensure we're not redirecting to login page
+        if (str_contains($intendedUrl, 'login')) {
+            $intendedUrl = route('business.dashboard');
+        }
 
-        // Redirect to dashboard route which will load React SPA
-        return redirect()->route('business.dashboard');
+        // Simply redirect - cookies are handled by middleware
+        return redirect($intendedUrl);
     }
 
     /**

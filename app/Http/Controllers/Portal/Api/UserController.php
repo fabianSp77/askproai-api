@@ -13,7 +13,7 @@ class UserController extends Controller
         // Quick response to prevent timeout
         $user = Auth::guard('portal')->user();
         
-        if (\!$user) {
+        if (!$user) {
             // Try to get from session
             $userId = session('portal_user_id');
             if ($userId) {
@@ -24,7 +24,7 @@ class UserController extends Controller
             }
         }
         
-        if (\!$user) {
+        if (!$user) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
         

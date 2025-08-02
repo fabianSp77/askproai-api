@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Browser Load Check</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .metric { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .high { color: red; font-weight: bold; }
+        .medium { color: orange; }
+        .low { color: green; }
+        button { padding: 10px 20px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Browser Performance Check</h1>
+    
+    <div class="metric">
+        <strong>CPU Usage:</strong> <span id="cpu">Measuring...</span>
+    </div>
+    
+    <div class="metric">
+        <strong>Memory Usage:</strong> <span id="memory">Measuring...</span>
+    </div>
+    
+    <div class="metric">
+        <strong>Active Timers:</strong> <span id="timers">0</span>
+    </div>
+    
+    <div class="metric">
+        <strong>DOM Nodes:</strong> <span id="nodes">0</span>
+    </div>
+    
+    <div class="metric">
+        <strong>Event Listeners:</strong> <span id="listeners">0</span>
+    </div>
+    
+    <h2>Test Admin Pages:</h2>
+    <button onclick="testPage('/admin/dashboard')">Test Dashboard</button>
+    <button onclick="testPage('/admin/calls')">Test Calls</button>
+    <button onclick="testPage('/admin/appointments')">Test Appointments</button>
+    
+    <h2>Results:</h2>
+    <div id="results"></div>
+    
+    <script>
+        // Monitor performance
+        let startTime = performance.now();
+        let frameCount = 0;
+        let activeTimers = 0;
+        
+        // Count timers
+        const originalSetInterval = window.setInterval;
+        const originalSetTimeout = window.setTimeout;
+        
+        window.setInterval = function() {
+            activeTimers++;
+            document.getElementById('timers').textContent = activeTimers;
+            return originalSetInterval.apply(this, arguments);
+        };
+        
+        window.setTimeout = function() {
+            activeTimers++;
+            document.getElementById('timers').textContent = activeTimers;
+            return originalSetTimeout.apply(this, arguments);
+        };
+        
+        // Monitor FPS and CPU
+        function measurePerformance() {
+            frameCount++;
+            const currentTime = performance.now();
+            const elapsed = currentTime - startTime;
+            
+            if (elapsed >= 1000) {
+                const fps = Math.round(frameCount * 1000 / elapsed);
+                const cpuLoad = Math.max(0, 100 - (fps / 60 * 100));
+                
+                document.getElementById('cpu').textContent = cpuLoad.toFixed(1) + '%';
+                document.getElementById('cpu').className = cpuLoad > 80 ? 'high' : (cpuLoad > 50 ? 'medium' : 'low');
+                
+                frameCount = 0;
+                startTime = currentTime;
+            }
+            
+            // Memory
+            if (performance.memory) {
+                const mb = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+                document.getElementById('memory').textContent = mb + ' MB';
+                document.getElementById('memory').className = mb > 500 ? 'high' : (mb > 250 ? 'medium' : 'low');
+            }
+            
+            // DOM nodes
+            document.getElementById('nodes').textContent = document.getElementsByTagName('*').length;
+            
+            requestAnimationFrame(measurePerformance);
+        }
+        
+        measurePerformance();
+        
+        // Test page loading
+        function testPage(url) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML += `<div>Testing ${url}...</div>`;
+            
+            // Open in iframe to isolate
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            
+            const startMetrics = {
+                timers: activeTimers,
+                memory: performance.memory ? performance.memory.usedJSHeapSize : 0,
+                time: performance.now()
+            };
+            
+            iframe.onload = function() {
+                setTimeout(() => {
+                    const endMetrics = {
+                        timers: activeTimers - startMetrics.timers,
+                        memory: performance.memory ? performance.memory.usedJSHeapSize - startMetrics.memory : 0,
+                        time: performance.now() - startMetrics.time
+                    };
+                    
+                    resultsDiv.innerHTML += `
+                        <div class="metric">
+                            <strong>${url}:</strong><br>
+                            Load time: ${endMetrics.time.toFixed(0)}ms<br>
+                            New timers: ${endMetrics.timers}<br>
+                            Memory increase: ${(endMetrics.memory / 1048576).toFixed(1)} MB
+                        </div>
+                    `;
+                    
+                    document.body.removeChild(iframe);
+                }, 3000);
+            };
+            
+            document.body.appendChild(iframe);
+        }
+    </script>
+</body>
+</html>

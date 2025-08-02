@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Portal\PortalAuthService;
 use Closure;
 use Illuminate\Http\Request;
-use App\Services\Portal\PortalAuthService;
 
 class PortalAuthAjax
 {
@@ -16,7 +16,7 @@ class PortalAuthAjax
     }
 
     /**
-     * Handle an incoming request for AJAX/API calls
+     * Handle an incoming request for AJAX/API calls.
      */
     public function handle(Request $request, Closure $next)
     {
@@ -32,6 +32,7 @@ class PortalAuthAjax
             if ($user) {
                 // Set user in auth guard for this request
                 auth()->guard('portal')->setUser($user);
+
                 return $next($request);
             }
         }
@@ -45,6 +46,7 @@ class PortalAuthAjax
                     if ($user && $user->is_active) {
                         app()->instance('current_company_id', $user->company_id);
                         auth()->guard('portal')->login($user);
+
                         return $next($request);
                     }
                 }
@@ -57,7 +59,7 @@ class PortalAuthAjax
         return response()->json([
             'success' => false,
             'message' => 'Unauthenticated',
-            'code' => 'UNAUTHENTICATED'
+            'code' => 'UNAUTHENTICATED',
         ], 401);
     }
 }

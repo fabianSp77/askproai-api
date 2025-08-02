@@ -11,13 +11,13 @@ class AppointmentController extends BaseAdminApiController
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Appointment::withoutGlobalScopes()
+        $query = Appointment::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
-                'branch' => function($q) { $q->withoutGlobalScopes(); },
-                'customer' => function($q) { $q->withoutGlobalScopes(); },
-                'staff' => function($q) { $q->withoutGlobalScopes(); },
-                'service' => function($q) { $q->withoutGlobalScopes(); }
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'branch' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'customer' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'staff' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'service' => function($q) { $q->where("company_id", auth()->user()->company_id); }
             ]);
 
         // Date filter
@@ -100,14 +100,14 @@ class AppointmentController extends BaseAdminApiController
 
     public function show($id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
-                'branch' => function($q) { $q->withoutGlobalScopes(); },
-                'customer' => function($q) { $q->withoutGlobalScopes(); },
-                'staff' => function($q) { $q->withoutGlobalScopes(); },
-                'service' => function($q) { $q->withoutGlobalScopes(); },
-                'call' => function($q) { $q->withoutGlobalScopes(); }
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'branch' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'customer' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'staff' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'service' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'call' => function($q) { $q->where("company_id", auth()->user()->company_id); }
             ])
             ->findOrFail($id);
 
@@ -136,7 +136,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function update(Request $request, $id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()->findOrFail($id);
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'customer_id' => 'sometimes|exists:customers,id',
@@ -156,7 +156,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function destroy($id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()->findOrFail($id);
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)->findOrFail($id);
         $appointment->delete();
 
         return response()->json(null, 204);
@@ -164,7 +164,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function cancel($id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()->findOrFail($id);
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)->findOrFail($id);
         $appointment->update(['status' => 'cancelled']);
 
         return response()->json(['message' => 'Appointment cancelled successfully']);
@@ -172,7 +172,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function confirm($id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()->findOrFail($id);
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)->findOrFail($id);
         $appointment->update(['status' => 'confirmed']);
 
         return response()->json(['message' => 'Appointment confirmed successfully']);
@@ -180,7 +180,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function complete($id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()->findOrFail($id);
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)->findOrFail($id);
         $appointment->update(['status' => 'completed']);
 
         return response()->json(['message' => 'Appointment completed successfully']);
@@ -188,7 +188,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function noShow($id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()->findOrFail($id);
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)->findOrFail($id);
         $appointment->update(['status' => 'no_show']);
 
         // Track no-show count for customer
@@ -203,7 +203,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function sendReminder($id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()->findOrFail($id);
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         try {
             // Dispatch reminder job
@@ -219,7 +219,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function reschedule(Request $request, $id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()->findOrFail($id);
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'starts_at' => 'required|date',
@@ -251,7 +251,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function checkIn($id): JsonResponse
     {
-        $appointment = Appointment::withoutGlobalScopes()->findOrFail($id);
+        $appointment = Appointment::where("company_id", auth()->user()->company_id)->findOrFail($id);
         
         $appointment->update([
             'checked_in_at' => now(),
@@ -270,7 +270,7 @@ class AppointmentController extends BaseAdminApiController
             'status' => 'required_if:action,update_status|in:scheduled,confirmed,completed,cancelled,no_show',
         ]);
 
-        $appointments = Appointment::withoutGlobalScopes()
+        $appointments = Appointment::where("company_id", auth()->user()->company_id)
             ->whereIn('id', $validated['appointment_ids'])
             ->get();
 
@@ -312,7 +312,7 @@ class AppointmentController extends BaseAdminApiController
         $dateFrom = $request->get('date_from', now()->startOfMonth());
         $dateTo = $request->get('date_to', now()->endOfMonth());
 
-        $query = Appointment::withoutGlobalScopes()
+        $query = Appointment::where("company_id", auth()->user()->company_id)
             ->whereBetween('starts_at', [$dateFrom, $dateTo]);
 
         if ($companyId) {
@@ -347,7 +347,7 @@ class AppointmentController extends BaseAdminApiController
 
     public function quickFilters(Request $request): JsonResponse
     {
-        $baseQuery = Appointment::withoutGlobalScopes();
+        $baseQuery = Appointment::where("company_id", auth()->user()->company_id);
 
         if ($request->has('company_id')) {
             $baseQuery->where('company_id', $request->get('company_id'));

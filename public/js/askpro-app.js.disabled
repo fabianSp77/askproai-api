@@ -1,0 +1,307 @@
+/**
+ * AskProAI Central Application Manager
+ * 
+ * Coordinates all UI enhancements and fixes in the correct order
+ * Ensures compatibility between Livewire v3, Alpine.js, and Filament v3
+ */
+
+window.AskProAI = {
+    version: '2.0.0',
+    initialized: false,
+    modules: new Map(),
+    readyCallbacks: [],
+    
+    config: {
+        debug: window.location.hostname === 'localhost',
+        waitTimeout: 5000,
+        initDelay: 50
+    },
+    
+    log(...args) {
+        if (this.config.debug) {
+            console.log('[AskProAI]', ...args);
+        }
+    },
+    
+    error(...args) {
+        console.error('[AskProAI]', ...args);
+    },
+    
+    /**
+     * Register a module to be initialized
+     */
+    registerModule(name, module) {
+        if (this.modules.has(name)) {
+            this.log(`Module ${name} already registered`);
+            return;
+        }
+        
+        this.modules.set(name, module);
+        this.log(`Module ${name} registered`);
+        
+        // If already initialized, init the module immediately
+        if (this.initialized && typeof module.init === 'function') {
+            this.initModule(name, module);
+        }
+    },
+    
+    /**
+     * Initialize a single module
+     */
+    initModule(name, module) {
+        try {
+            this.log(`Initializing module: ${name}`);
+            
+            if (typeof module.init === 'function') {
+                module.init();
+            }
+            
+            this.log(`Module ${name} initialized successfully`);
+        } catch (error) {
+            this.error(`Failed to initialize module ${name}:`, error);
+        }
+    },
+    
+    /**
+     * Wait for all required frameworks to be ready
+     */
+    waitForFrameworks() {
+        return new Promise((resolve) => {
+            const startTime = Date.now();
+            
+            const check = () => {
+                const elapsed = Date.now() - startTime;
+                
+                // Check if frameworks are ready
+                const status = {
+                    dom: document.readyState !== 'loading',
+                    livewire: typeof window.Livewire !== 'undefined',
+                    alpine: typeof window.Alpine !== 'undefined',
+                    filament: document.querySelector('[wire\\:id]') !== null
+                };
+                
+                // All ready?
+                if (status.dom && status.livewire && status.alpine) {
+                    this.log('All frameworks ready:', status);
+                    resolve(status);
+                } else if (elapsed > this.config.waitTimeout) {
+                    this.log('Timeout waiting for frameworks, proceeding with:', status);
+                    resolve(status);
+                } else {
+                    // Log what we're waiting for
+                    if (!status.dom) this.log('Waiting for DOM...');
+                    if (!status.livewire) this.log('Waiting for Livewire...');
+                    if (!status.alpine) this.log('Waiting for Alpine...');
+                    
+                    setTimeout(check, 100);
+                }
+            };
+            
+            check();
+        });
+    },
+    
+    /**
+     * Initialize all modules in the correct order
+     */
+    async init() {
+        if (this.initialized) {
+            this.log('Already initialized');
+            return;
+        }
+        
+        this.log('Starting initialization...');
+        
+        try {
+            // Wait for frameworks
+            await this.waitForFrameworks();
+            
+            // Small delay to ensure everything is really ready
+            await new Promise(resolve => setTimeout(resolve, this.config.initDelay));
+            
+            // Initialize modules in order
+            const initOrder = [
+                'EventHandler',      // Fix click handlers first
+                'DropdownManager',   // Then dropdown functionality
+                'FilamentCompat',    // Filament-specific fixes
+                'LoginEnhancer',     // Login page enhancements
+                'ResponsiveTables'   // Table responsiveness
+            ];
+            
+            for (const moduleName of initOrder) {
+                const module = this.modules.get(moduleName);
+                if (module) {
+                    this.initModule(moduleName, module);
+                }
+            }
+            
+            // Setup framework hooks
+            this.setupLivewireHooks();
+            this.setupAlpineHooks();
+            
+            // Mark as initialized
+            this.initialized = true;
+            this.log('Initialization complete');
+            
+            // Call ready callbacks
+            this.readyCallbacks.forEach(callback => {
+                try {
+                    callback();
+                } catch (error) {
+                    this.error('Ready callback error:', error);
+                }
+            });
+            
+        } catch (error) {
+            this.error('Initialization failed:', error);
+        }
+    },
+    
+    /**
+     * Setup Livewire hooks
+     */
+    setupLivewireHooks() {
+        if (!window.Livewire) return;
+        
+        this.log('Setting up Livewire hooks');
+        
+        // Re-initialize modules after Livewire updates
+        Livewire.hook('message.processed', (message, component) => {
+            this.log('Livewire update processed');
+            
+            // Re-run module updates
+            this.modules.forEach((module, name) => {
+                if (typeof module.onLivewireUpdate === 'function') {
+                    try {
+                        module.onLivewireUpdate(message, component);
+                    } catch (error) {
+                        this.error(`Module ${name} Livewire update failed:`, error);
+                    }
+                }
+            });
+        });
+        
+        // Handle navigation
+        Livewire.hook('navigate', () => {
+            this.log('Livewire navigation');
+            
+            // Re-initialize modules that need it
+            this.modules.forEach((module, name) => {
+                if (typeof module.onNavigate === 'function') {
+                    try {
+                        module.onNavigate();
+                    } catch (error) {
+                        this.error(`Module ${name} navigation handler failed:`, error);
+                    }
+                }
+            });
+        });
+    },
+    
+    /**
+     * Setup Alpine hooks
+     */
+    setupAlpineHooks() {
+        if (!window.Alpine) return;
+        
+        this.log('Setting up Alpine hooks');
+        
+        // Alpine doesn't have as many hooks as Livewire, but we can use mutation observer
+        document.addEventListener('alpine:initialized', () => {
+            this.log('Alpine initialized event');
+            
+            this.modules.forEach((module, name) => {
+                if (typeof module.onAlpineInit === 'function') {
+                    try {
+                        module.onAlpineInit();
+                    } catch (error) {
+                        this.error(`Module ${name} Alpine init failed:`, error);
+                    }
+                }
+            });
+        });
+    },
+    
+    /**
+     * Register a callback to be called when everything is ready
+     */
+    ready(callback) {
+        if (this.initialized) {
+            // Already initialized, call immediately
+            try {
+                callback();
+            } catch (error) {
+                this.error('Ready callback error:', error);
+            }
+        } else {
+            // Queue for later
+            this.readyCallbacks.push(callback);
+        }
+    },
+    
+    /**
+     * Utility: Safely get element
+     */
+    getElement(selector) {
+        try {
+            return document.querySelector(selector);
+        } catch (error) {
+            this.error('Invalid selector:', selector, error);
+            return null;
+        }
+    },
+    
+    /**
+     * Utility: Safely get all elements
+     */
+    getElements(selector) {
+        try {
+            return Array.from(document.querySelectorAll(selector));
+        } catch (error) {
+            this.error('Invalid selector:', selector, error);
+            return [];
+        }
+    },
+    
+    /**
+     * Utility: Add CSS class safely
+     */
+    addClass(element, className) {
+        if (element && element.classList) {
+            element.classList.add(className);
+        }
+    },
+    
+    /**
+     * Utility: Remove CSS class safely
+     */
+    removeClass(element, className) {
+        if (element && element.classList) {
+            element.classList.remove(className);
+        }
+    },
+    
+    /**
+     * Utility: Toggle CSS class safely
+     */
+    toggleClass(element, className) {
+        if (element && element.classList) {
+            element.classList.toggle(className);
+        }
+    }
+};
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        AskProAI.init();
+    });
+} else {
+    // DOM already loaded, but wait a tick for other scripts
+    setTimeout(() => {
+        AskProAI.init();
+    }, 0);
+}
+
+// Export for debugging
+window.AskProAI = AskProAI;

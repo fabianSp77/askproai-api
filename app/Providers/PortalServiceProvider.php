@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Services\Portal\PortalAuthService;
+use Illuminate\Support\ServiceProvider;
 
 class PortalServiceProvider extends ServiceProvider
 {
@@ -14,7 +14,7 @@ class PortalServiceProvider extends ServiceProvider
     {
         // Register PortalAuthService as singleton
         $this->app->singleton(PortalAuthService::class, function ($app) {
-            return new PortalAuthService();
+            return new PortalAuthService;
         });
 
         // Register alias for easier access
@@ -27,7 +27,7 @@ class PortalServiceProvider extends ServiceProvider
     public function boot()
     {
         // Add custom auth guard if needed
-        if (!config('auth.guards.portal')) {
+        if (! config('auth.guards.portal')) {
             config([
                 'auth.guards.portal' => [
                     'driver' => 'session',
@@ -47,15 +47,22 @@ class PortalServiceProvider extends ServiceProvider
 
         // Apply portal session config when in business routes
         if (request()->is('business/*') || request()->is('api/business/*')) {
-            config([
-                'session.cookie' => 'portal_session',
-                'session.table' => 'portal_sessions',
-                'session.domain' => config('session.domain'),
-                'session.path' => '/',
-                'session.same_site' => 'lax',
-                'session.http_only' => true,
-                'session.secure' => request()->secure(),
-            ]);
+            // Use the portal-specific session configuration
+            $portalSessionConfig = config('session_portal');
+            if ($portalSessionConfig) {
+                config([
+                    'session.driver' => $portalSessionConfig['driver'],
+                    'session.cookie' => $portalSessionConfig['cookie'],
+                    'session.table' => $portalSessionConfig['table'] ?? 'portal_sessions',
+                    'session.domain' => $portalSessionConfig['domain'] ?? config('session.domain'),
+                    'session.path' => $portalSessionConfig['path'],
+                    'session.same_site' => $portalSessionConfig['same_site'],
+                    'session.http_only' => $portalSessionConfig['http_only'],
+                    'session.secure' => $portalSessionConfig['secure'],
+                    'session.lifetime' => $portalSessionConfig['lifetime'],
+                    'session.files' => $portalSessionConfig['files'],
+                ]);
+            }
         }
     }
 }

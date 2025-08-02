@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean Login Test - Business Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .user-info h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .user-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .debug-info {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+        
+        .debug-info h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>🔐 Clean Login Test</h1>
+        
+        <div id="message"></div>
+        
+        <div id="login-form">
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required value="demo@askproai.de">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required value="demo">
+                </div>
+                
+                <button type="submit" id="submit-btn">Login</button>
+            </form>
+        </div>
+        
+        <div id="user-info" class="user-info hidden">
+            <h2>✅ Authenticated User</h2>
+            <p><strong>Name:</strong> <span id="user-name"></span></p>
+            <p><strong>Email:</strong> <span id="user-email"></span></p>
+            <p><strong>Company ID:</strong> <span id="user-company"></span></p>
+            <p><strong>Role:</strong> <span id="user-role"></span></p>
+            <button onclick="handleLogout()">Logout</button>
+        </div>
+        
+        <div class="debug-info">
+            <h3>Debug Information</h3>
+            <div id="debug-content">
+                <p>Token in localStorage: <span id="token-status">Not checked</span></p>
+                <p>Auth header set: <span id="auth-header">Not checked</span></p>
+                <p>API Base URL: /api</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configure axios-like fetch wrapper
+        const api = {
+            defaults: {
+                baseURL: '/api',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            },
+            
+            async request(url, options = {}) {
+                const token = localStorage.getItem('auth_token');
+                if (token) {
+                    options.headers = {
+                        ...this.defaults.headers,
+                        ...options.headers,
+                        'Authorization': `Bearer ${token}`
+                    };
+                } else {
+                    options.headers = {
+                        ...this.defaults.headers,
+                        ...options.headers
+                    };
+                }
+                
+                const response = await fetch(this.defaults.baseURL + url, {
+                    ...options,
+                    credentials: 'same-origin'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw { response: { status: response.status, data: error } };
+                }
+                
+                return response.json();
+            },
+            
+            get(url) {
+                return this.request(url, { method: 'GET' });
+            },
+            
+            post(url, data) {
+                return this.request(url, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+            }
+        };
+        
+        // Update debug info
+        function updateDebugInfo() {
+            const token = localStorage.getItem('auth_token');
+            document.getElementById('token-status').textContent = token ? 'Present' : 'Not found';
+            document.getElementById('auth-header').textContent = token ? 'Yes' : 'No';
+        }
+        
+        // Show message
+        function showMessage(type, text) {
+            const messageEl = document.getElementById('message');
+            messageEl.className = type;
+            messageEl.textContent = text;
+            messageEl.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // Check auth status on load
+        async function checkAuthStatus() {
+            updateDebugInfo();
+            
+            try {
+                const data = await api.get('/auth/user');
+                if (data.user) {
+                    showAuthenticatedState(data.user);
+                }
+            } catch (error) {
+                console.log('Not authenticated');
+            }
+        }
+        
+        // Show authenticated state
+        function showAuthenticatedState(user) {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            
+            document.getElementById('user-name').textContent = user.name || 'N/A';
+            document.getElementById('user-email').textContent = user.email || 'N/A';
+            document.getElementById('user-company').textContent = user.company_id || 'N/A';
+            document.getElementById('user-role').textContent = user.role || 'N/A';
+            
+            showMessage('success', 'Successfully authenticated!');
+        }
+        
+        // Handle login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = document.getElementById('submit-btn');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Logging in... <span class="loading"></span>';
+            
+            try {
+                const data = await api.post('/auth/portal/login', {
+                    email,
+                    password,
+                    device_name: 'web'
+                });
+                
+                if (data.requires_2fa) {
+                    showMessage('info', '2FA required. This test page does not support 2FA yet.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Login';
+                    return;
+                }
+                
+                // Store token
+                localStorage.setItem('auth_token', data.token);
+                updateDebugInfo();
+                
+                // Show authenticated state
+                showAuthenticatedState(data.user);
+                
+            } catch (error) {
+                const message = error.response?.data?.errors?.email?.[0] || 
+                              error.response?.data?.message || 
+                              'Login failed';
+                showMessage('error', message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
+            }
+        }
+        
+        // Handle logout
+        async function handleLogout() {
+            try {
+                await api.post('/auth/logout');
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                // Clear local state regardless
+                localStorage.removeItem('auth_token');
+                updateDebugInfo();
+                
+                // Reset UI
+                document.getElementById('login-form').classList.remove('hidden');
+                document.getElementById('user-info').classList.add('hidden');
+                showMessage('info', 'Logged out successfully');
+            }
+        }
+        
+        // Check for auth bypass scripts
+        function checkForBypassScripts() {
+            const issues = [];
+            
+            if (window.__AUTH_USER__ || window.DEMO_MODE) {
+                issues.push('⚠️ Auth override variables detected in window');
+            }
+            
+            if (localStorage.getItem('portal_auth') || localStorage.getItem('auth_override')) {
+                issues.push('⚠️ Auth override in localStorage');
+            }
+            
+            if (issues.length > 0) {
+                showMessage('error', 'Auth bypass detected: ' + issues.join(', '));
+            }
+        }
+        
+        // Initialize
+        checkForBypassScripts();
+        checkAuthStatus();
+    </script>
+</body>
+</html>

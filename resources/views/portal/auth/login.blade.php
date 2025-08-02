@@ -14,8 +14,18 @@
             </p>
         </div>
 
-        <form class="mt-8 space-y-6" action="{{ route('business.login') }}" method="POST">
+        <form class="mt-8 space-y-6" action="{{ route('business.login.post') }}" method="POST" id="login-form">
             @csrf
+            
+            <!-- Debug info - remove in production -->
+            @if(config('app.debug'))
+            <div class="text-xs text-gray-500 mb-4">
+                <p>Session ID: {{ substr(session()->getId(), 0, 8) }}...</p>
+                <p>Session Name: {{ session()->getName() }}</p>
+                <p>Demo Login: demo@askproai.de / password</p>
+                <p>CSRF Token: {{ substr(csrf_token(), 0, 8) }}...</p>
+            </div>
+            @endif
 
             @if (session('error'))
                 <div class="rounded-md bg-red-50 p-4">

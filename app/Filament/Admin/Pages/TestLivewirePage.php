@@ -22,4 +22,9 @@ class TestLivewirePage extends Page
     {
         return auth()->user()?->hasRole(['super_admin', 'Super Admin']) ?? false;
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
 }

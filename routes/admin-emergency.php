@@ -3,10 +3,19 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
-// Emergency admin login route - bypasses all middleware
+// SECURITY WARNING: Emergency admin login route - USE WITH EXTREME CAUTION
+// This route bypasses CSRF but is heavily rate limited (2 attempts per hour)
 Route::post('/admin-emergency-login', function (Request $request) {
+    // Log all emergency login attempts for security audit
+    \Log::warning('Emergency admin login attempt', [
+        'ip' => $request->ip(),
+        'user_agent' => $request->userAgent(),
+        'email' => $request->input('email'),
+    ]);
+    
     $email = $request->input('email');
     $password = $request->input('password');
     
@@ -16,11 +25,20 @@ Route::post('/admin-emergency-login', function (Request $request) {
         Auth::guard('web')->login($user);
         session()->regenerate();
         
+        // Log successful emergency login
+        \Log::warning('Emergency admin login successful', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => $request->ip(),
+        ]);
+        
         return redirect('/admin')->with('success', 'Logged in via emergency route');
     }
     
     return back()->withErrors(['email' => 'Invalid credentials']);
-})->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+})
+->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+->middleware(['web', 'auth.rate.limit']); // Apply rate limiting even to emergency route
 
 // Emergency login form
 Route::get('/admin-emergency', function () {

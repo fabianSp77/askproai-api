@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="space-y-6" wire:poll.5s="refreshData">
+    <div class="space-y-6" wire:poll.30s="refreshData">
         {{-- System Status Header --}}
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white shadow-xl">
             <div class="flex items-center justify-between">

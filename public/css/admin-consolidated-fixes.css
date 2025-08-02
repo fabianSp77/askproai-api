@@ -1,0 +1,351 @@
+/**
+ * Admin Portal Consolidated Fixes
+ * Combines all essential fixes in one optimized file
+ * Replaces multiple separate fix files
+ */
+
+/* ============================
+   1. IMMEDIATE BLACK SCREEN FIX
+   ============================ */
+
+/* AGGRESSIVE FIX: Remove ALL pseudo-element overlays */
+*::before,
+*::after {
+    content: none !important;
+    background: transparent !important;
+    opacity: 0 !important;
+    z-index: auto !important;
+}
+
+/* Only allow critical pseudo-elements for icons and UI */
+.fi-icon::before,
+.fi-icon::after,
+svg::before,
+svg::after,
+[class*="heroicon"]::before,
+[class*="heroicon"]::after,
+.fi-dropdown-list-item-icon::before,
+.fi-dropdown-list-item-icon::after {
+    content: "" !important;
+    opacity: 1 !important;
+}
+
+/* Force remove ANY black overlays */
+body > div[style*="background"],
+body > div[style*="rgba(0"],
+body > div[style*="rgb(0"],
+.fixed.inset-0,
+[class*="overlay"]:not(.fi-modal):not(.fi-notification),
+[class*="backdrop"]:not(.fi-modal) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Remove hover overlays */
+*:hover::before,
+*:hover::after {
+    display: none !important;
+}
+
+/* Exception: Allow specific UI pseudo-elements that need them */
+input[type="checkbox"]::before,
+input[type="radio"]::before,
+.fi-modal::before,
+.fi-notification::before {
+    display: block !important;
+    opacity: 1 !important;
+}
+
+/* Ensure body and forms are visible */
+body {
+    overflow: visible !important;
+    background-color: rgb(249 250 251) !important;
+}
+
+.fi-simple-page,
+.fi-login-panel,
+form {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Dark mode body background */
+body.dark {
+    background-color: rgb(17 24 39) !important;
+}
+
+/* ============================
+   2. ICON SIZE FIXES (Issues #429, #430, #431, #448, #450)
+   ============================ */
+
+/* AGGRESSIVE ICON SIZE CONTROL */
+/* Force ALL SVG icons to reasonable sizes */
+svg {
+    max-width: 1.5rem !important;
+    max-height: 1.5rem !important;
+}
+
+/* Dashboard widget icons (Issue #429) */
+.fi-wi-stats-overview-stat-icon {
+    width: 3rem !important;
+    height: 3rem !important;
+    padding: 0.75rem !important;
+}
+
+.fi-wi-stats-overview-stat-icon svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+}
+
+/* Table action icons (Issue #430) */
+.fi-ta-action {
+    width: 2rem !important;
+    height: 2rem !important;
+    padding: 0.375rem !important;
+}
+
+.fi-ta-action svg,
+.fi-ta-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Sidebar navigation icons */
+.fi-sidebar-item-icon {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    flex-shrink: 0 !important;
+}
+
+.fi-sidebar-item-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Form field icons (Issue #431) */
+.fi-fo-field-wrp-icon {
+    width: 2.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.fi-fo-field-wrp-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Global icon containers */
+.fi-icon-wrp {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+/* Modal and notification icons - allow slightly larger */
+.fi-modal-icon svg,
+.fi-empty-state-icon svg,
+.fi-modal-icon-wrapper svg {
+    max-width: 2rem !important;
+    max-height: 2rem !important;
+}
+
+/* User avatar icon */
+.fi-user-avatar svg {
+    width: 2rem !important;
+    height: 2rem !important;
+}
+
+/* Button icons should match button size */
+.fi-btn-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Very small icons (status indicators) */
+.fi-status-indicator-icon svg {
+    width: 0.5rem !important;
+    height: 0.5rem !important;
+    max-width: 0.5rem !important;
+    max-height: 0.5rem !important;
+}
+
+/* ============================
+   3. LOADING SPINNER FIXES
+   ============================ */
+
+/* Hide stuck loading spinners on login page */
+.fi-login .fi-loading-indicator,
+.fi-login .animate-spin,
+.fi-simple-page .fi-loading-indicator,
+.fi-simple-page .animate-spin {
+    display: none !important;
+}
+
+/* Fix infinite spinning animations */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin:not(.fi-login *):not(.fi-simple-page *) {
+    animation: spin 1s linear infinite !important;
+}
+
+/* ============================
+   4. CLICKABILITY FIXES
+   ============================ */
+
+/* Ensure ALL interactive elements are clickable */
+a, button, input, select, textarea,
+[role="button"], [role="link"], [role="menuitem"],
+[wire\:click], [x-on\:click], [onclick],
+.cursor-pointer, .fi-btn, .fi-link, .fi-dropdown-item,
+.fi-sidebar-nav-item, .fi-topbar-item, .fi-ac-trigger,
+.fi-ta-header-cell-label, .fi-ta-row, .fi-ta-cell,
+.fi-pagination-item, .fi-breadcrumb-item {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 999 !important;
+}
+
+/* Specific cursor styles */
+button, [role="button"], .fi-btn {
+    cursor: pointer !important;
+}
+
+input[type="text"], textarea {
+    cursor: text !important;
+}
+
+/* ============================
+   5. ANIMATION FIXES
+   ============================ */
+
+/* Respect reduced motion without breaking functionality */
+@media (prefers-reduced-motion: reduce) {
+    /* Only reduce decorative animations */
+    .animate-pulse,
+    .animate-bounce {
+        animation: none !important;
+    }
+    
+    /* Keep functional transitions but make them instant */
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.1s !important;
+    }
+    
+    /* Ensure dropdowns and modals still work */
+    .fi-dropdown-panel,
+    .fi-modal,
+    [x-transition] {
+        transition-duration: 0.15s !important;
+    }
+}
+
+/* ============================
+   6. FORM CONTROL FIXES
+   ============================ */
+
+/* Radio buttons and checkboxes */
+input[type="radio"],
+input[type="checkbox"],
+.fi-checkbox-input,
+.fi-radio-input {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+}
+
+/* Form field containers */
+.fi-form-field,
+.fi-form-component {
+    pointer-events: auto !important;
+}
+
+/* ============================
+   7. DROPDOWN FIXES
+   ============================ */
+
+/* Dropdown containers */
+[x-data*="dropdown"],
+[data-dropdown] {
+    position: relative !important;
+}
+
+/* Dropdown panels */
+.fi-dropdown-panel {
+    z-index: 50 !important;
+    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    pointer-events: auto !important;
+}
+
+.dark .fi-dropdown-panel {
+    background-color: rgb(31 41 55) !important;
+    border-color: rgb(55 65 81) !important;
+}
+
+/* ============================
+   8. MOBILE RESPONSIVE
+   ============================ */
+
+@media (max-width: 768px) {
+    /* Larger touch targets */
+    button, a, [role="button"], input[type="radio"], input[type="checkbox"] {
+        min-height: 44px !important;
+    }
+    
+    /* Mobile sidebar */
+    .fi-sidebar {
+        position: fixed !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    body.fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+}
+
+/* ============================
+   9. LOGIN PAGE SPECIFIC
+   ============================ */
+
+.fi-login {
+    /* Clean background */
+    background-color: rgb(249 250 251) !important;
+}
+
+.fi-login-panel {
+    /* Remove shadows on mobile */
+    @media (max-width: 640px) {
+        box-shadow: none !important;
+    }
+}
+
+/* ============================
+   10. Z-INDEX HIERARCHY
+   ============================ */
+
+:root {
+    --z-dropdown: 50;
+    --z-sidebar: 60;
+    --z-modal: 80;
+    --z-notification: 90;
+    --z-tooltip: 100;
+}
+
+.fi-dropdown-panel { z-index: var(--z-dropdown) !important; }
+.fi-sidebar { z-index: var(--z-sidebar) !important; }
+.fi-modal-window { z-index: var(--z-modal) !important; }
+.fi-notification { z-index: var(--z-notification) !important; }
+.fi-tooltip { z-index: var(--z-tooltip) !important; }

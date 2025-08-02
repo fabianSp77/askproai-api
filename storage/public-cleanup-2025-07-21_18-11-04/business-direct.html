@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal - Direct Access</title>
+    <script>
+        // Try to bypass 2FA redirect
+        if (window.location.pathname.includes('two-factor')) {
+            window.location.href = '/business';
+        }
+    </script>
+</head>
+<body>
+    <h1>Direct Dashboard Access</h1>
+    <p>If you get redirected to 2FA setup, click this link:</p>
+    <a href="/business" style="font-size: 20px;">Go directly to Dashboard</a>
+    
+    <script>
+        // Auto-redirect after 2 seconds
+        setTimeout(function() {
+            window.location.href = '/business';
+        }, 2000);
+    </script>
+</body>
+</html>

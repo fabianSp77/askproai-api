@@ -1,0 +1,198 @@
+/**
+ * Admin Portal Ultimate Fix
+ * Fixes all dropdown and link issues without blocking events
+ * Replaces all previous conflicting fixes
+ */
+
+(function() {
+    'use strict';
+    
+    console.log('[Admin Portal Ultimate Fix] Initializing...');
+    
+    // Wait for Alpine to be ready
+    document.addEventListener('alpine:init', () => {
+        console.log('[Admin Portal Ultimate Fix] Setting up Alpine fixes...');
+        
+        // Override the global dropdown functions without blocking
+        window.toggleDropdown = function() {
+            if (this && this.open !== undefined) {
+                this.open = !this.open;
+                console.log('[Admin Portal Ultimate Fix] Dropdown toggled:', this.open);
+            }
+        };
+        
+        window.closeDropdown = function() {
+            if (this && this.open !== undefined) {
+                this.open = false;
+                console.log('[Admin Portal Ultimate Fix] Dropdown closed');
+            }
+        };
+        
+        window.openDropdown = function() {
+            if (this && this.open !== undefined) {
+                this.open = true;
+                console.log('[Admin Portal Ultimate Fix] Dropdown opened');
+            }
+        };
+        
+        // Fix Filament dropdown behavior
+        Alpine.magic('dropdown', () => {
+            return {
+                toggle(event) {
+                    // Don't prevent default - let the click work normally
+                    const dropdown = event.target.closest('[x-data]');
+                    if (dropdown && dropdown._x_dataStack) {
+                        const data = dropdown._x_dataStack[0];
+                        if (data && data.open !== undefined) {
+                            data.open = !data.open;
+                        }
+                    }
+                },
+                close(event) {
+                    const dropdown = event.target.closest('[x-data]');
+                    if (dropdown && dropdown._x_dataStack) {
+                        const data = dropdown._x_dataStack[0];
+                        if (data && data.open !== undefined) {
+                            data.open = false;
+                        }
+                    }
+                }
+            };
+        });
+    });
+    
+    // DOM Ready handler
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('[Admin Portal Ultimate Fix] Applying fixes...');
+        
+        // Function to ensure elements are clickable
+        const ensureClickable = () => {
+            // Fix all interactive elements
+            const selectors = [
+                'a',
+                'button',
+                '[role="button"]',
+                '[role="link"]',
+                '.fi-btn',
+                '.fi-link',
+                '.fi-dropdown-trigger',
+                '.fi-dropdown-item',
+                '[wire\\:click]',
+                '[x-on\\:click]',
+                '[onclick]',
+                '.fi-ta-link',
+                '.fi-ta-action',
+                'input',
+                'select',
+                'textarea'
+            ];
+            
+            selectors.forEach(selector => {
+                document.querySelectorAll(selector).forEach(el => {
+                    // Only set if not already set
+                    if (getComputedStyle(el).pointerEvents === 'none') {
+                        el.style.pointerEvents = 'auto';
+                        el.style.cursor = el.matches('a, button, [role="button"]') ? 'pointer' : 'auto';
+                    }
+                });
+            });
+            
+            // Fix dropdown panels specifically
+            document.querySelectorAll('.fi-dropdown-panel, [x-ref="panel"]').forEach(el => {
+                el.style.pointerEvents = 'auto';
+                el.style.zIndex = '9999';
+            });
+            
+            console.log('[Admin Portal Ultimate Fix] Elements made clickable');
+        };
+        
+        // Apply fixes immediately
+        ensureClickable();
+        
+        // Re-apply after Livewire updates
+        if (window.Livewire) {
+            Livewire.hook('message.processed', () => {
+                setTimeout(ensureClickable, 100);
+            });
+            
+            // Also hook into element updates
+            Livewire.hook('element.updated', () => {
+                ensureClickable();
+            });
+        }
+        
+        // Observe DOM changes
+        const observer = new MutationObserver((mutations) => {
+            // Only re-apply if new nodes were added
+            const hasNewNodes = mutations.some(mutation => mutation.addedNodes.length > 0);
+            if (hasNewNodes) {
+                ensureClickable();
+            }
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // Fix dropdown click-outside behavior without blocking
+        document.addEventListener('click', (e) => {
+            // Find all open dropdowns
+            const openDropdowns = document.querySelectorAll('[x-data*="open"][x-data*="true"]');
+            
+            openDropdowns.forEach(dropdown => {
+                // Check if click was outside this dropdown
+                if (!dropdown.contains(e.target)) {
+                    // Try to close it via Alpine
+                    if (dropdown._x_dataStack) {
+                        const data = dropdown._x_dataStack[0];
+                        if (data && data.open === true) {
+                            data.open = false;
+                        }
+                    }
+                }
+            });
+        }, false); // Use bubbling phase, not capture
+        
+        // Debug helper
+        window.debugAdminPortal = () => {
+            console.log('=== Admin Portal Debug Info ===');
+            
+            // Check for blocking elements
+            const blockingElements = Array.from(document.querySelectorAll('*')).filter(el => {
+                const style = getComputedStyle(el);
+                return style.pointerEvents === 'none' && el.querySelector('button, a, [role="button"]');
+            });
+            
+            console.log('Elements blocking clicks:', blockingElements);
+            
+            // Check event listeners
+            const clickableElements = document.querySelectorAll('button, a, [role="button"]');
+            console.log('Clickable elements found:', clickableElements.length);
+            
+            // Check Alpine components
+            const alpineComponents = document.querySelectorAll('[x-data]');
+            console.log('Alpine components:', alpineComponents.length);
+            
+            return {
+                blocking: blockingElements,
+                clickable: clickableElements.length,
+                alpine: alpineComponents.length
+            };
+        };
+        
+        console.log('[Admin Portal Ultimate Fix] Ready! Debug with: debugAdminPortal()');
+    });
+    
+    // Prevent other scripts from breaking things
+    const originalAddEventListener = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+        // Block capture phase click handlers on document
+        if (this === document && type === 'click' && options === true) {
+            console.warn('[Admin Portal Ultimate Fix] Blocked capture phase click handler');
+            options = false; // Force bubbling phase
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+    };
+    
+})();

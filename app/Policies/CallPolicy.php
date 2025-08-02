@@ -15,6 +15,17 @@ class CallPolicy
      */
     public function viewAny(User $user): bool
     {
+        // Super admin can always view
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users with company_id can view their company's calls
+        if ($user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('view_any_call');
     }
 
@@ -23,6 +34,17 @@ class CallPolicy
      */
     public function view(User $user, Call $call): bool
     {
+        // Super admin can always view
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users can view calls from their own company
+        if ($user->company_id && $call->company_id === $user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('view_call');
     }
 
@@ -31,6 +53,17 @@ class CallPolicy
      */
     public function create(User $user): bool
     {
+        // Super admin can always create
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users with company_id can create calls for their company
+        if ($user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('create_call');
     }
 
@@ -39,6 +72,17 @@ class CallPolicy
      */
     public function update(User $user, Call $call): bool
     {
+        // Super admin can always update
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users can update calls from their own company
+        if ($user->company_id && $call->company_id === $user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('update_call');
     }
 
@@ -47,6 +91,17 @@ class CallPolicy
      */
     public function delete(User $user, Call $call): bool
     {
+        // Super admin can always delete
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users can delete calls from their own company
+        if ($user->company_id && $call->company_id === $user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('delete_call');
     }
 

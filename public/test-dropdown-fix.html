@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dropdown Fix Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
+    <h1 class="text-2xl font-bold mb-8">Dropdown Fix Test</h1>
+
+    <div class="space-y-8">
+        <!-- Test 1: Company/Branch Dropdown -->
+        <div>
+            <h2 class="text-lg font-semibold mb-4">1. Company/Branch Dropdown Test</h2>
+            <div class="relative w-64" x-data="{ open: false }" @click.outside="open = false">
+                <button 
+                    @click="open = !open"
+                    class="w-full px-4 py-2 text-left bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    Select Company
+                    <svg class="absolute right-3 top-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                
+                <div 
+                    x-show="open"
+                    x-transition
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg"
+                >
+                    <div class="py-1">
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Company 1</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Company 2</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Company 3</a>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-2 text-sm text-gray-600">✅ Should close when clicking outside</p>
+        </div>
+
+        <!-- Test 2: Date Filter Dropdown -->
+        <div>
+            <h2 class="text-lg font-semibold mb-4">2. Date Filter Dropdown Test</h2>
+            <div class="relative w-48" x-data="{ open: false }" @click.outside="open = false">
+                <button 
+                    @click="open = !open"
+                    class="w-full px-4 py-2 text-left bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    Last 7 Days
+                    <svg class="absolute right-3 top-3 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                
+                <div 
+                    x-show="open"
+                    x-transition
+                    class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg"
+                >
+                    <div class="py-1">
+                        <a href="#" @click="open = false" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Today</a>
+                        <a href="#" @click="open = false" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Yesterday</a>
+                        <a href="#" @click="open = false" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Last 7 Days</a>
+                        <a href="#" @click="open = false" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Last 30 Days</a>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-2 text-sm text-gray-600">✅ Should close when clicking an option or outside</p>
+        </div>
+
+        <!-- Test 3: Multiple Dropdowns -->
+        <div>
+            <h2 class="text-lg font-semibold mb-4">3. Multiple Dropdowns (only one should be open)</h2>
+            <div class="flex space-x-4">
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                    <button 
+                        @click="open = !open; $dispatch('dropdown-opened', { id: 'dropdown1' })"
+                        class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    >
+                        Dropdown 1
+                    </button>
+                    <div 
+                        x-show="open"
+                        x-transition
+                        @dropdown-opened.window="if ($event.detail.id !== 'dropdown1') open = false"
+                        class="absolute z-10 mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-4"
+                    >
+                        <p>Dropdown 1 Content</p>
+                    </div>
+                </div>
+
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                    <button 
+                        @click="open = !open; $dispatch('dropdown-opened', { id: 'dropdown2' })"
+                        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                    >
+                        Dropdown 2
+                    </button>
+                    <div 
+                        x-show="open"
+                        x-transition
+                        @dropdown-opened.window="if ($event.detail.id !== 'dropdown2') open = false"
+                        class="absolute z-10 mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-4"
+                    >
+                        <p>Dropdown 2 Content</p>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-2 text-sm text-gray-600">✅ Only one dropdown should be open at a time</p>
+        </div>
+    </div>
+
+    <div class="mt-12 p-4 bg-yellow-100 border border-yellow-400 rounded-md">
+        <h3 class="font-semibold mb-2">Test Instructions:</h3>
+        <ol class="list-decimal list-inside text-sm">
+            <li>Click on each dropdown to open it</li>
+            <li>Click outside the dropdown - it should close</li>
+            <li>For multiple dropdowns, opening one should close the others</li>
+            <li>All dropdowns should work smoothly without any JavaScript errors</li>
+        </ol>
+    </div>
+</body>
+</html>

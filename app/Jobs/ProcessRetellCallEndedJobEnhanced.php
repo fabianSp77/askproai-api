@@ -46,7 +46,7 @@ class ProcessRetellCallEndedJobEnhanced implements ShouldQueue
 
         // Mark webhook event as processing
         if ($this->webhookEventId) {
-            $webhookEvent = WebhookEvent::withoutGlobalScope(TenantScope::class)->find($this->webhookEventId);
+            $webhookEvent = WebhookEvent::find($this->webhookEventId);
             if ($webhookEvent) {
                 $webhookEvent->status = 'processing';
                 $webhookEvent->save();
@@ -228,7 +228,7 @@ class ProcessRetellCallEndedJobEnhanced implements ShouldQueue
             
             // Mark webhook event as completed
             if ($this->webhookEventId) {
-                $webhookEvent = WebhookEvent::withoutGlobalScope(TenantScope::class)->find($this->webhookEventId);
+                $webhookEvent = WebhookEvent::find($this->webhookEventId);
                 if ($webhookEvent) {
                     $webhookEvent->status = 'completed';
                     $webhookEvent->save();
@@ -266,7 +266,7 @@ class ProcessRetellCallEndedJobEnhanced implements ShouldQueue
             
             // Mark webhook event as failed
             if ($this->webhookEventId) {
-                $webhookEvent = WebhookEvent::withoutGlobalScope(TenantScope::class)->find($this->webhookEventId);
+                $webhookEvent = WebhookEvent::find($this->webhookEventId);
                 if ($webhookEvent) {
                     $webhookEvent->status = 'failed';
                     $webhookEvent->error_message = $e->getMessage();

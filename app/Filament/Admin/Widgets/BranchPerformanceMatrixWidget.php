@@ -16,7 +16,7 @@ class BranchPerformanceMatrixWidget extends FilterableWidget
 
     protected static ?int $sort = 3;
 
-    protected static ?string $pollingInterval = '60s';
+    protected static ?string $pollingInterval = null; // Disabled for performance
 
     public string $sortBy = 'roi'; // roi, revenue, conversion, calls
 
@@ -115,10 +115,12 @@ class BranchPerformanceMatrixWidget extends FilterableWidget
 
     protected function getDateRange(): array
     {
-        // Use filter from parent class
+        // Use parent method from FilterableWidget
+        $dateRange = parent::getDateRange();
+        
         return [
-            $this->getStartDate(),
-            $this->getEndDate(),
+            $dateRange['start'],
+            $dateRange['end'],
         ];
     }
 

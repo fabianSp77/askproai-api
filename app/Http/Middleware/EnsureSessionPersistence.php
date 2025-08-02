@@ -11,14 +11,12 @@ class EnsureSessionPersistence
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
         // Ensure session is started
-        if (!Session::isStarted()) {
+        if (! Session::isStarted()) {
             Session::start();
         }
 
@@ -29,7 +27,7 @@ class EnsureSessionPersistence
         Session::save();
 
         // Add session cookie headers if not present
-        if (!$response->headers->has('Set-Cookie')) {
+        if (! $response->headers->has('Set-Cookie')) {
             $config = config('session');
             $cookie = cookie(
                 $config['cookie'],

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Fix - Final Solution</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover { background: #2980b9; }
+        pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        .success { color: #27ae60; font-weight: bold; }
+        .error { color: #e74c3c; font-weight: bold; }
+        .warning { color: #f39c12; font-weight: bold; }
+        .critical {
+            background: #fee;
+            padding: 15px;
+            border-left: 4px solid #e74c3c;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Session Persistence Fix - Final Test</h1>
+        
+        <div class="critical">
+            <h3>Issue Identified:</h3>
+            <p>The session ID changes between requests, indicating the cookie is not being properly set/read.</p>
+            <p>This test uses proper Laravel request/response handling to ensure cookies are set correctly.</p>
+        </div>
+        
+        <div class="test-section">
+            <h2>1. Test Basic Session Cookie</h2>
+            <button onclick="testBasicSession()">Set Test Value</button>
+            <button onclick="getBasicSession()">Get Test Value</button>
+            <pre id="basic-session">Click to test basic session...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Test Login with Proper Response</h2>
+            <button onclick="testProperLogin()">Login with Response</button>
+            <button onclick="checkProperLogin()">Check Login Status</button>
+            <pre id="proper-login">Click to test...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Test Traditional Form Login</h2>
+            <button onclick="testFormLogin()">Traditional Login</button>
+            <button onclick="checkAfterFormLogin()">Check After Login</button>
+            <pre id="form-login">Click to test...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. Debug Cookies</h2>
+            <button onclick="debugCookies()">Show All Cookies</button>
+            <pre id="cookie-debug">Click to show cookies...</pre>
+        </div>
+    </div>
+    
+    <script>
+    async function testBasicSession() {
+        const result = document.getElementById('basic-session');
+        result.textContent = 'Setting test session value...';
+        
+        try {
+            const response = await fetch('/session-cookie-test.php?action=set-test-session');
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.test_value) {
+                result.innerHTML += '\n\n<span class="success">✅ Session value set!</span>';
+                result.innerHTML += '\n<span class="info">Now click "Get Test Value" to check persistence</span>';
+            }
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function getBasicSession() {
+        const result = document.getElementById('basic-session');
+        result.textContent = 'Getting test session value...';
+        
+        try {
+            const response = await fetch('/session-cookie-test.php?action=get-test-session');
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.test_value && data.test_value.startsWith('Hello from')) {
+                result.innerHTML += '\n\n<span class="success">✅ Session persisted!</span>';
+            } else {
+                result.innerHTML += '\n\n<span class="error">❌ Session not persisted!</span>';
+            }
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testProperLogin() {
+        const result = document.getElementById('proper-login');
+        result.textContent = 'Performing login with proper response handling...';
+        
+        try {
+            const response = await fetch('/fix-session-persistence.php?action=login', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.login_success) {
+                result.innerHTML += '\n\n<span class="success">✅ Login successful!</span>';
+                result.innerHTML += '\n<span class="info">Session ID: ' + data.session_id + '</span>';
+            }
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function checkProperLogin() {
+        const result = document.getElementById('proper-login');
+        result.textContent = 'Checking login persistence...';
+        
+        try {
+            const response = await fetch('/fix-session-persistence.php?action=check', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.auth_check && data.portal_user_id) {
+                result.innerHTML += '\n\n<span class="success">✅ Login persisted!</span>';
+            } else {
+                result.innerHTML += '\n\n<span class="error">❌ Login did not persist!</span>';
+                result.innerHTML += '\n<span class="warning">Session ID: ' + data.session_id + '</span>';
+            }
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testFormLogin() {
+        const result = document.getElementById('form-login');
+        result.textContent = 'Performing traditional form login...';
+        
+        try {
+            const formData = new FormData();
+            formData.append('email', 'demo@askproai.de');
+            formData.append('password', 'password');
+            
+            const response = await fetch('/business/login', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                redirect: 'manual'
+            });
+            
+            result.textContent = 'Login Response:\n';
+            result.textContent += 'Status: ' + response.status + '\n';
+            result.textContent += 'Type: ' + response.type + '\n';
+            
+            if (response.status === 302 || response.type === 'opaqueredirect') {
+                result.innerHTML += '\n<span class="success">✅ Login successful (redirected)</span>';
+            } else {
+                result.innerHTML += '\n<span class="error">❌ Login failed</span>';
+            }
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function checkAfterFormLogin() {
+        const result = document.getElementById('form-login');
+        
+        try {
+            const response = await fetch('/business/api/user', {
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            result.textContent += '\n\n=== Auth Check ===\n';
+            result.textContent += 'Status: ' + response.status + '\n';
+            
+            if (response.status === 200) {
+                const data = await response.json();
+                result.textContent += 'User: ' + JSON.stringify(data, null, 2) + '\n';
+                result.innerHTML += '\n<span class="success">✅ Authentication works!</span>';
+            } else {
+                result.innerHTML += '\n<span class="error">❌ Not authenticated</span>';
+            }
+            
+        } catch (error) {
+            result.innerHTML += '\n<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    function debugCookies() {
+        const result = document.getElementById('cookie-debug');
+        
+        const cookies = document.cookie.split(';').map(c => c.trim());
+        
+        result.textContent = '=== Current Cookies ===\n\n';
+        
+        cookies.forEach(cookie => {
+            const [name, value] = cookie.split('=');
+            if (name) {
+                result.textContent += name + ': ';
+                if (value) {
+                    result.textContent += value.substring(0, 50);
+                    if (value.length > 50) result.textContent += '...';
+                } else {
+                    result.textContent += '(empty)';
+                }
+                result.textContent += '\n';
+            }
+        });
+        
+        result.textContent += '\n=== Session Storage ===\n';
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            result.textContent += key + ': ' + sessionStorage.getItem(key) + '\n';
+        }
+        
+        result.textContent += '\n=== Local Storage ===\n';
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            result.textContent += key + ': ' + localStorage.getItem(key) + '\n';
+        }
+    }
+    </script>
+</body>
+</html>

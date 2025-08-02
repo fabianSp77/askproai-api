@@ -12,9 +12,9 @@ class CustomerController extends BaseAdminApiController
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Customer::withoutGlobalScopes()
+        $query = Customer::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); }
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); }
             ])
             ->withCount(['appointments', 'calls']);
 
@@ -83,17 +83,17 @@ class CustomerController extends BaseAdminApiController
 
     public function show($id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()
+        $customer = Customer::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
                 'appointments' => function($q) { 
-                    $q->withoutGlobalScopes()
+                    $q->where("company_id", auth()->user()->company_id)
                       ->with(['staff', 'service'])
                       ->latest()
                       ->limit(10);
                 },
                 'calls' => function($q) { 
-                    $q->withoutGlobalScopes()
+                    $q->where("company_id", auth()->user()->company_id)
                       ->latest()
                       ->limit(10);
                 }
@@ -119,7 +119,7 @@ class CustomerController extends BaseAdminApiController
         ]);
 
         // Check for duplicates
-        $existingCustomer = Customer::withoutGlobalScopes()
+        $existingCustomer = Customer::where("company_id", auth()->user()->company_id)
             ->where('company_id', $validated['company_id'])
             ->where('phone', $validated['phone'])
             ->first();
@@ -138,7 +138,7 @@ class CustomerController extends BaseAdminApiController
 
     public function update(Request $request, $id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -158,7 +158,7 @@ class CustomerController extends BaseAdminApiController
 
     public function destroy($id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
         
         // Check if customer has appointments or calls
         if ($customer->appointments()->exists() || $customer->calls()->exists()) {
@@ -174,13 +174,13 @@ class CustomerController extends BaseAdminApiController
 
     public function history($id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $history = [];
 
         // Get appointments
         $appointments = $customer->appointments()
-            ->withoutGlobalScopes()
+            ->where("company_id", auth()->user()->company_id)
             ->with(['staff', 'service'])
             ->get()
             ->map(function ($appointment) {
@@ -194,7 +194,7 @@ class CustomerController extends BaseAdminApiController
 
         // Get calls
         $calls = $customer->calls()
-            ->withoutGlobalScopes()
+            ->where("company_id", auth()->user()->company_id)
             ->get()
             ->map(function ($call) {
                 return [
@@ -223,8 +223,8 @@ class CustomerController extends BaseAdminApiController
             'duplicate_ids.*' => 'exists:customers,id',
         ]);
 
-        $primary = Customer::withoutGlobalScopes()->findOrFail($validated['primary_id']);
-        $duplicates = Customer::withoutGlobalScopes()->whereIn('id', $validated['duplicate_ids'])->get();
+        $primary = Customer::where("company_id", auth()->user()->company_id)->findOrFail($validated['primary_id']);
+        $duplicates = Customer::where("company_id", auth()->user()->company_id)->whereIn('id', $validated['duplicate_ids'])->get();
 
         foreach ($duplicates as $duplicate) {
             // Transfer appointments
@@ -251,7 +251,7 @@ class CustomerController extends BaseAdminApiController
 
     public function quickBooking(Request $request, $id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'branch_id' => 'required|exists:branches,id',
@@ -287,7 +287,7 @@ class CustomerController extends BaseAdminApiController
 
     public function timeline($id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $timeline = [];
 
@@ -303,7 +303,7 @@ class CustomerController extends BaseAdminApiController
 
         // Appointments
         $appointments = $customer->appointments()
-            ->withoutGlobalScopes()
+            ->where("company_id", auth()->user()->company_id)
             ->with(['staff', 'service'])
             ->get();
 
@@ -325,7 +325,7 @@ class CustomerController extends BaseAdminApiController
 
         // Calls
         $calls = $customer->calls()
-            ->withoutGlobalScopes()
+            ->where("company_id", auth()->user()->company_id)
             ->get();
 
         foreach ($calls as $call) {
@@ -355,7 +355,7 @@ class CustomerController extends BaseAdminApiController
 
     public function enablePortal(Request $request, $id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         // Check if portal user already exists
         $existingPortalUser = PortalUser::where('customer_id', $customer->id)->first();
@@ -398,7 +398,7 @@ class CustomerController extends BaseAdminApiController
 
     public function disablePortal($id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $portalUser = PortalUser::where('customer_id', $customer->id)->first();
         if (!$portalUser) {
@@ -414,7 +414,7 @@ class CustomerController extends BaseAdminApiController
 
     public function sendEmail(Request $request, $id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'subject' => 'required|string|max:255',
@@ -433,7 +433,7 @@ class CustomerController extends BaseAdminApiController
 
     public function sendSms(Request $request, $id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'message' => 'required|string|max:160',
@@ -450,7 +450,7 @@ class CustomerController extends BaseAdminApiController
 
     public function updateTags(Request $request, $id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'tags' => 'required|array',
@@ -467,7 +467,7 @@ class CustomerController extends BaseAdminApiController
 
     public function toggleVip($id): JsonResponse
     {
-        $customer = Customer::withoutGlobalScopes()->findOrFail($id);
+        $customer = Customer::where("company_id", auth()->user()->company_id)->findOrFail($id);
         
         $customer->update(['is_vip' => !$customer->is_vip]);
 
@@ -483,7 +483,7 @@ class CustomerController extends BaseAdminApiController
         $dateFrom = $request->get('date_from', now()->startOfMonth());
         $dateTo = $request->get('date_to', now()->endOfMonth());
 
-        $baseQuery = Customer::withoutGlobalScopes();
+        $baseQuery = Customer::where("company_id", auth()->user()->company_id);
         
         if ($companyId) {
             $baseQuery->where('company_id', $companyId);
@@ -519,7 +519,7 @@ class CustomerController extends BaseAdminApiController
         // Note: Assuming tags are stored as JSON array in the tags column
         $allTags = [];
         
-        $customers = Customer::withoutGlobalScopes()
+        $customers = Customer::where("company_id", auth()->user()->company_id)
             ->whereNotNull('tags')
             ->pluck('tags');
             

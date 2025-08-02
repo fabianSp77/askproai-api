@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Session\Store;
+use Illuminate\Support\ServiceProvider;
 
 class SessionFixServiceProvider extends ServiceProvider
 {
@@ -19,21 +19,21 @@ class SessionFixServiceProvider extends ServiceProvider
                 if ($destroy) {
                     // Store all current data
                     $data = $this->all();
-                    
+
                     // Regenerate the session ID
                     $this->regenerate(false);
-                    
+
                     // Restore all data
                     foreach ($data as $key => $value) {
                         $this->put($key, $value);
                     }
-                    
+
                     return true;
                 }
-                
+
                 return $this->regenerate($destroy);
             });
-            
+
             return $store;
         });
     }

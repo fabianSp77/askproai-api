@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Table Scroll Fix - Sofort anwenden</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        pre {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+            overflow: auto;
+            border: 2px solid #3B82F6;
+        }
+        
+        .important {
+            background: #FEF3C7;
+            border: 2px solid #F59E0B;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        h2 {
+            color: #3B82F6;
+        }
+        
+        code {
+            background: #e0e0e0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Table Scroll Fix - Sofortlösung</h1>
+    
+    <div class="important">
+        <strong>⚠️ Problem:</strong> Die Tabelle zeigt keinen horizontalen Scrollbalken, obwohl Spalten rechts abgeschnitten sind.
+    </div>
+    
+    <h2>1️⃣ Sofort-Fix (Browser Console)</h2>
+    <p>Kopiere diesen Code und füge ihn in die Browser-Konsole ein (F12 → Console):</p>
+    
+    <pre>
+// SOFORT-FIX für Tabellen-Scroll
+(function() {
+    // Fix alle Tabellen-Container
+    document.querySelectorAll('.fi-ta-content').forEach(container => {
+        // Entferne alle overflow styles
+        container.style.removeProperty('overflow');
+        container.style.removeProperty('overflow-x');
+        container.style.removeProperty('overflow-y');
+        
+        // Setze nur overflow-x
+        container.style.overflowX = 'auto';
+        container.style.overflowY = 'visible';
+        container.style.maxWidth = '100%';
+        container.style.width = '100%';
+        
+        // Scrollbar sichtbar machen
+        container.style.scrollbarWidth = 'thin';
+        container.style.webkitOverflowScrolling = 'touch';
+        
+        console.log('✅ Fixed container:', container);
+    });
+    
+    // Stelle sicher, dass Tabellen expandieren können
+    document.querySelectorAll('.fi-ta-table').forEach(table => {
+        table.style.width = 'auto';
+        table.style.minWidth = 'max-content';
+        table.style.tableLayout = 'auto';
+    });
+    
+    // Force Scrollbar anzeigen
+    const style = document.createElement('style');
+    style.textContent = `
+        .fi-ta-content::-webkit-scrollbar {
+            height: 10px !important;
+            display: block !important;
+        }
+        .fi-ta-content::-webkit-scrollbar-track {
+            background: #f1f1f1 !important;
+        }
+        .fi-ta-content::-webkit-scrollbar-thumb {
+            background: #888 !important;
+            border-radius: 5px !important;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    console.log('✅ Table scroll fix applied!');
+})();
+    </pre>
+    
+    <h2>2️⃣ Prüfe welche Spalten fehlen</h2>
+    <pre>
+// Zeige alle Tabellen-Header
+document.querySelectorAll('th').forEach((th, i) => {
+    console.log(`Spalte ${i + 1}: ${th.textContent.trim()}`);
+});
+    </pre>
+    
+    <h2>3️⃣ Debug: Prüfe Container-Größen</h2>
+    <pre>
+// Analysiere Tabellen-Overflow
+document.querySelectorAll('.fi-ta-content').forEach((container, i) => {
+    const table = container.querySelector('table');
+    console.log(`Tabelle ${i + 1}:`, {
+        containerWidth: container.clientWidth,
+        tableWidth: table ? table.scrollWidth : 0,
+        needsScroll: table && table.scrollWidth > container.clientWidth,
+        currentOverflowX: getComputedStyle(container).overflowX
+    });
+});
+    </pre>
+    
+    <h2>4️⃣ Alternative: CSS Injection</h2>
+    <pre>
+// CSS direkt injizieren
+const fixStyle = document.createElement('style');
+fixStyle.textContent = `
+    /* Force horizontal scroll on all tables */
+    .fi-ta-content {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    .fi-ta-table {
+        width: auto !important;
+        min-width: max-content !important;
+    }
+    
+    /* Scrollbar immer anzeigen */
+    .fi-ta-content {
+        overflow-x: scroll !important;
+    }
+`;
+document.head.appendChild(fixStyle);
+console.log('✅ CSS fix injected!');
+    </pre>
+    
+    <div class="important">
+        <strong>💡 Tipp:</strong> Nach dem Anwenden des Fixes solltest du einen horizontalen Scrollbalken am unteren Rand der Tabelle sehen.
+    </div>
+</body>
+</html>

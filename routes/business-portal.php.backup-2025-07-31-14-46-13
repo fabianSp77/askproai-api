@@ -1,0 +1,470 @@
+<?php
+
+use App\Http\Controllers\Portal\AnalyticsController;
+use App\Http\Controllers\Portal\AppointmentController;
+use App\Http\Controllers\Portal\Auth\AjaxLoginController;
+use App\Http\Controllers\Portal\Auth\LoginController;
+use App\Http\Controllers\Portal\Auth\TwoFactorController;
+use App\Http\Controllers\Portal\BillingController;
+use App\Http\Controllers\Portal\CallController;
+use App\Http\Controllers\Portal\DashboardController;
+use App\Http\Controllers\Portal\DemoController;
+use App\Http\Controllers\Portal\FeedbackController;
+use App\Http\Controllers\Portal\SettingsController;
+use App\Http\Controllers\Portal\TeamController;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Business Portal Routes
+|--------------------------------------------------------------------------
+|
+| Business portal routes for company users (B2B)
+|
+| Structure:
+| 1. Test/Debug Routes (should be removed in production)
+| 2. Authentication Routes
+| 3. Authenticated Portal Routes
+| 4. API Routes (authenticated)
+| 5. API Routes (optional auth)
+| 6. Catch-all Route for React SPA (must be last)
+|
+*/
+
+// ========================================
+// 1. TEST/DEBUG ROUTES (Remove in production)
+// ========================================
+Route::prefix('business')->name('business.')->group(function () {
+    // Simple session test
+    Route::get('/api/simple-session-test', [App\Http\Controllers\Portal\Api\SimpleSessionTestController::class, 'test'])
+        ->name('api.simple-session-test');
+
+    // Force auth test
+    Route::get('/api/force-auth-test', [App\Http\Controllers\Portal\Api\ForceAuthController::class, 'forceAuth'])
+        ->name('api.force-auth-test');
+
+    // Session test routes
+    Route::middleware(['web'])->prefix('session-test')->group(function () {
+        Route::get('/set', function () {
+            session(['test_value' => 'Session set at ' . now()]);
+            session(['counter' => session('counter', 0) + 1]);
+
+            return response()->json([
+                'success' => true,
+                'session_id' => session()->getId(),
+                'session_name' => session()->getName(),
+                'data_set' => [
+                    'test_value' => session('test_value'),
+                    'counter' => session('counter'),
+                ],
+            ]);
+        })->name('session-test.set');
+
+        Route::get('/get', function () {
+            return response()->json([
+                'session_id' => session()->getId(),
+                'session_name' => session()->getName(),
+                'test_value' => session('test_value'),
+                'counter' => session('counter'),
+                'all_data' => session()->all(),
+            ]);
+        })->name('session-test.get');
+    });
+    
+    // Session Debug Route
+    Route::get('/session-debug', function () {
+        $sessionKey = 'login_portal_' . sha1(\App\Models\PortalUser::class);
+        
+        // Try to manually restore auth if session exists
+        if (!auth()->guard('portal')->check() && session()->has($sessionKey)) {
+            $userId = session($sessionKey);
+            try {
+                $user = \App\Models\PortalUser::find($userId);
+                if ($user && $user->is_active) {
+                    auth()->guard('portal')->loginUsingId($userId, false);
+                    \Log::info('Session debug: Manually restored auth', [
+                        'user_id' => $userId,
+                        'email' => $user->email,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Session debug: Failed to restore auth', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+        
+        return response()->json([
+            'session' => [
+                'id' => session()->getId(),
+                'name' => session()->getName(),
+                'isStarted' => session()->isStarted(),
+                'all_keys' => array_keys(session()->all()),
+                'has_auth_key' => session()->has($sessionKey),
+                'auth_user_id' => session($sessionKey),
+                'portal_user_id' => session('portal_user_id'),
+                'company_id' => session('company_id'),
+            ],
+            'auth' => [
+                'portal_check' => auth()->guard('portal')->check(),
+                'portal_user' => auth()->guard('portal')->user() ? [
+                    'id' => auth()->guard('portal')->user()->id,
+                    'email' => auth()->guard('portal')->user()->email,
+                    'company_id' => auth()->guard('portal')->user()->company_id,
+                ] : null,
+            ],
+            'cookies' => [
+                'portal_session' => request()->cookie('askproai_portal_session'),
+                'admin_session' => request()->cookie('askproai_session'),
+                'all_cookies' => array_keys(request()->cookies->all()),
+            ],
+            'guards' => [
+                'web' => [
+                    'check' => auth()->guard('web')->check(),
+                    'user' => auth()->guard('web')->user() ? auth()->guard('web')->user()->email : null,
+                ],
+                'portal' => [
+                    'check' => auth()->guard('portal')->check(),
+                    'user' => auth()->guard('portal')->user() ? auth()->guard('portal')->user()->email : null,
+                ],
+            ],
+            'config' => [
+                'session_cookie' => config('session.cookie'),
+                'session_path' => config('session.path'),
+                'session_domain' => config('session.domain'),
+                'session_secure' => config('session.secure'),
+                'session_files' => config('session.files'),
+            ],
+            'request' => [
+                'url' => request()->url(),
+                'secure' => request()->secure(),
+                'ip' => request()->ip(),
+            ],
+            'session_file' => [
+                'path' => session()->getHandler() instanceof \Illuminate\Session\FileSessionHandler 
+                    ? storage_path('framework/sessions/portal/' . session()->getId())
+                    : 'not file based',
+                'exists' => session()->getHandler() instanceof \Illuminate\Session\FileSessionHandler 
+                    ? file_exists(storage_path('framework/sessions/portal/' . session()->getId()))
+                    : 'n/a',
+            ],
+        ]);
+    })->name('session-debug');
+    
+    // Test login route
+    Route::get('/test-login', function () {
+        // Force demo user login - disable global scopes to find user
+        $user = \App\Models\PortalUser::withoutGlobalScopes()->where('email', 'demo@askproai.de')->first();
+        if (!$user) {
+            // Try to find any portal user
+            $anyUser = \App\Models\PortalUser::withoutGlobalScopes()->first();
+            return response()->json([
+                'error' => 'Demo user not found',
+                'debug' => [
+                    'any_user_found' => $anyUser ? true : false,
+                    'first_user' => $anyUser ? [
+                        'id' => $anyUser->id,
+                        'email' => $anyUser->email,
+                    ] : null,
+                ],
+            ]);
+        }
+        
+        // Login
+        auth()->guard('portal')->login($user);
+        
+        // Set session data
+        $sessionKey = 'login_portal_' . sha1(\App\Models\PortalUser::class);
+        session([$sessionKey => $user->id]);
+        session(['portal_user_id' => $user->id]);
+        session(['company_id' => $user->company_id]);
+        
+        // Force save
+        session()->save();
+        
+        return response()->json([
+            'login' => 'success',
+            'user' => [
+                'id' => $user->id,
+                'email' => $user->email,
+                'company_id' => $user->company_id,
+            ],
+            'session' => [
+                'id' => session()->getId(),
+                'name' => session()->getName(),
+                'keys' => array_keys(session()->all()),
+                $sessionKey => session($sessionKey),
+                'portal_user_id' => session('portal_user_id'),
+                'company_id' => session('company_id'),
+            ],
+            'auth' => [
+                'check' => auth()->guard('portal')->check(),
+                'id' => auth()->guard('portal')->id(),
+            ],
+            'file' => [
+                'path' => storage_path('framework/sessions/portal/' . session()->getId()),
+                'exists' => file_exists(storage_path('framework/sessions/portal/' . session()->getId())),
+            ],
+        ]);
+    })->name('test-login');
+});
+
+// ========================================
+// 2. AUTHENTICATION ROUTES
+// ========================================
+Route::prefix('business')->middleware(['business-portal'])->name('business.')->group(function () {
+    // Debug login route
+    Route::get('/debug-login', [App\Http\Controllers\Portal\Auth\DebugLoginController::class, 'debugLogin'])->name('debug-login');
+    
+    // Login routes
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    // AJAX Authentication Routes
+    Route::prefix('api/auth')->name('api.auth.')->group(function () {
+        Route::post('/login', [AjaxLoginController::class, 'login'])->name('login');
+        Route::post('/logout', [AjaxLoginController::class, 'logout'])->name('logout');
+        Route::get('/check', [AjaxLoginController::class, 'check'])->name('check');
+        Route::post('/refresh', [AjaxLoginController::class, 'refresh'])->name('refresh');
+    });
+
+    // 2FA routes
+    Route::get('/2fa', [TwoFactorController::class, 'show'])->name('2fa.show');
+    Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('2fa.verify');
+    Route::post('/2fa/resend', [TwoFactorController::class, 'resend'])->name('2fa.resend');
+
+    // Additional 2FA routes referenced in LoginController
+    Route::get('/two-factor/setup', [TwoFactorController::class, 'showSetupForm'])->name('two-factor.setup');
+    Route::post('/two-factor/setup', [TwoFactorController::class, 'setup'])->name('two-factor.setup.post');
+    Route::get('/two-factor/challenge', [TwoFactorController::class, 'showChallengeForm'])->name('two-factor.challenge');
+    Route::post('/two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge.post');
+});
+
+// ========================================
+// 3. AUTHENTICATED PORTAL ROUTES
+// ========================================
+Route::prefix('business')->middleware(['business-portal', 'portal.auth'])->name('business.')->group(function () {
+    // Main portal routes
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.main');
+
+    // Calls
+    Route::prefix('calls')->name('calls.')->group(function () {
+        Route::get('/', [CallController::class, 'index'])->name('index');
+        Route::get('/{call}', [CallController::class, 'show'])->name('show');
+    });
+
+    // Appointments
+    Route::prefix('appointments')->name('appointments.')->group(function () {
+        Route::get('/', [AppointmentController::class, 'index'])->name('index');
+        Route::get('/create', [AppointmentController::class, 'create'])->name('create');
+        Route::post('/', [AppointmentController::class, 'store'])->name('store');
+        Route::get('/{appointment}', [AppointmentController::class, 'show'])->name('show');
+        Route::get('/{appointment}/edit', [AppointmentController::class, 'edit'])->name('edit');
+        Route::put('/{appointment}', [AppointmentController::class, 'update'])->name('update');
+        Route::delete('/{appointment}', [AppointmentController::class, 'destroy'])->name('destroy');
+    });
+
+    // Billing
+    Route::prefix('billing')->name('billing.')->group(function () {
+        Route::get('/', [BillingController::class, 'index'])->name('index');
+        Route::get('/topup', [BillingController::class, 'topup'])->name('topup');
+        Route::get('/invoices', [BillingController::class, 'invoices'])->name('invoices');
+        Route::get('/invoices/{invoice}', [BillingController::class, 'downloadInvoice'])->name('invoice.download');
+    });
+
+    // Analytics
+    Route::prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('/', [AnalyticsController::class, 'index'])->name('index');
+    });
+
+    // Settings
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingsController::class, 'index'])->name('index');
+        Route::post('/profile', [SettingsController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/password', [SettingsController::class, 'updatePassword'])->name('password.update');
+        Route::post('/company', [SettingsController::class, 'updateCompany'])->name('company.update');
+    });
+
+    // Team
+    Route::prefix('team')->name('team.')->group(function () {
+        Route::get('/', [TeamController::class, 'index'])->name('index');
+        Route::get('/create', [TeamController::class, 'create'])->name('create');
+        Route::post('/', [TeamController::class, 'store'])->name('store');
+        Route::get('/{user}/edit', [TeamController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [TeamController::class, 'update'])->name('update');
+        Route::delete('/{user}', [TeamController::class, 'destroy'])->name('destroy');
+    });
+
+    // Feedback
+    Route::prefix('feedback')->name('feedback.')->group(function () {
+        Route::get('/', [FeedbackController::class, 'index'])->name('index');
+        Route::post('/', [FeedbackController::class, 'store'])->name('store');
+    });
+});
+
+// ========================================
+// 4. AUTHENTICATED API ROUTES
+// ========================================
+Route::prefix('business/api')->middleware(['business-api'])->name('business.api.')->group(function () {
+    // Add a debug route without auth
+    Route::get('/debug-session', function () {
+        return response()->json([
+            'session_id' => session()->getId(),
+            'session_name' => session()->getName(),
+            'has_portal_user' => session()->has('login_portal_' . sha1(\App\Models\PortalUser::class)),
+            'portal_user_id' => session('portal_user_id'),
+            'cookies' => array_keys(request()->cookies->all()),
+            'portal_cookie' => request()->cookie('askproai_portal_session'),
+            'auth_check' => auth()->guard('portal')->check(),
+        ]);
+    });
+});
+
+Route::prefix('business/api')->middleware(['business-api', 'portal.auth'])->name('business.api.')->group(function () {
+    // Debug session (should be removed in production)
+    Route::get('/session-debug', [App\Http\Controllers\Portal\Api\SessionDebugController::class, 'debug'])->name('session.debug');
+    
+    // User info
+    Route::get('/user', function () {
+        $user = auth()->guard('portal')->user();
+
+        return response()->json([
+            'authenticated' => $user !== null,
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'company_id' => $user->company_id,
+                'role' => $user->role ?? 'user',
+            ] : null,
+            'session_id' => session()->getId(),
+            'debug' => [
+                'session_id' => session()->getId(),
+                'has_portal_session' => session()->has('login_portal_' . sha1(\App\Models\PortalUser::class)),
+                'portal_user_id' => session('portal_user_id'),
+                'user_found' => $user !== null,
+                'is_admin_viewing' => session('is_admin_viewing'),
+                'web_user' => auth()->guard('web')->user()?->email,
+            ],
+        ]);
+    })->name('user');
+
+    // Dashboard data
+    Route::get('/dashboard', [App\Http\Controllers\Portal\Api\DashboardApiControllerEnhanced::class, 'index'])->name('dashboard.data');
+
+    // Calls API
+    Route::prefix('calls')->name('calls.')->group(function () {
+        Route::get('/', [CallController::class, 'apiIndex'])->name('index');
+        Route::get('/{call}', [CallController::class, 'show'])->name('show');
+        Route::get('/{call}/transcript', [CallController::class, 'show'])->name('transcript');
+        Route::get('/{call}/summary', [CallController::class, 'show'])->name('summary');
+    });
+
+    // Appointments API
+    Route::prefix('appointments')->name('appointments.')->group(function () {
+        Route::get('/', [AppointmentController::class, 'apiIndex'])->name('index');
+        Route::get('/stats', [AppointmentController::class, 'apiStats'])->name('stats');
+        Route::post('/', [AppointmentController::class, 'apiStore'])->name('store');
+        Route::get('/{appointment}', [AppointmentController::class, 'apiShow'])->name('show');
+        Route::put('/{appointment}', [AppointmentController::class, 'apiUpdate'])->name('update');
+        Route::delete('/{appointment}', [AppointmentController::class, 'apiDestroy'])->name('destroy');
+    });
+
+    // Notifications API
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Portal\Api\NotificationController::class, 'index'])->name('index');
+        Route::post('/{notification}/read', [App\Http\Controllers\Portal\Api\NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/read-all', [App\Http\Controllers\Portal\Api\NotificationController::class, 'markAllAsRead'])->name('read-all');
+        Route::get('/preferences', [App\Http\Controllers\Portal\Api\NotificationController::class, 'preferences'])->name('preferences');
+        Route::post('/preferences', [App\Http\Controllers\Portal\Api\NotificationController::class, 'updatePreferences'])->name('preferences.update');
+    });
+
+    // Stats API
+    Route::get('/stats', [App\Http\Controllers\Portal\Api\StatsController::class, 'index'])->name('stats');
+
+    // Settings API
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Portal\Api\SettingsController::class, 'index'])->name('index');
+        Route::post('/profile', [App\Http\Controllers\Portal\Api\SettingsController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/password', [App\Http\Controllers\Portal\Api\SettingsController::class, 'updatePassword'])->name('password.update');
+        Route::post('/notifications', [App\Http\Controllers\Portal\Api\SettingsController::class, 'updateNotifications'])->name('notifications.update');
+    });
+});
+
+// ========================================
+// 5. OPTIONAL AUTH API ROUTES (für React Bridge)
+// ========================================
+Route::prefix('business-api')->middleware(['business-api'])->name('business.api.optional.')->group(function () {
+    // Check auth status
+    Route::get('/auth/check', function () {
+        $user = auth()->guard('portal')->user();
+
+        return response()->json([
+            'authenticated' => ! is_null($user),
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'company_id' => $user->company_id,
+            ] : null,
+        ]);
+    })->name('auth.check');
+});
+
+// ========================================
+// 6. DEMO ROUTES (nur für Demo-Umgebung)
+// ========================================
+if (config('app.demo_mode', false)) {
+    Route::prefix('business')->name('business.demo.')->group(function () {
+        Route::get('/demo', [DemoController::class, 'dashboard'])->name('dashboard');
+        Route::get('/demo/bypass', [DemoController::class, 'bypass'])->name('bypass');
+    });
+}
+
+// Integrated Portal Route
+Route::get('/business/portal', function () {
+    return view('portal.business-integrated');
+})->name('business.portal');
+
+// Debug route for session issues
+Route::get('/business/debug-auth', function () {
+    $sessionKey = 'login_portal_' . sha1(\App\Models\PortalUser::class);
+    $user = auth()->guard('portal')->user();
+    
+    // Try to restore from session
+    if (!$user && session()->has($sessionKey)) {
+        $userId = session($sessionKey);
+        $user = \App\Models\PortalUser::find($userId);
+        if ($user) {
+            auth()->guard('portal')->loginUsingId($userId);
+        }
+    }
+    
+    return response()->json([
+        'authenticated' => auth()->guard('portal')->check(),
+        'user' => $user ? [
+            'id' => $user->id,
+            'email' => $user->email,
+        ] : null,
+        'session' => [
+            'id' => session()->getId(),
+            'exists' => session()->isStarted(),
+            'has_key' => session()->has($sessionKey),
+            'user_id' => session($sessionKey),
+        ],
+        'middleware' => [
+            'groups' => request()->route() ? request()->route()->gatherMiddleware() : [],
+        ]
+    ]);
+})->middleware(['business-portal'])->name('business.debug-auth');
+
+// ========================================
+// 7. CATCH-ALL ROUTE FOR REACT SPA (MUST BE LAST!)
+// ========================================
+Route::prefix('business')->middleware(['business-portal'])->group(function () {
+    Route::get('/{any?}', function () {
+        return view('portal.react-app');
+    })->where('any', '.*')->name('business.spa.catchall');
+});

@@ -1,0 +1,94 @@
+<\!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal with Debug</title>
+    <meta name="csrf-token" content="">
+    <script>
+        // Intercept all redirects
+        const originalLocation = window.location;
+        let redirectBlocked = false;
+        
+        Object.defineProperty(window, 'location', {
+            get: function() {
+                return originalLocation;
+            },
+            set: function(value) {
+                if (\!redirectBlocked) {
+                    console.error('REDIRECT DETECTED TO:', value);
+                    alert('Redirect blocked\! Was trying to go to: ' + value);
+                    
+                    // Log stack trace
+                    console.trace('Redirect stack trace');
+                    
+                    // Block the redirect
+                    redirectBlocked = true;
+                    
+                    // Show debug info
+                    document.body.innerHTML = '<h1>Redirect Blocked\!</h1>' +
+                        '<p>Was trying to redirect to: ' + value + '</p>' +
+                        '<p>Check console for stack trace</p>' +
+                        '<iframe src="/business" width="100%" height="600"></iframe>';
+                    
+                    return false;
+                }
+            }
+        });
+        
+        // Also intercept location methods
+        const originalAssign = originalLocation.assign;
+        const originalReplace = originalLocation.replace;
+        const originalHref = Object.getOwnPropertyDescriptor(originalLocation, 'href');
+        
+        originalLocation.assign = function(url) {
+            console.error('location.assign() called with:', url);
+            alert('Redirect via assign() to: ' + url);
+        };
+        
+        originalLocation.replace = function(url) {
+            console.error('location.replace() called with:', url);
+            alert('Redirect via replace() to: ' + url);
+        };
+        
+        Object.defineProperty(originalLocation, 'href', {
+            get: originalHref.get,
+            set: function(url) {
+                console.error('location.href set to:', url);
+                alert('Redirect via href to: ' + url);
+            }
+        });
+        
+        // Log all fetch requests
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+            console.log('FETCH:', args[0], args[1]);
+            return originalFetch.apply(this, args)
+                .then(response => {
+                    console.log('FETCH RESPONSE:', args[0], response.status);
+                    if (response.status === 401 || response.status === 419) {
+                        console.error('AUTH ERROR DETECTED\!', response.status);
+                    }
+                    return response;
+                });
+        };
+    </script>
+</head>
+<body>
+    <h1>Loading Business Portal...</h1>
+    <p>If you see a redirect alert, check the console for details.</p>
+    
+    <iframe src="/business" width="100%" height="800" style="border: 2px solid red;"></iframe>
+    
+    <script>
+        // Monitor iframe
+        const iframe = document.querySelector('iframe');
+        iframe.onload = function() {
+            console.log('Business portal loaded in iframe');
+            try {
+                console.log('Iframe URL:', iframe.contentWindow.location.href);
+            } catch (e) {
+                console.log('Cannot access iframe URL (cross-origin)');
+            }
+        };
+    </script>
+</body>
+</html>

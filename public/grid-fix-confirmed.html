@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Fix - AskProAI</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .test-link:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>✅ Grid-Layout wurde repariert!</h1>
+            
+            <div class="success">
+                <strong>Problem behoben:</strong> Das Grid-System wurde von 3 Spalten zurück auf 12 Spalten korrigiert.
+            </div>
+            
+            <h3>Was wurde geändert:</h3>
+            <div class="code-block">
+// Vorher (kaputt):
+Grid::make([
+    'default' => 1,
+    'lg' => 3,  // ❌ Nur 3 Spalten!
+])
+->columnSpan(['lg' => 2])  // 2 von 3 = 66%
+->columnSpan(['lg' => 1])  // 1 von 3 = 33%
+
+// Nachher (repariert):
+Grid::make([
+    'default' => 1,
+    'lg' => 12,  // ✅ Standard 12-Spalten-System
+])
+->columnSpan(['lg' => 8])  // 8 von 12 = 66% (2/3)
+->columnSpan(['lg' => 4])  // 4 von 12 = 33% (1/3)
+            </div>
+            
+            <h3>Testen Sie es jetzt:</h3>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="/admin/calls/416" class="test-link">Call #416 öffnen</a>
+                <a href="/admin/calls/414" class="test-link">Call #414 öffnen</a>
+            </div>
+            
+            <p><strong>Die Call-Detailseite sollte jetzt wieder vollständig angezeigt werden mit:</strong></p>
+            <ul>
+                <li>✅ Header mit Kundeninfo</li>
+                <li>✅ Analyse und Einblicke</li>
+                <li>✅ Erfasste Kundendaten</li>
+                <li>✅ Audio-Player und Transkript</li>
+                <li>✅ Kundeninformationen (rechte Spalte)</li>
+                <li>✅ Technische Details</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

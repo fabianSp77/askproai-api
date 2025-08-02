@@ -15,44 +15,44 @@ class QuickActionsWidget extends Widget
         try {
             return [
                 [
-                    'label' => 'Neuer Termin',
+                    'label' => __('admin.quick_actions.new_appointment'),
                     'icon' => 'heroicon-o-calendar-days',
-                    'url' => '/admin/appointments/create',
+                    'url' => route('filament.admin.resources.appointments.create'),
                     'color' => 'primary',
                     'description' => 'Termin manuell anlegen'
                 ],
                 [
                     'label' => 'Neuer Kunde',
                     'icon' => 'heroicon-o-user-plus',
-                    'url' => '/admin/customers/create',
+                    'url' => route('filament.admin.resources.customers.create'),
                     'color' => 'success',
                     'description' => 'Kunde erfassen'
                 ],
                 [
                     'label' => 'Mitarbeiter',
                     'icon' => 'heroicon-o-user-group',
-                    'url' => '/admin/staff',
+                    'url' => route('filament.admin.resources.staff.index'),
                     'color' => 'info',
                     'description' => 'Personal verwalten'
                 ],
                 [
-                    'label' => 'Anrufe',
+                    'label' => __('admin.quick_actions.calls'),
                     'icon' => 'heroicon-o-phone',
-                    'url' => '/admin/calls',
+                    'url' => route('filament.admin.resources.calls.index'),
                     'color' => 'warning',
                     'description' => 'Anrufprotokoll'
                 ],
                 [
-                    'label' => 'System Status',
+                    'label' => __('admin.quick_actions.system_status'),
                     'icon' => 'heroicon-o-cpu-chip',
-                    'url' => '/admin/system-monitoring',
+                    'url' => route('filament.admin.pages.system-monitoring-dashboard'),
                     'color' => 'gray',
                     'description' => 'System überwachen'
                 ],
                 [
                     'label' => 'Event Import',
                     'icon' => 'heroicon-o-arrow-down-tray',
-                    'url' => '/admin/event-type-import-wizard',
+                    'url' => route('filament.admin.pages.event-type-import-wizard'),
                     'color' => 'purple',
                     'description' => 'Events importieren'
                 ],

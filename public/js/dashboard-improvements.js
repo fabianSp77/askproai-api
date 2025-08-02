@@ -57,9 +57,12 @@
     window.addEventListener('error', function(e) {
         if (e.message && e.message.includes('ResizeObserver')) {
             // Ignore ResizeObserver errors from charts
+            // Only prevent default for this specific error type
             e.stopPropagation();
             e.preventDefault();
+            return;
         }
+        // Let other errors through for proper debugging
     });
     
     // Add visual feedback for loading states

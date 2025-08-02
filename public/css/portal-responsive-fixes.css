@@ -1,0 +1,177 @@
+/* Portal Responsive Fixes for High-Resolution Displays */
+
+/* Fix for ultra-wide monitors (21:9 aspect ratio) */
+@media (min-width: 2560px) {
+    /* Increase max-width for better space utilization */
+    .max-w-7xl {
+        max-width: 1920px !important;
+    }
+    
+    /* Adjust grid for stats cards on ultra-wide */
+    .grid.lg\:grid-cols-5 {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 2rem;
+    }
+    
+    /* Larger text for better readability on 4K */
+    .text-2xl {
+        font-size: 2.5rem;
+    }
+    
+    .text-lg {
+        font-size: 1.25rem;
+    }
+    
+    .text-sm {
+        font-size: 1rem;
+    }
+    
+    /* More padding for cards on large screens */
+    .p-5 {
+        padding: 2rem;
+    }
+    
+    /* Larger icons for better visibility */
+    .h-6.w-6 {
+        height: 2rem;
+        width: 2rem;
+    }
+    
+    .h-12.w-12 {
+        height: 4rem;
+        width: 4rem;
+    }
+}
+
+/* Fix for 4K displays (3840x2160 and above) */
+@media (min-width: 3840px) {
+    /* Even larger container for 4K */
+    .max-w-7xl {
+        max-width: 2560px !important;
+    }
+    
+    /* Adjust font sizes for 4K readability */
+    body {
+        font-size: 18px;
+    }
+    
+    .text-3xl {
+        font-size: 3.5rem;
+    }
+    
+    .text-2xl {
+        font-size: 3rem;
+    }
+    
+    .text-xl {
+        font-size: 2rem;
+    }
+    
+    .text-lg {
+        font-size: 1.5rem;
+    }
+    
+    /* Larger form inputs */
+    input[type="text"],
+    input[type="date"],
+    select {
+        font-size: 1.125rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Better spacing for list items */
+    .px-4.py-4 {
+        padding: 1.5rem 2rem;
+    }
+}
+
+/* Fix for calls list table on wide screens */
+@media (min-width: 1920px) {
+    /* Better column distribution */
+    .calls-list-item {
+        display: grid;
+        grid-template-columns: 80px 1fr 200px 150px;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    /* Ensure proper text wrapping */
+    .truncate {
+        max-width: none;
+        white-space: normal;
+        overflow: visible;
+    }
+}
+
+/* High DPI display fixes */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    /* Sharper borders */
+    .border {
+        border-width: 0.5px;
+    }
+    
+    /* Better shadow rendering */
+    .shadow {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .shadow-lg {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+}
+
+/* Fix for empty state on large screens */
+.text-center.py-12 {
+    padding: 4rem 2rem;
+}
+
+@media (min-width: 2560px) {
+    .text-center.py-12 {
+        padding: 6rem 3rem;
+    }
+    
+    /* Larger empty state icons */
+    .text-center svg.h-12.w-12 {
+        height: 6rem;
+        width: 6rem;
+    }
+}
+
+/* Ensure proper contrast on high-res displays */
+.text-gray-500 {
+    color: #4b5563;
+}
+
+.text-gray-400 {
+    color: #6b7280;
+}
+
+/* Fix pagination layout on ultra-wide */
+@media (min-width: 2560px) {
+    #pagination-container .sm\:flex-1.sm\:flex {
+        justify-content: center;
+        gap: 3rem;
+    }
+    
+    /* Larger pagination buttons */
+    #pagination-container a {
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+    }
+}
+
+/* Responsive filter grid adjustments */
+@media (min-width: 2560px) {
+    .grid.sm\:grid-cols-4 {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 2rem;
+    }
+}
+
+/* Loading spinner adjustments for large screens */
+@media (min-width: 2560px) {
+    .animate-spin {
+        height: 4rem !important;
+        width: 4rem !important;
+    }
+}

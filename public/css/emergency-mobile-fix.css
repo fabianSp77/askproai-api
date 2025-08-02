@@ -1,0 +1,268 @@
+/**
+ * EMERGENCY MOBILE FIX
+ * Behebt alle pointer-events und z-index Probleme
+ * die Mobile-Klicks blockieren
+ */
+
+/* ============================
+   1. GLOBALE POINTER-EVENTS FIX
+   ============================ */
+
+/* Stelle sicher, dass ALLES klickbar ist */
+* {
+    pointer-events: auto !important;
+}
+
+/* Spezifische Overrides für bekannte Probleme */
+body,
+main,
+.fi-main,
+.fi-page,
+.fi-sidebar,
+.fi-topbar,
+.fi-body,
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[x-on\:click],
+[wire\:click],
+[onclick] {
+    pointer-events: auto !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: default !important;
+    -webkit-user-select: auto !important;
+    user-select: auto !important;
+    cursor: pointer !important;
+}
+
+/* Mobile Menu Button MUSS klickbar sein */
+.fi-topbar button,
+button[x-on\:click*="sidebarOpen"],
+button[aria-label*="menu"],
+.fi-icon-btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 9999 !important;
+    position: relative !important;
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* ============================
+   2. Z-INDEX RESET
+   ============================ */
+
+/* Entferne extreme z-index Werte */
+.fi-sidebar {
+    z-index: 60 !important;
+}
+
+.fi-sidebar-close-overlay {
+    z-index: 59 !important;
+}
+
+.fi-topbar {
+    z-index: 50 !important;
+}
+
+.fi-main {
+    z-index: 1 !important;
+}
+
+/* ============================
+   3. MOBILE TOUCH FIXES
+   ============================ */
+
+/* Vergrößere Touch-Bereiche */
+@media (max-width: 1023px) {
+    button,
+    a,
+    .fi-link,
+    [role="button"] {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Mobile Menu spezifisch */
+    .fi-topbar-item:first-child button {
+        width: 44px !important;
+        height: 44px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+}
+
+/* ============================
+   4. OVERLAY REMOVAL
+   ============================ */
+
+/* Entferne alle blockierenden Overlays */
+body::before,
+body::after,
+.fi-body::before,
+.fi-body::after,
+*[class*="overlay"]::before,
+*[class*="overlay"]::after {
+    display: none !important;
+    content: none !important;
+    pointer-events: none !important;
+}
+
+/* Ausnahme: Sidebar Overlay beim Öffnen */
+body.fi-sidebar-open::before {
+    content: "" !important;
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    z-index: 59 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* ============================
+   5. MOBILE NAVIGATION
+   ============================ */
+
+@media (max-width: 1023px) {
+    /* Sidebar versteckt */
+    .fi-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: var(--sidebar-width, 16rem) !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+        background: white !important;
+        z-index: 60 !important;
+        pointer-events: auto !important;
+    }
+    
+    /* Sidebar sichtbar */
+    body.fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    /* Topbar fixiert */
+    .fi-topbar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 50 !important;
+        background: white !important;
+        pointer-events: auto !important;
+    }
+    
+    /* Content scrollbar */
+    .fi-main {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        pointer-events: auto !important;
+    }
+}
+
+/* ============================
+   6. DROPDOWN FIXES
+   ============================ */
+
+/* Stelle sicher dass Dropdowns klickbar sind */
+.fi-dropdown,
+.fi-dropdown-panel,
+[x-show] {
+    pointer-events: auto !important;
+}
+
+/* Dropdown trigger buttons */
+button[x-on\:click*="open"],
+button[x-on\:click*="toggle"],
+button[x-on\:click*="show"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* ============================
+   7. FORM ELEMENTS
+   ============================ */
+
+/* Alle Form-Elemente müssen klickbar sein */
+input,
+select,
+textarea,
+button[type="submit"],
+button[type="button"],
+.fi-btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    -webkit-appearance: none !important;
+}
+
+/* ============================
+   8. DEBUG HELPERS
+   ============================ */
+
+/* Debug-Modus: Zeige alle klickbaren Bereiche */
+.debug-touch-targets button,
+.debug-touch-targets a,
+.debug-touch-targets [role="button"],
+.debug-touch-targets [x-on\:click],
+.debug-touch-targets [wire\:click] {
+    outline: 2px solid red !important;
+    outline-offset: -2px !important;
+}
+
+/* ============================
+   9. SAFARI/IOS FIXES
+   ============================ */
+
+/* iOS Safari spezifische Fixes */
+@supports (-webkit-touch-callout: none) {
+    /* iOS Touch-Verzögerung entfernen */
+    * {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    /* Scrolling verbessern */
+    .fi-main,
+    .fi-sidebar {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Button States */
+    button:active,
+    a:active {
+        opacity: 0.8;
+    }
+}
+
+/* ============================
+   10. WICHTIG: OVERRIDES
+   ============================ */
+
+/* Diese Regeln MÜSSEN am Ende stehen */
+html,
+body {
+    overflow-x: hidden !important;
+    pointer-events: auto !important;
+}
+
+/* Absolute Positionierung darf Klicks nicht blockieren */
+.fixed,
+.absolute,
+[style*="position: fixed"],
+[style*="position: absolute"] {
+    pointer-events: auto !important;
+}
+
+/* Deaktiviere alle Event-Blocker */
+.pointer-events-none,
+[style*="pointer-events: none"] {
+    pointer-events: auto !important;
+}

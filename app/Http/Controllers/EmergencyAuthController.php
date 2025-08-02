@@ -9,11 +9,7 @@ use Illuminate\Support\Facades\Hash;
 
 class EmergencyAuthController extends Controller
 {
-    public function __construct()
-    {
-        // Disable all middleware
-        $this->middleware([]); 
-    }
+    // Remove constructor to avoid middleware issues
     
     public function login(Request $request)
     {
@@ -33,7 +29,7 @@ class EmergencyAuthController extends Controller
             
             // Set session variables manually
             session(['_token' => csrf_token()]);
-            session(['password_hash_web' => $admin->password]);
+            // Password hash storage removed for security
             session()->save();
             
             return redirect('/admin')->with('success', 'Emergency login successful');

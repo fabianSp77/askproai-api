@@ -17,7 +17,17 @@ class RetellAgentResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
 
-    protected static ?string $navigationGroup = 'AI Configuration';
+    protected static ?string $navigationGroup = null;
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.ai_services');
+    }
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.retell_agents');
+    }
 
     protected static ?int $navigationSort = 2;
 

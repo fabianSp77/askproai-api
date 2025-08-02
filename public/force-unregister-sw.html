@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Force Unregister Service Worker</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 { color: #dc3545; }
+        button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover { background: #c82333; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; }
+        pre {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>⚠️ Service Worker noch aktiv!</h1>
+        <p>Der business-service-worker.js ist immer noch registriert und cached alte Dateien.</p>
+        
+        <button onclick="forceUnregister()">🔫 SERVICE WORKER ENTFERNEN</button>
+        
+        <div id="status"></div>
+        
+        <pre id="log"></pre>
+    </div>
+    
+    <script>
+        function log(msg) {
+            document.getElementById('log').textContent += msg + '\n';
+        }
+        
+        async function forceUnregister() {
+            const status = document.getElementById('status');
+            document.getElementById('log').textContent = '';
+            
+            log('Starting forced unregister...\n');
+            
+            try {
+                // 1. Get all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    log(`Found ${registrations.length} service worker(s)\n`);
+                    
+                    // 2. Unregister each one
+                    for (const registration of registrations) {
+                        log(`Unregistering: ${registration.scope}`);
+                        const success = await registration.unregister();
+                        log(success ? '✓ Success' : '✗ Failed');
+                        log('');
+                    }
+                    
+                    // 3. Clear all caches
+                    log('\nClearing all caches...');
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        log(`Found ${cacheNames.length} cache(s)\n`);
+                        
+                        for (const cacheName of cacheNames) {
+                            await caches.delete(cacheName);
+                            log(`✓ Deleted: ${cacheName}`);
+                        }
+                    }
+                    
+                    // 4. Force reload without cache
+                    log('\n✅ ALL SERVICE WORKERS REMOVED!\n');
+                    status.innerHTML = '<p class="success">✅ Service Worker entfernt!</p>';
+                    
+                    log('Reloading in 3 seconds...');
+                    setTimeout(() => {
+                        // Hard reload bypassing cache
+                        window.location.href = '/admin/calls?nocache=' + Date.now();
+                    }, 3000);
+                    
+                } else {
+                    status.innerHTML = '<p class="error">Service Workers not supported</p>';
+                }
+            } catch (error) {
+                log('Error: ' + error.message);
+                status.innerHTML = '<p class="error">Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // Auto-check on load
+        window.onload = async function() {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                if (registrations.length > 0) {
+                    log('⚠️ WARNING: Service Worker(s) still active!\n');
+                    registrations.forEach(reg => {
+                        log(`- ${reg.scope}`);
+                        if (reg.active) {
+                            log(`  Script: ${reg.active.scriptURL}`);
+                        }
+                    });
+                    log('\nClick the button above to remove them.');
+                } else {
+                    log('✅ No service workers found.');
+                }
+            }
+        };
+    </script>
+</body>
+</html>

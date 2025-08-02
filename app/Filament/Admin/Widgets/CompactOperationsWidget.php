@@ -20,7 +20,7 @@ class CompactOperationsWidget extends FilterableWidget
         'xl' => 2,            // Large screens: 2 columns
     ];
     protected static ?int $sort = 1;
-    protected static ?string $pollingInterval = '5s';
+    protected static ?string $pollingInterval = null; // Disabled for performance
     
     public function mount(): void
     {

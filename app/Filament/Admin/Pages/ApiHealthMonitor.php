@@ -20,6 +20,17 @@ class ApiHealthMonitor extends Page
     
     protected static string $view = 'filament.admin.pages.api-health-monitor';
     
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->hasRole(['Super Admin', 'super_admin', 'developer']) || $user->email === 'dev@askproai.de');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+    
     public $autoRefresh = true;
     public $refreshInterval = 30; // seconds
     

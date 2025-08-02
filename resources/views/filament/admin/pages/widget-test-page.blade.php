@@ -19,7 +19,7 @@
                 <pre class="bg-gray-100 dark:bg-gray-900 rounded p-4 overflow-x-auto text-sm">{{ json_encode([
                     'user' => auth()->user()->email ?? 'Not authenticated',
                     'company' => auth()->user()->company->name ?? 'No company',
-                    'widgets_count' => count($this->getCachedHeaderWidgets()),
+                    'widgets_count' => count($this->getHeaderWidgets()),
                     'timestamp' => now()->toDateTimeString()
                 ], JSON_PRETTY_PRINT) }}</pre>
             </div>

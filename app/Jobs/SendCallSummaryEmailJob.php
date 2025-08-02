@@ -51,7 +51,7 @@ class SendCallSummaryEmailJob implements ShouldQueue
             'recipients' => $this->recipients
         ]);
         
-        $call = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)->find($this->callId);
+        $call = Call::find($this->callId);
         
         if (!$call) {
             \Illuminate\Support\Facades\Log::error('[SendCallSummaryEmailJob] Call not found', [

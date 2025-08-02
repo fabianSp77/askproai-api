@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Browser Data - Fix Session Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .alert { padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .critical { background: #ffebee; color: #c62828; border: 2px solid #f44336; }
+        .success { background: #e8f5e9; color: #2e7d32; border: 2px solid #4caf50; }
+        .info { background: #e3f2fd; color: #1565c0; border: 2px solid #2196f3; }
+        button { padding: 15px 30px; margin: 10px; font-size: 18px; cursor: pointer; border: none; border-radius: 5px; }
+        .primary { background: #2196f3; color: white; }
+        .danger { background: #f44336; color: white; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        .step { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Fix Session Issue - Clear Browser Data</h1>
+    
+    <div class="alert critical">
+        <h3>⚠️ PROBLEM IDENTIFIED</h3>
+        <p>Your browser has conflicting session data:</p>
+        <ul>
+            <li>Old session ID that keeps coming back: <code>M4ZUnTnwei50fJOsMmEFKChtPi5pdtmRVt5V64oe</code></li>
+            <li>LocalStorage contains: <code>portal_user</code>, <code>auth_override</code></li>
+            <li>Remember cookie: <code>remember_web_59ba36...</code></li>
+        </ul>
+        <p><strong>These are interfering with new login sessions!</strong></p>
+    </div>
+
+    <button class="primary" onclick="showCurrentData()">1. Show Current Browser Data</button>
+    <button class="danger" onclick="clearAllData()">2. Clear All Site Data</button>
+    <button class="primary" onclick="testAfterClear()">3. Test Login After Clear</button>
+
+    <div id="results"></div>
+
+    <div class="alert info">
+        <h3>📋 Manual Steps (Recommended)</h3>
+        <ol>
+            <li>Open DevTools (F12)</li>
+            <li>Go to <strong>Application</strong> tab</li>
+            <li>In the left sidebar under "Storage", click <strong>Clear site data</strong></li>
+            <li>Or manually clear:
+                <ul>
+                    <li>Cookies → Select all → Delete</li>
+                    <li>Local Storage → Clear All</li>
+                    <li>Session Storage → Clear All</li>
+                </ul>
+            </li>
+            <li>Close browser completely and reopen</li>
+            <li>Try login again</li>
+        </ol>
+    </div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function log(content) {
+            const div = document.createElement('div');
+            div.className = 'step';
+            div.innerHTML = content;
+            results.appendChild(div);
+        }
+
+        function showCurrentData() {
+            results.innerHTML = '';
+            
+            // Cookies
+            log(`<h3>Current Cookies (visible to JS):</h3><pre>${document.cookie || 'None visible'}</pre>`);
+            
+            // LocalStorage
+            let localData = '<h3>LocalStorage:</h3><ul>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                localData += `<li><strong>${key}:</strong> ${value.substring(0, 100)}${value.length > 100 ? '...' : ''}</li>`;
+            }
+            localData += '</ul>';
+            log(localData);
+            
+            // SessionStorage
+            let sessionData = '<h3>SessionStorage:</h3><ul>';
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                const value = sessionStorage.getItem(key);
+                sessionData += `<li><strong>${key}:</strong> ${value}</li>`;
+            }
+            sessionData += sessionStorage.length === 0 ? '<li>Empty</li></ul>' : '</ul>';
+            log(sessionData);
+            
+            // Problem items
+            const problems = [];
+            if (localStorage.getItem('portal_user')) problems.push('portal_user in LocalStorage');
+            if (localStorage.getItem('auth_override')) problems.push('auth_override in LocalStorage');
+            if (localStorage.getItem('portal_auth')) problems.push('portal_auth in LocalStorage');
+            if (document.cookie.includes('remember_web')) problems.push('remember_web cookie');
+            
+            if (problems.length > 0) {
+                log(`<div class="alert critical">
+                    <h3>⚠️ Problematic Data Found:</h3>
+                    <ul>${problems.map(p => `<li>${p}</li>`).join('')}</ul>
+                    <p>This data is likely causing the session conflicts!</p>
+                </div>`);
+            }
+        }
+
+        function clearAllData() {
+            results.innerHTML = '';
+            
+            log('<h3>Clearing browser data...</h3>');
+            
+            // Clear cookies (only non-HttpOnly visible to JS)
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            // Clear localStorage
+            const localItems = Object.keys(localStorage);
+            localItems.forEach(key => localStorage.removeItem(key));
+            log(`✅ Cleared ${localItems.length} items from LocalStorage`);
+            
+            // Clear sessionStorage
+            const sessionItems = Object.keys(sessionStorage);
+            sessionItems.forEach(key => sessionStorage.removeItem(key));
+            log(`✅ Cleared ${sessionItems.length} items from SessionStorage`);
+            
+            log(`<div class="alert success">
+                <h3>✅ JavaScript-accessible data cleared!</h3>
+                <p><strong>Important:</strong> HttpOnly cookies (like session cookies) cannot be cleared via JavaScript.</p>
+                <p>You must use DevTools or browser settings to clear ALL cookies.</p>
+                <p>After clearing, close and reopen your browser for best results.</p>
+            </div>`);
+        }
+
+        async function testAfterClear() {
+            results.innerHTML = '';
+            
+            log('<h3>Testing login with clean browser state...</h3>');
+            
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+
+                const data = await response.json();
+                log(`<h4>Login Result:</h4><pre>${JSON.stringify(data, null, 2)}</pre>`);
+                
+                // Check auth
+                const authRes = await fetch('/business/auth/check', {
+                    credentials: 'include'
+                });
+                const authData = await authRes.json();
+                
+                log(`<h4>Auth Check:</h4><pre>${JSON.stringify(authData, null, 2)}</pre>`);
+                
+                if (authData.authenticated) {
+                    log(`<div class="alert success">
+                        <h3>✅ SUCCESS! Session is working correctly now!</h3>
+                    </div>`);
+                } else {
+                    log(`<div class="alert critical">
+                        <h3>❌ Still not working. Make sure to:</h3>
+                        <ol>
+                            <li>Clear ALL cookies via DevTools</li>
+                            <li>Close browser completely</li>
+                            <li>Reopen and try again</li>
+                        </ol>
+                    </div>`);
+                }
+                
+            } catch (error) {
+                log(`<div class="alert critical">Error: ${error}</div>`);
+            }
+        }
+    </script>
+</body>
+</html>

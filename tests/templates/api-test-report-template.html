@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Portal API Test Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .summary-card h3 {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: #555;
+        }
+        
+        .summary-card .metric {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .metric.pass { color: #28a745; }
+        .metric.fail { color: #dc3545; }
+        .metric.warn { color: #ffc107; }
+        .metric.info { color: #17a2b8; }
+        
+        .section {
+            background: white;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .section-header h2 {
+            color: #495057;
+            font-size: 1.5em;
+        }
+        
+        .section-content {
+            padding: 20px;
+        }
+        
+        .test-results {
+            margin-bottom: 20px;
+        }
+        
+        .test-group {
+            margin-bottom: 25px;
+        }
+        
+        .test-group h4 {
+            color: #495057;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        
+        .test-name {
+            flex-grow: 1;
+            font-weight: 500;
+        }
+        
+        .test-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-warn {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-skip {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .performance-chart {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .recommendations {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .recommendations h4 {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+        
+        .recommendations ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .recommendations li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .recommendations li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .alert {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .endpoint-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .endpoint-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #6c757d;
+        }
+        
+        .endpoint-item.pass {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .endpoint-item.fail {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .endpoint-method {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .test-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .endpoint-list {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #6c757d;
+            color: white;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin: 2px;
+        }
+        
+        .badge.success { background: #28a745; }
+        .badge.warning { background: #ffc107; color: #000; }
+        .badge.danger { background: #dc3545; }
+        .badge.info { background: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 API Test Results</h1>
+            <p>Business Portal API Comprehensive Testing Report</p>
+            <p><strong>Generated:</strong> {{TIMESTAMP}}</p>
+            <p><strong>Base URL:</strong> {{BASE_URL}}</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>Overall Status</h3>
+                <div class="metric {{OVERALL_STATUS_CLASS}}">{{OVERALL_STATUS}}</div>
+                <p>{{OVERALL_MESSAGE}}</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>Test Coverage</h3>
+                <div class="metric info">{{TOTAL_TESTS}}</div>
+                <p>Total Tests Executed</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>Success Rate</h3>
+                <div class="metric {{SUCCESS_RATE_CLASS}}">{{SUCCESS_RATE}}%</div>
+                <p>{{PASSED_TESTS}}/{{TOTAL_TESTS}} Tests Passed</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>Performance</h3>
+                <div class="metric {{PERFORMANCE_CLASS}}">{{AVG_RESPONSE_TIME}}ms</div>
+                <p>Average Response Time</p>
+            </div>
+        </div>
+
+        <!-- Test Results Overview -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📊 Test Suite Results</h2>
+            </div>
+            <div class="section-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test Suite</th>
+                            <th>Status</th>
+                            <th>Tests Run</th>
+                            <th>Passed</th>
+                            <th>Failed</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>🔧 Functional Tests</td>
+                            <td><span class="test-status {{FUNCTIONAL_STATUS_CLASS}}">{{FUNCTIONAL_STATUS}}</span></td>
+                            <td>{{FUNCTIONAL_TOTAL}}</td>
+                            <td>{{FUNCTIONAL_PASSED}}</td>
+                            <td>{{FUNCTIONAL_FAILED}}</td>
+                            <td>{{FUNCTIONAL_DURATION}}</td>
+                        </tr>
+                        <tr>
+                            <td>⚡ Performance Tests</td>
+                            <td><span class="test-status {{PERFORMANCE_STATUS_CLASS}}">{{PERFORMANCE_STATUS}}</span></td>
+                            <td>{{PERFORMANCE_TOTAL}}</td>
+                            <td>{{PERFORMANCE_PASSED}}</td>
+                            <td>{{PERFORMANCE_FAILED}}</td>
+                            <td>{{PERFORMANCE_DURATION}}</td>
+                        </tr>
+                        <tr>
+                            <td>🔒 Security Tests</td>
+                            <td><span class="test-status {{SECURITY_STATUS_CLASS}}">{{SECURITY_STATUS}}</span></td>
+                            <td>{{SECURITY_TOTAL}}</td>
+                            <td>{{SECURITY_PASSED}}</td>
+                            <td>{{SECURITY_FAILED}}</td>
+                            <td>{{SECURITY_DURATION}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- API Endpoints Status -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🌐 API Endpoints</h2>
+            </div>
+            <div class="section-content">
+                <div class="endpoint-list">
+                    {{#ENDPOINTS}}
+                    <div class="endpoint-item {{STATUS_CLASS}}">
+                        <div class="endpoint-method">{{METHOD}} {{PATH}}</div>
+                        <div>Status: {{STATUS_CODE}} - {{STATUS_MESSAGE}}</div>
+                        <div>Response Time: {{RESPONSE_TIME}}ms</div>
+                    </div>
+                    {{/ENDPOINTS}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="section">
+            <div class="section-header">
+                <h2>⚡ Performance Metrics</h2>
+            </div>
+            <div class="section-content">
+                <div class="performance-chart">
+                    <h4>Response Time Distribution</h4>
+                    <table>
+                        <tr>
+                            <td>Average Response Time:</td>
+                            <td><strong>{{AVG_RESPONSE_TIME}}ms</strong></td>
+                        </tr>
+                        <tr>
+                            <td>95th Percentile:</td>
+                            <td><strong>{{P95_RESPONSE_TIME}}ms</strong></td>
+                        </tr>
+                        <tr>
+                            <td>99th Percentile:</td>
+                            <td><strong>{{P99_RESPONSE_TIME}}ms</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Max Response Time:</td>
+                            <td><strong>{{MAX_RESPONSE_TIME}}ms</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h4>Throughput Metrics</h4>
+                <table>
+                    <tr>
+                        <td>Requests per Second:</td>
+                        <td><strong>{{REQUESTS_PER_SECOND}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Total Requests:</td>
+                        <td><strong>{{TOTAL_REQUESTS}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Failed Requests:</td>
+                        <td><strong>{{FAILED_REQUESTS}}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Error Rate:</td>
+                        <td><strong>{{ERROR_RATE}}%</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Security Analysis -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🔒 Security Analysis</h2>
+            </div>
+            <div class="section-content">
+                <div class="test-group">
+                    <h4>Authentication & Authorization</h4>
+                    <div class="test-item">
+                        <div class="test-name">Unauthenticated access blocked</div>
+                        <div class="test-status {{AUTH_BLOCKED_STATUS}}">{{AUTH_BLOCKED_RESULT}}</div>
+                    </div>
+                    <div class="test-item">
+                        <div class="test-name">Invalid tokens rejected</div>
+                        <div class="test-status {{INVALID_TOKEN_STATUS}}">{{INVALID_TOKEN_RESULT}}</div>
+                    </div>
+                    <div class="test-item">
+                        <div class="test-name">Session security</div>
+                        <div class="test-status {{SESSION_SECURITY_STATUS}}">{{SESSION_SECURITY_RESULT}}</div>
+                    </div>
+                </div>
+
+                <div class="test-group">
+                    <h4>Input Validation</h4>
+                    <div class="test-item">
+                        <div class="test-name">SQL Injection Protection</div>
+                        <div class="test-status {{SQL_INJECTION_STATUS}}">{{SQL_INJECTION_RESULT}}</div>
+                    </div>
+                    <div class="test-item">
+                        <div class="test-name">XSS Protection</div>
+                        <div class="test-status {{XSS_PROTECTION_STATUS}}">{{XSS_PROTECTION_RESULT}}</div>
+                    </div>
+                    <div class="test-item">
+                        <div class="test-name">Command Injection Protection</div>
+                        <div class="test-status {{CMD_INJECTION_STATUS}}">{{CMD_INJECTION_RESULT}}</div>
+                    </div>
+                </div>
+
+                <div class="test-group">
+                    <h4>Security Headers</h4>
+                    <div class="test-item">
+                        <div class="test-name">CORS Configuration</div>
+                        <div class="test-status {{CORS_STATUS}}">{{CORS_RESULT}}</div>
+                    </div>
+                    <div class="test-item">
+                        <div class="test-name">Security Headers Present</div>
+                        <div class="test-status {{SECURITY_HEADERS_STATUS}}">{{SECURITY_HEADERS_RESULT}}</div>
+                    </div>
+                    <div class="test-item">
+                        <div class="test-name">Rate Limiting</div>
+                        <div class="test-status {{RATE_LIMITING_STATUS}}">{{RATE_LIMITING_RESULT}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Functional Test Details -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🔧 Functional Test Results</h2>
+            </div>
+            <div class="section-content">
+                {{#FUNCTIONAL_GROUPS}}
+                <div class="test-group">
+                    <h4>{{GROUP_NAME}}</h4>
+                    {{#TESTS}}
+                    <div class="test-item">
+                        <div class="test-name">{{TEST_NAME}}</div>
+                        <div class="test-status {{STATUS_CLASS}}">{{STATUS}}</div>
+                    </div>
+                    {{/TESTS}}
+                </div>
+                {{/FUNCTIONAL_GROUPS}}
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="recommendations">
+            <h4>🎯 Recommendations</h4>
+            <ul>
+                {{#RECOMMENDATIONS}}
+                <li>{{RECOMMENDATION}}</li>
+                {{/RECOMMENDATIONS}}
+            </ul>
+        </div>
+
+        <!-- Quality Gates -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🎯 Quality Gates</h2>
+            </div>
+            <div class="section-content">
+                <div class="test-item">
+                    <div class="test-name">Response Time (95th percentile &lt; 2000ms)</div>
+                    <div class="test-status {{RESPONSE_TIME_GATE_STATUS}}">{{RESPONSE_TIME_GATE_RESULT}}</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-name">Error Rate (&lt; 5%)</div>
+                    <div class="test-status {{ERROR_RATE_GATE_STATUS}}">{{ERROR_RATE_GATE_RESULT}}</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-name">Authentication Security</div>
+                    <div class="test-status {{AUTH_GATE_STATUS}}">{{AUTH_GATE_RESULT}}</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-name">Input Validation</div>
+                    <div class="test-status {{VALIDATION_GATE_STATUS}}">{{VALIDATION_GATE_RESULT}}</div>
+                </div>
+                <div class="test-item">
+                    <div class="test-name">API Coverage (&gt; 90%)</div>
+                    <div class="test-status {{COVERAGE_GATE_STATUS}}">{{COVERAGE_GATE_RESULT}}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Information -->
+        <div class="section">
+            <div class="section-header">
+                <h2>💻 System Information</h2>
+            </div>
+            <div class="section-content">
+                <table>
+                    <tr>
+                        <td>Test Environment:</td>
+                        <td>{{TEST_ENVIRONMENT}}</td>
+                    </tr>
+                    <tr>
+                        <td>PHP Version:</td>
+                        <td>{{PHP_VERSION}}</td>
+                    </tr>
+                    <tr>
+                        <td>Laravel Version:</td>
+                        <td>{{LARAVEL_VERSION}}</td>
+                    </tr>
+                    <tr>
+                        <td>Database:</td>
+                        <td>{{DATABASE_TYPE}}</td>
+                    </tr>
+                    <tr>
+                        <td>Test Duration:</td>
+                        <td>{{TOTAL_DURATION}}</td>
+                    </tr>
+                    <tr>
+                        <td>Test Runner:</td>
+                        <td>{{TEST_RUNNER}}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Generated by AskProAI API Testing Suite</p>
+            <p>For questions or issues, contact the development team</p>
+        </div>
+    </div>
+
+    <script>
+        // Add any interactive features here
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bars
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>

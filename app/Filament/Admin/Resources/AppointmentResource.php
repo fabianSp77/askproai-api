@@ -103,11 +103,21 @@ class AppointmentResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar';
 
-    protected static ?string $navigationLabel = 'Termine';
+    protected static ?string $navigationLabel = null;
 
-    protected static ?string $navigationGroup = 'Täglicher Betrieb';
+    protected static ?string $navigationGroup = null;
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.appointments');
+    }
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.daily_operations');
+    }
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 2; // Zweite Position nach Anrufen
 
     public static function form(Form $form): Form
     {

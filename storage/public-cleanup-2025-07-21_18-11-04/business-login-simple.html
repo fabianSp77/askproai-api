@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Login</title>
+    <meta name="csrf-token" content="">
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f5f5; }
+        .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 400px; }
+        h2 { margin: 0 0 30px 0; color: #333; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        .error { color: red; margin: 10px 0; }
+        .success { color: green; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Business Portal Login</h2>
+        <div id="message"></div>
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <input type="email" id="email" placeholder="Email" value="portal@demo.de" required>
+            <input type="password" id="password" placeholder="Password" value="demo123" required>
+            <button type="submit">Login</button>
+        </form>
+        <br>
+        <button onclick="bypassLogin()">Quick Demo Access</button>
+    </div>
+    
+    <script>
+        function handleLogin(e) {
+            e.preventDefault();
+            // Simple redirect - no CSRF needed
+            window.location.href = '/business';
+        }
+        
+        function bypassLogin() {
+            // Set session storage
+            localStorage.setItem('portal_auth', 'true');
+            localStorage.setItem('portal_user', JSON.stringify({
+                id: 1,
+                name: 'Demo User',
+                email: 'portal@demo.de'
+            }));
+            
+            // Direct redirect
+            window.location.href = '/business';
+        }
+    </script>
+</body>
+</html>

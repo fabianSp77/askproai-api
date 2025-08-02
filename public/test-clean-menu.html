@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clean Menu Test - AskProAI</title>
+    <!-- Load the actual scripts to test -->
+    <link rel="stylesheet" href="/css/filament-menu-clean.css">
+    <script src="/js/filament-menu-clean.js"></script>
+    <script src="/js/menu-cleanup.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #3b82f6;
+        }
+        code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Clean Menu Solution Test</h1>
+        <p>Diese Seite testet die neue saubere Menu-Implementierung.</p>
+
+        <div class="test-section">
+            <h2>📊 Test Results</h2>
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Debug Actions</h2>
+            <button onclick="runAllTests()">Run All Tests</button>
+            <button onclick="checkForDuplicates()">Check for Duplicates</button>
+            <button onclick="cleanupDuplicates()">Cleanup Duplicates</button>
+            <button onclick="debugMenuState()">Debug Menu State</button>
+            <button onclick="window.location.href='/admin'">Go to Admin</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Console Output</h2>
+            <div id="console-output" class="status info" style="max-height: 300px; overflow-y: auto;">
+                <pre>Console output will appear here...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Capture console logs
+        const consoleOutput = document.getElementById('console-output').querySelector('pre');
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            consoleOutput.textContent += args.join(' ') + '\n';
+        };
+
+        function runAllTests() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '';
+
+            // Test 1: Check if clean menu script is loaded
+            addTestResult('Clean Menu Script Loaded', 
+                typeof window.filamentMenu !== 'undefined',
+                'window.filamentMenu exists'
+            );
+
+            // Test 2: Check if cleanup script is loaded
+            addTestResult('Cleanup Script Loaded', 
+                typeof window.menuCleanup !== 'undefined',
+                'window.menuCleanup exists'
+            );
+
+            // Test 3: Check for duplicate menu buttons
+            const menuButtons = document.querySelectorAll('.fi-topbar button');
+            const hamburgerButtons = Array.from(menuButtons).filter(btn => 
+                btn.innerHTML.includes('M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5') ||
+                btn.innerHTML.includes('M4 6h16M4 12h16M4 18h16')
+            );
+            
+            addTestResult('No Duplicate Buttons', 
+                hamburgerButtons.length <= 1,
+                `Found ${hamburgerButtons.length} hamburger buttons`
+            );
+
+            // Test 4: Check for fallback buttons
+            const fallbackButtons = document.querySelectorAll('.mobile-menu-fallback');
+            addTestResult('No Fallback Buttons', 
+                fallbackButtons.length === 0,
+                `Found ${fallbackButtons.length} fallback buttons`
+            );
+
+            // Test 5: Check if problematic scripts are disabled
+            fetch('/js/mobile-menu-button-fix.js')
+                .then(response => {
+                    addTestResult('Problematic Script Disabled', 
+                        response.status === 404,
+                        'mobile-menu-button-fix.js returns 404'
+                    );
+                })
+                .catch(() => {
+                    addTestResult('Problematic Script Disabled', true, 'Script not found (good!)');
+                });
+
+            // Test 6: Check CSS loaded
+            const cssLoaded = Array.from(document.styleSheets).some(sheet => 
+                sheet.href && sheet.href.includes('filament-menu-clean.css')
+            );
+            addTestResult('Clean Menu CSS Loaded', cssLoaded, 'filament-menu-clean.css is loaded');
+        }
+
+        function addTestResult(testName, passed, details) {
+            const results = document.getElementById('test-results');
+            const result = document.createElement('div');
+            result.className = 'test-result';
+            result.innerHTML = `
+                <strong>${passed ? '✅' : '❌'} ${testName}</strong><br>
+                <small>${details}</small>
+            `;
+            result.style.borderLeftColor = passed ? '#10b981' : '#ef4444';
+            results.appendChild(result);
+        }
+
+        function checkForDuplicates() {
+            console.log('=== Checking for Duplicate Buttons ===');
+            if (window.filamentMenu) {
+                window.filamentMenu.debug();
+            }
+            if (window.menuCleanup) {
+                window.menuCleanup.debug();
+            }
+        }
+
+        function cleanupDuplicates() {
+            console.log('=== Running Cleanup ===');
+            if (window.menuCleanup) {
+                window.menuCleanup.run();
+                console.log('Cleanup complete!');
+            } else {
+                console.error('menuCleanup not available');
+            }
+        }
+
+        function debugMenuState() {
+            console.log('=== Menu State Debug ===');
+            console.log('Body classes:', document.body.className);
+            console.log('Sidebar open:', document.body.classList.contains('fi-sidebar-open'));
+            
+            if (window.Alpine && Alpine.store) {
+                try {
+                    const sidebar = Alpine.store('sidebar');
+                    console.log('Alpine sidebar store:', sidebar);
+                } catch (e) {
+                    console.log('Alpine sidebar store not found');
+                }
+            }
+        }
+
+        // Run tests automatically on load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>

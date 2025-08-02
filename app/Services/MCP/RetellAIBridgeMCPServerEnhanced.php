@@ -8,7 +8,7 @@ use App\Models\Call;
 use App\Services\AgentSelectionService;
 use App\Services\CircuitBreaker\CircuitBreakerManager;
 use App\Services\PhoneNumberResolver;
-use App\Services\RetellMCPServer;
+use App\Services\MCP\RetellMCPServer;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;

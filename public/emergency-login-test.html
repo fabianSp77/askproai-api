@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emergency Login Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test-btn { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #f4f4f4; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Emergency Login Test</h1>
+    
+    <h2>1. Clear All Cookies</h2>
+    <button class="test-btn" onclick="clearCookies()">Clear Cookies</button>
+    <div id="cookie-result"></div>
+    
+    <h2>2. Test Admin Login</h2>
+    <button class="test-btn" onclick="testAdminLogin()">Test Admin Login</button>
+    <div id="admin-result"></div>
+    
+    <h2>3. Test Portal Login</h2>
+    <button class="test-btn" onclick="testPortalLogin()">Test Portal Login</button>
+    <div id="portal-result"></div>
+    
+    <script>
+        function clearCookies() {
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            document.getElementById('cookie-result').innerHTML = '<p class="success">✓ Cookies cleared</p>';
+        }
+        
+        async function testAdminLogin() {
+            const response = await fetch('/test-admin-auth');
+            const data = await response.json();
+            document.getElementById('admin-result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            if (data.success) {
+                setTimeout(() => window.open(data.redirect, '_blank'), 1000);
+            }
+        }
+        
+        async function testPortalLogin() {
+            const response = await fetch('/test-portal-auth');
+            const data = await response.json();
+            document.getElementById('portal-result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            if (data.success) {
+                setTimeout(() => window.open(data.redirect, '_blank'), 1000);
+            }
+        }
+    </script>
+</body>
+</html>

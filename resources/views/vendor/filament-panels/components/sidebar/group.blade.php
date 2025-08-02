@@ -27,6 +27,12 @@
         <div
             @if ($collapsible)
                 x-on:click="$store.sidebar.toggleCollapsedGroup(label)"
+                role="button"
+                tabindex="0"
+                x-on:keydown.enter="$store.sidebar.toggleCollapsedGroup(label)"
+                x-on:keydown.space.prevent="$store.sidebar.toggleCollapsedGroup(label)"
+                :aria-expanded="! $store.sidebar.groupIsCollapsed(label)"
+                aria-controls="group-items-{{ \Illuminate\Support\Str::slug($label) }}"
             @endif
             @if ($sidebarCollapsible)
                 x-show="$store.sidebar.isOpen"
@@ -35,7 +41,7 @@
                 x-transition:enter-end="opacity-100"
             @endif
             @class([
-                'fi-sidebar-group-button flex items-center gap-x-3 px-2 py-2',
+                'fi-sidebar-group-button flex items-center gap-x-3 px-2 py-2 relative',
                 'cursor-pointer' => $collapsible,
             ])
         >
@@ -53,16 +59,19 @@
             </span>
 
             @if ($collapsible)
-                <x-filament::icon-button
-                    color="gray"
-                    icon="heroicon-m-chevron-up"
-                    icon-alias="panels::sidebar.group.collapse-button"
-                    :label="$label"
-                    x-bind:aria-expanded="! $store.sidebar.groupIsCollapsed(label)"
+                <button
+                    type="button"
+                    class="fi-sidebar-group-collapse-button flex items-center justify-center"
                     x-on:click.stop="$store.sidebar.toggleCollapsedGroup(label)"
-                    class="fi-sidebar-group-collapse-button"
                     x-bind:class="{ '-rotate-180': $store.sidebar.groupIsCollapsed(label) }"
-                />
+                    :aria-expanded="! $store.sidebar.groupIsCollapsed(label)"
+                    aria-label="{{ __('filament-panels::layout.actions.sidebar.collapse.label') }}"
+                >
+                    <x-filament::icon
+                        icon="heroicon-m-chevron-up"
+                        class="h-5 w-5 text-gray-400 dark:text-gray-500"
+                    />
+                </button>
             @endif
         </div>
     @endif
@@ -160,6 +169,7 @@
 
     <ul
         @if (filled($label))
+            id="group-items-{{ \Illuminate\Support\Str::slug($label) }}"
             @if ($sidebarCollapsible)
                 x-show="$store.sidebar.isOpen ? ! $store.sidebar.groupIsCollapsed(label) : ! @js($hasDropdown)"
             @else

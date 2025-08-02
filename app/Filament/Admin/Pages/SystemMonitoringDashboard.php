@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Pages;
 
+use App\Filament\Admin\Traits\HasTooltips;
 use App\Models\Call;
 use App\Models\Appointment;
 use App\Models\Company;
@@ -20,11 +21,22 @@ use App\Services\NavigationService;
 
 class SystemMonitoringDashboard extends Page
 {
+    use HasTooltips;
+    
     protected static ?string $navigationIcon = 'heroicon-o-computer-desktop';
     protected static ?string $navigationLabel = 'System Monitoring';
-    protected static bool $shouldRegisterNavigation = true;
-    
     protected static string $view = 'filament.admin.pages.system-monitoring-dashboard';
+    
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->hasRole(['Super Admin', 'super_admin', 'developer']) || $user->email === 'dev@askproai.de');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
     
     public static function getNavigationGroup(): ?string
     {
@@ -41,7 +53,14 @@ class SystemMonitoringDashboard extends Page
     public array $systemMetrics = [];
     public array $apiStatus = [];
     public array $performanceMetrics = [];
-    public array $realtimeStats = [];
+    public array $realtimeStats = [
+        'active_calls' => 0,
+        'today_appointments' => 0,
+        'completed_today' => 0,
+        'active_companies' => 0,
+        'active_phones' => 0,
+        'recent_webhooks' => 0,
+    ];
     public array $errorLogs = [];
     public array $queueStatus = [];
     
@@ -439,28 +458,27 @@ class SystemMonitoringDashboard extends Page
 
     protected function getActions(): array
     {
-        return [
+        return static::applyFormActionTooltips([
             Actions\Action::make('refresh')
                 ->label('Aktualisieren')
+                ->tooltip(static::tooltip('refresh_data'))
                 ->icon('heroicon-o-arrow-path')
                 ->action('refresh'),
                 
             Actions\Action::make('export')
                 ->label('Export')
+                ->tooltip(static::tooltip('export_csv'))
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action('exportMetrics'),
                 
             Actions\Action::make('preflight')
                 ->label('Preflight Check')
+                ->tooltip(static::tooltip('preflight_check'))
                 ->icon('heroicon-o-shield-check')
                 ->url('/admin/preflight-check'),
-        ];
+        ]);
     }
 
-    public static function canAccess(): bool
-    {
-        return auth()->user()?->hasRole(['Super Admin', 'Admin', 'super_admin', 'admin']) ?? false;
-    }
     
     protected function handleMetricError(string $metric, \Exception $e): void
     {

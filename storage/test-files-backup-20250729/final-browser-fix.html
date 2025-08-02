@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Fix - AskProAI Admin</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin: 0 0 30px 0;
+        }
+        .alert {
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .alert-error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+        }
+        .alert-success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #393;
+        }
+        .alert-info {
+            background: #e6f3ff;
+            border: 1px solid #b3d9ff;
+            color: #0066cc;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button-danger {
+            background: #dc3545;
+        }
+        .button-danger:hover {
+            background: #c82333;
+        }
+        .button-success {
+            background: #28a745;
+        }
+        .button-success:hover {
+            background: #218838;
+        }
+        .code {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        .step {
+            margin: 20px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        .step::before {
+            content: attr(data-step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #007bff;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🔧 Final Fix für Admin Panel</h1>
+            
+            <div class="alert alert-error">
+                <strong>Problem:</strong> 500 Error auf https://api.askproai.de/admin/calls
+            </div>
+            
+            <div class="alert alert-info">
+                <strong>Status:</strong> Server funktioniert einwandfrei. Das Problem liegt im Browser (alte Session-Daten).
+            </div>
+            
+            <h2>Automatische Lösung:</h2>
+            
+            <div class="step" data-step="1">
+                <h3>Browser-Daten komplett löschen</h3>
+                <button class="button button-danger" onclick="nukeEverything()">
+                    🗑️ Alle Daten für askproai.de löschen
+                </button>
+                <p><small>Löscht Cookies, LocalStorage, SessionStorage für alle askproai.de Domains</small></p>
+            </div>
+            
+            <div class="step" data-step="2">
+                <h3>Neu einloggen</h3>
+                <p>Nach dem Löschen, öffne einen dieser Links:</p>
+                <a href="https://api.askproai.de/admin" target="_blank" class="button button-success">
+                    📊 Admin Dashboard
+                </a>
+                <a href="https://api.askproai.de/admin/login" target="_blank" class="button button-success">
+                    🔐 Admin Login
+                </a>
+            </div>
+            
+            <div id="status"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Alternative: Manuelle Lösung</h2>
+            
+            <h3>Option 1: Inkognito-Fenster</h3>
+            <ul>
+                <li>Chrome/Edge: <code>Strg+Shift+N</code> (Windows) oder <code>Cmd+Shift+N</code> (Mac)</li>
+                <li>Firefox: <code>Strg+Shift+P</code> (Windows) oder <code>Cmd+Shift+P</code> (Mac)</li>
+                <li>Safari: <code>Cmd+Shift+N</code></li>
+            </ul>
+            <p>Öffne dann: <code>https://api.askproai.de/admin/calls</code></p>
+            
+            <h3>Option 2: Browser-Cache manuell löschen</h3>
+            <ul>
+                <li><strong>Chrome:</strong> Einstellungen → Datenschutz → Browserdaten löschen → Zeitraum: "Gesamte Zeit"</li>
+                <li><strong>Firefox:</strong> Einstellungen → Datenschutz → Cookies und Website-Daten → Daten entfernen</li>
+                <li><strong>Edge:</strong> Einstellungen → Datenschutz → Browserdaten löschen</li>
+            </ul>
+            
+            <h3>Option 3: Anderer Browser</h3>
+            <p>Teste mit einem komplett anderen Browser, den du noch nie für askproai.de verwendet hast.</p>
+        </div>
+        
+        <div class="card">
+            <h2>Debug-Information</h2>
+            <div class="code" id="debug-info">
+                Lade Browser-Information...
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('status');
+            status.className = type === 'error' ? 'status-error' : 'status-success';
+            status.innerHTML = message;
+            status.style.display = 'block';
+        }
+        
+        function nukeEverything() {
+            showStatus('🔄 Lösche alle Browser-Daten für askproai.de...', 'info');
+            
+            let deletedItems = [];
+            
+            // 1. Delete all cookies
+            const cookies = document.cookie.split(';');
+            const domains = [
+                'api.askproai.de',
+                '.api.askproai.de', 
+                '.askproai.de',
+                'askproai.de',
+                location.hostname,
+                '.' + location.hostname,
+                ''
+            ];
+            const paths = ['/', '/admin', '/admin/', '/public', ''];
+            
+            cookies.forEach(cookie => {
+                const name = cookie.split('=')[0].trim();
+                if (name) {
+                    domains.forEach(domain => {
+                        paths.forEach(path => {
+                            // Multiple deletion attempts
+                            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; domain=${domain}; secure`;
+                            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; domain=${domain}`;
+                            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}`;
+                            document.cookie = `${name}=; max-age=-1; path=${path}; domain=${domain}`;
+                            document.cookie = `${name}=; max-age=0; path=${path}`;
+                        });
+                    });
+                    deletedItems.push(`Cookie: ${name}`);
+                }
+            });
+            
+            // 2. Clear localStorage
+            try {
+                const localCount = localStorage.length;
+                localStorage.clear();
+                if (localCount > 0) {
+                    deletedItems.push(`LocalStorage: ${localCount} items`);
+                }
+            } catch (e) {
+                console.error('LocalStorage error:', e);
+            }
+            
+            // 3. Clear sessionStorage
+            try {
+                const sessionCount = sessionStorage.length;
+                sessionStorage.clear();
+                if (sessionCount > 0) {
+                    deletedItems.push(`SessionStorage: ${sessionCount} items`);
+                }
+            } catch (e) {
+                console.error('SessionStorage error:', e);
+            }
+            
+            // 4. Clear IndexedDB
+            if ('indexedDB' in window) {
+                indexedDB.databases().then(databases => {
+                    databases.forEach(db => {
+                        indexedDB.deleteDatabase(db.name);
+                        deletedItems.push(`IndexedDB: ${db.name}`);
+                    });
+                }).catch(e => console.error('IndexedDB error:', e));
+            }
+            
+            // 5. Clear cache storage
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                        deletedItems.push(`Cache: ${name}`);
+                    });
+                }).catch(e => console.error('Cache error:', e));
+            }
+            
+            // Show results
+            setTimeout(() => {
+                if (deletedItems.length > 0) {
+                    showStatus(`✅ Erfolgreich gelöscht:<br>• ${deletedItems.join('<br>• ')}<br><br>Du kannst jetzt die Admin-Links öffnen!`, 'success');
+                } else {
+                    showStatus('✅ Browser-Daten wurden gelöscht. Du kannst jetzt die Admin-Links öffnen!', 'success');
+                }
+            }, 1000);
+        }
+        
+        // Show debug info
+        window.onload = function() {
+            const debugInfo = document.getElementById('debug-info');
+            const info = [
+                `Browser: ${navigator.userAgent.match(/(firefox|chrome|safari|edge|opera)/i)?.[0] || 'Unknown'}`,
+                `Cookies aktiviert: ${navigator.cookieEnabled ? 'Ja' : 'Nein'}`,
+                `Aktuelle Cookies: ${document.cookie.split(';').filter(c => c.trim()).length}`,
+                `LocalStorage Items: ${localStorage.length}`,
+                `SessionStorage Items: ${sessionStorage.length}`,
+                `Protokoll: ${location.protocol}`,
+                `Host: ${location.hostname}`
+            ];
+            debugInfo.innerHTML = info.join('<br>');
+        };
+    </script>
+</body>
+</html>

@@ -7,6 +7,12 @@
 > 📊 **Analytics & Monitoring**: [KPI Dashboard](./KPI_DASHBOARD_TEMPLATE.md) | [Health Monitor](./INTEGRATION_HEALTH_MONITOR.md) | [Troubleshooting](./TROUBLESHOOTING_DECISION_TREE.md) | [Data Flow](./PHONE_TO_APPOINTMENT_FLOW.md)
 >
 > 🎯 **BEST PRACTICES 2025**: [Context Summary](./CLAUDE_CONTEXT_SUMMARY.md) | [Best Practices](./BEST_PRACTICES_IMPLEMENTATION.md) | [Dev Process](./DEVELOPMENT_PROCESS_2025.md)
+>
+> 🤖 **RETELL AI MCP**: [Status & Fortsetzung](./RETELL_AI_MCP_SERVER_STATUS_2025-07-22.md) | [Quick Reference](./RETELL_AI_MCP_QUICK_REFERENCE.md)
+>
+> 🧠 **SUBAGENTS**: [Agent README](./.claude/agents/README.md) | [Selection Matrix](./.claude/agents/AGENT_SELECTION_MATRIX.md) | [Integration Report](./.claude/agents/COMPLETE_AGENT_INTEGRATION_2025-08-01.md) - 43 Specialized AI Agents
+>
+> 🛡️ **UI/UX FIXES**: [Mobile UI Critical Fix](./docs/MOBILE_UI_CRITICAL_FIX_2025-07-30.md) | [Comprehensive UI/UX Fix](./docs/UI_UX_FIX_COMPREHENSIVE_2025-07-30.md) | [Black Overlay Solution](./docs/BLACK_OVERLAY_SOLUTION.md) - Mobile Navigation, Touch Events, Dropdowns & Black Screen Issues
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -132,6 +138,92 @@ ssh root@hosting215275.ae83d.netcup.net
 
 ---
 
+## 🆕 NEU: Retell AI MCP Server Integration (Juli 2025)
+
+**Status**: ✅ VOLLSTÄNDIG IMPLEMENTIERT
+
+- **Dokumentation**: [RETELL_AI_MCP_SERVER_STATUS_2025-07-22.md](./RETELL_AI_MCP_SERVER_STATUS_2025-07-22.md)
+- **Quick Reference**: [RETELL_AI_MCP_QUICK_REFERENCE.md](./RETELL_AI_MCP_QUICK_REFERENCE.md)
+- **Admin UI**: `/admin/a-i-call-center`
+- **Key Features**:
+  - Outbound AI Calls mit Multi-Agent Support
+  - Call Campaigns mit Batch Processing
+  - Circuit Breaker & Rate Limiting
+  - Real-time Monitoring Dashboard
+  - Demo Daten verfügbar
+
+**Quick Commands**:
+```bash
+php artisan retell:health-check
+php artisan retell:test-call +491234567890
+php artisan db:seed --class=RetellAIMCPDemoSeeder --force
+```
+
+---
+
+## 🧠 Subagenten Framework (NEU August 2025)
+
+**Status**: ✅ INTEGRIERT (43 Agents)
+
+Das AskProAI-Projekt nutzt jetzt das erweiterte **Contains Studio Agents Framework** mit 43 spezialisierten AI-Agents für alle Aspekte der Produktentwicklung.
+
+### Übersicht
+- **8 Original AskProAI Agents**: Technische Analyse & Debugging
+- **35 Contains Studio Agents**: Engineering, Product, Design, Marketing, Testing, PM, Operations
+- **Selektive Integration**: Wichtigste Agents aus https://github.com/contains-studio/agents
+- **Kategorien**: 8 verschiedene Agent-Kategorien für jeden Use Case
+
+### Quick Start
+```bash
+# Technische Analyse (AskProAI Agents)
+> Use the performance-profiler subagent to analyze slow queries
+> Use the security-scanner subagent to check for vulnerabilities
+> Use the ui-auditor subagent to find UI/UX issues
+
+# Development (Contains Studio Agents)
+> Use the engineering/rapid-prototyper subagent to build MVP features
+> Use the engineering/frontend-developer subagent to fix React issues
+> Use the engineering/devops-automator subagent to setup CI/CD
+
+# Business Intelligence
+> Use the studio-operations/analytics-reporter subagent to create KPI dashboards
+> Use the studio-operations/finance-tracker subagent to analyze revenue
+```
+
+### Agent-Kategorien
+1. **Technische Analyse** (8 Agents): Performance, Security, UI, APIs, Multi-Tenancy
+2. **Engineering** (7): Backend, Frontend, Mobile, AI, DevOps, Prototyping
+3. **Product** (3): Feedback Analysis, Sprint Planning, Trend Research  
+4. **Design** (5): UX Research, UI Design, Brand, Visual Stories
+5. **Marketing** (3): Growth Hacking, Content, ASO/Community
+6. **Testing** (4): API Tests, Analysis, Tools, Workflows
+7. **Project Management** (3): Experiments, Releases, Sprint Coordination
+8. **Studio Operations** (5): Analytics, Finance, Infrastructure, Legal, Support
+9. **Bonus** (2): Team Morale, Process Coaching
+
+### Parallele Ausführung
+Agents arbeiten automatisch parallel wenn mehrere aufgerufen werden:
+```bash
+# Diese 3 Agents laufen parallel:
+> Use the ui-auditor subagent to check UI bugs
+> Use the performance-profiler subagent to analyze performance  
+> Use the security-scanner subagent to check security issues
+```
+
+### Proaktive Agents
+Einige Agents triggern automatisch in bestimmten Kontexten:
+- **studio-coach**: Bei komplexen Multi-Agent-Tasks oder wenn Agents Führung brauchen
+- **test-writer-fixer**: Nach Feature-Implementation, Bug-Fixes oder Code-Änderungen
+- **whimsy-injector**: Nach UI/UX-Änderungen
+- **experiment-tracker**: Wenn Feature-Flags hinzugefügt werden
+
+### Dokumentation
+- **Hauptdokumentation**: [.claude/agents/README.md](./.claude/agents/README.md)
+- **Agent-Auswahl**: [.claude/agents/AGENT_SELECTION_MATRIX.md](./.claude/agents/AGENT_SELECTION_MATRIX.md)
+- **Integration Report**: [.claude/agents/COMPLETE_AGENT_INTEGRATION_2025-08-01.md](./.claude/agents/COMPLETE_AGENT_INTEGRATION_2025-08-01.md)
+
+---
+
 ## 🚀 Best Practices & Automation (NEU 2025)
 
 ### Automatische MCP-Server Nutzung
@@ -143,6 +235,29 @@ $result = $discovery->executeTask('book appointment for tomorrow', $params);
 // In Services mit UsesMCPServers Trait
 $this->executeMCPTask('fetch customer data', ['phone' => $phoneNumber]);
 ```
+
+### Subagenten & MCP Integration
+```bash
+# 1. Agent für Analyse → MCP für Execution
+> Use the performance-profiler subagent to identify database bottlenecks
+# → Dann DatabaseMCP für Query-Optimierung
+
+# 2. Parallele Analyse mit mehreren Agents
+> Use the ui-auditor subagent to check the admin panel
+> Use the security-scanner subagent to audit authentication
+> Use the multi-tenant-auditor subagent to verify data isolation
+
+# 3. Agent Discovery für beste Lösung
+> Use the product/feedback-synthesizer subagent to analyze user complaints
+# → Agent findet Patterns und schlägt Lösungen vor
+```
+
+### Agent-First Development Workflow
+1. **Analyse mit Agents**: Nutze spezialisierte Agents für tiefe Analyse
+2. **Design mit Agents**: `engineering/backend-architect` für System-Design
+3. **Prototyping mit Agents**: `engineering/rapid-prototyper` für MVPs
+4. **Testing mit Agents**: `testing/*` Agents für Test-Strategien
+5. **Deployment mit DevOps Agent**: `engineering/devops-automator`
 
 ### Data Flow Tracking
 ```php
@@ -159,6 +274,10 @@ php artisan analyze:component App\\Services\\BookingService
 
 # Vor Deployment: Impact analysieren
 php artisan analyze:impact --git
+
+# Mit Agents: Tiefere Analyse
+> Use the webhook-flow-analyzer subagent to trace the booking flow
+> Use the filament-resource-analyzer subagent to check permissions
 ```
 
 ### Neue Essential Commands
@@ -262,11 +381,16 @@ Bei der Bearbeitung von Aufgaben befolge diese Regeln:
 ### 7. **Überprüfung und Zusammenfassung**
 - Füge abschließend einen Überprüfungsbereich in die Datei `todo.md` ein, der eine Zusammenfassung der vorgenommenen Änderungen und alle anderen relevanten Informationen enthält
 
-### 8. **MCP-Server und Tools nutzen**
+### 8. **MCP-Server, Subagenten und Tools nutzen**
+- **Subagenten für Analyse**: Nutze spezialisierte Agents für Code-Analyse, UI-Testing, Performance-Profiling und Debugging
 - **Context7 für Dokumentation**: Nutze `mcp__context7__resolve-library-id` und `mcp__context7__get-library-docs` für aktuelle Library-Dokumentation (Laravel, Filament, etc.)
 - **Interne MCP-Server**: Verwende projektspezifische MCP-Server wie DatabaseMCP, CalcomMCP, RetellMCP für API-Integrationen
 - **Task Management**: Nutze `TodoWrite`/`TodoRead` Tools für Aufgabenverwaltung
-- **Best Practice**: Evaluiere zu Beginn jeder Aufgabe verfügbare MCP-Server und kombiniere sie für optimale Ergebnisse
+- **Best Practice**: 
+  - Agent-First für Analyse und Design-Tasks
+  - MCP für direkte API-Integrationen
+  - Kombiniere beide für optimale Workflows
+  - Nutze parallele Agent-Ausführung für Effizienz
 
 ## MCP-Server Übersicht und Verwendung
 
@@ -323,6 +447,34 @@ Bei der Bearbeitung von Aufgaben befolge diese Regeln:
 3. **Dokumentiere MCP-Nutzung** in Implementierungsnotizen
 4. **Prüfe externe MCP-Optionen** bei neuen Anforderungen
 
+### MCP vs. Subagenten: Entscheidungshilfe
+
+| Use Case | MCP-Server | Subagenten | Begründung |
+|----------|------------|------------|------------|
+| **API-Integration** | ✅ CalcomMCP, RetellMCP | ❌ | MCP für direkte API-Calls |
+| **Code-Analyse** | ❌ | ✅ performance-profiler, security-scanner | Agents für komplexe Analyse |
+| **UI/UX Debugging** | ❌ | ✅ ui-auditor, design/ux-researcher | Agents haben Browser-Tools |
+| **Datenbank-Queries** | ✅ DatabaseMCP | ⚠️ | MCP für sichere DB-Ops |
+| **Feature Development** | ⚠️ | ✅ engineering/rapid-prototyper | Agents für kreative Tasks |
+| **Testing** | ⚠️ | ✅ testing/*, engineering/test-writer | Agents für Test-Strategien |
+| **Dokumentation** | ✅ Context7 MCP | ⚠️ | MCP für Library-Docs |
+| **Business Intelligence** | ⚠️ | ✅ studio-operations/analytics-reporter | Agents für Insights |
+
+**Kombinierte Workflows:**
+```bash
+# 1. Research mit Agent → Implementation mit MCP
+> Use the product/trend-researcher subagent to analyze market trends
+# → Dann MCP für API-Integration
+
+# 2. Debug mit Agent → Fix mit direktem Code
+> Use the retell-call-debugger subagent to find the issue
+# → Dann direkte Code-Änderung
+
+# 3. Parallel: Agent für Analyse + MCP für Daten
+> Use the performance-profiler subagent to analyze performance
+# + Gleichzeitig DatabaseMCP für Query-Optimierung
+```
+
 ### MCP-Server aktivieren:
 ```bash
 # Externe MCP-Server in .env aktivieren
@@ -356,6 +508,23 @@ php artisan mcp:discover "describe your task"      # Find best MCP server
 php artisan mcp:discover "task" --execute         # Execute directly
 php artisan mcp:health                            # Check MCP health
 php artisan mcp:list                              # List available servers
+
+# Subagent Commands (in Claude Code)
+> Use the ui-auditor subagent to check UI issues   # Single agent
+> Use the performance-profiler subagent to analyze performance
+> Use the engineering/rapid-prototyper subagent to build feature
+
+# Parallel Agent Execution
+> Use the ui-auditor subagent to check mobile UI
+> Use the performance-profiler subagent to find bottlenecks
+> Use the security-scanner subagent to audit security
+# All 3 run in parallel!
+
+# Agent Workflows
+# Debug → Fix → Test workflow:
+> Use the retell-call-debugger subagent to trace call flow
+> Use the engineering/backend-architect subagent to design fix
+> Use the engineering/test-writer-fixer subagent to add tests
 
 # Data Flow Tracking
 php artisan dataflow:list                         # View recent flows

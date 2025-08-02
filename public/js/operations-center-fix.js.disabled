@@ -1,0 +1,264 @@
+/**
+ * Operations Center Fix
+ * Defines missing Alpine.js components and fixes dropdown/link issues
+ */
+
+(function() {
+    'use strict';
+    
+    // Wait for Alpine to be ready
+    document.addEventListener('alpine:init', () => {
+        console.log('[Operations Center Fix] Initializing missing components...');
+        
+        // Define companyBranchSelect component
+        Alpine.data('companyBranchSelect', () => ({
+            showDropdown: false,
+            searchQuery: '',
+            selectedCompanies: [],
+            selectedBranches: [],
+            expandedCompanies: [],
+            
+            init() {
+                // Close dropdown on escape
+                this.$el.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.showDropdown) {
+                        this.closeDropdown();
+                    }
+                });
+            },
+            
+            toggleDropdown() {
+                this.showDropdown = !this.showDropdown;
+            },
+            
+            closeDropdown() {
+                this.showDropdown = false;
+            },
+            
+            toggleCompany(companyId) {
+                const index = this.selectedCompanies.indexOf(companyId);
+                if (index > -1) {
+                    this.selectedCompanies.splice(index, 1);
+                    // Also remove all branches of this company
+                    this.selectedBranches = this.selectedBranches.filter(b => !b.startsWith(companyId + '-'));
+                } else {
+                    this.selectedCompanies.push(companyId);
+                }
+                this.updateFilters();
+            },
+            
+            toggleBranch(companyId, branchId) {
+                const branchKey = companyId + '-' + branchId;
+                const index = this.selectedBranches.indexOf(branchKey);
+                if (index > -1) {
+                    this.selectedBranches.splice(index, 1);
+                } else {
+                    this.selectedBranches.push(branchKey);
+                    // Also select the company if not already selected
+                    if (!this.selectedCompanies.includes(companyId)) {
+                        this.selectedCompanies.push(companyId);
+                    }
+                }
+                this.updateFilters();
+            },
+            
+            isCompanySelected(companyId) {
+                return this.selectedCompanies.includes(companyId);
+            },
+            
+            isBranchSelected(companyId, branchId) {
+                return this.selectedBranches.includes(companyId + '-' + branchId);
+            },
+            
+            matchesSearch(text) {
+                if (!this.searchQuery) return true;
+                return text.toLowerCase().includes(this.searchQuery.toLowerCase());
+            },
+            
+            getCompactLabel() {
+                if (this.selectedCompanies.length === 0) {
+                    return 'Alle Unternehmen';
+                } else if (this.selectedCompanies.length === 1) {
+                    const companyEl = document.querySelector(`[data-company-id="${this.selectedCompanies[0]}"]`);
+                    return companyEl ? companyEl.textContent.trim() : 'Ausgewählt';
+                } else {
+                    return `${this.selectedCompanies.length} Unternehmen`;
+                }
+            },
+            
+            updateFilters() {
+                // Trigger Livewire update
+                if (window.Livewire) {
+                    Livewire.emit('filtersUpdated', {
+                        companies: this.selectedCompanies,
+                        branches: this.selectedBranches
+                    });
+                }
+            }
+        }));
+        
+        // Define dateFilterDropdownEnhanced component
+        Alpine.data('dateFilterDropdownEnhanced', () => ({
+            showDateFilter: false,
+            datePreset: 'today',
+            customStartDate: '',
+            customEndDate: '',
+            
+            init() {
+                // Set default dates
+                const today = new Date().toISOString().split('T')[0];
+                this.customStartDate = today;
+                this.customEndDate = today;
+            },
+            
+            toggleDropdown() {
+                this.showDateFilter = !this.showDateFilter;
+            },
+            
+            closeDropdown() {
+                this.showDateFilter = false;
+            },
+            
+            getDateLabel() {
+                const labels = {
+                    'today': 'Heute',
+                    'yesterday': 'Gestern',
+                    'last7days': 'Letzte 7 Tage',
+                    'last30days': 'Letzte 30 Tage',
+                    'thisMonth': 'Dieser Monat',
+                    'lastMonth': 'Letzter Monat',
+                    'custom': 'Benutzerdefiniert'
+                };
+                return labels[this.datePreset] || 'Zeitraum wählen';
+            },
+            
+            selectPreset(preset) {
+                this.datePreset = preset;
+                this.updateDateFilter();
+                if (preset !== 'custom') {
+                    this.closeDropdown();
+                }
+            },
+            
+            updateDateFilter() {
+                // Calculate dates based on preset
+                const dates = this.calculateDates();
+                
+                // Trigger Livewire update
+                if (window.Livewire) {
+                    Livewire.emit('dateFilterUpdated', {
+                        preset: this.datePreset,
+                        startDate: dates.start,
+                        endDate: dates.end
+                    });
+                }
+            },
+            
+            calculateDates() {
+                const today = new Date();
+                let start, end;
+                
+                switch(this.datePreset) {
+                    case 'today':
+                        start = end = today.toISOString().split('T')[0];
+                        break;
+                    case 'yesterday':
+                        const yesterday = new Date(today);
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        start = end = yesterday.toISOString().split('T')[0];
+                        break;
+                    case 'last7days':
+                        const week = new Date(today);
+                        week.setDate(week.getDate() - 7);
+                        start = week.toISOString().split('T')[0];
+                        end = today.toISOString().split('T')[0];
+                        break;
+                    case 'last30days':
+                        const month = new Date(today);
+                        month.setDate(month.getDate() - 30);
+                        start = month.toISOString().split('T')[0];
+                        end = today.toISOString().split('T')[0];
+                        break;
+                    case 'thisMonth':
+                        start = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                        end = today.toISOString().split('T')[0];
+                        break;
+                    case 'lastMonth':
+                        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                        start = lastMonth.toISOString().split('T')[0];
+                        end = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0];
+                        break;
+                    case 'custom':
+                        start = this.customStartDate;
+                        end = this.customEndDate;
+                        break;
+                    default:
+                        start = end = today.toISOString().split('T')[0];
+                }
+                
+                return { start, end };
+            }
+        }));
+        
+        console.log('[Operations Center Fix] Components registered successfully');
+    });
+    
+    // Fix pointer events for links and buttons
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('[Operations Center Fix] Fixing pointer events...');
+        
+        const fixPointerEvents = () => {
+            // Fix all links in the operations center
+            document.querySelectorAll('.fi-ta-link, .fi-link, [href]').forEach(el => {
+                el.style.pointerEvents = 'auto';
+                el.style.cursor = 'pointer';
+            });
+            
+            // Fix all buttons
+            document.querySelectorAll('button, [role="button"]').forEach(el => {
+                el.style.pointerEvents = 'auto';
+                el.style.cursor = 'pointer';
+            });
+            
+            // Remove any blocking overlays
+            document.querySelectorAll('.pointer-events-none').forEach(el => {
+                if (!el.querySelector('button, a, [role="button"]')) {
+                    // Only if it doesn't contain interactive elements
+                    el.style.pointerEvents = 'none';
+                }
+            });
+        };
+        
+        // Run immediately
+        fixPointerEvents();
+        
+        // Re-apply after Livewire updates
+        if (window.Livewire) {
+            Livewire.hook('message.processed', () => {
+                setTimeout(fixPointerEvents, 50);
+            });
+        }
+        
+        // Observe DOM changes
+        const observer = new MutationObserver(fixPointerEvents);
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+    
+    // Override problematic global functions
+    window.toggleDropdown = function() {
+        if (this && typeof this.toggleDropdown === 'function') {
+            this.toggleDropdown();
+        }
+    };
+    
+    window.closeDropdown = function() {
+        if (this && typeof this.closeDropdown === 'function') {
+            this.closeDropdown();
+        }
+    };
+    
+    console.log('[Operations Center Fix] All fixes loaded');
+})();

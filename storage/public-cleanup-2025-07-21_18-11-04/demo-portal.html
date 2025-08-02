@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI Business Portal - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-gray-900">AskProAI Business Portal</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">demo@askproai.de</span>
+                    <button class="text-sm text-red-600 hover:text-red-800">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8">
+                <a href="#" class="border-b-2 border-blue-500 text-blue-600 py-4 px-1 text-sm font-medium">
+                    <i class="fas fa-dashboard mr-2"></i>Dashboard
+                </a>
+                <a href="#" class="text-gray-500 hover:text-gray-700 py-4 px-1 text-sm font-medium">
+                    <i class="fas fa-phone mr-2"></i>Anrufe
+                </a>
+                <a href="#" class="text-gray-500 hover:text-gray-700 py-4 px-1 text-sm font-medium">
+                    <i class="fas fa-calendar mr-2"></i>Termine
+                </a>
+                <a href="#" class="text-gray-500 hover:text-gray-700 py-4 px-1 text-sm font-medium">
+                    <i class="fas fa-users mr-2"></i>Kunden
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <!-- Welcome Message -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 fade-in">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        Willkommen im Business Portal! Dies ist eine Demo-Version für Ihre Präsentation.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6 fade-in">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-100 rounded-lg p-3">
+                        <i class="fas fa-phone-volume text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Anrufe Heute</dt>
+                            <dd class="text-3xl font-semibold text-gray-900">24</dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="text-green-600 text-sm font-medium">
+                        <i class="fas fa-arrow-up"></i> 12% vs gestern
+                    </span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6 fade-in">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-100 rounded-lg p-3">
+                        <i class="fas fa-calendar-check text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Termine Gebucht</dt>
+                            <dd class="text-3xl font-semibold text-gray-900">8</dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="text-blue-600 text-sm font-medium">
+                        3 heute ausstehend
+                    </span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6 fade-in">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-purple-100 rounded-lg p-3">
+                        <i class="fas fa-user-plus text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Neue Kunden</dt>
+                            <dd class="text-3xl font-semibold text-gray-900">5</dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="text-gray-600 text-sm font-medium">
+                        Diese Woche
+                    </span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6 fade-in">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-yellow-100 rounded-lg p-3">
+                        <i class="fas fa-chart-line text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Erfolgsquote</dt>
+                            <dd class="text-3xl font-semibold text-gray-900">87%</dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="text-green-600 text-sm font-medium">
+                        <i class="fas fa-arrow-up"></i> 5% diese Woche
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Calls -->
+        <div class="bg-white shadow rounded-lg fade-in">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Letzte Anrufe</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zeit</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anrufer</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dauer</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ergebnis</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">vor 5 Min</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">+49 123 456789</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">3:45</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Abgeschlossen
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Termin gebucht</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button class="text-blue-600 hover:text-blue-900">Details</button>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">vor 23 Min</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">+49 987 654321</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">1:30</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Verpasst
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Rückruf ausstehend</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button class="text-blue-600 hover:text-blue-900">Details</button>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">vor 1 Std</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">+49 555 123456</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">5:12</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Abgeschlossen
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Information erteilt</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button class="text-blue-600 hover:text-blue-900">Details</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

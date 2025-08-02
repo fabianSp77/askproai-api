@@ -16,37 +16,21 @@
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::TOPBAR_START) }}
 
         @if (filament()->hasNavigation())
-            <x-filament::icon-button
-                color="gray"
-                icon="heroicon-o-bars-3"
-                icon-alias="panels::topbar.open-sidebar-button"
-                icon-size="lg"
-                :label="__('filament-panels::layout.actions.sidebar.expand.label')"
-                x-cloak
-                x-data="{}"
-                x-on:click="$store.sidebar.open()"
-                x-show="! $store.sidebar.isOpen"
-                @class([
-                    'fi-topbar-open-sidebar-btn',
-                    'lg:hidden' => (! filament()->isSidebarFullyCollapsibleOnDesktop()) || filament()->isSidebarCollapsibleOnDesktop(),
-                ])
-            />
-
-            <x-filament::icon-button
-                color="gray"
-                icon="heroicon-o-x-mark"
-                icon-alias="panels::topbar.close-sidebar-button"
-                icon-size="lg"
-                :label="__('filament-panels::layout.actions.sidebar.collapse.label')"
-                x-cloak
-                x-data="{}"
-                x-on:click="$store.sidebar.close()"
-                x-show="$store.sidebar.isOpen"
-                class="fi-topbar-close-sidebar-btn lg:hidden"
-            />
+            {{-- Mobile hamburger button - always visible on mobile --}}
+            <button
+                type="button"
+                class="fi-topbar-open-sidebar-btn inline-flex items-center justify-center rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white lg:hidden"
+                onclick="document.body.classList.toggle('fi-sidebar-open')"
+            >
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <span class="sr-only">{{ __('filament-panels::layout.actions.sidebar.expand.label') }}</span>
+            </button>
         @endif
 
-        @if (filament()->hasTopNavigation() || (! filament()->hasNavigation()))
+        {{-- Logo only shown when using top navigation (no sidebar) --}}
+        @if (filament()->hasTopNavigation())
             <div class="me-6 hidden lg:flex">
                 @if ($homeUrl = filament()->getHomeUrl())
                     <a {{ \Filament\Support\generate_href_html($homeUrl) }}>

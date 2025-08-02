@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Portal - FIXED</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        /* Login Page */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-box h1 {
+            margin-bottom: 30px;
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* Dashboard */
+        .dashboard {
+            display: none;
+            flex: 1;
+        }
+        .header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 20px 0;
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .logout-btn {
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+        
+        .content {
+            padding: 40px 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+        
+        .session-info {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <h1>Business Portal Login</h1>
+            <div id="loginError" class="error"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">E-Mail</label>
+                    <input type="email" id="email" name="email" value="demo@askproai.de" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Passwort</label>
+                    <input type="password" id="password" name="password" value="demo123" required>
+                </div>
+                <button type="submit" class="btn" id="loginBtn">Anmelden</button>
+            </form>
+            <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 6px;">
+                <p style="font-size: 14px; color: #0369a1;">
+                    <strong>✅ FIXED VERSION</strong><br>
+                    Diese Version nutzt die neuen Laravel Routes, die Session Cookies korrekt setzen!
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <h1>Business Portal Dashboard</h1>
+                    <div class="user-info">
+                        <span id="userEmail"></span>
+                        <button class="logout-btn" onclick="logout()">Abmelden</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main class="content">
+            <div class="container">
+                <div class="success-box">
+                    <h2>🎉 Login erfolgreich!</h2>
+                    <p>Die Session wird jetzt korrekt über Cookies aufrechterhalten.</p>
+                </div>
+                
+                <div class="session-info">
+                    <strong>Session Information:</strong><br>
+                    Session ID: <span id="sessionId"></span><br>
+                    User ID: <span id="userId"></span><br>
+                    Company ID: <span id="companyId"></span><br>
+                    Cookie Status: <span id="cookieStatus"></span>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Termine heute</h3>
+                        <div class="value">12</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Neue Kunden</h3>
+                        <div class="value">5</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Anrufe</h3>
+                        <div class="value">28</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Umsatz</h3>
+                        <div class="value">€ 2,450</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 40px;">
+                    <button class="btn" style="max-width: 200px;" onclick="testSession()">Session testen</button>
+                    <div id="sessionTest" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Check authentication on page load
+        window.onload = async function() {
+            await checkAuth();
+        };
+        
+        // Check if user is authenticated
+        async function checkAuth() {
+            try {
+                const response = await fetch('/business/auth/check', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    showDashboard(data.user, data.session_id);
+                } else {
+                    showLogin();
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                showLogin();
+            }
+        }
+        
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const loginError = document.getElementById('loginError');
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Anmelden...';
+            loginError.textContent = '';
+            
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showDashboard(data.user, data.session_id);
+                } else {
+                    loginError.textContent = data.message || 'Anmeldung fehlgeschlagen';
+                }
+            } catch (error) {
+                loginError.textContent = 'Netzwerkfehler: ' + error.message;
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Anmelden';
+            }
+        });
+        
+        // Show login page
+        function showLogin() {
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+        
+        // Show dashboard
+        function showDashboard(user, sessionId) {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('sessionId').textContent = sessionId;
+            document.getElementById('userId').textContent = user.id;
+            document.getElementById('companyId').textContent = user.company_id;
+            
+            // Check for session cookie
+            const hasCookie = document.cookie.includes('askproai_session');
+            document.getElementById('cookieStatus').textContent = hasCookie ? '✅ Cookie vorhanden' : '❌ Kein Cookie';
+        }
+        
+        // Logout
+        async function logout() {
+            try {
+                await fetch('/business/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                showLogin();
+            } catch (error) {
+                console.error('Logout failed:', error);
+                showLogin();
+            }
+        }
+        
+        // Test session persistence
+        async function testSession() {
+            const testDiv = document.getElementById('sessionTest');
+            testDiv.innerHTML = '<div class="loading">Teste Session...</div>';
+            
+            try {
+                // Set data
+                const setResponse = await fetch('/business/session-test/set', {
+                    credentials: 'same-origin'
+                });
+                const setData = await setResponse.json();
+                
+                // Get data
+                const getResponse = await fetch('/business/session-test/get', {
+                    credentials: 'same-origin'
+                });
+                const getData = await getResponse.json();
+                
+                testDiv.innerHTML = `
+                    <div style="background: #d4edda; padding: 15px; border-radius: 6px; text-align: left;">
+                        <strong>Session Test erfolgreich!</strong><br>
+                        Session ID bleibt gleich: ${setData.session_id === getData.session_id ? '✅' : '❌'}<br>
+                        Daten gespeichert: ${getData.test_value ? '✅' : '❌'}<br>
+                        Counter: ${getData.counter || 0}
+                    </div>
+                `;
+            } catch (error) {
+                testDiv.innerHTML = '<div class="error">Test fehlgeschlagen: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

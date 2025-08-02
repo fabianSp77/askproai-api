@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI Business Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-item.active { background-color: #3B82F6; color: white; }
+        .sidebar-item:hover { background-color: #E5E7EB; }
+        .sidebar-item.active:hover { background-color: #2563EB; }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .modal { transition: opacity 0.3s ease; }
+        .tab-active { border-bottom: 2px solid #3B82F6; color: #3B82F6; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">AskProAI</h1>
+                    <span class="ml-3 text-sm text-gray-500">Business Portal</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-gray-400 hover:text-gray-600 relative">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <span id="notificationBadge" class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <img class="h-8 w-8 rounded-full" src="https://ui-avatars.com/api/?name=Demo+User&background=3B82F6&color=fff" alt="User">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">Demo User</div>
+                            <div class="text-xs text-gray-500">demo@askproai.de</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex h-screen pt-16">
+        <!-- Sidebar -->
+        <nav class="w-64 bg-white shadow-lg">
+            <div class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg" onclick="showPage('dashboard')">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                            </svg>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg" onclick="showPage('calls')">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                            <span>Anrufe</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg" onclick="showPage('appointments')">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Termine</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg" onclick="showPage('customers')">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            <span>Kunden</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg" onclick="showPage('billing')">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                            </svg>
+                            <span>Abrechnung</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-item flex items-center space-x-3 p-3 rounded-lg" onclick="showPage('settings')">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                            <span>Einstellungen</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto bg-gray-50">
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="p-6">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Dashboard</h2>
+                    <p class="text-gray-600">Willkommen zurück! Hier ist Ihre Übersicht.</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Anrufe heute</p>
+                                <p class="text-3xl font-bold text-gray-900">24</p>
+                                <p class="text-sm text-green-600">+12% vs. gestern</p>
+                            </div>
+                            <div class="p-3 bg-blue-100 rounded-full">
+                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Neue Termine</p>
+                                <p class="text-3xl font-bold text-gray-900">18</p>
+                                <p class="text-sm text-green-600">+5% vs. gestern</p>
+                            </div>
+                            <div class="p-3 bg-green-100 rounded-full">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Durchschn. Anrufdauer</p>
+                                <p class="text-3xl font-bold text-gray-900">3:45</p>
+                                <p class="text-sm text-red-600">-8% vs. gestern</p>
+                            </div>
+                            <div class="p-3 bg-purple-100 rounded-full">
+                                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Konversionsrate</p>
+                                <p class="text-3xl font-bold text-gray-900">72%</p>
+                                <p class="text-sm text-green-600">+3% vs. gestern</p>
+                            </div>
+                            <div class="p-3 bg-yellow-100 rounded-full">
+                                <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Anrufvolumen (7 Tage)</h3>
+                        <canvas id="callVolumeChart" height="150"></canvas>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Terminbuchungen (7 Tage)</h3>
+                        <canvas id="appointmentChart" height="150"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Letzte Anrufe</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">+49 151 12345678</p>
+                                            <p class="text-sm text-gray-500">Termin gebucht</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm text-gray-500">vor 5 Min.</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">+49 170 98765432</p>
+                                            <p class="text-sm text-gray-500">Anfrage beantwortet</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm text-gray-500">vor 12 Min.</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium">+49 162 55443322</p>
+                                            <p class="text-sm text-gray-500">Verpasst</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm text-gray-500">vor 25 Min.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Anstehende Termine</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <div class="p-3 border-l-4 border-blue-500 bg-blue-50 rounded-lg">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-medium">Maria Schmidt</p>
+                                            <p class="text-sm text-gray-600">Beratungsgespräch</p>
+                                            <p class="text-sm text-gray-500 mt-1">📍 Hauptfiliale</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-medium">14:00</p>
+                                            <p class="text-xs text-gray-500">in 30 Min.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-3 border-l-4 border-green-500 bg-green-50 rounded-lg">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-medium">Thomas Müller</p>
+                                            <p class="text-sm text-gray-600">Erstberatung</p>
+                                            <p class="text-sm text-gray-500 mt-1">📍 Filiale Nord</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-medium">15:30</p>
+                                            <p class="text-xs text-gray-500">in 2 Std.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-3 border-l-4 border-yellow-500 bg-yellow-50 rounded-lg">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-medium">Sandra Weber</p>
+                                            <p class="text-sm text-gray-600">Nachbesprechung</p>
+                                            <p class="text-sm text-gray-500 mt-1">📍 Online</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-medium">17:00</p>
+                                            <p class="text-xs text-gray-500">in 3.5 Std.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calls Page -->
+            <div id="callsPage" class="p-6" style="display: none;">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Anrufe</h2>
+                    <p class="text-gray-600">Verwalten Sie alle eingehenden und ausgehenden Anrufe.</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-lg shadow p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <input type="text" placeholder="Suche nach Nummer oder Name..." class="px-4 py-2 border rounded-lg">
+                        <select class="px-4 py-2 border rounded-lg">
+                            <option>Alle Status</option>
+                            <option>Erfolgreich</option>
+                            <option>Verpasst</option>
+                            <option>Abgebrochen</option>
+                        </select>
+                        <input type="date" class="px-4 py-2 border rounded-lg">
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                            Filter anwenden
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Calls Table -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Anrufer
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Dauer
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Ergebnis
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Zeit
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Aktionen
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">+49 151 12345678</div>
+                                        <div class="text-sm text-gray-500">Maria Schmidt</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Erfolgreich
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    3:45
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    Termin gebucht
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    vor 15 Min.
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button onclick="showCallDetails(1)" class="text-blue-600 hover:text-blue-900 mr-3">Details</button>
+                                    <button class="text-green-600 hover:text-green-900">Transkript</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">+49 170 98765432</div>
+                                        <div class="text-sm text-gray-500">Thomas Müller</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        Beantwortet
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    2:12
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    Anfrage beantwortet
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    vor 32 Min.
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button onclick="showCallDetails(2)" class="text-blue-600 hover:text-blue-900 mr-3">Details</button>
+                                    <button class="text-green-600 hover:text-green-900">Transkript</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">+49 162 55443322</div>
+                                        <div class="text-sm text-gray-500">Unbekannt</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Verpasst
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    0:00
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    Kein Kontakt
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    vor 1 Std.
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button onclick="showCallDetails(3)" class="text-blue-600 hover:text-blue-900 mr-3">Details</button>
+                                    <button class="text-gray-400">Transkript</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Appointments Page -->
+            <div id="appointmentsPage" class="p-6" style="display: none;">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Termine</h2>
+                    <p class="text-gray-600">Übersicht aller gebuchten und anstehenden Termine.</p>
+                </div>
+
+                <!-- Calendar View Toggle -->
+                <div class="bg-white rounded-lg shadow p-4 mb-6">
+                    <div class="flex justify-between items-center">
+                        <div class="flex space-x-4">
+                            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg">Liste</button>
+                            <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Kalender</button>
+                        </div>
+                        <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            + Neuer Termin
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Appointments List -->
+                <div class="space-y-4">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold mb-2">Maria Schmidt - Beratungsgespräch</h3>
+                                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                    <div>
+                                        <p><strong>Datum:</strong> Heute, 14:00 - 15:00</p>
+                                        <p><strong>Filiale:</strong> Hauptfiliale</p>
+                                    </div>
+                                    <div>
+                                        <p><strong>Telefon:</strong> +49 151 12345678</p>
+                                        <p><strong>E-Mail:</strong> maria.schmidt@email.de</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <p class="text-sm text-gray-600"><strong>Notizen:</strong> Kundin interessiert sich für Premium-Paket</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col space-y-2">
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    Bestätigt
+                                </span>
+                                <button class="text-sm text-blue-600 hover:text-blue-800">Bearbeiten</button>
+                                <button class="text-sm text-red-600 hover:text-red-800">Absagen</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold mb-2">Thomas Müller - Erstberatung</h3>
+                                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                    <div>
+                                        <p><strong>Datum:</strong> Heute, 15:30 - 16:30</p>
+                                        <p><strong>Filiale:</strong> Filiale Nord</p>
+                                    </div>
+                                    <div>
+                                        <p><strong>Telefon:</strong> +49 170 98765432</p>
+                                        <p><strong>E-Mail:</strong> thomas.mueller@email.de</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <p class="text-sm text-gray-600"><strong>Notizen:</strong> Neukunde, wurde über Google gefunden</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col space-y-2">
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Unbestätigt
+                                </span>
+                                <button class="text-sm text-blue-600 hover:text-blue-800">Bearbeiten</button>
+                                <button class="text-sm text-red-600 hover:text-red-800">Absagen</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold mb-2">Sandra Weber - Nachbesprechung</h3>
+                                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                    <div>
+                                        <p><strong>Datum:</strong> Heute, 17:00 - 17:30</p>
+                                        <p><strong>Filiale:</strong> Online (Video-Call)</p>
+                                    </div>
+                                    <div>
+                                        <p><strong>Telefon:</strong> +49 160 11223344</p>
+                                        <p><strong>E-Mail:</strong> sandra.weber@email.de</p>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <p class="text-sm text-gray-600"><strong>Notizen:</strong> Follow-up nach erstem Termin letzte Woche</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col space-y-2">
+                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    Bestätigt
+                                </span>
+                                <button class="text-sm text-blue-600 hover:text-blue-800">Bearbeiten</button>
+                                <button class="text-sm text-red-600 hover:text-red-800">Absagen</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Page -->
+            <div id="customersPage" class="p-6" style="display: none;">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Kunden</h2>
+                    <p class="text-gray-600">Verwalten Sie Ihre Kundenkontakte und deren Historie.</p>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="bg-white rounded-lg shadow p-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="text" placeholder="Name oder Telefonnummer suchen..." class="px-4 py-2 border rounded-lg">
+                        <select class="px-4 py-2 border rounded-lg">
+                            <option>Alle Kunden</option>
+                            <option>Aktive Kunden</option>
+                            <option>Neue Kunden</option>
+                            <option>VIP Kunden</option>
+                        </select>
+                        <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            + Neuer Kunde
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customers Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                MS
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Maria Schmidt</h3>
+                                <p class="text-sm text-gray-500">VIP Kunde</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Tel:</strong> +49 151 12345678</p>
+                            <p><strong>E-Mail:</strong> maria.schmidt@email.de</p>
+                            <p><strong>Letzer Termin:</strong> vor 2 Wochen</p>
+                            <p><strong>Termine gesamt:</strong> 12</p>
+                        </div>
+                        <div class="mt-4 flex justify-between">
+                            <button class="text-blue-600 hover:text-blue-800 text-sm">Details</button>
+                            <button class="text-green-600 hover:text-green-800 text-sm">Termin buchen</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
+                                TM
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Thomas Müller</h3>
+                                <p class="text-sm text-gray-500">Stammkunde</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Tel:</strong> +49 170 98765432</p>
+                            <p><strong>E-Mail:</strong> thomas.mueller@email.de</p>
+                            <p><strong>Letzer Termin:</strong> vor 1 Monat</p>
+                            <p><strong>Termine gesamt:</strong> 8</p>
+                        </div>
+                        <div class="mt-4 flex justify-between">
+                            <button class="text-blue-600 hover:text-blue-800 text-sm">Details</button>
+                            <button class="text-green-600 hover:text-green-800 text-sm">Termin buchen</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                                SW
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Sandra Weber</h3>
+                                <p class="text-sm text-gray-500">Neukunde</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Tel:</strong> +49 160 11223344</p>
+                            <p><strong>E-Mail:</strong> sandra.weber@email.de</p>
+                            <p><strong>Letzer Termin:</strong> vor 1 Woche</p>
+                            <p><strong>Termine gesamt:</strong> 2</p>
+                        </div>
+                        <div class="mt-4 flex justify-between">
+                            <button class="text-blue-600 hover:text-blue-800 text-sm">Details</button>
+                            <button class="text-green-600 hover:text-green-800 text-sm">Termin buchen</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                                PB
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Peter Bauer</h3>
+                                <p class="text-sm text-gray-500">Stammkunde</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Tel:</strong> +49 175 33445566</p>
+                            <p><strong>E-Mail:</strong> peter.bauer@email.de</p>
+                            <p><strong>Letzer Termin:</strong> vor 3 Tagen</p>
+                            <p><strong>Termine gesamt:</strong> 15</p>
+                        </div>
+                        <div class="mt-4 flex justify-between">
+                            <button class="text-blue-600 hover:text-blue-800 text-sm">Details</button>
+                            <button class="text-green-600 hover:text-green-800 text-sm">Termin buchen</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">
+                                AK
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Anna Klein</h3>
+                                <p class="text-sm text-gray-500">VIP Kunde</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Tel:</strong> +49 163 77889900</p>
+                            <p><strong>E-Mail:</strong> anna.klein@email.de</p>
+                            <p><strong>Letzer Termin:</strong> Heute</p>
+                            <p><strong>Termine gesamt:</strong> 25</p>
+                        </div>
+                        <div class="mt-4 flex justify-between">
+                            <button class="text-blue-600 hover:text-blue-800 text-sm">Details</button>
+                            <button class="text-green-600 hover:text-green-800 text-sm">Termin buchen</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
+                                MH
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">Max Hoffmann</h3>
+                                <p class="text-sm text-gray-500">Neukunde</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Tel:</strong> +49 172 44556677</p>
+                            <p><strong>E-Mail:</strong> max.hoffmann@email.de</p>
+                            <p><strong>Letzer Termin:</strong> -</p>
+                            <p><strong>Termine gesamt:</strong> 0</p>
+                        </div>
+                        <div class="mt-4 flex justify-between">
+                            <button class="text-blue-600 hover:text-blue-800 text-sm">Details</button>
+                            <button class="text-green-600 hover:text-green-800 text-sm">Termin buchen</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Billing Page -->
+            <div id="billingPage" class="p-6" style="display: none;">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Abrechnung & Guthaben</h2>
+                    <p class="text-gray-600">Verwalten Sie Ihr Prepaid-Guthaben und Ihre Abrechnungen</p>
+                </div>
+
+                <!-- Balance Overview -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 text-white mb-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-blue-100 text-sm">Aktuelles Guthaben</p>
+                            <p class="text-4xl font-bold mt-2">€ 125,50</p>
+                            <p class="text-blue-100 text-sm mt-2">Reicht für ca. 322 Minuten</p>
+                        </div>
+                        <div class="text-right">
+                            <button class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+                                Guthaben aufladen
+                            </button>
+                            <p class="text-xs text-blue-100 mt-2">Min. €25 - Max. €5000</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Anrufe heute</p>
+                                <p class="text-2xl font-bold">24</p>
+                            </div>
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Minuten heute</p>
+                                <p class="text-2xl font-bold">89</p>
+                            </div>
+                            <div class="p-2 bg-green-100 rounded-lg">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Kosten heute</p>
+                                <p class="text-2xl font-bold">€34,71</p>
+                            </div>
+                            <div class="p-2 bg-purple-100 rounded-lg">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Monatsverbrauch</p>
+                                <p class="text-2xl font-bold">€412,85</p>
+                            </div>
+                            <div class="p-2 bg-orange-100 rounded-lg">
+                                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings and History -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Auto-Topup Card -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Auto-Aufladung</h3>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Automatisch aufladen wenn Guthaben unter €20 fällt</p>
+                                    <p class="text-sm text-gray-500 mt-1">Aufladebetrag: €100</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Transaction History -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-semibold">Transaktionsverlauf</h3>
+                            </div>
+                            <div class="p-6">
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Guthaben aufgeladen</p>
+                                                <p class="text-sm text-gray-500">Kreditkarte •••• 4242</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-medium text-green-600">+€100,00</p>
+                                            <p class="text-sm text-gray-500">vor 3 Tagen</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Anrufkosten</p>
+                                                <p class="text-sm text-gray-500">24 Anrufe, 89 Minuten</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-medium text-red-600">-€34,71</p>
+                                            <p class="text-sm text-gray-500">Heute</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium">Bonus erhalten</p>
+                                                <p class="text-sm text-gray-500">10% auf Aufladung</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-medium text-blue-600">+€10,00</p>
+                                            <p class="text-sm text-gray-500">vor 3 Tagen</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bonus Matrix -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Bonus bei Aufladung</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-sm">€250+</span>
+                                    <span class="font-semibold text-green-600">+10%</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-sm">€500+</span>
+                                    <span class="font-semibold text-green-600">+15%</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-sm">€1000+</span>
+                                    <span class="font-semibold text-green-600">+20%</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg border-2 border-blue-500">
+                                    <span class="text-sm font-medium">€2000+</span>
+                                    <span class="font-semibold text-blue-600">+30%</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-sm">€3000+</span>
+                                    <span class="font-semibold text-green-600">+40%</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-sm">€5000+</span>
+                                    <span class="font-semibold text-green-600">+50%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Monthly Overview -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Monatsübersicht</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">Anrufe gesamt</span>
+                                    <span class="font-semibold">412</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">Minuten gesamt</span>
+                                    <span class="font-semibold">1.058</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">Durchschn. Anrufdauer</span>
+                                    <span class="font-semibold">2,6 Min.</span>
+                                </div>
+                                <div class="pt-3 border-t">
+                                    <button class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 text-sm">
+                                        Detaillierte Statistiken
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settingsPage" class="p-6" style="display: none;">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Einstellungen</h2>
+                    <p class="text-gray-600">Verwalten Sie Ihre persönlichen und Unternehmenseinstellungen.</p>
+                </div>
+
+                <!-- Settings Tabs -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="border-b">
+                        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                            <button onclick="showSettingsTab('profile')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm tab-active">
+                                Profil
+                            </button>
+                            <button onclick="showSettingsTab('notifications')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700">
+                                Benachrichtigungen
+                            </button>
+                            <button onclick="showSettingsTab('security')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700">
+                                Sicherheit
+                            </button>
+                            <button onclick="showSettingsTab('company')" class="settings-tab py-4 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700">
+                                Unternehmen
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="p-6">
+                        <!-- Profile Tab -->
+                        <div id="profileTab" class="settings-content">
+                            <h3 class="text-lg font-semibold mb-4">Persönliche Informationen</h3>
+                            <form class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Vorname</label>
+                                        <input type="text" value="Demo" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nachname</label>
+                                        <input type="text" value="User" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+                                    <input type="email" value="demo@askproai.de" class="w-full px-3 py-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                                    <input type="tel" value="+49 151 12345678" class="w-full px-3 py-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Sprache</label>
+                                    <select class="w-full px-3 py-2 border rounded-lg">
+                                        <option>Deutsch</option>
+                                        <option>English</option>
+                                        <option>Français</option>
+                                    </select>
+                                </div>
+                                <div class="pt-4">
+                                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                        Änderungen speichern
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Notifications Tab -->
+                        <div id="notificationsTab" class="settings-content" style="display: none;">
+                            <h3 class="text-lg font-semibold mb-4">Benachrichtigungseinstellungen</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium">E-Mail-Benachrichtigungen</p>
+                                        <p class="text-sm text-gray-600">Erhalten Sie E-Mails über neue Termine und Anrufe</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium">SMS-Benachrichtigungen</p>
+                                        <p class="text-sm text-gray-600">SMS bei wichtigen Ereignissen</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium">Browser-Benachrichtigungen</p>
+                                        <p class="text-sm text-gray-600">Push-Benachrichtigungen im Browser</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security Tab -->
+                        <div id="securityTab" class="settings-content" style="display: none;">
+                            <h3 class="text-lg font-semibold mb-4">Sicherheitseinstellungen</h3>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-gray-50 rounded-lg">
+                                    <h4 class="font-medium mb-2">Passwort ändern</h4>
+                                    <form class="space-y-3">
+                                        <input type="password" placeholder="Aktuelles Passwort" class="w-full px-3 py-2 border rounded-lg">
+                                        <input type="password" placeholder="Neues Passwort" class="w-full px-3 py-2 border rounded-lg">
+                                        <input type="password" placeholder="Neues Passwort bestätigen" class="w-full px-3 py-2 border rounded-lg">
+                                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                            Passwort ändern
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="p-4 bg-gray-50 rounded-lg">
+                                    <h4 class="font-medium mb-2">Zwei-Faktor-Authentifizierung</h4>
+                                    <p class="text-sm text-gray-600 mb-3">Erhöhen Sie die Sicherheit Ihres Kontos</p>
+                                    <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                                        2FA aktivieren
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Company Tab -->
+                        <div id="companyTab" class="settings-content" style="display: none;">
+                            <h3 class="text-lg font-semibold mb-4">Unternehmenseinstellungen</h3>
+                            <form class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Firmenname</label>
+                                    <input type="text" value="Demo GmbH" class="w-full px-3 py-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                                    <input type="text" value="Musterstraße 123, 10115 Berlin" class="w-full px-3 py-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Steuernummer</label>
+                                    <input type="text" value="DE123456789" class="w-full px-3 py-2 border rounded-lg">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Öffnungszeiten</label>
+                                    <textarea class="w-full px-3 py-2 border rounded-lg" rows="3">Mo-Fr: 9:00-18:00
+Sa: 10:00-14:00
+So: Geschlossen</textarea>
+                                </div>
+                                <div class="pt-4">
+                                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                        Änderungen speichern
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Call Details Modal -->
+    <div id="callDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-semibold">Anrufdetails</h3>
+                        <button onclick="closeCallDetails()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <p class="text-sm text-gray-600">Anrufer</p>
+                            <p class="font-medium">+49 151 12345678</p>
+                            <p class="text-sm text-gray-500">Maria Schmidt</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Status</p>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Erfolgreich
+                            </span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Datum & Zeit</p>
+                            <p class="font-medium">21.07.2025, 14:23</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Dauer</p>
+                            <p class="font-medium">3:45</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="font-semibold mb-2">Transkript</h4>
+                        <div class="bg-gray-50 rounded-lg p-4 space-y-3 max-h-64 overflow-y-auto">
+                            <div class="flex">
+                                <span class="font-medium text-blue-600 mr-2">AI:</span>
+                                <p>Guten Tag, Sie sind verbunden mit Demo GmbH. Wie kann ich Ihnen helfen?</p>
+                            </div>
+                            <div class="flex">
+                                <span class="font-medium text-green-600 mr-2">Kunde:</span>
+                                <p>Hallo, ich möchte gerne einen Termin für eine Beratung vereinbaren.</p>
+                            </div>
+                            <div class="flex">
+                                <span class="font-medium text-blue-600 mr-2">AI:</span>
+                                <p>Sehr gerne! Wann würde es Ihnen denn passen?</p>
+                            </div>
+                            <div class="flex">
+                                <span class="font-medium text-green-600 mr-2">Kunde:</span>
+                                <p>Am liebsten nächste Woche Dienstag oder Mittwoch nachmittags.</p>
+                            </div>
+                            <div class="flex">
+                                <span class="font-medium text-blue-600 mr-2">AI:</span>
+                                <p>Ich habe am Dienstag, den 29. Juli um 15:00 Uhr einen freien Termin. Passt Ihnen das?</p>
+                            </div>
+                            <div class="flex">
+                                <span class="font-medium text-green-600 mr-2">Kunde:</span>
+                                <p>Ja, das passt perfekt!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold mb-2">Ergebnis</h4>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                            <p class="font-medium text-blue-900">Termin erfolgreich gebucht</p>
+                            <p class="text-sm text-blue-700 mt-1">Dienstag, 29. Juli 2025, 15:00 Uhr - Beratungsgespräch</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 border-t bg-gray-50">
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="closeCallDetails()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                            Schließen
+                        </button>
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Audio abspielen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Clear any existing intervals on page load
+        let activeIntervals = [];
+        
+        function clearAllIntervals() {
+            activeIntervals.forEach(id => clearInterval(id));
+            activeIntervals = [];
+        }
+
+        // Page Management
+        function showPage(page) {
+            clearAllIntervals(); // Clear intervals when switching pages
+            
+            // Hide all pages
+            document.getElementById('dashboardPage').style.display = 'none';
+            document.getElementById('callsPage').style.display = 'none';
+            document.getElementById('appointmentsPage').style.display = 'none';
+            document.getElementById('customersPage').style.display = 'none';
+            document.getElementById('billingPage').style.display = 'none';
+            document.getElementById('settingsPage').style.display = 'none';
+            
+            // Show selected page
+            document.getElementById(page + 'Page').style.display = 'block';
+            
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.sidebar-item').classList.add('active');
+            
+            // Initialize page-specific features
+            if (page === 'dashboard') {
+                initDashboard();
+            }
+        }
+
+        // Settings Tab Management
+        function showSettingsTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.settings-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.settings-tab').forEach(tabBtn => {
+                tabBtn.classList.remove('tab-active');
+                tabBtn.classList.add('text-gray-500');
+                tabBtn.classList.remove('text-blue-600');
+            });
+            
+            // Show selected tab
+            document.getElementById(tab + 'Tab').style.display = 'block';
+            
+            // Add active class to selected tab
+            event.target.classList.add('tab-active');
+            event.target.classList.remove('text-gray-500');
+            event.target.classList.add('text-blue-600');
+        }
+
+        // Dashboard Initialization
+        function initDashboard() {
+            clearAllIntervals(); // Clear before initializing new intervals
+            
+            // Initialize Call Volume Chart
+            const callCtx = document.getElementById('callVolumeChart').getContext('2d');
+            new Chart(callCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+                    datasets: [{
+                        label: 'Anrufe',
+                        data: [45, 52, 38, 65, 59, 42, 24],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Initialize Appointment Chart
+            const appointmentCtx = document.getElementById('appointmentChart').getContext('2d');
+            new Chart(appointmentCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+                    datasets: [{
+                        label: 'Termine',
+                        data: [12, 19, 15, 25, 22, 18, 8],
+                        backgroundColor: '#10B981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Simulate real-time updates (optional)
+            const updateInterval = setInterval(() => {
+                // Update notification badge
+                const badge = document.getElementById('notificationBadge');
+                const currentCount = parseInt(badge.textContent);
+                badge.textContent = Math.max(0, currentCount + Math.floor(Math.random() * 3) - 1);
+            }, 30000); // Update every 30 seconds
+            
+            activeIntervals.push(updateInterval);
+        }
+
+        // Call Details Modal
+        function showCallDetails(callId) {
+            document.getElementById('callDetailsModal').classList.remove('hidden');
+        }
+
+        function closeCallDetails() {
+            document.getElementById('callDetailsModal').classList.add('hidden');
+        }
+
+        // Initialize dashboard on load
+        window.onload = function() {
+            showPage('dashboard');
+        };
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', clearAllIntervals);
+    </script>
+</body>
+</html>

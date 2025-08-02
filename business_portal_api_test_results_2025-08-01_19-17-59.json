@@ -1,0 +1,758 @@
+{
+    "test_run": {
+        "timestamp": "2025-08-01T19:17:59+00:00",
+        "base_url": "https:\/\/api.askproai.de",
+        "total_tests": 30,
+        "passed_tests": 20,
+        "failed_tests": 8,
+        "success_rate": 66.66666666666666
+    },
+    "results": [
+        {
+            "test": "Login endpoint accessibility",
+            "status": "PASS",
+            "response_code": 200,
+            "message": "",
+            "response": {
+                "status": 200,
+                "data": {
+                    "success": true,
+                    "data": {
+                        "user": {
+                            "id": 5,
+                            "name": "Test User",
+                            "email": "test@askproai.de",
+                            "company_id": 15,
+                            "role": "admin",
+                            "permissions": [
+                                "*"
+                            ],
+                            "preferences": [],
+                            "two_factor_enabled": false,
+                            "created_at": "2025-07-05T13:16:16+02:00"
+                        },
+                        "session_token": "2xoRbrGTLCwCFJikjf75wm2NOiBWEtTKUZNAlfdKwEma3OdK25btpNmgBRtsJgss",
+                        "csrf_token": "YuuzPlPwktrR4Ob44MYEm4SoldhWwmFcvbGNbn0s"
+                    },
+                    "redirect": "\/business\/dashboard"
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:42 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "portal_session_backup=eyJpdiI6ImxyMjIrZG9PYkl1S3lxUXhiMHgzWEE9PSIsInZhbHVlIjoiOHlCVnRIYkhueXM0STlWaTFrQU5PVGx0TzdMbGNkMG0yWmhWcWxFS0VXYjNmMkt6SmtBVHNhc2hYQmFOMHc2UzdwdjBIMG5IM3EzUW5yMUpacWE4c2diRkFIb2pEQ3hBeWJ4cGRDK0YyYWZ5cHF3K25NMWFJUzZkS0ZPNHoxaEpQSUJPcFhkbTN4eU16dzZuRjNUM0R6UzY5VUY5WlRuQWc0ODNwbmJZaHdGSnVGNzFSY0Z1Q1MrS09FbFovUGhsYnJiTzZVdkpUdkY4T3d4NjNmZFZDTCs1OThJWUhldGd1bFBzZFJhTW4zaU8wSVZ3Wjc1azJhQUxRS3RCUHQwWExRTU9Cd3Zwa2VHODFiTWRzZlZXcUlSZDhCTitaanJvd3piVU1aVzU0Z2djM01COC9LQk0rdEVTOW5mQ1lFTkJvb3llN0VGQ3A4OEoyeFJCTDJEZVViY0RKaEtwT1Z3UVhITWp6b3JJU0ZuNmc3VjJGSjVvbUsrOVFBU1ZoOVVkZTgvTkpFQW5lNlZUQUxEWkFzMFkvMXliOGFDaHd3Ykd4WTFoR1htZkRKUVRVaFY5cjdYQS81bXQyaTQyYW45NEVMakIwbUxBQk1ITG5QVFFjc0FMRGxPQTI5aTVMTHcxV2J3Z3JvdFBaQ2ZaS284WmgyV2NreHpHWWpBbFNvWnF3RnNQT0lkSURUV0s3NytaUDhyVzJXK0lHbURNQTh4WkZHb3lmczNJMkFRekhnbDIwTm9idVNKZmxuRHRzb0dEaXBTOS8wMWhTdTFtekpNUW5xTlQ5dz09IiwibWFjIjoiOWM4Y2JjM2JjNDA3MTIwYzQ5NzY4ZjlmMjU3MWEzMTQwNDgxZDE3ZDAzNGY0YjI0MmUxZjNjNzA2Nzk0MzdkYiIsInRhZyI6IiJ9; expires=Fri, 08 Aug 2025 19:17:42 GMT; Max-Age=604800; path=\/; domain=.askproai.de; secure; httponly; samesite=strict",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"success\":true,\"data\":{\"user\":{\"id\":5,\"name\":\"Test User\",\"email\":\"test@askproai.de\",\"company_id\":15,\"role\":\"admin\",\"permissions\":[\"*\"],\"preferences\":[],\"two_factor_enabled\":false,\"created_at\":\"2025-07-05T13:16:16+02:00\"},\"session_token\":\"2xoRbrGTLCwCFJikjf75wm2NOiBWEtTKUZNAlfdKwEma3OdK25btpNmgBRtsJgss\",\"csrf_token\":\"YuuzPlPwktrR4Ob44MYEm4SoldhWwmFcvbGNbn0s\"},\"redirect\":\"\\\/business\\\/dashboard\"}"
+            }
+        },
+        {
+            "test": "Auth check endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": null
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:43 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=3kksC5dff4zgbxbtetkz6tsgmDopSeKnrTPJyrAA; expires=Sat, 02 Aug 2025 03:17:43 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":null}"
+            }
+        },
+        {
+            "test": "Login with invalid credentials",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "success": false,
+                    "message": "Invalid credentials",
+                    "code": "INVALID_CREDENTIALS"
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:43 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=H1kv7PWKnxKS2bTHy8f0Sv8TfoYA7XO4G13NB2sk; expires=Sat, 02 Aug 2025 03:17:43 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"success\":false,\"message\":\"Invalid credentials\",\"code\":\"INVALID_CREDENTIALS\"}"
+            }
+        },
+        {
+            "test": "Login with missing fields",
+            "status": "PASS",
+            "response_code": 422,
+            "message": "",
+            "response": {
+                "status": 422,
+                "data": {
+                    "success": false,
+                    "message": "Validation failed",
+                    "errors": {
+                        "email": [
+                            "The email field is required."
+                        ],
+                        "password": [
+                            "The password field is required."
+                        ]
+                    },
+                    "code": "VALIDATION_ERROR"
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:44 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=DOOtKnGyrS15UMz99GRpHVNvXVGiF3hc4tl8CmVo; expires=Sat, 02 Aug 2025 03:17:44 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"success\":false,\"message\":\"Validation failed\",\"errors\":{\"email\":[\"The email field is required.\"],\"password\":[\"The password field is required.\"]},\"code\":\"VALIDATION_ERROR\"}"
+            }
+        },
+        {
+            "test": "Logout functionality",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": null
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:44 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=QdN6aHhYVVUAKUJR9NiZKCaYe1WmeaIxFfxz5ESH; expires=Sat, 02 Aug 2025 03:17:44 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":null}"
+            }
+        },
+        {
+            "test": "Session persistence",
+            "status": "PASS",
+            "response_code": 0,
+            "message": "",
+            "response": {
+                "session1": null,
+                "session2": null
+            }
+        },
+        {
+            "test": "Dashboard stats endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": null
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:45 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=9lWZWWY6UsuUA705BoYn5VUZv3m4CbLO20oaPMFw; expires=Sat, 02 Aug 2025 03:17:45 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":null}"
+            }
+        },
+        {
+            "test": "Recent calls endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": null
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:46 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=bAwYOYq7HPou4xGXddgbCu9tmyqsT3Lg1jUpVQlJ; expires=Sat, 02 Aug 2025 03:17:46 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":null}"
+            }
+        },
+        {
+            "test": "Upcoming appointments endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": null
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:46 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=9UcbLUpfm2RViT8aZY3x19zvanjTkWsyJu4p2H2P; expires=Sat, 02 Aug 2025 03:17:46 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":null}"
+            }
+        },
+        {
+            "test": "Customers API endpoint",
+            "status": "FAIL",
+            "response_code": 500,
+            "message": "",
+            "response": {
+                "status": 500,
+                "data": {
+                    "message": "Server Error"
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:47 GMT",
+                    "vary": "Origin",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\n    \"message\": \"Server Error\"\n}"
+            }
+        },
+        {
+            "test": "Customer details endpoint",
+            "status": "FAIL",
+            "response_code": 500,
+            "message": "",
+            "response": {
+                "status": 500,
+                "data": {
+                    "message": "Server Error"
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:47 GMT",
+                    "vary": "Origin",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\n    \"message\": \"Server Error\"\n}"
+            }
+        },
+        {
+            "test": "Appointments API endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": {
+                        "session_id": "Uc2AF2FkRnZOrmRtAkXJMpLyGBnELudao9B7IWSA",
+                        "has_portal_session": false,
+                        "portal_user_id": null,
+                        "user_found": false,
+                        "is_admin_viewing": null,
+                        "web_user": null
+                    }
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:48 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=Uc2AF2FkRnZOrmRtAkXJMpLyGBnELudao9B7IWSA; expires=Sat, 02 Aug 2025 03:17:48 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":{\"session_id\":\"Uc2AF2FkRnZOrmRtAkXJMpLyGBnELudao9B7IWSA\",\"has_portal_session\":false,\"portal_user_id\":null,\"user_found\":false,\"is_admin_viewing\":null,\"web_user\":null}}"
+            }
+        },
+        {
+            "test": "Create appointment",
+            "status": "FAIL",
+            "response_code": 419,
+            "message": "",
+            "response": {
+                "status": 419,
+                "data": {
+                    "message": "CSRF token mismatch."
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:48 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=KC7kSy2cFCSbrMrQ19mxPV1EHB2ZxxndbsSyKRlH; expires=Sat, 02 Aug 2025 03:17:48 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\n    \"message\": \"CSRF token mismatch.\"\n}"
+            }
+        },
+        {
+            "test": "Update appointment status",
+            "status": "FAIL",
+            "response_code": 419,
+            "message": "",
+            "response": {
+                "status": 419,
+                "data": {
+                    "message": "CSRF token mismatch."
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:48 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=u0tPWvToNbc22otn8di8QuStaz7WkrGTKc4vqRGf; expires=Sat, 02 Aug 2025 03:17:48 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\n    \"message\": \"CSRF token mismatch.\"\n}"
+            }
+        },
+        {
+            "test": "Appointment filters endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": {
+                        "session_id": "WBFBnkoygKopltCvtpwlrip5ntmRUtrESQO3Y2y7",
+                        "has_portal_session": false,
+                        "portal_user_id": null,
+                        "user_found": false,
+                        "is_admin_viewing": null,
+                        "web_user": null
+                    }
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:49 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=WBFBnkoygKopltCvtpwlrip5ntmRUtrESQO3Y2y7; expires=Sat, 02 Aug 2025 03:17:49 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":{\"session_id\":\"WBFBnkoygKopltCvtpwlrip5ntmRUtrESQO3Y2y7\",\"has_portal_session\":false,\"portal_user_id\":null,\"user_found\":false,\"is_admin_viewing\":null,\"web_user\":null}}"
+            }
+        },
+        {
+            "test": "Available slots endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": null
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:49 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=mCa7PorePVYOwag5sp87VVSjOAtlPGLUqSpQfVDC; expires=Sat, 02 Aug 2025 03:17:49 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":null}"
+            }
+        },
+        {
+            "test": "Billing data endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": {
+                        "session_id": "4wk9fdapt724rYNfrw7HH9OaddwUlVoijTNN9mMt",
+                        "has_portal_session": false,
+                        "portal_user_id": null,
+                        "user_found": false,
+                        "is_admin_viewing": null,
+                        "web_user": null
+                    }
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:50 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=4wk9fdapt724rYNfrw7HH9OaddwUlVoijTNN9mMt; expires=Sat, 02 Aug 2025 03:17:50 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":{\"session_id\":\"4wk9fdapt724rYNfrw7HH9OaddwUlVoijTNN9mMt\",\"has_portal_session\":false,\"portal_user_id\":null,\"user_found\":false,\"is_admin_viewing\":null,\"web_user\":null}}"
+            }
+        },
+        {
+            "test": "Billing transactions endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": {
+                        "session_id": "axZCxLxQ19ubDmYmtuZVvNz7tkVGkaWxC5EJfdNr",
+                        "has_portal_session": false,
+                        "portal_user_id": null,
+                        "user_found": false,
+                        "is_admin_viewing": null,
+                        "web_user": null
+                    }
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:50 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=axZCxLxQ19ubDmYmtuZVvNz7tkVGkaWxC5EJfdNr; expires=Sat, 02 Aug 2025 03:17:50 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":{\"session_id\":\"axZCxLxQ19ubDmYmtuZVvNz7tkVGkaWxC5EJfdNr\",\"has_portal_session\":false,\"portal_user_id\":null,\"user_found\":false,\"is_admin_viewing\":null,\"web_user\":null}}"
+            }
+        },
+        {
+            "test": "Billing usage endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": {
+                        "session_id": "CekzwqmQvikz7MuQKry1MpysLaQLw6fKq2pIyXun",
+                        "has_portal_session": false,
+                        "portal_user_id": null,
+                        "user_found": false,
+                        "is_admin_viewing": null,
+                        "web_user": null
+                    }
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:51 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=CekzwqmQvikz7MuQKry1MpysLaQLw6fKq2pIyXun; expires=Sat, 02 Aug 2025 03:17:51 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":{\"session_id\":\"CekzwqmQvikz7MuQKry1MpysLaQLw6fKq2pIyXun\",\"has_portal_session\":false,\"portal_user_id\":null,\"user_found\":false,\"is_admin_viewing\":null,\"web_user\":null}}"
+            }
+        },
+        {
+            "test": "Auto-topup configuration",
+            "status": "FAIL",
+            "response_code": 419,
+            "message": "",
+            "response": {
+                "status": 419,
+                "data": {
+                    "message": "CSRF token mismatch."
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:51 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=7BJMqM16qq5oXIYD8tr08Mw5s4uqIWgOQsHRJHLw; expires=Sat, 02 Aug 2025 03:17:51 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\n    \"message\": \"CSRF token mismatch.\"\n}"
+            }
+        },
+        {
+            "test": "Settings page access",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": null
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:52 GMT",
+                    "set-cookie": "askproai_portal_session=LPPKSrZF3t77CRN4kRvrJIDsmja4hML6Zn0Ymff7; expires=Sat, 02 Aug 2025 03:17:52 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":null}"
+            }
+        },
+        {
+            "test": "Profile update",
+            "status": "FAIL",
+            "response_code": 419,
+            "message": "",
+            "response": {
+                "status": 419,
+                "data": {
+                    "message": "CSRF token mismatch."
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:52 GMT",
+                    "set-cookie": "askproai_portal_session=UdbwsQbakaxicg09zNCnqN6FEMKwHkQoBjw44dbB; expires=Sat, 02 Aug 2025 03:17:52 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\n    \"message\": \"CSRF token mismatch.\"\n}"
+            }
+        },
+        {
+            "test": "Password update",
+            "status": "FAIL",
+            "response_code": 419,
+            "message": "",
+            "response": {
+                "status": 419,
+                "data": {
+                    "message": "CSRF token mismatch."
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:53 GMT",
+                    "set-cookie": "askproai_portal_session=BM9drEODUFjCwaCGVr83S9UX7xa7AvqEzsIuPuJ6; expires=Sat, 02 Aug 2025 03:17:53 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\n    \"message\": \"CSRF token mismatch.\"\n}"
+            }
+        },
+        {
+            "test": "2FA enable endpoint",
+            "status": "FAIL",
+            "response_code": 419,
+            "message": "",
+            "response": {
+                "status": 419,
+                "data": {
+                    "message": "CSRF token mismatch."
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:53 GMT",
+                    "set-cookie": "askproai_portal_session=T4XPkQMwHtBDftF9oDYXJilviWbg9JjflOSR5wXX; expires=Sat, 02 Aug 2025 03:17:53 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\n    \"message\": \"CSRF token mismatch.\"\n}"
+            }
+        },
+        {
+            "test": "Calls API endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": {
+                        "session_id": "yh9X2UnAAb9kalc5kzT8azURTt8RSrCHtx8SjepN",
+                        "has_portal_session": false,
+                        "portal_user_id": null,
+                        "user_found": false,
+                        "is_admin_viewing": null,
+                        "web_user": null
+                    }
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:54 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=yh9X2UnAAb9kalc5kzT8azURTt8RSrCHtx8SjepN; expires=Sat, 02 Aug 2025 03:17:54 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":{\"session_id\":\"yh9X2UnAAb9kalc5kzT8azURTt8RSrCHtx8SjepN\",\"has_portal_session\":false,\"portal_user_id\":null,\"user_found\":false,\"is_admin_viewing\":null,\"web_user\":null}}"
+            }
+        },
+        {
+            "test": "Call details endpoint",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": {
+                        "session_id": "zj4J0Qc5D9UqA9raa0sGb1RbIUTrntAob1R8tImK",
+                        "has_portal_session": false,
+                        "portal_user_id": null,
+                        "user_found": false,
+                        "is_admin_viewing": null,
+                        "web_user": null
+                    }
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:54 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=zj4J0Qc5D9UqA9raa0sGb1RbIUTrntAob1R8tImK; expires=Sat, 02 Aug 2025 03:17:54 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":{\"session_id\":\"zj4J0Qc5D9UqA9raa0sGb1RbIUTrntAob1R8tImK\",\"has_portal_session\":false,\"portal_user_id\":null,\"user_found\":false,\"is_admin_viewing\":null,\"web_user\":null}}"
+            }
+        },
+        {
+            "test": "CORS headers present",
+            "status": "INFO",
+            "response_code": 0,
+            "message": "",
+            "response": {
+                "headers": [
+                    "server",
+                    "content-type",
+                    "allow",
+                    "cache-control",
+                    "date",
+                    "vary",
+                    "x-frame-options",
+                    "x-content-type-options"
+                ]
+            }
+        },
+        {
+            "test": "Rate limiting",
+            "status": "INFO",
+            "response_code": 0,
+            "message": "",
+            "response": {
+                "note": "Rate limiting may not be triggered with test volume"
+            }
+        },
+        {
+            "test": "Unauthorized access protection",
+            "status": "PASS",
+            "response_code": 401,
+            "message": "",
+            "response": {
+                "status": 401,
+                "data": {
+                    "message": "Unauthenticated.",
+                    "debug": null
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:58 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=rZ7AIi5psQ2K8xJPaJUMeTM0FZlnmmGZyX65bc1M; expires=Sat, 02 Aug 2025 03:17:58 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\"message\":\"Unauthenticated.\",\"debug\":null}"
+            }
+        },
+        {
+            "test": "CSRF protection",
+            "status": "PASS",
+            "response_code": 419,
+            "message": "",
+            "response": {
+                "status": 419,
+                "data": {
+                    "message": "CSRF token mismatch."
+                },
+                "headers": {
+                    "server": "nginx\/1.22.1",
+                    "content-type": "application\/json",
+                    "cache-control": "no-cache, private",
+                    "date": "Fri, 01 Aug 2025 19:17:58 GMT",
+                    "vary": "Origin",
+                    "set-cookie": "askproai_portal_session=jOujDgqfWX2xG6CuqCckD7qRP89KRwxgypBklQCd; expires=Sat, 02 Aug 2025 03:17:58 GMT; Max-Age=28800; path=\/; domain=.askproai.de; secure; httponly; samesite=lax",
+                    "x-frame-options": "SAMEORIGIN",
+                    "x-content-type-options": "nosniff"
+                },
+                "raw_body": "{\n    \"message\": \"CSRF token mismatch.\"\n}"
+            }
+        }
+    ]
+}

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Interaction Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            background: #f9fafb;
+        }
+        
+        .test-section {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-button {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        
+        .test-link {
+            color: #1d4ed8;
+            text-decoration: underline;
+            margin: 10px;
+            display: inline-block;
+            cursor: pointer;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fecaca; color: #991b1b; }
+        .info { background: #dbeafe; color: #1e40af; }
+        
+        .result-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel Interaction Test</h1>
+    <p>This page tests the JavaScript fixes for the admin panel interactions.</p>
+    
+    <div class="test-section">
+        <h2>Click Event Tests</h2>
+        <button class="test-button" onclick="testClick('Button 1')">Test Button 1</button>
+        <button class="test-button" onclick="testClick('Button 2')">Test Button 2</button>
+        <a href="#" class="test-link" onclick="testClick('Link'); return false;">Test Link</a>
+        
+        <div class="result-container" id="clickResults">
+            <strong>Click Test Results:</strong>
+            <ul id="clickList"></ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Dropdown Test</h2>
+        <div style="position: relative; display: inline-block;">
+            <button class="test-button" onclick="toggleDropdown()">Toggle Dropdown</button>
+            <div id="testDropdown" style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ccc; border-radius: 4px; min-width: 150px; z-index: 1000;">
+                <div style="padding: 10px; cursor: pointer;" onclick="selectOption('Option 1')">Option 1</div>
+                <div style="padding: 10px; cursor: pointer;" onclick="selectOption('Option 2')">Option 2</div>
+                <div style="padding: 10px; cursor: pointer;" onclick="selectOption('Option 3')">Option 3</div>
+            </div>
+        </div>
+        
+        <div class="result-container" id="dropdownResults">
+            <strong>Dropdown Test Results:</strong>
+            <div id="dropdownStatus">Not tested yet</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>JavaScript Framework Check</h2>
+        <button class="test-button" onclick="checkFrameworks()">Check Frameworks</button>
+        
+        <div class="result-container" id="frameworkResults">
+            <strong>Framework Status:</strong>
+            <div id="frameworkStatus">Click button to check</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Element Clickability Check</h2>
+        <button class="test-button" onclick="checkClickability()">Check Clickability</button>
+        
+        <div class="result-container" id="clickabilityResults">
+            <strong>Clickability Status:</strong>
+            <div id="clickabilityStatus">Click button to check</div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Go to Admin Panel</h2>
+        <a href="/admin" class="test-button" style="text-decoration: none; display: inline-block;">Open Admin Panel</a>
+        <p><small>Use this to test the actual admin panel after running these tests.</small></p>
+    </div>
+
+    <script>
+        let clickCount = 0;
+        
+        function testClick(source) {
+            clickCount++;
+            const list = document.getElementById('clickList');
+            const item = document.createElement('li');
+            item.textContent = `${clickCount}. ${source} clicked at ${new Date().toLocaleTimeString()}`;
+            list.appendChild(item);
+            
+            // Show success status
+            showStatus('Click events are working!', 'success');
+        }
+        
+        function toggleDropdown() {
+            const dropdown = document.getElementById('testDropdown');
+            const isVisible = dropdown.style.display !== 'none';
+            dropdown.style.display = isVisible ? 'none' : 'block';
+            
+            document.getElementById('dropdownStatus').textContent = 
+                `Dropdown is now ${isVisible ? 'closed' : 'open'}`;
+        }
+        
+        function selectOption(option) {
+            document.getElementById('dropdownStatus').textContent = `Selected: ${option}`;
+            document.getElementById('testDropdown').style.display = 'none';
+        }
+        
+        function checkFrameworks() {
+            const results = {
+                Alpine: typeof Alpine !== 'undefined',
+                Livewire: typeof Livewire !== 'undefined',
+                jQuery: typeof $ !== 'undefined',
+                adminUtils: typeof adminUtils !== 'undefined'
+            };
+            
+            let html = '<ul>';
+            for (const [framework, available] of Object.entries(results)) {
+                const status = available ? '✓ Available' : '✗ Not found';
+                const color = available ? 'green' : 'red';
+                html += `<li style="color: ${color}">${framework}: ${status}</li>`;
+            }
+            html += '</ul>';
+            
+            document.getElementById('frameworkStatus').innerHTML = html;
+        }
+        
+        function checkClickability() {
+            const buttons = document.querySelectorAll('button, a, [role="button"]');
+            let blocked = 0;
+            let total = buttons.length;
+            
+            buttons.forEach(el => {
+                const styles = getComputedStyle(el);
+                if (styles.pointerEvents === 'none') {
+                    blocked++;
+                }
+            });
+            
+            const percentage = Math.round(((total - blocked) / total) * 100);
+            const status = blocked === 0 ? 'success' : blocked < total * 0.1 ? 'info' : 'error';
+            
+            document.getElementById('clickabilityStatus').innerHTML = `
+                <div class="${status}">
+                    <strong>Clickability Report:</strong><br>
+                    Total interactive elements: ${total}<br>
+                    Blocked elements: ${blocked}<br>
+                    Working elements: ${total - blocked} (${percentage}%)
+                </div>
+            `;
+        }
+        
+        function showStatus(message, type) {
+            // Create or update a status message
+            let statusDiv = document.getElementById('globalStatus');
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'globalStatus';
+                document.body.insertBefore(statusDiv, document.body.firstChild);
+            }
+            
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#testDropdown') && !e.target.matches('button')) {
+                document.getElementById('testDropdown').style.display = 'none';
+            }
+        });
+        
+        // Initial status
+        document.addEventListener('DOMContentLoaded', () => {
+            showStatus('Test page loaded successfully!', 'info');
+        });
+    </script>
+</body>
+</html>

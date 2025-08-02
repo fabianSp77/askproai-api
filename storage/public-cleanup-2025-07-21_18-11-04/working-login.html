@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working Login - Final Solution</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            margin: 0 0 30px 0;
+            color: #333;
+            text-align: center;
+            font-size: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>🔐 Working Login</h1>
+        
+        <div class="info">
+            ✅ This login bypasses all issues and works directly
+        </div>
+        
+        <form id="loginForm" onsubmit="return false;">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" value="demo@askproai.de" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" value="demo123" required>
+            </div>
+            
+            <button type="submit" id="loginBtn" onclick="doLogin()">Login</button>
+        </form>
+        
+        <div id="message"></div>
+    </div>
+    
+    <script>
+        async function doLogin() {
+            const btn = document.getElementById('loginBtn');
+            const msg = document.getElementById('message');
+            
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+            msg.innerHTML = '';
+            
+            try {
+                const response = await fetch('/final-login-fix.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    msg.className = 'message success';
+                    msg.innerHTML = `
+                        ✅ Login successful!<br>
+                        Welcome ${data.user.name}<br>
+                        <small>Redirecting to dashboard...</small>
+                    `;
+                    
+                    // Store session info
+                    sessionStorage.setItem('portal_user', JSON.stringify(data.user));
+                    sessionStorage.setItem('session_id', data.session_id);
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/business/dashboard';
+                    }, 2000);
+                } else {
+                    msg.className = 'message error';
+                    msg.textContent = `❌ ${data.message}`;
+                }
+            } catch (error) {
+                msg.className = 'message error';
+                msg.textContent = `❌ Error: ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Login';
+            }
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('loginForm').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doLogin();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Login Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #3498db; color: white; border: none; cursor: pointer; }
+        button:hover { background: #2980b9; }
+        pre { background: #f0f0f0; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Direct Login Test (Bypass Normal Flow)</h1>
+    
+    <button onclick="testDirectLogin()">1. Direct Login</button>
+    <button onclick="checkSession()">2. Check Session</button>
+    <button onclick="testProtectedRoute()">3. Test Protected Route</button>
+    
+    <h2>Results:</h2>
+    <pre id="results">Click buttons in order...</pre>
+    
+    <script>
+    async function testDirectLogin() {
+        const results = document.getElementById('results');
+        results.textContent = 'Performing direct login...\n';
+        
+        try {
+            const response = await fetch('/business/test-login-direct', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            results.textContent = '=== Direct Login Result ===\n' + JSON.stringify(data, null, 2);
+            
+            if (data.login_success) {
+                results.innerHTML += '\n\n<span class="success">✅ Login successful!</span>';
+                results.innerHTML += '\n<span class="success">Session ID: ' + data.session_id + '</span>';
+                results.innerHTML += '\n<span class="success">Portal User ID in session: ' + data.session_data.portal_user_id + '</span>';
+            }
+        } catch (error) {
+            results.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function checkSession() {
+        const results = document.getElementById('results');
+        
+        try {
+            const response = await fetch('/business/test-session-check', {
+                credentials: 'same-origin'
+            });
+            
+            const data = await response.json();
+            results.textContent += '\n\n=== Session Check Result ===\n' + JSON.stringify(data, null, 2);
+            
+            if (data.auth_check) {
+                results.innerHTML += '\n\n<span class="success">✅ Auth persisted!</span>';
+            } else {
+                results.innerHTML += '\n\n<span class="error">❌ Auth lost</span>';
+            }
+        } catch (error) {
+            results.innerHTML += '\n\n<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testProtectedRoute() {
+        const results = document.getElementById('results');
+        
+        try {
+            const response = await fetch('/business/calls', {
+                credentials: 'same-origin',
+                redirect: 'manual'
+            });
+            
+            results.textContent += '\n\n=== Protected Route Test ===\n';
+            results.textContent += 'Route: /business/calls\n';
+            results.textContent += 'Status: ' + response.status + '\n';
+            
+            if (response.status === 200) {
+                results.innerHTML += '<span class="success">✅ Access granted!</span>';
+            } else if (response.status === 0 || response.type === 'opaqueredirect') {
+                results.innerHTML += '<span class="error">❌ Redirected (not authenticated)</span>';
+            } else {
+                results.innerHTML += '<span class="error">❌ Status: ' + response.status + '</span>';
+            }
+        } catch (error) {
+            results.innerHTML += '\n\n<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+/**
+ * Unified UI Fixes for AskProAI
+ * Behebt Mobile Menu, Dropdowns, Transparenz und Responsive Design
+ */
+
+/* ============================
+   1. MOBILE MENU FIXES
+   ============================ */
+
+/* Mobile Menu Button - Sichtbar und funktional */
+.fi-topbar-item button[x-on\:click*="sidebarOpen"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 50 !important;
+}
+
+/* Mobile Sidebar - Korrekte Positionierung */
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: var(--sidebar-width, 16rem) !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out !important;
+        z-index: 60 !important;
+        background-color: white !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    body.fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    /* Mobile Overlay - Transparent aber klickbar */
+    body.fi-sidebar-open::before {
+        content: "" !important;
+        position: fixed !important;
+        inset: 0 !important;
+        background-color: rgba(0, 0, 0, 0.3) !important;
+        z-index: 59 !important;
+        cursor: pointer !important;
+    }
+}
+
+/* ============================
+   2. DROPDOWN FIXES
+   ============================ */
+
+/* Dropdown Container */
+[x-data*="dropdown"],
+[data-dropdown] {
+    position: relative !important;
+}
+
+/* Dropdown Menu - Sichtbar wenn offen */
+[x-show="open"],
+[x-show="showDropdown"],
+[x-show="isOpen"] {
+    position: absolute !important;
+    z-index: 50 !important;
+    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    min-width: 200px !important;
+}
+
+/* Alpine.js v3 Kompatibilität */
+[x-on\:click\.outside],
+[x-on\:click\.away] {
+    cursor: pointer !important;
+}
+
+/* Fix für stuck dropdowns */
+.fi-dropdown-panel:not([x-show]) {
+    display: none !important;
+}
+
+/* ============================
+   3. TRANSPARENZ FIXES
+   ============================ */
+
+/* Entferne ungewollte Transparenz */
+.fi-main,
+.fi-page,
+.fi-simple-page,
+.fi-login-panel,
+.fi-card {
+    background-color: white !important;
+    opacity: 1 !important;
+}
+
+/* Dark Mode Anpassungen */
+.dark .fi-main,
+.dark .fi-page,
+.dark .fi-simple-page,
+.dark .fi-login-panel,
+.dark .fi-card {
+    background-color: rgb(17 24 39) !important;
+}
+
+/* Modal/Dialog Hintergründe */
+.fi-modal-window {
+    background-color: white !important;
+    opacity: 1 !important;
+}
+
+.fi-modal-close-overlay {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ============================
+   4. RESPONSIVE DESIGN
+   ============================ */
+
+/* Mobile-First Grid System */
+@media (max-width: 639px) {
+    /* Single column on mobile */
+    .fi-form-component-container {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Full width buttons */
+    .fi-form-actions {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .fi-form-actions > * {
+        width: 100% !important;
+    }
+    
+    /* Responsive tables */
+    .fi-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Stack filters vertically */
+    .fi-filters {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+}
+
+/* Tablet Breakpoint */
+@media (min-width: 640px) and (max-width: 1023px) {
+    .fi-form-component-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Desktop Breakpoint */
+@media (min-width: 1024px) {
+    /* Hide mobile menu button on desktop */
+    .fi-topbar-item button[x-on\:click*="sidebarOpen"] {
+        display: none !important;
+    }
+    
+    /* Sidebar always visible on desktop */
+    .fi-sidebar {
+        position: sticky !important;
+        transform: translateX(0) !important;
+    }
+}
+
+/* ============================
+   5. Z-INDEX HIERARCHIE
+   ============================ */
+
+/* Definiere klare z-index Ebenen */
+:root {
+    --z-base: 1;
+    --z-dropdown: 50;
+    --z-sticky: 55;
+    --z-sidebar-overlay: 59;
+    --z-sidebar: 60;
+    --z-modal-overlay: 70;
+    --z-modal: 80;
+    --z-notification: 90;
+    --z-tooltip: 100;
+}
+
+/* Anwenden der z-index Hierarchie */
+.fi-dropdown-panel { z-index: var(--z-dropdown) !important; }
+.fi-sidebar { z-index: var(--z-sidebar) !important; }
+.fi-modal-close-overlay { z-index: var(--z-modal-overlay) !important; }
+.fi-modal-window { z-index: var(--z-modal) !important; }
+.fi-notification { z-index: var(--z-notification) !important; }
+.fi-tooltip { z-index: var(--z-tooltip) !important; }
+
+/* ============================
+   6. TOUCH SUPPORT
+   ============================ */
+
+/* Vergrößere Touch-Targets für Mobile */
+@media (max-width: 1023px) {
+    button,
+    a,
+    [role="button"],
+    .fi-link,
+    .fi-table-row {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Mehr Abstand zwischen klickbaren Elementen */
+    .fi-table-actions,
+    .fi-form-actions {
+        gap: 0.75rem !important;
+    }
+}
+
+/* ============================
+   7. PERFORMANCE OPTIMIERUNGEN
+   ============================ */
+
+/* Respect reduced motion preference without breaking functionality */
+@media (prefers-reduced-motion: reduce) {
+    /* Only reduce decorative animations, not functional ones */
+    .animate-spin,
+    .animate-pulse,
+    .animate-bounce {
+        animation: none !important;
+    }
+    
+    /* Keep functional transitions but make them instant */
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.1s !important;
+    }
+    
+    /* Ensure dropdowns and modals still work */
+    .fi-dropdown-panel,
+    .fi-modal,
+    [x-transition] {
+        transition-duration: 0.15s !important;
+    }
+}
+
+/* Hardware-Acceleration für Transitions */
+.fi-sidebar,
+.fi-dropdown-panel,
+.fi-modal-window {
+    will-change: transform, opacity;
+}
+
+/* ============================
+   8. ACCESSIBILITY
+   ============================ */
+
+/* Focus Styles */
+:focus-visible {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+}
+
+/* Skip Links */
+.skip-link {
+    position: absolute !important;
+    left: -9999px !important;
+    z-index: 999 !important;
+}
+
+.skip-link:focus {
+    position: fixed !important;
+    top: 10px !important;
+    left: 10px !important;
+    z-index: 999 !important;
+    padding: 1rem !important;
+    background: white !important;
+    border: 2px solid #3b82f6 !important;
+}
+
+/* ============================
+   9. FILAMENT-SPEZIFISCHE FIXES
+   ============================ */
+
+/* Fix für Filament Modals */
+.fi-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    overflow-y: auto !important;
+}
+
+/* Fix für Filament Notifications */
+.fi-notification-close-button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Fix für Filament Tables */
+.fi-table-header-cell,
+.fi-table-cell {
+    white-space: nowrap !important;
+}
+
+@media (max-width: 639px) {
+    .fi-table-header-cell,
+    .fi-table-cell {
+        white-space: normal !important;
+    }
+}
+
+/* ============================
+   10. UTILITY CLASSES
+   ============================ */
+
+/* Mobile-Only */
+@media (min-width: 1024px) {
+    .mobile-only {
+        display: none !important;
+    }
+}
+
+/* Desktop-Only */
+@media (max-width: 1023px) {
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+/* Debugging Helpers */
+.debug-border {
+    border: 2px solid red !important;
+}
+
+.debug-overlays body::before,
+.debug-overlays body::after,
+.debug-overlays *::before,
+.debug-overlays *::after {
+    background-color: rgba(255, 0, 0, 0.2) !important;
+}

@@ -4,29 +4,40 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 
 /**
- * Configure Portal-specific session settings
+ * Business Portal Session Configuration
+ * 
+ * Configures session settings specifically for the business portal
+ * to prevent conflicts with the admin portal.
  */
 class PortalSessionConfig
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
-        // Load portal-specific session configuration
-        $portalConfig = config('session_portal');
-        
-        if ($portalConfig) {
-            // Override default session configuration
-            foreach ($portalConfig as $key => $value) {
-                Config::set('session.' . $key, $value);
+        // Only configure if session hasn't started yet
+        if (!session()->isStarted()) {
+            // Portal-specific session configuration
+            $sessionConfig = [
+                'driver' => env('SESSION_DRIVER', 'redis'),
+                'lifetime' => 480, // 8 hours for portal
+                'expire_on_close' => false,
+                'encrypt' => env('SESSION_ENCRYPT', true),
+                'cookie' => env('PORTAL_SESSION_COOKIE', 'askproai_portal_session'),
+                'path' => '/',
+                'domain' => env('SESSION_DOMAIN', '.askproai.de'),
+                'secure' => $request->secure(), // Auto-detect HTTPS
+                'http_only' => true,
+                'same_site' => 'lax',
+                'files' => storage_path('framework/sessions'),
+            ];
+            
+            // Apply configuration BEFORE session starts
+            foreach ($sessionConfig as $key => $value) {
+                config(["session.$key" => $value]);
             }
         }
         

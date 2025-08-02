@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Responsive Table Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .viewport-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #000;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 9999;
+            font-size: 14px;
+        }
+        .test-buttons {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .test-buttons button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-buttons button:hover {
+            background: #2563eb;
+        }
+        .breakpoint-indicator {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f3f4f6;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .desktop { background: #10b981; color: white; }
+        .tablet { background: #f59e0b; color: white; }
+        .mobile { background: #ef4444; color: white; }
+        .small-mobile { background: #8b5cf6; color: white; }
+    </style>
+</head>
+<body>
+    <div class="viewport-info">
+        <div id="viewport-size">Width: 0px</div>
+        <div id="breakpoint">Breakpoint: </div>
+    </div>
+
+    <h1>Responsive Table Test</h1>
+    
+    <div id="breakpoint-indicator" class="breakpoint-indicator">
+        Current Breakpoint: Loading...
+    </div>
+
+    <div class="test-buttons">
+        <button onclick="setViewport(1440)">Desktop (1440px)</button>
+        <button onclick="setViewport(1024)">Large Tablet (1024px)</button>
+        <button onclick="setViewport(768)">Tablet (768px)</button>
+        <button onclick="setViewport(480)">Mobile (480px)</button>
+        <button onclick="setViewport(375)">iPhone (375px)</button>
+        <button onclick="window.location.href='/admin/calls'">Go to Calls</button>
+    </div>
+
+    <script>
+        function updateViewportInfo() {
+            const width = window.innerWidth;
+            document.getElementById('viewport-size').textContent = `Width: ${width}px`;
+            
+            let breakpoint = '';
+            let className = '';
+            
+            if (width >= 1280) {
+                breakpoint = 'Desktop (1280px+)';
+                className = 'desktop';
+            } else if (width >= 1024) {
+                breakpoint = 'Large Tablet (1024-1279px)';
+                className = 'tablet';
+            } else if (width >= 768) {
+                breakpoint = 'Tablet (768-1023px)';
+                className = 'tablet';
+            } else if (width >= 480) {
+                breakpoint = 'Mobile (480-767px)';
+                className = 'mobile';
+            } else {
+                breakpoint = 'Small Mobile (<480px)';
+                className = 'small-mobile';
+            }
+            
+            document.getElementById('breakpoint').textContent = `Breakpoint: ${breakpoint}`;
+            
+            const indicator = document.getElementById('breakpoint-indicator');
+            indicator.textContent = `Current Breakpoint: ${breakpoint}`;
+            indicator.className = `breakpoint-indicator ${className}`;
+        }
+
+        function setViewport(width) {
+            // This won't actually resize the browser, but shows what size to test
+            alert(`Please resize your browser to ${width}px width to test this breakpoint.\n\nAlternatively, use Chrome DevTools (F12) > Toggle device toolbar (Ctrl+Shift+M)`);
+        }
+
+        // Initial update
+        updateViewportInfo();
+        
+        // Update on resize
+        window.addEventListener('resize', updateViewportInfo);
+        
+        // Test responsive by opening calls page in iframe at different sizes
+        if (window.location.search.includes('test=true')) {
+            document.body.innerHTML += `
+                <div style="margin-top: 40px;">
+                    <h2>Live Preview</h2>
+                    <iframe src="/admin/calls" style="width: 100%; height: 600px; border: 2px solid #ccc; border-radius: 8px;"></iframe>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

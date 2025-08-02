@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('staff', function (Blueprint $table) {
-            // Add is_active column if it doesn't exist
-            if (!Schema::hasColumn('staff', 'is_active')) {
-                $table->boolean('is_active')->default(true)->after('working_hours');
-                $table->index('is_active');
-            }
-        });
+        // Only run if staff table exists
+        if (Schema::hasTable('staff')) {
+            Schema::table('staff', function (Blueprint $table) {
+                // Add is_active column if it doesn't exist
+                if (!Schema::hasColumn('staff', 'is_active')) {
+                    $table->boolean('is_active')->default(true);
+                    $table->index('is_active');
+                }
+            });
+        }
     }
 
     /**
@@ -25,9 +28,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('staff', function (Blueprint $table) {
-            $table->dropIndex(['is_active']);
-            $table->dropColumn('is_active');
-        });
+        if (Schema::hasTable('staff') && Schema::hasColumn('staff', 'is_active')) {
+            Schema::table('staff', function (Blueprint $table) {
+                $table->dropIndex(['is_active']);
+                $table->dropColumn('is_active');
+            });
+        }
     }
 };

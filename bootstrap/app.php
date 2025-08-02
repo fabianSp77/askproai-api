@@ -61,9 +61,9 @@ return Application::configure(basePath: dirname(__DIR__))
         /* ---------------------------------------------------------
          |  Global Middleware (runs on every request)
          * -------------------------------------------------------- */
-        // Use Laravel's default StartSession middleware
-        // Note: FixStartSession was removed as it was causing authentication failures
-
+        // UnifiedSessionConfig removed - causing session conflicts
+        // Each portal now manages its own session configuration
+        
         // Add middleware in reverse order since prepend adds to the beginning
         $middleware->prepend(App\Http\Middleware\TrustProxies::class);
         // $middleware->prepend(\App\Http\Middleware\EnsureProperResponseFormat::class);
@@ -92,46 +92,45 @@ return Application::configure(basePath: dirname(__DIR__))
             Illuminate\Routing\Middleware\SubstituteBindings::class,
             App\Http\Middleware\HandleInertiaRequests::class,
         ]);
-
+        
         /* ---------------------------------------------------------
-         |  PORTAL-Gruppe  (Business Portal specific middleware)
+         |  ADMIN-Gruppe  (Admin Portal specific middleware)
+         * -------------------------------------------------------- */
+        $middleware->group('admin', [
+            // Extend web middleware group instead of redefining
+            'web',
+        ]);
+
+                /* ---------------------------------------------------------
+         |  PORTAL-Gruppe  (Business Portal - SIMPLIFIED)
          * -------------------------------------------------------- */
         $middleware->group('portal', [
+            // Extend web middleware group instead of redefining
+            'web',
+        ]);
+
+                /* ---------------------------------------------------------
+         |  BUSINESS-PORTAL-Gruppe  (Business Portal specific)
+         * -------------------------------------------------------- */
+        $middleware->group('business-portal', [
             App\Http\Middleware\EncryptCookies::class,
             Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             Illuminate\Session\Middleware\StartSession::class,
             Illuminate\View\Middleware\ShareErrorsFromSession::class,
             App\Http\Middleware\VerifyCsrfToken::class,
             Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ]);
-
-        /* ---------------------------------------------------------
-         |  BUSINESS-PORTAL-Gruppe  (Business Portal specific middleware)
-         * -------------------------------------------------------- */
-        $middleware->group('business-portal', [
-            Illuminate\Cookie\Middleware\EncryptCookies::class,
-            Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            Illuminate\Session\Middleware\StartSession::class,
-            // DISABLED: PortalSessionConfig causes issues when changing session config after start
-            // \App\Http\Middleware\PortalSessionConfig::class,
-            App\Http\Middleware\SharePortalSession::class, // CRITICAL: Restore auth from session
-            App\Http\Middleware\FixSessionPersistence::class, // Force session save
-            // REMOVED: \App\Http\Middleware\RefreshCsrfTokenForPortal::class, // Duplicate CSRF handling
-            Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            // CSRF is needed even though it's disabled for business/* - for proper token generation
-            App\Http\Middleware\VerifyCsrfToken::class,
-            Illuminate\Routing\Middleware\SubstituteBindings::class,
+            App\Http\Middleware\HandleInertiaRequests::class,
         ]);
 
         /* ---------------------------------------------------------
          |  BUSINESS-API-Gruppe  (Business API specific middleware)
          * -------------------------------------------------------- */
         $middleware->group('business-api', [
+            // Removed PortalSessionConfig - causing issues
+            App\Http\Middleware\IsolatePortalAuth::class, // Isolate from admin auth
             Illuminate\Cookie\Middleware\EncryptCookies::class,
             Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             Illuminate\Session\Middleware\StartSession::class,
-            // DISABLED: PortalSessionConfig causes issues when changing session config after start
-            // \App\Http\Middleware\PortalSessionConfig::class,
             App\Http\Middleware\SharePortalSession::class,
             // DISABLED: DemoModeAuth was causing conflicts
             // \App\Http\Middleware\DemoModeAuth::class,
@@ -204,7 +203,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'validate.retell' => App\Http\Middleware\ValidateRetellInput::class,
 
             /* 🏢 Portal Middleware */
-            'portal.auth' => App\Http\Middleware\PortalAuthenticate::class,
+            'portal.auth' => App\Http\Middleware\PortalAuth::class,
             'portal.auth.api' => App\Http\Middleware\PortalApiAuth::class,
             'portal.permission' => App\Http\Middleware\PortalPermission::class,
             'portal.api.cors' => App\Http\Middleware\PortalApiCors::class,

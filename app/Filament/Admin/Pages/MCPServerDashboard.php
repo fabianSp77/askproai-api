@@ -21,6 +21,17 @@ class MCPServerDashboard extends Page
     protected static string $view = 'filament.admin.pages.mcp-server-dashboard';
     protected static ?string $slug = 'mcp-servers';
     
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->hasRole(['Super Admin', 'super_admin', 'developer']) || $user->email === 'dev@askproai.de');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+    
     public array $internalServers = [];
     public array $externalServers = [];
     public array $integrations = [];

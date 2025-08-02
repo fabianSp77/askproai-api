@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .login-form { max-width: 400px; margin: 0 auto; }
+        input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+        .results { margin-top: 20px; padding: 20px; background: #f5f5f5; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="login-form">
+        <h1>Admin Login Test</h1>
+        
+        <p>Test-Account: demo@askproai.de</p>
+        
+        <input type="email" id="email" placeholder="Email" value="demo@askproai.de">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="testLogin()">Login</button>
+        
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const results = document.getElementById('results');
+            
+            results.innerHTML = 'Logging in...';
+            
+            try {
+                // Step 1: Get CSRF token
+                const tokenResponse = await fetch('/api/test-session');
+                const tokenData = await tokenResponse.json();
+                
+                results.innerHTML += '<p>CSRF Token: ' + tokenData.csrf_token.substring(0, 20) + '...</p>';
+                
+                // Step 2: Try to login
+                const loginResponse = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': tokenData.csrf_token,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                results.innerHTML += '<p>Login Response: ' + loginResponse.status + '</p>';
+                
+                if (loginResponse.ok) {
+                    results.innerHTML += '<p class="success">Login successful!</p>';
+                    
+                    // Test access to admin
+                    const adminResponse = await fetch('/admin/calls', {
+                        credentials: 'include'
+                    });
+                    
+                    results.innerHTML += '<p>Admin/calls access: ' + adminResponse.status + '</p>';
+                    
+                    if (adminResponse.ok) {
+                        results.innerHTML += '<p class="success">✅ Full access granted!</p>';
+                        results.innerHTML += '<p><a href="/admin" target="_blank">Open Admin Panel</a></p>';
+                    }
+                } else {
+                    const error = await loginResponse.text();
+                    results.innerHTML += '<p class="error">Login failed: ' + error + '</p>';
+                }
+                
+            } catch (error) {
+                results.innerHTML += '<p class="error">Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // Check current session status
+        window.onload = async function() {
+            const response = await fetch('/api/test-session');
+            const data = await response.json();
+            
+            document.getElementById('results').innerHTML = 
+                '<p>Session Status: ' + (data.authenticated ? 'Logged In' : 'Not Logged In') + '</p>' +
+                '<p>Session Cookie: ' + (document.cookie.includes('askproai_session') ? '✅' : '❌') + '</p>';
+        };
+    </script>
+</body>
+</html>

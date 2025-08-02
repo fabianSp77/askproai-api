@@ -13,7 +13,12 @@ use Filament\Tables\Table;
 
 class ServiceResource extends Resource
 {
-    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    protected static ?string $navigationGroup = null;
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.system');
+    }
 
     protected static ?int $navigationSort = 40;
 
@@ -112,7 +117,12 @@ class ServiceResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
 
-    protected static ?string $navigationLabel = 'Leistungen';
+    protected static ?string $navigationLabel = null;
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.services');
+    }
 
     public static function form(Form $form): Form
     {

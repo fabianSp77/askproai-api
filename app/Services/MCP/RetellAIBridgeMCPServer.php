@@ -9,7 +9,7 @@ use App\Models\Customer;
 use App\Models\RetellAICallCampaign;
 use App\Services\AgentSelectionService;
 use App\Services\PhoneNumberResolver;
-use App\Services\RetellMCPServer;
+use App\Services\MCP\RetellMCPServer;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;

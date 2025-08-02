@@ -321,9 +321,10 @@ class Dashboard extends FilamentDashboard
         $widgets = [];
 
         // Show MultiCompanyOverviewWidget only for Super Admins
-        if (auth()->user()?->hasRole('Super Admin')) {
-            $widgets[] = \App\Filament\Admin\Widgets\MultiCompanyOverviewWidget::class;
-        }
+        // TEMPORÄR DEAKTIVIERT: Widget erscheint als ungewolltes Overlay
+        // if (auth()->user()?->hasRole('Super Admin')) {
+        //     $widgets[] = \App\Filament\Admin\Widgets\MultiCompanyOverviewWidget::class;
+        // }
 
         // Regular widgets
         $widgets = array_merge($widgets, [

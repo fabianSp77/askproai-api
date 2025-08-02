@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manual Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Business Portal Manual Login Test</h1>
+    
+    <div class="section">
+        <h2>Step 1: Login</h2>
+        <button onclick="performLogin()">Login as Demo User</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Step 2: Test Protected Routes</h2>
+        <button onclick="testRoutes()" disabled id="test-routes-btn">Test Routes</button>
+        <div id="routes-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Step 3: Direct Links</h2>
+        <p>Try these links after login:</p>
+        <ul>
+            <li><a href="/business/dashboard" target="_blank">Dashboard</a></li>
+            <li><a href="/business/calls" target="_blank">Calls</a></li>
+            <li><a href="/business/appointments" target="_blank">Appointments</a></li>
+            <li><a href="/business/test/session" target="_blank">Session Info</a></li>
+        </ul>
+    </div>
+    
+    <script>
+    async function performLogin() {
+        const resultDiv = document.getElementById('login-result');
+        resultDiv.innerHTML = '<p>Logging in...</p>';
+        
+        try {
+            // Get CSRF token
+            const loginPageResponse = await fetch('/business/login');
+            const loginPageHtml = await loginPageResponse.text();
+            const csrfMatch = loginPageHtml.match(/<meta name="csrf-token" content="([^"]+)"/);
+            const csrfToken = csrfMatch ? csrfMatch[1] : '';
+            
+            // Submit login
+            const formData = new FormData();
+            formData.append('email', 'demo@askproai.de');
+            formData.append('password', 'demo2024');
+            formData.append('_token', csrfToken);
+            
+            const loginResponse = await fetch('/business/login', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                redirect: 'manual'
+            });
+            
+            if (loginResponse.status === 302 || loginResponse.type === 'opaqueredirect') {
+                resultDiv.className = 'section success';
+                resultDiv.innerHTML = '<p>✅ Login successful! Redirected to dashboard.</p>';
+                document.getElementById('test-routes-btn').disabled = false;
+                
+                // Wait a moment then load dashboard
+                setTimeout(() => {
+                    window.open('/business/dashboard', '_blank');
+                }, 1000);
+            } else {
+                resultDiv.className = 'section error';
+                resultDiv.innerHTML = `<p>❌ Login failed: HTTP ${loginResponse.status}</p>`;
+            }
+        } catch (error) {
+            resultDiv.className = 'section error';
+            resultDiv.innerHTML = `<p>❌ Error: ${error.message}</p>`;
+        }
+    }
+    
+    async function testRoutes() {
+        const resultDiv = document.getElementById('routes-result');
+        resultDiv.innerHTML = '<p>Testing routes...</p>';
+        
+        const routes = [
+            '/business/dashboard',
+            '/business/calls',
+            '/business/appointments',
+            '/business/api/user',
+            '/business/api/dashboard',
+            '/business/test/session'
+        ];
+        
+        let html = '<h3>Route Test Results:</h3><ul>';
+        
+        for (const route of routes) {
+            try {
+                const response = await fetch(route, {
+                    credentials: 'same-origin',
+                    redirect: 'manual'
+                });
+                
+                if (response.status === 200) {
+                    html += `<li>✅ ${route} - HTTP 200</li>`;
+                } else if (response.status === 0 || response.type === 'opaqueredirect') {
+                    html += `<li>❌ ${route} - Redirect (not authenticated)</li>`;
+                } else {
+                    html += `<li>⚠️ ${route} - HTTP ${response.status}</li>`;
+                }
+            } catch (error) {
+                html += `<li>❌ ${route} - Error: ${error.message}</li>`;
+            }
+        }
+        
+        html += '</ul>';
+        resultDiv.innerHTML = html;
+    }
+    </script>
+</body>
+</html>

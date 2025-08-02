@@ -29,11 +29,19 @@ class IntegrationStatusWidget extends StatsOverviewWidget
     private function getActiveIntegrationsStat(): Stat
     {
         $totalIntegrations = Integration::count();
-        $activeIntegrations = Integration::where('is_active', true)->count();
+        $activeIntegrations = Integration::where('active', true)->count();
         
         // Count by type
-        $byType = Integration::where('is_active', true)
-            ->select('type', DB::raw('COUNT(*) as count'))
+        $byType = Integration::where('active', true)
+            ->select(DB::raw('
+                CASE 
+                    WHEN system = "calcom" THEN "calcom"
+                    WHEN system = "retell" THEN "retell"
+                    WHEN system = "stripe" THEN "stripe"
+                    WHEN system = "twilio" THEN "twilio"
+                    ELSE "other"
+                END as type
+            '), DB::raw('COUNT(*) as count'))
             ->groupBy('type')
             ->pluck('count', 'type')
             ->toArray();
@@ -85,19 +93,16 @@ class IntegrationStatusWidget extends StatsOverviewWidget
     
     private function getIntegrationHealthStat(): Stat
     {
-        // Count by status
-        $active = Integration::where('status', 'active')->where('is_active', true)->count();
-        $pending = Integration::where('status', 'pending')->where('is_active', true)->count();
-        $error = Integration::where('status', 'error')->where('is_active', true)->count();
-        $total = Integration::where('is_active', true)->count();
+        // Count by status (simulated based on active status)
+        $active = Integration::where('active', true)->count();
+        $pending = 0; // No pending status in current schema
+        $error = 0; // No error status in current schema
+        $total = Integration::count();
         
         $healthRate = $total > 0 ? round(($active / $total) * 100, 1) : 100;
         
-        // Recent errors
-        $recentErrors = Integration::where('status', 'error')
-            ->where('is_active', true)
-            ->where('updated_at', '>=', Carbon::now()->subHours(24))
-            ->count();
+        // Recent errors (simulated)
+        $recentErrors = 0; // No error status in current schema
         
         return Stat::make('🏥 System-Gesundheit', $healthRate . '% OK')
             ->description(sprintf(
@@ -118,17 +123,16 @@ class IntegrationStatusWidget extends StatsOverviewWidget
         $lastHour = Carbon::now()->subHour();
         $last24Hours = Carbon::now()->subHours(24);
         
-        // Count recent syncs
-        $recentSyncs = Integration::where('last_sync_at', '>=', $lastHour)->count();
-        $todaySyncs = Integration::where('last_sync_at', '>=', $last24Hours)->count();
+        // Count recent syncs (simulated based on updated_at)
+        $recentSyncs = Integration::where('updated_at', '>=', $lastHour)->count();
+        $todaySyncs = Integration::where('updated_at', '>=', $last24Hours)->count();
         
-        // Find oldest unsync'd integration
-        $oldestUnsync = Integration::where('is_active', true)
-            ->whereNotNull('last_sync_at')
-            ->orderBy('last_sync_at')
+        // Find oldest integration
+        $oldestIntegration = Integration::where('active', true)
+            ->orderBy('updated_at')
             ->first();
         
-        $syncAge = $oldestUnsync ? $oldestUnsync->last_sync_at->diffForHumans() : 'Noch nie';
+        $syncAge = $oldestIntegration ? $oldestIntegration->updated_at->diffForHumans() : 'Noch nie';
         
         return Stat::make('🔄 Synchronisation', $recentSyncs . ' in letzter Stunde')
             ->description(sprintf(

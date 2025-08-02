@@ -1,0 +1,65 @@
+<style>
+/* Login Button Fix for Filament Admin Panel */
+.fi-btn-primary,
+.fi-btn.fi-btn-color-primary,
+button[type="submit"].fi-btn {
+    background-color: rgb(251, 191, 36) !important;
+    color: rgb(0, 0, 0) !important;
+    border: 1px solid rgb(217, 119, 6) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.fi-btn-primary:hover,
+.fi-btn.fi-btn-color-primary:hover,
+button[type="submit"].fi-btn:hover {
+    background-color: rgb(245, 158, 11) !important;
+    color: rgb(0, 0, 0) !important;
+    transform: translateY(-1px);
+}
+
+.fi-btn-primary:focus,
+.fi-btn.fi-btn-color-primary:focus,
+button[type="submit"].fi-btn:focus {
+    outline: 2px solid rgb(251, 191, 36) !important;
+    outline-offset: 2px !important;
+}
+
+.fi-btn-label {
+    color: inherit !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+}
+
+.fi-btn-primary:disabled,
+.fi-btn.fi-btn-color-primary:disabled {
+    background-color: rgb(251, 191, 36) !important;
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
+}
+
+#form button[type="submit"],
+.fi-login button[type="submit"],
+form[wire\:submit="authenticate"] button[type="submit"] {
+    background-color: rgb(251, 191, 36) !important;
+    color: rgb(0, 0, 0) !important;
+    border: 1px solid rgb(217, 119, 6) !important;
+    padding: 0.625rem 1.25rem !important;
+    font-weight: 600 !important;
+    border-radius: 0.5rem !important;
+    transition: all 0.2s !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2.5rem !important;
+}
+
+.dark .fi-btn-primary,
+.dark .fi-btn.fi-btn-color-primary,
+.dark button[type="submit"].fi-btn {
+    background-color: rgb(251, 191, 36) !important;
+    color: rgb(0, 0, 0) !important;
+    border-color: rgb(217, 119, 6) !important;
+}
+</style>

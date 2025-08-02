@@ -1,0 +1,118 @@
+/* ================================================================
+   TARGETED FIXES FOR BLACK SCREEN & ICON ISSUES
+   GitHub Issues: #427, #428, #429
+   Created: 2025-07-29
+   
+   This replaces the overly aggressive critical-fixes.css
+   ================================================================ */
+
+/* ================================================================
+   1. SPECIFIC SIDEBAR OVERLAY FIX
+   ================================================================ */
+
+/* Remove sidebar overlay on desktop only */
+@media (min-width: 1024px) {
+    /* Target only the problematic sidebar overlay */
+    body.fi-sidebar-open::before {
+        display: none !important;
+    }
+    
+    /* Ensure body remains scrollable */
+    body.fi-sidebar-open {
+        overflow: visible !important;
+    }
+}
+
+/* Mobile: Ensure overlay is clickable to close sidebar */
+@media (max-width: 1023px) {
+    body.fi-sidebar-open::before {
+        cursor: pointer;
+    }
+}
+
+/* ================================================================
+   2. TARGETED ICON SIZE FIXES
+   ================================================================ */
+
+/* Standard Filament icon containers */
+.fi-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Sidebar navigation icons */
+.fi-sidebar-item-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Table action icons - slightly smaller */
+.fi-ta-icon svg,
+.fi-ta-icon-btn svg {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+/* Icon buttons */
+.fi-icon-btn svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Large icons for special cases */
+.fi-empty-state-icon svg,
+.fi-modal-icon svg,
+.fi-section-header-icon svg {
+    width: 3rem !important;
+    height: 3rem !important;
+}
+
+/* Widget icons */
+.fi-wi-icon svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+}
+
+/* Badge icons */
+.fi-badge svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+}
+
+/* ================================================================
+   3. LOGIN FORM PROTECTION
+   ================================================================ */
+
+/* Ensure login forms are never blocked */
+.fi-simple-page,
+.fi-login-panel {
+    position: relative;
+    z-index: 50;
+}
+
+/* ================================================================
+   4. PRESERVE UI ELEMENTS
+   ================================================================ */
+
+/* Ensure these elements maintain their intended styles */
+.fi-badge::before,
+.fi-badge::after,
+.fi-indicator::before,
+.fi-loading-indicator::after,
+input[type="checkbox"]::before,
+input[type="radio"]::before,
+.fi-switch-toggle::before {
+    /* Let them use their original positioning */
+    position: absolute;
+}
+
+/* ================================================================
+   5. SAFE OVERRIDES ONLY
+   ================================================================ */
+
+/* Only override where absolutely necessary */
+.fi-main-ctn {
+    /* Ensure main content is always visible */
+    opacity: 1 !important;
+    visibility: visible !important;
+}

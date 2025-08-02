@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test with CSRF</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .box { padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Login Test with CSRF Token</h1>
+    
+    <button onclick="getCSRF()">1. Get CSRF Token</button>
+    <button onclick="testLogin()">2. Test Login</button>
+    <button onclick="testDirectPost()">3. Test Direct POST (No CSRF)</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        let csrfToken = null;
+        
+        async function getCSRF() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="box info">Getting CSRF token...</div>';
+            
+            try {
+                // First, get the CSRF cookie by visiting a page
+                await fetch('/sanctum/csrf-cookie', {
+                    credentials: 'include'
+                });
+                
+                // Check for XSRF-TOKEN cookie
+                const xsrfToken = getCookie('XSRF-TOKEN');
+                if (xsrfToken) {
+                    csrfToken = decodeURIComponent(xsrfToken);
+                    result.innerHTML = `
+                        <div class="box success">
+                            <h3>✅ CSRF Token obtained!</h3>
+                            <p>Token: ${csrfToken.substring(0, 20)}...</p>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = '<div class="box error">❌ No XSRF-TOKEN cookie found</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="box error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testLogin() {
+            const result = document.getElementById('result');
+            
+            if (!csrfToken) {
+                result.innerHTML = '<div class="box error">Please get CSRF token first!</div>';
+                return;
+            }
+            
+            result.innerHTML = '<div class="box info">Testing login with CSRF token...</div>';
+            
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-XSRF-TOKEN': csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                result.innerHTML = `
+                    <div class="box ${response.ok ? 'success' : 'error'}">
+                        <h3>Response (${response.status})</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `<div class="box error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testDirectPost() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="box info">Testing without CSRF token...</div>';
+            
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+                
+                const text = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    data = { raw: text };
+                }
+                
+                result.innerHTML = `
+                    <div class="box ${response.ok ? 'success' : 'error'}">
+                        <h3>Response (${response.status})</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                result.innerHTML = `<div class="box error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+    </script>
+</body>
+</html>

@@ -24,7 +24,7 @@
                                             {{ $recommendation['type'] === 'calls' ? 'Anrufe' : 'Termine' }}
                                         </h4>
                                         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                            {{ $recommendation['reason'] }}
+                                            {{ $recommendation['reason'] ?? 'Sync empfohlen' }}
                                         </p>
                                     </div>
                                     <span class="ml-3 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium {{ $recommendation['priority'] === 'high' ? 'bg-danger-100 text-danger-700' : 'bg-primary-100 text-primary-700' }}">

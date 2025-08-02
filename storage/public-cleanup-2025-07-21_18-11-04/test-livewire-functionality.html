@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livewire Functionality Test</title>
+    <meta name="csrf-token" content="">
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #333; color: #fff; padding: 10px; overflow: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Livewire & Session Test</h1>
+
+    <div class="test-section">
+        <h2>1. Cookie & Session Test</h2>
+        <button onclick="testCookies()">Test Cookies</button>
+        <button onclick="testSession()">Test Session</button>
+        <div id="cookie-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. CSRF Token Test</h2>
+        <button onclick="fetchCSRFToken()">Fetch CSRF Token</button>
+        <div id="csrf-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Admin Access Test</h2>
+        <button onclick="testAdminAccess()">Test Admin Pages</button>
+        <div id="admin-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Livewire Component Test</h2>
+        <button onclick="testLivewire()">Test Livewire Request</button>
+        <div id="livewire-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Browser Console Monitor</h2>
+        <pre id="console-log"></pre>
+    </div>
+
+    <script>
+        // Capture console errors
+        const consoleLog = document.getElementById('console-log');
+        const originalError = console.error;
+        console.error = function(...args) {
+            consoleLog.innerHTML += `ERROR: ${args.join(' ')}\n`;
+            originalError.apply(console, args);
+        };
+
+        function testCookies() {
+            const results = document.getElementById('cookie-results');
+            results.innerHTML = '<h3>Cookie Test:</h3>';
+            
+            // Test setting a cookie
+            document.cookie = "test_cookie=test_value; path=/; samesite=lax";
+            
+            // Read all cookies
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            results.innerHTML += '<pre>' + JSON.stringify(cookies, null, 2) + '</pre>';
+            
+            // Check for important cookies
+            const hasSessionCookie = cookies.some(c => c.includes('askproai_session'));
+            const hasXSRF = cookies.some(c => c.includes('XSRF-TOKEN'));
+            
+            results.innerHTML += `<p class="${hasSessionCookie ? 'success' : 'error'}">Session Cookie: ${hasSessionCookie ? '✅' : '❌'}</p>`;
+            results.innerHTML += `<p class="${hasXSRF ? 'success' : 'error'}">XSRF Token Cookie: ${hasXSRF ? '✅' : '❌'}</p>`;
+        }
+
+        function testSession() {
+            const results = document.getElementById('cookie-results');
+            
+            axios.get('/api/test-session', {
+                withCredentials: true
+            })
+            .then(response => {
+                results.innerHTML += '<h3>Session Test Success:</h3>';
+                results.innerHTML += '<pre>' + JSON.stringify(response.data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                results.innerHTML += '<h3 class="error">Session Test Failed:</h3>';
+                results.innerHTML += '<pre>' + JSON.stringify(error.response?.data || error.message, null, 2) + '</pre>';
+            });
+        }
+
+        function fetchCSRFToken() {
+            const results = document.getElementById('csrf-results');
+            
+            // Try to get CSRF token from meta tag
+            let token = document.querySelector('meta[name="csrf-token"]')?.content;
+            
+            if (!token) {
+                // Try to get from cookie
+                const xsrfCookie = document.cookie.split(';').find(c => c.trim().startsWith('XSRF-TOKEN='));
+                if (xsrfCookie) {
+                    token = decodeURIComponent(xsrfCookie.split('=')[1]);
+                }
+            }
+            
+            results.innerHTML = '<h3>CSRF Token:</h3>';
+            if (token) {
+                results.innerHTML += `<p class="success">Token found: ${token.substring(0, 20)}...</p>`;
+                // Set it for axios
+                axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
+            } else {
+                results.innerHTML += '<p class="error">No CSRF token found!</p>';
+            }
+        }
+
+        function testAdminAccess() {
+            const results = document.getElementById('admin-results');
+            results.innerHTML = '<h3>Testing Admin Pages...</h3>';
+            
+            const pages = ['/admin', '/admin/calls', '/admin/appointments'];
+            
+            Promise.all(pages.map(page => 
+                axios.get(page, { 
+                    withCredentials: true,
+                    validateStatus: () => true // Don't throw on any status
+                })
+                .then(response => ({
+                    page,
+                    status: response.status,
+                    redirect: response.request.responseURL
+                }))
+            ))
+            .then(responses => {
+                results.innerHTML += '<table border="1" cellpadding="5">';
+                results.innerHTML += '<tr><th>Page</th><th>Status</th><th>Result</th></tr>';
+                responses.forEach(r => {
+                    const isOk = r.status === 200;
+                    results.innerHTML += `<tr>
+                        <td>${r.page}</td>
+                        <td>${r.status}</td>
+                        <td class="${isOk ? 'success' : 'error'}">
+                            ${r.redirect !== window.location.origin + r.page ? `Redirected to: ${r.redirect}` : 'Direct access'}
+                        </td>
+                    </tr>`;
+                });
+                results.innerHTML += '</table>';
+            });
+        }
+
+        function testLivewire() {
+            const results = document.getElementById('livewire-results');
+            results.innerHTML = '<h3>Testing Livewire...</h3>';
+            
+            // Get CSRF token first
+            const token = axios.defaults.headers.common['X-CSRF-TOKEN'] || 
+                         document.querySelector('meta[name="csrf-token"]')?.content;
+            
+            if (!token) {
+                results.innerHTML += '<p class="error">No CSRF token available!</p>';
+                return;
+            }
+            
+            // Simulate a Livewire request
+            const livewireData = {
+                fingerprint: {
+                    id: 'test-' + Date.now(),
+                    name: 'test-component',
+                    locale: 'de',
+                    path: '/admin/test',
+                    method: 'GET'
+                },
+                updates: [],
+                serverMemo: {
+                    children: [],
+                    errors: [],
+                    htmlHash: 'test',
+                    data: {},
+                    dataMeta: {},
+                    checksum: 'test'
+                }
+            };
+            
+            axios.post('/livewire/message/test-component', livewireData, {
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'X-Livewire': true,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                withCredentials: true
+            })
+            .then(response => {
+                results.innerHTML += '<p class="success">Livewire request successful!</p>';
+                results.innerHTML += '<pre>' + JSON.stringify(response.data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                results.innerHTML += '<p class="error">Livewire request failed!</p>';
+                results.innerHTML += '<pre>' + JSON.stringify({
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    headers: error.response?.headers
+                }, null, 2) + '</pre>';
+            });
+        }
+
+        // Auto-run cookie test on load
+        window.onload = () => {
+            testCookies();
+            fetchCSRFToken();
+        };
+    </script>
+</body>
+</html>

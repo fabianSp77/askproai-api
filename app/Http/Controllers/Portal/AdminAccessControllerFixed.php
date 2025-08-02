@@ -38,7 +38,7 @@ class AdminAccessControllerFixed extends Controller
         }
         
         // Get company
-        $company = Company::withoutGlobalScope(\App\Scopes\TenantScope::class)->find($tokenData['company_id']);
+        $company = Company::find($tokenData['company_id']);
         if (!$company) {
             abort(404, 'Firma nicht gefunden.');
         }

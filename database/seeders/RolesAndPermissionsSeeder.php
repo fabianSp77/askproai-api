@@ -308,6 +308,35 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_analytics',
         ]);
 
+        // Developer - has access to debug and monitoring tools
+        $developer = Role::firstOrCreate(['name' => 'developer', 'guard_name' => 'web']);
+        $developer->givePermissionTo([
+            'access_admin_panel',
+            'view_system_logs',
+            'manage_integrations',
+            'manage_webhooks',
+            'view_analytics',
+            'export_data',
+            'import_data',
+            // View permissions for debugging
+            'view_any_company',
+            'view_company',
+            'view_any_branch',
+            'view_branch',
+            'view_any_staff',
+            'view_staff',
+            'view_any_customer',
+            'view_customer',
+            'view_any_appointment',
+            'view_appointment',
+            'view_any_call',
+            'view_call',
+            'view_any_invoice',
+            'view_invoice',
+            'view_any_calcom_event_type',
+            'view_calcom_event_type',
+        ]);
+
         $this->command->info('Roles and permissions created successfully!');
     }
 }

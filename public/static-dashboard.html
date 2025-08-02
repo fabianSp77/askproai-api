@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI Business Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar-item:hover {
+            background-color: #f3f4f6;
+        }
+        .sidebar-item.active {
+            background-color: #e5e7eb;
+            border-left: 4px solid #3b82f6;
+        }
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-lg">
+            <div class="p-6 border-b">
+                <h1 class="text-2xl font-bold text-gray-800">AskProAI</h1>
+            </div>
+            <nav class="p-4">
+                <a href="#" class="sidebar-item active flex items-center p-3 rounded-lg mb-2">
+                    <i class="fas fa-dashboard mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Dashboard</span>
+                </a>
+                <a href="#calls" class="sidebar-item flex items-center p-3 rounded-lg mb-2">
+                    <i class="fas fa-phone mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Anrufe</span>
+                </a>
+                <a href="#appointments" class="sidebar-item flex items-center p-3 rounded-lg mb-2">
+                    <i class="fas fa-calendar mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Termine</span>
+                </a>
+                <a href="#customers" class="sidebar-item flex items-center p-3 rounded-lg mb-2">
+                    <i class="fas fa-users mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Kunden</span>
+                </a>
+                <a href="#team" class="sidebar-item flex items-center p-3 rounded-lg mb-2">
+                    <i class="fas fa-user-friends mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Team</span>
+                </a>
+                <a href="#analytics" class="sidebar-item flex items-center p-3 rounded-lg mb-2">
+                    <i class="fas fa-chart-bar mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Analysen</span>
+                </a>
+                <a href="#billing" class="sidebar-item flex items-center p-3 rounded-lg mb-2">
+                    <i class="fas fa-credit-card mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Abrechnung</span>
+                </a>
+                <a href="#settings" class="sidebar-item flex items-center p-3 rounded-lg mb-2">
+                    <i class="fas fa-cog mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Einstellungen</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="flex items-center justify-between p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                    <div class="flex items-center space-x-4">
+                        <button class="relative p-2 text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-bell"></i>
+                            <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white">
+                                D
+                            </div>
+                            <span class="text-gray-700">Demo Benutzer</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-blue-100 rounded-full">
+                                <i class="fas fa-phone text-blue-600"></i>
+                            </div>
+                            <span class="text-green-500 text-sm">+12%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">125</h3>
+                        <p class="text-gray-600">Gesamtanrufe</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-green-100 rounded-full">
+                                <i class="fas fa-calendar-check text-green-600"></i>
+                            </div>
+                            <span class="text-green-500 text-sm">+8%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">42</h3>
+                        <p class="text-gray-600">Termine gebucht</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-yellow-100 rounded-full">
+                                <i class="fas fa-clock text-yellow-600"></i>
+                            </div>
+                            <span class="text-yellow-500 text-sm">3</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">8</h3>
+                        <p class="text-gray-600">Anrufe heute</p>
+                    </div>
+
+                    <div class="stat-card bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 bg-purple-100 rounded-full">
+                                <i class="fas fa-percentage text-purple-600"></i>
+                            </div>
+                            <span class="text-green-500 text-sm">+5%</span>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800">89%</h3>
+                        <p class="text-gray-600">Erfolgsquote</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Recent Calls -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold text-gray-800">Letzte Anrufe</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium text-gray-800">+49 123 456789</p>
+                                        <p class="text-sm text-gray-600">vor 15 Minuten</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Termin gebucht</span>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium text-gray-800">+49 987 654321</p>
+                                        <p class="text-sm text-gray-600">vor 1 Stunde</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">Info erhalten</span>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium text-gray-800">+49 555 123456</p>
+                                        <p class="text-sm text-gray-600">vor 2 Stunden</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">Rückruf</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Appointments -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold text-gray-800">Nächste Termine</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium text-gray-800">Max Mustermann</p>
+                                        <p class="text-sm text-gray-600">Heute, 14:00 Uhr</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">Beratung</span>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium text-gray-800">Anna Schmidt</p>
+                                        <p class="text-sm text-gray-600">Heute, 16:30 Uhr</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">Erstgespräch</span>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <p class="font-medium text-gray-800">Peter Weber</p>
+                                        <p class="text-sm text-gray-600">Morgen, 10:00 Uhr</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">Follow-up</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Simple navigation
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                const pageName = this.querySelector('span').textContent;
+                document.querySelector('header h2').textContent = pageName;
+            });
+        });
+
+        // Simulate real-time updates
+        setInterval(() => {
+            const callsToday = document.querySelector('.stat-card:nth-child(3) h3');
+            const currentValue = parseInt(callsToday.textContent);
+            if (Math.random() > 0.7) {
+                callsToday.textContent = currentValue + 1;
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

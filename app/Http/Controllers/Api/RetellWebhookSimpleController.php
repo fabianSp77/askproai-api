@@ -106,7 +106,7 @@ class RetellWebhookSimpleController extends Controller
                 }
                 
                 // Konvertiere zu Model
-                $branch = Branch::withoutGlobalScope(TenantScope::class)->find($branch->id);
+                $branch = Branch::find($branch->id);
             }
                 
             if (!$branch) {
@@ -119,7 +119,7 @@ class RetellWebhookSimpleController extends Controller
                     ->first();
                     
                 if ($branch) {
-                    $branch = Branch::withoutGlobalScope(TenantScope::class)->find($branch->id);
+                    $branch = Branch::find($branch->id);
                 } else {
                     throw new \Exception("Keine Branch für Nummer gefunden: $phoneNumber");
                 }

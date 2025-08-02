@@ -10,7 +10,7 @@ class CompanyController extends BaseAdminApiController
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Company::withoutGlobalScopes()
+        $query = Company::query()
             ->withCount(['branches', 'appointments', 'customers', 'calls']);
 
         // Search
@@ -40,7 +40,7 @@ class CompanyController extends BaseAdminApiController
 
     public function show($id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()
+        $company = Company::query()
             ->with([
                 'branches' => function($q) {
                     $q->withoutGlobalScopes()->with('phoneNumbers', 'staff');
@@ -133,8 +133,8 @@ class CompanyController extends BaseAdminApiController
     public function stats(): JsonResponse
     {
         $stats = [
-            'total_companies' => Company::withoutGlobalScopes()->count(),
-            'active_companies' => Company::withoutGlobalScopes()->where('active', true)->count(),
+            'total_companies' => Company::query()->count(),
+            'active_companies' => Company::query()->where('active', true)->count(),
             'total_appointments' => \App\Models\Appointment::withoutGlobalScopes()->count(),
             'appointments_today' => \App\Models\Appointment::withoutGlobalScopes()->whereDate('start_time', today())->count(),
             'total_calls' => \App\Models\Call::withoutGlobalScopes()->count(),
@@ -146,7 +146,7 @@ class CompanyController extends BaseAdminApiController
 
     public function activate($id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()->findOrFail($id);
+        $company = Company::query()->findOrFail($id);
         $company->update(['active' => true]);
 
         return response()->json([
@@ -157,7 +157,7 @@ class CompanyController extends BaseAdminApiController
 
     public function deactivate($id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()->findOrFail($id);
+        $company = Company::query()->findOrFail($id);
         $company->update(['active' => false]);
 
         return response()->json([
@@ -168,7 +168,7 @@ class CompanyController extends BaseAdminApiController
 
     public function syncCalcom($id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()->findOrFail($id);
+        $company = Company::query()->findOrFail($id);
 
         if (!$company->calcom_api_key) {
             return response()->json([
@@ -193,7 +193,7 @@ class CompanyController extends BaseAdminApiController
 
     public function validateApiKeys(Request $request, $id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()->findOrFail($id);
+        $company = Company::query()->findOrFail($id);
         $results = [];
 
         // Validate Retell API Key
@@ -228,7 +228,7 @@ class CompanyController extends BaseAdminApiController
 
     public function getEventTypes($id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()->findOrFail($id);
+        $company = Company::query()->findOrFail($id);
 
         if (!$company->calcom_api_key) {
             return response()->json([
@@ -252,7 +252,7 @@ class CompanyController extends BaseAdminApiController
 
     public function getWorkingHours($id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()->findOrFail($id);
+        $company = Company::query()->findOrFail($id);
         
         $workingHours = $company->workingHours()
             ->orderBy('day_of_week')
@@ -273,7 +273,7 @@ class CompanyController extends BaseAdminApiController
 
     public function updateWorkingHours(Request $request, $id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()->findOrFail($id);
+        $company = Company::query()->findOrFail($id);
         
         $validated = $request->validate([
             'working_hours' => 'required|array',
@@ -298,7 +298,7 @@ class CompanyController extends BaseAdminApiController
 
     public function getNotificationSettings($id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()->findOrFail($id);
+        $company = Company::query()->findOrFail($id);
         
         return response()->json([
             'email_notifications_enabled' => $company->email_notifications_enabled ?? true,
@@ -312,7 +312,7 @@ class CompanyController extends BaseAdminApiController
 
     public function updateNotificationSettings(Request $request, $id): JsonResponse
     {
-        $company = Company::withoutGlobalScopes()->findOrFail($id);
+        $company = Company::query()->findOrFail($id);
         
         $validated = $request->validate([
             'email_notifications_enabled' => 'boolean',

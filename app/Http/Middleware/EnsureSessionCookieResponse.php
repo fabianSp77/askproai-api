@@ -8,22 +8,22 @@ use Illuminate\Http\Request;
 class EnsureSessionCookieResponse
 {
     /**
-     * Force Laravel to send session cookie with every response
+     * Force Laravel to send session cookie with every response.
      */
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
-        
+
         // Get session store
         $session = $request->session();
-        
+
         if ($session && method_exists($session, 'getId')) {
             $sessionId = $session->getId();
             $cookieName = config('session.cookie');
-            
+
             // Check if we need to set a new cookie
             $currentCookie = $request->cookie($cookieName);
-            
+
             // Decrypt current cookie to get session ID
             $currentSessionId = null;
             if ($currentCookie) {
@@ -33,9 +33,9 @@ class EnsureSessionCookieResponse
                     // Cookie might be invalid
                 }
             }
-            
+
             // If session ID changed or no cookie exists, set new cookie
-            if ($sessionId && ($currentSessionId !== $sessionId || !$currentCookie)) {
+            if ($sessionId && ($currentSessionId !== $sessionId || ! $currentCookie)) {
                 $cookie = cookie(
                     $cookieName,
                     $sessionId,
@@ -47,11 +47,11 @@ class EnsureSessionCookieResponse
                     false, // raw
                     config('session.same_site')
                 );
-                
+
                 $response->headers->setCookie($cookie);
             }
         }
-        
+
         return $response;
     }
 }

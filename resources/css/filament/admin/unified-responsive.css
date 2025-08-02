@@ -1,0 +1,410 @@
+/* ================================================================
+   UNIFIED RESPONSIVE SYSTEM - Mobile-First Approach
+   ================================================================
+   
+   This file consolidates all responsive functionality into one place
+   to avoid conflicts and ensure consistent behavior across devices.
+   
+   Breakpoints:
+   - Mobile: 0-767px (default)
+   - Tablet: 768px-1023px
+   - Desktop: 1024px+
+   ================================================================ */
+
+/* ================================================================
+   1. GLOBAL RESPONSIVE RESET
+   ================================================================ */
+
+/* Ensure proper box-sizing and smooth scrolling */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+    overflow-x: hidden;
+    position: relative;
+}
+
+.fi-body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ================================================================
+   2. MOBILE NAVIGATION (0-1023px)
+   ================================================================ */
+
+@media (max-width: 1023px) {
+    /* Hide sidebar by default on mobile */
+    .fi-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 80% !important;
+        max-width: 320px !important;
+        height: 100vh !important;
+        z-index: 50 !important;
+        background: white !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1) !important;
+        transition: left 0.3s ease-out !important;
+        overflow-y: auto !important;
+    }
+    
+    /* Show sidebar when open */
+    .fi-sidebar-open .fi-sidebar {
+        left: 0 !important;
+    }
+    
+    /* Overlay when sidebar is open */
+    .fi-sidebar-open::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 45;
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    /* Ensure hamburger button is visible */
+    .fi-topbar-open-sidebar-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 40px !important;
+        height: 40px !important;
+        padding: 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Remove margin from main content on mobile */
+    .fi-main-ctn {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Adjust topbar padding on mobile */
+    .fi-topbar nav {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+
+/* ================================================================
+   3. TABLET ADJUSTMENTS (768px-1023px)
+   ================================================================ */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    /* Slightly larger sidebar on tablet */
+    .fi-sidebar {
+        max-width: 400px !important;
+    }
+    
+    /* More padding on tablet */
+    .fi-main-ctn {
+        padding: 1.5rem !important;
+    }
+}
+
+/* ================================================================
+   4. DESKTOP LAYOUT (1024px+)
+   ================================================================ */
+
+@media (min-width: 1024px) {
+    /* Static sidebar on desktop */
+    .fi-sidebar {
+        position: relative !important;
+        left: 0 !important;
+        width: auto !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Hide mobile navigation button */
+    .fi-topbar-open-sidebar-btn {
+        display: none !important;
+    }
+    
+    /* Normal layout with sidebar */
+    .fi-main-ctn {
+        margin-left: var(--sidebar-width, 16rem) !important;
+    }
+}
+
+/* ================================================================
+   5. RESPONSIVE TABLES
+   ================================================================ */
+
+/* Mobile-first table approach */
+.fi-ta-content {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+}
+
+.fi-ta-table {
+    min-width: 100% !important;
+}
+
+/* Mobile table layout (0-767px) */
+@media (max-width: 767px) {
+    /* Convert table to card layout on mobile */
+    .fi-ta-table thead {
+        display: none !important;
+    }
+    
+    .fi-ta-table tbody tr {
+        display: block !important;
+        margin-bottom: 1rem !important;
+        background: white !important;
+        border-radius: 0.5rem !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        padding: 1rem !important;
+    }
+    
+    .fi-ta-table tbody td {
+        display: flex !important;
+        justify-content: space-between !important;
+        padding: 0.5rem 0 !important;
+        border: none !important;
+    }
+    
+    .fi-ta-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+    
+    /* Actions column special handling */
+    .fi-ta-table tbody td:last-child {
+        justify-content: flex-start !important;
+        margin-top: 0.5rem !important;
+        padding-top: 0.5rem !important;
+        border-top: 1px solid #e5e7eb !important;
+    }
+}
+
+/* Tablet/Desktop table (768px+) */
+@media (min-width: 768px) {
+    /* Progressive column display */
+    .fi-ta-table th:nth-child(n+7),
+    .fi-ta-table td:nth-child(n+7) {
+        display: none;
+    }
+}
+
+@media (min-width: 1024px) {
+    .fi-ta-table th:nth-child(n+7),
+    .fi-ta-table td:nth-child(n+7) {
+        display: table-cell;
+    }
+}
+
+@media (min-width: 1280px) {
+    .fi-ta-table th,
+    .fi-ta-table td {
+        display: table-cell !important;
+    }
+}
+
+/* ================================================================
+   6. RESPONSIVE FORMS & MODALS
+   ================================================================ */
+
+/* Mobile forms */
+@media (max-width: 767px) {
+    /* Full-width form fields on mobile */
+    .fi-fo-field-wrp {
+        grid-column: span 1 !important;
+    }
+    
+    /* Stack form actions vertically */
+    .fi-form-actions {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+    
+    .fi-form-actions > * {
+        width: 100% !important;
+    }
+    
+    /* Full-screen modals on mobile */
+    .fi-modal-window {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+}
+
+/* ================================================================
+   7. RESPONSIVE GRIDS & CARDS
+   ================================================================ */
+
+/* Info list grids - mobile first */
+.fi-in-component-ctn {
+    display: grid !important;
+    gap: 1rem !important;
+    grid-template-columns: 1fr !important;
+}
+
+@media (min-width: 768px) {
+    .fi-in-component-ctn {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .fi-in-component-ctn {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* Card grids */
+.fi-wi-stats-overview-stats-container {
+    display: grid !important;
+    gap: 1rem !important;
+    grid-template-columns: 1fr !important;
+}
+
+@media (min-width: 640px) {
+    .fi-wi-stats-overview-stats-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .fi-wi-stats-overview-stats-container {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+    }
+}
+
+/* ================================================================
+   8. RESPONSIVE UTILITIES
+   ================================================================ */
+
+/* Hide elements based on screen size */
+@media (max-width: 767px) {
+    .hide-mobile {
+        display: none !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .hide-tablet {
+        display: none !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .hide-desktop {
+        display: none !important;
+    }
+}
+
+/* Responsive text sizes */
+@media (max-width: 767px) {
+    .fi-header-heading {
+        font-size: 1.5rem !important;
+    }
+    
+    .fi-section-header-heading {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* ================================================================
+   9. TOUCH-FRIENDLY ADJUSTMENTS
+   ================================================================ */
+
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    button,
+    a,
+    .fi-btn,
+    .fi-link {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Remove hover effects on touch devices */
+    *:hover {
+        transition: none !important;
+    }
+    
+    /* Larger form inputs */
+    input,
+    select,
+    textarea {
+        min-height: 44px !important;
+        font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+}
+
+/* ================================================================
+   10. PRINT STYLES
+   ================================================================ */
+
+@media print {
+    /* Hide navigation and non-essential elements */
+    .fi-sidebar,
+    .fi-topbar,
+    .fi-form-actions,
+    button,
+    .hide-print {
+        display: none !important;
+    }
+    
+    /* Full width content for printing */
+    .fi-main-ctn {
+        margin: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* ================================================================
+   Z-INDEX HIERARCHY
+   ================================================================ */
+
+/*
+   Z-Index Scale:
+   0-9: Base elements
+   10-19: Cards, overlays
+   20-29: Sticky elements (topbar)
+   30-39: Dropdowns, tooltips
+   40-49: Modals
+   50-59: Navigation drawer
+   60+: Notifications, alerts
+*/

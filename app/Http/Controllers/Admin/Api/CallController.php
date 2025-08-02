@@ -11,11 +11,11 @@ class CallController extends BaseAdminApiController
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Call::withoutGlobalScopes()
+        $query = Call::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
-                'branch' => function($q) { $q->withoutGlobalScopes(); },
-                'customer' => function($q) { $q->withoutGlobalScopes(); }
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'branch' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'customer' => function($q) { $q->where("company_id", auth()->user()->company_id); }
             ])
             ->latest();
 
@@ -93,14 +93,14 @@ class CallController extends BaseAdminApiController
 
     public function show($id): JsonResponse
     {
-        $call = Call::withoutGlobalScopes()
+        $call = Call::where("company_id", auth()->user()->company_id)
             ->with([
                 'company' => function($q) { 
                     $q->withoutGlobalScopes()->with('billingRate'); 
                 },
-                'branch' => function($q) { $q->withoutGlobalScopes(); },
-                'customer' => function($q) { $q->withoutGlobalScopes(); },
-                'appointment' => function($q) { $q->withoutGlobalScopes(); }
+                'branch' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'customer' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'appointment' => function($q) { $q->where("company_id", auth()->user()->company_id); }
             ])
             ->findOrFail($id);
 
@@ -139,7 +139,7 @@ class CallController extends BaseAdminApiController
 
     public function transcript($id): JsonResponse
     {
-        $call = Call::withoutGlobalScopes()->findOrFail($id);
+        $call = Call::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         if (empty($call->transcript)) {
             return response()->json([
@@ -159,20 +159,20 @@ class CallController extends BaseAdminApiController
         $today = now()->startOfDay();
         $yesterday = now()->subDay()->startOfDay();
 
-        $totalCalls = Call::withoutGlobalScopes()->count();
-        $answeredCalls = Call::withoutGlobalScopes()->where('status', 'completed')->count();
+        $totalCalls = Call::where("company_id", auth()->user()->company_id)->count();
+        $answeredCalls = Call::where("company_id", auth()->user()->company_id)->where('status', 'completed')->count();
 
         $stats = [
             'total_calls' => $totalCalls,
-            'calls_today' => Call::withoutGlobalScopes()->whereDate('created_at', $today)->count(),
-            'calls_yesterday' => Call::withoutGlobalScopes()->whereDate('created_at', $yesterday)->count(),
+            'calls_today' => Call::where("company_id", auth()->user()->company_id)->whereDate('created_at', $today)->count(),
+            'calls_yesterday' => Call::where("company_id", auth()->user()->company_id)->whereDate('created_at', $yesterday)->count(),
             'answered_rate' => $totalCalls > 0 ? ($answeredCalls / $totalCalls * 100) : 0,
-            'average_duration' => Call::withoutGlobalScopes()->where('status', 'completed')->avg('duration_sec') ?? 0,
-            'by_status' => Call::withoutGlobalScopes()
+            'average_duration' => Call::where("company_id", auth()->user()->company_id)->where('status', 'completed')->avg('duration_sec') ?? 0,
+            'by_status' => Call::where("company_id", auth()->user()->company_id)
                 ->selectRaw('status, count(*) as count')
                 ->groupBy('status')
                 ->pluck('count', 'status'),
-            'by_sentiment' => Call::withoutGlobalScopes()
+            'by_sentiment' => Call::where("company_id", auth()->user()->company_id)
                 ->whereNotNull('sentiment')
                 ->selectRaw('sentiment, count(*) as count')
                 ->groupBy('sentiment')
@@ -191,7 +191,7 @@ class CallController extends BaseAdminApiController
 
         DB::beginTransaction();
         try {
-            Call::withoutGlobalScopes()
+            Call::where("company_id", auth()->user()->company_id)
                 ->whereIn('id', $validated['call_ids'])
                 ->update(['is_non_billable' => true]);
 
@@ -216,7 +216,7 @@ class CallController extends BaseAdminApiController
 
         DB::beginTransaction();
         try {
-            Call::withoutGlobalScopes()
+            Call::where("company_id", auth()->user()->company_id)
                 ->whereIn('id', $validated['call_ids'])
                 ->update([
                     'is_refunded' => true,
@@ -237,7 +237,7 @@ class CallController extends BaseAdminApiController
 
     public function share($id): JsonResponse
     {
-        $call = Call::withoutGlobalScopes()->findOrFail($id);
+        $call = Call::where("company_id", auth()->user()->company_id)->findOrFail($id);
         
         // Generate a temporary sharing link (valid for 7 days)
         $shareToken = \Str::random(32);
@@ -260,7 +260,7 @@ class CallController extends BaseAdminApiController
 
     public function getRecording($id): JsonResponse
     {
-        $call = Call::withoutGlobalScopes()->findOrFail($id);
+        $call = Call::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         if (empty($call->recording_url)) {
             return response()->json([
@@ -284,7 +284,7 @@ class CallController extends BaseAdminApiController
 
         DB::beginTransaction();
         try {
-            Call::withoutGlobalScopes()
+            Call::where("company_id", auth()->user()->company_id)
                 ->whereIn('id', $validated['call_ids'])
                 ->delete();
 

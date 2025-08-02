@@ -13,7 +13,7 @@
 
     <!-- Styles -->
     @if(file_exists(public_path('build/manifest.json')))
-        <link rel="stylesheet" href="{{ asset('build/assets/app-CAAkOUKa.css') }}">
+        @vite(['resources/css/app.css'])
     @else
         <style>
             /* Fallback styles */
@@ -71,6 +71,9 @@
         .focus\:ring-primary-500:focus { --tw-ring-color: var(--primary-500); }
         .focus\:border-primary-500:focus { border-color: var(--primary-500); }
     </style>
+    
+    {{-- Portal Login Fix - Temporarily disabled due to form submission issues
+    <script src="{{ asset('js/portal-login-fix.js') }}?v={{ time() }}"></script> --}}
 </head>
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100">

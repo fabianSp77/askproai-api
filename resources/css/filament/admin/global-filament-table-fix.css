@@ -1,0 +1,175 @@
+/* ================================================
+   GLOBAL FILAMENT TABLE OVERFLOW FIX
+   Applies to ALL Filament tables in the entire portal
+   ================================================ */
+
+/* Primary fix - Target ALL Filament table content wrappers */
+.fi-ta-content {
+    /* Force horizontal scrolling on ALL tables */
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    display: block !important;
+    position: relative !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* Alternative selectors to ensure coverage */
+[class*="fi-ta-content"],
+div.fi-ta-content,
+.fi-table-content,
+.fi-tables-content {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Ensure ALL tables can expand beyond their containers */
+.fi-ta-table,
+.fi-table,
+table.fi-ta-table,
+.fi-ta-content table,
+.fi-ta-content .table {
+    width: auto !important;
+    min-width: max-content !important;
+    table-layout: auto !important;
+    display: table !important;
+}
+
+/* Fix parent containers for ALL resources */
+.fi-ta-ctn,
+.fi-ta-content-ctn,
+.fi-table-container {
+    overflow: visible !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* Page-level containers must not restrict */
+.fi-page,
+.fi-page-simple,
+.fi-main,
+.fi-main-ctn {
+    overflow-x: visible !important;
+    max-width: 100% !important;
+}
+
+/* Force scrollbar visibility on ALL tables */
+.fi-ta-content::-webkit-scrollbar {
+    height: 10px !important;
+    display: block !important;
+    visibility: visible !important;
+}
+
+.fi-ta-content::-webkit-scrollbar-track {
+    background: #f3f4f6 !important;
+    border-radius: 5px !important;
+}
+
+.fi-ta-content::-webkit-scrollbar-thumb {
+    background: #9ca3af !important;
+    border-radius: 5px !important;
+}
+
+.fi-ta-content::-webkit-scrollbar-thumb:hover {
+    background: #6b7280 !important;
+}
+
+/* Firefox scrollbar */
+.fi-ta-content {
+    scrollbar-width: thin !important;
+    scrollbar-color: #9ca3af #f3f4f6 !important;
+}
+
+/* Resource-specific overrides (if needed) */
+.fi-resource-appointments .fi-ta-content,
+.fi-resource-appointment .fi-ta-content,
+.fi-resource-customers .fi-ta-content,
+.fi-resource-customer .fi-ta-content,
+.fi-resource-staff .fi-ta-content,
+.fi-resource-branches .fi-ta-content,
+.fi-resource-branch .fi-ta-content,
+.fi-resource-services .fi-ta-content,
+.fi-resource-service .fi-ta-content,
+.fi-resource-invoices .fi-ta-content,
+.fi-resource-invoice .fi-ta-content,
+.fi-resource-portal-users .fi-ta-content,
+.fi-resource-portal-user .fi-ta-content {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Mobile and tablet specific */
+@media (max-width: 1280px) {
+    .fi-ta-content {
+        overflow-x: scroll !important; /* Always show scrollbar on mobile */
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* Tables inside modals and slideovers */
+.fi-modal .fi-ta-content,
+.fi-modal-window .fi-ta-content,
+[x-teleport] .fi-ta-content {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+}
+
+/* Relation managers */
+.fi-resource-relation-manager .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Widget tables */
+.fi-wi .fi-ta-content,
+.fi-widget .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Dashboard tables */
+.fi-dashboard .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Print styles - enable horizontal scroll in print preview */
+@media print {
+    .fi-ta-content {
+        overflow-x: visible !important;
+        max-width: none !important;
+    }
+}
+
+/* Visual indicator that scrolling is available */
+.fi-ta-content[data-has-overflow="true"]::after {
+    content: "↔" !important;
+    position: absolute !important;
+    bottom: 10px !important;
+    right: 10px !important;
+    background: #3b82f6 !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+    font-size: 11px !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+}
+
+/* Debug mode - uncomment to see which tables have the fix applied */
+/*
+.fi-ta-content {
+    border: 2px solid #10b981 !important;
+    position: relative !important;
+}
+
+.fi-ta-content::before {
+    content: "✓ Scroll enabled" !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    background: #10b981 !important;
+    color: white !important;
+    padding: 2px 8px !important;
+    font-size: 10px !important;
+    z-index: 100 !important;
+}
+*/

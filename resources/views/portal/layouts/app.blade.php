@@ -13,17 +13,6 @@
         'role' => auth()->guard('portal')->user()->role ?? 'user'
     ]) }}">
     @endauth
-    
-    @auth('web')
-    @if(!auth()->guard('portal')->check())
-    <meta name="user" content="{{ json_encode([
-        'id' => auth()->user()->id,
-        'name' => auth()->user()->name,
-        'email' => auth()->user()->email,
-        'role' => 'admin'
-    ]) }}">
-    @endif
-    @endauth
 
     <title>{{ config('app.name', 'AskProAI') }} - Business Portal</title>
 
@@ -47,11 +36,13 @@
 
     <!-- Scripts -->
     @if(file_exists(public_path('build/manifest.json')))
-        <link rel="stylesheet" href="{{ asset('build/assets/app-CAAkOUKa.css') }}">
-        <script src="{{ asset('build/assets/app-Cfj5Fmmu.js') }}" defer></script>
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     @endif
+    
+    <!-- Portal Responsive Fixes for High-Resolution Displays -->
+    <link href="{{ asset('css/portal-responsive-fixes.css') }}?v={{ time() }}" rel="stylesheet">
 </head>
 <body class="font-sans antialiased">
     {{-- Admin banner removed - using React portal now --}}
@@ -248,6 +239,12 @@
             @yield('content')
         </main>
     </div>
+    
+    {{-- Portal Alpine Fix --}}
+    <script src="{{ asset('js/portal-alpine-fix.js') }}?v={{ time() }}"></script>
+    
+    {{-- Portal Viewport Optimizer for High-Resolution Displays --}}
+    <script src="{{ asset('js/portal-viewport-optimizer.js') }}?v={{ time() }}"></script>
     
     {{-- Alpine.js Initialization Helper --}}
     <script>

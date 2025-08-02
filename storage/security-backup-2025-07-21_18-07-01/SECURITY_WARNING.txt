@@ -1,0 +1,13 @@
+⚠️ SECURITY WARNING ⚠️
+
+Diese Dateien wurden entfernt, weil sie hardcodierte Datenbank-Credentials
+oder unsichere Admin-Bypass-Mechanismen enthielten.
+
+DIESE DATEIEN DÜRFEN NIEMALS WIEDER IN DAS PUBLIC-VERZEICHNIS KOPIERT WERDEN!
+
+Falls Sie diese Dateien für die Entwicklung benötigen:
+1. Verwenden Sie Environment-Variablen statt hardcodierter Credentials
+2. Platzieren Sie sie außerhalb des public/ Verzeichnisses
+3. Implementieren Sie proper Authentication
+
+Entfernt am: 2025-07-21_18-07-01

@@ -11,9 +11,9 @@ class BranchController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Branch::withoutGlobalScopes()
+        $query = Branch::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
                 'phoneNumbers'
             ])
             ->withCount(['staff', 'appointments']);
@@ -40,11 +40,11 @@ class BranchController extends Controller
 
     public function show($id): JsonResponse
     {
-        $branch = Branch::withoutGlobalScopes()
+        $branch = Branch::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
                 'phoneNumbers',
-                'staff' => function($q) { $q->withoutGlobalScopes(); },
+                'staff' => function($q) { $q->where("company_id", auth()->user()->company_id); },
                 'workingHours'
             ])
             ->withCount(['staff', 'appointments'])
@@ -75,7 +75,7 @@ class BranchController extends Controller
 
     public function update(Request $request, $id): JsonResponse
     {
-        $branch = Branch::withoutGlobalScopes()->findOrFail($id);
+        $branch = Branch::where('company_id', auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -96,7 +96,7 @@ class BranchController extends Controller
 
     public function destroy($id): JsonResponse
     {
-        $branch = Branch::withoutGlobalScopes()->findOrFail($id);
+        $branch = Branch::where('company_id', auth()->user()->company_id)->findOrFail($id);
         
         // Check if branch has data
         if ($branch->appointments()->exists() || $branch->staff()->exists()) {
@@ -112,7 +112,7 @@ class BranchController extends Controller
 
     public function workingHours($id): JsonResponse
     {
-        $branch = Branch::withoutGlobalScopes()->findOrFail($id);
+        $branch = Branch::where('company_id', auth()->user()->company_id)->findOrFail($id);
         $workingHours = $branch->workingHours;
 
         return response()->json($workingHours);
@@ -120,7 +120,7 @@ class BranchController extends Controller
 
     public function updateWorkingHours(Request $request, $id): JsonResponse
     {
-        $branch = Branch::withoutGlobalScopes()->findOrFail($id);
+        $branch = Branch::where('company_id', auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'working_hours' => 'required|array',

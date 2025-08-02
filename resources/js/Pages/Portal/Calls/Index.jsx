@@ -12,6 +12,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useCalls } from '../../../hooks/useCalls';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../../services/axiosInstance';
+import { useCallUpdates } from '../../../hooks/useEcho';
 import { 
     Phone, 
     RefreshCw, 
@@ -75,6 +76,32 @@ const CallsIndex = () => {
     const [translatedTranscripts, setTranslatedTranscripts] = useState({});
     const [playingCalls, setPlayingCalls] = useState(new Set());
     const audioRefs = useRef({});
+    
+    // Handle real-time call updates
+    useCallUpdates((update) => {
+        console.log('Call update received:', update);
+        
+        // Show toast notification for new calls
+        if (update.event === 'created') {
+            toast.info(`Neuer Anruf von ${update.call?.from_number || 'Unbekannt'}`);
+            // Refresh the call list to include the new call
+            refresh();
+        } else if (update.event === 'status_updated') {
+            // Update the call in the list without full refresh
+            const updatedCall = update.call;
+            if (updatedCall) {
+                // Find and update the call in the current list
+                const callIndex = calls.findIndex(c => c.id === updatedCall.id);
+                if (callIndex !== -1) {
+                    const newCalls = [...calls];
+                    newCalls[callIndex] = { ...newCalls[callIndex], ...updatedCall };
+                    // Note: We can't directly update calls since it comes from useCalls hook
+                    // So we trigger a refresh instead
+                    refresh();
+                }
+            }
+        }
+    });
 
     // Status Badge Mapping
     const getStatusBadge = (status) => {

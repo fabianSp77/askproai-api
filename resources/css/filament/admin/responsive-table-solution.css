@@ -1,0 +1,211 @@
+/* ================================================
+   RESPONSIVE TABLE SOLUTION FOR ALL FILAMENT TABLES
+   Mobile-first approach with intelligent column handling
+   ================================================ */
+
+/* Base: Keep horizontal scroll for desktop */
+@media (min-width: 1024px) {
+    .fi-ta-content {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+    }
+    
+    .fi-ta-table {
+        width: auto !important;
+        min-width: max-content !important;
+    }
+}
+
+/* Tablet: Optimize column widths */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .fi-ta-content {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Reduce padding for more content */
+    .fi-ta-table th,
+    .fi-ta-table td {
+        padding: 0.5rem !important;
+        font-size: 0.875rem !important;
+    }
+}
+
+/* Mobile: Stack important columns, hide others */
+@media (max-width: 767px) {
+    /* Remove horizontal scroll on mobile */
+    .fi-ta-content {
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Make table responsive */
+    .fi-ta-table {
+        width: 100% !important;
+        min-width: 100% !important;
+        table-layout: fixed !important;
+    }
+    
+    /* Hide table header on mobile */
+    .fi-ta-table thead {
+        display: none !important;
+    }
+    
+    /* Convert table rows to cards */
+    .fi-ta-table tbody tr {
+        display: block !important;
+        margin-bottom: 1rem !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        border-radius: 0.5rem !important;
+        padding: 0.75rem !important;
+        background: white !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* Make cells block level */
+    .fi-ta-table tbody td {
+        display: block !important;
+        text-align: left !important;
+        padding: 0.5rem 0 !important;
+        border: none !important;
+        position: relative !important;
+        padding-left: 40% !important;
+    }
+    
+    /* Add labels before each cell */
+    .fi-ta-table tbody td::before {
+        content: attr(data-label) !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0.5rem !important;
+        width: 35% !important;
+        padding-right: 10px !important;
+        font-weight: 600 !important;
+        text-align: left !important;
+        color: #6b7280 !important;
+        font-size: 0.75rem !important;
+        text-transform: uppercase !important;
+    }
+    
+    /* Priority columns - always show */
+    .fi-ta-col-customer_phone_number,
+    .fi-ta-col-customer_name,
+    .fi-ta-col-customer\.name,
+    .fi-ta-col-caller_phone_number,
+    .fi-ta-col-name,
+    .fi-ta-col-status,
+    .fi-ta-col-created_at {
+        display: block !important;
+    }
+    
+    /* Secondary columns - hide by default */
+    .fi-ta-col-branch\.name,
+    .fi-ta-col-company\.name,
+    .fi-ta-col-updated_at,
+    .fi-ta-col-assigned_staff_id {
+        display: none !important;
+    }
+    
+    /* Actions always visible */
+    .fi-ta-actions {
+        display: flex !important;
+        justify-content: center !important;
+        padding: 0.5rem 0 !important;
+        border-top: 1px solid #e5e7eb !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    /* Compact action buttons */
+    .fi-ta-actions .fi-btn {
+        padding: 0.375rem 0.75rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Status badges optimization */
+    .fi-badge {
+        display: inline-flex !important;
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+}
+
+/* Ultra-small devices (< 400px) */
+@media (max-width: 399px) {
+    .fi-ta-table tbody td {
+        padding-left: 0 !important;
+        padding-top: 1.5rem !important;
+    }
+    
+    .fi-ta-table tbody td::before {
+        position: relative !important;
+        display: block !important;
+        width: 100% !important;
+        margin-bottom: 0.25rem !important;
+    }
+}
+
+/* Resource-specific mobile optimizations */
+@media (max-width: 767px) {
+    /* Calls Resource */
+    .fi-resource-calls .fi-ta-col-caller_phone_number::before { content: "Anrufer" !important; }
+    .fi-resource-calls .fi-ta-col-created_at::before { content: "Datum" !important; }
+    .fi-resource-calls .fi-ta-col-duration_sec::before { content: "Dauer" !important; }
+    .fi-resource-calls .fi-ta-col-status::before { content: "Status" !important; }
+    .fi-resource-calls .fi-ta-col-cost::before { content: "Kosten" !important; }
+    
+    /* Customers Resource */
+    .fi-resource-customers .fi-ta-col-name::before { content: "Name" !important; }
+    .fi-resource-customers .fi-ta-col-phone_number::before { content: "Telefon" !important; }
+    .fi-resource-customers .fi-ta-col-email::before { content: "E-Mail" !important; }
+    .fi-resource-customers .fi-ta-col-appointments_count::before { content: "Termine" !important; }
+    
+    /* Appointments Resource */
+    .fi-resource-appointments .fi-ta-col-customer\.name::before { content: "Kunde" !important; }
+    .fi-resource-appointments .fi-ta-col-start_time::before { content: "Termin" !important; }
+    .fi-resource-appointments .fi-ta-col-service\.name::before { content: "Service" !important; }
+    .fi-resource-appointments .fi-ta-col-status::before { content: "Status" !important; }
+}
+
+/* Pagination mobile optimization */
+@media (max-width: 767px) {
+    .fi-ta-pagination {
+        flex-direction: column !important;
+        gap: 1rem !important;
+    }
+    
+    .fi-ta-pagination-items {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .fi-ta-pagination-records-per-page {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+
+/* Print styles - show all columns */
+@media print {
+    .fi-ta-content {
+        overflow: visible !important;
+    }
+    
+    .fi-ta-table {
+        width: 100% !important;
+    }
+    
+    .fi-ta-table tbody tr {
+        display: table-row !important;
+    }
+    
+    .fi-ta-table tbody td {
+        display: table-cell !important;
+        padding-left: 0.5rem !important;
+    }
+    
+    .fi-ta-table tbody td::before {
+        display: none !important;
+    }
+}

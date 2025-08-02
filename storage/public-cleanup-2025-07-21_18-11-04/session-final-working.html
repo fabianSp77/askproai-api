@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Final Working Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .success-box {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover { background: #2980b9; }
+        pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #27ae60; font-weight: bold; }
+        .error { color: #e74c3c; font-weight: bold; }
+        .info { color: #3498db; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Session Final Working Test</h1>
+        
+        <div class="success-box">
+            <h3>✅ All Issues Fixed:</h3>
+            <ol>
+                <li>.env file permissions (was root-only)</li>
+                <li>SESSION_SECURE_COOKIE mismatch</li>
+                <li>Session cookie encryption (excluded from EncryptCookies)</li>
+                <li><strong>Web middleware group missing session middleware (NOW FIXED)</strong></li>
+            </ol>
+            <p><strong>The session cookie should now be properly set!</strong></p>
+        </div>
+        
+        <div class="test-section">
+            <h2>1. Test Session Cookie</h2>
+            <button onclick="debugHeaders()">Debug Headers</button>
+            <button onclick="forceSessionCookie()">Force Session Cookie</button>
+            <pre id="cookie-test">Click to test cookie headers...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Test Session Persistence</h2>
+            <button onclick="setSession()">Set Session</button>
+            <button onclick="getSession()">Get Session</button>
+            <button onclick="showCookies()">Show Cookies</button>
+            <pre id="session-test">Click to test sessions...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Test Login Flow</h2>
+            <button onclick="testLogin()">Login</button>
+            <button onclick="checkAuth()">Check Auth</button>
+            <button onclick="testProtectedRoute()">Test Protected Route</button>
+            <pre id="login-test">Click to test login...</pre>
+        </div>
+    </div>
+    
+    <script>
+    async function debugHeaders() {
+        const result = document.getElementById('cookie-test');
+        result.textContent = 'Checking cookie headers...';
+        
+        try {
+            const response = await fetch('/debug-cookie-headers.php');
+            const text = await response.text();
+            result.textContent = text;
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    function forceSessionCookie() {
+        window.open('/force-session-cookie.php', '_blank');
+        document.getElementById('cookie-test').innerHTML = '<span class="info">✓ Opened in new tab - check if cookie is set</span>';
+    }
+    
+    async function setSession() {
+        const result = document.getElementById('session-test');
+        result.textContent = 'Setting session...';
+        
+        try {
+            const response = await fetch('/test-session-set.php', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.success) {
+                result.innerHTML += '\n\n<span class="success">✅ Session set!</span>';
+                result.innerHTML += '\n<span class="info">Now check cookies and get session</span>';
+            }
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function getSession() {
+        const result = document.getElementById('session-test');
+        result.textContent = 'Getting session...';
+        
+        try {
+            const response = await fetch('/test-session-get.php', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.test_value) {
+                result.innerHTML += '\n\n<span class="success">✅ Session persisted!</span>';
+            } else {
+                result.innerHTML += '\n\n<span class="error">❌ Session lost!</span>';
+            }
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    function showCookies() {
+        const result = document.getElementById('session-test');
+        
+        result.textContent = '=== Browser Cookies ===\n\n';
+        const cookies = document.cookie.split(';');
+        
+        let sessionCookieFound = false;
+        
+        cookies.forEach(cookie => {
+            const [name, value] = cookie.trim().split('=');
+            if (name) {
+                result.textContent += name + ': ' + (value ? value.substring(0, 50) + '...' : '(empty)') + '\n';
+                if (name === 'askproai_session') {
+                    sessionCookieFound = true;
+                }
+            }
+        });
+        
+        result.textContent += '\n=== Analysis ===\n';
+        if (sessionCookieFound) {
+            result.innerHTML += '<span class="success">✅ Session cookie found!</span>\n';
+        } else {
+            result.innerHTML += '<span class="error">❌ Session cookie NOT found!</span>\n';
+        }
+    }
+    
+    async function testLogin() {
+        const result = document.getElementById('login-test');
+        result.textContent = 'Logging in...';
+        
+        try {
+            const response = await fetch('/test-login-simple.php', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.login_success) {
+                result.innerHTML += '\n\n<span class="success">✅ Login successful!</span>';
+            }
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function checkAuth() {
+        const result = document.getElementById('login-test');
+        result.textContent = 'Checking auth...';
+        
+        try {
+            const response = await fetch('/test-session-get.php', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = 'Auth Check:\n' + JSON.stringify(data, null, 2);
+            
+            if (data.all_data && data.all_data.portal_user_id) {
+                result.innerHTML += '\n\n<span class="success">✅ Authenticated! User ID: ' + data.all_data.portal_user_id + '</span>';
+            } else {
+                result.innerHTML += '\n\n<span class="error">❌ Not authenticated!</span>';
+            }
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testProtectedRoute() {
+        const result = document.getElementById('login-test');
+        result.textContent = 'Testing protected route...';
+        
+        try {
+            const response = await fetch('/business/calls', {
+                credentials: 'same-origin',
+                redirect: 'manual'
+            });
+            
+            result.textContent = 'Route: /business/calls\n';
+            result.textContent += 'Status: ' + response.status + '\n';
+            
+            if (response.status === 200) {
+                result.innerHTML += '<span class="success">✅ Access granted!</span>';
+            } else if (response.status === 401) {
+                result.innerHTML += '<span class="error">❌ Unauthorized!</span>';
+            } else if (response.status === 0 || response.type === 'opaqueredirect') {
+                result.innerHTML += '<span class="error">❌ Redirected (not authenticated)</span>';
+            }
+        } catch (error) {
+            result.innerHTML += '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    </script>
+</body>
+</html>

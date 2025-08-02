@@ -960,7 +960,7 @@
                 el.style.color = '#0EA5E9';
                 setTimeout(() => {
                     el.style.color = '';
-                }, 500);
+                }, 30000);
             });
         }, {{ $refreshInterval * 1000 }});
         @endif

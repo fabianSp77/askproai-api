@@ -12,6 +12,7 @@ class EncryptCookies extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        // 'askproai_session', // Removed - let Laravel handle session cookie encryption
+        // Portal session cookie should not be encrypted for proper session handling
+        'askproai_portal_session',
     ];
 }

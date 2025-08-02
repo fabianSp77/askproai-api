@@ -50,23 +50,26 @@ class IntelligentSyncManager extends Page implements HasForms
     }
     protected static string $view = 'filament.admin.pages.intelligent-sync-manager';
     
-    // Filter für Anrufe
-    public ?string $callDateFrom = null;
-    public ?string $callDateTo = null;
-    public ?int $callLimit = 100;
-    public ?int $callMinDuration = 30;
-    public ?string $callStatus = null;
-    public ?bool $callHasAppointment = null;
-    public bool $callSkipExisting = true;
-    
-    // Filter für Termine
-    public ?string $appointmentDateFrom = null;
-    public ?string $appointmentDateTo = null;
-    public ?int $appointmentLimit = 200;
-    public ?string $appointmentStatus = null;
-    public ?string $appointmentEventTypeId = null;
-    public bool $appointmentSkipExisting = true;
-    public bool $appointmentIncludeCancelled = false;
+    // Form data array
+    public ?array $data = [
+        // Filter für Anrufe
+        'callDateFrom' => null,
+        'callDateTo' => null,
+        'callLimit' => 100,
+        'callMinDuration' => 30,
+        'callStatus' => null,
+        'callHasAppointment' => null,
+        'callSkipExisting' => true,
+        
+        // Filter für Termine
+        'appointmentDateFrom' => null,
+        'appointmentDateTo' => null,
+        'appointmentLimit' => 200,
+        'appointmentStatus' => null,
+        'appointmentEventTypeId' => null,
+        'appointmentSkipExisting' => true,
+        'appointmentIncludeCancelled' => false,
+    ];
     
     // UI State
     public bool $showCallPreview = false;
@@ -81,11 +84,11 @@ class IntelligentSyncManager extends Page implements HasForms
         $this->syncService = app(SyncMCPService::class);
         
         // Setze sinnvolle Defaults
-        $this->callDateFrom = now()->subDays(7)->format('Y-m-d');
-        $this->callDateTo = now()->format('Y-m-d');
+        $this->data['callDateFrom'] = now()->subDays(7)->format('Y-m-d');
+        $this->data['callDateTo'] = now()->format('Y-m-d');
         
-        $this->appointmentDateFrom = now()->subDays(30)->format('Y-m-d');
-        $this->appointmentDateTo = now()->addDays(90)->format('Y-m-d');
+        $this->data['appointmentDateFrom'] = now()->subDays(30)->format('Y-m-d');
+        $this->data['appointmentDateTo'] = now()->addDays(90)->format('Y-m-d');
         
         // Lade Empfehlungen
         $this->loadRecommendations();
@@ -118,12 +121,12 @@ class IntelligentSyncManager extends Page implements HasForms
     {
         try {
             $filters = [
-                'date_from' => Carbon::parse($this->callDateFrom),
-                'date_to' => Carbon::parse($this->callDateTo),
-                'limit' => min($this->callLimit, 20), // Preview max 20
-                'min_duration' => $this->callMinDuration,
-                'status' => $this->callStatus,
-                'skip_existing' => $this->callSkipExisting,
+                'date_from' => Carbon::parse($this->data['callDateFrom']),
+                'date_to' => Carbon::parse($this->data['callDateTo']),
+                'limit' => min($this->data['callLimit'], 20), // Preview max 20
+                'min_duration' => $this->data['callMinDuration'],
+                'status' => $this->data['callStatus'],
+                'skip_existing' => $this->data['callSkipExisting'],
             ];
             
             $this->callPreviewData = $this->syncService->previewSync('calls', $filters);
@@ -148,13 +151,13 @@ class IntelligentSyncManager extends Page implements HasForms
     {
         try {
             $filters = [
-                'date_from' => Carbon::parse($this->callDateFrom),
-                'date_to' => Carbon::parse($this->callDateTo),
-                'limit' => $this->callLimit,
-                'min_duration' => $this->callMinDuration,
-                'status' => $this->callStatus,
-                'has_appointment' => $this->callHasAppointment,
-                'skip_existing' => $this->callSkipExisting,
+                'date_from' => Carbon::parse($this->data['callDateFrom']),
+                'date_to' => Carbon::parse($this->data['callDateTo']),
+                'limit' => $this->data['callLimit'],
+                'min_duration' => $this->data['callMinDuration'],
+                'status' => $this->data['callStatus'],
+                'has_appointment' => $this->data['callHasAppointment'],
+                'skip_existing' => $this->data['callSkipExisting'],
             ];
             
             Notification::make()
@@ -189,17 +192,48 @@ class IntelligentSyncManager extends Page implements HasForms
         }
     }
     
+    public function previewAppointments(): void
+    {
+        try {
+            $filters = [
+                'date_from' => Carbon::parse($this->data['appointmentDateFrom']),
+                'date_to' => Carbon::parse($this->data['appointmentDateTo']),
+                'limit' => min($this->data['appointmentLimit'], 20), // Preview max 20
+                'status' => $this->data['appointmentStatus'],
+                'event_type_id' => $this->data['appointmentEventTypeId'],
+                'skip_existing' => $this->data['appointmentSkipExisting'],
+                'include_cancelled' => $this->data['appointmentIncludeCancelled'],
+            ];
+            
+            $this->appointmentPreviewData = $this->syncService->previewSync('appointments', $filters);
+            $this->showAppointmentPreview = true;
+            
+            Notification::make()
+                ->title('Vorschau generiert')
+                ->body("Vorschau für Termine wurde generiert.")
+                ->info()
+                ->send();
+                
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Fehler bei Vorschau')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+    
     public function syncAppointments(): void
     {
         try {
             $filters = [
-                'date_from' => Carbon::parse($this->appointmentDateFrom),
-                'date_to' => Carbon::parse($this->appointmentDateTo),
-                'limit' => $this->appointmentLimit,
-                'status' => $this->appointmentStatus,
-                'event_type_id' => $this->appointmentEventTypeId,
-                'skip_existing' => $this->appointmentSkipExisting,
-                'include_cancelled' => $this->appointmentIncludeCancelled,
+                'date_from' => Carbon::parse($this->data['appointmentDateFrom']),
+                'date_to' => Carbon::parse($this->data['appointmentDateTo']),
+                'limit' => $this->data['appointmentLimit'],
+                'status' => $this->data['appointmentStatus'],
+                'event_type_id' => $this->data['appointmentEventTypeId'],
+                'skip_existing' => $this->data['appointmentSkipExisting'],
+                'include_cancelled' => $this->data['appointmentIncludeCancelled'],
             ];
             
             Notification::make()
@@ -246,13 +280,13 @@ class IntelligentSyncManager extends Page implements HasForms
             $filters = $recommendation['suggested_filters'];
             
             if (isset($filters['date_from'])) {
-                $this->callDateFrom = $filters['date_from']->format('Y-m-d');
+                $this->data['callDateFrom'] = $filters['date_from']->format('Y-m-d');
             }
             if (isset($filters['limit'])) {
-                $this->callLimit = $filters['limit'];
+                $this->data['callLimit'] = $filters['limit'];
             }
             if (isset($filters['min_duration'])) {
-                $this->callMinDuration = $filters['min_duration'];
+                $this->data['callMinDuration'] = $filters['min_duration'];
             }
             
             Notification::make()
@@ -262,7 +296,25 @@ class IntelligentSyncManager extends Page implements HasForms
                 ->send();
         }
         
-        // Ähnlich für appointments...
+        if ($type === 'appointments' && isset($recommendation['suggested_filters'])) {
+            $filters = $recommendation['suggested_filters'];
+            
+            if (isset($filters['date_from'])) {
+                $this->data['appointmentDateFrom'] = $filters['date_from']->format('Y-m-d');
+            }
+            if (isset($filters['date_to'])) {
+                $this->data['appointmentDateTo'] = $filters['date_to']->format('Y-m-d');
+            }
+            if (isset($filters['limit'])) {
+                $this->data['appointmentLimit'] = $filters['limit'];
+            }
+            
+            Notification::make()
+                ->title('Filter angewendet')
+                ->body('Die empfohlenen Filter wurden übernommen.')
+                ->success()
+                ->send();
+        }
     }
     
     public function form(Form $form): Form

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mobile Portal Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #111827;
+            margin-bottom: 20px;
+        }
+        .status-box {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .status-success {
+            background: #10b981;
+            color: white;
+        }
+        .status-error {
+            background: #ef4444;
+            color: white;
+        }
+        .status-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .test-btn {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .test-btn:hover {
+            background: #2563eb;
+        }
+        .test-btn:active {
+            transform: scale(0.98);
+        }
+        .console-output {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .console-line {
+            margin: 2px 0;
+        }
+        .console-success {
+            color: #10b981;
+        }
+        .console-error {
+            color: #ef4444;
+        }
+        .console-info {
+            color: #3b82f6;
+        }
+        .device-info {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border: 1px solid #e5e7eb;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        .info-value {
+            color: #111827;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Mobile Portal Test Suite</h1>
+        
+        <div id="device-info" class="device-info">
+            <div class="info-row">
+                <span class="info-label">Viewport Width:</span>
+                <span class="info-value" id="viewport-width">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Viewport Height:</span>
+                <span class="info-value" id="viewport-height">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">User Agent:</span>
+                <span class="info-value" id="user-agent">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Touch Support:</span>
+                <span class="info-value" id="touch-support">-</span>
+            </div>
+        </div>
+
+        <div id="status-container"></div>
+
+        <div class="test-buttons">
+            <button class="test-btn" onclick="checkMobileNavigation()">Check Mobile Navigation</button>
+            <button class="test-btn" onclick="testBurgerButton()">Test Burger Button</button>
+            <button class="test-btn" onclick="testMenuVisibility()">Test Menu Visibility</button>
+            <button class="test-btn" onclick="runAllTests()">Run All Tests</button>
+            <button class="test-btn" onclick="window.location.href='/admin'">Go to Admin Portal</button>
+        </div>
+
+        <div id="console" class="console-output">
+            <div class="console-line console-info">Test console ready...</div>
+        </div>
+    </div>
+
+    <script>
+        // Update device info
+        function updateDeviceInfo() {
+            document.getElementById('viewport-width').textContent = window.innerWidth + 'px';
+            document.getElementById('viewport-height').textContent = window.innerHeight + 'px';
+            document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 50) + '...';
+            document.getElementById('touch-support').textContent = 'ontouchstart' in window ? 'Yes' : 'No';
+        }
+        
+        // Console logging
+        function log(message, type = 'info') {
+            const console = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = `console-line console-${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        // Add status message
+        function addStatus(message, type = 'success') {
+            const container = document.getElementById('status-container');
+            const box = document.createElement('div');
+            box.className = `status-box status-${type}`;
+            box.textContent = message;
+            container.appendChild(box);
+        }
+        
+        // Clear previous results
+        function clearResults() {
+            document.getElementById('status-container').innerHTML = '';
+            document.getElementById('console').innerHTML = '<div class="console-line console-info">Test console ready...</div>';
+        }
+        
+        // Test functions
+        function checkMobileNavigation() {
+            clearResults();
+            log('Checking mobile navigation components...');
+            
+            // Open admin in iframe to test
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = '/admin';
+            document.body.appendChild(iframe);
+            
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Check for professional mobile navigation
+                    const mobileNav = iframeDoc.querySelector('.professional-mobile-navigation');
+                    if (mobileNav) {
+                        log('✅ Mobile navigation component found', 'success');
+                        addStatus('Mobile navigation component is present', 'success');
+                    } else {
+                        log('❌ Mobile navigation component NOT found', 'error');
+                        addStatus('Mobile navigation component is missing', 'error');
+                    }
+                    
+                    // Check for burger button
+                    const burgerBtn = iframeDoc.querySelector('.professional-burger-btn');
+                    if (burgerBtn) {
+                        log('✅ Burger button found', 'success');
+                        const isVisible = window.getComputedStyle(burgerBtn).display !== 'none';
+                        if (isVisible) {
+                            log('✅ Burger button is visible', 'success');
+                            addStatus('Burger button is visible', 'success');
+                        } else {
+                            log('⚠️ Burger button is hidden', 'error');
+                            addStatus('Burger button is hidden on mobile', 'warning');
+                        }
+                    } else {
+                        log('❌ Burger button NOT found', 'error');
+                        addStatus('Burger button is missing', 'error');
+                    }
+                    
+                    // Check Alpine.js
+                    if (iframe.contentWindow.Alpine) {
+                        log('✅ Alpine.js is loaded', 'success');
+                    } else {
+                        log('⚠️ Alpine.js not detected', 'error');
+                    }
+                    
+                } catch (e) {
+                    log('Error accessing iframe: ' + e.message, 'error');
+                }
+                
+                document.body.removeChild(iframe);
+            };
+        }
+        
+        function testBurgerButton() {
+            clearResults();
+            log('Testing burger button functionality...');
+            addStatus('Please open the admin portal and click the burger button to test', 'warning');
+            
+            // Provide test script
+            const testScript = `
+// Run this in the browser console on the admin page:
+const btn = document.querySelector('.professional-burger-btn');
+if (btn) {
+    console.log('Burger button found');
+    btn.click();
+    console.log('Clicked burger button');
+    
+    setTimeout(() => {
+        const menu = document.querySelector('.professional-mobile-panel');
+        if (menu && window.getComputedStyle(menu).display !== 'none') {
+            console.log('✅ Mobile menu is visible');
+        } else {
+            console.log('❌ Mobile menu is NOT visible');
+        }
+    }, 500);
+} else {
+    console.log('❌ Burger button not found');
+}
+            `;
+            
+            log('Copy this script to test:', 'info');
+            log(testScript, 'info');
+        }
+        
+        function testMenuVisibility() {
+            clearResults();
+            log('Testing menu visibility on different screen sizes...');
+            
+            const currentWidth = window.innerWidth;
+            
+            if (currentWidth < 1024) {
+                log(`Current width: ${currentWidth}px (Mobile view)`, 'info');
+                addStatus('You are in mobile view - burger menu should be visible', 'success');
+            } else {
+                log(`Current width: ${currentWidth}px (Desktop view)`, 'info');
+                addStatus('You are in desktop view - sidebar should be visible', 'warning');
+            }
+            
+            log('Resize your browser window to test responsive behavior', 'info');
+        }
+        
+        function runAllTests() {
+            clearResults();
+            log('Running all tests...', 'info');
+            
+            checkMobileNavigation();
+            
+            setTimeout(() => {
+                testMenuVisibility();
+            }, 1000);
+        }
+        
+        // Initialize
+        updateDeviceInfo();
+        window.addEventListener('resize', updateDeviceInfo);
+        
+        // Auto-run tests if on mobile
+        if (window.innerWidth < 1024) {
+            setTimeout(runAllTests, 500);
+        }
+    </script>
+</body>
+</html>

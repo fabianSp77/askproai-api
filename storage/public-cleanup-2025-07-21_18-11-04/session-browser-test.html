@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Browser Session Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .cookie-item {
+            background: #e9ecef;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .log-entry {
+            padding: 5px;
+            margin: 2px 0;
+            border-left: 3px solid #007bff;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Browser Session Cookie Test</h1>
+        
+        <div class="test-section">
+            <h2>Current Cookies <span id="cookie-status" class="status warning">Checking...</span></h2>
+            <div id="cookies-list"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Session Test <span id="session-status" class="status warning">Not started</span></h2>
+            <p>Session Counter: <strong id="counter">0</strong></p>
+            <p>Session ID: <code id="session-id">none</code></p>
+            <button onclick="testSession()">Test Laravel Session</button>
+            <button onclick="clearSession()">Clear Session</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Cookie Manipulation Test</h2>
+            <button onclick="setCookie('test_cookie', 'test_value')">Set Test Cookie</button>
+            <button onclick="deleteCookie('test_cookie')">Delete Test Cookie</button>
+            <button onclick="testHttpOnlyCookie()">Test HttpOnly Cookie</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Browser Storage</h2>
+            <p>LocalStorage Counter: <strong id="local-counter">0</strong></p>
+            <p>SessionStorage Counter: <strong id="session-storage-counter">0</strong></p>
+            <button onclick="incrementStorage()">Increment Storage</button>
+            <button onclick="clearStorage()">Clear Storage</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Activity Log</h2>
+            <div id="activity-log" style="max-height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        let activityLog = [];
+        
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            activityLog.unshift(`[${time}] ${message}`);
+            updateLog();
+        }
+
+        function updateLog() {
+            const logEl = document.getElementById('activity-log');
+            logEl.innerHTML = activityLog.slice(0, 20).map(entry => 
+                `<div class="log-entry">${entry}</div>`
+            ).join('');
+        }
+
+        function updateCookies() {
+            const cookiesList = document.getElementById('cookies-list');
+            const cookies = document.cookie.split(';').filter(c => c.trim());
+            
+            if (cookies.length === 0 || (cookies.length === 1 && cookies[0] === '')) {
+                cookiesList.innerHTML = '<p class="error">No cookies found!</p>';
+                document.getElementById('cookie-status').className = 'status error';
+                document.getElementById('cookie-status').textContent = 'No cookies';
+                return;
+            }
+
+            cookiesList.innerHTML = cookies.map(cookie => {
+                const [name, value] = cookie.trim().split('=');
+                return `<div class="cookie-item"><strong>${name}:</strong> ${value || '(empty)'}</div>`;
+            }).join('');
+
+            document.getElementById('cookie-status').className = 'status success';
+            document.getElementById('cookie-status').textContent = `${cookies.length} cookies`;
+
+            // Check for Laravel session cookie
+            const hasLaravelSession = cookies.some(c => c.includes('askproai_session'));
+            if (hasLaravelSession) {
+                log('Laravel session cookie detected');
+            }
+        }
+
+        function setCookie(name, value, days = 1) {
+            const expires = new Date();
+            expires.setDate(expires.getDate() + days);
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+            log(`Set cookie: ${name}=${value}`);
+            updateCookies();
+        }
+
+        function deleteCookie(name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            log(`Deleted cookie: ${name}`);
+            updateCookies();
+        }
+
+        function testHttpOnlyCookie() {
+            // This will attempt to read HttpOnly cookies (should fail)
+            const allCookies = document.cookie;
+            const httpOnlyCookies = ['askproai_session', 'XSRF-TOKEN'];
+            const found = [];
+            
+            httpOnlyCookies.forEach(name => {
+                if (allCookies.includes(name)) {
+                    found.push(name);
+                }
+            });
+
+            if (found.length > 0) {
+                log('Warning: HttpOnly cookies visible to JavaScript: ' + found.join(', '), 'warning');
+            } else {
+                log('Good: HttpOnly cookies are not accessible via JavaScript', 'success');
+            }
+        }
+
+        async function testSession() {
+            try {
+                const response = await fetch('/api/test/session-check', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+                
+                // Update counter from session data
+                const counter = data.session_data?.test_counter || 0;
+                document.getElementById('counter').textContent = counter;
+                document.getElementById('session-id').textContent = data.session_id || 'none';
+                
+                if (data.session_id) {
+                    document.getElementById('session-status').className = 'status success';
+                    document.getElementById('session-status').textContent = 'Active';
+                    log(`Session test successful. ID: ${data.session_id}, Counter: ${counter}`);
+                } else {
+                    document.getElementById('session-status').className = 'status error';
+                    document.getElementById('session-status').textContent = 'Failed';
+                    log('Session test failed - no session ID', 'error');
+                }
+
+                // Update cookies after request
+                setTimeout(updateCookies, 100);
+
+            } catch (error) {
+                document.getElementById('session-status').className = 'status error';
+                document.getElementById('session-status').textContent = 'Error';
+                log('Session test error: ' + error.message, 'error');
+            }
+        }
+
+        async function clearSession() {
+            try {
+                await fetch('/api/test/clear-session', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                document.getElementById('counter').textContent = '0';
+                document.getElementById('session-id').textContent = 'none';
+                document.getElementById('session-status').className = 'status warning';
+                document.getElementById('session-status').textContent = 'Cleared';
+                log('Session cleared');
+                
+                setTimeout(updateCookies, 100);
+            } catch (error) {
+                log('Clear session error: ' + error.message, 'error');
+            }
+        }
+
+        function incrementStorage() {
+            // LocalStorage
+            let localCounter = parseInt(localStorage.getItem('counter') || '0');
+            localCounter++;
+            localStorage.setItem('counter', localCounter);
+            document.getElementById('local-counter').textContent = localCounter;
+
+            // SessionStorage
+            let sessionCounter = parseInt(sessionStorage.getItem('counter') || '0');
+            sessionCounter++;
+            sessionStorage.setItem('counter', sessionCounter);
+            document.getElementById('session-storage-counter').textContent = sessionCounter;
+
+            log(`Storage incremented - Local: ${localCounter}, Session: ${sessionCounter}`);
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('local-counter').textContent = '0';
+            document.getElementById('session-storage-counter').textContent = '0';
+            log('Browser storage cleared');
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            updateCookies();
+            
+            // Load storage counters
+            document.getElementById('local-counter').textContent = localStorage.getItem('counter') || '0';
+            document.getElementById('session-storage-counter').textContent = sessionStorage.getItem('counter') || '0';
+            
+            log('Page loaded');
+            
+            // Auto-refresh cookies every 5 seconds
+            setInterval(updateCookies, 5000);
+        };
+
+        // Monitor cookie changes
+        let lastCookies = document.cookie;
+        setInterval(() => {
+            if (document.cookie !== lastCookies) {
+                log('Cookies changed detected');
+                lastCookies = document.cookie;
+                updateCookies();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

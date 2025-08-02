@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Portal\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Services\Portal\PortalAuthService;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 
 class AjaxLoginController extends Controller
 {
@@ -18,7 +18,7 @@ class AjaxLoginController extends Controller
     }
 
     /**
-     * Handle login request
+     * Handle login request.
      */
     public function login(Request $request)
     {
@@ -26,10 +26,11 @@ class AjaxLoginController extends Controller
         $key = 'login:' . $request->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
             $seconds = RateLimiter::availableIn($key);
+
             return response()->json([
                 'success' => false,
                 'message' => "Too many login attempts. Please try again in {$seconds} seconds.",
-                'code' => 'RATE_LIMITED'
+                'code' => 'RATE_LIMITED',
             ], 429);
         }
 
@@ -37,16 +38,17 @@ class AjaxLoginController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string|min:6',
-            'remember' => 'boolean'
+            'remember' => 'boolean',
         ]);
 
         if ($validator->fails()) {
             RateLimiter::hit($key);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
-                'code' => 'VALIDATION_ERROR'
+                'code' => 'VALIDATION_ERROR',
             ], 422);
         }
 
@@ -57,8 +59,9 @@ class AjaxLoginController extends Controller
             $request->boolean('remember', false)
         );
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             RateLimiter::hit($key);
+
             return response()->json($result, 401);
         }
 
@@ -71,14 +74,14 @@ class AjaxLoginController extends Controller
             'data' => [
                 'user' => $result['user'],
                 'session_token' => $result['session_token'],
-                'csrf_token' => csrf_token()
+                'csrf_token' => csrf_token(),
             ],
-            'redirect' => $result['redirect']
+            'redirect' => $result['redirect'],
         ]);
     }
 
     /**
-     * Handle logout request
+     * Handle logout request.
      */
     public function logout(Request $request)
     {
@@ -87,23 +90,23 @@ class AjaxLoginController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Logged out successfully',
-            'redirect' => '/business/login'
+            'redirect' => '/business/login',
         ]);
     }
 
     /**
-     * Check authentication status
+     * Check authentication status.
      */
     public function check(Request $request)
     {
-        if (!$this->authService->check()) {
+        if (! $this->authService->check()) {
             return response()->json([
-                'authenticated' => false
+                'authenticated' => false,
             ]);
         }
 
         $user = $this->authService->user();
-        
+
         return response()->json([
             'authenticated' => true,
             'user' => [
@@ -112,31 +115,31 @@ class AjaxLoginController extends Controller
                 'email' => $user->email,
                 'company_id' => $user->company_id,
                 'role' => $user->role ?? 'user',
-                'permissions' => session('portal_permissions', [])
+                'permissions' => session('portal_permissions', []),
             ],
-            'csrf_token' => csrf_token()
+            'csrf_token' => csrf_token(),
         ]);
     }
 
     /**
-     * Refresh session
+     * Refresh session.
      */
     public function refresh(Request $request)
     {
         $userData = $this->authService->refreshSession();
 
-        if (!$userData) {
+        if (! $userData) {
             return response()->json([
                 'success' => false,
                 'message' => 'Session refresh failed',
-                'code' => 'SESSION_EXPIRED'
+                'code' => 'SESSION_EXPIRED',
             ], 401);
         }
 
         return response()->json([
             'success' => true,
             'user' => $userData,
-            'csrf_token' => csrf_token()
+            'csrf_token' => csrf_token(),
         ]);
     }
 }

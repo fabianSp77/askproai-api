@@ -1,0 +1,225 @@
+<?php
+
+namespace App\Filament\Admin\Resources;
+
+use App\Filament\Admin\Traits\HasTooltips;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+
+/**
+ * Example Resource demonstrating tooltip implementation
+ * 
+ * This resource shows how to implement tooltips across:
+ * - Table actions
+ * - Bulk actions
+ * - Header actions
+ * - Form actions
+ * - Infolist actions
+ */
+class ExampleTooltipResource extends Resource
+{
+    use HasTooltips;
+
+    protected static ?string $model = \App\Models\Call::class; // Using Call model as example
+    protected static ?string $navigationIcon = 'heroicon-o-information-circle';
+    protected static ?string $navigationLabel = 'Tooltip Examples';
+    protected static bool $shouldRegisterNavigation = false; // Hide from navigation
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label('ID'),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created'),
+            ])
+            // Header Actions with tooltips
+            ->headerActions(static::applyHeaderActionTooltips([
+                Tables\Actions\Action::make('export')
+                    ->label('Export')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    // Tooltip will be automatically applied from language file
+                    ->action(fn () => null),
+                    
+                Tables\Actions\Action::make('import')
+                    ->label('Import')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    // Tooltip will be automatically applied
+                    ->action(fn () => null),
+                    
+                Tables\Actions\Action::make('refresh')
+                    ->label('Aktualisieren')
+                    ->icon('heroicon-o-arrow-path')
+                    // Custom tooltip can override automatic ones
+                    ->tooltip('Lädt alle Daten neu vom Server')
+                    ->action(fn () => null),
+            ]))
+            // Row Actions with tooltips
+            ->actions(static::applyTableActionTooltips([
+                // Standard CRUD actions get automatic tooltips
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                
+                // Action groups also work
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('duplicate')
+                        ->label('Duplizieren')
+                        ->icon('heroicon-o-document-duplicate')
+                        // Automatic tooltip from 'duplicate' key
+                        ->action(fn () => null),
+                        
+                    Tables\Actions\Action::make('archive')
+                        ->label('Archivieren')
+                        ->icon('heroicon-o-archive-box')
+                        // Automatic tooltip from 'archive' key
+                        ->action(fn () => null),
+                        
+                    Tables\Actions\Action::make('send_email')
+                        ->label('E-Mail senden')
+                        ->icon('heroicon-o-envelope')
+                        // Automatic tooltip from 'send_email' key
+                        ->action(fn () => null),
+                ]),
+                
+                // Custom actions with explicit tooltips
+                Tables\Actions\Action::make('custom_action')
+                    ->label('Custom Action')
+                    ->tooltip('This is a custom tooltip for a custom action')
+                    ->icon('heroicon-o-sparkles')
+                    ->action(fn () => null),
+            ]))
+            // Bulk Actions with tooltips
+            ->bulkActions(static::applyBulkActionTooltips([
+                Tables\Actions\BulkActionGroup::make([
+                    // Standard bulk actions
+                    Tables\Actions\DeleteBulkAction::make(),
+                    
+                    // Custom bulk actions
+                    Tables\Actions\BulkAction::make('bulk_export')
+                        ->label('Ausgewählte exportieren')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        // Automatic tooltip from 'bulk_export' key
+                        ->action(fn () => null),
+                        
+                    Tables\Actions\BulkAction::make('mark_as_non_billable')
+                        ->label('Als nicht abrechenbar markieren')
+                        ->icon('heroicon-o-x-circle')
+                        // Automatic tooltip from 'mark_non_billable' key
+                        ->action(fn () => null),
+                        
+                    Tables\Actions\BulkAction::make('create_credit_note')
+                        ->label('Gutschrift erstellen')
+                        ->icon('heroicon-o-receipt-refund')
+                        // Automatic tooltip from 'create_credit_note' key
+                        ->action(fn () => null),
+                ]),
+            ]));
+    }
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\TextInput::make('name')
+                    ->label('Name')
+                    ->required(),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\TextEntry::make('id')
+                    ->label('ID'),
+                    
+                // Infolist actions with tooltips
+                Infolists\Components\Actions::make([
+                    Infolists\Components\Actions\Action::make('refresh_data')
+                        ->label('Daten aktualisieren')
+                        ->icon('heroicon-o-arrow-path')
+                        ->tooltip(static::tooltip('refresh_data'))
+                        ->action(fn () => null),
+                        
+                    Infolists\Components\Actions\Action::make('download')
+                        ->label('PDF herunterladen')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->tooltip(static::tooltip('download_pdf'))
+                        ->action(fn () => null),
+                ]),
+            ]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListExampleTooltips::route('/'),
+            'view' => ViewExampleTooltip::route('/{record}'),
+        ];
+    }
+}
+
+// List Page with tooltips
+namespace App\Filament\Admin\Resources\ExampleTooltipResource\Pages;
+
+use App\Filament\Admin\Resources\ExampleTooltipResource;
+use App\Filament\Admin\Traits\HasTooltips;
+use Filament\Actions;
+use Filament\Resources\Pages\ListRecords;
+
+class ListExampleTooltips extends ListRecords
+{
+    use HasTooltips;
+    
+    protected static string $resource = ExampleTooltipResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return static::applyFormActionTooltips([
+            Actions\CreateAction::make()
+                // Automatic tooltip from 'create' key
+                ->label('Neu erstellen'),
+                
+            Actions\Action::make('preflight_check')
+                ->label('Preflight Check')
+                ->icon('heroicon-o-shield-check')
+                // Automatic tooltip from 'preflight_check' key
+                ->action(fn () => null),
+                
+            Actions\Action::make('health_check')
+                ->label('Health Check')
+                ->icon('heroicon-o-heart')
+                // Automatic tooltip from 'health_check' key
+                ->action(fn () => null),
+        ]);
+    }
+}
+
+// View Page with tooltips
+class ViewExampleTooltip extends \Filament\Resources\Pages\ViewRecord
+{
+    use HasTooltips;
+    
+    protected static string $resource = ExampleTooltipResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return static::applyFormActionTooltips([
+            Actions\EditAction::make(),
+            Actions\DeleteAction::make(),
+            
+            Actions\Action::make('generate_report')
+                ->label('Bericht erstellen')
+                ->icon('heroicon-o-document-chart-bar')
+                // Automatic tooltip from 'generate_report' key
+                ->action(fn () => null),
+        ]);
+    }
+}

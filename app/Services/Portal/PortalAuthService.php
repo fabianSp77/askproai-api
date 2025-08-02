@@ -54,8 +54,11 @@ class PortalAuthService
 
             // Login user
             Auth::guard('portal')->login($user, $remember);
+            
+            // Regenerate session ID to prevent session fixation
+            Session::regenerate();
 
-            // Store session data
+            // Store session data AFTER regeneration
             $this->storeSessionData($user);
 
             // Generate session token for API authentication
@@ -154,6 +157,11 @@ class PortalAuthService
      */
     protected function storeSessionData(PortalUser $user): void
     {
+        // Store the standard Laravel auth session key
+        $sessionKey = 'login_portal_' . sha1(\App\Models\PortalUser::class);
+        Session::put($sessionKey, $user->id);
+        
+        // Store additional portal-specific data
         Session::put('portal_user_id', $user->id);
         Session::put('portal_company_id', $user->company_id);
         Session::put('portal_authenticated', true);
@@ -170,6 +178,9 @@ class PortalAuthService
             'authenticated' => true,
             'login_time' => now()->toIso8601String(),
         ]), 60 * 24 * 7); // 7 days
+        
+        // Force save session to ensure persistence
+        Session::save();
     }
 
     /**

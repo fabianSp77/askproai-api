@@ -13,7 +13,8 @@ class ListIntegrations extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\IntegrationStatusWidget::class,
+            // Temporarily disabled due to database schema mismatch
+            // \App\Filament\Admin\Widgets\IntegrationStatusWidget::class,
         ];
     }
 

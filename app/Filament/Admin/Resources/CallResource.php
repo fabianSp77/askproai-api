@@ -6,6 +6,7 @@ use App\Filament\Admin\Resources\CallResource\Actions\MarkAsNonBillableAction;
 use App\Filament\Admin\Resources\CallResource\Pages;
 use App\Filament\Admin\Resources\CallResource\Widgets;
 use App\Filament\Admin\Resources\Concerns\HasManyColumns;
+use App\Filament\Admin\Traits\HasTooltips;
 use App\Models\Appointment;
 use App\Models\Call;
 use App\Models\Customer;
@@ -23,17 +24,27 @@ use Illuminate\Support\HtmlString;
 
 class CallResource extends Resource
 {
-    use HasManyColumns;
+    use HasManyColumns, HasTooltips;
 
     protected static ?string $model = Call::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-phone-arrow-down-left';
 
-    protected static ?string $navigationLabel = 'Anrufe';
+    protected static ?string $navigationLabel = null;
 
-    protected static ?string $navigationGroup = 'Täglicher Betrieb';
+    protected static ?string $navigationGroup = null;
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.calls');
+    }
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.daily_operations');
+    }
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 1; // Erste Position in der Gruppe
 
     protected static bool $shouldRegisterNavigation = true;
 
@@ -85,9 +96,8 @@ class CallResource extends Resource
         return $table
             ->modifyQueryUsing(
                 fn ($query) => $query
-                    ->withoutGlobalScope(\App\Scopes\TenantScope::class)
-                    ->withoutGlobalScope(\App\Scopes\CompanyScope::class)
-                    ->with(['customer', 'appointment', 'branch', 'company.billingRate', 'mlPrediction', 'callCharge'])
+                    ->with(['customer:id,name,phone,email', 'appointment:id,status', 'branch:id,name', 'company:id,name'])
+                    ->select('calls.*')
             )
             ->striped()
             ->defaultSort('start_timestamp', 'desc')
@@ -96,11 +106,12 @@ class CallResource extends Resource
             ->paginationPageOptions([10, 25, 50])
             ->defaultPaginationPageOption(25)
             ->selectCurrentPageOnly()
-            ->recordClasses(fn ($record) => match ($record->sentiment) {
-                'positive' => 'border-l-4 border-green-500',
-                'negative' => 'border-l-4 border-red-500',
-                default => '',
-            })
+            // Temporarily disable record classes for performance
+            // ->recordClasses(fn ($record) => match ($record->sentiment) {
+            //     'positive' => 'border-l-4 border-green-500',
+            //     'negative' => 'border-l-4 border-red-500',
+            //     default => '',
+            // })
             ->columns([
                 Tables\Columns\TextColumn::make('start_timestamp')
                     ->label('Anrufstart')
@@ -142,33 +153,43 @@ class CallResource extends Resource
 
                 Tables\Columns\TextColumn::make('sentiment')
                     ->label('Stimmung')
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        'positive' => 'Positiv',
-                        'negative' => 'Negativ',
-                        'neutral' => 'Neutral',
-                        default => '—'
+                    ->formatStateUsing(function ($state) {
+                        return match ($state) {
+                            'positive' => 'Positiv',
+                            'negative' => 'Negativ',
+                            'neutral' => 'Neutral',
+                            default => '—'
+                        };
                     })
                     ->badge()
-                    ->color(fn ($state) => match ($state) {
-                        'positive' => 'success',
-                        'negative' => 'danger',
-                        'neutral' => 'gray',
-                        default => 'secondary'
+                    ->color(function ($state) {
+                        return match ($state) {
+                            'positive' => 'success',
+                            'negative' => 'danger',
+                            'neutral' => 'gray',
+                            default => 'secondary'
+                        };
                     })
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('appointment_made')
                     ->label('Termin')
-                    ->formatStateUsing(fn ($state, $record) => match (true) {
-                        $record->appointment_made => 'Gebucht',
-                        $record->appointment_requested => 'Angefragt',
-                        default => 'Kein Termin'
+                    ->formatStateUsing(function ($state, $record) {
+                        if ($record && $record->appointment_made) {
+                            return 'Gebucht';
+                        } elseif ($record && $record->appointment_requested) {
+                            return 'Angefragt';
+                        }
+                        return 'Kein Termin';
                     })
                     ->badge()
-                    ->color(fn ($state, $record) => match (true) {
-                        $record->appointment_made => 'success',
-                        $record->appointment_requested => 'warning',
-                        default => 'gray'
+                    ->color(function ($state, $record) {
+                        if ($record && $record->appointment_made) {
+                            return 'success';
+                        } elseif ($record && $record->appointment_requested) {
+                            return 'warning';
+                        }
+                        return 'gray';
                     })
                     ->toggleable(),
 
@@ -182,74 +203,83 @@ class CallResource extends Resource
                 Tables\Columns\TextColumn::make('callCharge.refund_status')
                     ->label('Erstattung')
                     ->default('')
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        'full' => 'Voll erstattet',
-                        'partial' => 'Teilweise erstattet',
-                        'none' => '',
-                        null => '',
-                        default => ''
+                    ->formatStateUsing(function ($state) {
+                        if ($state === 'full') {
+                            return 'Voll erstattet';
+                        } elseif ($state === 'partial') {
+                            return 'Teilweise erstattet';
+                        }
+                        return '';
                     })
                     ->badge()
-                    ->color(fn ($state) => match ($state) {
-                        'full' => 'success',
-                        'partial' => 'warning',
-                        null => null,
-                        default => null
+                    ->color(function ($state) {
+                        if ($state === 'full') {
+                            return 'success';
+                        } elseif ($state === 'partial') {
+                            return 'warning';
+                        }
+                        return null;
                     })
                     ->toggleable(),
 
-                Tables\Columns\IconColumn::make('non_billable_status')
-                    ->label('Nicht abrechenbar')
-                    ->getStateUsing(fn ($record) => $record->metadata['non_billable'] ?? false)
-                    ->boolean()
-                    ->trueIcon('heroicon-o-x-circle')
-                    ->falseIcon('')
-                    ->trueColor('danger')
-                    ->tooltip(
-                        fn ($record) => ($record->metadata['non_billable'] ?? false)
-                            ? 'Grund: ' . ($record->metadata['non_billable_reason'] ?? 'Unbekannt')
-                            : null
-                    )
-                    ->toggleable(isToggledHiddenByDefault: false),
+                // Temporarily disable complex metadata column for performance
+                // Tables\Columns\IconColumn::make('non_billable_status')
+                //     ->label('Nicht abrechenbar')
+                //     ->getStateUsing(fn ($record) => $record->metadata['non_billable'] ?? false)
+                //     ->boolean()
+                //     ->trueIcon('heroicon-o-x-circle')
+                //     ->falseIcon('')
+                //     ->trueColor('danger')
+                //     ->tooltip(
+                //         fn ($record) => ($record->metadata['non_billable'] ?? false)
+                //             ? 'Grund: ' . ($record->metadata['non_billable_reason'] ?? 'Unbekannt')
+                //             : null
+                //     )
+                //     ->toggleable(isToggledHiddenByDefault: false),
 
                 Tables\Columns\TextColumn::make('branch.name')
                     ->label('Filiale')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: false),
 
                 Tables\Columns\TextColumn::make('company.name')
                     ->label('Firma')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
-                SelectFilter::make('refund_status')
-                    ->label('Erstattungsstatus')
-                    ->relationship('callCharge', 'refund_status')
-                    ->options([
-                        'none' => 'Nicht erstattet',
-                        'partial' => 'Teilweise erstattet',
-                        'full' => 'Voll erstattet',
-                    ])
-                    ->placeholder('Alle Anrufe'),
+                // Temporarily disable complex filters for performance
             ])
-            ->actions([
+            ->actions(static::applyTableActionTooltips([
                 Tables\Actions\ViewAction::make()
-                    ->iconButton(),
+                    ->label('Details')
+                    ->button()
+                    ->size('sm')
+                    ->outlined()
+                    ->icon('heroicon-m-eye')
+                    ->extraAttributes([
+                        'class' => 'fi-ta-view-action',
+                    ]),
 
                 Tables\Actions\Action::make('share')
+                    ->label('Teilen')
                     ->icon('heroicon-o-share')
                     ->color('gray')
-                    ->iconButton()
+                    ->button()
+                    ->size('sm')
+                    ->outlined()
                     ->modalContent(fn ($record) => view('filament.modals.share-call', ['record' => $record]))
                     ->modalHeading('Anruf teilen')
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Schließen'),
-            ])
-            ->bulkActions([
-                MarkAsNonBillableAction::make(),
+                    ->modalCancelActionLabel('Schließen')
+                    ->visible(false), // Temporarily hide share button on mobile
+            ]))
+            ->bulkActions(static::applyBulkActionTooltips([
+                MarkAsNonBillableAction::make()
+                    ->tooltip(static::tooltip('mark_non_billable')),
                 Tables\Actions\BulkAction::make('createRefund')
                     ->label('Gutschrift erstellen')
+                    ->tooltip(static::tooltip('create_credit_note'))
                     ->icon('heroicon-o-receipt-refund')
                     ->color('warning')
                     ->requiresConfirmation()
@@ -285,14 +315,19 @@ class CallResource extends Resource
                         $callIds = $records->pluck('id')->toArray();
                         $refundService = app(\App\Services\CallRefundService::class);
 
-                        $reason = match ($data['reason']) {
+                        $reasonMap = [
                             'technical_issue' => 'Technisches Problem',
                             'quality_issue' => 'Qualitätsproblem',
                             'wrong_number' => 'Falsche Nummer',
                             'customer_complaint' => 'Kundenbeschwerde',
                             'test_call' => 'Testanruf',
-                            'other' => 'Sonstiges: ' . ($data['notes'] ?? ''),
-                        };
+                        ];
+                        
+                        if ($data['reason'] === 'other') {
+                            $reason = 'Sonstiges: ' . ($data['notes'] ?? '');
+                        } else {
+                            $reason = $reasonMap[$data['reason']] ?? $data['reason'];
+                        }
 
                         $results = $refundService->refundMultipleCalls(
                             $callIds,
@@ -322,13 +357,9 @@ class CallResource extends Resource
                         }
                     })
                     ->deselectRecordsAfterCompletion(),
-                Tables\Actions\DeleteBulkAction::make(),
-            ])
-            ->recordClasses(
-                fn ($record) => ($record->metadata['non_billable'] ?? false)
-                    ? 'non-billable-call-row'
-                    : ''
-            );
+                Tables\Actions\DeleteBulkAction::make()
+                    ->tooltip(static::tooltip('bulk_delete'))
+            ]));
 
         return static::configureTableForManyColumns($table);
     }
@@ -336,7 +367,10 @@ class CallResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCalls::route('/'),
+            'index' => Pages\ListCallsWorking::route('/'),
+            'clean' => Pages\ListCallsClean::route('/clean'),
+            'old' => Pages\ListCalls::route('/old'),
+            'fixed' => Pages\ListCallsFixed::route('/fixed'),
             'create' => Pages\CreateCall::route('/create'),
             'edit' => Pages\EditCall::route('/{record}/edit'),
             'view' => Pages\ViewCall::route('/{record}'),
@@ -354,17 +388,16 @@ class CallResource extends Resource
     {
         return $infolist
             ->schema([
-                // MODERN HEADER V2 - Balanced customer prominence with call context
+                // MODERN HEADER V2 - Mobile-optimized version
                 Infolists\Components\ViewEntry::make('modern_header')
                     ->label(false)
-                    ->view('filament.infolists.call-header-modern-v2')
+                    ->view('filament.infolists.call-header-modern-v2-mobile')
                     ->columnSpanFull(),
 
-                // MAIN CONTENT AREA - Grid Layout for better distribution
+                // MAIN CONTENT AREA - Responsive Grid Layout
                 Infolists\Components\Grid::make([
-                    'default' => 1,
-                    'md' => 1,
-                    'lg' => 12,
+                    'default' => 1,    // Mobile: Stack everything
+                    'lg' => 12,        // Desktop: 12-column grid system
                 ])
                     ->schema([
                         // LEFT COLUMN - Primary Information (2/3 width)
@@ -1339,7 +1372,7 @@ class CallResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['customer', 'appointment', 'company', 'mlPrediction']);
+            ->with(['customer', 'appointment', 'company', 'mlPrediction', 'branch', 'callCharge']);
 
         $user = auth()->user();
 

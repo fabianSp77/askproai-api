@@ -9,18 +9,18 @@ class InjectCsrfToken
 {
     public function handle(Request $request, Closure $next)
     {
-        // Always regenerate token for business portal
-        if ($request->is('business/*') || $request->is('business')) {
+        // Only regenerate token if it doesn't exist
+        if (($request->is('business/*') || $request->is('business')) && !$request->session()->has('_token')) {
             $request->session()->regenerateToken();
         }
-        
+
         $response = $next($request);
-        
+
         // Add CSRF token to response headers
         if ($response instanceof \Illuminate\Http\Response) {
             $response->headers->set('X-CSRF-TOKEN', csrf_token());
         }
-        
+
         return $response;
     }
 }

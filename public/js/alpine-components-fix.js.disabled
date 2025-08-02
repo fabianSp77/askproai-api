@@ -1,0 +1,114 @@
+/**
+ * Alpine.js Components Fix
+ * Provides missing Alpine components to fix console errors
+ */
+
+// Define global Alpine components
+document.addEventListener('alpine:init', () => {
+    console.log('[Alpine Components Fix] Initializing missing components...');
+    
+    // Global dropdown functions
+    Alpine.data('dropdown', () => ({
+        open: false,
+        
+        toggleDropdown() {
+            this.open = !this.open;
+        },
+        
+        closeDropdown() {
+            this.open = false;
+        },
+        
+        openDropdown() {
+            this.open = true;
+        }
+    }));
+    
+    // Define companyBranchSelectEnhanced for any page that needs it
+    Alpine.data('companyBranchSelectEnhanced', () => ({
+        showDropdown: false,
+        searchQuery: '',
+        selectedCompany: null,
+        selectedBranches: [],
+        expandedCompanies: [],
+        
+        init() {
+            console.log('[Alpine Fix] companyBranchSelectEnhanced initialized');
+        },
+        
+        toggleDropdown() {
+            this.showDropdown = !this.showDropdown;
+        },
+        
+        closeDropdown() {
+            this.showDropdown = false;
+        },
+        
+        getCompactLabel() {
+            return 'Select Company/Branch';
+        },
+        
+        matchesSearch(text) {
+            if (!this.searchQuery) return true;
+            return text.toLowerCase().includes(this.searchQuery.toLowerCase());
+        },
+        
+        isCompanySelected(companyId) {
+            return this.selectedCompany === companyId;
+        },
+        
+        isBranchSelected(branchId) {
+            return this.selectedBranches.includes(branchId);
+        },
+        
+        hasSearchResults() {
+            return true;
+        }
+    }));
+    
+    // Define dateFilterDropdownEnhanced
+    Alpine.data('dateFilterDropdownEnhanced', () => ({
+        showDateFilter: false,
+        showDropdown: false, // Add standard property
+        
+        init() {
+            console.log('[Alpine Fix] dateFilterDropdownEnhanced initialized');
+        },
+        
+        toggleDateFilter() {
+            this.showDateFilter = !this.showDateFilter;
+            this.showDropdown = this.showDateFilter; // Keep in sync
+        },
+        
+        // Add standard dropdown methods
+        toggleDropdown() {
+            this.showDropdown = !this.showDropdown;
+            this.showDateFilter = this.showDropdown; // Keep in sync
+        },
+        
+        closeDropdown() {
+            this.showDropdown = false;
+            this.showDateFilter = false;
+        },
+        
+        openDropdown() {
+            this.showDropdown = true;
+            this.showDateFilter = true;
+        }
+    }));
+});
+
+// Also provide fallback for any undefined Alpine components
+window.Alpine && window.Alpine.magic('fallback', () => {
+    return (componentName) => {
+        console.warn(`[Alpine Fix] Component '${componentName}' not found, using fallback`);
+        return {
+            init() {},
+            showDropdown: false,
+            expandedCompanies: [],
+            searchQuery: ''
+        };
+    };
+});
+
+console.log('[Alpine Components Fix] Script loaded');

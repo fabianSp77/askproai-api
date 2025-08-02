@@ -30,19 +30,19 @@ class ListInvoices extends ListRecords
             'draft' => Tab::make('Entwürfe')
                 ->icon('heroicon-o-pencil')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'draft'))
-                ->badge(fn () => $this->getModel()::where('status', 'draft')->count())
+                ->badge(fn () => static::getResource()::getEloquentQuery()->where('status', 'draft')->count())
                 ->badgeColor('gray'),
                 
             'open' => Tab::make('Offen')
                 ->icon('heroicon-o-clock')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'open'))
-                ->badge(fn () => $this->getModel()::where('status', 'open')->count())
+                ->badge(fn () => static::getResource()::getEloquentQuery()->where('status', 'open')->count())
                 ->badgeColor('warning'),
                 
             'paid' => Tab::make('Bezahlt')
                 ->icon('heroicon-o-check-circle')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'paid'))
-                ->badge(fn () => $this->getModel()::where('status', 'paid')->count())
+                ->badge(fn () => static::getResource()::getEloquentQuery()->where('status', 'paid')->count())
                 ->badgeColor('success'),
                 
             'overdue' => Tab::make('Überfällig')
@@ -51,7 +51,8 @@ class ListInvoices extends ListRecords
                     $query->where('status', 'open')
                           ->where('due_date', '<', now())
                 )
-                ->badge(fn () => $this->getModel()::where('status', 'open')
+                ->badge(fn () => static::getResource()::getEloquentQuery()
+                    ->where('status', 'open')
                     ->where('due_date', '<', now())
                     ->count()
                 )
@@ -62,8 +63,9 @@ class ListInvoices extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            InvoiceResource\Widgets\InvoiceStatsOverview::class,
-            InvoiceResource\Widgets\InvoicePipelineWidget::class,
+            // Temporarily disabled to isolate error
+            // InvoiceResource\Widgets\InvoiceStatsOverview::class,
+            // InvoiceResource\Widgets\InvoicePipelineWidget::class,
         ];
     }
 }

@@ -14,13 +14,23 @@ use Filament\Notifications\Notification;
 
 class UserResource extends Resource
 {
-    protected static ?string $navigationGroup = 'System & Verwaltung';
+    protected static ?string $navigationGroup = null;
     protected static ?int $navigationSort = 10;
     use HasConsistentNavigation;
     
     protected static ?string $model = User::class;
     protected static ?string $navigationIcon = 'heroicon-o-user';
-    protected static ?string $navigationLabel = 'Benutzer';
+    protected static ?string $navigationLabel = null;
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.system');
+    }
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.users');
+    }
 
     public static function form(Form $form): Form
     {

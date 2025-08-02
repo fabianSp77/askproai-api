@@ -10,22 +10,13 @@ class Kernel extends HttpKernel
      * The application's global HTTP middleware stack.
      */
     protected $middleware = [
-        // \App\Http\Middleware\TrustHosts::class,
-        // \App\Http\Middleware\ResponseWrapper::class, // Disabled - interferes with Livewire
-        // \App\Http\Middleware\EnsureProperResponseFormat::class, // Disabled - interferes with Livewire
         Middleware\TrustProxies::class,
         \Illuminate\Http\Middleware\HandleCors::class,
         Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        Middleware\ReleaseDbConnection::class, // Release DB connections after request
-        // \App\Http\Middleware\FixLivewireHeadersIssue::class, // Fix Livewire headers issue - must be early
-        // \App\Http\Middleware\CorrelationIdMiddleware::class, // Add correlation ID to all requests
-        // \App\Http\Middleware\EnsureTenantContext::class, // Add tenant context globally
-        // \App\Http\Middleware\ThreatDetectionMiddleware::class, // Add threat detection
-        // \App\Http\Middleware\MonitoringMiddleware::class, // Performance and security monitoring
-        // Middleware\MetricsMiddleware::class, // Prometheus metrics collection - temporarily disabled
+        Middleware\ReleaseDbConnection::class,
     ];
 
     /* -------------------------------------------------------------------- *
@@ -39,8 +30,6 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            Middleware\CheckCookieConsent::class,
-            // \App\Http\Middleware\ResponseCompressionMiddleware::class, // Temporarily disabled - may interfere with Livewire
         ],
         'api' => [
             'throttle:api',
@@ -65,22 +54,20 @@ class Kernel extends HttpKernel
         ],
         
         'business-portal' => [
-            \App\Http\Middleware\PortalSessionConfig::class,
+            // Use individual middleware instead of inheriting from web
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
-            \App\Http\Middleware\RefreshCsrfTokenForPortal::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
         
         'business-api' => [
-            \App\Http\Middleware\PortalSessionConfig::class,
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
-            \App\Http\Middleware\SharePortalSession::class,
+            \App\Http\Middleware\PortalAuth::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
@@ -99,6 +86,7 @@ class Kernel extends HttpKernel
         'input.validation' => Middleware\InputValidationMiddleware::class,
         'threat.detection' => Middleware\ThreatDetectionMiddleware::class,
         'rate.limit' => Middleware\AdaptiveRateLimitMiddleware::class,
+        'auth.rate.limit' => Middleware\AuthenticationRateLimiter::class,
         'webhook.replay.protection' => Middleware\WebhookReplayProtection::class,
         'monitoring' => Middleware\MonitoringMiddleware::class,
         'check.cookie.consent' => Middleware\CheckCookieConsent::class,
@@ -110,30 +98,15 @@ class Kernel extends HttpKernel
         'cache.response' => Middleware\CacheResponse::class,
         'branch.context' => Middleware\BranchContextMiddleware::class,
         'check.appointment.booking' => Middleware\CheckAppointmentBookingRequired::class,
+        'query.performance' => Middleware\QueryPerformanceMiddleware::class,
         
-        // Portal Middleware - Unified
+        // Portal Middleware - Simplified
         'portal.auth' => Middleware\PortalAuth::class,
-        'portal.auth.optional' => Middleware\PortalAuth::class . ':optional',
-        'portal.auth.api' => Middleware\PortalAuth::class,
-        'portal.api.auth' => Middleware\PortalAuth::class,
         'portal.permission' => Middleware\PortalPermission::class,
-        'allow.dual.auth' => Middleware\AllowDualAuth::class,
-        'fix.portal.auth' => Middleware\FixPortalAuth::class,
-        'share.portal.session' => Middleware\SharePortalSession::class,
+        'portal.2fa' => Middleware\PortalTwoFactorAuth::class,
         
-        // Session Configuration Middleware
-        'portal.session' => Middleware\PortalSessionConfig::class,
-        'admin.session' => Middleware\AdminSessionConfig::class,
-        
-        // Admin Impersonation
+        // Admin Middleware
         'admin.impersonation' => Middleware\AdminImpersonation::class,
-        
-        // Admin API
-        'disable.csrf.admin' => Middleware\DisableCSRFForAdminAPI::class,
-        'disable.tenant.scope' => Middleware\DisableTenantScopeForAdminApi::class,
-        
-        // Legacy aliases for backward compatibility
-        'portal.authenticate' => Middleware\PortalAuth::class,
 
         // ── Laravel-Standard ──────────────────────────────────────────────
         'auth' => Middleware\Authenticate::class,

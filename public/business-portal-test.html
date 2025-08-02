@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Portal Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Business Portal Session Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Session Test</h2>
+        <button onclick="testSession()">Test Session</button>
+        <div id="session-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Login Test</h2>
+        <form id="login-form">
+            <input type="email" id="email" value="demo@askproai.de" placeholder="Email">
+            <input type="password" id="password" value="password" placeholder="Password">
+            <button type="submit">Login</button>
+        </form>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Dashboard Access Test</h2>
+        <button onclick="testDashboard()">Test Dashboard Access</button>
+        <div id="dashboard-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. API Test</h2>
+        <button onclick="testAPI()">Test API Access</button>
+        <div id="api-result"></div>
+    </div>
+
+    <script>
+        async function testSession() {
+            const result = document.getElementById('session-result');
+            result.innerHTML = '<p class="info">Testing session...</p>';
+            
+            try {
+                const response = await fetch('/business/session-debug', {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                
+                result.innerHTML = `
+                    <p class="success">Session Test Complete</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const result = document.getElementById('login-result');
+            result.innerHTML = '<p class="info">Logging in...</p>';
+            
+            // Get CSRF token
+            const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+            let csrfToken = tokenMeta ? tokenMeta.content : '';
+            
+            if (!csrfToken) {
+                // Try to get from login page
+                const loginPage = await fetch('/business/login');
+                const html = await loginPage.text();
+                const match = html.match(/<input type="hidden" name="_token" value="([^"]+)"/);
+                csrfToken = match ? match[1] : '';
+            }
+            
+            const formData = new FormData();
+            formData.append('email', document.getElementById('email').value);
+            formData.append('password', document.getElementById('password').value);
+            formData.append('_token', csrfToken);
+            
+            try {
+                const response = await fetch('/business/login', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    redirect: 'manual'
+                });
+                
+                if (response.type === 'opaqueredirect' || response.status === 302 || response.status === 303) {
+                    result.innerHTML = '<p class="success">Login successful! (Redirect detected)</p>';
+                    
+                    // Test session after login
+                    setTimeout(() => testSession(), 1000);
+                } else {
+                    const text = await response.text();
+                    result.innerHTML = `<p class="error">Login failed: ${response.status}</p>`;
+                    
+                    // Check for errors in response
+                    if (text.includes('ungültig') || text.includes('invalid')) {
+                        result.innerHTML += '<p class="error">Invalid credentials</p>';
+                    }
+                }
+            } catch (error) {
+                result.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        });
+        
+        async function testDashboard() {
+            const result = document.getElementById('dashboard-result');
+            result.innerHTML = '<p class="info">Testing dashboard access...</p>';
+            
+            try {
+                const response = await fetch('/business/dashboard', {
+                    credentials: 'same-origin',
+                    redirect: 'manual'
+                });
+                
+                if (response.type === 'opaqueredirect' || response.status === 302) {
+                    result.innerHTML = '<p class="error">Redirected (probably to login)</p>';
+                } else if (response.ok) {
+                    const text = await response.text();
+                    const isLoggedIn = !text.includes('login') || text.includes('dashboard');
+                    result.innerHTML = isLoggedIn 
+                        ? '<p class="success">Dashboard accessible!</p>'
+                        : '<p class="error">Not authenticated</p>';
+                } else {
+                    result.innerHTML = `<p class="error">Error: ${response.status}</p>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testAPI() {
+            const result = document.getElementById('api-result');
+            result.innerHTML = '<p class="info">Testing API access...</p>';
+            
+            try {
+                const response = await fetch('/business/api/user', {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `
+                        <p class="success">API Access Successful!</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else if (response.status === 401) {
+                    result.innerHTML = '<p class="error">Not authenticated (401)</p>';
+                } else {
+                    result.innerHTML = `<p class="error">Error: ${response.status}</p>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Test session on load
+        window.onload = () => {
+            testSession();
+        };
+    </script>
+</body>
+</html>

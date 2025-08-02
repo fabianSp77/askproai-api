@@ -13,7 +13,10 @@ class HorizonServiceProvider extends ServiceProvider
         Horizon::auth(fn ($request) =>
             in_array(
                 optional($request->user())->email,
-                ['fabian@askproai.de']    // ⚠️ weitere Admin-Mails hier eintragen
+                [
+                    'fabian@askproai.de',
+                    'admin@askproai.de'    // Admin user für Horizon Zugriff
+                ]
             )
         );
     }

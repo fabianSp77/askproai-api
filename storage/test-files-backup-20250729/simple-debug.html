@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Debug</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; margin: 40px; background: #f5f5f5; }
+        .box { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #0056b3; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        pre { background: #f0f0f0; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>Simple Debug für Calls Page</h1>
+        <p>Klicke die Buttons um Tests auszuführen:</p>
+        
+        <button onclick="test1()">Test 1: Check Livewire</button>
+        <button onclick="test2()">Test 2: Check Assets</button>
+        <button onclick="test3()">Test 3: Check Admin</button>
+        <button onclick="test4()">Test 4: Clear Everything</button>
+    </div>
+    
+    <div class="box">
+        <h2>Results:</h2>
+        <div id="results"></div>
+    </div>
+    
+    <script>
+        function addResult(text, className) {
+            var div = document.getElementById('results');
+            var p = document.createElement('p');
+            p.className = className || '';
+            p.textContent = new Date().toLocaleTimeString() + ' - ' + text;
+            div.appendChild(p);
+        }
+        
+        function test1() {
+            addResult('Testing Livewire...', '');
+            
+            // Check if Livewire script exists
+            var xhr = new XMLHttpRequest();
+            xhr.open('HEAD', '/vendor/livewire/livewire.js', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    addResult('✓ Livewire script exists', 'success');
+                    
+                    // Try to load it
+                    var script = document.createElement('script');
+                    script.src = '/vendor/livewire/livewire.js';
+                    script.onload = function() {
+                        if (typeof window.Livewire !== 'undefined') {
+                            addResult('✓ Livewire loaded successfully!', 'success');
+                        } else {
+                            addResult('✗ Livewire loaded but not initialized', 'error');
+                        }
+                    };
+                    script.onerror = function() {
+                        addResult('✗ Failed to load Livewire script', 'error');
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    addResult('✗ Livewire script not found: ' + xhr.status, 'error');
+                }
+            };
+            xhr.send();
+        }
+        
+        function test2() {
+            addResult('Checking assets...', '');
+            
+            var assets = [
+                '/css/filament/filament/app.css',
+                '/js/filament/filament/app.js',
+                '/js/filament/support/support.js'
+            ];
+            
+            assets.forEach(function(url) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('HEAD', url, true);
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        addResult('✓ ' + url + ' - OK', 'success');
+                    } else {
+                        addResult('✗ ' + url + ' - ' + xhr.status, 'error');
+                    }
+                };
+                xhr.onerror = function() {
+                    addResult('✗ ' + url + ' - Network error', 'error');
+                };
+                xhr.send();
+            });
+        }
+        
+        function test3() {
+            addResult('Testing admin endpoint...', '');
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/admin/calls', true);
+            xhr.withCredentials = true;
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    addResult('✓ Admin calls page returned 200', 'success');
+                    
+                    // Check response content
+                    var hasLivewire = xhr.responseText.indexOf('wire:id') > -1;
+                    var hasLoading = xhr.responseText.indexOf('Loading') > -1;
+                    
+                    addResult('Has Livewire components: ' + (hasLivewire ? 'Yes' : 'No'), hasLivewire ? 'success' : 'warning');
+                    addResult('Has Loading text: ' + (hasLoading ? 'Yes' : 'No'), hasLoading ? 'warning' : 'success');
+                } else if (xhr.status === 302) {
+                    addResult('⚠ Redirect to login (not authenticated)', 'warning');
+                } else {
+                    addResult('✗ Admin calls page error: ' + xhr.status, 'error');
+                }
+            };
+            xhr.send();
+        }
+        
+        function test4() {
+            if (!confirm('This will clear all browser data. Continue?')) return;
+            
+            addResult('Clearing browser data...', 'warning');
+            
+            // Clear storage
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                addResult('✓ Storage cleared', 'success');
+            } catch (e) {
+                addResult('✗ Error clearing storage: ' + e.message, 'error');
+            }
+            
+            // Clear service workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    registrations.forEach(function(registration) {
+                        registration.unregister();
+                        addResult('✓ Service worker unregistered', 'success');
+                    });
+                });
+            }
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            addResult('✓ Cookies cleared', 'success');
+            
+            addResult('Done! Please close browser and reopen.', 'success');
+        }
+        
+        // Initial message
+        addResult('Debug tool ready. Click buttons above.', '');
+    </script>
+</body>
+</html>

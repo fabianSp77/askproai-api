@@ -40,6 +40,7 @@ import GoalDashboard from '../../../components/Portal/Goals/GoalDashboard';
 import { useIsMobile } from '../../../hooks/useMediaQuery';
 import MobileDashboard from '../../../components/Mobile/MobileDashboard';
 import axiosInstance from '../../../services/axiosInstance';
+import { useDashboardUpdates } from '../../../hooks/useEcho';
 
 dayjs.locale('de');
 
@@ -80,10 +81,72 @@ const DashboardIndex = () => {
         alerts: []
     });
 
+    // Handle real-time dashboard updates
+    useDashboardUpdates((update) => {
+        console.log('Dashboard update received:', update);
+        
+        // Update stats if provided
+        if (update.stats) {
+            setDashboardData(prevData => ({
+                ...prevData,
+                stats: {
+                    ...prevData.stats,
+                    ...update.stats
+                }
+            }));
+        }
+        
+        // Update trends if provided
+        if (update.trends) {
+            setDashboardData(prevData => ({
+                ...prevData,
+                trends: {
+                    ...prevData.trends,
+                    ...update.trends
+                }
+            }));
+        }
+        
+        // Update performance metrics if provided
+        if (update.performance) {
+            setDashboardData(prevData => ({
+                ...prevData,
+                performance: {
+                    ...prevData.performance,
+                    ...update.performance
+                }
+            }));
+        }
+        
+        // Update chart data if provided
+        if (update.chartData) {
+            setDashboardData(prevData => ({
+                ...prevData,
+                chartData: {
+                    ...prevData.chartData,
+                    ...update.chartData
+                }
+            }));
+        }
+        
+        // Update lists if provided
+        if (update.recentCalls) {
+            setDashboardData(prevData => ({
+                ...prevData,
+                recentCalls: update.recentCalls
+            }));
+        }
+        
+        if (update.upcomingAppointments) {
+            setDashboardData(prevData => ({
+                ...prevData,
+                upcomingAppointments: update.upcomingAppointments
+            }));
+        }
+    });
+
     useEffect(() => {
         fetchDashboardData();
-        const interval = setInterval(fetchDashboardData, 60000); // Refresh every minute
-        return () => clearInterval(interval);
     }, [timeRange]);
 
     const fetchDashboardData = async () => {

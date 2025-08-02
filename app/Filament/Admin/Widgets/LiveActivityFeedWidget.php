@@ -17,7 +17,7 @@ class LiveActivityFeedWidget extends FilterableWidget
         'xl' => 2,
     ];
     protected static ?int $sort = 4;
-    protected static ?string $pollingInterval = '10s';
+    protected static ?string $pollingInterval = null; // Disabled for performance
     
     protected function getViewData(): array
     {

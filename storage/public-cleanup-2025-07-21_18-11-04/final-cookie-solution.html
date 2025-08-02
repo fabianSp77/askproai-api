@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Solution - Final Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .alert { padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .solution { background: #e8f5e9; padding: 20px; border-radius: 10px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Cookie Solution - Final Analysis</h1>
+    
+    <div class="alert info">
+        <h3>Current Situation:</h3>
+        <ul>
+            <li>✅ Server sends Set-Cookie header correctly</li>
+            <li>✅ Cookie has correct domain (.askproai.de)</li>
+            <li>✅ Cookie has secure flag for HTTPS</li>
+            <li>❌ Browser does not store the cookie</li>
+        </ul>
+    </div>
+
+    <div id="analysis"></div>
+
+    <div class="solution">
+        <h2>💡 Most Likely Solutions:</h2>
+        <ol>
+            <li><strong>Domain Mismatch</strong>: You're accessing from a different domain/subdomain</li>
+            <li><strong>Browser Privacy Settings</strong>: Third-party cookies blocked</li>
+            <li><strong>Browser Extensions</strong>: Ad blockers or privacy extensions</li>
+            <li><strong>Incognito/Private Mode</strong>: Some browsers block cookies in private mode</li>
+        </ol>
+    </div>
+
+    <button onclick="runFullDiagnosis()">Run Full Diagnosis</button>
+    <button onclick="testDirectCookie()">Test Direct Cookie Set</button>
+
+    <script>
+        const analysis = document.getElementById('analysis');
+        
+        function log(content, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `alert ${type}`;
+            div.innerHTML = content;
+            analysis.appendChild(div);
+        }
+
+        async function runFullDiagnosis() {
+            analysis.innerHTML = '';
+            
+            // 1. Check current domain
+            log(`<strong>1. Domain Check:</strong><br>
+                Current URL: ${window.location.href}<br>
+                Hostname: ${window.location.hostname}<br>
+                Cookie Domain: .askproai.de<br>
+                Match: ${window.location.hostname.endsWith('askproai.de') ? '✅ YES' : '❌ NO'}
+            `, window.location.hostname.endsWith('askproai.de') ? 'success' : 'error');
+
+            // 2. Check HTTPS
+            log(`<strong>2. HTTPS Check:</strong><br>
+                Protocol: ${window.location.protocol}<br>
+                Secure: ${window.location.protocol === 'https:' ? '✅ YES' : '❌ NO'}
+            `, window.location.protocol === 'https:' ? 'success' : 'warning');
+
+            // 3. Check cookie support
+            log(`<strong>3. Cookie Support:</strong><br>
+                navigator.cookieEnabled: ${navigator.cookieEnabled ? '✅ YES' : '❌ NO'}
+            `, navigator.cookieEnabled ? 'success' : 'error');
+
+            // 4. Test login
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+
+                const data = await response.json();
+                
+                log(`<strong>4. Login Response:</strong><br>
+                    Status: ${response.status}<br>
+                    Success: ${data.success ? '✅ YES' : '❌ NO'}<br>
+                    Session ID: ${data.session_id || 'N/A'}
+                `, data.success ? 'success' : 'error');
+
+                // Wait and check cookies
+                setTimeout(() => {
+                    const cookies = document.cookie;
+                    const hasSession = cookies.includes('askproai_session');
+                    
+                    log(`<strong>5. Cookie Result:</strong><br>
+                        Session Cookie Found: ${hasSession ? '✅ YES' : '❌ NO'}<br>
+                        All Cookies: <pre>${cookies || 'NONE'}</pre>
+                    `, hasSession ? 'success' : 'error');
+
+                    if (!hasSession) {
+                        showSolution();
+                    }
+                }, 500);
+
+            } catch (error) {
+                log(`<strong>Login Error:</strong> ${error}`, 'error');
+            }
+        }
+
+        function testDirectCookie() {
+            // Try setting cookie directly via JS
+            document.cookie = 'test_direct=works; path=/; domain=.askproai.de; secure; samesite=lax';
+            
+            const found = document.cookie.includes('test_direct=works');
+            log(`<strong>Direct Cookie Test:</strong><br>
+                Attempted to set: test_direct=works<br>
+                Found in document.cookie: ${found ? '✅ YES' : '❌ NO'}
+            `, found ? 'success' : 'error');
+        }
+
+        function showSolution() {
+            log(`<strong>🔧 SOLUTION NEEDED:</strong><br>
+                <h3>The cookie is not being stored because:</h3>
+                <ol>
+                    <li>You might be accessing from <code>localhost</code> or an IP address instead of the domain</li>
+                    <li>The cookie domain <code>.askproai.de</code> doesn't match your current domain</li>
+                </ol>
+                <h3>To fix this:</h3>
+                <ol>
+                    <li>Access the site via: <code>https://api.askproai.de/</code></li>
+                    <li>Or update SESSION_DOMAIN in .env to match your domain</li>
+                    <li>Or remove SESSION_DOMAIN to use current domain</li>
+                </ol>
+            `, 'warning');
+        }
+
+        // Auto-run on load
+        window.onload = () => {
+            if (!window.location.hostname.endsWith('askproai.de')) {
+                log(`<strong>⚠️ DOMAIN MISMATCH DETECTED!</strong><br>
+                    You are accessing from: ${window.location.hostname}<br>
+                    But cookies are set for: .askproai.de<br>
+                    <br>
+                    <strong>This is why cookies are not working!</strong>
+                `, 'error');
+            }
+        };
+    </script>
+</body>
+</html>

@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\InvoiceResource\Pages;
 use App\Filament\Admin\Traits\HasConsistentNavigation;
+use App\Filament\Admin\Traits\HasTooltips;
 use App\Models\Invoice;
 use App\Models\Company;
 use App\Models\TaxRate;
@@ -32,17 +33,37 @@ use Illuminate\Database\Eloquent\Model;
 
 class InvoiceResource extends Resource
 {
-    use HasConsistentNavigation;
+    use HasConsistentNavigation, HasTooltips;
     
     protected static ?string $model = Invoice::class;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $navigationLabel = 'Rechnungen';
-    protected static ?string $navigationGroup = 'Abrechnung';
+    protected static ?string $navigationLabel = null;
+    protected static ?string $navigationGroup = null;
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.invoices');
+    }
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.financial');
+    }
     protected static ?int $navigationSort = 200;
     
-    protected static ?string $modelLabel = 'Rechnung';
+    protected static ?string $modelLabel = null;
     
-    protected static ?string $pluralModelLabel = 'Rechnungen';
+    protected static ?string $pluralModelLabel = null;
+    
+    public static function getModelLabel(): string
+    {
+        return __('admin.resources.invoices');
+    }
+    
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.resources.invoices');
+    }
 
     public static function canViewAny(): bool
     {
@@ -137,9 +158,9 @@ class InvoiceResource extends Resource
                         // Check creation_mode first to avoid query
                         if ($record->creation_mode === 'usage') return true;
                         // Only check flexible items if not already determined by creation_mode
-                        return $record->relationLoaded('flexibleItems') 
-                            ? $record->flexibleItems->where('type', 'usage')->isNotEmpty()
-                            : $record->flexibleItems()->where('type', 'usage')->exists();
+                        return $record->relationLoaded('items') 
+                            ? $record->items->where('type', 'usage')->isNotEmpty()
+                            : $record->items()->where('type', 'usage')->exists();
                     })
                     ->schema([
                         \Filament\Forms\Components\Placeholder::make('usage_info')
@@ -239,7 +260,7 @@ class InvoiceResource extends Resource
                     ->description('Fügen Sie die einzelnen Positionen hinzu')
                     ->schema([
                         Repeater::make('items')
-                            ->relationship('flexibleItems')
+                            ->relationship('items')
                             ->label('Positionen')
                             ->schema([
                                 Grid::make(12)
@@ -275,23 +296,29 @@ class InvoiceResource extends Resource
                                     
                                 Grid::make(12)
                                     ->schema([
-                                        Select::make('tax_rate_id')
-                                            ->label('Steuersatz')
-                                            ->options(function (Get $get) {
-                                                $companyId = $get('../../company_id');
-                                                if (!$companyId) {
-                                                    return TaxRate::system()->pluck('name', 'id');
-                                                }
-                                                
-                                                $company = Company::find($companyId);
-                                                if ($company?->is_small_business) {
-                                                    return TaxRate::where('rate', 0)->pluck('name', 'id');
-                                                }
-                                                
-                                                return TaxRate::forCompany($companyId)->pluck('name', 'id');
-                                            })
-                                            ->required()
-                                            ->reactive()
+                                        // Tax rate temporarily disabled - no tax_rate_id column in invoice_items
+                                        // Select::make('tax_rate_id')
+                                        //     ->label('Steuersatz')
+                                        //     ->options(function (Get $get) {
+                                        //         $companyId = $get('../../company_id');
+                                        //         if (!$companyId) {
+                                        //             return TaxRate::system()->pluck('name', 'id');
+                                        //         }
+                                        //         
+                                        //         $company = Company::find($companyId);
+                                        //         if ($company?->is_small_business) {
+                                        //             return TaxRate::where('rate', 0)->pluck('name', 'id');
+                                        //         }
+                                        //         
+                                        //         return TaxRate::forCompany($companyId)->pluck('name', 'id');
+                                        //     })
+                                        //     ->required()
+                                        //     ->reactive()
+                                        //     ->columnSpan(3),
+                                        
+                                        Placeholder::make('tax_info')
+                                            ->label('Steuer')
+                                            ->content('Wird aus Firmenstatus berechnet')
                                             ->columnSpan(3),
                                             
                                         DatePicker::make('period_start')
@@ -334,10 +361,12 @@ class InvoiceResource extends Resource
                                 
                                 foreach ($items as $item) {
                                     $amount = ($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0);
-                                    $taxCalc = $taxService->calculateTax($amount, $company, $item['tax_rate_id'] ?? null);
+                                    // Tax calculation simplified - no tax_rate_id in items
+                                    $taxRate = $company->is_small_business ? 0 : 19;
+                                    $taxAmount = $amount * ($taxRate / 100);
                                     
                                     $subtotal += $amount;
-                                    $totalTax += $taxCalc['tax_amount'];
+                                    $totalTax += $taxAmount;
                                 }
                                 
                                 $set('subtotal', $subtotal);
@@ -459,13 +488,13 @@ class InvoiceResource extends Resource
                         default => $state,
                     }),
                     
-                Tables\Columns\IconColumn::make('is_small_business')
+                Tables\Columns\IconColumn::make('company.is_small_business')
                     ->label('Kleinunt.')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
                     ->falseIcon('heroicon-o-x-circle')
                     ->tooltip(fn (Model $record): string => 
-                        $record->company->is_small_business 
+                        $record->company && $record->company->is_small_business 
                             ? 'Kleinunternehmer (0% MwSt)' 
                             : 'Regulär besteuert'
                     ),
@@ -518,9 +547,10 @@ class InvoiceResource extends Resource
                             );
                     }),
             ])
-            ->actions([
+            ->actions(static::applyTableActionTooltips([
                 Tables\Actions\Action::make('preview')
                     ->label('Vorschau')
+                    ->tooltip(static::tooltip('preview_invoice'))
                     ->icon('heroicon-o-eye')
                     ->modalContent(fn (Invoice $record): \Illuminate\Contracts\View\View => 
                         view('filament.admin.resources.invoice-preview', ['invoice' => $record])
@@ -530,6 +560,7 @@ class InvoiceResource extends Resource
                     
                 Tables\Actions\Action::make('finalize')
                     ->label('Finalisieren')
+                    ->tooltip(static::tooltip('finalize_invoice'))
                     ->icon('heroicon-o-check')
                     ->action(function (Invoice $record) {
                         $service = new \App\Services\Stripe\EnhancedStripeInvoiceService();
@@ -553,11 +584,12 @@ class InvoiceResource extends Resource
                     
                 Tables\Actions\Action::make('download')
                     ->label('PDF')
+                    ->tooltip(static::tooltip('download_pdf'))
                     ->icon('heroicon-o-arrow-down-tray')
                     ->url(fn (Invoice $record) => $record->pdf_url)
                     ->openUrlInNewTab()
                     ->visible(fn (Invoice $record) => $record->pdf_url),
-            ])
+            ]))
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
@@ -588,6 +620,6 @@ class InvoiceResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['company', 'flexibleItems.taxRate']);
+            ->with(['company', 'items']);
     }
 }

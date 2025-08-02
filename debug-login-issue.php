@@ -1,79 +1,76 @@
 <?php
 
-require 'vendor/autoload.php';
-$app = require_once 'bootstrap/app.php';
-$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap();
+require_once __DIR__ . '/vendor/autoload.php';
 
-use App\Models\PortalUser;
-use App\Models\Company;
-use Illuminate\Support\Facades\Hash;
+$app = require_once __DIR__ . '/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
-echo "=== Portal Login Debug ===\n\n";
+// Start the app
+$app->boot();
 
-// Check user
-$user = PortalUser::where('email', 'fabianspitzer@icloud.com')->first();
+echo "=== LOGIN DEBUG ANALYSIS ===\n\n";
 
-if (!$user) {
-    die("ERROR: User not found!\n");
-}
-
-echo "✓ User found\n";
-echo "  - ID: " . $user->id . "\n";
-echo "  - Email: " . $user->email . "\n";
-echo "  - Name: " . $user->name . "\n";
-echo "  - Role: " . $user->role . "\n";
-echo "  - Active: " . ($user->is_active ? 'YES' : 'NO') . "\n";
-echo "  - Company ID: " . $user->company_id . "\n";
-
-// Check company
-$company = Company::find($user->company_id);
-echo "\n✓ Company found\n";
-echo "  - ID: " . $company->id . "\n";
-echo "  - Name: " . $company->name . "\n";
-echo "  - Active: " . ($company->is_active ? 'YES' : 'NO') . "\n";
-
-// Check password
-echo "\n✓ Password check\n";
-$passwordCorrect = Hash::check('demo123', $user->password);
-echo "  - Password 'demo123' correct: " . ($passwordCorrect ? 'YES' : 'NO') . "\n";
-
-// Check 2FA
-echo "\n✓ 2FA check\n";
-echo "  - 2FA Secret: " . ($user->two_factor_secret ? 'SET' : 'NOT SET') . "\n";
-echo "  - 2FA Confirmed: " . ($user->two_factor_confirmed_at ? $user->two_factor_confirmed_at : 'NOT CONFIRMED') . "\n";
-echo "  - Requires 2FA: " . ($user->requires2FA() ? 'YES' : 'NO') . "\n";
-echo "  - 2FA Enforced: " . ($user->two_factor_enforced ? 'YES' : 'NO') . "\n";
-
-// Check if there's any scope issue
-echo "\n✓ Database query test\n";
-$testUser = \DB::table('portal_users')->where('email', 'fabianspitzer@icloud.com')->first();
-echo "  - Direct DB query found user: " . ($testUser ? 'YES' : 'NO') . "\n";
-
-// Check for any global scopes
-echo "\n✓ Model scopes\n";
-$scopes = (new \ReflectionClass($user))->getProperty('globalScopes');
-$scopes->setAccessible(true);
-$globalScopes = $scopes->getValue($user);
-echo "  - Global scopes: " . (empty($globalScopes) ? 'NONE' : json_encode(array_keys($globalScopes))) . "\n";
-
-// Test login process step by step
-echo "\n✓ Login process simulation\n";
-echo "  1. User lookup: " . (PortalUser::where('email', 'fabianspitzer@icloud.com')->first() ? 'FOUND' : 'NOT FOUND') . "\n";
-echo "  2. Password check: " . ($passwordCorrect ? 'PASSED' : 'FAILED') . "\n";
-echo "  3. Active check: " . ($user->is_active ? 'PASSED' : 'FAILED') . "\n";
-echo "  4. 2FA requirement: " . ($user->requires2FA() ? 'REQUIRED' : 'NOT REQUIRED') . "\n";
-echo "  5. 2FA secret check: " . ($user->two_factor_secret ? 'HAS SECRET' : 'NO SECRET') . "\n";
-
-echo "\n✓ Summary\n";
-if ($user && $passwordCorrect && $user->is_active && !$user->requires2FA() && !$user->two_factor_secret) {
-    echo "  ✅ User should be able to login without issues!\n";
-} else {
-    echo "  ❌ Login will fail due to:\n";
-    if (!$user) echo "    - User not found\n";
-    if (!$passwordCorrect) echo "    - Incorrect password\n";
-    if (!$user->is_active) echo "    - User not active\n";
-    if ($user->requires2FA()) echo "    - 2FA required but not set up\n";
-    if ($user->two_factor_secret) echo "    - 2FA secret exists, challenge required\n";
-}
-
+echo "1. SESSION CONFIGURATION:\n";
+echo "   Main session cookie: " . config('session.cookie') . "\n";
+echo "   Main session domain: " . (config('session.domain') ?: 'null') . "\n";
+echo "   Main session path: " . config('session.path') . "\n";
+echo "   Main session secure: " . (config('session.secure') ? 'true' : 'false') . "\n";
+echo "   Main session driver: " . config('session.driver') . "\n";
+echo "   Main session files: " . config('session.files') . "\n";
 echo "\n";
+
+echo "2. PORTAL SESSION CONFIGURATION (if exists):\n";
+if (file_exists(__DIR__ . '/config/session_portal.php')) {
+    $portalConfig = include __DIR__ . '/config/session_portal.php';
+    echo "   Portal session cookie: " . $portalConfig['cookie'] . "\n";
+    echo "   Portal session domain: " . ($portalConfig['domain'] ?: 'null') . "\n";
+    echo "   Portal session path: " . $portalConfig['path'] . "\n";
+    echo "   Portal session secure: " . ($portalConfig['secure'] ? 'true' : 'false') . "\n";
+    echo "   Portal session files: " . $portalConfig['files'] . "\n";
+} else {
+    echo "   Portal session config not found\n";
+}
+echo "\n";
+
+echo "3. AUTH GUARDS CONFIGURATION:\n";
+$guards = config('auth.guards');
+foreach ($guards as $name => $guard) {
+    echo "   Guard '$name': driver={$guard['driver']}, provider={$guard['provider']}\n";
+}
+echo "\n";
+
+echo "4. AUTH PROVIDERS CONFIGURATION:\n";
+$providers = config('auth.providers');
+foreach ($providers as $name => $provider) {
+    echo "   Provider '$name': driver={$provider['driver']}, model={$provider['model']}\n";
+}
+echo "\n";
+
+echo "5. SESSION FILES CHECK:\n";
+$mainSessionPath = storage_path('framework/sessions');
+$portalSessionPath = storage_path('framework/sessions/portal');
+
+echo "   Main session path exists: " . (is_dir($mainSessionPath) ? 'YES' : 'NO') . "\n";
+echo "   Main session path writable: " . (is_writable($mainSessionPath) ? 'YES' : 'NO') . "\n";
+echo "   Portal session path exists: " . (is_dir($portalSessionPath) ? 'YES' : 'NO') . "\n";
+echo "   Portal session path writable: " . (is_writable($portalSessionPath) ? 'YES' : 'NO') . "\n";
+
+if (is_dir($mainSessionPath)) {
+    $mainSessionFiles = glob($mainSessionPath . '/*');
+    echo "   Main session files count: " . count($mainSessionFiles) . "\n";
+}
+
+if (is_dir($portalSessionPath)) {
+    $portalSessionFiles = glob($portalSessionPath . '/*');
+    echo "   Portal session files count: " . count($portalSessionFiles) . "\n";
+}
+echo "\n";
+
+echo "6. ENVIRONMENT VARIABLES:\n";
+$sessionEnvs = ['SESSION_DRIVER', 'SESSION_LIFETIME', 'SESSION_ENCRYPT', 'SESSION_DOMAIN', 'SESSION_SECURE_COOKIE', 'SESSION_COOKIE'];
+foreach ($sessionEnvs as $env) {
+    echo "   $env: " . (env($env) ?: 'not set') . "\n";
+}
+
+echo "\n=== END DEBUG ANALYSIS ===\n";
+EOF < /dev/null

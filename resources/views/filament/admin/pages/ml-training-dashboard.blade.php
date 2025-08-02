@@ -2,7 +2,7 @@
     {{-- CSS for premium styling --}}
     <link rel="stylesheet" href="{{ asset('css/ml-dashboard-premium.css') }}">
     
-    <div wire:poll.5s="refreshProgress">
+    <div wire:poll.30s="refreshProgress">
         {{-- Instructions Section --}}
         @if($showInstructions)
         <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">

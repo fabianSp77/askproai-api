@@ -15,70 +15,24 @@ class ListCalls extends ListRecords
 {
     protected static string $resource = CallResource::class;
     
-    protected static string $view = 'filament.admin.resources.call-resource.pages.list-calls';
+    // Remove custom view to use default Filament view
+    // protected static string $view = 'filament.admin.resources.call-resource.pages.list-calls';
     
+    /* Remove getViewData as it's not needed for standard Filament pages
     protected function getViewData(): array
     {
-        $data = parent::getViewData();
-        $user = auth()->user();
-        $company = $user?->company;
-        
-        // Initialize default values
-        $data['company'] = $company;
-        $data['todayCount'] = 0;
-        $data['weekCount'] = 0;
-        $data['avgDuration'] = 0;
-        $data['avgDurationFormatted'] = '0:00';
-        $data['conversionRate'] = 0;
-        $data['conversionData'] = (object)['total' => 0, 'with_appointments' => 0];
-        
-        if ($company && $user) {
-            // Cache widget data for 60 seconds to avoid multiple queries
-            $widgetData = \Illuminate\Support\Facades\Cache::remember('call_widget_data_' . $company->id, 60, function() use ($company) {
-                $berlinTz = 'Europe/Berlin';
-                
-                return [
-                    'todayCount' => \App\Models\Call::where('company_id', $company->id)
-                        ->whereDate('start_timestamp', today($berlinTz))
-                        ->count(),
-                    
-                    'weekCount' => \App\Models\Call::where('company_id', $company->id)
-                        ->whereBetween('start_timestamp', [
-                            now($berlinTz)->startOfWeek(),
-                            now($berlinTz)->endOfWeek()
-                        ])
-                        ->count(),
-                    
-                    'avgDuration' => \App\Models\Call::where('company_id', $company->id)
-                        ->whereNotNull('duration_sec')
-                        ->where('duration_sec', '>', 0)
-                        ->avg('duration_sec'),
-                    
-                    'conversionData' => \Illuminate\Support\Facades\DB::table('calls')
-                        ->where('company_id', $company->id)
-                        ->where('start_timestamp', '>=', now($berlinTz)->startOfMonth())
-                        ->selectRaw('COUNT(*) as total, COUNT(appointment_id) as with_appointments')
-                        ->first(),
-                ];
-            });
-            
-            // Format average duration
-            $widgetData['avgDurationFormatted'] = $widgetData['avgDuration'] 
-                ? gmdate('i:s', $widgetData['avgDuration']) 
-                : '0:00';
-            
-            // Calculate conversion rate
-            $widgetData['conversionRate'] = $widgetData['conversionData']->total > 0 
-                ? round(($widgetData['conversionData']->with_appointments / $widgetData['conversionData']->total) * 100) 
-                : 0;
-            
-            $data = array_merge($data, $widgetData);
-            $data['conversionData'] = $widgetData['conversionData'];
+        // This method was causing issues - removed
+    }
+    */
+
+    public function mount(): void
+    {
+        // Emergency Company Context Fix
+        if (auth()->check() && auth()->user()->company_id) {
+            app()->instance('current_company_id', auth()->user()->company_id);
+            app()->instance('company_context_source', 'web_auth');
         }
-        
-        $data['contentContainerClasses'] = 'fi-resource-calls';
-        
-        return $data;
+        parent::mount();
     }
 
     protected function getHeaderActions(): array
@@ -188,19 +142,19 @@ class ListCalls extends ListRecords
             return [];
         }
         
-        // Cache tab counts for 60 seconds to avoid multiple queries
-        $counts = Cache::remember('call_tab_counts_' . $user->company_id, 60, function() use ($user) {
+        // Cache tab counts for 5 minutes to avoid multiple queries
+        $counts = Cache::remember('call_tab_counts_' . $user->company_id, 300, function() use ($user) {
             $companyId = $user->company_id;
             
             return DB::table('calls')
                 ->where('company_id', $companyId)
                 ->selectRaw("
                     COUNT(*) as total,
-                    COUNT(CASE WHEN DATE(start_timestamp) = CURDATE() THEN 1 END) as today,
-                    COUNT(CASE WHEN appointment_id IS NOT NULL THEN 1 END) as with_appointments,
-                    COUNT(CASE WHEN appointment_id IS NULL THEN 1 END) as without_appointments,
-                    COUNT(CASE WHEN duration_sec > 300 THEN 1 END) as long_calls,
-                    COUNT(CASE WHEN call_status = 'failed' THEN 1 END) as failed
+                    SUM(CASE WHEN DATE(start_timestamp) = CURDATE() THEN 1 ELSE 0 END) as today,
+                    SUM(CASE WHEN appointment_id IS NOT NULL THEN 1 ELSE 0 END) as with_appointments,
+                    SUM(CASE WHEN appointment_id IS NULL THEN 1 ELSE 0 END) as without_appointments,
+                    SUM(CASE WHEN duration_sec > 300 THEN 1 ELSE 0 END) as long_calls,
+                    SUM(CASE WHEN call_status = 'failed' THEN 1 ELSE 0 END) as failed
                 ")
                 ->first();
         });

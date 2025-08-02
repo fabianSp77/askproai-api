@@ -2,14 +2,23 @@
 
 namespace App\Http\Controllers\Portal\Api;
 
+use App\Traits\UsesMCPServers;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use PragmaRX\Google2FA\Google2FA;
 
 class SettingsApiController extends BaseApiController
 {
+    use UsesMCPServers;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->setMCPPreferences([
+            'settings' => true,
+            'user' => true,
+            'company' => true
+        ]);
+    }
     public function getProfile(Request $request)
     {
         $user = $this->getCurrentUser();
@@ -18,18 +27,17 @@ class SettingsApiController extends BaseApiController
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Get profile via MCP
+        $result = $this->executeMCPTask('getUserProfile', [
+            'user_id' => $user->id
+        ]);
+
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json(['error' => 'Failed to fetch profile'], 500);
+        }
+
         return response()->json([
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone ?? null,
-                'role' => $user->role ?? 'user',
-                'avatar_url' => $user->avatar_url ?? null,
-                'two_factor_enabled' => $user->two_factor_confirmed_at !== null,
-                'created_at' => $user->created_at,
-                'last_login_at' => $user->last_login_at ?? null,
-            ],
+            'user' => $result['result']['data']
         ]);
     }
 
@@ -43,15 +51,27 @@ class SettingsApiController extends BaseApiController
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:portal_users,email,' . $user->id . '|unique:users,email,' . $user->id,
+            'email' => 'required|email',
             'phone' => 'nullable|string|max:20',
         ]);
 
-        $user->update($request->only(['name', 'email', 'phone']));
+        // Update profile via MCP
+        $result = $this->executeMCPTask('updateUserProfile', [
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone
+        ]);
+
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json([
+                'errors' => ['email' => [$result['result']['error'] ?? 'Failed to update profile']]
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
-            'user' => $user,
+            'user' => $result['result']['data'],
         ]);
     }
 
@@ -68,15 +88,18 @@ class SettingsApiController extends BaseApiController
             'new_password' => 'required|min:8|confirmed',
         ]);
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        // Change password via MCP
+        $result = $this->executeMCPTask('changePassword', [
+            'user_id' => $user->id,
+            'current_password' => $request->current_password,
+            'new_password' => $request->new_password
+        ]);
+
+        if (!($result['result']['success'] ?? false)) {
             return response()->json([
-                'errors' => ['current_password' => ['Das aktuelle Passwort ist falsch']],
+                'errors' => ['current_password' => [$result['result']['error'] ?? 'Das aktuelle Passwort ist falsch']],
             ], 422);
         }
-
-        $user->update([
-            'password' => Hash::make($request->new_password),
-        ]);
 
         return response()->json([
             'success' => true,
@@ -92,47 +115,30 @@ class SettingsApiController extends BaseApiController
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $company = $user->company;
-        
-        // Check if company relationship exists
-        if (!$company) {
+        if (!$user->company_id) {
             return response()->json([
                 'error' => 'No company associated with this user',
-                'company' => null,
-                'preferences' => [
-                    'email_notifications' => $user->email_notifications ?? true,
-                    'sms_notifications' => $user->sms_notifications ?? false,
-                    'appointment_reminders' => $user->appointment_reminders ?? true,
-                    'daily_summary' => $user->daily_summary ?? true,
-                    'marketing_emails' => $user->marketing_emails ?? false,
-                ],
+                'company' => null
             ], 404);
         }
         
+        // Get company settings via MCP
+        $companyResult = $this->executeMCPTask('getCompanySettings', [
+            'company_id' => $user->company_id
+        ]);
+
+        if (!($companyResult['result']['success'] ?? false)) {
+            return response()->json(['error' => 'Failed to fetch company settings'], 500);
+        }
+
+        // Get user preferences via MCP
+        $prefsResult = $this->executeMCPTask('getNotificationPreferences', [
+            'user_id' => $user->id
+        ]);
+
         return response()->json([
-            'company' => [
-                'id' => $company->id,
-                'name' => $company->name,
-                'email' => $company->email ?? null,
-                'phone' => $company->phone ?? null,
-                'address' => $company->address ?? null,
-                'timezone' => $company->timezone ?? 'Europe/Berlin',
-                'language' => $company->language ?? 'de',
-                'currency' => $company->currency ?? 'EUR',
-                'subscription' => [
-                    'plan_name' => $company->subscription_plan ?? 'Basic',
-                    'next_billing_date' => $company->next_billing_date ?? null,
-                    'used_minutes' => $company->used_minutes ?? 0,
-                    'included_minutes' => $company->included_minutes ?? 1000,
-                ],
-            ],
-            'preferences' => [
-                'email_notifications' => $user->email_notifications ?? true,
-                'sms_notifications' => $user->sms_notifications ?? false,
-                'appointment_reminders' => $user->appointment_reminders ?? true,
-                'daily_summary' => $user->daily_summary ?? true,
-                'marketing_emails' => $user->marketing_emails ?? false,
-            ],
+            'company' => $companyResult['result']['data'],
+            'preferences' => $prefsResult['result']['data'] ?? []
         ]);
     }
 
@@ -140,7 +146,7 @@ class SettingsApiController extends BaseApiController
     {
         $user = auth()->guard('portal')->user() ?: auth()->guard('web')->user();
         
-        if (!$user) {
+        if (!$user || !$user->company_id) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -154,25 +160,25 @@ class SettingsApiController extends BaseApiController
             'currency' => 'nullable|string|in:EUR,USD,GBP',
         ]);
 
-        $company = $user->company;
-        
-        if (!$company) {
-            return response()->json(['error' => 'No company associated with this user'], 404);
-        }
-        
-        $company->update([
+        // Update company via MCP
+        $result = $this->executeMCPTask('updateCompanySettings', [
+            'company_id' => $user->company_id,
             'name' => $request->company_name,
             'email' => $request->company_email,
             'phone' => $request->company_phone,
             'address' => $request->company_address,
             'timezone' => $request->timezone,
             'language' => $request->language,
-            'currency' => $request->currency,
+            'currency' => $request->currency
         ]);
+
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json(['error' => $result['result']['error'] ?? 'Failed to update company'], 422);
+        }
 
         return response()->json([
             'success' => true,
-            'company' => $company,
+            'company' => $result['result']['data'],
         ]);
     }
 
@@ -192,8 +198,21 @@ class SettingsApiController extends BaseApiController
             'marketing_emails' => 'boolean',
         ]);
 
-        // Store in user preferences or separate preferences table
-        // For now, we'll simulate the update
+        // Update preferences via MCP
+        $result = $this->executeMCPTask('updateNotificationPreferences', array_merge(
+            ['user_id' => $user->id],
+            $request->only([
+                'email_notifications',
+                'sms_notifications',
+                'appointment_reminders',
+                'daily_summary',
+                'marketing_emails'
+            ])
+        ));
+
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json(['error' => $result['result']['error'] ?? 'Failed to update preferences'], 422);
+        }
         
         return response()->json([
             'success' => true,
@@ -209,29 +228,18 @@ class SettingsApiController extends BaseApiController
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        if ($user->two_factor_confirmed_at) {
-            return response()->json(['error' => '2FA ist bereits aktiviert'], 400);
+        // Enable 2FA via MCP
+        $result = $this->executeMCPTask('enable2FA', [
+            'user_id' => $user->id
+        ]);
+
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json(['error' => $result['result']['error'] ?? '2FA ist bereits aktiviert'], 400);
         }
 
-        $google2fa = new Google2FA();
-        $secret = $google2fa->generateSecretKey();
-        
-        // Store secret temporarily
-        $user->two_factor_secret = encrypt($secret);
-        $user->save();
-
-        // Generate QR code
-        $qrCodeUrl = $google2fa->getQRCodeUrl(
-            config('app.name'),
-            $user->email,
-            $secret
-        );
-
-        $qrCode = QrCode::size(200)->generate($qrCodeUrl);
-
         return response()->json([
-            'secret' => $secret,
-            'qr_code' => $qrCode,
+            'secret' => $result['result']['data']['secret'],
+            'qr_code' => $result['result']['data']['qr_code'],
         ]);
     }
 
@@ -247,19 +255,20 @@ class SettingsApiController extends BaseApiController
             'code' => 'required|string|size:6',
         ]);
 
-        $google2fa = new Google2FA();
-        $secret = decrypt($user->two_factor_secret);
-        
-        if (!$google2fa->verifyKey($secret, $request->code)) {
-            return response()->json(['error' => 'Ungültiger Code'], 422);
-        }
+        // Confirm 2FA via MCP
+        $result = $this->executeMCPTask('confirm2FA', [
+            'user_id' => $user->id,
+            'code' => $request->code
+        ]);
 
-        $user->two_factor_confirmed_at = now();
-        $user->save();
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json(['error' => $result['result']['error'] ?? 'Ungültiger Code'], 422);
+        }
 
         return response()->json([
             'success' => true,
             'message' => '2FA erfolgreich aktiviert',
+            'recovery_codes' => $result['result']['data']['recovery_codes'] ?? []
         ]);
     }
 
@@ -271,9 +280,14 @@ class SettingsApiController extends BaseApiController
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $user->two_factor_secret = null;
-        $user->two_factor_confirmed_at = null;
-        $user->save();
+        // Disable 2FA via MCP
+        $result = $this->executeMCPTask('disable2FA', [
+            'user_id' => $user->id
+        ]);
+
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json(['error' => $result['result']['error'] ?? 'Failed to disable 2FA'], 400);
+        }
 
         return response()->json([
             'success' => true,
@@ -289,35 +303,27 @@ class SettingsApiController extends BaseApiController
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $company = $user->company;
-        
-        if (!$company) {
+        if (!$user->company_id) {
             return response()->json([
                 'error' => 'No company associated with this user',
-                'settings' => [
-                    'send_call_summaries' => false,
-                    'call_summary_recipients' => [],
-                    'include_transcript_in_summary' => true,
-                    'include_csv_export' => false,
-                    'summary_email_frequency' => 'immediate',
-                ],
-                'user_preferences' => $user->call_notification_preferences ?? [
-                    'receive_summaries' => false,
-                ],
+                'settings' => [],
+                'user_preferences' => []
             ], 404);
         }
         
+        // Get call notification settings via MCP
+        $result = $this->executeMCPTask('getCallNotificationSettings', [
+            'company_id' => $user->company_id,
+            'user_id' => $user->id
+        ]);
+
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json(['error' => 'Failed to fetch notification settings'], 500);
+        }
+
         return response()->json([
-            'settings' => [
-                'send_call_summaries' => $company->send_call_summaries ?? false,
-                'call_summary_recipients' => $company->call_summary_recipients ?? [],
-                'include_transcript_in_summary' => $company->include_transcript_in_summary ?? true,
-                'include_csv_export' => $company->include_csv_export ?? false,
-                'summary_email_frequency' => $company->summary_email_frequency ?? 'immediate',
-            ],
-            'user_preferences' => $user->call_notification_preferences ?? [
-                'receive_summaries' => false,
-            ],
+            'settings' => $result['result']['data']['company_settings'] ?? [],
+            'user_preferences' => $result['result']['data']['user_preferences'] ?? ['receive_summaries' => false]
         ]);
     }
 
@@ -325,7 +331,7 @@ class SettingsApiController extends BaseApiController
     {
         $user = auth()->guard('portal')->user() ?: auth()->guard('web')->user();
         
-        if (!$user) {
+        if (!$user || !$user->company_id) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -343,30 +349,26 @@ class SettingsApiController extends BaseApiController
             'summary_email_frequency' => 'nullable|in:immediate,hourly,daily',
         ]);
 
-        $company = $user->company;
-        
-        if (!$company) {
-            return response()->json(['error' => 'No company associated with this user'], 404);
+        // Update call notification settings via MCP
+        $result = $this->executeMCPTask('updateCallNotificationSettings', array_merge(
+            ['company_id' => $user->company_id],
+            $request->only([
+                'send_call_summaries',
+                'call_summary_recipients',
+                'include_transcript_in_summary',
+                'include_csv_export',
+                'summary_email_frequency',
+            ])
+        ));
+
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json(['error' => $result['result']['error'] ?? 'Failed to update settings'], 422);
         }
-        
-        $company->update($request->only([
-            'send_call_summaries',
-            'call_summary_recipients',
-            'include_transcript_in_summary',
-            'include_csv_export',
-            'summary_email_frequency',
-        ]));
 
         return response()->json([
             'success' => true,
             'message' => 'Anruf-Benachrichtigungseinstellungen aktualisiert',
-            'settings' => [
-                'send_call_summaries' => $company->send_call_summaries,
-                'call_summary_recipients' => $company->call_summary_recipients,
-                'include_transcript_in_summary' => $company->include_transcript_in_summary,
-                'include_csv_export' => $company->include_csv_export,
-                'summary_email_frequency' => $company->summary_email_frequency,
-            ],
+            'settings' => $result['result']['data'] ?? [],
         ]);
     }
 
@@ -382,15 +384,19 @@ class SettingsApiController extends BaseApiController
             'receive_summaries' => 'nullable|boolean',
         ]);
 
-        $preferences = $user->call_notification_preferences ?? [];
-        $preferences['receive_summaries'] = $request->receive_summaries ?? false;
-        
-        $user->call_notification_preferences = $preferences;
-        $user->save();
+        // Update user preferences via MCP
+        $result = $this->executeMCPTask('updateNotificationPreferences', [
+            'user_id' => $user->id,
+            'call_assigned' => $request->receive_summaries
+        ]);
+
+        if (!($result['result']['success'] ?? false)) {
+            return response()->json(['error' => $result['result']['error'] ?? 'Failed to update preferences'], 422);
+        }
 
         return response()->json([
             'success' => true,
-            'preferences' => $preferences,
+            'preferences' => ['receive_summaries' => $request->receive_summaries],
         ]);
     }
 }

@@ -21,7 +21,7 @@ class BillingController extends BaseAdminApiController
     {
         $companyId = $request->get('company_id');
         
-        $query = Company::withoutGlobalScopes();
+        $query = Company::query();
         if ($companyId) {
             $query->where('id', $companyId);
         }
@@ -39,16 +39,16 @@ class BillingController extends BaseAdminApiController
                 return $balance && $balance->balance < ($balance->low_balance_threshold ?? 10);
             })->count(),
             'auto_topup_enabled' => $companies->filter(fn($c) => $c->prepaidBalance && $c->prepaidBalance->auto_topup_enabled)->count(),
-            'unpaid_invoices' => Invoice::withoutGlobalScopes()
+            'unpaid_invoices' => Invoice::where("company_id", auth()->user()->company_id)
                 ->whereIn('company_id', $companies->pluck('id'))
                 ->where('status', 'unpaid')
                 ->count(),
-            'revenue_mtd' => BalanceTopup::withoutGlobalScopes()
+            'revenue_mtd' => BalanceTopup::where("company_id", auth()->user()->company_id)
                 ->whereIn('company_id', $companies->pluck('id'))
                 ->where('status', 'succeeded')
                 ->whereMonth('created_at', now()->month)
                 ->sum('amount'),
-            'revenue_today' => BalanceTopup::withoutGlobalScopes()
+            'revenue_today' => BalanceTopup::where("company_id", auth()->user()->company_id)
                 ->whereIn('company_id', $companies->pluck('id'))
                 ->where('status', 'succeeded')
                 ->whereDate('created_at', today())
@@ -63,7 +63,7 @@ class BillingController extends BaseAdminApiController
      */
     public function balances(Request $request): JsonResponse
     {
-        $query = PrepaidBalance::withoutGlobalScopes()
+        $query = PrepaidBalance::where("company_id", auth()->user()->company_id)
             ->with(['company' => function($q) {
                 $q->withoutGlobalScopes();
             }]);
@@ -129,7 +129,7 @@ class BillingController extends BaseAdminApiController
      */
     public function invoices(Request $request): JsonResponse
     {
-        $query = Invoice::withoutGlobalScopes()
+        $query = Invoice::where("company_id", auth()->user()->company_id)
             ->with(['company' => function($q) {
                 $q->withoutGlobalScopes();
             }, 'items']);
@@ -175,7 +175,7 @@ class BillingController extends BaseAdminApiController
      */
     public function topups(Request $request): JsonResponse
     {
-        $query = BalanceTopup::withoutGlobalScopes()
+        $query = BalanceTopup::where("company_id", auth()->user()->company_id)
             ->with(['company' => function($q) {
                 $q->withoutGlobalScopes();
             }, 'initiatedBy' => function($q) {
@@ -239,7 +239,7 @@ class BillingController extends BaseAdminApiController
      */
     public function updateBalanceSettings(Request $request, $id): JsonResponse
     {
-        $balance = PrepaidBalance::withoutGlobalScopes()->findOrFail($id);
+        $balance = PrepaidBalance::where("company_id", auth()->user()->company_id)->findOrFail($id);
         
         $validated = $request->validate([
             'low_balance_threshold' => 'nullable|numeric|min:0',
@@ -270,7 +270,7 @@ class BillingController extends BaseAdminApiController
             'is_bonus' => 'boolean',
         ]);
         
-        $company = Company::withoutGlobalScopes()->findOrFail($validated['company_id']);
+        $company = Company::query()->findOrFail($validated['company_id']);
         $prepaidBalance = $company->prepaidBalance;
         
         if (!$prepaidBalance) {
@@ -344,7 +344,7 @@ class BillingController extends BaseAdminApiController
             'description' => 'required|string',
         ]);
         
-        $company = Company::withoutGlobalScopes()->findOrFail($validated['company_id']);
+        $company = Company::query()->findOrFail($validated['company_id']);
         $prepaidBalance = $company->prepaidBalance;
         
         if (!$prepaidBalance) {
@@ -421,7 +421,7 @@ class BillingController extends BaseAdminApiController
      */
     public function markInvoiceAsPaid($id): JsonResponse
     {
-        $invoice = Invoice::withoutGlobalScopes()->findOrFail($id);
+        $invoice = Invoice::where("company_id", auth()->user()->company_id)->findOrFail($id);
         $invoice->markAsPaid();
         
         return response()->json([
@@ -435,7 +435,7 @@ class BillingController extends BaseAdminApiController
      */
     public function resendInvoice($id): JsonResponse
     {
-        $invoice = Invoice::withoutGlobalScopes()->findOrFail($id);
+        $invoice = Invoice::where("company_id", auth()->user()->company_id)->findOrFail($id);
         
         try {
             // Dispatch job to send invoice email

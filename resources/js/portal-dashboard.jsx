@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { BrowserRouter } from 'react-router-dom';
 import DashboardIndex from './Pages/Portal/Dashboard/Index';
 import '../css/app.css';
 
@@ -12,10 +13,12 @@ if (rootElement) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     
     root.render(
-        <ThemeProvider defaultTheme="system">
-            <AuthProvider csrfToken={csrfToken}>
-                <DashboardIndex />
-            </AuthProvider>
-        </ThemeProvider>
+        <BrowserRouter basename="/business">
+            <ThemeProvider defaultTheme="system">
+                <AuthProvider csrfToken={csrfToken}>
+                    <DashboardIndex />
+                </AuthProvider>
+            </ThemeProvider>
+        </BrowserRouter>
     );
 }

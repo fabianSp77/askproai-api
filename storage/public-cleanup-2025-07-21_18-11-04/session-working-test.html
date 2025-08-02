@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Working Test - Final</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .fix-box {
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover { background: #2980b9; }
+        pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        .success { color: #27ae60; font-weight: bold; }
+        .error { color: #e74c3c; font-weight: bold; }
+        .warning { color: #f39c12; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Session Working Test - After Cookie Fix</h1>
+        
+        <div class="fix-box">
+            <h3>✅ Latest Fix Applied:</h3>
+            <p>The session cookie "askproai_session" was being encrypted even though SESSION_ENCRYPT=false.</p>
+            <p>Fixed by excluding it from EncryptCookies middleware.</p>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 1: Test Basic Session</h2>
+            <button onclick="setSession()">Set Session Value</button>
+            <button onclick="getSession()">Get Session Value</button>
+            <pre id="basic-test">Click to test basic session operations...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 2: Test Login</h2>
+            <button onclick="testLogin()">Login as demo@askproai.de</button>
+            <button onclick="checkAuth()">Check Authentication</button>
+            <pre id="login-test">Click to test login...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 3: Test Protected Routes</h2>
+            <button onclick="testRoute('/business/dashboard')">Dashboard</button>
+            <button onclick="testRoute('/business/calls')">Calls</button>
+            <button onclick="testRoute('/business/appointments')">Appointments</button>
+            <pre id="route-test">Login first...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>Cookie Status</h2>
+            <button onclick="showCookies()">Show Cookies</button>
+            <pre id="cookie-status">Click to show cookies...</pre>
+        </div>
+    </div>
+    
+    <script>
+    let sessionId = null;
+    
+    async function setSession() {
+        const result = document.getElementById('basic-test');
+        result.textContent = 'Setting session value...';
+        
+        try {
+            const response = await fetch('/test-session-set.php', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            sessionId = data.session_id;
+            
+            if (data.success) {
+                result.innerHTML += '\n\n<span class="success">✅ Session set! ID: ' + sessionId + '</span>';
+                result.innerHTML += '\n<span class="warning">Now click "Get Session Value" to test persistence</span>';
+            }
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function getSession() {
+        const result = document.getElementById('basic-test');
+        result.textContent = 'Getting session value...';
+        
+        try {
+            const response = await fetch('/test-session-get.php', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.test_value) {
+                result.innerHTML += '\n\n<span class="success">✅ Session persisted!</span>';
+                if (data.session_id === sessionId) {
+                    result.innerHTML += '\n<span class="success">✅ Same session ID maintained!</span>';
+                } else {
+                    result.innerHTML += '\n<span class="error">❌ Session ID changed!</span>';
+                }
+            } else {
+                result.innerHTML += '\n\n<span class="error">❌ Session data lost!</span>';
+            }
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testLogin() {
+        const result = document.getElementById('login-test');
+        result.textContent = 'Logging in...';
+        
+        try {
+            const response = await fetch('/test-login-simple.php', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.login_success) {
+                result.innerHTML += '\n\n<span class="success">✅ Login successful!</span>';
+                sessionId = data.session_id;
+            } else {
+                result.innerHTML += '\n\n<span class="error">❌ Login failed!</span>';
+            }
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function checkAuth() {
+        const result = document.getElementById('login-test');
+        result.textContent = 'Checking authentication...';
+        
+        try {
+            const response = await fetch('/test-session-get.php', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            result.textContent = 'Session Data:\n' + JSON.stringify(data, null, 2);
+            
+            if (data.all_data && data.all_data.portal_user_id) {
+                result.innerHTML += '\n\n<span class="success">✅ Authentication persisted!</span>';
+                result.innerHTML += '\n<span class="success">Portal User ID: ' + data.all_data.portal_user_id + '</span>';
+            } else {
+                result.innerHTML += '\n\n<span class="error">❌ Authentication lost!</span>';
+            }
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testRoute(route) {
+        const result = document.getElementById('route-test');
+        result.textContent = 'Testing ' + route + '...';
+        
+        try {
+            const response = await fetch(route, {
+                credentials: 'same-origin',
+                redirect: 'manual'
+            });
+            
+            result.textContent = 'Route: ' + route + '\n';
+            result.textContent += 'Status: ' + response.status + '\n';
+            result.textContent += 'Type: ' + response.type + '\n';
+            
+            if (response.status === 200) {
+                result.innerHTML += '<span class="success">✅ Access granted!</span>\n';
+            } else if (response.status === 401) {
+                result.innerHTML += '<span class="error">❌ Unauthorized!</span>\n';
+            } else if (response.status === 302 || response.type === 'opaqueredirect') {
+                result.innerHTML += '<span class="error">❌ Redirected!</span>\n';
+            } else {
+                result.innerHTML += '<span class="warning">⚠️ Status: ' + response.status + '</span>\n';
+            }
+        } catch (error) {
+            result.innerHTML += '<span class="error">Error: ' + error.message + '</span>\n';
+        }
+    }
+    
+    function showCookies() {
+        const result = document.getElementById('cookie-status');
+        
+        result.textContent = '=== Current Cookies ===\n\n';
+        const cookies = document.cookie.split(';');
+        
+        let hasSessionCookie = false;
+        
+        cookies.forEach(cookie => {
+            const [name, value] = cookie.trim().split('=');
+            if (name) {
+                result.textContent += name + ': ' + (value ? value.substring(0, 50) + '...' : '(empty)') + '\n';
+                if (name === 'askproai_session') {
+                    hasSessionCookie = true;
+                }
+            }
+        });
+        
+        result.textContent += '\n=== Cookie Analysis ===\n';
+        result.textContent += 'Session Cookie (askproai_session): ' + (hasSessionCookie ? 'FOUND ✅' : 'NOT FOUND ❌') + '\n';
+        result.textContent += 'XSRF Token: ' + (document.cookie.includes('XSRF-TOKEN') ? 'FOUND' : 'NOT FOUND') + '\n';
+    }
+    </script>
+</body>
+</html>

@@ -17,9 +17,19 @@ use Filament\Notifications\Notification;
 class IntegrationResource extends Resource
 {
     protected static ?string $model = Integration::class;
-    protected static ?string $navigationGroup = 'System & Verwaltung';
+    protected static ?string $navigationGroup = null;
     protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';
-    protected static ?string $navigationLabel = 'Integrationen';
+    protected static ?string $navigationLabel = null;
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.integrations');
+    }
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.integrations');
+    }
     protected static ?int $navigationSort = 20;
     protected static bool $shouldRegisterNavigation = true;
 
@@ -207,6 +217,8 @@ class IntegrationResource extends Resource
                     ->trueColor('success')
                     ->falseColor('danger'),
                     
+                // Temporarily removed non-existent columns
+                /*
                 Tables\Columns\TextColumn::make('health_status')
                     ->label('Verbindung')
                     ->badge()
@@ -236,6 +248,7 @@ class IntegrationResource extends Resource
                     ->suffix(' Anfragen')
                     ->sortable()
                     ->toggleable(),
+                */
                     
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Erstellt')
@@ -272,6 +285,8 @@ class IntegrationResource extends Resource
                 Tables\Filters\TernaryFilter::make('active')
                     ->label('Aktiv'),
                     
+                // Removed filter for non-existent column
+                /*
                 Tables\Filters\SelectFilter::make('health_status')
                     ->label('Verbindungsstatus')
                     ->options([
@@ -279,6 +294,7 @@ class IntegrationResource extends Resource
                         'error' => 'Fehler',
                         'warning' => 'Warnung',
                     ]),
+                */
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
@@ -286,42 +302,18 @@ class IntegrationResource extends Resource
                     
                 Tables\Actions\EditAction::make(),
                 
+                // Simplified actions - removed non-implemented test methods
                 Tables\Actions\Action::make('test_connection')
                     ->label('Testen')
                     ->icon('heroicon-m-signal')
                     ->color('gray')
                     ->action(function (Integration $record) {
-                        // Test connection based on service type
-                        try {
-                            $success = match($record->service) {
-                                'calcom' => $this->testCalcomConnection($record),
-                                'retell' => $this->testRetellConnection($record),
-                                'stripe' => $this->testStripeConnection($record),
-                                default => false
-                            };
-                            
-                            if ($success) {
-                                $record->update([
-                                    'health_status' => 'healthy',
-                                    'last_sync' => now(),
-                                ]);
-                                
-                                Notification::make()
-                                    ->title('Verbindung erfolgreich')
-                                    ->success()
-                                    ->send();
-                            } else {
-                                throw new \Exception('Verbindungstest fehlgeschlagen');
-                            }
-                        } catch (\Exception $e) {
-                            $record->update(['health_status' => 'error']);
-                            
-                            Notification::make()
-                                ->title('Verbindungsfehler')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
+                        // Placeholder for future implementation
+                        Notification::make()
+                            ->title('Test-Funktion')
+                            ->body('Die Test-Funktion wird in Kürze implementiert.')
+                            ->warning()
+                            ->send();
                     }),
                     
                 Tables\Actions\Action::make('sync')
@@ -398,7 +390,8 @@ class IntegrationResource extends Resource
     public static function getWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\IntegrationStatusWidget::class,
+            // Temporarily disabled due to database schema mismatch
+            // \App\Filament\Admin\Widgets\IntegrationStatusWidget::class,
         ];
     }
 }

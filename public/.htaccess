@@ -4,10 +4,34 @@
     </IfModule>
 
     RewriteEngine On
-# Temporary redirect disabled - testing original admin
-# RewriteCond %{REQUEST_URI} ^/admin$ [NC]
-# RewriteRule ^(.*)$ /admin-simple.php [L,R=302]
 
+    # Block ALL Service Workers
+    RewriteRule ^.*service-worker.*\.js$ - [R=404,L]
+    RewriteRule ^sw\.js$ - [R=404,L]
+
+    # Security: Block access to sensitive files
+    RewriteRule ^\.env$ - [F,L]
+    RewriteRule ^\.git - [F,L]
+    RewriteRule ^composer\.(json|lock)$ - [F,L]
+    RewriteRule ^package(-lock)?\.json$ - [F,L]
+    RewriteRule ^phpunit\.xml$ - [F,L]
+    RewriteRule ^readme\.md$ - [F,L]
+    RewriteRule ^README\.md$ - [F,L]
+    RewriteRule ^artisan$ - [F,L]
+    RewriteRule ^Dockerfile$ - [F,L]
+    RewriteRule ^docker-compose\.yml$ - [F,L]
+
+    # Security: Block direct access to PHP files in root (except index.php)
+    # But allow Laravel to handle all routes through index.php
+    <FilesMatch "^(?!index\.php$).+\.php$">
+        <IfModule mod_authz_core.c>
+            Require all denied
+        </IfModule>
+        <IfModule !mod_authz_core.c>
+            Order Deny,Allow
+            Deny from all
+        </IfModule>
+    </FilesMatch>
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
@@ -27,17 +51,63 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
-# Allow direct PHP access for login bypass
-<Files "admin-emergency.php">
-    Order Allow,Deny
-    Allow from all
-</Files>
 
-# Disable redirects for emergency access
-RewriteEngine On
-# Temporary redirect disabled - testing original admin
-# RewriteCond %{REQUEST_URI} ^/admin$ [NC]
-# RewriteRule ^(.*)$ /admin-simple.php [L,R=302]
+# Security Headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Enable XSS filter
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Remove server signature
+    Header always unset Server
+    Header always unset X-Powered-By
+    
+    # Strict Transport Security
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
 
-RewriteCond %{REQUEST_URI} ^/admin-emergency\.php$ [NC]
-RewriteRule .* - [L]
+# Disable directory browsing
+Options -Indexes
+
+# Block access to backup files
+<FilesMatch "(\.(bak|backup|config|dist|fla|inc|ini|log|psd|sh|sql|swp)|~)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Protect against SQL injection (less aggressive for API compatibility)
+<IfModule mod_rewrite.c>
+    # Block only obvious SQL injection attempts
+    RewriteCond %{QUERY_STRING} (union.*select|select.*from|insert.*into|drop.*table|delete.*from|update.*set) [NC,OR]
+    RewriteCond %{QUERY_STRING} (script.*>|<.*iframe|<.*object|<.*embed) [NC,OR]
+    RewriteCond %{QUERY_STRING} (%00|%0A|%0D|%08|%09) [NC]
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>
+
+# Performance Protection Rules
+<IfModule mod_headers.c>
+    # Disable aggressive caching for admin panel
+    <FilesMatch "\.(js|css)$">
+        Header set Cache-Control "max-age=3600, public"
+    </FilesMatch>
+    
+    # Disable Service Worker completely
+    Header set Service-Worker-Allowed "none"
+</IfModule>
+
+# Rate limiting for Livewire endpoints
+<IfModule mod_ratelimit.c>
+    SetOutputFilter RATE_LIMIT
+    SetEnv rate-limit 100
+    SetEnv rate-initial-burst 20
+</IfModule>

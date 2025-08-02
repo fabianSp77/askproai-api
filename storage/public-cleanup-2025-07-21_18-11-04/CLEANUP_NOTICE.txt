@@ -1,0 +1,15 @@
+⚠️ PUBLIC DIRECTORY CLEANUP ⚠️
+
+Diese Dateien wurden aus dem public/ Verzeichnis entfernt, weil sie:
+- Test- oder Debug-Zwecken dienten
+- Sicherheitsrisiken darstellten
+- Nicht für die Produktion geeignet waren
+
+DIESE DATEIEN SOLLTEN NICHT WIEDER IN DAS PUBLIC-VERZEICHNIS KOPIERT WERDEN!
+
+Wenn Sie diese Dateien benötigen:
+1. Verschieben Sie sie in ein nicht-öffentliches Verzeichnis
+2. Verwenden Sie Laravel Routes statt direkter PHP-Dateien
+3. Implementieren Sie proper Authentication und Authorization
+
+Bereinigt am: 2025-07-21_18-11-04

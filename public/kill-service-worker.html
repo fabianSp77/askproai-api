@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Service Worker Killer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover { background: #c82333; }
+        .log {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔫 Service Worker Killer</h1>
+        <p class="warning">⚠️ Ein Service Worker cached alte Dateien und verhindert das Laden der Admin-Seiten!</p>
+        
+        <p>Service Worker gefunden: <strong>business-service-worker.js</strong></p>
+        
+        <button onclick="killAllServiceWorkers()">🗑️ ALLE Service Worker LÖSCHEN</button>
+        
+        <div id="log" class="log"></div>
+        
+        <div style="margin-top: 30px;">
+            <h2>Nach dem Löschen:</h2>
+            <ol>
+                <li>Diese Seite schließen</li>
+                <li>Browser komplett schließen und neu öffnen</li>
+                <li>Direkt zu <a href="/admin/login">Admin Login</a> gehen</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        const log = (msg, type = 'info') => {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            logDiv.innerHTML += `[${time}] <span class="${className}">${msg}</span>\n`;
+        };
+        
+        async function killAllServiceWorkers() {
+            log('Starting Service Worker removal...', 'info');
+            
+            if ('serviceWorker' in navigator) {
+                try {
+                    // Get all registrations
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    log(`Found ${registrations.length} service worker(s)`, 'info');
+                    
+                    // Unregister each one
+                    for (const registration of registrations) {
+                        const scope = registration.scope;
+                        const success = await registration.unregister();
+                        if (success) {
+                            log(`✅ Unregistered: ${scope}`, 'success');
+                        } else {
+                            log(`❌ Failed to unregister: ${scope}`, 'error');
+                        }
+                    }
+                    
+                    // Clear all caches
+                    log('Clearing all caches...', 'info');
+                    const cacheNames = await caches.keys();
+                    log(`Found ${cacheNames.length} cache(s)`, 'info');
+                    
+                    for (const cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        log(`✅ Deleted cache: ${cacheName}`, 'success');
+                    }
+                    
+                    // Clear storage
+                    log('Clearing storage...', 'info');
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    log('✅ Storage cleared', 'success');
+                    
+                    // Clear cookies
+                    log('Clearing cookies...', 'info');
+                    document.cookie.split(';').forEach(cookie => {
+                        const name = cookie.split('=')[0].trim();
+                        if (name) {
+                            // Try multiple domain variations
+                            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.askproai.de`;
+                            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+                            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=api.askproai.de`;
+                        }
+                    });
+                    log('✅ Cookies cleared', 'success');
+                    
+                    log('\n🎉 ALL SERVICE WORKERS REMOVED!', 'success');
+                    log('Please close browser and reopen for changes to take effect.', 'info');
+                    
+                } catch (error) {
+                    log(`Error: ${error.message}`, 'error');
+                }
+            } else {
+                log('Service Workers not supported in this browser', 'error');
+            }
+        }
+        
+        // Check current status on load
+        window.onload = async () => {
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                if (registrations.length > 0) {
+                    log(`⚠️ ${registrations.length} Service Worker(s) currently active!`, 'error');
+                    registrations.forEach(reg => {
+                        log(`  - ${reg.scope}`, 'info');
+                    });
+                } else {
+                    log('✅ No Service Workers found', 'success');
+                }
+            }
+        };
+    </script>
+</body>
+</html>

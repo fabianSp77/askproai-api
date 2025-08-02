@@ -3,20 +3,29 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Traits\UsesMCPServers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 class SettingsController extends Controller
 {
+    use UsesMCPServers;
+
+    public function __construct()
+    {
+        $this->setMCPPreferences([
+            'settings' => true,
+            'user' => true,
+            'company' => true
+        ]);
+    }
+
     /**
      * Show settings overview
      */
     public function index()
     {
-        $user = Auth::guard('portal')->user();
-        
         // Redirect to React settings page
         return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
@@ -26,8 +35,6 @@ class SettingsController extends Controller
      */
     public function profile()
     {
-        $user = Auth::guard('portal')->user();
-        
         // Redirect to React settings page
         return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
@@ -37,15 +44,29 @@ class SettingsController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        $user = Auth::guard('portal')->user();
+        $userId = $this->getCurrentUserId();
+        
+        if (!$userId) {
+            abort(401, 'Unauthorized');
+        }
         
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:portal_users,email,'.$user->id],
+            'email' => ['required', 'email'],
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
         
-        $user->update($validated);
+        // Update via MCP
+        $result = $this->executeMCPTask('updateUserProfile', [
+            'user_id' => $userId,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null
+        ]);
+        
+        if (!($result['result']['success'] ?? false)) {
+            return back()->withErrors(['error' => $result['result']['error'] ?? 'Failed to update profile']);
+        }
         
         return back()->with('success', 'Profil wurde aktualisiert.');
     }
@@ -64,16 +85,27 @@ class SettingsController extends Controller
      */
     public function updatePassword(Request $request)
     {
-        $user = Auth::guard('portal')->user();
+        $userId = $this->getCurrentUserId();
+        
+        if (!$userId) {
+            abort(401, 'Unauthorized');
+        }
         
         $validated = $request->validate([
-            'current_password' => ['required', 'current_password:portal'],
+            'current_password' => ['required'],
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
         
-        $user->update([
-            'password' => Hash::make($validated['password'])
+        // Change password via MCP
+        $result = $this->executeMCPTask('changePassword', [
+            'user_id' => $userId,
+            'current_password' => $validated['current_password'],
+            'new_password' => $validated['password']
         ]);
+        
+        if (!($result['result']['success'] ?? false)) {
+            return back()->withErrors(['current_password' => $result['result']['error'] ?? 'Failed to change password']);
+        }
         
         return redirect()->route('business.settings.index')
             ->with('success', 'Passwort wurde geändert.');
@@ -84,8 +116,6 @@ class SettingsController extends Controller
      */
     public function notifications()
     {
-        $user = Auth::guard('portal')->user();
-        
         // Redirect to React settings page
         return app(\App\Http\Controllers\Portal\ReactDashboardController::class)->index();
     }
@@ -95,7 +125,11 @@ class SettingsController extends Controller
      */
     public function updateNotifications(Request $request)
     {
-        $user = Auth::guard('portal')->user();
+        $userId = $this->getCurrentUserId();
+        
+        if (!$userId) {
+            abort(401, 'Unauthorized');
+        }
         
         $validated = $request->validate([
             'email_notifications' => ['boolean'],
@@ -105,9 +139,25 @@ class SettingsController extends Controller
             'low_balance_alert' => ['boolean'],
         ]);
         
-        $user->notification_preferences = $validated;
-        $user->save();
+        // Update preferences via MCP
+        $result = $this->executeMCPTask('updateNotificationPreferences', array_merge(
+            ['user_id' => $userId],
+            $validated
+        ));
+        
+        if (!($result['result']['success'] ?? false)) {
+            return back()->withErrors(['error' => $result['result']['error'] ?? 'Failed to update preferences']);
+        }
         
         return back()->with('success', 'Benachrichtigungseinstellungen wurden aktualisiert.');
+    }
+    
+    /**
+     * Get current user ID.
+     */
+    protected function getCurrentUserId(): ?int
+    {
+        $user = Auth::guard('portal')->user();
+        return $user ? $user->id : null;
     }
 }

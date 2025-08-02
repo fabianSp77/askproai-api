@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Cookie Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .box { padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🍪 Simple Cookie Test</h1>
+    
+    <div class="box info">
+        <h3>Quick Solution:</h3>
+        <p>If cookies aren't working, try:</p>
+        <ol>
+            <li>Use a normal browser window (not Incognito/Private)</li>
+            <li>Disable browser extensions temporarily</li>
+            <li>Or run: <code>sed -i 's/SESSION_SECURE_COOKIE=true/SESSION_SECURE_COOKIE=false/' .env && php artisan config:clear</code></li>
+        </ol>
+    </div>
+
+    <button onclick="testCookie()">Test Cookie Storage</button>
+    <button onclick="checkDevTools()">How to Check DevTools</button>
+
+    <div id="result"></div>
+
+    <script>
+        function testCookie() {
+            const result = document.getElementById('result');
+            
+            // Test if we can set ANY cookie
+            document.cookie = 'test=working; path=/';
+            const canSetCookie = document.cookie.includes('test=working');
+            
+            if (canSetCookie) {
+                result.innerHTML = `
+                    <div class="box success">
+                        <h3>✅ Cookies ARE enabled!</h3>
+                        <p>JavaScript can set cookies. The session cookie issue is likely:</p>
+                        <ul>
+                            <li>HttpOnly flag (normal - cookies work but JS can't see them)</li>
+                            <li>Secure flag blocking on HTTP</li>
+                            <li>Domain mismatch</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                result.innerHTML = `
+                    <div class="box error">
+                        <h3>❌ Cookies are BLOCKED!</h3>
+                        <p>Your browser is blocking ALL cookies. Check:</p>
+                        <ul>
+                            <li>Are you in Incognito/Private mode?</li>
+                            <li>Browser privacy settings</li>
+                            <li>Browser extensions</li>
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // Clean up
+            document.cookie = 'test=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        }
+        
+        function checkDevTools() {
+            const result = document.getElementById('result');
+            result.innerHTML = `
+                <div class="box info">
+                    <h3>📋 How to Check Session Cookie in DevTools:</h3>
+                    <ol>
+                        <li>Press <strong>F12</strong> to open DevTools</li>
+                        <li>Go to <strong>Application</strong> tab (Chrome) or <strong>Storage</strong> tab (Firefox)</li>
+                        <li>Click <strong>Cookies</strong> in left sidebar</li>
+                        <li>Click <strong>${window.location.origin}</strong></li>
+                        <li>Look for cookie named <strong>askproai_session</strong></li>
+                    </ol>
+                    <p>If the cookie is there but authentication fails, the issue is server-side.</p>
+                    <p>If the cookie is NOT there, your browser is blocking it.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Debug - AskProAI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #374151;
+            margin-top: 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.ok {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        pre {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .test-button {
+            display: inline-block;
+            min-width: 100px;
+            min-height: 44px;
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Mobile Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h2>1. Browser & Device Info</h2>
+        <div id="device-info"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>2. Touch Target Test</h2>
+        <p>Tap these buttons to test if clicks work:</p>
+        <button class="test-button" onclick="testClick(1)">Test 1</button>
+        <button class="test-button" onclick="testClick(2)">Test 2</button>
+        <button class="test-button" onclick="testClick(3)">Test 3</button>
+        <div id="click-result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>3. Alpine.js Status</h2>
+        <div id="alpine-status"></div>
+        <button onclick="checkAlpine()">Check Alpine</button>
+        <button onclick="testSidebarStore()">Test Sidebar Store</button>
+    </div>
+    
+    <div class="debug-section">
+        <h2>4. CSS Analysis</h2>
+        <button onclick="findPointerEventsNone()">Find pointer-events: none</button>
+        <button onclick="findHighZIndex()">Find High Z-Index</button>
+        <div id="css-result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>5. Event Listeners</h2>
+        <button onclick="checkEventListeners()">Check Event Listeners</button>
+        <div id="event-result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>6. Admin Portal Test</h2>
+        <button onclick="window.open('/admin', '_blank')">Open Admin in New Tab</button>
+        <button onclick="testInIframe()">Test in iFrame</button>
+        <iframe id="admin-iframe" style="width: 100%; height: 400px; border: 1px solid #ccc; display: none;"></iframe>
+    </div>
+    
+    <div class="debug-section">
+        <h2>7. Console Output</h2>
+        <pre id="console-output"></pre>
+    </div>
+
+    <script>
+        // Device Info
+        function showDeviceInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                viewportWidth: window.innerWidth,
+                viewportHeight: window.innerHeight,
+                pixelRatio: window.devicePixelRatio,
+                touchSupport: 'ontouchstart' in window,
+                platform: navigator.platform
+            };
+            
+            document.getElementById('device-info').innerHTML = `
+                <pre>${JSON.stringify(info, null, 2)}</pre>
+                <div class="status ${info.touchSupport ? 'ok' : 'warning'}">
+                    Touch Support: ${info.touchSupport ? 'YES' : 'NO'}
+                </div>
+            `;
+        }
+        
+        // Click Test
+        let clickCount = 0;
+        function testClick(num) {
+            clickCount++;
+            const result = document.getElementById('click-result');
+            result.innerHTML = `<div class="status ok">Button ${num} clicked! Total clicks: ${clickCount}</div>`;
+            log(`Button ${num} clicked`);
+        }
+        
+        // Alpine Check
+        function checkAlpine() {
+            const hasAlpine = typeof window.Alpine !== 'undefined';
+            const status = document.getElementById('alpine-status');
+            
+            if (hasAlpine) {
+                status.innerHTML = `
+                    <div class="status ok">Alpine.js is loaded</div>
+                    <pre>${JSON.stringify({
+                        version: Alpine.version || 'unknown',
+                        stores: Object.keys(Alpine.stores || {})
+                    }, null, 2)}</pre>
+                `;
+            } else {
+                status.innerHTML = '<div class="status error">Alpine.js is NOT loaded</div>';
+            }
+            log('Alpine check completed');
+        }
+        
+        // Sidebar Store Test
+        function testSidebarStore() {
+            if (typeof Alpine !== 'undefined' && Alpine.store) {
+                try {
+                    const sidebar = Alpine.store('sidebar');
+                    if (sidebar) {
+                        log('Sidebar store found:', sidebar);
+                        alert('Sidebar store found! Check console for details.');
+                    } else {
+                        log('Sidebar store not found');
+                        alert('Sidebar store not found!');
+                    }
+                } catch (e) {
+                    log('Error accessing sidebar store:', e);
+                    alert('Error: ' + e.message);
+                }
+            } else {
+                alert('Alpine.js not available');
+            }
+        }
+        
+        // CSS Analysis
+        function findPointerEventsNone() {
+            const elements = document.querySelectorAll('*');
+            const problematic = [];
+            
+            elements.forEach(el => {
+                const style = getComputedStyle(el);
+                if (style.pointerEvents === 'none') {
+                    problematic.push({
+                        element: el.tagName + (el.className ? '.' + el.className : ''),
+                        id: el.id || 'no-id'
+                    });
+                }
+            });
+            
+            document.getElementById('css-result').innerHTML = `
+                <div class="status ${problematic.length > 0 ? 'warning' : 'ok'}">
+                    Found ${problematic.length} elements with pointer-events: none
+                </div>
+                ${problematic.length > 0 ? '<pre>' + JSON.stringify(problematic, null, 2) + '</pre>' : ''}
+            `;
+            log(`Found ${problematic.length} elements with pointer-events: none`);
+        }
+        
+        function findHighZIndex() {
+            const elements = document.querySelectorAll('*');
+            const highZ = [];
+            
+            elements.forEach(el => {
+                const style = getComputedStyle(el);
+                const zIndex = parseInt(style.zIndex);
+                if (!isNaN(zIndex) && zIndex > 10) {
+                    highZ.push({
+                        element: el.tagName + (el.className ? '.' + el.className : ''),
+                        zIndex: zIndex
+                    });
+                }
+            });
+            
+            highZ.sort((a, b) => b.zIndex - a.zIndex);
+            
+            document.getElementById('css-result').innerHTML += `
+                <div class="status warning">
+                    Found ${highZ.length} elements with z-index > 10
+                </div>
+                <pre>${JSON.stringify(highZ.slice(0, 10), null, 2)}</pre>
+            `;
+            log(`Found ${highZ.length} elements with high z-index`);
+        }
+        
+        // Event Listeners
+        function checkEventListeners() {
+            const buttons = document.querySelectorAll('button');
+            const result = document.getElementById('event-result');
+            
+            result.innerHTML = `
+                <div class="status ok">Found ${buttons.length} buttons</div>
+                <p>Click events will be logged to console...</p>
+            `;
+            
+            buttons.forEach((btn, i) => {
+                const clone = btn.cloneNode(true);
+                clone.addEventListener('click', () => {
+                    log(`Test click on button ${i}: ${btn.textContent}`);
+                });
+            });
+        }
+        
+        // iFrame Test
+        function testInIframe() {
+            const iframe = document.getElementById('admin-iframe');
+            iframe.style.display = 'block';
+            iframe.src = '/admin';
+            log('Loading admin portal in iframe...');
+        }
+        
+        // Console Logger
+        function log(...args) {
+            console.log(...args);
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${args.join(' ')}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        // Initialize
+        showDeviceInfo();
+        
+        // Mobile viewport fix
+        function setViewportHeight() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        setViewportHeight();
+        window.addEventListener('resize', setViewportHeight);
+        
+        // Log all errors
+        window.addEventListener('error', (e) => {
+            log('ERROR:', e.message, e.filename, e.lineno);
+        });
+        
+        log('Mobile debug tool loaded');
+    </script>
+</body>
+</html>

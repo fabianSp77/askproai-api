@@ -1,0 +1,156 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\PortalUser;
+use App\Models\Company;
+use App\Models\Branch;
+
+/**
+ * Unified Portal Authentication Middleware
+ * Handles both portal users and admin impersonation
+ */
+class PortalAuth
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string|null  $mode  'required' (default) or 'optional'
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next, $mode = 'required')
+    {
+        // Ensure session is started
+        if (!session()->isStarted()) {
+            session()->start();
+        }
+        
+        // Force session ID from cookie if available
+        $sessionCookie = $request->cookie('askproai_portal_session') ?? $request->cookie('laravel_session');
+        if ($sessionCookie && session()->getId() !== $sessionCookie) {
+            session()->setId($sessionCookie);
+            session()->start();
+        }
+        
+        // Try to authenticate user
+        $user = $this->authenticateUser();
+        
+        if ($user) {
+            // Set company context
+            $this->setCompanyContext($user);
+            // Keep session alive
+        session(['portal_user_id' => $request->user('portal')->id]);
+        session(['portal_active' => true]);
+        
+        return $next($request);
+        }
+        
+        // Check if authentication is optional
+        if ($mode === 'optional') {
+            // Keep session alive
+        session(['portal_user_id' => $request->user('portal')->id]);
+        session(['portal_active' => true]);
+        
+        return $next($request);
+        }
+        
+        // For web requests, redirect to login
+        if ($request->expectsJson() || $request->is('*/api/*') || $request->is('api/*')) {
+            // Return JSON response for API requests
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+        
+        // Redirect to login for web requests
+        return redirect()->guest(route('business.login'));
+    }
+    
+    /**
+     * Try to authenticate user from various sources
+     */
+    private function authenticateUser()
+    {
+        // 1. Check if already authenticated via portal guard
+        if (Auth::guard('portal')->check()) {
+            return Auth::guard('portal')->user();
+        }
+        
+        // 2. Try to authenticate from session (no admin guard check)
+        $userId = $this->getUserIdFromSession();
+        if ($userId) {
+            $user = $this->validateAndLoginPortalUser($userId);
+            if ($user) {
+                return $user;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get user ID from various session keys
+     */
+    private function getUserIdFromSession()
+    {
+        // Laravel's standard auth session key
+        $portalSessionKey = 'login_portal_' . sha1('Illuminate\Auth\SessionGuard.portal');
+        
+        // Check multiple possible session keys
+        $userId = session($portalSessionKey) 
+            ?? session('portal_user_id') 
+            ?? session('portal_login');
+        
+        return $userId;
+    }
+    
+    /**
+     * Validate and login portal user
+     */
+    private function validateAndLoginPortalUser($userId)
+    {
+        $user = PortalUser::withoutGlobalScopes()->find($userId);
+        
+        if (!$user || !$user->is_active) {
+            return null;
+        }
+        
+        // Check company is active
+        $company = Company::withoutGlobalScopes()->find($user->company_id);
+        if (!$company || !$company->is_active) {
+            return null;
+        }
+        
+        // Login the user
+        Auth::guard('portal')->login($user);
+        
+        return $user;
+    }
+    
+    
+    /**
+     * Set company and branch context
+     */
+    private function setCompanyContext($user)
+    {
+        // Set company ID from authenticated user
+        $companyId = $user->company_id ?? null;
+        if ($companyId) {
+            app()->instance('current_company_id', $companyId);
+        }
+        
+        // Set branch context if not set
+        if (!session('current_branch_id') && $companyId) {
+            $branch = Branch::withoutGlobalScopes()
+                ->where('company_id', $companyId)
+                ->first();
+                
+            if ($branch) {
+                session(['current_branch_id' => $branch->id]);
+            }
+        }
+    }
+}

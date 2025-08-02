@@ -1,0 +1,223 @@
+/**
+ * Mobile Menu Button Fix
+ * Direkter Fix für den Burger Menu Button
+ */
+
+(function() {
+    'use strict';
+    
+    console.log('[Mobile Menu Button Fix] Starting...');
+    
+    function fixMobileMenuButton() {
+        // Skip on login page - no menu needed there
+        if (window.location.pathname.includes('/login') || 
+            document.querySelector('.fi-login') || 
+            document.querySelector('.fi-simple-page')) {
+            console.log('[Mobile Menu Button Fix] Login page detected, skipping menu button');
+            return;
+        }
+        
+        // Finde den Menu Button - verschiedene mögliche Selektoren
+        const selectors = [
+            '.fi-topbar .fi-icon-btn:first-child',
+            '.fi-topbar button:first-child',
+            'button[x-on\\:click*="sidebar"]',
+            'button[aria-label*="menu"]',
+            '.fi-topbar-open-sidebar-btn',
+            '.fi-sidebar-open-btn'
+        ];
+        
+        let menuButton = null;
+        for (const selector of selectors) {
+            menuButton = document.querySelector(selector);
+            if (menuButton) {
+                console.log('[Mobile Menu Button Fix] Found button with selector:', selector);
+                break;
+            }
+        }
+        
+        if (!menuButton) {
+            console.error('[Mobile Menu Button Fix] No menu button found!');
+            // Only create fallback on non-login pages
+            if (!document.querySelector('.fi-login')) {
+                createFallbackButton();
+            }
+            return;
+        }
+        
+        // Entferne alle existierenden Event Listener
+        const newButton = menuButton.cloneNode(true);
+        menuButton.parentNode.replaceChild(newButton, menuButton);
+        
+        // Style den Button
+        newButton.style.cssText = `
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 44px !important;
+            height: 44px !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            position: relative !important;
+            z-index: 9999 !important;
+        `;
+        
+        // Debug border
+        if (window.location.search.includes('debug')) {
+            newButton.style.border = '2px solid red';
+        }
+        
+        // Click Handler
+        newButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('[Mobile Menu Button Fix] Button clicked!');
+            
+            // Toggle body class direkt
+            const isOpen = document.body.classList.contains('fi-sidebar-open');
+            
+            if (isOpen) {
+                document.body.classList.remove('fi-sidebar-open');
+                console.log('[Mobile Menu Button Fix] Closed sidebar');
+            } else {
+                document.body.classList.add('fi-sidebar-open');
+                console.log('[Mobile Menu Button Fix] Opened sidebar');
+            }
+            
+            // Versuche Alpine Store zu updaten wenn verfügbar
+            if (window.Alpine && Alpine.store && Alpine.store('sidebar')) {
+                const store = Alpine.store('sidebar');
+                store.isOpen = !isOpen;
+            }
+        });
+        
+        console.log('[Mobile Menu Button Fix] Button fixed and ready');
+    }
+    
+    function createFallbackButton() {
+        console.log('[Mobile Menu Button Fix] Creating fallback button...');
+        
+        // Ensure body exists
+        if (!document.body) {
+            console.warn('[Mobile Menu Button Fix] Body not ready, retrying...');
+            setTimeout(createFallbackButton, 100);
+            return;
+        }
+        
+        // Check if we already created a fallback
+        if (document.querySelector('.mobile-menu-fallback')) {
+            return;
+        }
+        
+        const button = document.createElement('button');
+        button.className = 'mobile-menu-fallback';
+        button.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 24px; height: 24px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+        `;
+        
+        button.style.cssText = `
+            position: fixed !important;
+            top: 10px !important;
+            left: 10px !important;
+            width: 44px !important;
+            height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: white !important;
+            border: 1px solid #ccc !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            cursor: pointer !important;
+            z-index: 99999 !important;
+        `;
+        
+        button.addEventListener('click', function() {
+            document.body.classList.toggle('fi-sidebar-open');
+            console.log('[Mobile Menu Button Fix] Fallback button clicked');
+            
+            // Update Alpine store if available
+            if (window.Alpine && Alpine.store && Alpine.store('sidebar')) {
+                Alpine.store('sidebar').toggle();
+            }
+        });
+        
+        document.body.appendChild(button);
+        console.log('[Mobile Menu Button Fix] Fallback button created');
+    }
+    
+    // Setup click outside handler
+    function setupClickOutside() {
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth < 1024 && document.body.classList.contains('fi-sidebar-open')) {
+                const sidebar = document.querySelector('.fi-sidebar');
+                const menuButton = e.target.closest('button');
+                
+                if (!sidebar?.contains(e.target) && !menuButton) {
+                    document.body.classList.remove('fi-sidebar-open');
+                    console.log('[Mobile Menu Button Fix] Closed sidebar (click outside)');
+                    
+                    // Update Alpine store
+                    if (window.Alpine && Alpine.store && Alpine.store('sidebar')) {
+                        Alpine.store('sidebar').isOpen = false;
+                    }
+                }
+            }
+        });
+    }
+    
+    // Run fixes
+    function runFixes() {
+        fixMobileMenuButton();
+        setupClickOutside();
+    }
+    
+    // Run immediately and after DOM ready
+    runFixes();
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runFixes);
+    }
+    
+    // Re-run after delays to catch dynamic content
+    setTimeout(runFixes, 500);
+    setTimeout(runFixes, 1000);
+    setTimeout(runFixes, 2000);
+    
+    // Livewire support
+    if (window.Livewire) {
+        Livewire.hook('message.processed', () => {
+            setTimeout(runFixes, 100);
+        });
+    }
+    
+    // Global helper
+    window.mobileMenuFix = {
+        toggle: function() {
+            document.body.classList.toggle('fi-sidebar-open');
+            console.log('Sidebar toggled manually');
+        },
+        
+        debug: function() {
+            const buttons = document.querySelectorAll('button');
+            console.log('All buttons:', buttons.length);
+            buttons.forEach((btn, i) => {
+                console.log(`Button ${i}:`, btn, {
+                    display: getComputedStyle(btn).display,
+                    pointerEvents: getComputedStyle(btn).pointerEvents,
+                    opacity: getComputedStyle(btn).opacity
+                });
+            });
+        }
+    };
+    
+    console.log('[Mobile Menu Button Fix] Ready! Use mobileMenuFix.toggle() to test');
+})();

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KILL SERVICE WORKER</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .emergency {
+            background: #dc3545;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        h1 { margin: 0 0 20px 0; }
+        .step {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 5px solid #dc3545;
+        }
+        .code {
+            background: #f8f9fa;
+            padding: 15px;
+            font-family: monospace;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="emergency">
+        <h1>🚨 EMERGENCY: SERVICE WORKER ENTFERNEN</h1>
+        <p>Der business-service-worker.js lädt sich immer wieder neu!</p>
+    </div>
+
+    <div class="step">
+        <h2>Schritt 1: Browser DevTools öffnen</h2>
+        <p>Drücke <strong>F12</strong> oder Rechtsklick → "Untersuchen"</p>
+    </div>
+
+    <div class="step">
+        <h2>Schritt 2: Console öffnen</h2>
+        <p>Kopiere diesen Code und füge ihn in die Console ein:</p>
+        <div class="code">
+navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+        registration.unregister();
+        console.log('Unregistered:', registration.scope);
+    }
+});
+caches.keys().then(function(names) {
+    for (let name of names) {
+        caches.delete(name);
+        console.log('Deleted cache:', name);
+    }
+});
+        </div>
+        <button onclick="copyCode()">📋 Code kopieren</button>
+    </div>
+
+    <div class="step">
+        <h2>Schritt 3: Alternative - Chrome Settings</h2>
+        <ol>
+            <li>Öffne: <strong>chrome://settings/content/all</strong></li>
+            <li>Suche nach: <strong>askproai.de</strong></li>
+            <li>Klicke auf den Pfeil</li>
+            <li>Klicke: <strong>"Clear & reset"</strong></li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h2>Schritt 4: Nuclear Option</h2>
+        <ol>
+            <li>Öffne: <strong>chrome://settings/privacy</strong></li>
+            <li>Klicke: <strong>"Clear browsing data"</strong></li>
+            <li>Wähle: <strong>"All time"</strong></li>
+            <li>Aktiviere: <strong>"Cookies and other site data"</strong></li>
+            <li>Aktiviere: <strong>"Cached images and files"</strong></li>
+            <li>Klicke: <strong>"Clear data"</strong></li>
+        </ol>
+    </div>
+
+    <div class="step" style="background: #d4edda; border-color: #28a745;">
+        <h2>Schritt 5: Neu starten</h2>
+        <ol>
+            <li>Browser komplett schließen</li>
+            <li>Browser neu öffnen</li>
+            <li>Direkt zu: <a href="/admin/login">https://api.askproai.de/admin/login</a></li>
+        </ol>
+    </div>
+
+    <script>
+        function copyCode() {
+            const code = `navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+        registration.unregister();
+        console.log('Unregistered:', registration.scope);
+    }
+});
+caches.keys().then(function(names) {
+    for (let name of names) {
+        caches.delete(name);
+        console.log('Deleted cache:', name);
+    }
+});`;
+            navigator.clipboard.writeText(code);
+            alert('Code kopiert! Füge ihn in die Browser Console ein.');
+        }
+
+        // Try to unregister on page load
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                registrations.forEach(function(registration) {
+                    registration.unregister();
+                });
+            });
+        }
+    </script>
+</body>
+</html>

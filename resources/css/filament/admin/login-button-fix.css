@@ -1,0 +1,100 @@
+/* Login Button Fix for Filament Admin Panel */
+
+/* Fix primary button visibility on login page */
+.fi-btn-primary,
+.fi-btn.fi-btn-color-primary,
+button[type="submit"].fi-btn {
+    background-color: rgb(251, 191, 36) !important; /* Amber color */
+    color: rgb(0, 0, 0) !important; /* Black text for contrast */
+    border: 1px solid rgb(217, 119, 6) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.fi-btn-primary:hover,
+.fi-btn.fi-btn-color-primary:hover,
+button[type="submit"].fi-btn:hover {
+    background-color: rgb(245, 158, 11) !important; /* Darker amber on hover */
+    color: rgb(0, 0, 0) !important;
+    transform: translateY(-1px);
+}
+
+.fi-btn-primary:focus,
+.fi-btn.fi-btn-color-primary:focus,
+button[type="submit"].fi-btn:focus {
+    outline: 2px solid rgb(251, 191, 36) !important;
+    outline-offset: 2px !important;
+}
+
+/* Ensure button text is always visible */
+.fi-btn-label {
+    color: inherit !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+}
+
+/* Fix button loading state */
+.fi-btn-primary:disabled,
+.fi-btn.fi-btn-color-primary:disabled {
+    background-color: rgb(251, 191, 36) !important;
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
+}
+
+/* Fix for login form submit button specifically */
+#form button[type="submit"],
+.fi-login button[type="submit"],
+form[wire\:submit="authenticate"] button[type="submit"] {
+    background-color: rgb(251, 191, 36) !important;
+    color: rgb(0, 0, 0) !important;
+    border: 1px solid rgb(217, 119, 6) !important;
+    padding: 0.625rem 1.25rem !important;
+    font-weight: 600 !important;
+    border-radius: 0.5rem !important;
+    transition: all 0.2s !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 2.5rem !important;
+}
+
+/* Dark mode adjustments */
+.dark .fi-btn-primary,
+.dark .fi-btn.fi-btn-color-primary,
+.dark button[type="submit"].fi-btn {
+    background-color: rgb(251, 191, 36) !important;
+    color: rgb(0, 0, 0) !important;
+    border-color: rgb(217, 119, 6) !important;
+}
+
+/* Fix button container spacing */
+.fi-form-actions {
+    margin-top: 1.5rem !important;
+}
+
+/* Ensure button is clickable */
+.fi-btn {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* Override any conflicting styles */
+.fi-panel-app .fi-btn-primary {
+    background-color: rgb(251, 191, 36) !important;
+    color: rgb(0, 0, 0) !important;
+}
+
+/* Fix for any overlay issues */
+.fi-btn-primary::before,
+.fi-btn-primary::after {
+    display: none !important;
+}
+
+/* Ensure button text contrast */
+.fi-btn-primary span,
+.fi-btn-primary .fi-btn-label {
+    color: rgb(0, 0, 0) !important;
+    text-shadow: none !important;
+}

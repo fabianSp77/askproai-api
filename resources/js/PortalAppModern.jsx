@@ -21,7 +21,8 @@ import {
     Menu,
     X,
     Sun,
-    Moon
+    Moon,
+    Building
 } from 'lucide-react';
 
 // Import pages
@@ -35,6 +36,8 @@ import SettingsIndex from './Pages/Portal/Settings/Index';
 import BillingIndex from './Pages/Portal/Billing/IndexRefactored';
 import FeedbackIndex from './Pages/Portal/Feedback/Index';
 import CustomersIndex from './Pages/Portal/Customers/Index';
+import CustomerShow from './Pages/Portal/Customers/Show';
+import BranchesIndex from './Pages/Portal/Branches/Index';
 
 // Import components
 import NotificationCenter from './components/NotificationCenterModern';
@@ -45,6 +48,7 @@ const navigation = [
     { name: 'Termine', href: '/appointments', icon: Calendar },
     { name: 'Kunden', href: '/customers', icon: Users },
     { name: 'Team', href: '/team', icon: Users },
+    { name: 'Filialen', href: '/branches', icon: Building },
     { name: 'Analysen', href: '/analytics', icon: BarChart3 },
     { name: 'Abrechnung', href: '/billing', icon: CreditCard },
     { name: 'Feedback', href: '/feedback', icon: MessageSquare },
@@ -272,7 +276,9 @@ function PortalAppModern({ initialAuth, csrfToken, initialRoute }) {
                             <Route path="/calls/:id" element={<CallShow />} />
                             <Route path="/appointments" element={<AppointmentsIndex csrfToken={csrfToken} />} />
                             <Route path="/customers" element={<CustomersIndex csrfToken={csrfToken} />} />
+                            <Route path="/customers/:id" element={<CustomerShow csrfToken={csrfToken} />} />
                             <Route path="/team" element={<TeamIndex csrfToken={csrfToken} />} />
+                            <Route path="/branches" element={<BranchesIndex csrfToken={csrfToken} />} />
                             <Route path="/analytics" element={<AnalyticsIndex csrfToken={csrfToken} />} />
                             <Route path="/settings" element={<SettingsIndex csrfToken={csrfToken} />} />
                             <Route path="/billing" element={<BillingIndex />} />

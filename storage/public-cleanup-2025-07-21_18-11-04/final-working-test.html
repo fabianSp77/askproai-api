@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Working Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1000px; 
+            margin: 20px auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 5px; 
+            cursor: pointer;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        .success { 
+            color: green; 
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #86efac;
+        }
+        .error { 
+            color: red;
+            background: #fef2f2;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #fca5a5;
+        }
+        pre { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            overflow-x: auto;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .step {
+            background: #f9fafb;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Final Working Test</h1>
+        <p>Simplified test focusing on the core issue</p>
+        
+        <div class="step">
+            <h3>Step 1: Clear Everything</h3>
+            <button onclick="clearAll()">Clear Browser Data</button>
+            <div id="clear-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 2: Test Login</h3>
+            <button onclick="doLogin()">Login with demo@askproai.de</button>
+            <div id="login-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 3: Check Session (Working Endpoint)</h3>
+            <button onclick="checkWorkingSession()">Check Session</button>
+            <div id="session-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 4: Access Dashboard</h3>
+            <button onclick="window.location.href='/business/dashboard'">Go to Dashboard</button>
+        </div>
+    </div>
+    
+    <script>
+        function clearAll() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.cookie.split(";").forEach(c => { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            document.getElementById('clear-result').innerHTML = '<div class="success">✅ Cleared!</div>';
+        }
+        
+        async function doLogin() {
+            const result = document.getElementById('login-result');
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    result.innerHTML = '<div class="success">✅ Login successful!<br><pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+                } else {
+                    result.innerHTML = '<div class="error">❌ Login failed: ' + data.message + '</div>';
+                }
+            } catch (error) {
+                result.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function checkWorkingSession() {
+            const result = document.getElementById('session-result');
+            try {
+                const response = await fetch('/working-session-test.php', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const isAuth = data.auth && data.auth.check;
+                result.innerHTML = '<div class="' + (isAuth ? 'success' : 'error') + '">' + 
+                    (isAuth ? '✅ Session Active!' : '❌ Not Authenticated') + 
+                    '<br><pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+            } catch (error) {
+                result.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

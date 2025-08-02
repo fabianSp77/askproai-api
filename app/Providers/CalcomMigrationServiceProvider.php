@@ -20,8 +20,8 @@ class CalcomMigrationServiceProvider extends ServiceProvider
             // Log that we're using backwards compatibility
             \Log::info('CalcomService requested - using backwards compatibility layer');
             
-            // Return backwards compatibility instance
-            return new CalcomBackwardsCompatibility();
+            // Return backwards compatibility instance with container injection
+            return new CalcomBackwardsCompatibility($app);
         });
         
         // Register V2 service as singleton

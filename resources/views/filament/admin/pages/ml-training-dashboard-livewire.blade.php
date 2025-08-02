@@ -17,7 +17,7 @@
         </div>
     </div>
     
-    <div class="space-y-6" wire:poll.5s="refreshProgress">
+    <div class="space-y-6" wire:poll.30s="refreshProgress">
         
         {{-- Instructions/Guide --}}
         @if($showInstructions)
@@ -481,7 +481,7 @@
         if (@js(count($activeJobs)) > 0) {
             setInterval(() => {
                 $wire.refreshProgress();
-            }, 2000);
+            }, 30000);
         }
         
         // Performance Chart

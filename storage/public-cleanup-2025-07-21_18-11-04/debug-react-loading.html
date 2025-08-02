@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug React Loading</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            overflow: auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug React Loading</h1>
+    
+    <div id="test-results"></div>
+    
+    <h2>Actions:</h2>
+    <button onclick="checkLoginPage()">Check Login Page</button>
+    <button onclick="testReactLoad()">Test React Load</button>
+    <button onclick="viewConsoleErrors()">View Console Errors</button>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            document.getElementById('test-results').appendChild(div);
+        }
+
+        async function checkLoginPage() {
+            addResult('Fetching login page...', 'info');
+            
+            try {
+                const response = await fetch('/business/login');
+                const html = await response.text();
+                
+                addResult(`Status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                // Check if login-app div exists
+                const hasLoginApp = html.includes('id="login-app"');
+                addResult(`Login app div exists: ${hasLoginApp}`, hasLoginApp ? 'success' : 'error');
+                
+                // Check if scripts are loaded
+                const hasLoginScript = html.includes('login-CjXr15MN.js');
+                addResult(`Login script included: ${hasLoginScript}`, hasLoginScript ? 'success' : 'error');
+                
+                // Parse and check scripts
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const scripts = doc.querySelectorAll('script[type="module"]');
+                
+                addResult(`Module scripts found: ${scripts.length}`, 'info');
+                scripts.forEach(script => {
+                    addResult(`Script: ${script.src}`, 'info');
+                });
+                
+                // Check CSS
+                const styles = doc.querySelectorAll('link[rel="stylesheet"]');
+                addResult(`Stylesheets found: ${styles.length}`, 'info');
+                
+            } catch (error) {
+                addResult(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function testReactLoad() {
+            addResult('Testing React load...', 'info');
+            
+            // Create a test div
+            const testDiv = document.createElement('div');
+            testDiv.id = 'test-react-app';
+            testDiv.setAttribute('data-csrf', 'test-token');
+            document.body.appendChild(testDiv);
+            
+            // Try to load React
+            addResult('Loading React and ReactDOM...', 'info');
+            
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.textContent = `
+                import React from 'react';
+                import ReactDOM from 'react-dom/client';
+                
+                console.log('React loaded:', !!React);
+                console.log('ReactDOM loaded:', !!ReactDOM);
+                
+                window.testReactLoaded = {
+                    React: !!React,
+                    ReactDOM: !!ReactDOM
+                };
+                
+                // Try to render
+                try {
+                    const root = ReactDOM.createRoot(document.getElementById('test-react-app'));
+                    root.render(React.createElement('div', null, 'React is working!'));
+                    console.log('React render successful');
+                } catch (e) {
+                    console.error('React render error:', e);
+                }
+            `;
+            
+            script.onerror = (e) => {
+                addResult('Script load error', 'error');
+                console.error('Script error:', e);
+            };
+            
+            document.body.appendChild(script);
+            
+            setTimeout(() => {
+                if (window.testReactLoaded) {
+                    addResult(`React loaded: ${window.testReactLoaded.React}`, 'success');
+                    addResult(`ReactDOM loaded: ${window.testReactLoaded.ReactDOM}`, 'success');
+                } else {
+                    addResult('React not loaded', 'error');
+                }
+                
+                const testApp = document.getElementById('test-react-app');
+                if (testApp && testApp.textContent) {
+                    addResult(`React rendered: ${testApp.textContent}`, 'success');
+                } else {
+                    addResult('React not rendered', 'error');
+                }
+            }, 1000);
+        }
+
+        function viewConsoleErrors() {
+            addResult('Opening new window to check console errors...', 'info');
+            
+            const win = window.open('/business/login', '_blank');
+            
+            setTimeout(() => {
+                addResult('Check the console in the new window for errors', 'info');
+                addResult('Common issues:', 'info');
+                addResult('- Module not found errors', 'info');
+                addResult('- CORS errors', 'info');
+                addResult('- Syntax errors', 'info');
+                addResult('- Network errors loading resources', 'info');
+            }, 1000);
+        }
+
+        // Initial check
+        checkLoginPage();
+    </script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Session Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1200px; 
+            margin: 20px auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .test-card {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 5px; 
+            cursor: pointer;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        .success { 
+            color: green; 
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #86efac;
+        }
+        .error { 
+            color: red;
+            background: #fef2f2;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #fca5a5;
+        }
+        .info {
+            color: #1e40af;
+            background: #dbeafe;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #93c5fd;
+        }
+        pre { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            overflow-x: auto;
+            border-radius: 4px;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-ok { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .status-unknown { background: #6b7280; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Ultimate Session Test</h1>
+        <p>Comprehensive test to diagnose and fix session persistence issues</p>
+        
+        <div class="test-grid">
+            <div class="test-card">
+                <h3>1. Clear & Reset</h3>
+                <button onclick="clearEverything()">Clear All Data</button>
+                <div id="clear-result"></div>
+            </div>
+            
+            <div class="test-card">
+                <h3>2. Login Test</h3>
+                <button onclick="testLogin()">Test Login</button>
+                <div id="login-result"></div>
+            </div>
+            
+            <div class="test-card">
+                <h3>3. Session Check</h3>
+                <button onclick="checkAllSessions()">Check All Sessions</button>
+                <div id="session-result"></div>
+            </div>
+            
+            <div class="test-card">
+                <h3>4. Dashboard Access</h3>
+                <button onclick="testDashboard()">Test Dashboard</button>
+                <div id="dashboard-result"></div>
+            </div>
+        </div>
+        
+        <div id="detailed-results"></div>
+        
+        <div class="info" style="margin-top: 20px;">
+            <h3>Current Status:</h3>
+            <div id="status-summary">Checking...</div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-check status on load
+        window.onload = function() {
+            updateStatus();
+        };
+        
+        async function updateStatus() {
+            const summary = document.getElementById('status-summary');
+            
+            try {
+                // Check multiple endpoints
+                const checks = await Promise.all([
+                    fetch('/business/auth/check', { credentials: 'include' }).then(r => r.json()).catch(() => null),
+                    fetch('/session-check.php', { credentials: 'include' }).then(r => r.json()).catch(() => null),
+                    fetch('/simple-session-check.php', { credentials: 'include' }).then(r => r.json()).catch(() => null)
+                ]);
+                
+                const [authCheck, sessionCheck, simpleCheck] = checks;
+                
+                let statusHTML = '';
+                
+                // Auth check
+                if (authCheck && authCheck.authenticated) {
+                    statusHTML += '<p><span class="status-indicator status-ok"></span> Laravel Auth: ✅ Authenticated as ' + authCheck.user.email + '</p>';
+                } else {
+                    statusHTML += '<p><span class="status-indicator status-error"></span> Laravel Auth: ❌ Not authenticated</p>';
+                }
+                
+                // Session check
+                if (sessionCheck && sessionCheck.session.portal_user_id) {
+                    statusHTML += '<p><span class="status-indicator status-ok"></span> Session Data: ✅ User ID ' + sessionCheck.session.portal_user_id + '</p>';
+                } else {
+                    statusHTML += '<p><span class="status-indicator status-error"></span> Session Data: ❌ No user in session</p>';
+                }
+                
+                // PHP Session
+                if (simpleCheck && simpleCheck.authenticated) {
+                    statusHTML += '<p><span class="status-indicator status-ok"></span> PHP Session: ✅ Active</p>';
+                } else {
+                    statusHTML += '<p><span class="status-indicator status-error"></span> PHP Session: ❌ Not active</p>';
+                }
+                
+                // Cookies
+                const cookies = document.cookie.split(';').map(c => c.trim().split('=')[0]);
+                statusHTML += '<p>Cookies: ' + (cookies.length > 0 ? cookies.join(', ') : 'None') + '</p>';
+                
+                summary.innerHTML = statusHTML;
+                
+            } catch (error) {
+                summary.innerHTML = '<p class="error">Error checking status: ' + error.message + '</p>';
+            }
+        }
+        
+        function clearEverything() {
+            const result = document.getElementById('clear-result');
+            
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            result.innerHTML = '<div class="success">✅ All data cleared!</div>';
+            
+            // Update status
+            setTimeout(updateStatus, 500);
+        }
+        
+        async function testLogin() {
+            const result = document.getElementById('login-result');
+            result.innerHTML = '<div class="info">Logging in...</div>';
+            
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = '<div class="success">✅ Login successful!<br>Session: ' + data.session_id + '</div>';
+                    
+                    // Update status after login
+                    setTimeout(updateStatus, 1000);
+                } else {
+                    result.innerHTML = '<div class="error">❌ Login failed: ' + data.message + '</div>';
+                }
+                
+            } catch (error) {
+                result.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function checkAllSessions() {
+            const result = document.getElementById('session-result');
+            const detailed = document.getElementById('detailed-results');
+            
+            result.innerHTML = '<div class="info">Checking sessions...</div>';
+            
+            try {
+                const endpoints = [
+                    { url: '/business/auth/check', name: 'Laravel Auth' },
+                    { url: '/session-check.php', name: 'Session Check' },
+                    { url: '/simple-session-check.php', name: 'PHP Session' },
+                    { url: '/business/api/user', name: 'User API' }
+                ];
+                
+                const results = await Promise.all(
+                    endpoints.map(async (endpoint) => {
+                        try {
+                            const response = await fetch(endpoint.url, { credentials: 'include' });
+                            const data = await response.json();
+                            return { ...endpoint, status: response.status, data };
+                        } catch (error) {
+                            return { ...endpoint, error: error.message };
+                        }
+                    })
+                );
+                
+                let summary = '';
+                let details = '<h3>Detailed Session Information:</h3>';
+                
+                results.forEach(r => {
+                    if (r.error) {
+                        summary += '<p>❌ ' + r.name + ': Error</p>';
+                    } else if (r.status === 200) {
+                        summary += '<p>✅ ' + r.name + ': OK</p>';
+                    } else {
+                        summary += '<p>❌ ' + r.name + ': Status ' + r.status + '</p>';
+                    }
+                    
+                    details += '<h4>' + r.name + ':</h4>';
+                    details += '<pre>' + JSON.stringify(r.data || { error: r.error }, null, 2) + '</pre>';
+                });
+                
+                result.innerHTML = summary;
+                detailed.innerHTML = details;
+                
+            } catch (error) {
+                result.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function testDashboard() {
+            const result = document.getElementById('dashboard-result');
+            
+            result.innerHTML = '<div class="info">Testing dashboard access...</div>';
+            
+            try {
+                const response = await fetch('/business/dashboard', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'text/html,application/json'
+                    },
+                    redirect: 'manual'
+                });
+                
+                if (response.status === 200) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType.includes('json')) {
+                        const data = await response.json();
+                        result.innerHTML = '<div class="' + (data.error ? 'error' : 'success') + '">Dashboard Response:<br>' + JSON.stringify(data, null, 2).substring(0, 200) + '...</div>';
+                    } else {
+                        result.innerHTML = '<div class="success">✅ Dashboard loaded successfully!</div>';
+                    }
+                } else if (response.status === 0 || response.type === 'opaqueredirect') {
+                    result.innerHTML = '<div class="error">❌ Redirected (probably to login)</div>';
+                } else {
+                    result.innerHTML = '<div class="error">❌ Dashboard returned status: ' + response.status + '</div>';
+                }
+                
+            } catch (error) {
+                result.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

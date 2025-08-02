@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
@@ -37,22 +36,22 @@ return [
         'base_url' => env('CALCOM_BASE_URL', 'https://api.cal.com'),
         'user_id' => env('CALCOM_USER_ID'),
         'webhook_secret' => env('CALCOM_WEBHOOK_SECRET'),
-        
+
         // V2 API Configuration
         'api_version' => env('CALCOM_API_VERSION', 'v2'),
         'v2_base_url' => env('CALCOM_V2_BASE_URL', 'https://api.cal.com/v2'),
         'use_v2_api' => env('CALCOM_USE_V2_API', false),
-        
+
         // Migration settings
         'v2_enabled_methods' => explode(',', env('CALCOM_V2_ENABLED_METHODS', '')),
         'v2_mandatory_methods' => explode(',', env('CALCOM_V2_MANDATORY_METHODS', '')),
-        
+
         // Performance settings
         'cache_ttl' => env('CALCOM_CACHE_TTL', 300), // 5 minutes
         'circuit_breaker_enabled' => env('CALCOM_CIRCUIT_BREAKER_ENABLED', true),
         'circuit_breaker_threshold' => env('CALCOM_CIRCUIT_BREAKER_THRESHOLD', 5),
         'circuit_breaker_timeout' => env('CALCOM_CIRCUIT_BREAKER_TIMEOUT', 60),
-        
+
         // Default event type for testing
         'default_event_type_id' => env('CALCOM_DEFAULT_EVENT_TYPE_ID'),
     ],
@@ -69,7 +68,7 @@ return [
         'default_company_id' => env('RETELL_DEFAULT_COMPANY_ID', 1),
         'default_branch_id' => env('RETELL_DEFAULT_BRANCH_ID', 1),
     ],
-    
+
     'retell_mcp' => [
         'url' => env('RETELL_MCP_SERVER_URL', 'http://localhost:3001'),
         'token' => env('RETELL_MCP_SERVER_TOKEN'),
@@ -111,7 +110,7 @@ return [
         'webhook_verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN'),
         'api_version' => env('WHATSAPP_API_VERSION', 'v18.0'),
         'base_url' => env('WHATSAPP_BASE_URL', 'https://graph.facebook.com'),
-        
+
         // Templates
         'templates' => [
             'appointment_reminder_24h' => env('WHATSAPP_TEMPLATE_REMINDER_24H', 'appointment_reminder_24h'),
@@ -120,7 +119,7 @@ return [
             'appointment_confirmation' => env('WHATSAPP_TEMPLATE_CONFIRMATION', 'appointment_confirmation'),
             'appointment_cancellation' => env('WHATSAPP_TEMPLATE_CANCELLATION', 'appointment_cancellation'),
         ],
-        
+
         // Twilio alternative configuration (if using Twilio for WhatsApp)
         'provider' => env('WHATSAPP_PROVIDER', 'meta'), // meta or twilio
         'twilio' => [
@@ -136,18 +135,18 @@ return [
         'from' => env('TWILIO_PHONE_NUMBER'),
         'whatsapp_from' => env('TWILIO_WHATSAPP_FROM', 'whatsapp:+14155238886'),
         'sandbox_mode' => env('TWILIO_SANDBOX_MODE', false),
-        
+
         // Webhook configuration
         'webhook_url' => env('TWILIO_WEBHOOK_URL', env('APP_URL') . '/api/mcp/twilio/status-callback'),
-        
+
         // Feature flags
         'sms_enabled' => env('TWILIO_SMS_ENABLED', true),
         'whatsapp_enabled' => env('TWILIO_WHATSAPP_ENABLED', true),
         'voice_enabled' => env('TWILIO_VOICE_ENABLED', false),
-        
+
         // Rate limiting
         'rate_limit' => env('TWILIO_RATE_LIMIT', 1), // messages per second
-        
+
         // Logging
         'log_messages' => env('TWILIO_LOG_MESSAGES', true),
     ],
@@ -184,5 +183,4 @@ return [
         'api_token' => env('FIGMA_API_TOKEN'),
         'base_url' => 'https://api.figma.com/v1',
     ],
-
 ];

@@ -126,7 +126,7 @@
     </style>
     @endpush
     
-    <div class="space-y-6" wire:poll.5s="loadMetrics">
+    <div class="space-y-6" wire:poll.30s="loadMetrics">
         <!-- Header with Overall Health -->
         <div class="glass-card rounded-xl p-8 text-center">
             <h1 class="text-4xl font-bold mb-4">AskProAI System Health</h1>

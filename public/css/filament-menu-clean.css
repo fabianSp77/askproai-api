@@ -1,0 +1,278 @@
+/**
+ * Filament Clean Menu CSS
+ * Saubere, moderne Styling für das Mobile Menu
+ * Best Practice & State of the Art
+ */
+
+/* =================================================================
+   1. MENU BUTTON STYLING
+   ================================================================= */
+
+/* Ensure only ONE menu button is visible */
+.fi-topbar-open-sidebar-btn {
+    /* Reset any inherited styles */
+    position: relative !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 50 !important;
+    
+    /* Clean modern styling */
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    
+    /* Colors */
+    color: rgb(75 85 99);
+    background-color: transparent;
+    transition: all 0.2s ease;
+}
+
+/* Hover state */
+.fi-topbar-open-sidebar-btn:hover {
+    background-color: rgb(243 244 246);
+    color: rgb(17 24 39);
+}
+
+/* Dark mode */
+.dark .fi-topbar-open-sidebar-btn {
+    color: rgb(209 213 219);
+}
+
+.dark .fi-topbar-open-sidebar-btn:hover {
+    background-color: rgb(55 65 81);
+    color: white;
+}
+
+/* Active/Open state */
+body.fi-sidebar-open .fi-topbar-open-sidebar-btn {
+    background-color: rgb(229 231 235);
+    color: rgb(17 24 39);
+}
+
+.dark body.fi-sidebar-open .fi-topbar-open-sidebar-btn {
+    background-color: rgb(55 65 81);
+    color: white;
+}
+
+/* Hide duplicate buttons */
+.mobile-menu-fallback,
+.fi-topbar button.mobile-menu-fallback {
+    display: none !important;
+}
+
+/* Ensure icon is properly sized */
+.fi-topbar-open-sidebar-btn svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    stroke-width: 2;
+}
+
+/* =================================================================
+   2. SIDEBAR OVERLAY & ANIMATION
+   ================================================================= */
+
+/* Mobile overlay when sidebar is open */
+@media (max-width: 1023px) {
+    body.fi-sidebar-open::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 30;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    body.fi-sidebar-open::before {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+/* Sidebar animation */
+.fi-sidebar {
+    transition: transform 0.3s ease;
+}
+
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 40;
+        transform: translateX(-100%);
+    }
+    
+    body.fi-sidebar-open .fi-sidebar {
+        transform: translateX(0);
+    }
+}
+
+/* =================================================================
+   3. RESPONSIVE BEHAVIOR
+   ================================================================= */
+
+/* Desktop - hide mobile menu button */
+@media (min-width: 1024px) {
+    .fi-topbar-open-sidebar-btn {
+        display: none !important;
+    }
+    
+    /* Ensure sidebar is always visible on desktop */
+    .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+}
+
+/* Mobile - show menu button */
+@media (max-width: 1023px) {
+    .fi-topbar-open-sidebar-btn {
+        display: inline-flex !important;
+    }
+}
+
+/* =================================================================
+   4. TOUCH OPTIMIZATION
+   ================================================================= */
+
+/* Better touch targets on mobile */
+@media (max-width: 1023px) {
+    .fi-topbar-open-sidebar-btn {
+        /* Minimum 44x44px touch target as per Apple HIG */
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    /* Prevent accidental taps */
+    .fi-topbar-open-sidebar-btn:active {
+        transform: scale(0.95);
+    }
+}
+
+/* =================================================================
+   5. ACCESSIBILITY & FOCUS STATES
+   ================================================================= */
+
+/* Focus styles for keyboard navigation */
+.fi-topbar-open-sidebar-btn:focus {
+    outline: 2px solid rgb(59 130 246);
+    outline-offset: 2px;
+}
+
+.fi-topbar-open-sidebar-btn:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Screen reader text */
+.fi-topbar-open-sidebar-btn .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* =================================================================
+   6. PREVENT LAYOUT SHIFTS
+   ================================================================= */
+
+/* Ensure topbar maintains height */
+.fi-topbar nav {
+    min-height: 4rem;
+    position: relative;
+}
+
+/* Prevent content jumping when sidebar opens */
+@media (max-width: 1023px) {
+    body.fi-sidebar-open {
+        overflow: hidden;
+    }
+    
+    /* Allow sidebar content to scroll */
+    body.fi-sidebar-open .fi-sidebar {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* =================================================================
+   7. CLEAN UP OLD/DUPLICATE ELEMENTS
+   ================================================================= */
+
+/* Remove any duplicate menu buttons */
+.fi-topbar button:not(.fi-topbar-open-sidebar-btn):first-child {
+    /* Only hide if it looks like a menu button */
+}
+
+.fi-topbar button[onclick*="classList.toggle"]:not(.fi-topbar-open-sidebar-btn) {
+    display: none !important;
+}
+
+/* Remove any inline onclick handlers visually */
+button[onclick*="sidebar"]:not(.fi-topbar-open-sidebar-btn) {
+    display: none !important;
+}
+
+/* =================================================================
+   8. MODERN ANIMATIONS
+   ================================================================= */
+
+/* Hamburger icon animation */
+.fi-topbar-open-sidebar-btn svg {
+    transition: transform 0.3s ease;
+}
+
+body.fi-sidebar-open .fi-topbar-open-sidebar-btn svg {
+    transform: rotate(90deg);
+}
+
+/* Smooth sidebar shadow */
+@media (max-width: 1023px) {
+    body.fi-sidebar-open .fi-sidebar {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+                    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+}
+
+/* =================================================================
+   9. PERFORMANCE OPTIMIZATIONS
+   ================================================================= */
+
+/* Use GPU acceleration for animations */
+.fi-sidebar {
+    will-change: transform;
+}
+
+/* Reduce repaints during animation */
+body.fi-sidebar-open::before {
+    will-change: opacity;
+}
+
+/* =================================================================
+   10. DEBUG MODE (remove in production)
+   ================================================================= */
+
+/* Enable with ?debug=menu in URL */
+body.debug-menu .fi-topbar-open-sidebar-btn {
+    border: 2px solid red !important;
+}
+
+body.debug-menu .fi-sidebar {
+    border: 2px solid blue !important;
+}
+
+body.debug-menu .mobile-menu-fallback {
+    border: 2px solid orange !important;
+    opacity: 0.5 !important;
+}

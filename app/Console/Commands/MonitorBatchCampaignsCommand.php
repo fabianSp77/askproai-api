@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\RetellAICallCampaign;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\DB;
-use App\Models\RetellAICallCampaign;
 
 class MonitorBatchCampaignsCommand extends Command
 {
@@ -43,6 +42,7 @@ class MonitorBatchCampaignsCommand extends Command
 
         if ($campaigns->isEmpty()) {
             $this->warn('No campaigns found.');
+
             return 0;
         }
 
@@ -50,15 +50,15 @@ class MonitorBatchCampaignsCommand extends Command
 
         foreach ($campaigns as $campaign) {
             $batchId = $campaign->metadata['batch_id'] ?? null;
-            
-            if (!$batchId) {
+
+            if (! $batchId) {
                 continue;
             }
 
             try {
                 $batch = Bus::findBatch($batchId);
-                
-                if (!$batch) {
+
+                if (! $batch) {
                     continue;
                 }
 
@@ -90,7 +90,7 @@ class MonitorBatchCampaignsCommand extends Command
 
                 $batchStatuses[] = $batchStatus;
 
-                if (!$asJson) {
+                if (! $asJson) {
                     $this->displayBatchStatus($batchStatus);
                 }
             } catch (\Exception $e) {
@@ -112,7 +112,7 @@ class MonitorBatchCampaignsCommand extends Command
         $this->info("\n=== Campaign: {$status['campaign_name']} ===");
         $this->line("Campaign ID: {$status['campaign_id']}");
         $this->line("Batch ID: {$status['batch_id']}");
-        
+
         $table = [
             ['Total Jobs', $status['total_jobs']],
             ['Processed', $status['processed_jobs']],
@@ -139,7 +139,7 @@ class MonitorBatchCampaignsCommand extends Command
         $this->table(['Metric', 'Value'], $table);
 
         // Show progress bar
-        if (!$status['finished'] && !$status['cancelled']) {
+        if (! $status['finished'] && ! $status['cancelled']) {
             $progress = intval(str_replace('%', '', $status['progress']));
             $this->output->write($this->getProgressBar($progress));
         }
@@ -149,7 +149,7 @@ class MonitorBatchCampaignsCommand extends Command
     {
         $filled = floor($progress / 2);
         $empty = 50 - $filled;
-        
+
         return "\n[" . str_repeat('█', $filled) . str_repeat('░', $empty) . "] {$progress}%\n";
     }
 }

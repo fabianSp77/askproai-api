@@ -31,7 +31,8 @@ class EventServiceProvider extends ServiceProvider
      * The subscriber classes to register.
      */
     protected $subscribe = [
-        \App\Listeners\LogAuthenticationEvents::class,
+        \App\Listeners\LogAuthenticationEventsOptimized::class,
+        \App\Listeners\EventLogger::class,
     ];
 
     public function boot(): void

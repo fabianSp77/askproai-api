@@ -116,11 +116,21 @@ class CustomerResource extends EnhancedResourceSimple
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationLabel = 'Kunden';
+    protected static ?string $navigationLabel = null;
 
-    protected static ?string $navigationGroup = 'Täglicher Betrieb';
+    protected static ?string $navigationGroup = null;
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.customers');
+    }
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.customer_management');
+    }
 
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 1; // Erste Position in Kundenverwaltung
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {

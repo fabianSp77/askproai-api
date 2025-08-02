@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\MCP\DebugMCPServer;
+use Illuminate\Console\Command;
 
 class MCPDebugCommand extends Command
 {
@@ -39,6 +39,7 @@ class MCPDebugCommand extends Command
         // List available tools if requested
         if ($tool === 'list') {
             $this->listTools($debugServer, $jsonOutput);
+
             return Command::SUCCESS;
         }
 
@@ -55,12 +56,13 @@ class MCPDebugCommand extends Command
             return Command::SUCCESS;
         } catch (\Exception $e) {
             $this->error('Error executing tool: ' . $e->getMessage());
+
             return Command::FAILURE;
         }
     }
 
     /**
-     * List available tools
+     * List available tools.
      */
     protected function listTools(DebugMCPServer $server, bool $jsonOutput): void
     {
@@ -68,6 +70,7 @@ class MCPDebugCommand extends Command
 
         if ($jsonOutput) {
             $this->line(json_encode($tools, JSON_PRETTY_PRINT));
+
             return;
         }
 
@@ -77,8 +80,8 @@ class MCPDebugCommand extends Command
         foreach ($tools as $tool) {
             $this->comment($tool['name']);
             $this->line('  ' . $tool['description']);
-            
-            if (isset($tool['inputSchema']['properties']) && !empty($tool['inputSchema']['properties'])) {
+
+            if (isset($tool['inputSchema']['properties']) && ! empty($tool['inputSchema']['properties'])) {
                 $this->line('  Parameters:');
                 foreach ($tool['inputSchema']['properties'] as $param => $schema) {
                     $required = isset($tool['inputSchema']['required']) && in_array($param, $tool['inputSchema']['required']);
@@ -96,7 +99,7 @@ class MCPDebugCommand extends Command
     }
 
     /**
-     * Display result in a formatted way
+     * Display result in a formatted way.
      */
     protected function displayResult(string $tool, array $result): void
     {
@@ -106,32 +109,32 @@ class MCPDebugCommand extends Command
         switch ($tool) {
             case 'debug_auth_state':
                 $this->displayAuthState($result);
+
                 break;
-            
             case 'trace_request_flow':
                 $this->displayRequestFlow($result);
+
                 break;
-            
             case 'debug_route_conflicts':
                 $this->displayRouteConflicts($result);
+
                 break;
-            
             case 'monitor_middleware':
                 $this->displayMiddleware($result);
+
                 break;
-            
             case 'debug_session':
                 $this->displaySession($result);
+
                 break;
-            
             case 'analyze_auth_flow':
                 $this->displayAuthFlow($result);
+
                 break;
-            
             case 'list_routes':
                 $this->displayRoutes($result);
+
                 break;
-            
             default:
                 // Default display for other tools
                 $this->displayArray($result);
@@ -139,48 +142,50 @@ class MCPDebugCommand extends Command
     }
 
     /**
-     * Display auth state
+     * Display auth state.
      */
     protected function displayAuthState(array $result): void
     {
         foreach ($result as $guard => $state) {
             if ($guard === 'sanctum_tokens') {
                 $this->info("Active Sanctum Tokens: $state");
+
                 continue;
             }
 
             $this->comment("Guard: $guard");
-            
+
             if (isset($state['error'])) {
-                $this->error("  Error: " . $state['error']);
+                $this->error('  Error: ' . $state['error']);
+
                 continue;
             }
 
             $authenticated = $state['authenticated'] ?? false;
-            $this->line("  Authenticated: " . ($authenticated ? 'Yes' : 'No'));
-            
+            $this->line('  Authenticated: ' . ($authenticated ? 'Yes' : 'No'));
+
             if ($authenticated && isset($state['user'])) {
-                $this->line("  User ID: " . $state['user']['id']);
-                $this->line("  User Email: " . ($state['user']['email'] ?? 'N/A'));
-                $this->line("  User Type: " . $state['user']['type']);
-                $this->line("  Company ID: " . ($state['user']['company_id'] ?? 'N/A'));
+                $this->line('  User ID: ' . $state['user']['id']);
+                $this->line('  User Email: ' . ($state['user']['email'] ?? 'N/A'));
+                $this->line('  User Type: ' . $state['user']['type']);
+                $this->line('  Company ID: ' . ($state['user']['company_id'] ?? 'N/A'));
             }
-            
-            $this->line("  Session ID: " . ($state['session_id'] ?? 'N/A'));
+
+            $this->line('  Session ID: ' . ($state['session_id'] ?? 'N/A'));
             $this->newLine();
         }
     }
 
     /**
-     * Display request flow
+     * Display request flow.
      */
     protected function displayRequestFlow(array $result): void
     {
         $this->info('Request Details:');
         $this->line('  Method: ' . $result['request']['method']);
         $this->line('  URI: ' . $result['request']['uri']);
-        
-        if (!empty($result['request']['headers'])) {
+
+        if (! empty($result['request']['headers'])) {
             $this->line('  Headers:');
             foreach ($result['request']['headers'] as $key => $value) {
                 $this->line("    $key: $value");
@@ -196,18 +201,18 @@ class MCPDebugCommand extends Command
             $this->line('  Method: ' . ($result['route']['method'] ?? 'N/A'));
         }
 
-        if (!empty($result['middleware'])) {
+        if (! empty($result['middleware'])) {
             $this->newLine();
             $this->info('Middleware Stack:');
             foreach ($result['middleware'] as $index => $middleware) {
                 $this->line(sprintf('  %d. %s', $index + 1, $middleware['class']));
-                if (!empty($middleware['parameters'])) {
+                if (! empty($middleware['parameters'])) {
                     $this->line('     Parameters: ' . implode(', ', $middleware['parameters']));
                 }
             }
         }
 
-        if (!empty($result['errors'])) {
+        if (! empty($result['errors'])) {
             $this->newLine();
             $this->error('Errors:');
             foreach ($result['errors'] as $error) {
@@ -217,14 +222,14 @@ class MCPDebugCommand extends Command
     }
 
     /**
-     * Display route conflicts
+     * Display route conflicts.
      */
     protected function displayRouteConflicts(array $result): void
     {
         $this->info('Route Analysis:');
         $this->line('Total routes: ' . $result['total_routes']);
-        
-        if (!empty($result['conflicts'])) {
+
+        if (! empty($result['conflicts'])) {
             $this->newLine();
             $this->error('Route Conflicts Found:');
             foreach ($result['conflicts'] as $key => $routes) {
@@ -240,12 +245,13 @@ class MCPDebugCommand extends Command
     }
 
     /**
-     * Display middleware analysis
+     * Display middleware analysis.
      */
     protected function displayMiddleware(array $result): void
     {
         if (isset($result['error'])) {
             $this->error($result['error']);
+
             return;
         }
 
@@ -261,7 +267,7 @@ class MCPDebugCommand extends Command
             if ($middleware['alias']) {
                 $this->line('     Alias: ' . $middleware['alias']);
             }
-            if (!empty($middleware['parameters'])) {
+            if (! empty($middleware['parameters'])) {
                 $this->line('     Parameters: ' . implode(', ', $middleware['parameters']));
             }
         }
@@ -278,7 +284,7 @@ class MCPDebugCommand extends Command
     }
 
     /**
-     * Display session debug info
+     * Display session debug info.
      */
     protected function displaySession(array $result): void
     {
@@ -313,7 +319,7 @@ class MCPDebugCommand extends Command
     }
 
     /**
-     * Display auth flow analysis
+     * Display auth flow analysis.
      */
     protected function displayAuthFlow(array $result): void
     {
@@ -344,7 +350,7 @@ class MCPDebugCommand extends Command
             }
         }
 
-        if (!empty($result['issues'])) {
+        if (! empty($result['issues'])) {
             $this->newLine();
             $this->error('Issues Found:');
             foreach ($result['issues'] as $issue) {
@@ -352,7 +358,7 @@ class MCPDebugCommand extends Command
             }
         }
 
-        if (!empty($result['recommendations'])) {
+        if (! empty($result['recommendations'])) {
             $this->newLine();
             $this->comment('Recommendations:');
             foreach ($result['recommendations'] as $recommendation) {
@@ -362,7 +368,7 @@ class MCPDebugCommand extends Command
     }
 
     /**
-     * Display routes
+     * Display routes.
      */
     protected function displayRoutes(array $result): void
     {
@@ -371,6 +377,7 @@ class MCPDebugCommand extends Command
 
         if (empty($result['routes'])) {
             $this->comment('No routes found matching the criteria.');
+
             return;
         }
 
@@ -393,7 +400,7 @@ class MCPDebugCommand extends Command
     }
 
     /**
-     * Display generic array
+     * Display generic array.
      */
     protected function displayArray(array $data, string $prefix = ''): void
     {
@@ -412,13 +419,14 @@ class MCPDebugCommand extends Command
     }
 
     /**
-     * Truncate action name for display
+     * Truncate action name for display.
      */
     protected function truncateAction(string $action): string
     {
         if (strlen($action) > 50) {
             return substr($action, 0, 47) . '...';
         }
+
         return $action;
     }
 }

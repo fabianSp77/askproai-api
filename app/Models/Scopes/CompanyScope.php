@@ -47,10 +47,18 @@ class CompanyScope implements Scope
      */
     protected function getCompanyId(): ?int
     {
-        // 1. Check app container for trusted job context
+        // 1. Check app container for trusted context
         if (app()->bound('current_company_id') && app()->bound('company_context_source')) {
+            $contextSource = app('company_context_source');
+            
+            // Allow web auth context from our middleware
+            $allowedWebSources = ['web_auth', 'early_middleware', 'force_company_context_middleware', 'auth_event', 'request_handled_event', 'route_matched_event', 'portal_auth', 'session_restore'];
+            if (in_array($contextSource, $allowedWebSources) && !app()->runningInConsole()) {
+                return (int) app('current_company_id');
+            }
+            
             // Verify this is actually a background job and not a web request
-            if (app('company_context_source') === 'trusted_job' && 
+            if ($contextSource === 'trusted_job' && 
                 app()->runningInConsole() &&
                 app()->bound('trusted_job_class')) {
                 
@@ -97,7 +105,15 @@ class CompanyScope implements Scope
             }
         }
         
-        // 3. Check API authentication (sanctum guard)
+        // 3. Check portal authentication (portal guard)
+        if (Auth::guard('portal')->check()) {
+            $user = Auth::guard('portal')->user();
+            if ($user && isset($user->company_id)) {
+                return (int) $user->company_id;
+            }
+        }
+        
+        // 4. Check API authentication (sanctum guard)
         if (Auth::guard('sanctum')->check()) {
             $user = Auth::guard('sanctum')->user();
             if ($user && isset($user->company_id)) {
@@ -105,7 +121,7 @@ class CompanyScope implements Scope
             }
         }
         
-        // 4. For system operations in console
+        // 5. For system operations in console
         if (app()->runningInConsole()) {
             // Allow explicit company context for migrations/seeders
             if (app()->has('tenant.id')) {
@@ -116,7 +132,7 @@ class CompanyScope implements Scope
             return null;
         }
         
-        // 5. Security check - log if headers are attempted
+        // 6. Security check - log if headers are attempted
         if (request()->hasHeader('X-Company-Id') || request()->has('company_id')) {
             Log::critical('SECURITY: Attempted to use untrusted company_id source', [
                 'headers' => request()->headers->all(),

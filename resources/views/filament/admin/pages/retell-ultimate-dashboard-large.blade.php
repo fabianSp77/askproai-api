@@ -1893,9 +1893,10 @@
         @endif
     </div>
     
-    {{-- Force Modern Styles - Most Aggressive Approach --}}
+    {{-- Removed performance-killing scripts - Issue #452
     <link rel="stylesheet" href="/css/force-modern-styles.css?v={{ time() }}" />
     <script src="/js/force-modern-styles.js?v={{ time() }}"></script>
+    --}}
     
     {{-- Inline critical styles immediately --}}
     <style id="critical-modern-styles">
@@ -1991,7 +1992,7 @@
             }
             
             // Apply periodically
-            setInterval(applyUltraModernStyles, 250);
+            setInterval(applyUltraModernStyles, 30000);
             
             // Override any style changes
             const styleObserver = new MutationObserver(() => {

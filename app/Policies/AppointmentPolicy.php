@@ -15,6 +15,17 @@ class AppointmentPolicy
      */
     public function viewAny(User $user): bool
     {
+        // Super admin can always view
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users with company_id can view their company's appointments
+        if ($user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('view_any_appointment');
     }
 
@@ -23,6 +34,17 @@ class AppointmentPolicy
      */
     public function view(User $user, Appointment $appointment): bool
     {
+        // Super admin can always view
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users can view appointments from their own company
+        if ($user->company_id && $appointment->company_id === $user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('view_appointment');
     }
 
@@ -31,6 +53,17 @@ class AppointmentPolicy
      */
     public function create(User $user): bool
     {
+        // Super admin can always create
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users with company_id can create appointments for their company
+        if ($user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('create_appointment');
     }
 
@@ -39,6 +72,17 @@ class AppointmentPolicy
      */
     public function update(User $user, Appointment $appointment): bool
     {
+        // Super admin can always update
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users can update appointments from their own company
+        if ($user->company_id && $appointment->company_id === $user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('update_appointment');
     }
 
@@ -47,6 +91,17 @@ class AppointmentPolicy
      */
     public function delete(User $user, Appointment $appointment): bool
     {
+        // Super admin can always delete
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Users can delete appointments from their own company
+        if ($user->company_id && $appointment->company_id === $user->company_id) {
+            return true;
+        }
+        
+        // Check for specific permission
         return $user->can('delete_appointment');
     }
 

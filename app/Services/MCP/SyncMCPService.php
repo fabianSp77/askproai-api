@@ -249,6 +249,7 @@ class SyncMCPService
             $recommendations[] = [
                 'type' => 'calls',
                 'priority' => 'high',
+                'reason' => 'Anrufe wurden seit über 6 Stunden nicht synchronisiert',
                 'message' => 'Anrufe wurden seit über 6 Stunden nicht synchronisiert',
                 'action' => 'sync_last_24h',
                 'suggested_filters' => [
@@ -265,6 +266,7 @@ class SyncMCPService
             $recommendations[] = [
                 'type' => 'appointments',
                 'priority' => 'medium',
+                'reason' => 'Termine wurden seit über einem Tag nicht synchronisiert',
                 'message' => 'Termine wurden seit über einem Tag nicht synchronisiert',
                 'action' => 'sync_upcoming',
                 'suggested_filters' => [
@@ -285,6 +287,7 @@ class SyncMCPService
             $recommendations[] = [
                 'type' => 'analysis',
                 'priority' => 'low',
+                'reason' => "{$unlinkedCalls} Anrufe ohne Terminverknüpfung in den letzten 7 Tagen",
                 'message' => "{$unlinkedCalls} Anrufe ohne Terminverknüpfung in den letzten 7 Tagen",
                 'action' => 'analyze_unlinked'
             ];

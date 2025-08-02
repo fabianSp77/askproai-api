@@ -1,86 +1,100 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
     plugins: [
         laravel({
-            input: [
-                'resources/css/app.css', 
-                'resources/css/filament/admin/theme.css',
-                'resources/css/filament/admin/agent-management.css',
-                'resources/css/filament/admin/company-integration-portal-clean.css',
-                'resources/css/filament/admin/company-integration-portal-v2.css',
-                'resources/css/filament/admin/responsive-fixes.css',
-                'resources/css/filament/admin/ultimate-theme.css',
-                'resources/css/filament/admin/ultra-calls.css',
-                'resources/css/filament/admin/ultra-appointments.css',
-                'resources/css/filament/admin/ultra-customers.css',
-                'resources/css/filament/admin/retell-ultimate.css',
-                'resources/css/filament/admin/retell-control-center.css',
-                'resources/css/filament/admin/quick-docs-enhanced.css',
-                'resources/css/filament/admin/professional-navigation.css',
-                'resources/css/filament/admin/billing-alerts-improvements.css',
-                'resources/css/filament/admin/user-menu-fixes.css',
-                'resources/css/filament/admin/dropdown-fixes.css',
-                'resources/css/filament/admin/wizard-component-fixes.css',
-                'resources/css/filament/admin/monitoring-dashboard-responsive.css',
-                'resources/css/filament/admin/z-index-fix.css',
-                'resources/css/filament/admin/dropdown-stacking-fix.css',
-                'resources/css/filament/admin/simple-width-fix.css',
-                'resources/css/filament/admin/professional-mobile-menu.css',
-                'resources/css/call-detail-modern.css',
-                'resources/js/app.js', // For non-admin pages
-                'resources/js/app-filament-compatible.js', // For admin pages
-                'resources/js/filament-v3-fixes.js',
-                'resources/js/filament-searchable-select-fix.js',
-                'resources/js/retell-control-center.js',
-                'resources/js/quick-docs-enhanced.js',
-                'resources/js/agent-management.js',
-                'resources/js/column-toggle-enhancements.js',
-                'resources/js/column-selector-fix.js',
-                'resources/js/column-editor-modern.js',
-                'resources/js/company-integration-portal.js',
-                'resources/js/askproai-ui-components.js',
-                'resources/js/askproai-state-manager.js',
-                'resources/js/dropdown-manager.js',
-                'resources/js/ultimate-ui-system-simple.js',
-                'resources/js/responsive-zoom-handler.js',
-                'resources/js/pusher-integration.js',
-                'resources/js/wizard-progress-enhancer.js',
-                'resources/js/wizard-v2-enhancements.js',
-                // React App Entry Points
-                'resources/js/app-react.jsx',
-                'resources/js/app-react-simple.jsx',
-                'resources/js/PortalApp.jsx',
-                'resources/js/PortalAppModern.jsx',
-                // Portal React Components
-                'resources/js/portal-calls.jsx',
-                'resources/js/portal-dashboard.jsx',
-                'resources/js/portal-customers.jsx',
-                'resources/js/portal-settings.jsx',
-                'resources/js/portal-team.jsx',
-                'resources/js/portal-analytics.jsx',
-                'resources/js/portal-appointments.jsx',
-                'resources/js/portal-billing.jsx',
-                // Optimized Portal React Components
-                'resources/js/portal-dashboard-optimized.jsx',
-                'resources/js/portal-calls-optimized.jsx',
-                'resources/js/portal-appointments-optimized.jsx',
-                'resources/js/portal-customers-optimized.jsx',
-                'resources/js/portal-team-optimized.jsx',
-                'resources/js/portal-analytics-optimized.jsx',
-                'resources/js/portal-settings-optimized.jsx',
-                'resources/js/portal-billing-optimized.jsx',
-                // Admin React Portal
-                'resources/js/admin.jsx',
-                // Login
-                'resources/js/login.jsx',
-                // Dropdown Close Fix
-                'resources/js/dropdown-close-fix.js'
-            ],
+            input: {
+                // Main Application Bundle
+                'app': 'resources/js/app.js',
+                'app.styles': 'resources/css/app.css',
+                
+                // Admin Panel Bundle (Filament)
+                'admin': 'resources/js/bundles/admin.js',
+                'admin.styles': 'resources/css/bundles/admin.css',
+                
+                // Portal React Bundle
+                'portal': 'resources/js/bundles/portal.jsx',
+                
+                // Login Page Bundle
+                'login': 'resources/js/login.jsx',
+                
+                // Critical CSS (inline for fast loading)
+                'critical': 'resources/css/bundles/critical.css',
+                
+                // Filament theme CSS files
+                'filament.admin.theme': 'resources/css/filament/admin/theme.css',
+                'filament.admin.sidebar-layout-fix': 'resources/css/filament/admin/sidebar-layout-fix.css',
+                'filament.admin.unified-responsive': 'resources/css/filament/admin/unified-responsive.css',
+                'filament.admin.icon-fixes': 'resources/css/filament/admin/icon-fixes.css',
+                'filament.admin.icon-container-sizes': 'resources/css/filament/admin/icon-container-sizes.css',
+                'filament.admin.form-layout-fixes': 'resources/css/filament/admin/form-layout-fixes.css',
+                'filament.admin.table-scroll-indicators': 'resources/css/filament/admin/table-scroll-indicators.css',
+                'filament.admin.content-width-fix': 'resources/css/filament/admin/content-width-fix.css'
+            },
             refresh: true,
         }),
         react(),
     ],
+    
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    // Vendor chunks
+                    'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+                    'vendor-ui': ['@headlessui/react', '@heroicons/react/24/outline', '@heroicons/react/24/solid'],
+                    'vendor-utils': ['axios'],
+                },
+                // Generate consistent chunk names for better caching
+                chunkFileNames: (chunkInfo) => {
+                    const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
+                    return `js/chunks/${facadeModuleId}-[hash].js`;
+                },
+                assetFileNames: (assetInfo) => {
+                    if (assetInfo.name.endsWith('.css')) {
+                        return 'css/[name]-[hash][extname]';
+                    }
+                    return 'assets/[name]-[hash][extname]';
+                }
+            }
+        },
+        // Enable CSS code splitting
+        cssCodeSplit: true,
+        // Increase chunk size warning limit
+        chunkSizeWarningLimit: 1000,
+        // Minify for production
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true
+            }
+        }
+    },
+    
+    // Optimize dependencies
+    optimizeDeps: {
+        include: [
+            'react',
+            'react-dom',
+            'react-router-dom',
+            'axios',
+            '@headlessui/react',
+            '@heroicons/react/24/outline',
+            '@heroicons/react/24/solid'
+        ]
+    },
+    
+    // Development server optimizations
+    server: {
+        hmr: {
+            overlay: false
+        },
+        watch: {
+            usePolling: false
+        }
+    }
 });

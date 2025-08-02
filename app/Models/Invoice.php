@@ -67,6 +67,15 @@ class Invoice extends Model
     }
 
     /**
+     * Get the flexible invoice items.
+     * NOTE: Commented out as the table 'invoice_items_flexible' does not exist
+     */
+    // public function flexibleItems(): HasMany
+    // {
+    //     return $this->hasMany(InvoiceItemFlexible::class);
+    // }
+
+    /**
      * Get the billing periods.
      */
     public function billingPeriods()

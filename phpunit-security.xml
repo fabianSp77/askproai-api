@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         failOnRisky="true"
+         failOnEmptyTestSuite="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         cacheDirectory=".phpunit.cache"
+         backupGlobals="false"
+         backupStaticAttributes="false">
+    
+    <testsuites>
+        <testsuite name="Security">
+            <directory suffix="Test.php">./tests/Feature/Security</directory>
+        </testsuite>
+        <testsuite name="Critical">
+            <file>./tests/Feature/Security/CrossTenantAuthenticationTest.php</file>
+            <file>./tests/Feature/Security/AdminApiAccessControlTest.php</file>
+            <file>./tests/Feature/Security/WebhookDataContaminationTest.php</file>
+            <file>./tests/Feature/Security/AuthenticationBypassTest.php</file>
+            <file>./tests/Feature/Security/DatabaseSecurityTest.php</file>
+        </testsuite>
+        <testsuite name="Medium">
+            <file>./tests/Feature/Security/SessionIsolationTest.php</file>
+            <file>./tests/Feature/Security/InputValidationSecurityTest.php</file>
+            <file>./tests/Feature/Security/DataLeakageTest.php</file>
+            <file>./tests/Feature/Security/ApiSecurityVulnerabilitiesTest.php</file>
+            <file>./tests/Feature/Security/FileSystemSecurityTest.php</file>
+        </testsuite>
+    </testsuites>
+    
+    <coverage includeUncoveredFiles="true"
+              processUncoveredFiles="true"
+              ignoreDeprecatedCode="true"
+              disableCodeCoverageIgnore="false">
+        <include>
+            <directory suffix=".php">./app</directory>
+        </include>
+        <exclude>
+            <directory suffix=".php">./app/Console/Kernel.php</directory>
+            <directory suffix=".php">./app/Exceptions/Handler.php</directory>
+            <directory suffix=".php">./app/Http/Kernel.php</directory>
+            <directory>./app/Providers</directory>
+            <file>./app/Http/Controllers/Controller.php</file>
+        </exclude>
+        <report>
+            <html outputDirectory="security-reports/coverage/html"/>
+            <clover outputFile="security-reports/coverage/clover.xml"/>
+            <crap4j outputFile="security-reports/coverage/crap4j.xml"/>
+            <php outputFile="security-reports/coverage/coverage.php"/>
+            <text outputFile="security-reports/coverage/coverage.txt"/>
+        </report>
+    </coverage>
+    
+    <logging>
+        <junit outputFile="security-reports/junit.xml"/>
+        <teamcity outputFile="security-reports/teamcity.txt"/>
+        <testdoxHtml outputFile="security-reports/testdox.html"/>
+        <testdoxText outputFile="security-reports/testdox.txt"/>
+    </logging>
+    
+    <php>
+        <server name="APP_ENV" value="testing"/>
+        <server name="BCRYPT_ROUNDS" value="4"/>
+        <server name="CACHE_DRIVER" value="array"/>
+        <server name="DB_CONNECTION" value="sqlite"/>
+        <server name="DB_DATABASE" value=":memory:"/>
+        <server name="MAIL_MAILER" value="array"/>
+        <server name="QUEUE_CONNECTION" value="sync"/>
+        <server name="SESSION_DRIVER" value="array"/>
+        <server name="TELESCOPE_ENABLED" value="false"/>
+        <env name="SECURITY_TESTING" value="true"/>
+    </php>
+    
+    <extensions>
+        <!-- Add any PHPUnit extensions for security testing -->
+    </extensions>
+</phpunit>

@@ -1,0 +1,17 @@
+Routes that may reference test/debug controllers:
+================================================
+routes/api-portal.php:Route::get('business/api/test-session', [\App\Http\Controllers\Portal\Api\TestSessionController::class, 'test'])
+routes/api-portal.php:Route::get('business/api/debug-session-noauth', [\App\Http\Controllers\Portal\Api\DebugSessionController::class, 'debug'])
+routes/api-portal.php:Route::get('business/api/test-auth', [\App\Http\Controllers\Portal\Api\TestAuthController::class, 'test'])
+routes/api-portal.php:        Route::get('/test-calls', [\App\Http\Controllers\Portal\Api\TestCallsController::class, 'test'])->name('test-calls');
+routes/api-portal.php:        Route::get('/debug-calls-auth', [\App\Http\Controllers\Portal\Api\DebugCallsApiController::class, 'debug'])->name('debug-calls-auth');
+routes/business-portal.php:use App\Http\Controllers\Portal\DemoController;
+routes/business-portal.php:    Route::get('/', [DemoController::class, 'index'])->name('index');
+routes/business-portal.php:    Route::get('/components', [DemoController::class, 'components'])->name('components');
+routes/business-portal.php.backup-2025-07-31-14-46-13:use App\Http\Controllers\Portal\DemoController;
+routes/business-portal.php.backup-2025-07-31-14-46-13:    Route::get('/debug-login', [App\Http\Controllers\Portal\Auth\DebugLoginController::class, 'debugLogin'])->name('debug-login');
+routes/business-portal.php.backup-2025-07-31-14-46-13:        Route::get('/demo', [DemoController::class, 'dashboard'])->name('dashboard');
+routes/business-portal.php.backup-2025-07-31-14-46-13:        Route::get('/demo/bypass', [DemoController::class, 'bypass'])->name('bypass');
+routes/web.php:Route::post('/simple-login', [App\Http\Controllers\SimpleLoginController::class, 'login'])->name('simple.login');
+routes/web.php:Route::get('/debug-login', [App\Http\Controllers\DebugLoginController::class, 'showForm']);
+routes/web.php:Route::post('/debug-login/attempt', [App\Http\Controllers\DebugLoginController::class, 'attemptLogin']);

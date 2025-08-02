@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 15px; overflow-x: auto; }
+        .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; }
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Login Test</h1>
+    
+    <button onclick="debugRequest()">Test Debug Endpoint</button>
+    <button onclick="testRealLogin()">Test Real Login</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function debugRequest() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>Testing debug endpoint...</p>';
+            
+            try {
+                const response = await fetch('/debug-login-request.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                result.innerHTML = `
+                    <h3>Debug Response:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    ${data.auth_result ? '<div class="success">✅ Authentication successful on server!</div>' : '<div class="error">❌ Authentication failed on server</div>'}
+                `;
+            } catch (error) {
+                result.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function testRealLogin() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>Testing real login endpoint...</p>';
+            
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                result.innerHTML = `
+                    <h3>Login Response (${response.status}):</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    ${data.success ? '<div class="success">✅ Login successful!</div>' : '<div class="error">❌ Login failed</div>'}
+                `;
+            } catch (error) {
+                result.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

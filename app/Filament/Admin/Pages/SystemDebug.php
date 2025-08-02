@@ -19,6 +19,11 @@ class SystemDebug extends Page
         return auth()->user()?->hasRole('Super Admin') ?? false;
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+
     public function testDropdown(): void
     {
         $this->dispatch('notify', [

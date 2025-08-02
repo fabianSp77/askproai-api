@@ -74,10 +74,17 @@ trait BelongsToCompany
      */
     protected static function getCurrentCompanyId(): ?int
     {
-        // 1. Check app container (for background jobs with explicit context)
+        // 1. Check app container for trusted context
         if (app()->bound('current_company_id') && app()->bound('company_context_source')) {
+            $contextSource = app('company_context_source');
+            
+            // Allow web auth context from our middleware
+            if ($contextSource === 'web_auth' && !app()->runningInConsole()) {
+                return (int) app('current_company_id');
+            }
+            
             // Verify this is actually a background job and not a web request
-            if (app('company_context_source') === 'trusted_job' && 
+            if ($contextSource === 'trusted_job' && 
                 app()->runningInConsole() &&
                 app()->bound('trusted_job_class')) {
                 

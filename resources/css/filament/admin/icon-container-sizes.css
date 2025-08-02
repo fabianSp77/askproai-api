@@ -1,0 +1,195 @@
+/* ================================================================
+   ICON CONTAINER SIZES
+   ================================================================
+   
+   This file defines the correct sizes for icon containers.
+   The SVGs inside these containers will scale to 100% (as defined in icon-fixes.css),
+   but the containers themselves need fixed sizes to prevent icons from growing too large.
+   
+   ================================================================ */
+
+/* Base icon container size */
+.fi-icon {
+    width: 1.25rem !important;  /* 20px */
+    height: 1.25rem !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Table column icons */
+.fi-ta-icon {
+    width: 1.25rem !important;  /* 20px */
+    height: 1.25rem !important;
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Icon buttons need larger touch targets */
+.fi-icon-btn {
+    min-width: 2.5rem !important;  /* 40px */
+    min-height: 2.5rem !important;
+    padding: 0.5rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Icon button SVGs should be smaller than the button */
+.fi-icon-btn .fi-icon,
+.fi-icon-btn svg {
+    width: 1.25rem !important;  /* 20px */
+    height: 1.25rem !important;
+}
+
+/* Section headers can have slightly larger icons */
+.fi-section-header .fi-icon,
+.fi-section-header svg {
+    width: 1.5rem !important;  /* 24px */
+    height: 1.5rem !important;
+}
+
+/* Modal and empty state icons are larger */
+.fi-modal-icon,
+.fi-empty-state-icon {
+    width: 3rem !important;  /* 48px */
+    height: 3rem !important;
+}
+
+.fi-modal-icon svg,
+.fi-empty-state-icon svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Dropdown icons */
+.fi-dropdown-list-item-icon {
+    width: 1.25rem !important;  /* 20px */
+    height: 1.25rem !important;
+    flex-shrink: 0 !important;
+}
+
+/* Badge icons are smaller */
+.fi-badge .fi-icon,
+.fi-badge svg {
+    width: 0.875rem !important;  /* 14px */
+    height: 0.875rem !important;
+}
+
+/* Navigation icons */
+.fi-sidebar-item-icon {
+    width: 1.25rem !important;  /* 20px */
+    height: 1.25rem !important;
+    flex-shrink: 0 !important;
+}
+
+/* Notification icons */
+.fi-notification-icon {
+    width: 1.25rem !important;  /* 20px */
+    height: 1.25rem !important;
+    flex-shrink: 0 !important;
+}
+
+/* Form field icons */
+.fi-fo-field-wrp-label .fi-icon,
+.fi-fo-field-wrp-label svg {
+    width: 1rem !important;  /* 16px */
+    height: 1rem !important;
+}
+
+/* Action icons in tables */
+.fi-ta-action .fi-icon,
+.fi-ta-action svg {
+    width: 1.25rem !important;  /* 20px */
+    height: 1.25rem !important;
+}
+
+/* Bulk action icons */
+.fi-ta-bulk-action .fi-icon,
+.fi-ta-bulk-action svg {
+    width: 1.25rem !important;  /* 20px */
+    height: 1.25rem !important;
+}
+
+/* Loading indicators maintain original size */
+.fi-loading-indicator {
+    width: 1.25rem !important;  /* 20px */
+    height: 1.25rem !important;
+}
+
+.fi-loading-indicator svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Widget icons */
+.fi-wi-icon {
+    width: 1.5rem !important;  /* 24px */
+    height: 1.5rem !important;
+    flex-shrink: 0 !important;
+}
+
+/* Stats widget icons can be larger */
+.fi-wi-stats-overview-stat-icon {
+    width: 2rem !important;  /* 32px */
+    height: 2rem !important;
+}
+
+/* Ensure heroicons respect container sizes */
+.heroicon,
+[class*="heroicon-"] {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: inherit !important;
+    max-height: inherit !important;
+}
+
+/* Fix for inline icons in text */
+.fi-link .fi-icon,
+.fi-link svg,
+p .fi-icon,
+p svg,
+span .fi-icon,
+span svg {
+    width: 1em !important;
+    height: 1em !important;
+    vertical-align: -0.125em !important;
+}
+
+/* Mobile adjustments for better touch targets */
+@media (max-width: 767px) {
+    .fi-icon-btn {
+        min-width: 3rem !important;  /* 48px - better for touch */
+        min-height: 3rem !important;
+    }
+    
+    /* Keep icon size the same */
+    .fi-icon-btn .fi-icon,
+    .fi-icon-btn svg {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+    }
+}
+
+/* Dark mode adjustments */
+.dark .fi-icon,
+.dark .fi-ta-icon,
+.dark .fi-icon-btn {
+    /* Ensure icons are visible in dark mode */
+    color: inherit;
+}
+
+/* Print adjustments */
+@media print {
+    .fi-icon,
+    .fi-ta-icon,
+    .fi-icon-btn {
+        /* Ensure icons print correctly */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+    }
+}

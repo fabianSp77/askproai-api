@@ -1,0 +1,74 @@
+/* Admin Panel CSS Bundle */
+/* Consolidates all admin-specific stylesheets */
+
+/* Core Theme */
+@import '../filament/admin/theme.css';
+@import '../filament/admin/ultimate-theme.css';
+
+/* Responsive and Layout Fixes */
+@import '../filament/admin/unified-responsive.css';
+@import '../filament/admin/responsive-fixes.css';
+@import '../filament/admin/content-area-fix.css';
+@import '../filament/admin/content-width-fix.css';
+@import '../filament/admin/sidebar-layout-fix.css';
+@import '../filament/admin/simple-width-fix.css';
+
+/* Icon System */
+@import '../filament/admin/icon-fixes.css';
+@import '../filament/admin/icon-container-sizes.css';
+
+/* Form and Table Enhancements */
+@import '../filament/admin/form-layout-fixes.css';
+@import '../filament/admin/table-scroll-indicators.css';
+@import '../filament/admin/calls-table-fix.css';
+
+/* Component-Specific Styles */
+@import '../filament/admin/agent-management.css';
+@import '../filament/admin/company-integration-portal-clean.css';
+@import '../filament/admin/company-integration-portal-v2.css';
+@import '../filament/admin/retell-ultimate.css';
+@import '../filament/admin/retell-control-center.css';
+@import '../filament/admin/quick-docs-enhanced.css';
+
+/* Resource-Specific Styles */
+@import '../filament/admin/ultra-calls.css';
+@import '../filament/admin/ultra-appointments.css';
+@import '../filament/admin/ultra-customers.css';
+
+/* UI Improvements */
+@import '../filament/admin/professional-navigation.css';
+@import '../filament/admin/professional-mobile-menu.css';
+@import '../filament/admin/billing-alerts-improvements.css';
+@import '../filament/admin/user-menu-fixes.css';
+@import '../filament/admin/dropdown-fixes.css';
+@import '../filament/admin/wizard-component-fixes.css';
+@import '../filament/admin/monitoring-dashboard-responsive.css';
+
+/* Z-Index and Overlay Management */
+@import '../filament/admin/z-index-fix.css';
+@import '../filament/admin/dropdown-stacking-fix.css';
+@import '../filament/admin/overlay-fix-v2.css';
+@import '../filament/admin/targeted-fixes.css';
+
+/* Mobile Specific */
+@import '../filament-mobile-fixes.css';
+
+/* Modern Call Details */
+@import '../call-detail-modern.css';
+
+/* Print Styles */
+@media print {
+    /* Hide navigation and non-essential elements */
+    .filament-sidebar,
+    .filament-topbar,
+    .filament-footer,
+    .filament-notifications {
+        display: none !important;
+    }
+    
+    /* Optimize content for printing */
+    .filament-main {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}

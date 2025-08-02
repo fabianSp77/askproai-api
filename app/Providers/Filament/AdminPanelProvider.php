@@ -25,25 +25,14 @@ use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Assets\Js;
 use Filament\Support\Assets\Css;
 use Illuminate\Support\Facades\Vite;
+use Filament\Support\Enums\MaxWidth;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function boot(): void
     {
-        // Filament handles its own assets - we don't need to add anything here
-        // The assets.blade.php file will handle our custom CSS/JS
-        
-        // Register searchable select fix
-        \Filament\Support\Facades\FilamentView::registerRenderHook(
-            PanelsRenderHook::SCRIPTS_AFTER,
-            fn (): string => Blade::render('@vite(["resources/js/filament-searchable-select-fix.js"])'),
-        );
-        
-        // Register global search in topbar
-        \Filament\Support\Facades\FilamentView::registerRenderHook(
-            PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-            fn (): string => Blade::render('@livewire("global-search")'),
-        );
+        // No custom assets needed - they're causing 500 errors
+        // All necessary functionality is in the main theme.css
     }
     
     public function panel(Panel $panel): Panel
@@ -57,25 +46,27 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
+            // ->locale('de') // Deutsche Lokalisierung für Filament - Not available in Filament v3
             ->viteTheme([
                 'resources/css/filament/admin/theme.css',
-                // 'resources/css/filament/admin/dropdown-fixes.css', // Replaced by dropdown-stacking-consolidated.css
-                'resources/css/filament/admin/wizard-component-fixes.css',
-                'resources/css/filament/admin/monitoring-dashboard-responsive.css',
-                // 'resources/css/filament/admin/z-index-fix.css', // Replaced by dropdown-stacking-consolidated.css
-                'resources/css/filament/admin/simple-width-fix.css',
-                'resources/css/filament/admin/professional-mobile-menu.css'
+                'resources/css/filament/admin/sidebar-layout-fix.css',
+                'resources/css/filament/admin/unified-responsive.css',
+                'resources/css/filament/admin/icon-fixes.css',
+                'resources/css/filament/admin/icon-container-sizes.css',
+                'resources/css/filament/admin/form-layout-fixes.css',
+                'resources/css/filament/admin/table-scroll-indicators.css',
+                'resources/css/filament/admin/content-width-fix.css'
             ])
+            ->maxContentWidth(MaxWidth::Full) // Use full width for content
             ->navigationGroups([
-                'Dashboard',
-                'Täglicher Betrieb',
-                'Unternehmensstruktur',
-                'Einrichtung & Konfiguration',
-                'Abrechnung',
-                'Berichte & Analysen',
-                'System',
-                'System & Verwaltung',
-                'Compliance & Sicherheit',
+                'Täglicher Betrieb',        // Daily operations - most important
+                'Kundenverwaltung',         // Customer management
+                'Unternehmensstruktur',     // Company structure
+                'Integrationen',            // Integrations
+                'Finanzen & Abrechnung',    // Finance & Billing  
+                'Einstellungen',            // Settings
+                'System & Monitoring',      // System monitoring (admin only)
+                'Entwicklung',              // Development (super admin only)
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
@@ -84,74 +75,77 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->widgets([
-                // Command Palette / Global Search - Show first
-                \App\Filament\Admin\Widgets\CommandPaletteWidget::class,
-                // Onboarding Progress Widget
-                \App\Filament\Admin\Widgets\OnboardingProgressWidget::class,
-                // Live Call Widget - Show first
-                \App\Filament\Admin\Widgets\LiveCallsWidget::class,
-                // Phone Agent Status Widget - Show high for monitoring
-                \App\Filament\Admin\Widgets\PhoneAgentStatusWidget::class,
-                // Core Widgets
-                \App\Filament\Admin\Widgets\SystemStatsOverview::class,
-                \App\Filament\Admin\Widgets\SubscriptionStatusWidget::class, // Billing widget
-                \App\Filament\Admin\Widgets\PrepaidBalanceOverview::class, // Prepaid balance overview
-                \App\Filament\Admin\Widgets\RecentAppointments::class,
-                \App\Filament\Admin\Widgets\RecentCalls::class,
-                \App\Filament\Admin\Widgets\QuickActionsWidget::class,
-                \App\Filament\Admin\Widgets\CustomerMetricsWidget::class,
-                \App\Filament\Admin\Widgets\BranchComparisonWidget::class,
-                \App\Filament\Admin\Widgets\LiveAppointmentBoard::class,
-                \App\Filament\Admin\Widgets\RecentActivityWidget::class,
-                // ML Performance Widget
-                \App\Filament\Admin\Widgets\AgentPerformanceWidget::class,
-                // Documentation Health Widget (Admin only)
-                \App\Filament\Admin\Widgets\DocumentationHealthWidget::class,
-                // System Health Overview Widget
-                \App\Filament\Admin\Widgets\SystemHealthOverview::class,
-                // Call Refund Stats Widget
-                \App\Filament\Admin\Widgets\CallRefundStatsWidget::class,
+                // Widgets will be auto-discovered
                 // Default Filament Widgets
-                // \App\Filament\Admin\Widgets\EnhancedAccountWidget::class, // Temporarily disabled
-                Widgets\AccountWidget::class, // Restored original
+                Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
-                // \App\Http\Middleware\ResponseWrapper::class, // Fix Livewire Redirector issues
-                // \App\Http\Middleware\EnsureProperResponseFormat::class, // Ensure proper response format
-                EncryptCookies::class,
-                AddQueuedCookiesToResponse::class,
-                \App\Http\Middleware\AdminSessionConfig::class, // Configure admin-specific session
-                StartSession::class, // Use standard StartSession temporarily
-                // AuthenticateSession::class,
-                ShareErrorsFromSession::class,
-                \App\Http\Middleware\DisableFilamentCSRF::class, // Disable CSRF for admin
-                // VerifyCsrfToken::class, // CSRF deaktiviert
-                SubstituteBindings::class,
+                \App\Http\Middleware\EncryptCookies::class,
+                \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+                \Illuminate\Session\Middleware\StartSession::class,
+                \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+                \App\Http\Middleware\VerifyCsrfToken::class,
+                \Illuminate\Routing\Middleware\SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                \App\Http\Middleware\ForceAdminLogin::class, // Force Admin Login
-                \App\Http\Middleware\BranchContextMiddleware::class, // Use full class name
-                \App\Http\Middleware\ProcessBranchSwitch::class, // Process branch switch from URL params
             ])
-            //->authMiddleware([])
+            ->authMiddleware([
+                Authenticate::class,
+                AuthenticateSession::class,
+            ])
             ->login()
             ->maxContentWidth('full')
             // Global actions not available in Filament 3.3.x - using alternative approach
-            ->renderHook(
-                PanelsRenderHook::USER_MENU_BEFORE,
-                fn (): string => Blade::render('@include("filament.components.professional-branch-switcher")')
-            )
-            ->renderHook(
-                PanelsRenderHook::HEAD_END,
-                fn (): string => Blade::render('@include("vendor.filament-panels.components.livewire-fix")')
-            )
-            ->renderHook(
-                PanelsRenderHook::BODY_END,
-                fn (): string => Blade::render('@include("vendor.filament-panels.components.csrf-fix")')
-            )
-            ->sidebarCollapsibleOnDesktop()
-            ->sidebarFullyCollapsibleOnDesktop()
+            // TEMPORARILY DISABLED FOR DEBUGGING
+            // ->renderHook(
+            //     PanelsRenderHook::USER_MENU_BEFORE,
+            //     fn (): string => Blade::render('@include("filament.components.professional-branch-switcher")')
+            // )
+            // Removed obsolete render hooks that were causing 500 errors
+            // ->renderHook(PanelsRenderHook::HEAD_END, ...) // livewire-fix removed
+            // ->renderHook(PanelsRenderHook::BODY_END, ...) // csrf-fix removed  
+            // ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE, ...) // login-button-styles removed
+            // TEMPORARILY DISABLED FOR DEBUGGING
+            /* ->renderHook(
+                PanelsRenderHook::SCRIPTS_AFTER,
+                fn (): string => request()->is('admin/login') ? '
+                    <script>
+                        // Minimal login fix - ensure form submission works
+                        document.addEventListener("DOMContentLoaded", function() {
+                            console.log("[LoginFix] Starting minimal fix...");
+                            
+                            // Wait for Livewire to initialize
+                            const waitForLivewire = setInterval(function() {
+                                if (window.Livewire) {
+                                    clearInterval(waitForLivewire);
+                                    console.log("[LoginFix] Livewire ready");
+                                    
+                                    // Find and fix submit button
+                                    const submitButtons = document.querySelectorAll(\'button[type="submit"]\');
+                                    submitButtons.forEach(button => {
+                                        // Skip non-login buttons
+                                        if (button.closest(\'.fi-password-input\')) return;
+                                        
+                                        console.log("[LoginFix] Found submit button");
+                                        
+                                        // Ensure button is visible
+                                        button.style.opacity = "1";
+                                        button.style.visibility = "visible";
+                                        button.style.pointerEvents = "auto";
+                                        
+                                        // Style the button
+                                        button.style.backgroundColor = "rgb(251, 191, 36)";
+                                        button.style.color = "rgb(0, 0, 0)";
+                                        button.style.border = "1px solid rgb(217, 119, 6)";
+                                    });
+                                }
+                            }, 100);
+                        });
+                    </script>
+                ' : ''
+            ) */
+            ->sidebarCollapsibleOnDesktop() // Only use one collapsible option
             ;
     }
 }

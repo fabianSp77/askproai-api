@@ -12,10 +12,21 @@ use Filament\Panel;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticationProvider;
+use App\Scopes\OptimizedTenantScope;
 
 class User extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable, HasRoles, HasApiTokens, TwoFactorAuthenticatable;
+    
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted()
+    {
+        // Use OptimizedTenantScope that prevents memory exhaustion during authentication
+        // This scope intelligently skips authentication operations to avoid circular dependencies
+        static::addGlobalScope(new OptimizedTenantScope);
+    }
     
     protected $table = 'users';
     protected $primaryKey = 'id';
@@ -28,7 +39,8 @@ class User extends Authenticatable implements FilamentUser
         'interface_language', 'content_language', 'auto_translate_content'
     ];
     
-    protected $appends = ['company_id'];
+    // Removed company_id from appends to prevent memory exhaustion
+    protected $appends = [];
     
     protected $hidden = [
         'password', 'remember_token', 'salt', 'legacypassword',
@@ -50,24 +62,7 @@ class User extends Authenticatable implements FilamentUser
     
     public function company()
     {
-        return $this->belongsTo(\App\Models\Company::class, 'company_id', 'id')
-            ->withDefault(function () {
-                // If no company_id is set, try to find one based on tenant
-                if ($this->tenant_id) {
-                    // The correct relationship is Company hasMany Tenants
-                    // So we need to find the company that owns this tenant
-                    $tenant = \App\Models\Tenant::find($this->tenant_id);
-                    if ($tenant && $tenant->company_id) {
-                        $company = \App\Models\Company::find($tenant->company_id);
-                        if ($company) {
-                            return $company;
-                        }
-                    }
-                }
-                
-                // Fallback to first active company
-                return \App\Models\Company::where('is_active', true)->first() ?: new \App\Models\Company();
-            });
+        return $this->belongsTo(\App\Models\Company::class, 'company_id', 'id');
     }
     
     public function getCompanyIdAttribute()

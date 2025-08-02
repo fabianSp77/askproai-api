@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI Business Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar-item:hover { background-color: #f3f4f6; }
+        .sidebar-item.active { background-color: #e5e7eb; border-left: 4px solid #3b82f6; }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .page { display: none; }
+        .page.active { display: block; }
+        .loading { display: none; }
+        .loading.active { display: flex; }
+        .table-row:hover { background-color: #f9fafb; }
+        .badge { padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-warning { background-color: #fef3c7; color: #92400e; }
+        .badge-info { background-color: #dbeafe; color: #1e40af; }
+        .badge-error { background-color: #fee2e2; color: #991b1b; }
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background-color: white; padding: 2rem; border-radius: 0.5rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-lg">
+            <div class="p-6 border-b">
+                <h1 class="text-2xl font-bold text-gray-800">AskProAI</h1>
+            </div>
+            <nav class="p-4">
+                <a href="#dashboard" class="sidebar-item active flex items-center p-3 rounded-lg mb-2" data-page="dashboard">
+                    <i class="fas fa-dashboard mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Dashboard</span>
+                </a>
+                <a href="#calls" class="sidebar-item flex items-center p-3 rounded-lg mb-2" data-page="calls">
+                    <i class="fas fa-phone mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Anrufe</span>
+                </a>
+                <a href="#appointments" class="sidebar-item flex items-center p-3 rounded-lg mb-2" data-page="appointments">
+                    <i class="fas fa-calendar mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Termine</span>
+                </a>
+                <a href="#customers" class="sidebar-item flex items-center p-3 rounded-lg mb-2" data-page="customers">
+                    <i class="fas fa-users mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Kunden</span>
+                </a>
+                <a href="#team" class="sidebar-item flex items-center p-3 rounded-lg mb-2" data-page="team">
+                    <i class="fas fa-user-friends mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Team</span>
+                </a>
+                <a href="#analytics" class="sidebar-item flex items-center p-3 rounded-lg mb-2" data-page="analytics">
+                    <i class="fas fa-chart-bar mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Analysen</span>
+                </a>
+                <a href="#billing" class="sidebar-item flex items-center p-3 rounded-lg mb-2" data-page="billing">
+                    <i class="fas fa-credit-card mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Abrechnung</span>
+                </a>
+                <a href="#settings" class="sidebar-item flex items-center p-3 rounded-lg mb-2" data-page="settings">
+                    <i class="fas fa-cog mr-3 text-gray-600"></i>
+                    <span class="text-gray-700">Einstellungen</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="flex items-center justify-between p-6">
+                    <h2 id="page-title" class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                    <div class="flex items-center space-x-4">
+                        <button class="relative p-2 text-gray-600 hover:text-gray-800" onclick="toggleNotifications()">
+                            <i class="fas fa-bell"></i>
+                            <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white">D</div>
+                            <span class="text-gray-700">Demo Benutzer</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Loading Spinner -->
+            <div class="loading absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-40">
+                <div class="text-center">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                    <p class="mt-4 text-gray-600">Lade Daten...</p>
+                </div>
+            </div>
+
+            <!-- Pages Container -->
+            <main class="flex-1 overflow-y-auto p-6">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="stat-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-blue-100 rounded-full">
+                                    <i class="fas fa-phone text-blue-600"></i>
+                                </div>
+                                <span class="text-green-500 text-sm">+12%</span>
+                            </div>
+                            <h3 id="total-calls" class="text-2xl font-bold text-gray-800">0</h3>
+                            <p class="text-gray-600">Gesamtanrufe</p>
+                        </div>
+                        <div class="stat-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-green-100 rounded-full">
+                                    <i class="fas fa-calendar-check text-green-600"></i>
+                                </div>
+                                <span class="text-green-500 text-sm">+8%</span>
+                            </div>
+                            <h3 id="appointments-count" class="text-2xl font-bold text-gray-800">0</h3>
+                            <p class="text-gray-600">Termine gebucht</p>
+                        </div>
+                        <div class="stat-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-yellow-100 rounded-full">
+                                    <i class="fas fa-clock text-yellow-600"></i>
+                                </div>
+                                <span id="calls-today-badge" class="text-yellow-500 text-sm">0</span>
+                            </div>
+                            <h3 id="calls-today" class="text-2xl font-bold text-gray-800">0</h3>
+                            <p class="text-gray-600">Anrufe heute</p>
+                        </div>
+                        <div class="stat-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-purple-100 rounded-full">
+                                    <i class="fas fa-percentage text-purple-600"></i>
+                                </div>
+                                <span class="text-green-500 text-sm">+5%</span>
+                            </div>
+                            <h3 id="success-rate" class="text-2xl font-bold text-gray-800">0%</h3>
+                            <p class="text-gray-600">Erfolgsquote</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-semibold text-gray-800">Letzte Anrufe</h3>
+                            </div>
+                            <div class="p-6">
+                                <div id="recent-calls" class="space-y-4"></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-semibold text-gray-800">Nächste Termine</h3>
+                            </div>
+                            <div class="p-6">
+                                <div id="upcoming-appointments" class="space-y-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calls Page -->
+                <div id="calls-page" class="page">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-800">Anrufliste</h3>
+                            <div class="flex space-x-2">
+                                <input type="text" id="calls-search" placeholder="Suchen..." class="px-4 py-2 border rounded-lg">
+                                <button onclick="exportCalls()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                    <i class="fas fa-download mr-2"></i>Export
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefonnummer</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dauer</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="calls-table" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointments Page -->
+                <div id="appointments-page" class="page">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-800">Termine</h3>
+                            <button onclick="showNewAppointmentModal()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                <i class="fas fa-plus mr-2"></i>Neuer Termin
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <div id="appointments-calendar" class="grid grid-cols-7 gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customers Page -->
+                <div id="customers-page" class="page">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-800">Kundenliste</h3>
+                            <div class="flex space-x-2">
+                                <input type="text" id="customers-search" placeholder="Suchen..." class="px-4 py-2 border rounded-lg">
+                                <button onclick="showNewCustomerModal()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                    <i class="fas fa-plus mr-2"></i>Neuer Kunde
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefon</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Termine</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customers-table" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Page -->
+                <div id="team-page" class="page">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-800">Team Mitglieder</h3>
+                            <button onclick="showInviteModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                <i class="fas fa-user-plus mr-2"></i>Einladen
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6" id="team-grid"></div>
+                    </div>
+                </div>
+
+                <!-- Analytics Page -->
+                <div id="analytics-page" class="page">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Anrufstatistiken</h3>
+                            <canvas id="calls-chart"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Terminübersicht</h3>
+                            <canvas id="appointments-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="mt-6 bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Performance Metriken</h3>
+                        <div id="performance-metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                    </div>
+                </div>
+
+                <!-- Billing Page -->
+                <div id="billing-page" class="page">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Guthaben & Nutzung</h3>
+                                <div class="mb-6">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-gray-600">Aktuelles Guthaben</span>
+                                        <span class="text-2xl font-bold text-gray-800">€ <span id="current-balance">0.00</span></span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                        <div id="balance-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 45%"></div>
+                                    </div>
+                                </div>
+                                <button onclick="showTopupModal()" class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                    <i class="fas fa-plus-circle mr-2"></i>Guthaben aufladen
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-4">Auto-Topup</h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-600">Aktiviert</span>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" id="auto-topup-toggle" class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        Lädt automatisch €50 auf, wenn das Guthaben unter €10 fällt.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold text-gray-800">Transaktionsverlauf</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Beschreibung</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Betrag</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactions-table" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settings-page" class="page">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-6">Profileinstellungen</h3>
+                                <form id="profile-form" class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                        <input type="text" id="profile-name" value="Demo Benutzer" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input type="email" id="profile-email" value="demo@askproai.de" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                                        <input type="tel" id="profile-phone" value="+49 123 456789" class="w-full px-3 py-2 border rounded-lg">
+                                    </div>
+                                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                        Speichern
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-6">Benachrichtigungen</h3>
+                                <div class="space-y-4">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" checked class="mr-3">
+                                        <span class="text-sm text-gray-700">Email-Benachrichtigungen</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" checked class="mr-3">
+                                        <span class="text-sm text-gray-700">SMS-Benachrichtigungen</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" class="mr-3">
+                                        <span class="text-sm text-gray-700">Push-Benachrichtigungen</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Call Details Modal -->
+    <div id="call-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Anrufdetails</h3>
+                <button onclick="closeModal('call-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="call-details"></div>
+        </div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        // Global state
+        let currentPage = 'dashboard';
+        let apiToken = localStorage.getItem('api_token') || 'demo-token';
+        let userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+
+        // Mock API function
+        async function mockAPI(endpoint, options = {}) {
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Return mock data based on endpoint
+            if (endpoint.includes('dashboard')) {
+                return {
+                    stats: {
+                        total_calls: 125,
+                        calls_today: 8,
+                        appointments_scheduled: 42,
+                        pending_callbacks: 3,
+                        success_rate: 89
+                    },
+                    recent_calls: [
+                        { id: 1, phone: '+49 123 456789', time: 'vor 15 Minuten', status: 'completed', result: 'appointment_scheduled' },
+                        { id: 2, phone: '+49 987 654321', time: 'vor 1 Stunde', status: 'completed', result: 'info_provided' },
+                        { id: 3, phone: '+49 555 123456', time: 'vor 2 Stunden', status: 'pending', result: 'callback_needed' }
+                    ],
+                    upcoming_appointments: [
+                        { id: 1, customer: 'Max Mustermann', time: 'Heute, 14:00 Uhr', type: 'Beratung' },
+                        { id: 2, customer: 'Anna Schmidt', time: 'Heute, 16:30 Uhr', type: 'Erstgespräch' },
+                        { id: 3, customer: 'Peter Weber', time: 'Morgen, 10:00 Uhr', type: 'Follow-up' }
+                    ]
+                };
+            }
+            
+            if (endpoint.includes('calls')) {
+                return {
+                    data: [
+                        { id: 1, date: '2024-01-21 14:23', phone: '+49 123 456789', duration: '3:45', status: 'completed' },
+                        { id: 2, date: '2024-01-21 13:15', phone: '+49 987 654321', duration: '5:12', status: 'completed' },
+                        { id: 3, date: '2024-01-21 11:30', phone: '+49 555 123456', duration: '2:30', status: 'no_answer' },
+                        { id: 4, date: '2024-01-21 10:45', phone: '+49 111 222333', duration: '4:20', status: 'completed' },
+                        { id: 5, date: '2024-01-21 09:20', phone: '+49 999 888777', duration: '1:15', status: 'voicemail' }
+                    ]
+                };
+            }
+            
+            if (endpoint.includes('customers')) {
+                return {
+                    data: [
+                        { id: 1, name: 'Max Mustermann', phone: '+49 123 456789', email: 'max@example.com', appointments: 3 },
+                        { id: 2, name: 'Anna Schmidt', phone: '+49 987 654321', email: 'anna@example.com', appointments: 1 },
+                        { id: 3, name: 'Peter Weber', phone: '+49 555 123456', email: 'peter@example.com', appointments: 5 },
+                        { id: 4, name: 'Lisa Müller', phone: '+49 111 222333', email: 'lisa@example.com', appointments: 2 }
+                    ]
+                };
+            }
+            
+            if (endpoint.includes('team')) {
+                return {
+                    data: [
+                        { id: 1, name: 'Dr. Sarah Johnson', role: 'Ärztin', avatar: 'SJ', status: 'active' },
+                        { id: 2, name: 'Tom Meyer', role: 'Rezeption', avatar: 'TM', status: 'active' },
+                        { id: 3, name: 'Julia Schneider', role: 'Assistenz', avatar: 'JS', status: 'busy' }
+                    ]
+                };
+            }
+            
+            if (endpoint.includes('billing')) {
+                return {
+                    balance: 125.50,
+                    transactions: [
+                        { id: 1, date: '2024-01-20', description: 'Guthaben Aufladung', amount: '+50.00', status: 'completed' },
+                        { id: 2, date: '2024-01-19', description: 'Anrufgebühren', amount: '-2.50', status: 'completed' },
+                        { id: 3, date: '2024-01-18', description: 'Monatsgebühr', amount: '-29.99', status: 'completed' }
+                    ]
+                };
+            }
+            
+            return { data: [] };
+        }
+
+        // Navigation
+        function navigateTo(page) {
+            // Update active states
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById(`${page}-page`).classList.add('active');
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            
+            // Update page title
+            const title = document.querySelector(`[data-page="${page}"] span`).textContent;
+            document.getElementById('page-title').textContent = title;
+            
+            currentPage = page;
+            
+            // Load page data
+            loadPageData(page);
+        }
+
+        // Load page data
+        async function loadPageData(page) {
+            showLoading();
+            
+            try {
+                switch(page) {
+                    case 'dashboard':
+                        await loadDashboard();
+                        break;
+                    case 'calls':
+                        await loadCalls();
+                        break;
+                    case 'customers':
+                        await loadCustomers();
+                        break;
+                    case 'team':
+                        await loadTeam();
+                        break;
+                    case 'analytics':
+                        await loadAnalytics();
+                        break;
+                    case 'billing':
+                        await loadBilling();
+                        break;
+                }
+            } catch (error) {
+                console.error('Error loading page:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Dashboard
+        async function loadDashboard() {
+            const data = await mockAPI('/api/dashboard');
+            
+            // Update stats
+            document.getElementById('total-calls').textContent = data.stats.total_calls;
+            document.getElementById('appointments-count').textContent = data.stats.appointments_scheduled;
+            document.getElementById('calls-today').textContent = data.stats.calls_today;
+            document.getElementById('calls-today-badge').textContent = data.stats.calls_today;
+            document.getElementById('success-rate').textContent = data.stats.success_rate + '%';
+            
+            // Recent calls
+            const recentCallsHtml = data.recent_calls.map(call => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <p class="font-medium text-gray-800">${call.phone}</p>
+                        <p class="text-sm text-gray-600">${call.time}</p>
+                    </div>
+                    <span class="badge ${getStatusBadgeClass(call.result)}">${getStatusLabel(call.result)}</span>
+                </div>
+            `).join('');
+            document.getElementById('recent-calls').innerHTML = recentCallsHtml;
+            
+            // Upcoming appointments
+            const appointmentsHtml = data.upcoming_appointments.map(apt => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <p class="font-medium text-gray-800">${apt.customer}</p>
+                        <p class="text-sm text-gray-600">${apt.time}</p>
+                    </div>
+                    <span class="badge badge-info">${apt.type}</span>
+                </div>
+            `).join('');
+            document.getElementById('upcoming-appointments').innerHTML = appointmentsHtml;
+        }
+
+        // Calls
+        async function loadCalls() {
+            const data = await mockAPI('/api/calls');
+            
+            const tableHtml = data.data.map(call => `
+                <tr class="table-row">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${call.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${call.phone}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${call.duration}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="badge ${getCallStatusBadgeClass(call.status)}">${getCallStatusLabel(call.status)}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="showCallDetails(${call.id})" class="text-blue-600 hover:text-blue-800 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="downloadCallRecording(${call.id})" class="text-green-600 hover:text-green-800">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('calls-table').innerHTML = tableHtml;
+        }
+
+        // Customers
+        async function loadCustomers() {
+            const data = await mockAPI('/api/customers');
+            
+            const tableHtml = data.data.map(customer => `
+                <tr class="table-row">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${customer.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${customer.phone}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${customer.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${customer.appointments}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <button onclick="showCustomerDetails(${customer.id})" class="text-blue-600 hover:text-blue-800 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteCustomer(${customer.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('customers-table').innerHTML = tableHtml;
+        }
+
+        // Team
+        async function loadTeam() {
+            const data = await mockAPI('/api/team');
+            
+            const gridHtml = data.data.map(member => `
+                <div class="bg-gray-50 rounded-lg p-6 text-center">
+                    <div class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+                        ${member.avatar}
+                    </div>
+                    <h4 class="font-semibold text-gray-800">${member.name}</h4>
+                    <p class="text-sm text-gray-600 mb-2">${member.role}</p>
+                    <span class="badge ${member.status === 'active' ? 'badge-success' : 'badge-warning'}">
+                        ${member.status === 'active' ? 'Verfügbar' : 'Beschäftigt'}
+                    </span>
+                </div>
+            `).join('');
+            document.getElementById('team-grid').innerHTML = gridHtml;
+        }
+
+        // Analytics
+        async function loadAnalytics() {
+            // Initialize charts
+            const callsCtx = document.getElementById('calls-chart');
+            if (callsCtx.chart) callsCtx.chart.destroy();
+            
+            callsCtx.chart = new Chart(callsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+                    datasets: [{
+                        label: 'Anrufe',
+                        data: [12, 19, 15, 25, 22, 8, 10],
+                        borderColor: 'rgb(59, 130, 246)',
+                        tension: 0.1
+                    }]
+                }
+            });
+            
+            const apptCtx = document.getElementById('appointments-chart');
+            if (apptCtx.chart) apptCtx.chart.destroy();
+            
+            apptCtx.chart = new Chart(apptCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr'],
+                    datasets: [{
+                        label: 'Termine',
+                        data: [8, 12, 10, 15, 11],
+                        backgroundColor: 'rgba(34, 197, 94, 0.5)'
+                    }]
+                }
+            });
+            
+            // Performance metrics
+            const metricsHtml = `
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-gray-800">95%</div>
+                    <div class="text-sm text-gray-600">Anrufannahmerate</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-gray-800">2:45</div>
+                    <div class="text-sm text-gray-600">Ø Anrufdauer</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-gray-800">4.8</div>
+                    <div class="text-sm text-gray-600">Kundenzufriedenheit</div>
+                </div>
+            `;
+            document.getElementById('performance-metrics').innerHTML = metricsHtml;
+        }
+
+        // Billing
+        async function loadBilling() {
+            const data = await mockAPI('/api/billing');
+            
+            document.getElementById('current-balance').textContent = data.balance.toFixed(2);
+            document.getElementById('balance-bar').style.width = `${(data.balance / 200) * 100}%`;
+            
+            const transactionsHtml = data.transactions.map(tx => `
+                <tr class="table-row">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tx.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tx.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium ${tx.amount.startsWith('+') ? 'text-green-600' : 'text-red-600'}">
+                        €${tx.amount}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="badge badge-success">${tx.status}</span>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('transactions-table').innerHTML = transactionsHtml;
+        }
+
+        // Helper functions
+        function getStatusBadgeClass(status) {
+            const classes = {
+                'appointment_scheduled': 'badge-success',
+                'info_provided': 'badge-info',
+                'callback_needed': 'badge-warning'
+            };
+            return classes[status] || 'badge-info';
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'appointment_scheduled': 'Termin gebucht',
+                'info_provided': 'Info erhalten',
+                'callback_needed': 'Rückruf'
+            };
+            return labels[status] || status;
+        }
+
+        function getCallStatusBadgeClass(status) {
+            const classes = {
+                'completed': 'badge-success',
+                'no_answer': 'badge-warning',
+                'voicemail': 'badge-info'
+            };
+            return classes[status] || 'badge-info';
+        }
+
+        function getCallStatusLabel(status) {
+            const labels = {
+                'completed': 'Abgeschlossen',
+                'no_answer': 'Keine Antwort',
+                'voicemail': 'Voicemail'
+            };
+            return labels[status] || status;
+        }
+
+        function showLoading() {
+            document.querySelector('.loading').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.querySelector('.loading').classList.remove('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showCallDetails(callId) {
+            document.getElementById('call-details').innerHTML = `
+                <div class="space-y-4">
+                    <div><strong>Anruf ID:</strong> ${callId}</div>
+                    <div><strong>Datum:</strong> 2024-01-21 14:23</div>
+                    <div><strong>Dauer:</strong> 3:45</div>
+                    <div><strong>Status:</strong> Erfolgreich abgeschlossen</div>
+                    <div><strong>Transkript:</strong></div>
+                    <div class="bg-gray-50 p-4 rounded">
+                        <p class="text-sm">Agent: Guten Tag, AskProAI, wie kann ich Ihnen helfen?</p>
+                        <p class="text-sm mt-2">Kunde: Ich möchte gerne einen Termin vereinbaren...</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('call-modal').classList.add('active');
+        }
+
+        function exportCalls() {
+            alert('Export wird vorbereitet...');
+        }
+
+        function showNewCustomerModal() {
+            alert('Neuer Kunde Dialog');
+        }
+
+        function showInviteModal() {
+            alert('Team Mitglied einladen');
+        }
+
+        function showTopupModal() {
+            alert('Guthaben aufladen');
+        }
+
+        function showNewAppointmentModal() {
+            alert('Neuer Termin');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup navigation
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = item.dataset.page;
+                    navigateTo(page);
+                });
+            });
+            
+            // Profile form
+            document.getElementById('profile-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                alert('Profil gespeichert!');
+            });
+            
+            // Auto-topup toggle
+            document.getElementById('auto-topup-toggle').addEventListener('change', (e) => {
+                alert(`Auto-Topup ${e.target.checked ? 'aktiviert' : 'deaktiviert'}`);
+            });
+            
+            // Search functionality
+            document.getElementById('calls-search').addEventListener('input', (e) => {
+                // Implement search
+            });
+            
+            document.getElementById('customers-search').addEventListener('input', (e) => {
+                // Implement search
+            });
+            
+            // Load initial page
+            loadDashboard();
+            
+            // Simulate real-time updates
+            setInterval(() => {
+                if (currentPage === 'dashboard') {
+                    const callsToday = document.getElementById('calls-today');
+                    const currentValue = parseInt(callsToday.textContent);
+                    if (Math.random() > 0.8) {
+                        callsToday.textContent = currentValue + 1;
+                        document.getElementById('calls-today-badge').textContent = currentValue + 1;
+                    }
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

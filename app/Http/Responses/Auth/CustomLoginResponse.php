@@ -9,30 +9,10 @@ use Livewire\Features\SupportRedirects\Redirector;
 
 class CustomLoginResponse implements LoginResponseContract
 {
-    public function toResponse($request): RedirectResponse | Redirector
+    public function toResponse($request): RedirectResponse|Redirector
     {
-        // IMPORTANT: At this point, the user is already logged in
-        // but Laravel may have destroyed the session data
-        
-        // Re-save the session to ensure it persists
-        $session = app('session.store');
-        $session->save();
-        
-        // Ensure the auth session key is set
-        if (auth()->check()) {
-            $user = auth()->user();
-            $guard = auth()->guard('web');
-            
-            // Get the actual session key
-            $reflection = new \ReflectionMethod($guard, 'getName');
-            $reflection->setAccessible(true);
-            $sessionKey = $reflection->invoke($guard);
-            
-            $session->put($sessionKey, $user->id);
-            $session->put('password_hash_web', $user->password);
-            $session->save();
-        }
-        
+        // Simply redirect to the intended URL or default Filament dashboard
+        // Laravel and Filament handle session management automatically
         return redirect()->intended(Filament::getUrl());
     }
 }

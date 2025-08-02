@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login - Fixed</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            cursor: pointer;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563EB;
+        }
+        .success { 
+            color: green; 
+            background: #f0fdf4;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error { 
+            color: red;
+            background: #fef2f2;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        pre { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fixed Login Test</h1>
+        <p>This test uses the WorkingLoginController that bypasses CompanyScope during login.</p>
+        
+        <button onclick="testLogin()">Test Login with Fixed Controller</button>
+        <button onclick="checkAuth()">Check Auth Status</button>
+        <button onclick="clearBrowserData()">Clear Browser Data</button>
+        
+        <div id="result"></div>
+    </div>
+    
+    <script>
+        async function testLogin() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p class="loading">Attempting login...</p>';
+            
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    result.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Login Successful!</h3>
+                            <p>User: ${data.user.email}</p>
+                            <p>Session ID: ${data.session_id}</p>
+                            <p>Redirect: ${data.redirect}</p>
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        <button onclick="window.location.href='${data.redirect}'">Go to Dashboard</button>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Login Failed</h3>
+                            <p>${data.message || 'Unknown error'}</p>
+                        </div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+                
+            } catch (error) {
+                result.innerHTML = `<div class="error">Network Error: ${error.message}</div>`;
+            }
+        }
+        
+        async function checkAuth() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p class="loading">Checking authentication...</p>';
+            
+            try {
+                const response = await fetch('/business/auth/check', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                result.innerHTML = `
+                    <h3>Auth Status:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    ${data.authenticated ? 
+                        '<div class="success">✅ You are authenticated</div>' : 
+                        '<div class="error">❌ You are not authenticated</div>'}
+                `;
+                
+            } catch (error) {
+                result.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        function clearBrowserData() {
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Try to clear cookies (limited by browser security)
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            document.getElementById('result').innerHTML = '<div class="success">✅ Browser data cleared. Refresh the page to test with a clean state.</div>';
+        }
+        
+        // Auto-check auth on load
+        window.onload = function() {
+            checkAuth();
+        };
+    </script>
+</body>
+</html>

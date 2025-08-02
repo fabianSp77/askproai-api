@@ -12,8 +12,6 @@ class FilamentSessionFix
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
@@ -25,7 +23,7 @@ class FilamentSessionFix
 
         // If we have a user in session but Auth doesn't recognize it, restore it
         $userId = Session::get('login_web_59ba36addc2b2f9401580f014c7f58ea4e30989d');
-        if ($userId && !Auth::check()) {
+        if ($userId && ! Auth::check()) {
             Auth::loginUsingId($userId, true);
         }
 
@@ -34,7 +32,7 @@ class FilamentSessionFix
         // Force session persistence after authentication
         if (Auth::check() && $request->is('admin/login')) {
             Session::put('login_web_' . sha1(get_class(Auth::user())), Auth::id());
-            Session::put('password_hash_web', Auth::user()->password);
+            // Password hash storage removed for security
             Session::save();
         }
 

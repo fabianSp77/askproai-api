@@ -17,7 +17,7 @@ class FinancialIntelligenceWidget extends FilterableWidget
 
     protected static ?int $sort = 2;
 
-    protected static ?string $pollingInterval = '60s';
+    protected static ?string $pollingInterval = null; // Disabled for performance
 
     public ?int $companyId = null;
 
@@ -105,11 +105,12 @@ class FinancialIntelligenceWidget extends FilterableWidget
 
     protected function getDateRange(): array
     {
-        $now = Carbon::now();
-
+        // Use parent method from FilterableWidget
+        $dateRange = parent::getDateRange();
+        
         return [
-            $this->getStartDate(),
-            $this->getEndDate(),
+            $dateRange['start'],
+            $dateRange['end'],
         ];
     }
 

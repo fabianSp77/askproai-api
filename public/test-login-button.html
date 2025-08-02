@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-button {
+            background-color: rgb(251, 191, 36);
+            color: black;
+            border: 1px solid rgb(217, 119, 6);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .test-button:hover {
+            background-color: rgb(245, 158, 11);
+            transform: translateY(-1px);
+        }
+        
+        .fi-btn-primary {
+            background-color: rgb(251, 191, 36) !important;
+            color: rgb(0, 0, 0) !important;
+            border: 1px solid rgb(217, 119, 6) !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login Button Test Page</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Button Functionality</h2>
+        <button type="submit" class="test-button" onclick="testClick(this, 'Test 1')">
+            Test Submit Button
+        </button>
+        <button type="button" class="fi-btn-primary" onclick="testClick(this, 'Test 2')">
+            Filament Style Button
+        </button>
+        <div id="click-status" class="status info">Click status will appear here</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Current CSS Styles</h2>
+        <div id="css-check" class="status info">Checking CSS...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. JavaScript Status</h2>
+        <div id="js-status" class="status info">Checking JavaScript files...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Login Page Preview</h2>
+        <p>The login page is embedded below. Check if the button is visible and clickable:</p>
+        <iframe src="/admin/login" id="login-frame"></iframe>
+    </div>
+    
+    <script>
+        let clickCount = 0;
+        
+        function testClick(button, name) {
+            clickCount++;
+            const status = document.getElementById('click-status');
+            status.className = 'status success';
+            status.textContent = `${name} clicked! Click count: ${clickCount}. Button works on first click!`;
+            
+            // Visual feedback
+            button.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 100);
+        }
+        
+        // Check CSS
+        function checkCSS() {
+            const cssStatus = document.getElementById('css-check');
+            const button = document.querySelector('.fi-btn-primary');
+            
+            if (button) {
+                const styles = window.getComputedStyle(button);
+                const bg = styles.backgroundColor;
+                const color = styles.color;
+                
+                cssStatus.innerHTML = `
+                    <strong>Button Styles:</strong><br>
+                    Background: ${bg}<br>
+                    Text Color: ${color}<br>
+                    Display: ${styles.display}<br>
+                    Visibility: ${styles.visibility}<br>
+                    Cursor: ${styles.cursor}<br>
+                    Status: ${bg.includes('251') ? '✅ Correct amber color' : '❌ Wrong color'}
+                `;
+                cssStatus.className = bg.includes('251') ? 'status success' : 'status error';
+            }
+        }
+        
+        // Check JavaScript
+        async function checkJS() {
+            const jsStatus = document.getElementById('js-status');
+            const files = [
+                '/js/login-button-fix.js',
+                '/js/button-click-handler.js',
+                '/js/clean-livewire-fix.js'
+            ];
+            
+            let results = [];
+            for (const file of files) {
+                try {
+                    const response = await fetch(file);
+                    if (response.ok) {
+                        results.push(`✅ ${file} - Loaded`);
+                    } else {
+                        results.push(`❌ ${file} - Error ${response.status}`);
+                    }
+                } catch (e) {
+                    results.push(`❌ ${file} - Failed to load`);
+                }
+            }
+            
+            jsStatus.innerHTML = '<strong>JavaScript Files:</strong><br>' + results.join('<br>');
+            jsStatus.className = results.every(r => r.includes('✅')) ? 'status success' : 'status error';
+        }
+        
+        // Check iframe content
+        function checkIframe() {
+            const iframe = document.getElementById('login-frame');
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const button = iframeDoc.querySelector('button[type="submit"], .fi-btn-primary');
+                    
+                    if (button) {
+                        console.log('Login button found in iframe:', button);
+                        const styles = iframe.contentWindow.getComputedStyle(button);
+                        console.log('Button styles:', {
+                            background: styles.backgroundColor,
+                            color: styles.color,
+                            visibility: styles.visibility
+                        });
+                    } else {
+                        console.log('Login button not found in iframe');
+                    }
+                } catch (e) {
+                    console.log('Cannot access iframe content (cross-origin)');
+                }
+            };
+        }
+        
+        // Run checks
+        window.onload = function() {
+            checkCSS();
+            checkJS();
+            checkIframe();
+        };
+    </script>
+</body>
+</html>

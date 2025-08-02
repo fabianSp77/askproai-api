@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
     /*
     |--------------------------------------------------------------------------
@@ -13,7 +11,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'file'),
+    'driver' => env('SESSION_DRIVER', 'redis'),
 
     'lifetime' => env('PORTAL_SESSION_LIFETIME', 480), // 8 hours for portal users
 
@@ -47,9 +45,11 @@ return [
 
     'path' => '/',
 
-    'domain' => env('SESSION_DOMAIN'),
+    // Explicit domain for subdomain support
+    'domain' => env('SESSION_DOMAIN', '.askproai.de'),
 
-    'secure' => env('SESSION_SECURE_COOKIE', true),
+    // Dynamic secure flag based on environment
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
 
     'http_only' => env('SESSION_HTTP_ONLY', true),
 

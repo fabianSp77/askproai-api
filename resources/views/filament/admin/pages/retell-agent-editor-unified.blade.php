@@ -513,7 +513,7 @@
                 if (Object.keys(pendingUpdates).length > 0) {
                     saveChanges();
                 }
-            }, 2000);
+            }, 30000);
         }
         
         // Update field and mark for saving

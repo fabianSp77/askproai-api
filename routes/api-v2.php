@@ -79,11 +79,12 @@ Route::prefix('v2')->middleware(['auth:sanctum', 'verified'])->group(function ()
 });
 
 // Webhook routes (no auth required but signature verification)
-Route::prefix('v2/webhooks')->group(function () {
-    Route::post('/retell', [App\Http\Controllers\Api\V2\WebhookController::class, 'retell'])
-        ->middleware('verify.retell.signature');
-    Route::post('/calcom', [App\Http\Controllers\Api\V2\WebhookController::class, 'calcom'])
-        ->middleware('verify.calcom.signature');
-    Route::post('/stripe', [App\Http\Controllers\Api\V2\WebhookController::class, 'stripe'])
-        ->middleware('verify.stripe.signature');
-});
+// Temporarily commented out - WebhookController needs to be implemented
+// Route::prefix('v2/webhooks')->group(function () {
+//     Route::post('/retell', [App\Http\Controllers\Api\V2\WebhookController::class, 'retell'])
+//         ->middleware('verify.retell.signature');
+//     Route::post('/calcom', [App\Http\Controllers\Api\V2\WebhookController::class, 'calcom'])
+//         ->middleware('verify.calcom.signature');
+//     Route::post('/stripe', [App\Http\Controllers\Api\V2\WebhookController::class, 'stripe'])
+//         ->middleware('verify.stripe.signature');
+// });

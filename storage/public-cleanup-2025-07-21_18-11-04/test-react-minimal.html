@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="test-token">
+    <title>Test React Minimal</title>
+</head>
+<body>
+    <h1>React Minimal Test</h1>
+    <div id="test-app"></div>
+    
+    <script type="module">
+        console.log('Script started');
+        
+        // Test if modules work
+        try {
+            // Simple test without imports first
+            const div = document.getElementById('test-app');
+            div.innerHTML = '<p>JavaScript is working</p>';
+            
+            // Now try imports
+            import('https://api.askproai.de/build/assets/client-BRW-J6q7.js')
+                .then(() => {
+                    console.log('React loaded successfully');
+                    div.innerHTML += '<p>React module loaded</p>';
+                    
+                    // Check if React is available
+                    if (window.React) {
+                        console.log('React available globally');
+                        div.innerHTML += '<p>React is available</p>';
+                    } else {
+                        console.log('React not available globally');
+                        div.innerHTML += '<p>React not available globally</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load React:', error);
+                    div.innerHTML += `<p style="color: red;">Failed to load React: ${error.message}</p>`;
+                });
+                
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('test-app').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        }
+    </script>
+    
+    <hr>
+    
+    <h2>Direct Module Test</h2>
+    <div id="module-test"></div>
+    
+    <script type="module">
+        // Direct test of the login module
+        import('/build/assets/login-CjXr15MN.js')
+            .then(() => {
+                document.getElementById('module-test').innerHTML = '<p style="color: green;">Login module loaded successfully</p>';
+            })
+            .catch(error => {
+                document.getElementById('module-test').innerHTML = `<p style="color: red;">Login module error: ${error.message}</p>`;
+                console.error('Login module error:', error);
+            });
+    </script>
+</body>
+</html>

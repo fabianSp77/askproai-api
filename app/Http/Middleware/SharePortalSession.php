@@ -32,13 +32,49 @@ class SharePortalSession
             return $next($request);
         }
 
-        // Do not auto-restore users - let Laravel handle session authentication normally
-        // The portal guard's session driver will handle this automatically
-
-        // Just ensure company context is set if user is authenticated
-        $user = Auth::guard('portal')->user();
-        if ($user && $user->company_id) {
-            app()->instance('current_company_id', $user->company_id);
+        // For portal routes, try to restore auth from session
+        if ($request->is('business/*') || $request->is('business/api/*')) {
+            $sessionKey = 'login_portal_' . sha1(\App\Models\PortalUser::class);
+            
+            if (session()->has($sessionKey)) {
+                $userId = session($sessionKey);
+                
+                \Log::debug('SharePortalSession: Attempting to restore user from session', [
+                    'user_id' => $userId,
+                    'session_id' => session()->getId(),
+                    'url' => $request->url(),
+                ]);
+                
+                try {
+                    $user = \App\Models\PortalUser::find($userId);
+                    if ($user && $user->is_active) {
+                        Auth::guard('portal')->loginUsingId($userId, false);
+                        
+                        // Set company context
+                        app()->instance('current_company_id', $user->company_id);
+                        app()->instance('company_context_source', 'portal_session_restore');
+                        
+                        \Log::info('SharePortalSession: Successfully restored user from session', [
+                            'user_id' => $userId,
+                            'email' => $user->email,
+                            'company_id' => $user->company_id,
+                        ]);
+                        
+                        return $next($request);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('SharePortalSession: Failed to restore user', [
+                        'error' => $e->getMessage(),
+                        'user_id' => $userId,
+                    ]);
+                }
+            } else {
+                \Log::debug('SharePortalSession: No session key found', [
+                    'session_id' => session()->getId(),
+                    'session_keys' => array_keys(session()->all()),
+                    'url' => $request->url(),
+                ]);
+            }
         }
 
         // Also check for admin viewing

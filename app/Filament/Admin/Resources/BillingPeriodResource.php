@@ -19,9 +19,19 @@ class BillingPeriodResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     
-    protected static ?string $navigationLabel = 'Abrechnungszeiträume';
+    protected static ?string $navigationLabel = null;
     
-    protected static ?string $navigationGroup = 'Abrechnung';
+    protected static ?string $navigationGroup = null;
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.billing_periods');
+    }
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.financial');
+    }
     
     protected static ?int $navigationSort = 10;
 
@@ -52,10 +62,10 @@ class BillingPeriodResource extends Resource
                     ->numeric(),
                 Forms\Components\TextInput::make('base_fee')
                     ->numeric()
-                    ->prefix('¬'),
+                    ->prefix('ï¿½'),
                 Forms\Components\TextInput::make('total_cost')
                     ->numeric()
-                    ->prefix('¬'),
+                    ->prefix('ï¿½'),
             ]);
     }
 

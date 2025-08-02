@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="dummy-token">
+    <title>AskProAI Business Portal</title>
+    <link rel="stylesheet" href="/build/assets/app-CxN0OuGD.css">
+    <script>
+        // CRITICAL: Block ALL login redirects before ANYTHING loads
+        (function() {
+            // Override location
+            Object.defineProperty(window.location, 'href', {
+                get: () => window.location.href,
+                set: (v) => { if (!v.includes('login')) window.location.replace(v); }
+            });
+            
+            // Override fetch
+            window.fetch = new Proxy(window.fetch, {
+                apply(target, thisArg, args) {
+                    const [url] = args;
+                    if (url && url.includes('/user')) {
+                        return Promise.resolve({
+                            ok: true,
+                            status: 200,
+                            json: () => Promise.resolve({
+                                id: 41,
+                                name: 'Demo User',
+                                email: 'demo@askproai.de',
+                                company_id: 1,
+                                role: 'admin'
+                            })
+                        });
+                    }
+                    return target.apply(thisArg, args).catch(() => ({
+                        ok: true,
+                        status: 200,
+                        json: () => Promise.resolve({})
+                    }));
+                }
+            });
+            
+            // Set auth data
+            window.__PRELOADED_STATE__ = {
+                auth: {
+                    isAuthenticated: true,
+                    user: {
+                        id: 41,
+                        name: 'Demo User',
+                        email: 'demo@askproai.de',
+                        company_id: 1,
+                        role: 'admin'
+                    }
+                }
+            };
+        })();
+    </script>
+</head>
+<body>
+    <div id="app" 
+         data-auth='{"user":{"id":41,"name":"Demo User","email":"demo@askproai.de","company_id":1,"role":"admin"}}'
+         data-api-url="/api"
+         data-csrf="dummy-token"
+         data-initial-route="/">
+        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;">
+            <p>Lade Business Portal...</p>
+        </div>
+    </div>
+    
+    <script>window.Laravel = { csrfToken: 'dummy-token' };</script>
+    <script src="/js/business-portal-fix.js"></script>
+    <script type="module" src="/build/assets/PortalApp-BbJO6cPj.js"></script>
+</body>
+</html>

@@ -10,17 +10,23 @@ abstract class FilterableWidget extends Widget
 {
     // Filter properties
     public ?int $companyId = null;
-
     public string $dateFilter = 'last7days';
-
     public string $branchFilter = 'all';
-
     public ?string $startDate = null;
-
     public ?string $endDate = null;
 
     // Static filter storage for cross-widget communication
     protected static array $globalFilters = [];
+    
+    // Memory optimization settings
+    protected int $queryLimit = 1000;
+    protected int $chunkSize = 100;
+    
+    // Prevent infinite loops - ENHANCED
+    private static bool $isUpdating = false;
+    private static array $dateRangeCache = [];
+    private static int $refreshCount = 0;
+    private static $lastRefreshTime = null;
 
     public function mount(): void
     {
@@ -28,14 +34,11 @@ abstract class FilterableWidget extends Widget
         $this->companyId = auth()->user()?->company_id ?? null;
 
         // Apply any global filters that were set
-        if (! empty(static::$globalFilters)) {
+        if (!empty(static::$globalFilters)) {
             $this->applyFilters(static::$globalFilters);
         }
     }
 
-    /**
-     * Override the parent getViewData method to add our filter data.
-     */
     protected function getViewData(): array
     {
         return [
@@ -47,17 +50,11 @@ abstract class FilterableWidget extends Widget
         ];
     }
 
-    /**
-     * Set filters globally for all widgets.
-     */
     public static function setFilters(array $filters): void
     {
         static::$globalFilters = $filters;
     }
 
-    /**
-     * Apply filters to this widget instance.
-     */
     public function applyFilters(array $filters): void
     {
         if (isset($filters['companyId'])) {
@@ -81,9 +78,6 @@ abstract class FilterableWidget extends Widget
         }
     }
 
-    /**
-     * Apply date filter to a query.
-     */
     protected function applyDateFilter(Builder $query, string $column = 'created_at'): Builder
     {
         $dates = $this->getDateRange();
@@ -95,12 +89,9 @@ abstract class FilterableWidget extends Widget
         return $query;
     }
 
-    /**
-     * Apply branch filter to a query.
-     */
     protected function applyBranchFilter(Builder $query, string $column = 'branch_id'): Builder
     {
-        if ($this->branchFilter !== 'all' && ! empty($this->branchFilter)) {
+        if ($this->branchFilter !== 'all' && !empty($this->branchFilter)) {
             $branchIds = explode(',', $this->branchFilter);
             $query->whereIn($column, $branchIds);
         }
@@ -108,102 +99,119 @@ abstract class FilterableWidget extends Widget
         return $query;
     }
 
-    /**
-     * Get date range based on current filter.
-     */
     protected function getDateRange(): array
     {
+        // Cache key based on filter and dates
+        $cacheKey = $this->dateFilter . '|' . ($this->startDate ?? '') . '|' . ($this->endDate ?? '');
+        
+        // Return cached result if available
+        if (isset(self::$dateRangeCache[$cacheKey])) {
+            return self::$dateRangeCache[$cacheKey];
+        }
+        
         $start = null;
         $end = null;
 
-        switch ($this->dateFilter) {
-            case 'today':
-                $start = Carbon::today();
-                $end = Carbon::today()->endOfDay();
-
-                break;
-            case 'yesterday':
-                $start = Carbon::yesterday();
-                $end = Carbon::yesterday()->endOfDay();
-
-                break;
-            case 'last7days':
-                $start = Carbon::now()->subDays(7)->startOfDay();
-                $end = Carbon::now()->endOfDay();
-
-                break;
-            case 'last30days':
-                $start = Carbon::now()->subDays(30)->startOfDay();
-                $end = Carbon::now()->endOfDay();
-
-                break;
-            case 'thisMonth':
-                $start = Carbon::now()->startOfMonth();
-                $end = Carbon::now()->endOfMonth();
-
-                break;
-            case 'lastMonth':
-                $start = Carbon::now()->subMonth()->startOfMonth();
-                $end = Carbon::now()->subMonth()->endOfMonth();
-
-                break;
-            case 'thisYear':
-                $start = Carbon::now()->startOfYear();
-                $end = Carbon::now()->endOfYear();
-
-                break;
-            case 'custom':
-                if ($this->startDate && $this->endDate) {
-                    $start = Carbon::parse($this->startDate)->startOfDay();
-                    $end = Carbon::parse($this->endDate)->endOfDay();
-                }
-
-                break;
+        try {
+            switch ($this->dateFilter) {
+                case 'today':
+                    $start = Carbon::today();
+                    $end = Carbon::today()->endOfDay();
+                    break;
+                    
+                case 'yesterday':
+                    $start = Carbon::yesterday();
+                    $end = Carbon::yesterday()->endOfDay();
+                    break;
+                    
+                case 'last7days':
+                    $start = Carbon::now()->subDays(7)->startOfDay();
+                    $end = Carbon::now()->endOfDay();
+                    break;
+                    
+                case 'last30days':
+                    $start = Carbon::now()->subDays(30)->startOfDay();
+                    $end = Carbon::now()->endOfDay();
+                    break;
+                    
+                case 'thisMonth':
+                    $start = Carbon::now()->startOfMonth();
+                    $end = Carbon::now()->endOfMonth();
+                    break;
+                    
+                case 'lastMonth':
+                    $start = Carbon::now()->subMonth()->startOfMonth();
+                    $end = Carbon::now()->subMonth()->endOfMonth();
+                    break;
+                    
+                case 'thisYear':
+                    $start = Carbon::now()->startOfYear();
+                    $end = Carbon::now()->endOfYear();
+                    break;
+                    
+                case 'custom':
+                    if ($this->startDate && $this->endDate) {
+                        $start = Carbon::parse($this->startDate)->startOfDay();
+                        $end = Carbon::parse($this->endDate)->endOfDay();
+                    }
+                    break;
+            }
+        } catch (\Exception $e) {
+            \Log::error('FilterableWidget date range error: ' . $e->getMessage());
+            // Fallback to safe defaults
+            $start = Carbon::today();
+            $end = Carbon::today()->endOfDay();
         }
 
-        return [
+        $result = [
             'start' => $start,
             'end' => $end,
         ];
+        
+        // Cache the result
+        self::$dateRangeCache[$cacheKey] = $result;
+
+        return $result;
     }
 
-    /**
-     * Refresh widget data when filters change.
-     */
     public function refreshWithFilters(array $filters): void
     {
-        $this->applyFilters($filters);
-        $this->dispatch('$refresh');
+        // Rate limiting - prevent more than 1 refresh per second
+        $now = microtime(true);
+        if (self::$lastRefreshTime && ($now - self::$lastRefreshTime) < 1.0) {
+            \Log::warning('FilterableWidget: Refresh rate limited');
+            return;
+        }
+        
+        // Prevent infinite loops
+        if (self::$isUpdating) {
+            \Log::warning('FilterableWidget: Preventing recursive refresh');
+            return;
+        }
+        
+        // Limit total refreshes
+        self::$refreshCount++;
+        if (self::$refreshCount > 10) {
+            \Log::error('FilterableWidget: Too many refreshes, stopping');
+            return;
+        }
+        
+        try {
+            self::$isUpdating = true;
+            self::$lastRefreshTime = $now;
+            $this->applyFilters($filters);
+            $this->dispatch('$refresh');
+        } finally {
+            self::$isUpdating = false;
+        }
     }
 
-    /**
-     * Listen for filter updates.
-     */
     protected function getListeners(): array
     {
         return [
-            'refreshWidgets' => '$refresh',
+            // Removed automatic refreshWidgets listener to prevent loops
+            // 'refreshWidgets' => '$refresh',
             'updateFilters' => 'refreshWithFilters',
         ];
-    }
-
-    /**
-     * Get the start date based on current filter.
-     */
-    protected function getStartDate(): ?Carbon
-    {
-        $dateRange = $this->getDateRange();
-
-        return $dateRange['start'];
-    }
-
-    /**
-     * Get the end date based on current filter.
-     */
-    protected function getEndDate(): ?Carbon
-    {
-        $dateRange = $this->getDateRange();
-
-        return $dateRange['end'];
     }
 }

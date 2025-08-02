@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Admin Access Test</title>
+</head>
+<body>
+    <h1>Direct Admin Access Test</h1>
+    
+    <h2>Test Links:</h2>
+    <ul>
+        <li><a href="/admin" onclick="event.preventDefault(); window.location.href='/admin'; return false;">Admin (JavaScript disabled)</a></li>
+        <li><a href="https://api.askproai.de/admin">Admin (Full URL)</a></li>
+        <li><a href="/admin/companies">Companies Direct</a></li>
+        <li><a href="/admin/login">Admin Login</a></li>
+    </ul>
+    
+    <h2>Form Test:</h2>
+    <form action="/admin" method="GET">
+        <button type="submit">Go to Admin via Form</button>
+    </form>
+    
+    <h2>Direct JavaScript Navigation:</h2>
+    <button onclick="window.location.href='/admin'">JavaScript Navigation</button>
+    
+    <script>
+        console.log('Current location:', window.location.href);
+        console.log('No redirects should happen on this page');
+    </script>
+</body>
+</html>

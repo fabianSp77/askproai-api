@@ -1,0 +1,143 @@
+/**
+ * Mobile Sidebar Visibility Fix
+ * Stellt sicher, dass die Sidebar auf Mobile sichtbar wird
+ */
+
+/* Mobile Sidebar Grundstruktur */
+@media (max-width: 1023px) {
+    /* Sidebar standardmäßig versteckt */
+    .fi-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: 16rem !important;
+        max-width: 80vw !important;
+        background: white !important;
+        z-index: 60 !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Dark mode */
+    .dark .fi-sidebar {
+        background: rgb(17 24 39) !important;
+    }
+    
+    /* Sidebar sichtbar wenn open */
+    body.fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    /* Overlay beim Öffnen */
+    body.fi-sidebar-open::before {
+        content: "" !important;
+        display: block !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        z-index: 59 !important;
+        cursor: pointer !important;
+        pointer-events: auto !important;
+    }
+    
+    /* Main content verschiebt sich nicht auf Mobile */
+    .fi-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* Topbar fixiert */
+    .fi-topbar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 50 !important;
+        background: white !important;
+    }
+    
+    .dark .fi-topbar {
+        background: rgb(17 24 39) !important;
+    }
+}
+
+/* Desktop: Sidebar immer sichtbar */
+@media (min-width: 1024px) {
+    .fi-sidebar {
+        position: sticky !important;
+        transform: translateX(0) !important;
+    }
+    
+    /* Kein Overlay auf Desktop */
+    body.fi-sidebar-open::before {
+        display: none !important;
+    }
+}
+
+/* Menu Button Styling */
+.fi-topbar .fi-icon-btn:first-child,
+.fi-topbar button:first-child {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    padding: 0 !important;
+    margin-right: 0.5rem !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 51 !important;
+}
+
+/* Hide menu button on desktop */
+@media (min-width: 1024px) {
+    .fi-topbar .fi-icon-btn:first-child,
+    .fi-topbar button[aria-label*="menu"] {
+        display: none !important;
+    }
+}
+
+/* Smooth transitions */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS Safari Fixes */
+@supports (-webkit-touch-callout: none) {
+    .fi-sidebar {
+        -webkit-transform: translateX(-100%);
+        transform: translateX(-100%);
+    }
+    
+    body.fi-sidebar-open .fi-sidebar {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+    }
+    
+    /* Momentum scrolling */
+    .fi-sidebar,
+    .fi-main {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Debug Mode */
+body.debug-mobile {
+    .fi-topbar button:first-child {
+        border: 2px solid red !important;
+    }
+    
+    .fi-sidebar {
+        border: 2px solid blue !important;
+    }
+    
+    body.fi-sidebar-open::before {
+        background: rgba(255, 0, 0, 0.2) !important;
+    }
+}

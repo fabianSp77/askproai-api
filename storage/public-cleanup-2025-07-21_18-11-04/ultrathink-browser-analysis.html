@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULTRATHINK Browser Analysis</title>
+    <style>
+        body { font-family: monospace; max-width: 1200px; margin: 20px auto; padding: 20px; background: #000; color: #0f0; }
+        .section { margin: 20px 0; padding: 15px; background: #111; border: 1px solid #0f0; }
+        .critical { color: #f00; font-weight: bold; }
+        .success { color: #0f0; }
+        .warning { color: #ff0; }
+        .info { color: #0ff; }
+        pre { background: #222; padding: 10px; overflow-x: auto; }
+        button { background: #0f0; color: #000; padding: 10px 20px; margin: 5px; cursor: pointer; border: none; font-weight: bold; }
+        button:hover { background: #0ff; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { border: 1px solid #0f0; padding: 8px; }
+        .matrix { font-family: monospace; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+    <h1 class="matrix">🧠 ULTRATHINK BROWSER ANALYSIS</h1>
+    
+    <div class="section">
+        <h2>PHASE 1: ENVIRONMENT SCAN</h2>
+        <div id="envScan"></div>
+    </div>
+
+    <div class="section">
+        <h2>PHASE 2: SECURITY CONTEXT</h2>
+        <div id="securityContext"></div>
+    </div>
+
+    <div class="section">
+        <h2>PHASE 3: COOKIE CAPABILITY TEST</h2>
+        <button onclick="runCookieTests()">EXECUTE COOKIE TESTS</button>
+        <div id="cookieTests"></div>
+    </div>
+
+    <div class="section">
+        <h2>PHASE 4: NETWORK ANALYSIS</h2>
+        <button onclick="runNetworkAnalysis()">ANALYZE NETWORK</button>
+        <div id="networkAnalysis"></div>
+    </div>
+
+    <div class="section">
+        <h2>PHASE 5: LOGIN DEEP DIVE</h2>
+        <button onclick="runLoginAnalysis()">DEEP LOGIN ANALYSIS</button>
+        <div id="loginAnalysis"></div>
+    </div>
+
+    <div class="section critical">
+        <h2>DIAGNOSIS</h2>
+        <div id="diagnosis"></div>
+    </div>
+
+    <script>
+        // Phase 1: Environment Scan
+        function scanEnvironment() {
+            const env = {
+                'Browser Protocol': window.location.protocol,
+                'Browser Hostname': window.location.hostname,
+                'Browser Port': window.location.port || '(default)',
+                'Full URL': window.location.href,
+                'Is HTTPS': window.location.protocol === 'https:',
+                'User Agent': navigator.userAgent,
+                'Cookies Enabled': navigator.cookieEnabled,
+                'Do Not Track': navigator.doNotTrack,
+                'Storage Available': typeof(Storage) !== 'undefined',
+                'Current Cookies': document.cookie || 'NONE'
+            };
+
+            let html = '<table>';
+            for (const [key, value] of Object.entries(env)) {
+                const className = key === 'Is HTTPS' && !value ? 'critical' : 
+                                key === 'Cookies Enabled' && !value ? 'critical' : '';
+                html += `<tr><td>${key}</td><td class="${className}">${value}</td></tr>`;
+            }
+            html += '</table>';
+
+            document.getElementById('envScan').innerHTML = html;
+
+            // Critical warnings
+            if (window.location.protocol !== 'https:') {
+                document.getElementById('envScan').innerHTML += 
+                    '<p class="critical">⚠️ NOT HTTPS - Secure cookies WILL NOT WORK!</p>';
+            }
+        }
+
+        // Phase 2: Security Context
+        function checkSecurityContext() {
+            const checks = {
+                'Content Security Policy': document.querySelector('meta[http-equiv="Content-Security-Policy"]') ? 'Present' : 'Not found',
+                'Referrer Policy': document.referrerPolicy || 'default',
+                'Third Party Cookies Test': 'Pending...',
+                'SameSite Context': window.location.origin === 'https://api.askproai.de' ? 'First-party' : 'Cross-origin',
+                'Frame Ancestors': window.self === window.top ? 'Top level' : 'Framed'
+            };
+
+            let html = '<table>';
+            for (const [key, value] of Object.entries(checks)) {
+                html += `<tr><td>${key}</td><td>${value}</td></tr>`;
+            }
+            html += '</table>';
+
+            document.getElementById('securityContext').innerHTML = html;
+        }
+
+        // Phase 3: Cookie Tests
+        async function runCookieTests() {
+            const results = document.getElementById('cookieTests');
+            results.innerHTML = '<p class="info">Running cookie tests...</p>';
+
+            const tests = [];
+
+            // Test 1: Basic cookie
+            document.cookie = 'test_basic=value1; path=/';
+            tests.push({
+                name: 'Basic Cookie',
+                set: 'test_basic=value1; path=/',
+                found: document.cookie.includes('test_basic'),
+                result: document.cookie.includes('test_basic') ? 'PASS' : 'FAIL'
+            });
+
+            // Test 2: Secure cookie (only on HTTPS)
+            if (window.location.protocol === 'https:') {
+                document.cookie = 'test_secure=value2; path=/; secure';
+                tests.push({
+                    name: 'Secure Cookie',
+                    set: 'test_secure=value2; path=/; secure',
+                    found: document.cookie.includes('test_secure'),
+                    result: document.cookie.includes('test_secure') ? 'PASS' : 'FAIL'
+                });
+            }
+
+            // Test 3: SameSite cookie
+            document.cookie = 'test_samesite=value3; path=/; samesite=lax';
+            tests.push({
+                name: 'SameSite Cookie',
+                set: 'test_samesite=value3; path=/; samesite=lax',
+                found: document.cookie.includes('test_samesite'),
+                result: document.cookie.includes('test_samesite') ? 'PASS' : 'FAIL'
+            });
+
+            // Display results
+            let html = '<h3>Cookie Test Results:</h3><table>';
+            html += '<tr><th>Test</th><th>Cookie Set</th><th>Result</th></tr>';
+            for (const test of tests) {
+                const className = test.result === 'PASS' ? 'success' : 'critical';
+                html += `<tr><td>${test.name}</td><td>${test.set}</td><td class="${className}">${test.result}</td></tr>`;
+            }
+            html += '</table>';
+
+            // Cleanup
+            document.cookie = 'test_basic=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'test_secure=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;';
+            document.cookie = 'test_samesite=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; samesite=lax;';
+
+            results.innerHTML = html;
+        }
+
+        // Phase 4: Network Analysis
+        async function runNetworkAnalysis() {
+            const results = document.getElementById('networkAnalysis');
+            results.innerHTML = '<p class="info">Analyzing network...</p>';
+
+            try {
+                // Test connection to API
+                const response = await fetch('/business/auth/session-test', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                let html = '<h3>API Connection Test:</h3>';
+                html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+
+                // Analyze response
+                html += '<h3>Response Analysis:</h3><table>';
+                html += `<tr><td>Status Code</td><td>${response.status}</td></tr>`;
+                html += `<tr><td>Response Type</td><td>${response.type}</td></tr>`;
+                html += `<tr><td>URL</td><td>${response.url}</td></tr>`;
+                html += `<tr><td>Redirected</td><td>${response.redirected}</td></tr>`;
+                html += '</table>';
+
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `<p class="critical">Network Error: ${error}</p>`;
+            }
+        }
+
+        // Phase 5: Login Deep Dive
+        async function runLoginAnalysis() {
+            const results = document.getElementById('loginAnalysis');
+            results.innerHTML = '<p class="info">Performing deep login analysis...</p>';
+
+            const steps = [];
+
+            // Step 1: Pre-login cookies
+            steps.push({
+                step: 'Pre-login Cookies',
+                data: document.cookie || 'NONE'
+            });
+
+            try {
+                // Step 2: Login request
+                const loginResponse = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+
+                const loginData = await loginResponse.json();
+
+                steps.push({
+                    step: 'Login Response',
+                    data: loginData
+                });
+
+                // Step 3: Post-login cookies (immediate)
+                steps.push({
+                    step: 'Post-login Cookies (immediate)',
+                    data: document.cookie || 'NONE'
+                });
+
+                // Step 4: Wait and check again
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                steps.push({
+                    step: 'Post-login Cookies (after 1s)',
+                    data: document.cookie || 'NONE'
+                });
+
+                // Step 5: Check authentication
+                const checkResponse = await fetch('/business/auth/check', {
+                    credentials: 'include'
+                });
+                const checkData = await checkResponse.json();
+
+                steps.push({
+                    step: 'Auth Check',
+                    data: checkData
+                });
+
+            } catch (error) {
+                steps.push({
+                    step: 'ERROR',
+                    data: error.toString()
+                });
+            }
+
+            // Display all steps
+            let html = '<h3>Login Analysis Steps:</h3>';
+            for (const step of steps) {
+                html += `<div class="section">`;
+                html += `<h4>${step.step}</h4>`;
+                html += `<pre>${typeof step.data === 'object' ? JSON.stringify(step.data, null, 2) : step.data}</pre>`;
+                html += `</div>`;
+            }
+
+            results.innerHTML = html;
+
+            // Final diagnosis
+            diagnose(steps);
+        }
+
+        // Diagnosis
+        function diagnose(loginSteps = []) {
+            const diagnosis = document.getElementById('diagnosis');
+            
+            const issues = [];
+            const solutions = [];
+
+            // Check HTTPS
+            if (window.location.protocol !== 'https:') {
+                issues.push('NOT ON HTTPS - Secure cookies cannot be set!');
+                solutions.push('Access the site via HTTPS: https://api.askproai.de/');
+            }
+
+            // Check cookies enabled
+            if (!navigator.cookieEnabled) {
+                issues.push('Cookies are DISABLED in browser!');
+                solutions.push('Enable cookies in browser settings');
+            }
+
+            // Check if session cookie appears
+            if (loginSteps.length > 0) {
+                const hasSessionCookie = loginSteps.some(step => 
+                    step.data && typeof step.data === 'string' && step.data.includes('askproai_session')
+                );
+                if (!hasSessionCookie) {
+                    issues.push('Session cookie never appears in document.cookie');
+                    
+                    // Specific diagnosis based on protocol
+                    if (window.location.protocol === 'https:') {
+                        solutions.push('Browser may be blocking cookies due to privacy settings');
+                        solutions.push('Check for browser extensions blocking cookies');
+                        solutions.push('Try incognito/private mode');
+                    } else {
+                        solutions.push('You MUST use HTTPS for secure cookies to work');
+                    }
+                }
+            }
+
+            let html = '<h3>Issues Found:</h3><ul>';
+            for (const issue of issues) {
+                html += `<li class="critical">${issue}</li>`;
+            }
+            html += '</ul>';
+
+            html += '<h3>Solutions:</h3><ol>';
+            for (const solution of solutions) {
+                html += `<li class="warning">${solution}</li>`;
+            }
+            html += '</ol>';
+
+            if (issues.length === 0) {
+                html = '<p class="success">✅ No issues detected - cookies should be working!</p>';
+            }
+
+            diagnosis.innerHTML = html;
+        }
+
+        // Initialize
+        window.onload = () => {
+            scanEnvironment();
+            checkSecurityContext();
+        };
+    </script>
+</body>
+</html>

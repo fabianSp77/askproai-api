@@ -13,6 +13,16 @@ class ListAppointments extends ListRecords
 {
     protected static string $resource = AppointmentResource::class;
 
+    public function mount(): void
+    {
+        // Emergency Company Context Fix
+        if (auth()->check() && auth()->user()->company_id) {
+            app()->instance('current_company_id', auth()->user()->company_id);
+            app()->instance('company_context_source', 'web_auth');
+        }
+        parent::mount();
+    }
+
     protected function getHeaderActions(): array
     {
         return [

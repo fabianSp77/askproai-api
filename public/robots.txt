@@ -1,2 +1,8 @@
 User-agent: *
-Disallow:
+Disallow: /admin/
+Disallow: /api/
+Disallow: /storage/
+Disallow: /business-service-worker.js
+Disallow: /service-worker.js
+Disallow: /sw.js
+Disallow: *.worker.js

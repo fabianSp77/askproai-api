@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Working Solution</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0;
+            padding: 0;
+            background: #f5f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        button { 
+            padding: 16px 32px; 
+            margin: 10px; 
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 300px;
+        }
+        .primary-btn {
+            background: #3B82F6;
+            color: white;
+        }
+        .primary-btn:hover {
+            background: #2563EB;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
+        }
+        .secondary-btn {
+            background: #10b981;
+            color: white;
+        }
+        .secondary-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+        }
+        .status {
+            background: #f0f9ff;
+            border: 1px solid #3B82F6;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #1e40af;
+        }
+        .steps {
+            text-align: left;
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .steps li {
+            margin: 10px 0;
+            color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">🎯</div>
+        <h1>Finale Lösung</h1>
+        <p class="subtitle">Ein einfacher Weg zum funktionierenden Dashboard</p>
+        
+        <div id="status" class="status">
+            Bereit zum Start...
+        </div>
+        
+        <button class="primary-btn" onclick="doLogin()">
+            1. Login durchführen
+        </button>
+        
+        <button class="secondary-btn" onclick="openDashboard()" id="dashboardBtn" style="display: none;">
+            2. Dashboard öffnen
+        </button>
+        
+        <div class="steps">
+            <strong>So funktioniert es:</strong>
+            <ol>
+                <li>Klicken Sie auf "Login durchführen"</li>
+                <li>Warten Sie auf die Bestätigung</li>
+                <li>Klicken Sie auf "Dashboard öffnen"</li>
+                <li>Genießen Sie Ihr funktionierendes Dashboard!</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        async function doLogin() {
+            const status = document.getElementById('status');
+            status.innerHTML = '⏳ Login wird durchgeführt...';
+            
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store user data
+                    localStorage.setItem('portal_user_id', data.user.id);
+                    localStorage.setItem('portal_company_id', data.user.company_id);
+                    localStorage.setItem('portal_user_name', data.user.name);
+                    localStorage.setItem('portal_user_email', data.user.email);
+                    
+                    status.innerHTML = '✅ Login erfolgreich! Jetzt können Sie das Dashboard öffnen.';
+                    document.getElementById('dashboardBtn').style.display = 'block';
+                } else {
+                    status.innerHTML = '❌ Login fehlgeschlagen: ' + data.message;
+                }
+            } catch (error) {
+                status.innerHTML = '❌ Fehler: ' + error.message;
+            }
+        }
+        
+        function openDashboard() {
+            // Open minimal dashboard with user ID
+            const userId = localStorage.getItem('portal_user_id') || 41;
+            window.location.href = '/minimal-dashboard.php?uid=' + userId;
+        }
+        
+        // Check if already logged in
+        if (localStorage.getItem('portal_user_id')) {
+            document.getElementById('status').innerHTML = '✅ Sie sind bereits eingeloggt!';
+            document.getElementById('dashboardBtn').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

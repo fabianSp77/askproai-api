@@ -19,6 +19,17 @@ class MCPDashboard extends Page
     protected static string $view = 'filament.admin.pages.mcp-dashboard';
     protected static ?string $slug = 'mcp-dashboard';
     
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->hasRole(['Super Admin', 'super_admin', 'developer']) || $user->email === 'dev@askproai.de');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+    
     public array $systemHealth = [];
     public array $performanceMetrics = [];
     public array $connectionPoolStats = [];

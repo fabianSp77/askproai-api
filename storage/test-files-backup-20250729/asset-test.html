@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Asset Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Asset Loading Test</h1>
+    
+    <h2>Attempting to load Livewire & Alpine:</h2>
+    
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(text, success) {
+            const div = document.createElement('div');
+            div.className = 'status ' + (success ? 'success' : 'error');
+            div.textContent = text;
+            results.appendChild(div);
+        }
+        
+        // Test 1: Load Livewire directly
+        addResult('Loading Livewire from /vendor/livewire/livewire.js...', true);
+        
+        const script1 = document.createElement('script');
+        script1.src = '/vendor/livewire/livewire.js';
+        script1.onload = () => {
+            addResult('✅ Livewire script loaded successfully!', true);
+            if (typeof window.Livewire !== 'undefined') {
+                addResult('✅ window.Livewire is available!', true);
+            } else {
+                addResult('❌ window.Livewire is still undefined', false);
+            }
+        };
+        script1.onerror = () => {
+            addResult('❌ Failed to load Livewire script', false);
+        };
+        document.head.appendChild(script1);
+        
+        // Test 2: Check Alpine after a delay
+        setTimeout(() => {
+            if (typeof window.Alpine !== 'undefined') {
+                addResult('✅ Alpine.js is available!', true);
+            } else {
+                addResult('❌ Alpine.js not found', false);
+                
+                // Try loading Filament support
+                const script2 = document.createElement('script');
+                script2.src = '/js/filament/support/support.js';
+                script2.onload = () => {
+                    addResult('✅ Filament support loaded', true);
+                    setTimeout(() => {
+                        if (typeof window.Alpine !== 'undefined') {
+                            addResult('✅ Alpine.js now available!', true);
+                        }
+                    }, 500);
+                };
+                script2.onerror = () => {
+                    addResult('❌ Failed to load Filament support', false);
+                };
+                document.head.appendChild(script2);
+            }
+        }, 1000);
+        
+        // Show loaded scripts
+        setTimeout(() => {
+            const scripts = Array.from(document.scripts).map(s => s.src).filter(s => s);
+            addResult('\nLoaded scripts:\n' + scripts.join('\n'), true);
+        }, 2000);
+    </script>
+</body>
+</html>

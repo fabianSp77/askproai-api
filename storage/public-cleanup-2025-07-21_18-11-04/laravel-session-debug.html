@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Laravel Session Debug</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            background: #3498db; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 4px;
+        }
+        button:hover { background: #2980b9; }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        pre { 
+            background: #f0f0f0; 
+            padding: 15px; 
+            border-radius: 4px; 
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .warning { color: orange; font-weight: bold; }
+        h2 { color: #2c3e50; }
+        .note { 
+            background: #ffffcc; 
+            padding: 10px; 
+            border-left: 4px solid #ffeb3b; 
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Laravel Session Debug Tool</h1>
+        
+        <div class="note">
+            This tool tests Laravel session handling to diagnose why portal_user_id is not persisting.
+        </div>
+        
+        <div class="test-section">
+            <h2>1. Session Configuration Check</h2>
+            <button onclick="checkSessionInfo()">Check Session Config</button>
+            <pre id="session-info">Click to check session configuration...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Session Write Test</h2>
+            <button onclick="testSessionWrite()">Test Session Write</button>
+            <pre id="write-test">Click to test session writing...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Authentication Test</h2>
+            <button onclick="testAuth()">Set Auth Session</button>
+            <button onclick="checkAuth()">Check Auth Persistence</button>
+            <pre id="auth-test">Click to test authentication...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. Cookie Information</h2>
+            <button onclick="showCookies()">Show Cookies</button>
+            <pre id="cookie-info">Click to show current cookies...</pre>
+        </div>
+    </div>
+    
+    <script>
+    async function checkSessionInfo() {
+        const result = document.getElementById('session-info');
+        result.textContent = 'Loading session configuration...';
+        
+        try {
+            const response = await fetch('/laravel-session-test.php?action=info');
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            // Highlight potential issues
+            let analysis = '\n\n=== ANALYSIS ===\n';
+            
+            if (data.session_driver === 'array') {
+                analysis += '❌ Session driver is "array" - sessions will not persist!\n';
+            } else {
+                analysis += '✅ Session driver is "' + data.session_driver + '"\n';
+            }
+            
+            if (data.session_driver === 'file' && data.storage_permissions.sessions_dir !== 'WRITABLE') {
+                analysis += '❌ Session directory is not writable!\n';
+            }
+            
+            if (data.session_secure && window.location.protocol !== 'https:') {
+                analysis += '⚠️  Secure cookies enabled but not on HTTPS\n';
+            }
+            
+            result.textContent += analysis;
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testSessionWrite() {
+        const result = document.getElementById('write-test');
+        result.textContent = 'Testing session write...';
+        
+        try {
+            const response = await fetch('/laravel-session-test.php?action=test-write');
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.write_test.success) {
+                result.innerHTML += '\n\n<span class="success">✅ Session write successful!</span>';
+            } else {
+                result.innerHTML += '\n\n<span class="error">❌ Session write failed!</span>';
+            }
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testAuth() {
+        const result = document.getElementById('auth-test');
+        result.textContent = 'Setting authentication session...';
+        
+        try {
+            const response = await fetch('/laravel-session-test.php?action=test-auth');
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            if (data.auth_test && data.auth_test.auth_check_immediate) {
+                result.innerHTML += '\n\n<span class="success">✅ Auth session set!</span>';
+                result.innerHTML += '\n<span class="warning">Now click "Check Auth Persistence" to see if it persists</span>';
+            }
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function checkAuth() {
+        const result = document.getElementById('auth-test');
+        result.textContent = 'Checking auth persistence...';
+        
+        try {
+            const response = await fetch('/laravel-session-test.php?action=check-auth');
+            const data = await response.json();
+            
+            result.textContent = JSON.stringify(data, null, 2);
+            
+            let analysis = '\n\n=== PERSISTENCE CHECK ===\n';
+            
+            if (data.auth_check.auth_guard_check) {
+                analysis += '✅ Auth guard check: PASSED\n';
+            } else {
+                analysis += '❌ Auth guard check: FAILED\n';
+            }
+            
+            if (data.auth_check.portal_user_id) {
+                analysis += '✅ portal_user_id in session: ' + data.auth_check.portal_user_id + '\n';
+            } else {
+                analysis += '❌ portal_user_id: NOT FOUND\n';
+            }
+            
+            if (data.auth_check.auth_key) {
+                analysis += '✅ Laravel auth key in session: ' + data.auth_check.auth_key + '\n';
+            } else {
+                analysis += '❌ Laravel auth key: NOT FOUND\n';
+            }
+            
+            result.textContent += analysis;
+            
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    function showCookies() {
+        const result = document.getElementById('cookie-info');
+        const cookies = document.cookie.split(';').map(c => c.trim());
+        
+        let cookieInfo = 'Current Cookies:\n\n';
+        cookies.forEach(cookie => {
+            const [name, value] = cookie.split('=');
+            cookieInfo += name + ': ' + (value ? value.substring(0, 50) + '...' : 'empty') + '\n';
+        });
+        
+        cookieInfo += '\n\nRaw Cookie String:\n' + document.cookie;
+        
+        result.textContent = cookieInfo;
+    }
+    </script>
+</body>
+</html>

@@ -61,7 +61,7 @@ class BranchPerformanceWidget extends Widget
                 // Load company relationship
                 $branch->load('company');
                 
-                $revenue = Appointment::where('branch_id', $branch->id)
+                $revenue = Appointment::where('appointments.branch_id', $branch->id)
                     ->join('services', 'appointments.service_id', '=', 'services.id')
                     ->where('appointments.status', 'completed')
                     ->where('appointments.created_at', '>=', Carbon::now()->startOfMonth())

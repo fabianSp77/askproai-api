@@ -7,6 +7,17 @@ use Illuminate\Contracts\Console\Kernel;
 trait UsesSimplifiedDatabase
 {
     /**
+     * Setup a simplified database for testing
+     */
+    protected function setupSimplifiedDatabase(): void
+    {
+        // Skip migrations that might cause issues in testing
+        if (app()->environment('testing')) {
+            $this->app->instance('migration.repository', new \Illuminate\Database\Migrations\NullMigrationRepository());
+        }
+    }
+
+    /**
      * Define hooks to migrate the database before and after each test.
      */
     public function setUpUsesSimplifiedDatabase(): void

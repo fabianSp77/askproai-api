@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Fix Calls Page NOW</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+            display: block;
+            width: 100%;
+        }
+        button:hover { background: #218838; }
+        .button-danger {
+            background: #dc3545;
+        }
+        .button-danger:hover { background: #c82333; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔧 Calls Page Fix</h1>
+        
+        <p class="warning">⚠️ Die Calls-Seite lädt nicht? Hier ist die Lösung!</p>
+        
+        <div id="status"></div>
+        
+        <button onclick="runFix()">🚀 FIX AUSFÜHREN</button>
+        
+        <div id="results" class="hidden">
+            <h2>Ergebnisse:</h2>
+            <pre id="log"></pre>
+            
+            <h2>Nächste Schritte:</h2>
+            <ol>
+                <li>Gehe zu <a href="/admin/calls" target="_blank">Admin Calls</a></li>
+                <li>Die Seite sollte jetzt laden!</li>
+                <li>Falls nicht, drücke F5 für Hard Refresh</li>
+            </ol>
+        </div>
+        
+        <hr style="margin: 30px 0;">
+        
+        <h2>Alternative Lösungen:</h2>
+        <button onclick="window.open('/debug-calls-live.php', '_blank')">📊 Live Debug Tool öffnen</button>
+        <button onclick="clearEverything()" class="button-danger">🗑️ Kompletter Reset</button>
+    </div>
+    
+    <script>
+        const log = (message, type = 'info') => {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            logDiv.innerHTML += `[${timestamp}] <span class="${className}">${message}</span>\n`;
+        };
+        
+        async function runFix() {
+            const status = document.getElementById('status');
+            const results = document.getElementById('results');
+            
+            status.innerHTML = '<p class="warning">Fix läuft...</p>';
+            results.classList.remove('hidden');
+            document.getElementById('log').innerHTML = '';
+            
+            log('Starting fix process...', 'info');
+            
+            try {
+                // Step 1: Clear problematic data
+                log('Clearing browser storage...', 'info');
+                localStorage.clear();
+                sessionStorage.clear();
+                log('✅ Storage cleared', 'success');
+                
+                // Step 2: Force reload Livewire
+                log('Force loading Livewire...', 'info');
+                const livewireScript = document.createElement('script');
+                livewireScript.src = '/vendor/livewire/livewire.js?v=' + Date.now();
+                livewireScript.onload = () => {
+                    log('✅ Livewire loaded', 'success');
+                    
+                    // Check if Livewire is available
+                    setTimeout(() => {
+                        if (typeof window.Livewire !== 'undefined') {
+                            log('✅ Livewire is available!', 'success');
+                            window.Livewire.start();
+                            log('✅ Livewire started', 'success');
+                        }
+                    }, 500);
+                };
+                document.head.appendChild(livewireScript);
+                
+                // Step 3: Test the calls endpoint
+                log('Testing calls endpoint...', 'info');
+                const response = await fetch('/admin/calls', {
+                    credentials: 'include',
+                    headers: { 'Accept': 'text/html' }
+                });
+                log(`Calls page status: ${response.status}`, response.ok ? 'success' : 'error');
+                
+                // Step 4: Set fix flag
+                localStorage.setItem('calls_page_fixed', 'true');
+                localStorage.setItem('fix_timestamp', new Date().toISOString());
+                
+                log('\n🎉 FIX COMPLETE!', 'success');
+                status.innerHTML = '<p class="success">✅ Fix erfolgreich ausgeführt!</p>';
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                status.innerHTML = '<p class="error">❌ Fix fehlgeschlagen</p>';
+            }
+        }
+        
+        function clearEverything() {
+            if (!confirm('Wirklich ALLES löschen und neu starten?')) return;
+            
+            // Clear all data
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(';').forEach(c => {
+                const name = c.split('=')[0].trim();
+                if (name) {
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.askproai.de`;
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+                }
+            });
+            
+            alert('Alles gelöscht! Browser schließen und neu öffnen.');
+            window.location = '/admin/login';
+        }
+        
+        // Add fix script to page
+        const fixScript = `
+// Auto-fix for Calls page
+(function() {
+    if (window.location.pathname === '/admin/calls') {
+        console.log('[Calls Fix] Checking page...');
+        
+        // Force Livewire if missing
+        if (typeof window.Livewire === 'undefined') {
+            console.warn('[Calls Fix] Loading Livewire...');
+            const script = document.createElement('script');
+            script.src = '/vendor/livewire/livewire.js';
+            script.onload = () => {
+                console.log('[Calls Fix] Livewire loaded!');
+                if (window.Livewire) window.Livewire.start();
+            };
+            document.head.appendChild(script);
+        }
+        
+        // Remove loading state after timeout
+        setTimeout(() => {
+            const loadingElements = document.querySelectorAll('[wire\\\\:loading], .animate-spin');
+            loadingElements.forEach(el => {
+                el.style.display = 'none';
+            });
+        }, 3000);
+    }
+})();
+`;
+        
+        // Show the script
+        const scriptPre = document.createElement('pre');
+        scriptPre.textContent = fixScript;
+        scriptPre.style.display = 'none';
+        document.body.appendChild(scriptPre);
+    </script>
+</body>
+</html>

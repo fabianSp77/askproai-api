@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Test Suite - AskProAI</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #f5f5f5; 
+            margin: 0; 
+            padding: 20px;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+        }
+        h1 { 
+            color: #1a1a1a; 
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .test-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        .test-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        .test-card h3 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .test-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pending { background: #e3f2fd; color: #1976d2; }
+        .status-running { background: #fff3e0; color: #f57c00; }
+        .status-success { background: #e8f5e9; color: #388e3c; }
+        .status-error { background: #ffebee; color: #d32f2f; }
+        .test-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+            width: 100%;
+            margin-top: 12px;
+        }
+        .test-button:hover {
+            background: #2563eb;
+        }
+        .test-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .test-result {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            background: #f8f9fa;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        .quick-links {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .quick-links h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .link-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .link-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #f3f4f6;
+            color: #374151;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .link-button:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+        .icon {
+            font-size: 20px;
+            margin-right: 4px;
+        }
+        .critical { background: #ef4444; color: white; }
+        .critical:hover { background: #dc2626; }
+        
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Final Test Suite - AskProAI Session Fix</h1>
+        
+        <div class="summary-box">
+            <h2>Test Summary</h2>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="total-tests">8</div>
+                    <div class="stat-label">Total Tests</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="passed-tests">0</div>
+                    <div class="stat-label">Passed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="failed-tests">0</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="running-tests">0</div>
+                    <div class="stat-label">Running</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-grid">
+            <!-- Test 1: Session Configuration -->
+            <div class="test-card" id="test-session-config">
+                <h3>
+                    <span class="icon">⚙️</span>
+                    Session Configuration
+                    <span class="test-status status-pending">Pending</span>
+                </h3>
+                <p>Verify session configuration is correct</p>
+                <button class="test-button" onclick="runTest('session-config')">Run Test</button>
+                <div class="test-result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 2: Cookie Domain -->
+            <div class="test-card" id="test-cookie-domain">
+                <h3>
+                    <span class="icon">🍪</span>
+                    Cookie Domain Check
+                    <span class="test-status status-pending">Pending</span>
+                </h3>
+                <p>Check if cookies are set with correct domain</p>
+                <button class="test-button" onclick="runTest('cookie-domain')">Run Test</button>
+                <div class="test-result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 3: Session Persistence -->
+            <div class="test-card" id="test-session-persistence">
+                <h3>
+                    <span class="icon">💾</span>
+                    Session Persistence
+                    <span class="test-status status-pending">Pending</span>
+                </h3>
+                <p>Test if session data persists between requests</p>
+                <button class="test-button" onclick="runTest('session-persistence')">Run Test</button>
+                <div class="test-result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 4: Authentication -->
+            <div class="test-card" id="test-authentication">
+                <h3>
+                    <span class="icon">🔐</span>
+                    Authentication Test
+                    <span class="test-status status-pending">Pending</span>
+                </h3>
+                <p>Test login and auth persistence</p>
+                <button class="test-button" onclick="runTest('authentication')">Run Test</button>
+                <div class="test-result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 5: CSRF Token -->
+            <div class="test-card" id="test-csrf">
+                <h3>
+                    <span class="icon">🛡️</span>
+                    CSRF Protection
+                    <span class="test-status status-pending">Pending</span>
+                </h3>
+                <p>Verify CSRF token generation and validation</p>
+                <button class="test-button" onclick="runTest('csrf')">Run Test</button>
+                <div class="test-result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 6: Admin Access -->
+            <div class="test-card" id="test-admin-access">
+                <h3>
+                    <span class="icon">🚪</span>
+                    Admin Panel Access
+                    <span class="test-status status-pending">Pending</span>
+                </h3>
+                <p>Test access to admin panel after login</p>
+                <button class="test-button" onclick="runTest('admin-access')">Run Test</button>
+                <div class="test-result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 7: Business Portal -->
+            <div class="test-card" id="test-business-portal">
+                <h3>
+                    <span class="icon">💼</span>
+                    Business Portal Access
+                    <span class="test-status status-pending">Pending</span>
+                </h3>
+                <p>Test business portal login and access</p>
+                <button class="test-button" onclick="runTest('business-portal')">Run Test</button>
+                <div class="test-result" style="display: none;"></div>
+            </div>
+
+            <!-- Test 8: Livewire Integration -->
+            <div class="test-card" id="test-livewire">
+                <h3>
+                    <span class="icon">⚡</span>
+                    Livewire Integration
+                    <span class="test-status status-pending">Pending</span>
+                </h3>
+                <p>Test Livewire components and session handling</p>
+                <button class="test-button" onclick="runTest('livewire')">Run Test</button>
+                <div class="test-result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="quick-links">
+            <h2>🚀 Quick Actions</h2>
+            <div class="link-grid">
+                <a href="/quick-fix-login.php" class="link-button critical" target="_blank">
+                    <span class="icon">🔥</span> Quick Fix Login
+                </a>
+                <a href="/session-validation-tool.php" class="link-button" target="_blank">
+                    <span class="icon">🔍</span> Session Validator
+                </a>
+                <a href="/admin" class="link-button" target="_blank">
+                    <span class="icon">📊</span> Admin Panel
+                </a>
+                <a href="/business/login" class="link-button" target="_blank">
+                    <span class="icon">💼</span> Business Login
+                </a>
+                <a href="/fixed-login" class="link-button" target="_blank">
+                    <span class="icon">🔧</span> Fixed Login
+                </a>
+                <button class="link-button critical" onclick="runAllTests()">
+                    <span class="icon">▶️</span> Run All Tests
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            passed: 0,
+            failed: 0,
+            running: 0
+        };
+
+        function updateStats() {
+            document.getElementById('passed-tests').textContent = testResults.passed;
+            document.getElementById('failed-tests').textContent = testResults.failed;
+            document.getElementById('running-tests').textContent = testResults.running;
+        }
+
+        async function runTest(testName) {
+            const testCard = document.getElementById(`test-${testName}`);
+            const statusElement = testCard.querySelector('.test-status');
+            const resultElement = testCard.querySelector('.test-result');
+            const button = testCard.querySelector('.test-button');
+            
+            // Update UI
+            statusElement.className = 'test-status status-running';
+            statusElement.textContent = 'Running';
+            button.disabled = true;
+            resultElement.style.display = 'block';
+            resultElement.textContent = 'Running test...';
+            testResults.running++;
+            updateStats();
+
+            try {
+                let result;
+                switch(testName) {
+                    case 'session-config':
+                        result = await testSessionConfig();
+                        break;
+                    case 'cookie-domain':
+                        result = await testCookieDomain();
+                        break;
+                    case 'session-persistence':
+                        result = await testSessionPersistence();
+                        break;
+                    case 'authentication':
+                        result = await testAuthentication();
+                        break;
+                    case 'csrf':
+                        result = await testCSRF();
+                        break;
+                    case 'admin-access':
+                        result = await testAdminAccess();
+                        break;
+                    case 'business-portal':
+                        result = await testBusinessPortal();
+                        break;
+                    case 'livewire':
+                        result = await testLivewire();
+                        break;
+                }
+
+                testResults.running--;
+                if (result.success) {
+                    statusElement.className = 'test-status status-success';
+                    statusElement.textContent = 'Passed';
+                    testResults.passed++;
+                } else {
+                    statusElement.className = 'test-status status-error';
+                    statusElement.textContent = 'Failed';
+                    testResults.failed++;
+                }
+                resultElement.innerHTML = result.message;
+                updateStats();
+            } catch (error) {
+                testResults.running--;
+                testResults.failed++;
+                statusElement.className = 'test-status status-error';
+                statusElement.textContent = 'Error';
+                resultElement.textContent = `Error: ${error.message}`;
+                updateStats();
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        async function testSessionConfig() {
+            const response = await fetch('/api/test/session-config');
+            const data = await response.json();
+            
+            const checks = [
+                { name: 'Session Driver', value: data.driver, expected: 'file' },
+                { name: 'Session Domain', value: data.domain, expected: 'api.askproai.de' },
+                { name: 'Secure Cookie', value: data.secure, expected: true },
+                { name: 'HTTP Only', value: data.http_only, expected: true }
+            ];
+            
+            const failed = checks.filter(c => c.value !== c.expected);
+            
+            return {
+                success: failed.length === 0,
+                message: checks.map(c => 
+                    `${c.name}: ${c.value} ${c.value === c.expected ? '✅' : '❌ (expected: ' + c.expected + ')'}`
+                ).join('<br>')
+            };
+        }
+
+        async function testCookieDomain() {
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            const sessionCookie = cookies.find(c => c.startsWith('askproai_session='));
+            
+            return {
+                success: sessionCookie !== undefined,
+                message: sessionCookie ? 
+                    `Session cookie found: ${sessionCookie.substring(0, 30)}...` : 
+                    'No session cookie found in browser'
+            };
+        }
+
+        async function testSessionPersistence() {
+            // Set a test value
+            const setResponse = await fetch('/test-session-set-route');
+            const setData = await setResponse.json();
+            
+            // Get the value back
+            const getResponse = await fetch('/test-session-get-route');
+            const getData = await getResponse.json();
+            
+            const success = setData.session_id === getData.session_id && 
+                          getData.test_route !== undefined;
+            
+            return {
+                success: success,
+                message: `Session ID: ${getData.session_id}<br>` +
+                        `Test Value: ${getData.test_route || 'NOT FOUND'}<br>` +
+                        `Counter: ${getData.counter || 0}`
+            };
+        }
+
+        async function testAuthentication() {
+            const response = await fetch('/auth-debug');
+            const data = await response.json();
+            
+            return {
+                success: data.auth_check === true,
+                message: `Authenticated: ${data.auth_check ? 'YES ✅' : 'NO ❌'}<br>` +
+                        `User: ${data.user ? data.user.email : 'None'}<br>` +
+                        `Guard: ${data.guard}<br>` +
+                        `Session ID: ${data.session_id}`
+            };
+        }
+
+        async function testCSRF() {
+            const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+            const hasMetaTag = tokenMeta !== null;
+            const token = tokenMeta ? tokenMeta.content : null;
+            
+            if (!token) {
+                // Try to get from API
+                const response = await fetch('/api/csrf-token');
+                const data = await response.json();
+                
+                return {
+                    success: data.token !== undefined,
+                    message: `Meta tag: ${hasMetaTag ? 'YES' : 'NO'}<br>` +
+                            `Token from API: ${data.token ? data.token.substring(0, 20) + '...' : 'NOT FOUND'}`
+                };
+            }
+            
+            return {
+                success: true,
+                message: `CSRF Token found: ${token.substring(0, 20)}...`
+            };
+        }
+
+        async function testAdminAccess() {
+            try {
+                const response = await fetch('/admin', {
+                    redirect: 'manual'
+                });
+                
+                const isRedirect = response.status === 302 || response.status === 301;
+                const location = response.headers.get('Location') || '';
+                
+                return {
+                    success: response.status === 200 || (isRedirect && !location.includes('login')),
+                    message: `Status: ${response.status}<br>` +
+                            `Type: ${response.type}<br>` +
+                            `Redirect: ${isRedirect ? location : 'None'}`
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    message: `Error accessing admin panel: ${error.message}`
+                };
+            }
+        }
+
+        async function testBusinessPortal() {
+            try {
+                const response = await fetch('/business/login', {
+                    redirect: 'manual'
+                });
+                
+                return {
+                    success: response.status === 200,
+                    message: `Business portal status: ${response.status}<br>` +
+                            `Accessible: ${response.status === 200 ? 'YES ✅' : 'NO ❌'}`
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    message: `Error accessing business portal: ${error.message}`
+                };
+            }
+        }
+
+        async function testLivewire() {
+            const hasLivewire = typeof window.Livewire !== 'undefined';
+            
+            if (!hasLivewire) {
+                return {
+                    success: false,
+                    message: 'Livewire not loaded on this page'
+                };
+            }
+            
+            return {
+                success: true,
+                message: `Livewire loaded: YES ✅<br>` +
+                        `Version: ${window.Livewire.version || 'Unknown'}`
+            };
+        }
+
+        async function runAllTests() {
+            const tests = ['session-config', 'cookie-domain', 'session-persistence', 
+                          'authentication', 'csrf', 'admin-access', 'business-portal', 'livewire'];
+            
+            // Reset stats
+            testResults = { passed: 0, failed: 0, running: 0 };
+            updateStats();
+            
+            for (const test of tests) {
+                await runTest(test);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between tests
+            }
+        }
+
+        // Create a simple test API endpoint
+        if (!window.testEndpointsCreated) {
+            // Add meta tag for CSRF if not present
+            if (!document.querySelector('meta[name="csrf-token"]')) {
+                const meta = document.createElement('meta');
+                meta.name = 'csrf-token';
+                meta.content = '{{ csrf_token() }}';
+                document.head.appendChild(meta);
+            }
+            window.testEndpointsCreated = true;
+        }
+    </script>
+</body>
+</html>

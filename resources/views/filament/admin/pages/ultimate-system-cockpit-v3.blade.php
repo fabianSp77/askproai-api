@@ -924,7 +924,7 @@
             setTimeout(() => {
                 document.getElementById('systemStatus').style.color = '#00ff00';
                 document.getElementById('systemStatus').textContent = 'ONLINE';
-            }, 1000);
+            }, 30000);
         }, {{ $refreshInterval * 1000 }});
         @endif
         

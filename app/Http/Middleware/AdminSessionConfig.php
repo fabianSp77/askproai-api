@@ -4,29 +4,40 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 
 /**
- * Configure Admin-specific session settings
+ * Admin Portal Session Configuration
+ * 
+ * Configures session settings specifically for the admin portal
+ * to prevent conflicts with the business portal.
  */
 class AdminSessionConfig
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
-        // Load admin-specific session configuration
-        $adminConfig = config('session_admin');
-        
-        if ($adminConfig) {
-            // Override default session configuration
-            foreach ($adminConfig as $key => $value) {
-                Config::set('session.' . $key, $value);
+        // Only configure if session hasn't started yet
+        if (!session()->isStarted()) {
+            // Admin-specific session configuration
+            $sessionConfig = [
+                'driver' => config('session.driver', 'file'),
+                'lifetime' => 480, // 8 hours for admin
+                'expire_on_close' => false,
+                'encrypt' => false,
+                'cookie' => 'askproai_admin_session',
+                'path' => '/',
+                'domain' => null,
+                'secure' => $request->secure(), // Auto-detect HTTPS
+                'http_only' => true,
+                'same_site' => 'lax',
+                'files' => storage_path('framework/sessions'),
+            ];
+            
+            // Apply configuration BEFORE session starts
+            foreach ($sessionConfig as $key => $value) {
+                config(["session.$key" => $value]);
             }
         }
         

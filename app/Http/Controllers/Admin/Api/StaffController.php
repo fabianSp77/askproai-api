@@ -11,11 +11,11 @@ class StaffController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Staff::withoutGlobalScopes()
+        $query = Staff::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
-                'branch' => function($q) { $q->withoutGlobalScopes(); },
-                'services' => function($q) { $q->withoutGlobalScopes(); }
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'branch' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'services' => function($q) { $q->where("company_id", auth()->user()->company_id); }
             ])
             ->withCount(['appointments']);
 
@@ -51,11 +51,11 @@ class StaffController extends Controller
 
     public function show($id): JsonResponse
     {
-        $staff = Staff::withoutGlobalScopes()
+        $staff = Staff::where("company_id", auth()->user()->company_id)
             ->with([
-                'company' => function($q) { $q->withoutGlobalScopes(); },
-                'branch' => function($q) { $q->withoutGlobalScopes(); },
-                'services' => function($q) { $q->withoutGlobalScopes(); },
+                'company' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'branch' => function($q) { $q->where("company_id", auth()->user()->company_id); },
+                'services' => function($q) { $q->where("company_id", auth()->user()->company_id); },
                 'workingHours'
             ])
             ->withCount(['appointments'])
@@ -84,7 +84,7 @@ class StaffController extends Controller
 
     public function update(Request $request, $id): JsonResponse
     {
-        $staff = Staff::withoutGlobalScopes()->findOrFail($id);
+        $staff = Staff::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'branch_id' => 'sometimes|exists:branches,id',
@@ -103,7 +103,7 @@ class StaffController extends Controller
 
     public function destroy($id): JsonResponse
     {
-        $staff = Staff::withoutGlobalScopes()->findOrFail($id);
+        $staff = Staff::where("company_id", auth()->user()->company_id)->findOrFail($id);
         
         // Check if staff has appointments
         if ($staff->appointments()->exists()) {
@@ -119,7 +119,7 @@ class StaffController extends Controller
 
     public function availability($id): JsonResponse
     {
-        $staff = Staff::withoutGlobalScopes()->findOrFail($id);
+        $staff = Staff::where("company_id", auth()->user()->company_id)->findOrFail($id);
         
         // Get working hours
         $workingHours = $staff->workingHours;
@@ -140,7 +140,7 @@ class StaffController extends Controller
 
     public function assignServices(Request $request, $id): JsonResponse
     {
-        $staff = Staff::withoutGlobalScopes()->findOrFail($id);
+        $staff = Staff::where("company_id", auth()->user()->company_id)->findOrFail($id);
 
         $validated = $request->validate([
             'service_ids' => 'required|array',

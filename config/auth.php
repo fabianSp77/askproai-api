@@ -85,7 +85,7 @@ return [
         ],
         
         'portal_users' => [
-            'driver' => 'eloquent',
+            'driver' => 'portal_eloquent',  // Use our custom provider that bypasses CompanyScope
             'model'  => App\Models\PortalUser::class,
         ],
     ],

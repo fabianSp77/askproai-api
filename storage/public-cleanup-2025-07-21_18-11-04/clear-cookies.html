@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear All Cookies</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #c82333;
+        }
+        .success {
+            background: #28a745;
+        }
+        .success:hover {
+            background: #218838;
+        }
+        .info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍪 Cookie Cleaner</h1>
+        
+        <div class="info">
+            <p>Die Session funktioniert nicht, weil alte Cookies im Weg sind.</p>
+            <p>Diese Seite hilft dir, alle Cookies zu löschen.</p>
+        </div>
+        
+        <button onclick="clearAllCookies()">🗑️ Alle Cookies löschen</button>
+        
+        <div id="result" style="margin-top: 20px;"></div>
+        
+        <div style="margin-top: 30px;">
+            <p>Nach dem Löschen:</p>
+            <button class="success" onclick="window.location.href='/web-session-login.php'">
+                ✅ Zum Login
+            </button>
+        </div>
+        
+        <div class="info" style="margin-top: 30px;">
+            <h3>Manuelle Methode:</h3>
+            <p><strong>Chrome/Edge:</strong> F12 → Application → Storage → Clear site data</p>
+            <p><strong>Firefox:</strong> F12 → Storage → Cookies → Rechtsklick → Delete All</p>
+            <p><strong>Safari:</strong> Develop → Show Web Inspector → Storage → Cookies → Remove All</p>
+        </div>
+    </div>
+    
+    <script>
+    function clearAllCookies() {
+        const result = document.getElementById('result');
+        let count = 0;
+        
+        // Get all cookies
+        const cookies = document.cookie.split(';');
+        
+        // Delete each cookie
+        cookies.forEach(cookie => {
+            if (cookie) {
+                const eqPos = cookie.indexOf('=');
+                const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                
+                // Delete for current path
+                document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                
+                // Delete for current domain
+                document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=' + window.location.hostname;
+                
+                // Delete for parent domain
+                document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.askproai.de';
+                
+                // Delete for subdomain
+                document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=api.askproai.de';
+                
+                count++;
+            }
+        });
+        
+        // Clear sessionStorage and localStorage
+        sessionStorage.clear();
+        localStorage.clear();
+        
+        result.innerHTML = `
+            <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">
+                ✅ ${count} Cookies gelöscht!<br>
+                ✅ SessionStorage gelöscht!<br>
+                ✅ LocalStorage gelöscht!<br><br>
+                <strong>Jetzt kannst du dich neu einloggen!</strong>
+            </div>
+        `;
+        
+        // Also try to clear using more aggressive method
+        const domains = ['api.askproai.de', '.askproai.de', 'askproai.de'];
+        const paths = ['/', '/admin', '/api'];
+        
+        domains.forEach(domain => {
+            paths.forEach(path => {
+                cookies.forEach(cookie => {
+                    if (cookie) {
+                        const name = cookie.split('=')[0].trim();
+                        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=${path};domain=${domain}`;
+                    }
+                });
+            });
+        });
+    }
+    </script>
+</body>
+</html>

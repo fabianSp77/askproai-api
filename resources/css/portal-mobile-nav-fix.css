@@ -1,0 +1,134 @@
+/* Portal Mobile Navigation Fixes */
+
+/* Ensure mobile nav doesn't overlap content */
+.mobile-bottom-nav {
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Add padding to content when mobile nav is present */
+@media (max-width: 768px) {
+    .ant-layout-content {
+        padding-bottom: 72px !important; /* 56px nav + 16px spacing */
+    }
+    
+    /* Ensure content is scrollable */
+    .ant-layout {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Smooth transitions for drawer */
+.ant-drawer-content-wrapper {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Fix z-index conflicts */
+.mobile-bottom-nav {
+    z-index: 1001;
+}
+
+.ant-drawer-mask {
+    z-index: 1000;
+}
+
+.ant-drawer-content-wrapper {
+    z-index: 1001;
+}
+
+/* Mobile drawer menu styling */
+.mobile-drawer-menu {
+    height: 100%;
+}
+
+.mobile-drawer-menu .ant-menu-item {
+    margin: 0;
+    height: 48px;
+    line-height: 48px;
+}
+
+/* Haptic feedback visual indicator */
+.nav-item-active {
+    animation: tap-feedback 0.3s ease-out;
+}
+
+@keyframes tap-feedback {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+/* Mobile header adjustments */
+@media (max-width: 768px) {
+    .ant-layout-header {
+        padding: 0 12px !important;
+        height: 56px;
+        line-height: 56px;
+    }
+    
+    .ant-layout-header h1 {
+        font-size: 18px !important;
+        margin: 0 !important;
+    }
+    
+    /* Ensure buttons don't get too cramped */
+    .ant-space-compact {
+        gap: 8px !important;
+    }
+}
+
+/* Fix for iOS safe areas */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .mobile-bottom-nav {
+        padding-bottom: env(safe-area-inset-bottom, 0);
+        height: calc(56px + env(safe-area-inset-bottom, 0));
+    }
+}
+
+/* Prevent content from being hidden behind fixed elements */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    
+    .ant-layout-content > div:last-child {
+        margin-bottom: 16px;
+    }
+}
+
+/* Mobile menu button styling */
+.mobile-menu-button {
+    border: none;
+    box-shadow: none;
+}
+
+.mobile-menu-button:hover,
+.mobile-menu-button:focus {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Ensure modals and notifications appear above navigation */
+.ant-modal-wrap,
+.ant-notification {
+    z-index: 1050;
+}
+
+.ant-message {
+    z-index: 1060;
+}
+
+/* Smooth page transitions */
+.page-transition {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

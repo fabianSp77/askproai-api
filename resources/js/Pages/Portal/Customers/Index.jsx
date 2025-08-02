@@ -50,10 +50,12 @@ import { cn } from '../../../lib/utils';
 import dayjs from 'dayjs';
 import 'dayjs/locale/de';
 import axiosInstance from '../../../services/axiosInstance';
+import { useNavigate } from 'react-router-dom';
 
 dayjs.locale('de');
 
 const CustomersIndex = () => {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [customers, setCustomers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -552,6 +554,13 @@ const CustomersIndex = () => {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => navigate(`/customers/${customer.id}`)}
+                                                    >
+                                                        Details
+                                                    </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"

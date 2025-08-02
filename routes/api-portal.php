@@ -12,8 +12,8 @@ use App\Http\Controllers\Portal\Api\BillingApiController;
 use App\Http\Controllers\Portal\Api\EmailController;
 use App\Http\Controllers\Portal\Api\CustomerJourneyApiController;
 use App\Http\Controllers\Portal\Api\FeedbackApiController;
-use App\Http\Controllers\Portal\Api\SessionDebugController;
-
+use App\Http\Controllers\Portal\Api\BranchesApiController;
+use App\Http\Controllers\Portal\Api\EventsApiController;
 /*
 |--------------------------------------------------------------------------
 | Portal API Routes
@@ -28,37 +28,11 @@ Route::get('business/api/auth-check', [App\Http\Controllers\Portal\Api\AuthCheck
     ->middleware(['web'])
     ->name('business.api.auth-check');
 
-// Debug route for session testing
-Route::get('business/api/debug-session', [SessionDebugController::class, 'debug'])
-    ->middleware(['web'])
-    ->name('business.api.debug-session');
-
-// Test session route
-Route::get('business/api/test-session', [\App\Http\Controllers\Portal\Api\TestSessionController::class, 'test'])
-    ->middleware(['web'])
-    ->name('business.api.test-session');
-
-// Debug session route (no auth)
-Route::get('business/api/debug-session-noauth', [\App\Http\Controllers\Portal\Api\DebugSessionController::class, 'debug'])
-    ->middleware(['web'])
-    ->name('business.api.debug-session-noauth');
-
-// Test auth route (no auth required)
-Route::get('business/api/test-auth', [\App\Http\Controllers\Portal\Api\TestAuthController::class, 'test'])
-    ->middleware(['web'])
-    ->name('business.api.test-auth');
-
 // Business Portal API Routes
 Route::prefix('business/api')
     ->middleware(['web', 'portal.session', \App\Http\Middleware\SharePortalSession::class, 'portal.auth.api'])
     ->name('business.api.')
     ->group(function () {
-        // Test route
-        Route::get('/test-calls', [\App\Http\Controllers\Portal\Api\TestCallsController::class, 'test'])->name('test-calls');
-        
-        // Debug route for calls authentication
-        Route::get('/debug-calls-auth', [\App\Http\Controllers\Portal\Api\DebugCallsApiController::class, 'debug'])->name('debug-calls-auth');
-        
         // Dashboard
         Route::get('/dashboard', [DashboardApiController::class, 'index'])->name('dashboard');
         
@@ -113,6 +87,20 @@ Route::prefix('business/api')
             Route::post('/call/{call}/assign', [CustomerJourneyApiController::class, 'assignCustomer'])->name('assign');
             Route::post('/customer/{customer}/note', [CustomerJourneyApiController::class, 'addNote'])->name('add-note');
             Route::get('/stats', [CustomerJourneyApiController::class, 'getCustomerStats'])->name('stats');
+        });
+        
+        // Branches
+        Route::prefix('branches')->name('branches.')->group(function () {
+            Route::get('/', [BranchesApiController::class, 'index'])->name('index');
+            Route::get('/{branch}', [BranchesApiController::class, 'show'])->name('show');
+            Route::post('/', [BranchesApiController::class, 'store'])->name('store');
+            Route::put('/{branch}', [BranchesApiController::class, 'update'])->name('update');
+            Route::delete('/{branch}', [BranchesApiController::class, 'destroy'])->name('destroy');
+            Route::get('/{branch}/staff', [BranchesApiController::class, 'staff'])->name('staff');
+            Route::get('/{branch}/services', [BranchesApiController::class, 'services'])->name('services');
+            Route::get('/{branch}/working-hours', [BranchesApiController::class, 'workingHours'])->name('working-hours');
+            Route::put('/{branch}/working-hours', [BranchesApiController::class, 'updateWorkingHours'])->name('update-working-hours');
+            Route::get('/{branch}/check-open', [BranchesApiController::class, 'checkOpen'])->name('check-open');
         });
         
         // Team
@@ -198,4 +186,22 @@ Route::prefix('business/api')
                 ]
             ]);
         })->name('notifications.index');
+        
+        // Events
+        Route::prefix('events')->name('events.')->group(function () {
+            Route::get('/', [EventsApiController::class, 'index'])->name('index');
+            Route::get('/timeline', [EventsApiController::class, 'timeline'])->name('timeline');
+            Route::get('/stats', [EventsApiController::class, 'stats'])->name('stats');
+            Route::get('/schemas', [EventsApiController::class, 'schemas'])->name('schemas');
+            
+            // Event subscriptions
+            Route::get('/subscriptions', [EventsApiController::class, 'subscriptions'])->name('subscriptions');
+            Route::post('/subscriptions', [EventsApiController::class, 'subscribe'])->name('subscribe');
+            Route::put('/subscriptions/{id}', [EventsApiController::class, 'updateSubscription'])->name('update-subscription');
+            Route::delete('/subscriptions/{id}', [EventsApiController::class, 'deleteSubscription'])->name('delete-subscription');
+            
+            // Webhook management
+            Route::get('/webhook-logs', [EventsApiController::class, 'webhookLogs'])->name('webhook-logs');
+            Route::post('/test-webhook', [EventsApiController::class, 'testWebhook'])->name('test-webhook');
+        });
     });

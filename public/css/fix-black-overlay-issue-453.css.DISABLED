@@ -1,0 +1,97 @@
+/* ================================================================
+   EMERGENCY FIX FOR BLACK OVERLAY ISSUE #453
+   Removes ALL overlays and fixes Alpine.js related hover issues
+   ================================================================ */
+
+/* Remove ALL pseudo-element overlays aggressively */
+*::before,
+*::after {
+    content: none !important;
+    background: transparent !important;
+    opacity: 0 !important;
+    z-index: auto !important;
+}
+
+/* Only allow critical pseudo-elements */
+/* Icons and UI elements that need them */
+.fi-icon::before,
+.fi-icon::after,
+svg::before,
+svg::after,
+[class*="heroicon"]::before,
+[class*="heroicon"]::after,
+.fi-dropdown-list-item-icon::before,
+.fi-dropdown-list-item-icon::after {
+    content: "" !important;
+    opacity: 1 !important;
+}
+
+/* Force remove ANY black overlays */
+body > div[style*="background"],
+body > div[style*="rgba(0"],
+body > div[style*="rgb(0"],
+.fixed.inset-0,
+[class*="overlay"],
+[class*="backdrop"] {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Exception for real modals and notifications */
+.fi-modal,
+.fi-modal-window,
+.fi-notification,
+.fi-notification-close-overlay {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure main content is ALWAYS on top and interactive */
+body,
+.fi-body,
+.fi-main,
+.fi-main-ctn,
+.fi-page,
+.fi-section,
+.fi-resource,
+.fi-ta-ctn {
+    position: relative !important;
+    z-index: 1 !important;
+    pointer-events: auto !important;
+    background: transparent !important;
+}
+
+/* Force interactive elements to be clickable */
+a, button, input, select, textarea,
+[role="button"],
+[role="link"],
+[wire\:click],
+[x-on\:click],
+[onclick],
+.cursor-pointer {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* Remove hover effects that might create overlays */
+*:hover::before,
+*:hover::after {
+    display: none !important;
+}
+
+/* Fix table cells and rows */
+table, thead, tbody, tr, td, th {
+    position: relative !important;
+    z-index: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* Debug mode - makes overlays visible in red */
+body.debug-overlays *::before,
+body.debug-overlays *::after {
+    background: rgba(255, 0, 0, 0.3) !important;
+    content: "OVERLAY" !important;
+}

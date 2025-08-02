@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Services\MCP\RetellAIBridgeMCPServer;
-use App\Models\Company;
 use App\Models\Call;
+use App\Models\Company;
+use App\Services\MCP\RetellAIBridgeMCPServer;
+use Illuminate\Console\Command;
 
 class RetellMCPTestCallCommand extends Command
 {
@@ -35,7 +35,7 @@ class RetellMCPTestCallCommand extends Command
     public function handle(RetellAIBridgeMCPServer $bridgeServer): int
     {
         $phoneNumber = $this->argument('phone');
-        
+
         // Get company
         $companyId = $this->option('company');
         if ($companyId) {
@@ -43,22 +43,24 @@ class RetellMCPTestCallCommand extends Command
         } else {
             $company = Company::first();
         }
-        
-        if (!$company) {
+
+        if (! $company) {
             $this->error('No company found. Please specify --company=ID');
+
             return self::FAILURE;
         }
-        
+
         // Get agent ID
         $agentId = $this->option('agent') ?? $company->retell_agent_id;
-        if (!$agentId) {
+        if (! $agentId) {
             $this->error('No agent ID found. Please specify --agent=ID or configure default agent for company.');
+
             return self::FAILURE;
         }
-        
+
         $this->info('🚀 Initiating test call...');
         $this->newLine();
-        
+
         $this->table(
             ['Parameter', 'Value'],
             [
@@ -68,7 +70,7 @@ class RetellMCPTestCallCommand extends Command
                 ['Scenario', $this->option('scenario')],
             ]
         );
-        
+
         try {
             // Build test parameters
             $params = [
@@ -78,37 +80,36 @@ class RetellMCPTestCallCommand extends Command
                 'purpose' => 'test_call',
                 'dynamic_variables' => $this->buildTestVariables(),
             ];
-            
+
             // Make the call
             $result = $bridgeServer->createOutboundCall($params);
-            
+
             $this->newLine();
             $this->info('✅ Call initiated successfully!');
             $this->line('Call ID: ' . $result['call_id']);
             $this->line('Retell Call ID: ' . $result['retell_call_id']);
-            
+
             if ($this->option('monitor')) {
                 $this->monitorCall($result['call_id']);
             }
-            
+
             return self::SUCCESS;
-            
         } catch (\Exception $e) {
             $this->newLine();
             $this->error('❌ Failed to initiate call');
             $this->error('Error: ' . $e->getMessage());
-            
+
             if ($this->output->isVerbose()) {
                 $this->error('Stack trace:');
                 $this->line($e->getTraceAsString());
             }
-            
+
             return self::FAILURE;
         }
     }
 
     /**
-     * Build test variables based on scenario
+     * Build test variables based on scenario.
      */
     protected function buildTestVariables(): array
     {
@@ -118,31 +119,32 @@ class RetellMCPTestCallCommand extends Command
             'test_scenario' => $scenario,
             'test_timestamp' => now()->toISOString(),
         ];
-        
+
         switch ($scenario) {
             case 'greeting':
                 $variables['expected_response'] = 'greeting_with_company_name';
+
                 break;
-                
             case 'appointment':
                 $variables['test_service'] = 'Haircut';
                 $variables['test_date'] = 'tomorrow';
                 $variables['test_time'] = '2 PM';
                 $variables['expected_response'] = 'appointment_confirmation';
+
                 break;
-                
             case 'custom':
                 if ($this->option('message')) {
                     $variables['custom_message'] = $this->option('message');
                 }
+
                 break;
         }
-        
+
         return $variables;
     }
 
     /**
-     * Monitor call status in real-time
+     * Monitor call status in real-time.
      */
     protected function monitorCall(string $callId): void
     {
@@ -150,67 +152,69 @@ class RetellMCPTestCallCommand extends Command
         $this->info('📞 Monitoring call status...');
         $this->line('Press Ctrl+C to stop monitoring');
         $this->newLine();
-        
+
         $lastStatus = null;
         $startTime = now();
-        
+
         while (true) {
             $call = Call::find($callId);
-            
-            if (!$call) {
+
+            if (! $call) {
                 $this->error('Call record not found!');
+
                 break;
             }
-            
+
             // Update status display
             if ($call->status !== $lastStatus) {
                 $lastStatus = $call->status;
                 $duration = $startTime->diffInSeconds(now());
-                
+
                 $this->line(sprintf(
                     '[%s] Status: %s (Duration: %ds)',
                     now()->format('H:i:s'),
                     strtoupper($call->status),
                     $duration
                 ));
-                
+
                 // Show additional info based on status
                 switch ($call->status) {
                     case 'in-progress':
                         $this->info('   📞 Call is active...');
+
                         break;
-                        
                     case 'completed':
                         $this->info('   ✅ Call completed successfully!');
                         $this->line('   Duration: ' . $call->duration_sec . ' seconds');
-                        
+
                         if ($call->transcript) {
                             $this->newLine();
                             $this->info('📝 Transcript:');
                             $this->line(wordwrap($call->transcript, 80));
                         }
-                        
+
                         if ($call->recording_url) {
                             $this->newLine();
                             $this->info('🎙️ Recording URL:');
                             $this->line($call->recording_url);
                         }
-                        
+
                         return;
-                        
                     case 'failed':
                     case 'no-answer':
                         $this->error('   ❌ Call ended: ' . $call->status);
+
                         return;
                 }
             }
-            
+
             // Check for timeout
             if ($startTime->diffInMinutes(now()) > 10) {
                 $this->warn('⏱️ Monitoring timeout after 10 minutes');
+
                 break;
             }
-            
+
             sleep(2); // Check every 2 seconds
         }
     }

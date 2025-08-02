@@ -4,44 +4,24 @@
 // require __DIR__ . '/ultrathink-auth.php'; // Temporarily disabled - file missing
 
 // Override 2FA routes to prevent 500 errors
-Route::get('/business/two-factor/setup', function () {
-    return redirect('/business');
-})->name('business.two-factor.setup.override');
+// TEMPORARILY DISABLED - causing redirect loops
+// Route::get('/business/two-factor/setup', function () {
+//     return redirect('/business');
+// })->name('business.two-factor.setup.override');
 
-Route::post('/business/two-factor/setup', function () {
-    return redirect('/business');
-})->name('business.two-factor.setup.post.override');
+// Route::post('/business/two-factor/setup', function () {
+//     return redirect('/business');
+// })->name('business.two-factor.setup.post.override');
 
-Route::get('/business/two-factor/challenge', function () {
-    return redirect('/business');
-})->name('business.two-factor.challenge.override');
+// Route::get('/business/two-factor/challenge', function () {
+//     return redirect('/business');
+// })->name('business.two-factor.challenge.override');
 
 use App\Http\Controllers\Admin\CallCustomerAssignmentController;
 use Illuminate\Support\Facades\Route;
 
 // EMERGENCY FIX: Fixed login routes
-Route::get('/fixed-login', [App\Http\Controllers\Auth\FixedLoginController::class, 'directLogin'])
-    ->name('fixed.login');
-
-Route::post('/fixed-login', [App\Http\Controllers\Auth\FixedLoginController::class, 'login'])
-        ->name('fixed.login.post');
-
-// Include emergency admin routes
-require __DIR__ . '/admin-emergency.php';
-
-// Admin Portal Switch Routes
-require __DIR__ . '/admin-switch.php';
-
-// Widget test route
-require __DIR__ . '/test-widgets.php';
-
-// Error Catalog Routes
-Route::prefix('errors')->name('errors.')->group(function () {
-    Route::get('/', [App\Http\Controllers\ErrorCatalogController::class, 'index'])->name('index');
-    Route::get('/autocomplete', [App\Http\Controllers\ErrorCatalogController::class, 'autocomplete'])->name('autocomplete');
-    Route::get('/{errorCode}', [App\Http\Controllers\ErrorCatalogController::class, 'show'])->name('show');
-    Route::post('/feedback/{solutionId}', [App\Http\Controllers\ErrorCatalogController::class, 'submitFeedback'])->name('feedback');
-});
+// REMOVED FOR SECURITY
 
 // React Admin Portal (wenn aktiviert)
 if (config('app.admin_portal_react', false)) {
@@ -49,39 +29,7 @@ if (config('app.admin_portal_react', false)) {
 }
 
 // Emergency auth routes - bypass everything
-Route::get('/emergency-login', [App\Http\Controllers\EmergencyAuthController::class, 'login'])
-    ->withoutMiddleware(['web', 'auth', 'csrf']);
-
-Route::get('/auto-admin-login', [App\Http\Controllers\EmergencyAuthController::class, 'autoLogin'])
-        ->withoutMiddleware(['web', 'auth', 'csrf']);
-
-// Direct auth route - bypasses all middleware
-Route::get('/admin-direct-auth', function () {
-    $uid = request('uid');
-    $token = request('token');
-
-    if ($uid && $token) {
-        $user = App\Models\User::find($uid);
-        if ($user) {
-            // Force login
-            Illuminate\Support\Facades\Auth::guard('web')->loginUsingId($user->id);
-            session()->regenerate();
-
-            return redirect('/admin')->with('success', 'Logged in via direct auth');
-        }
-    }
-
-    return redirect('/direct-login.php')->with('error', 'Invalid auth token');
-})->withoutMiddleware(['web']);
-
-// Test route to verify application is working
-Route::get('/test', function () {
-    return response()->json([
-        'status' => 'ok',
-        'time' => now()->toISOString(),
-        'user' => auth()->check() ? auth()->user()->email : 'not logged in',
-    ]);
-});
+// REMOVED FOR SECURITY
 
 // Debug authentication
 Route::get('/auth-debug', function () {
@@ -227,6 +175,18 @@ Route::get('/profile/edit', function () {
     return redirect('/admin/my-profile');
 })->middleware(['auth'])->name('profile.edit');
 
+// Portal routes (alias for business)
+Route::get('/portal', function () {
+    return redirect('/business');
+});
+
+Route::get('/portal/login', function () {
+    return redirect('/business/login');
+});
+
+Route::post('/portal/login', [\App\Http\Controllers\Portal\Auth\LoginController::class, 'login'])
+    ->name('portal.login.post');
+
 // Logout route
 Route::post('/logout', function () {
     auth()->logout();
@@ -276,19 +236,7 @@ Route::get('/test-livewire-check', function () {
     return view('test-livewire-check');
 });
 
-// Fallback for GET requests to Livewire update endpoint
-Route::get('/livewire/update', function () {
-    Log::warning('GET request to /livewire/update detected', [
-        'user_agent' => request()->userAgent(),
-        'referer' => request()->header('referer'),
-        'ip' => request()->ip(),
-    ]);
-
-    return response()->json([
-        'message' => 'Method not allowed. This endpoint only accepts POST requests.',
-        'hint' => 'If you are seeing this error, there might be an issue with Livewire JavaScript loading.',
-    ], 405);
-})->name('livewire.update.get');
+// Livewire routes are now registered in LivewireRouteFix provider
 
 // Let Filament handle its own routes - no custom login routes!
 
@@ -296,9 +244,6 @@ Route::get('/livewire/update', function () {
 Route::get('/temp-login', [App\Http\Controllers\TempLoginController::class, 'showLoginForm'])->name('temp.login');
 Route::post('/temp-login', [App\Http\Controllers\TempLoginController::class, 'login'])->name('temp.login.submit');
 Route::post('/temp-logout', [App\Http\Controllers\TempLoginController::class, 'logout'])->name('temp.logout');
-
-// Simple login test
-Route::post('/simple-login', [App\Http\Controllers\SimpleLoginController::class, 'login'])->name('simple.login');
 
 // Debug routes
 Route::get('/debug/session', function () {
@@ -351,10 +296,6 @@ Route::post('/debug/clear-logs', function () {
     return response()->json(['cleared' => true]);
 });
 
-// Debug login routes
-Route::get('/debug-login', [App\Http\Controllers\DebugLoginController::class, 'showForm']);
-Route::post('/debug-login/attempt', [App\Http\Controllers\DebugLoginController::class, 'attemptLogin']);
-
 // Livewire test page
 Route::get('/livewire-test-page', function () {
     return view('livewire-test-page');
@@ -368,9 +309,11 @@ Route::middleware(['auth'])->group(function () {
 
 // require __DIR__.'/test-errors.php';
 
-// Customer Portal Routes
+// Customer Portal Routes - REMOVED (See Issue #464)
+// All customer portal functionality has been removed.
+// Use Business Portal (/business) instead for all portal needs.
 Route::prefix('portal')->group(function () {
-    // Legacy redirects - redirect old portal URLs to business URLs
+    // All portal routes now redirect to business portal
     Route::get('/calls/{id}', function ($id) {
         return redirect("/business/calls/{$id}", 301);
     });
@@ -387,7 +330,7 @@ Route::prefix('portal')->group(function () {
         return redirect('/business/', 301);
     });
 
-    require __DIR__ . '/portal.php';
+    // Customer portal routes removed - was: require __DIR__ . '/portal.php';
 });
 
 // Business Portal Routes
@@ -533,6 +476,23 @@ Route::get('/test-session-get-route', function () {
 // Test routes (temporary)
 // require __DIR__ . '/test-routes.php'; // Temporarily disabled - file missing
 
+// Portal session debug route
+Route::get('/portal-session-debug', function () {
+    return response()->json([
+        'session_id' => session()->getId(),
+        'session_name' => session()->getName(),
+        'session_cookie' => request()->cookie('askproai_portal_session'),
+        'portal_auth' => auth()->guard('portal')->check(),
+        'portal_user' => auth()->guard('portal')->user(),
+        'session_key' => 'login_portal_' . sha1(\App\Models\PortalUser::class),
+        'session_has_key' => session()->has('login_portal_' . sha1(\App\Models\PortalUser::class)),
+        'session_user_id' => session('login_portal_' . sha1(\App\Models\PortalUser::class)),
+        'all_session_keys' => array_keys(session()->all()),
+        'cookies' => array_keys(request()->cookies->all()),
+        'middleware' => app()->router->getMiddleware(),
+    ]);
+})->middleware(['web']);
+
 // Temporary admin bypass
 // require __DIR__ . '/admin-bypass.php'; // Temporarily disabled - file missing
 
@@ -542,3 +502,16 @@ Route::get('/test-session-get-route', function () {
 // Direct login routes (bypass session migration issue)
 Route::get('/direct-login', [App\Http\Controllers\DirectLoginController::class, 'login'])->name('direct.login');
 Route::post('/api/direct-login', [App\Http\Controllers\DirectLoginController::class, 'apiLogin'])->name('api.direct.login');
+
+// Debug route for session testing (remove in production)
+if (app()->environment(['local', 'staging', 'production'])) { // Temporarily enabled for all environments
+    require __DIR__ . '/debug-sessions.php';
+    require __DIR__ . '/session-test.php';
+}
+
+// EMERGENCY TEST ROUTES
+Route::get('/test-admin-auth', [App\Http\Controllers\SimpleAuthTestController::class, 'testAdminLogin']);
+Route::get('/test-portal-auth', [App\Http\Controllers\SimpleAuthTestController::class, 'testPortalLogin']);
+
+// ADMIN EMERGENCY ROUTES (with rate limiting)
+require __DIR__ . '/admin-emergency.php';

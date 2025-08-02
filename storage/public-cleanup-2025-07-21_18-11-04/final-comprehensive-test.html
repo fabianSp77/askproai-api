@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Final Comprehensive Session Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover { background: #2980b9; }
+        pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        .success { color: #27ae60; font-weight: bold; }
+        .error { color: #e74c3c; font-weight: bold; }
+        .warning { color: #f39c12; font-weight: bold; }
+        .info { color: #3498db; font-weight: bold; }
+        h2 { color: #2c3e50; margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Final Comprehensive Session Test</h1>
+        
+        <div class="test-section">
+            <h2>1. PHP Session Test (No Laravel)</h2>
+            <button onclick="testPHPSession('set')">Set PHP Session</button>
+            <button onclick="testPHPSession('get')">Get PHP Session</button>
+            <pre id="php-session">Click to test basic PHP sessions...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Laravel Session Test</h2>
+            <button onclick="testLaravelSession()">Test Laravel Session</button>
+            <pre id="laravel-session">Click to test Laravel sessions...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Direct Login (Skip Routes)</h2>
+            <button onclick="directLogin()">Direct Login</button>
+            <pre id="direct-login">Click to login directly...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. Login with CSRF Token</h2>
+            <button onclick="openCSRFLogin()">Open CSRF Login Page</button>
+            <pre id="csrf-login">Click to open login page with CSRF token...</pre>
+        </div>
+        
+        <div class="test-section">
+            <h2>5. Debug Information</h2>
+            <button onclick="debugHeaders()">Debug Headers & Config</button>
+            <button onclick="showAllCookies()">Show All Cookies</button>
+            <pre id="debug-info">Click to show debug information...</pre>
+        </div>
+    </div>
+    
+    <script>
+    async function testPHPSession(action) {
+        const result = document.getElementById('php-session');
+        result.textContent = 'Testing PHP session (' + action + ')...';
+        
+        try {
+            const response = await fetch('/debug-session-cookie.php?action=' + action);
+            const text = await response.text();
+            
+            result.textContent = text;
+            
+            if (action === 'set') {
+                result.innerHTML += '\n\n<span class="info">Now click "Get PHP Session" to test persistence</span>';
+            }
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    async function testLaravelSession() {
+        const result = document.getElementById('laravel-session');
+        result.textContent = 'Testing Laravel session...';
+        
+        try {
+            const response = await fetch('/debug-session-cookie.php?action=laravel');
+            const text = await response.text();
+            
+            result.textContent = text;
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    function directLogin() {
+        window.open('/direct-login-test.php', '_blank');
+        document.getElementById('direct-login').innerHTML = '<span class="info">✓ Opened in new tab</span>';
+    }
+    
+    function openCSRFLogin() {
+        window.open('/login-with-csrf.php', '_blank');
+        document.getElementById('csrf-login').innerHTML = '<span class="info">✓ Opened in new tab</span>';
+    }
+    
+    async function debugHeaders() {
+        const result = document.getElementById('debug-info');
+        result.textContent = 'Getting debug information...';
+        
+        try {
+            const response = await fetch('/debug-session-cookie.php?action=headers');
+            const text = await response.text();
+            
+            result.textContent = text;
+        } catch (error) {
+            result.innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+        }
+    }
+    
+    function showAllCookies() {
+        const result = document.getElementById('debug-info');
+        
+        result.textContent = '=== BROWSER COOKIES ===\n\n';
+        
+        const cookies = document.cookie.split(';');
+        if (cookies.length === 0 || (cookies.length === 1 && cookies[0] === '')) {
+            result.textContent += 'No cookies found!\n';
+        } else {
+            cookies.forEach(cookie => {
+                const [name, value] = cookie.trim().split('=');
+                if (name) {
+                    result.textContent += name + ': ';
+                    if (value) {
+                        result.textContent += value.substring(0, 50);
+                        if (value.length > 50) result.textContent += '...';
+                    } else {
+                        result.textContent += '(empty)';
+                    }
+                    result.textContent += '\n';
+                }
+            });
+        }
+        
+        result.textContent += '\n=== COOKIE DETAILS ===\n';
+        result.textContent += 'Document cookie enabled: ' + navigator.cookieEnabled + '\n';
+        result.textContent += 'Location protocol: ' + window.location.protocol + '\n';
+        result.textContent += 'Location hostname: ' + window.location.hostname + '\n';
+    }
+    </script>
+</body>
+</html>

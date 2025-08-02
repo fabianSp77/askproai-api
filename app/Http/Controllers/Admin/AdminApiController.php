@@ -21,7 +21,7 @@ class AdminApiController extends Controller
         ]);
         
         // Find call without tenant scope
-        $call = Call::withoutGlobalScope(\App\Scopes\TenantScope::class)->find($callId);
+        $call = Call::where("company_id", auth()->user()->company_id)->find($callId);
         
         if (!$call) {
             return response()->json([

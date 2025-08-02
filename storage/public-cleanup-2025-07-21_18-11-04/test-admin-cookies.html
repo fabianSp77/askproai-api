@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Cookie Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .error { color: red; }
+        .success { color: green; }
+        .code { background: #f4f4f4; padding: 5px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel Cookie Test</h1>
+    
+    <div class="section">
+        <h2>1. Current Cookies</h2>
+        <div id="cookies"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. Session Storage</h2>
+        <div id="sessionStorage"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Cookie Test</h2>
+        <button onclick="testCookie()">Test Cookie Setting</button>
+        <div id="cookieTest"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. Admin API Test</h2>
+        <button onclick="testAdminAPI()">Test Admin API</button>
+        <div id="apiTest"></div>
+    </div>
+    
+    <script>
+        // Display current cookies
+        function displayCookies() {
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            const cookiesDiv = document.getElementById('cookies');
+            
+            if (cookies.length === 0 || (cookies.length === 1 && cookies[0] === '')) {
+                cookiesDiv.innerHTML = '<span class="error">No cookies found!</span>';
+            } else {
+                cookiesDiv.innerHTML = '<ul>' + 
+                    cookies.map(c => `<li class="code">${c}</li>`).join('') + 
+                    '</ul>';
+            }
+        }
+        
+        // Display session storage
+        function displaySessionStorage() {
+            const div = document.getElementById('sessionStorage');
+            const keys = Object.keys(sessionStorage);
+            
+            if (keys.length === 0) {
+                div.innerHTML = '<span class="error">No session storage data</span>';
+            } else {
+                div.innerHTML = '<ul>' + 
+                    keys.map(k => `<li class="code">${k}: ${sessionStorage[k]}</li>`).join('') + 
+                    '</ul>';
+            }
+        }
+        
+        // Test cookie setting
+        function testCookie() {
+            const testName = 'test_cookie_' + Date.now();
+            const testValue = 'test_value';
+            
+            // Try to set a cookie
+            document.cookie = `${testName}=${testValue}; path=/; domain=.askproai.de; SameSite=Lax`;
+            
+            // Check if it was set
+            const div = document.getElementById('cookieTest');
+            if (document.cookie.includes(testName)) {
+                div.innerHTML = '<span class="success">✓ Cookie set successfully</span>';
+            } else {
+                div.innerHTML = '<span class="error">✗ Failed to set cookie</span>';
+                
+                // Try without domain
+                document.cookie = `${testName}=${testValue}; path=/; SameSite=Lax`;
+                if (document.cookie.includes(testName)) {
+                    div.innerHTML += '<br><span class="success">✓ Cookie set without domain</span>';
+                }
+            }
+            
+            displayCookies();
+        }
+        
+        // Test Admin API
+        async function testAdminAPI() {
+            const div = document.getElementById('apiTest');
+            div.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('/admin', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'text/html',
+                    }
+                });
+                
+                div.innerHTML = `
+                    <p>Status: ${response.status} ${response.statusText}</p>
+                    <p>Redirected: ${response.redirected}</p>
+                    <p>URL: ${response.url}</p>
+                `;
+                
+                // Check response headers
+                const setCookie = response.headers.get('set-cookie');
+                if (setCookie) {
+                    div.innerHTML += `<p>Set-Cookie header: <span class="code">${setCookie}</span></p>`;
+                }
+                
+            } catch (error) {
+                div.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            }
+        }
+        
+        // Initial display
+        displayCookies();
+        displaySessionStorage();
+        
+        // Auto-refresh cookies every 2 seconds
+        setInterval(displayCookies, 2000);
+    </script>
+</body>
+</html>

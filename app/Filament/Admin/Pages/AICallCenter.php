@@ -37,7 +37,12 @@ class AICallCenter extends Page implements HasForms, HasTable
 
     protected static string $view = 'filament.admin.pages.ai-call-center';
 
-    public ?array $quickCallData = [];
+    public ?array $quickCallData = [
+        'phone_number' => '',
+        'agent_id' => null,
+        'purpose' => null,
+        'variables' => [],
+    ];
 
     public ?array $campaignData = [];
 
@@ -63,17 +68,19 @@ class AICallCenter extends Page implements HasForms, HasTable
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\AICallStatsWidget::class,
-            \App\Filament\Admin\Widgets\ActiveCampaignsWidget::class,
-            \App\Filament\Admin\Widgets\RealTimeCallMonitorWidget::class,
+            // Temporarily disabled to debug error
+            // \App\Filament\Admin\Widgets\AICallStatsWidget::class,
+            // \App\Filament\Admin\Widgets\ActiveCampaignsWidget::class,
+            // \App\Filament\Admin\Widgets\RealTimeCallMonitorWidget::class,
         ];
     }
 
     protected function getFooterWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\OutboundCallMetricsWidget::class,
-            \App\Filament\Admin\Widgets\CampaignPerformanceInsightsWidget::class,
+            // Temporarily disabled to debug error
+            // \App\Filament\Admin\Widgets\OutboundCallMetricsWidget::class,
+            // \App\Filament\Admin\Widgets\CampaignPerformanceInsightsWidget::class,
         ];
     }
 
@@ -186,7 +193,7 @@ class AICallCenter extends Page implements HasForms, HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(RetellAICallCampaign::query())
+            ->query(RetellAICallCampaign::query()->where('company_id', auth()->user()->company_id))
             ->columns([
                 TextColumn::make('name')
                     ->searchable()

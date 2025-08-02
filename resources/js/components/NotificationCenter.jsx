@@ -37,6 +37,7 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/de';
 import notificationService from '../services/NotificationService';
+import { useEcho } from '../hooks/useEcho';
 
 dayjs.extend(relativeTime);
 dayjs.locale('de');
@@ -56,6 +57,8 @@ const NotificationCenter = ({ csrfToken }) => {
         pageSize: 20,
         total: 0
     });
+    
+    const { subscribeToNotifications } = useEcho();
 
     // Icon mapping
     const getIcon = (type) => {
@@ -123,26 +126,45 @@ const NotificationCenter = ({ csrfToken }) => {
         }
     }, [csrfToken]);
 
-    // Initialize notification service
+    // Initialize WebSocket notifications
     useEffect(() => {
-        const token = csrfToken; // In production, use proper auth token
-        
-        notificationService.initialize(token, {
-            onNotification: (notification) => {
-                // Refresh notifications when new one arrives
-                if (activeTab === 'all' || notification.category === activeTab) {
-                    fetchNotifications(activeTab, pagination.current);
-                }
-            },
-            onUnreadCountChange: (count) => {
-                setUnreadCount(count);
-            },
-            onConnectionChange: (connected) => {
-                if (connected) {
-                    // Service connected
-                } else {
-                    // Service disconnected
-                }
+        // Subscribe to real-time notifications
+        const channel = subscribeToNotifications((notification) => {
+            console.log('New notification received:', notification);
+            
+            // Add new notification to the list
+            setNotifications(prev => [notification, ...prev]);
+            
+            // Update unread count
+            if (!notification.read) {
+                setUnreadCount(prev => prev + 1);
+            }
+            
+            // Update category counts
+            if (notification.category) {
+                setCategoryCounts(prev => ({
+                    ...prev,
+                    [notification.category]: (prev[notification.category] || 0) + 1
+                }));
+            }
+            
+            // Show browser notification if supported
+            if (notification.title && notification.message) {
+                message.info({
+                    content: (
+                        <div>
+                            <strong>{notification.title}</strong>
+                            <div>{notification.message}</div>
+                        </div>
+                    ),
+                    icon: getIcon(notification.type),
+                    duration: 5
+                });
+            }
+            
+            // Refresh notifications if on the same category
+            if (activeTab === 'all' || notification.category === activeTab) {
+                fetchNotifications(activeTab, pagination.current);
             }
         });
 
@@ -150,9 +172,9 @@ const NotificationCenter = ({ csrfToken }) => {
         fetchNotifications();
 
         return () => {
-            notificationService.disconnect();
+            // Channel cleanup is handled by useEcho hook
         };
-    }, []);
+    }, [subscribeToNotifications, activeTab, pagination.current]);
 
     // Mark as read
     const handleMarkAsRead = async (notification) => {

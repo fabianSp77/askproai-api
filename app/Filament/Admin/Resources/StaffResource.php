@@ -123,9 +123,19 @@ class StaffResource extends EnhancedResourceSimple
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
-    protected static ?string $navigationLabel = 'Mitarbeiter';
+    protected static ?string $navigationLabel = null;
 
-    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    protected static ?string $navigationGroup = null;
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.staff');
+    }
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.system');
+    }
 
     protected static ?int $navigationSort = 30;
 

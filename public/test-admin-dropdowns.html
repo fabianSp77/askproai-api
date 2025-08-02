@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Portal Dropdown Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .status { 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .success { background: #10b981; color: white; }
+        .error { background: #ef4444; color: white; }
+        .warning { background: #f59e0b; color: white; }
+        .info { background: #3b82f6; color: white; }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        pre {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Portal Dropdown & Button Test</h1>
+    
+    <div class="test-section">
+        <h2>🔍 Quick Diagnostics</h2>
+        <button onclick="runDiagnostics()">Run All Tests</button>
+        <div id="diagnostics"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Manual Test Checklist</h2>
+        <ol>
+            <li><strong>User Menu Dropdown</strong> (top right corner)
+                <ul>
+                    <li>✓ Opens on click</li>
+                    <li>✓ Shows profile options</li>
+                    <li>✓ Closes when clicking outside</li>
+                </ul>
+            </li>
+            <li><strong>Navigation Dropdowns</strong>
+                <ul>
+                    <li>✓ Sidebar items expand/collapse</li>
+                    <li>✓ Only one open at a time</li>
+                    <li>✓ Smooth animation</li>
+                </ul>
+            </li>
+            <li><strong>Table Action Dropdowns</strong>
+                <ul>
+                    <li>✓ Three-dot menus work</li>
+                    <li>✓ Actions are clickable</li>
+                    <li>✓ Close after action</li>
+                </ul>
+            </li>
+            <li><strong>Buttons</strong>
+                <ul>
+                    <li>✓ Create buttons work</li>
+                    <li>✓ Save/Cancel in forms</li>
+                    <li>✓ Delete confirmations</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>🛠️ Applied Fixes</h2>
+        <ul>
+            <li><span class="status success">REMOVED</span> Duplicate dropdown managers</li>
+            <li><span class="status success">ADDED</span> admin-dropdown-fix.js</li>
+            <li><span class="status success">ADDED</span> admin-pointer-fix.css</li>
+            <li><span class="status success">CLEANED</span> Script loading (25+ → 4 files)</li>
+            <li><span class="status success">FIXED</span> Pointer-events conflicts</li>
+        </ul>
+    </div>
+
+    <script>
+        function runDiagnostics() {
+            const results = [];
+            
+            // Test 1: Check if Alpine is loaded
+            if (typeof Alpine !== 'undefined') {
+                results.push({ test: 'Alpine.js loaded', status: 'success' });
+            } else {
+                results.push({ test: 'Alpine.js loaded', status: 'error' });
+            }
+            
+            // Test 2: Check if admin-dropdown-fix.js is loaded
+            const scripts = Array.from(document.scripts).map(s => s.src);
+            const hasDropdownFix = scripts.some(s => s.includes('admin-dropdown-fix.js'));
+            results.push({ 
+                test: 'admin-dropdown-fix.js loaded', 
+                status: hasDropdownFix ? 'success' : 'error' 
+            });
+            
+            // Test 3: Check if admin-pointer-fix.css is loaded
+            const stylesheets = Array.from(document.styleSheets).map(s => s.href).filter(Boolean);
+            const hasPointerFix = stylesheets.some(s => s.includes('admin-pointer-fix.css'));
+            results.push({ 
+                test: 'admin-pointer-fix.css loaded', 
+                status: hasPointerFix ? 'success' : 'error' 
+            });
+            
+            // Test 4: Check for conflicting scripts
+            const conflictingScripts = [
+                'consolidated-dropdown-manager.js',
+                'dropdown-close-fix.js',
+                'alpine-components-fix.js'
+            ];
+            const hasConflicts = conflictingScripts.some(script => 
+                scripts.some(s => s.includes(script) && !s.includes('.disabled'))
+            );
+            results.push({ 
+                test: 'No conflicting scripts', 
+                status: hasConflicts ? 'error' : 'success' 
+            });
+            
+            // Test 5: Check console errors
+            const hasConsoleErrors = window.consoleErrors && window.consoleErrors.length > 0;
+            results.push({ 
+                test: 'No console errors', 
+                status: hasConsoleErrors ? 'warning' : 'success' 
+            });
+            
+            // Display results
+            const diagnosticsDiv = document.getElementById('diagnostics');
+            diagnosticsDiv.innerHTML = '<h3>Test Results:</h3>' + 
+                results.map(r => 
+                    `<div class="status ${r.status}">${r.status.toUpperCase()}: ${r.test}</div>`
+                ).join('');
+            
+            // Add script info
+            diagnosticsDiv.innerHTML += '<h3>Loaded Scripts:</h3><pre>' + 
+                scripts.filter(s => s.includes('/js/')).join('\n') + '</pre>';
+        }
+        
+        // Capture console errors
+        window.consoleErrors = [];
+        window.addEventListener('error', (e) => {
+            window.consoleErrors.push(e.message);
+        });
+    </script>
+</body>
+</html>

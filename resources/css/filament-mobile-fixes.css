@@ -1,0 +1,118 @@
+/* Mobile UI Fixes for Filament Admin Panel */
+
+/* Prevent horizontal overflow on mobile */
+@media (max-width: 768px) {
+    /* Main container fixes */
+    .fi-layout {
+        overflow-x: hidden !important;
+    }
+    
+    .fi-main-ctn {
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+    }
+    
+    .fi-main {
+        max-width: 100% !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    /* Table responsive wrapper */
+    .fi-ta-table-wrap {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        max-width: calc(100vw - 2rem);
+    }
+    
+    /* Fix table cells */
+    .fi-ta-table {
+        min-width: 600px; /* Allow horizontal scroll */
+    }
+    
+    .fi-ta-cell {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 150px;
+    }
+    
+    /* Fix action buttons visibility */
+    .fi-ta-actions {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Ensure icon buttons have minimum size */
+    .fi-icon-btn {
+        min-width: 2.5rem !important;
+        min-height: 2.5rem !important;
+        padding: 0.5rem !important;
+    }
+    
+    /* Fix sidebar positioning */
+    .fi-sidebar,
+    .fi-main-sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 280px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 40;
+    }
+    
+    .fi-main-ctn-sidebar-open .fi-sidebar,
+    .fi-main-ctn-sidebar-open .fi-main-sidebar,
+    [x-data]:has(.fi-sidebar.fi-sidebar-open) .fi-sidebar,
+    [x-data]:has(.fi-main-sidebar.fi-sidebar-open) .fi-main-sidebar {
+        transform: translateX(0);
+    }
+    
+    /* Topbar adjustments */
+    .fi-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+    }
+    
+    /* Form fields */
+    .fi-form-field {
+        max-width: 100% !important;
+    }
+    
+    /* Modal adjustments */
+    .fi-modal-window {
+        max-width: calc(100vw - 2rem) !important;
+        margin: 1rem !important;
+    }
+}
+
+/* Icon fallbacks */
+.fi-icon-btn svg {
+    display: block;
+}
+
+/* If SVG fails to load, show text */
+.fi-icon-btn:empty::after {
+    content: attr(aria-label);
+    font-size: 0.875rem;
+}
+
+/* Ensure ViewAction is visible */
+.fi-ta-view-action {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 768px) {
+    .fi-btn,
+    .fi-icon-btn,
+    .fi-ta-action {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+}

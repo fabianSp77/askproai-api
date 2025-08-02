@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Login Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Business Portal Login Test</h1>
+    
+    <div id="status"></div>
+    
+    <button onclick="testLogin()">1. Login</button>
+    <button onclick="checkAuth()">2. Check Auth</button>
+    <button onclick="fetchDashboard()">3. Fetch Dashboard Data</button>
+    
+    <pre id="output"></pre>
+
+    <script>
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+        
+        async function testLogin() {
+            try {
+                status.textContent = 'Logging in...';
+                
+                // First get CSRF token
+                const tokenResponse = await fetch('/business/login');
+                const html = await tokenResponse.text();
+                const csrfMatch = html.match(/name="_token".*?value="([^"]+)"/);
+                
+                if (!csrfMatch) {
+                    output.textContent = 'Could not find CSRF token';
+                    return;
+                }
+                
+                const csrfToken = csrfMatch[1];
+                output.textContent = `CSRF Token: ${csrfToken}\n`;
+                
+                // Now login
+                const formData = new FormData();
+                formData.append('_token', csrfToken);
+                formData.append('email', 'demo@askproai.de');
+                formData.append('password', 'demo123');
+                
+                const loginResponse = await fetch('/business/login', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                
+                output.textContent += `Login Status: ${loginResponse.status}\n`;
+                output.textContent += `Redirected to: ${loginResponse.url}\n`;
+                
+                if (loginResponse.redirected && loginResponse.url.includes('/business')) {
+                    status.textContent = 'Login successful!';
+                } else {
+                    status.textContent = 'Login failed';
+                }
+                
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+                status.textContent = 'Error occurred';
+            }
+        }
+        
+        async function checkAuth() {
+            try {
+                status.textContent = 'Checking auth...';
+                
+                const response = await fetch('/business/api/user', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                output.textContent = `Auth Check Response:\n${JSON.stringify(data, null, 2)}`;
+                
+                if (response.status === 200) {
+                    status.textContent = 'Authenticated!';
+                } else {
+                    status.textContent = 'Not authenticated';
+                }
+                
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+                status.textContent = 'Error occurred';
+            }
+        }
+        
+        async function fetchDashboard() {
+            try {
+                status.textContent = 'Fetching dashboard data...';
+                
+                const response = await fetch('/business/api/dashboard', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                output.textContent = `Dashboard Data:\n${JSON.stringify(data, null, 2)}`;
+                
+                if (response.status === 200) {
+                    status.textContent = 'Data loaded successfully!';
+                } else {
+                    status.textContent = 'Failed to load data';
+                }
+                
+            } catch (error) {
+                output.textContent = `Error: ${error.message}`;
+                status.textContent = 'Error occurred';
+            }
+        }
+    </script>
+</body>
+</html>

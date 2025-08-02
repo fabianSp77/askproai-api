@@ -1,0 +1,246 @@
+/**
+ * Consolidated Dropdown Manager for AskProAI
+ * 
+ * Handles all dropdown functionality across the application
+ * Compatible with Alpine.js, Livewire, and Filament components
+ */
+
+(function() {
+    'use strict';
+    
+    window.AskProDropdownManager = {
+        activeDropdown: null,
+        dropdowns: new Map(),
+        initialized: false,
+        
+        init() {
+            if (this.initialized) return;
+            
+            console.log('[DropdownManager] Initializing...');
+            
+            // Setup global click handler for closing dropdowns
+            this.setupGlobalClickHandler();
+            
+            // Setup Alpine data if Alpine is available
+            if (window.Alpine) {
+                this.setupAlpineIntegration();
+            }
+            
+            // Fix existing dropdowns
+            this.fixExistingDropdowns();
+            
+            // Setup mutation observer for dynamic content
+            this.setupMutationObserver();
+            
+            this.initialized = true;
+            console.log('[DropdownManager] Initialized');
+        },
+        
+        setupGlobalClickHandler() {
+            // Single global handler for all click-outside functionality
+            document.addEventListener('click', (e) => {
+                if (!this.activeDropdown) return;
+                
+                const activeElement = document.querySelector(`[data-dropdown-id="${this.activeDropdown}"]`);
+                if (!activeElement) {
+                    this.closeActive();
+                    return;
+                }
+                
+                // Check if click is inside the dropdown
+                if (!activeElement.contains(e.target)) {
+                    this.closeActive();
+                }
+            }, true);
+            
+            // Handle escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.activeDropdown) {
+                    this.closeActive();
+                }
+            });
+        },
+        
+        setupAlpineIntegration() {
+            // Create Alpine store for dropdown state
+            Alpine.store('dropdown', {
+                active: null,
+                
+                open(id) {
+                    this.active = id;
+                    AskProDropdownManager.activeDropdown = id;
+                },
+                
+                close() {
+                    this.active = null;
+                    AskProDropdownManager.activeDropdown = null;
+                },
+                
+                toggle(id) {
+                    if (this.active === id) {
+                        this.close();
+                    } else {
+                        this.open(id);
+                    }
+                },
+                
+                isOpen(id) {
+                    return this.active === id;
+                }
+            });
+            
+            // Create reusable Alpine component
+            Alpine.data('dropdown', (config = {}) => ({
+                open: false,
+                id: config.id || Math.random().toString(36).substr(2, 9),
+                
+                init() {
+                    // Register this dropdown
+                    AskProDropdownManager.register(this.id, this);
+                    
+                    // Set data attribute for global handler
+                    this.$el.setAttribute('data-dropdown-id', this.id);
+                    
+                    // Sync with global state
+                    this.$watch('open', value => {
+                        if (value) {
+                            AskProDropdownManager.open(this.id);
+                        } else if (AskProDropdownManager.activeDropdown === this.id) {
+                            AskProDropdownManager.closeActive();
+                        }
+                    });
+                },
+                
+                toggle() {
+                    this.open = !this.open;
+                },
+                
+                close() {
+                    this.open = false;
+                },
+                
+                destroy() {
+                    AskProDropdownManager.unregister(this.id);
+                }
+            }));
+        },
+        
+        register(id, instance) {
+            this.dropdowns.set(id, instance);
+        },
+        
+        unregister(id) {
+            this.dropdowns.delete(id);
+            if (this.activeDropdown === id) {
+                this.activeDropdown = null;
+            }
+        },
+        
+        open(id) {
+            // Close any currently open dropdown
+            if (this.activeDropdown && this.activeDropdown !== id) {
+                this.closeActive();
+            }
+            
+            this.activeDropdown = id;
+            
+            // Update Alpine store if available
+            if (window.Alpine && Alpine.store('dropdown')) {
+                Alpine.store('dropdown').active = id;
+            }
+        },
+        
+        closeActive() {
+            if (!this.activeDropdown) return;
+            
+            const instance = this.dropdowns.get(this.activeDropdown);
+            if (instance && typeof instance.close === 'function') {
+                instance.close();
+            }
+            
+            this.activeDropdown = null;
+            
+            // Update Alpine store if available
+            if (window.Alpine && Alpine.store('dropdown')) {
+                Alpine.store('dropdown').active = null;
+            }
+        },
+        
+        fixExistingDropdowns() {
+            // Fix Filament select components
+            document.querySelectorAll('.fi-fo-select').forEach(select => {
+                if (!select.hasAttribute('data-dropdown-fixed')) {
+                    select.setAttribute('data-dropdown-fixed', 'true');
+                    this.enhanceFilamentSelect(select);
+                }
+            });
+            
+            // Fix Alpine dropdowns with @click.away
+            document.querySelectorAll('[\\@click\\.away]').forEach(el => {
+                const handler = el.getAttribute('@click.away');
+                if (handler && !el.hasAttribute('data-dropdown-converted')) {
+                    el.setAttribute('data-dropdown-converted', 'true');
+                    // Alpine v3 uses @click.outside instead
+                    el.removeAttribute('@click.away');
+                    el.setAttribute('@click.outside', handler);
+                }
+            });
+        },
+        
+        enhanceFilamentSelect(selectElement) {
+            // Ensure Filament selects work properly
+            const wrapper = selectElement.closest('[x-data]');
+            if (!wrapper) return;
+            
+            // Add our dropdown ID if not present
+            if (!wrapper.hasAttribute('data-dropdown-id')) {
+                const id = 'filament-select-' + Math.random().toString(36).substr(2, 9);
+                wrapper.setAttribute('data-dropdown-id', id);
+            }
+        },
+        
+        setupMutationObserver() {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach(mutation => {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) { // Element node
+                            // Check for dropdowns in the added content
+                            if (node.matches('.fi-fo-select') || node.querySelector('.fi-fo-select')) {
+                                setTimeout(() => this.fixExistingDropdowns(), 100);
+                            }
+                        }
+                    });
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+    };
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            AskProDropdownManager.init();
+        });
+    } else {
+        AskProDropdownManager.init();
+    }
+    
+    // Re-initialize after Alpine
+    document.addEventListener('alpine:init', () => {
+        AskProDropdownManager.setupAlpineIntegration();
+    });
+    
+    // Re-fix dropdowns after Livewire updates
+    if (window.Livewire) {
+        Livewire.hook('message.processed', () => {
+            setTimeout(() => {
+                AskProDropdownManager.fixExistingDropdowns();
+            }, 100);
+        });
+    }
+    
+})();

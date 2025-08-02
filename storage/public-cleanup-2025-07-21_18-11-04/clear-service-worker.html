@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Worker Cleaner</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Service Worker Cleaner</h1>
+    <p>Clearing all service workers...</p>
+    
+    <script>
+    // Deregister all service workers
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+            registration.unregister().then(function(success) {
+                console.log('Service Worker unregistered:', registration.scope);
+            });
+        }
+    });
+    
+    // Clear all caches
+    caches.keys().then(function(names) {
+        for (let name of names) {
+            caches.delete(name);
+            console.log('Cache deleted:', name);
+        }
+    });
+    
+    // Redirect to admin after 2 seconds
+    setTimeout(function() {
+        window.location.href = '/admin';
+    }, 2000);
+    </script>
+</body>
+</html>

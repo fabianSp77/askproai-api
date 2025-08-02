@@ -834,7 +834,7 @@
                         const height = 20 + Math.random() * 30;
                         bar.style.height = `${height}px`;
                     });
-                }, 100);
+                }, 30000);
                 
             } else {
                 stopVoicePreview();
@@ -994,7 +994,7 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'ended') {
-                            updateCallStatus('Call completed', 100);
+                            updateCallStatus('Call completed', 30000);
                             clearInterval(checkStatus);
                         } else if (data.status === 'ongoing') {
                             const progress = Math.min(90, 30 + (data.duration / 3) * 60);

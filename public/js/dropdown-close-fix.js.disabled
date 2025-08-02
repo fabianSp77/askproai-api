@@ -1,0 +1,201 @@
+/**
+ * Dropdown Close Fix for Filament v3
+ * Stellt sicher, dass Dropdowns sich korrekt schließen
+ */
+
+(function() {
+    'use strict';
+    
+    console.log('[Dropdown Fix] Initializing...');
+    
+    // Track all open dropdowns
+    const openDropdowns = new Set();
+    
+    // Close all dropdowns
+    function closeAllDropdowns() {
+        openDropdowns.forEach(dropdown => {
+            if (dropdown.Alpine) {
+                // Alpine v3 way
+                dropdown.Alpine.data.open = false;
+                dropdown.Alpine.data.show = false;
+                dropdown.Alpine.data.isOpen = false;
+            }
+            
+            // Direct attribute manipulation as fallback
+            dropdown.setAttribute('x-show', 'false');
+            dropdown.style.display = 'none';
+        });
+        
+        openDropdowns.clear();
+        console.log('[Dropdown Fix] All dropdowns closed');
+    }
+    
+    // Setup global click handler
+    document.addEventListener('click', (e) => {
+        const clickedDropdown = e.target.closest('[x-data*="dropdown"], [data-dropdown]');
+        const clickedTrigger = e.target.closest('[x-on\\:click*="open"], [x-on\\:click*="toggle"], [x-on\\:click*="show"]');
+        
+        // If clicked outside any dropdown, close all
+        if (!clickedDropdown && !clickedTrigger) {
+            closeAllDropdowns();
+        }
+    }, true);
+    
+    // Escape key handler
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeAllDropdowns();
+        }
+    });
+    
+    // Fix Alpine dropdowns after initialization
+    document.addEventListener('alpine:initialized', () => {
+        console.log('[Dropdown Fix] Fixing Alpine dropdowns...');
+        
+        // Override Alpine dropdown behavior
+        Alpine.directive('dropdown', (el, { expression }, { Alpine: AlpineInstance }) => {
+            const data = AlpineInstance.reactive({
+                open: false,
+                toggle() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        openDropdowns.add(el);
+                    } else {
+                        openDropdowns.delete(el);
+                    }
+                },
+                close() {
+                    this.open = false;
+                    openDropdowns.delete(el);
+                }
+            });
+            
+            // Make data available on element
+            el.Alpine = { data };
+            
+            // Click outside handler
+            const clickOutsideHandler = (e) => {
+                if (!el.contains(e.target)) {
+                    data.close();
+                }
+            };
+            
+            // Add/remove listener based on state
+            AlpineInstance.effect(() => {
+                if (data.open) {
+                    setTimeout(() => {
+                        document.addEventListener('click', clickOutsideHandler);
+                    }, 0);
+                } else {
+                    document.removeEventListener('click', clickOutsideHandler);
+                }
+            });
+            
+            // Cleanup
+            AlpineInstance.cleanup(() => {
+                document.removeEventListener('click', clickOutsideHandler);
+                openDropdowns.delete(el);
+            });
+            
+            return data;
+        });
+    });
+    
+    // Monitor for dynamically added dropdowns
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1) { // Element node
+                    // Find dropdowns in added content
+                    const dropdowns = node.querySelectorAll?.('[x-show], .fi-dropdown-panel');
+                    dropdowns?.forEach(dropdown => {
+                        // Ensure dropdown is hidden by default
+                        if (!dropdown.hasAttribute('data-dropdown-fixed')) {
+                            dropdown.setAttribute('data-dropdown-fixed', 'true');
+                            
+                            // Hide if not explicitly shown
+                            const shouldShow = dropdown.getAttribute('x-show');
+                            if (!shouldShow || shouldShow === 'false' || shouldShow === 'open' || shouldShow === 'show') {
+                                dropdown.style.display = 'none';
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    });
+    
+    // Start observing when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    } else {
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+    
+    // Livewire integration
+    if (window.Livewire) {
+        Livewire.hook('message.processed', () => {
+            // Close dropdowns after Livewire update
+            setTimeout(() => {
+                document.querySelectorAll('.fi-dropdown-panel:not([x-show="true"])').forEach(dropdown => {
+                    dropdown.style.display = 'none';
+                });
+            }, 100);
+        });
+    }
+    
+    // Fix Filament specific dropdowns
+    function fixFilamentDropdowns() {
+        // User menu dropdown
+        const userMenu = document.querySelector('[x-data*="userMenuDropdown"]');
+        if (userMenu && !userMenu.hasAttribute('data-fixed')) {
+            userMenu.setAttribute('data-fixed', 'true');
+            
+            const trigger = userMenu.querySelector('button');
+            const panel = userMenu.querySelector('.fi-dropdown-panel');
+            
+            if (trigger && panel) {
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = panel.style.display !== 'none';
+                    
+                    // Close all other dropdowns
+                    closeAllDropdowns();
+                    
+                    // Toggle this dropdown
+                    if (!isOpen) {
+                        panel.style.display = 'block';
+                        openDropdowns.add(panel);
+                    }
+                });
+            }
+        }
+        
+        // Table filter dropdowns
+        document.querySelectorAll('.fi-ta-filters-dropdown').forEach(dropdown => {
+            if (!dropdown.hasAttribute('data-fixed')) {
+                dropdown.setAttribute('data-fixed', 'true');
+                
+                const trigger = dropdown.querySelector('[x-on\\:click]');
+                if (trigger) {
+                    trigger.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                }
+            }
+        });
+    }
+    
+    // Run fixes periodically to catch dynamic content
+    setInterval(fixFilamentDropdowns, 1000);
+    
+    console.log('[Dropdown Fix] Initialized successfully');
+})();

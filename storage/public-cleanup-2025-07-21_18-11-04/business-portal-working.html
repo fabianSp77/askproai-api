@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="<?php echo csrf_token(); ?>">
+    <title>AskProAI - Business Portal (Working Version)</title>
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+        }
+        .loading-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1890ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            color: #666;
+            font-size: 16px;
+            text-align: center;
+        }
+        .error {
+            color: #ff4d4f;
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px;
+            max-width: 500px;
+        }
+        .success {
+            color: #52c41a;
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <div id="status" class="status">Lade Business Portal...</div>
+    </div>
+    
+    <div id="app" style="display: none;"></div>
+    
+    <script>
+        // Immediate auth bridge setup
+        (function() {
+            console.log('🔧 Business Portal Auth Bridge aktiviert');
+            
+            // Get PHP session data if available
+            const phpSessionId = '<?php echo session()->getId() ?? ""; ?>';
+            const phpUserId = <?php echo \Illuminate\Support\Facades\Auth::guard('portal')->id() ?? 'null'; ?>;
+            
+            if (phpUserId) {
+                console.log('✅ PHP Session gefunden:', { sessionId: phpSessionId, userId: phpUserId });
+                
+                // Bridge to React
+                const userData = {
+                    id: phpUserId,
+                    email: '<?php echo \Illuminate\Support\Facades\Auth::guard('portal')->user()->email ?? ""; ?>',
+                    name: '<?php echo \Illuminate\Support\Facades\Auth::guard('portal')->user()->name ?? "User"; ?>',
+                    company_id: <?php echo \Illuminate\Support\Facades\Auth::guard('portal')->user()->company_id ?? 1; ?>
+                };
+                
+                localStorage.setItem('portal_user', JSON.stringify(userData));
+                localStorage.setItem('portal_session_id', phpSessionId);
+                localStorage.setItem('auth_token', 'php-session-' + phpSessionId);
+                
+                document.getElementById('status').innerHTML = '✅ Auth Bridge aktiv - Lade Dashboard...';
+            } else {
+                // Fallback to demo mode
+                console.log('⚠️ Keine PHP Session - Aktiviere Demo Mode');
+                
+                localStorage.setItem('demo_mode', 'true');
+                window.__DEMO_MODE__ = true;
+                
+                const demoUser = {
+                    id: 1,
+                    name: 'Demo User',
+                    email: 'demo@askproai.de',
+                    company_id: 1,
+                    role: 'user'
+                };
+                
+                localStorage.setItem('portal_user', JSON.stringify(demoUser));
+                localStorage.setItem('auth_token', 'demo-' + Date.now());
+                
+                document.getElementById('status').innerHTML = '🎯 Demo Mode aktiv - Lade Dashboard...';
+            }
+            
+            // Override window.location to prevent login redirects
+            const originalLocation = window.location;
+            let redirectBlocked = false;
+            
+            Object.defineProperty(window, 'location', {
+                get: function() {
+                    return {
+                        ...originalLocation,
+                        href: originalLocation.href,
+                        pathname: originalLocation.pathname,
+                        assign: function(url) {
+                            if (url.includes('/login') && !redirectBlocked) {
+                                console.warn('🛑 Login redirect blockiert:', url);
+                                redirectBlocked = true;
+                                document.getElementById('status').classList.add('error');
+                                document.getElementById('status').innerHTML = `
+                                    ❌ React Auth fehlgeschlagen<br>
+                                    <a href="/fix-react-auth-bridge.php" style="color: #1890ff;">
+                                        🔧 Auth Bridge verwenden
+                                    </a> oder
+                                    <a href="/emergency-dashboard.html" style="color: #1890ff;">
+                                        🚨 Emergency Dashboard
+                                    </a>
+                                `;
+                                return;
+                            }
+                            originalLocation.assign(url);
+                        }
+                    };
+                },
+                set: function(value) {
+                    if (!String(value).includes('/login')) {
+                        originalLocation.href = value;
+                    }
+                }
+            });
+            
+            // Load React app after setup
+            setTimeout(() => {
+                console.log('🚀 Lade React App...');
+                
+                // Create React mount point
+                const app = document.getElementById('app');
+                app.style.display = 'block';
+                app.setAttribute('data-auth', JSON.stringify({
+                    user: JSON.parse(localStorage.getItem('portal_user')),
+                    isAdminViewing: false
+                }));
+                app.setAttribute('data-csrf', '<?php echo csrf_token(); ?>');
+                app.setAttribute('data-api-url', '/api');
+                
+                // Hide loading
+                document.querySelector('.loading-container').style.display = 'none';
+                
+                // Load React scripts
+                const reactScript = document.createElement('script');
+                reactScript.src = '/build/assets/PortalApp.jsx';
+                reactScript.type = 'module';
+                document.body.appendChild(reactScript);
+                
+                // Load React styles
+                const reactStyles = document.createElement('link');
+                reactStyles.rel = 'stylesheet';
+                reactStyles.href = '/build/assets/app.css';
+                document.head.appendChild(reactStyles);
+                
+            }, 1000);
+        })();
+    </script>
+    
+    <!-- React will be loaded here dynamically -->
+</body>
+</html>

@@ -1,0 +1,130 @@
+/* Critical CSS - Inline for fastest initial render */
+/* Contains only the most essential styles for above-the-fold content */
+
+/* Reset and Base */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -moz-tab-size: 4;
+    tab-size: 4;
+}
+
+body {
+    margin: 0;
+    font-family: inherit;
+    line-height: inherit;
+    color: #374151;
+    background-color: #f3f4f6;
+}
+
+/* Loading State */
+.app-loading {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f3f4f6;
+}
+
+.app-loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Basic Layout Structure */
+.min-h-screen {
+    min-height: 100vh;
+}
+
+.flex {
+    display: flex;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+/* Hide elements until styles load */
+.js-enabled .no-js {
+    display: none;
+}
+
+/* Prevent FOUC (Flash of Unstyled Content) */
+.filament-body {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.filament-body.loaded {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Critical Typography */
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-weight: inherit;
+}
+
+p {
+    margin: 0;
+}
+
+/* Critical Form Elements */
+button, input, optgroup, select, textarea {
+    font-family: inherit;
+    font-size: 100%;
+    font-weight: inherit;
+    line-height: inherit;
+    color: inherit;
+    margin: 0;
+    padding: 0;
+}
+
+/* Prevent layout shift from images */
+img, video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Mobile Viewport Fix */
+@media (max-width: 640px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    body {
+        color: #e5e7eb;
+        background-color: #111827;
+    }
+    
+    .app-loading {
+        background-color: #111827;
+    }
+    
+    .app-loading-spinner {
+        border-color: #374151;
+        border-top-color: #60a5fa;
+    }
+}

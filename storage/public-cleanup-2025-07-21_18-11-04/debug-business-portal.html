@@ -1,0 +1,140 @@
+<\!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .log { margin: 5px 0; padding: 5px; background: #000; border: 1px solid #0f0; }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        .info { color: #ff0; }
+        #controls { margin-bottom: 20px; }
+        button { padding: 10px 20px; margin-right: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Business Portal Debug Tool</h1>
+    
+    <div id="controls">
+        <button onclick="testAuth()">Test Auth Status</button>
+        <button onclick="testSession()">Test Session</button>
+        <button onclick="testAPI()">Test API Call</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+    
+    <div id="logs"></div>
+    
+    <script>
+        const logs = document.getElementById('logs');
+        
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log ${type}`;
+            entry.textContent = `[${new Date().toISOString()}] ${message}`;
+            logs.insertBefore(entry, logs.firstChild);
+        }
+        
+        async function testAuth() {
+            log('Testing authentication status...', 'info');
+            
+            try {
+                // Check Laravel session
+                const sessionResponse = await fetch('/business/api/user', {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                log(`Session check response: ${sessionResponse.status} ${sessionResponse.statusText}`);
+                
+                if (sessionResponse.ok) {
+                    const userData = await sessionResponse.json();
+                    log(`User authenticated: ${JSON.stringify(userData)}`, 'success');
+                } else {
+                    const text = await sessionResponse.text();
+                    log(`Auth check failed: ${text}`, 'error');
+                }
+                
+                // Check cookies
+                log('Cookies: ' + document.cookie, 'info');
+                
+                // Check localStorage
+                const localStorage_items = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    localStorage_items.push(`${key}: ${localStorage.getItem(key)}`);
+                }
+                log('LocalStorage: ' + localStorage_items.join(', '), 'info');
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSession() {
+            log('Testing PHP session...', 'info');
+            
+            try {
+                const response = await fetch('/business/api/session-debug', {
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.text();
+                log(`Session data: ${data}`, 'info');
+            } catch (error) {
+                log(`Session test error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAPI() {
+            log('Testing API endpoints...', 'info');
+            
+            const endpoints = [
+                '/business/api/user',
+                '/business/api/dashboard',
+                '/api/user',
+                '/sanctum/csrf-cookie'
+            ];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, {
+                        credentials: 'same-origin',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    log(`${endpoint}: ${response.status} ${response.statusText}`, 
+                        response.ok ? 'success' : 'error');
+                    
+                    if (response.status === 419) {
+                        log('CSRF Token missing or invalid\!', 'error');
+                    }
+                } catch (error) {
+                    log(`${endpoint}: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        function clearLogs() {
+            logs.innerHTML = '';
+            log('Logs cleared', 'info');
+        }
+        
+        // Auto-run auth test on load
+        window.onload = () => {
+            log('Debug tool loaded', 'success');
+            testAuth();
+        };
+        
+        // Intercept navigation
+        window.addEventListener('beforeunload', (event) => {
+            log('Page is about to redirect\!', 'error');
+        });
+    </script>
+</body>
+</html>

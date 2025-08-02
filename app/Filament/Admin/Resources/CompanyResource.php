@@ -19,7 +19,12 @@ use Filament\Tables\Table;
 
 class CompanyResource extends Resource
 {
-    protected static ?string $navigationGroup = 'Unternehmensstruktur';
+    protected static ?string $navigationGroup = null;
+    
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.system');
+    }
 
     protected static ?int $navigationSort = 10;
 
@@ -104,7 +109,12 @@ class CompanyResource extends Resource
 
     protected static ?string $model = Company::class;
 
-    protected static ?string $navigationLabel = 'Unternehmen';
+    protected static ?string $navigationLabel = null;
+    
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.resources.companies');
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 

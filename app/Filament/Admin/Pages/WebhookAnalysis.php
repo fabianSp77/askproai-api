@@ -20,7 +20,8 @@ class WebhookAnalysis extends Page
     public function mount(): void
     {
         // Check permissions
-        if (! auth()->user()?->hasRole('super_admin')) {
+        $user = auth()->user();
+        if (!$user || (!$user->hasRole('super_admin') && !$user->hasRole('Super Admin') && !$user->hasRole('admin'))) {
             abort(403);
         }
     }

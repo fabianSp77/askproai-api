@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Operations Center Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .status { 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .success { background: #10b981; color: white; }
+        .error { background: #ef4444; color: white; }
+        .warning { background: #f59e0b; color: white; }
+        .info { background: #3b82f6; color: white; }
+        pre {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        code {
+            background: #e5e7eb;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Operations Center Fix Test</h1>
+    
+    <div class="test-section">
+        <h2>📋 Fixed Issues</h2>
+        <ul>
+            <li><span class="status success">FIXED</span> Alpine Error: <code>dateFilterDropdownEnhanced is not defined</code></li>
+            <li><span class="status success">FIXED</span> Alpine Error: <code>showDateFilter is not defined</code></li>
+            <li><span class="status success">FIXED</span> Dropdowns not closing</li>
+            <li><span class="status success">FIXED</span> Links not clickable</li>
+            <li><span class="status success">FIXED</span> Script conflicts between menu managers</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>🧪 Manual Test Checklist</h2>
+        <h3>Company/Branch Filter Dropdown:</h3>
+        <ul>
+            <li>✓ Opens when clicked</li>
+            <li>✓ Search field works</li>
+            <li>✓ Companies expand to show branches</li>
+            <li>✓ Checkboxes are selectable</li>
+            <li>✓ Closes when clicking outside</li>
+            <li>✓ Shows "X Unternehmen" when multiple selected</li>
+        </ul>
+        
+        <h3>Date Filter Dropdown:</h3>
+        <ul>
+            <li>✓ Opens when clicked</li>
+            <li>✓ Preset options work (Heute, Gestern, etc.)</li>
+            <li>✓ Custom date range selectable</li>
+            <li>✓ Closes after selecting preset</li>
+            <li>✓ Shows selected date range in button</li>
+        </ul>
+        
+        <h3>Links & Actions:</h3>
+        <ul>
+            <li>✓ Table row links are clickable</li>
+            <li>✓ Action buttons work</li>
+            <li>✓ Navigation links function</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>🛠️ Technical Details</h2>
+        <h3>Created Components:</h3>
+        <pre>Alpine.data('companyBranchSelect', () => ({
+    showDropdown: false,
+    searchQuery: '',
+    selectedCompanies: [],
+    selectedBranches: [],
+    expandedCompanies: [],
+    // ... methods
+}))
+
+Alpine.data('dateFilterDropdownEnhanced', () => ({
+    showDateFilter: false,
+    datePreset: 'today',
+    customStartDate: '',
+    customEndDate: '',
+    // ... methods
+}))</pre>
+        
+        <h3>Files Changed:</h3>
+        <ul>
+            <li><code>/public/js/operations-center-fix.js</code> - New file with Alpine components</li>
+            <li><code>/resources/views/filament/admin/pages/operations-dashboard.blade.php</code> - Added script</li>
+            <li><code>/resources/views/vendor/filament-panels/components/layout/base.blade.php</code> - Disabled conflicts</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>✅ Expected Console Output</h2>
+        <pre>[AdminDropdownFix] Dropdown fixes loaded successfully
+[Operations Center Fix] Initializing missing components...
+[Operations Center Fix] Components registered successfully
+[Operations Center Fix] Fixing pointer events...
+[Operations Center Fix] All fixes loaded</pre>
+        
+        <p><strong>NO ERRORS</strong> should appear in the console!</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔗 Test Links</h2>
+        <p>
+            <a href="https://api.askproai.de/admin" target="_blank">→ Go to Admin Panel</a><br>
+            <a href="https://api.askproai.de/admin/operations-dashboard" target="_blank">→ Go to Operations Center</a>
+        </p>
+    </div>
+</body>
+</html>

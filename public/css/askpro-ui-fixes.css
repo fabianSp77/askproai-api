@@ -1,0 +1,88 @@
+/**
+ * AskProAI UI Fixes
+ * Clean, minimal CSS fixes for UI issues
+ */
+
+/* Icon size normalization */
+.fi-icon svg,
+.fi-sidebar-item-icon svg,
+.fi-ta-icon svg,
+.fi-btn svg:not(.fi-btn-icon),
+.fi-link-icon svg,
+.fi-badge svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Smaller icons for inline elements */
+.fi-ta-text-item-icon svg,
+.fi-fo-field-wrp-label svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Preserve logo size */
+.fi-logo svg {
+    width: auto;
+    height: auto;
+}
+
+/* Remove duplicate logos in mobile */
+@media (min-width: 1024px) {
+    .fi-topbar .fi-logo {
+        display: none;
+    }
+}
+
+/* Fix layout spacing */
+.fi-main-ctn {
+    margin-top: 0;
+}
+
+.fi-topbar + .fi-main-ctn {
+    margin-top: 4rem;
+}
+
+@media (min-width: 1024px) {
+    .fi-main-ctn {
+        margin-left: var(--sidebar-width, 16rem);
+    }
+}
+
+/* Table responsiveness */
+.fi-ta-table-wrp {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1023px) {
+    .fi-ta-table {
+        min-width: 800px;
+    }
+}
+
+/* Form component enhancements */
+.fi-fo-select [x-ref="trigger"],
+.fi-fo-date-time-picker input,
+.fi-fo-toggle button {
+    cursor: pointer;
+}
+
+/* Modal z-index */
+.fi-modal {
+    z-index: 9999;
+}
+
+.fi-modal-backdrop {
+    z-index: 9998;
+}
+
+.fi-no-notification {
+    z-index: 10000;
+}
+
+/* Remove any overlay issues */
+body.fi-sidebar-open::before,
+body.fi-sidebar-open::after {
+    display: none;
+}

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Login Test - Working Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .user-info h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .user-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .debug-info {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+        
+        code {
+            background: #e9ecef;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .token-display {
+            word-break: break-all;
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 API Login Test</h1>
+        
+        <div id="message-box" class="hidden"></div>
+        
+        <div id="login-form">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required value="demo@askproai.de">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required value="demo123">
+                </div>
+                
+                <button type="submit" id="loginBtn">Login</button>
+            </form>
+        </div>
+        
+        <div id="user-info" class="user-info hidden">
+            <h2>✅ Authenticated Successfully</h2>
+            <p><strong>Name:</strong> <span id="userName"></span></p>
+            <p><strong>Email:</strong> <span id="userEmail"></span></p>
+            <p><strong>Company ID:</strong> <span id="userCompany"></span></p>
+            <p><strong>Role:</strong> <span id="userRole"></span></p>
+            <p><strong>Token:</strong></p>
+            <div class="token-display" id="tokenDisplay"></div>
+            <button onclick="testAuthenticatedRequest()">Test Authenticated Request</button>
+            <button onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="debug-info">
+            <h3>Debug Information</h3>
+            <p>Token stored: <span id="tokenStatus">No</span></p>
+            <p>API URL: <code>https://api.askproai.de/api/auth/portal/login</code></p>
+            <p>Test Credentials: <code>demo@askproai.de / demo123</code></p>
+        </div>
+    </div>
+    
+    <script>
+        let authToken = null;
+        
+        function showMessage(type, text) {
+            const box = document.getElementById('message-box');
+            box.className = 'message ' + type;
+            box.textContent = text;
+            box.classList.remove('hidden');
+            
+            if (type === 'success') {
+                setTimeout(() => box.classList.add('hidden'), 5000);
+            }
+        }
+        
+        function updateTokenStatus() {
+            const stored = localStorage.getItem('auth_token');
+            document.getElementById('tokenStatus').textContent = stored ? 'Yes' : 'No';
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
+            
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+            
+            try {
+                const response = await fetch('https://api.askproai.de/api/auth/portal/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        device_name: 'web'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.requires_2fa) {
+                        showMessage('info', '2FA required - not implemented in this test');
+                        return;
+                    }
+                    
+                    // Store token
+                    authToken = data.token;
+                    localStorage.setItem('auth_token', authToken);
+                    updateTokenStatus();
+                    
+                    // Show user info
+                    document.getElementById('userName').textContent = data.user.name || 'N/A';
+                    document.getElementById('userEmail').textContent = data.user.email;
+                    document.getElementById('userCompany').textContent = data.user.company_id;
+                    document.getElementById('userRole').textContent = data.user.role;
+                    document.getElementById('tokenDisplay').textContent = authToken.substring(0, 50) + '...';
+                    
+                    document.getElementById('login-form').classList.add('hidden');
+                    document.getElementById('user-info').classList.remove('hidden');
+                    
+                    showMessage('success', 'Login successful!');
+                } else {
+                    const errorMsg = data.errors?.email?.[0] || data.message || 'Login failed';
+                    showMessage('error', errorMsg);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showMessage('error', 'Network error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Login';
+            }
+        });
+        
+        async function testAuthenticatedRequest() {
+            if (!authToken) {
+                showMessage('error', 'No auth token');
+                return;
+            }
+            
+            try {
+                const response = await fetch('https://api.askproai.de/api/auth/user', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('success', 'Authenticated request successful! User: ' + data.user.email);
+                } else {
+                    showMessage('error', 'Auth check failed: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                showMessage('error', 'Request failed: ' + error.message);
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('auth_token');
+            authToken = null;
+            updateTokenStatus();
+            
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+            
+            showMessage('info', 'Logged out');
+        }
+        
+        // Check for stored token on load
+        updateTokenStatus();
+        const storedToken = localStorage.getItem('auth_token');
+        if (storedToken) {
+            authToken = storedToken;
+            testAuthenticatedRequest();
+        }
+    </script>
+</body>
+</html>

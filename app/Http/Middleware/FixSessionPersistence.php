@@ -11,22 +11,22 @@ class FixSessionPersistence
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param Closure(Request): (Response) $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         // Ensure session is started
-        if (!$request->hasSession() || !$request->session()->isStarted()) {
+        if (! $request->hasSession() || ! $request->session()->isStarted()) {
             $request->session()->start();
         }
-        
+
         $response = $next($request);
-        
+
         // Force session to save
         if ($request->hasSession() && $request->session()->isStarted()) {
             $request->session()->save();
         }
-        
+
         return $response;
     }
 }

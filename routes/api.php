@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CircuitBreakerHealthController;
+use App\Http\Controllers\Api\CsrfController;
 use App\Http\Controllers\Api\DocumentationDataController;
 use App\Http\Controllers\Api\GitHubWebhookController;
 use App\Http\Controllers\Api\HealthController;
@@ -28,21 +29,28 @@ use Illuminate\Support\Facades\Route;
 // Health Check Routes (public)
 Route::get('/health', [HealthCheckController::class, 'health']);
 Route::get('/health-check', [HealthCheckController::class, 'health']);
+
+// CSRF Token Route (public)
+Route::get('/csrf-token', [CsrfController::class, 'token']);
 Route::get('/health/detailed', [HealthCheckController::class, 'detailed']);
 
 // Authentication Routes
 Route::prefix('auth')->group(function () {
-    // Admin authentication
-    Route::post('/admin/login', [App\Http\Controllers\Api\AuthController::class, 'adminLogin']);
+    // Admin authentication - with rate limiting
+    Route::post('/admin/login', [App\Http\Controllers\Api\AuthController::class, 'adminLogin'])
+        ->middleware('auth.rate.limit');
 
-    // Business portal authentication
-    Route::post('/portal/login', [App\Http\Controllers\Api\AuthController::class, 'portalLogin']);
+    // Business portal authentication - with rate limiting
+    Route::post('/portal/login', [App\Http\Controllers\Api\AuthController::class, 'portalLogin'])
+        ->middleware('auth.rate.limit');
 
-    // Customer authentication
-    Route::post('/customer/login', [App\Http\Controllers\Api\AuthController::class, 'customerLogin']);
+    // Customer authentication - with rate limiting
+    Route::post('/customer/login', [App\Http\Controllers\Api\AuthController::class, 'customerLogin'])
+        ->middleware('auth.rate.limit');
 
-    // 2FA verification
-    Route::post('/verify-2fa', [App\Http\Controllers\Api\AuthController::class, 'verify2FA']);
+    // 2FA verification - with rate limiting
+    Route::post('/verify-2fa', [App\Http\Controllers\Api\AuthController::class, 'verify2FA'])
+        ->middleware('auth.rate.limit');
 
     // Protected routes requiring authentication
     Route::middleware('auth:sanctum')->group(function () {
@@ -50,6 +58,40 @@ Route::prefix('auth')->group(function () {
         Route::post('/logout', [App\Http\Controllers\Api\AuthController::class, 'logout']);
         Route::post('/refresh', [App\Http\Controllers\Api\AuthController::class, 'refresh']);
     });
+});
+
+// Session Management Routes (Enhanced UX)
+Route::prefix('session')->middleware(['web', 'auth'])->group(function () {
+    Route::get('/status', [App\Http\Controllers\Api\SessionStatusController::class, 'status']);
+    Route::post('/extend', [App\Http\Controllers\Api\SessionStatusController::class, 'extend']);
+    Route::get('/activity', [App\Http\Controllers\Api\SessionStatusController::class, 'activity']);
+    Route::post('/logout', [App\Http\Controllers\Api\SessionStatusController::class, 'logout']);
+    Route::get('/reminders', [App\Http\Controllers\Api\SessionStatusController::class, 'securityReminders']);
+});
+
+// Tenant/Company Switching (Enhanced UX)
+Route::prefix('tenant')->middleware(['web', 'auth'])->group(function () {
+    Route::post('/switch', [App\Http\Controllers\Api\TenantSwitchController::class, 'switch']);
+    Route::get('/available', [App\Http\Controllers\Api\TenantSwitchController::class, 'available']);
+    Route::get('/current', [App\Http\Controllers\Api\TenantSwitchController::class, 'current']);
+});
+
+// Two-Factor Authentication (Enhanced UX)
+Route::prefix('2fa')->middleware(['web', 'auth'])->group(function () {
+    Route::post('/enable', [App\Http\Controllers\Api\TwoFactorController::class, 'enable']);
+    Route::post('/validate', [App\Http\Controllers\Api\TwoFactorController::class, 'validate']);
+    Route::post('/disable', [App\Http\Controllers\Api\TwoFactorController::class, 'disable']);
+    Route::get('/qr-code', [App\Http\Controllers\Api\TwoFactorController::class, 'qrCode']);
+    Route::get('/backup-codes', [App\Http\Controllers\Api\TwoFactorController::class, 'backupCodes']);
+});
+
+// Security Score API
+Route::prefix('security')->middleware(['web', 'auth'])->group(function () {
+    Route::get('/score', [App\Http\Controllers\Api\SecurityScoreController::class, 'getScore']);
+    Route::post('/score/update', [App\Http\Controllers\Api\SecurityScoreController::class, 'updateScore']);
+    Route::get('/improvements', [App\Http\Controllers\Api\SecurityScoreController::class, 'getImprovements']);
+    Route::get('/tips', [App\Http\Controllers\Api\SecurityScoreController::class, 'getTips']);
+    Route::post('/event', [App\Http\Controllers\Api\SecurityScoreController::class, 'logSecurityEvent']);
 });
 
 // Admin API Routes (React Admin Portal)
@@ -867,4 +909,47 @@ Route::prefix('v2/portal')->group(function () {
         Route::get('/appointments', [PortalController::class, 'appointments']);
         Route::get('/calls', [PortalController::class, 'calls']);
     });
+});
+
+// Analytics API Routes
+Route::prefix('analytics')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/metrics', [App\Http\Controllers\Api\AnalyticsApiController::class, 'metrics']);
+    Route::get('/predict-revenue', [App\Http\Controllers\Api\AnalyticsApiController::class, 'predictRevenue']);
+    Route::get('/predict-demand', [App\Http\Controllers\Api\AnalyticsApiController::class, 'predictDemand']);
+    Route::get('/customer-behavior', [App\Http\Controllers\Api\AnalyticsApiController::class, 'customerBehavior']);
+    Route::get('/insights', [App\Http\Controllers\Api\AnalyticsApiController::class, 'insights']);
+    Route::get('/anomalies', [App\Http\Controllers\Api\AnalyticsApiController::class, 'anomalies']);
+    Route::post('/optimize-schedule', [App\Http\Controllers\Api\AnalyticsApiController::class, 'optimizeSchedule']);
+    Route::post('/report', [App\Http\Controllers\Api\AnalyticsApiController::class, 'generateReport']);
+    Route::get('/realtime', [App\Http\Controllers\Api\AnalyticsApiController::class, 'realtime']);
+    Route::post('/export', [App\Http\Controllers\Api\AnalyticsApiController::class, 'export']);
+});
+
+// Events API Routes
+Route::prefix('events')->middleware(['auth:sanctum'])->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\EventsApiController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\EventsApiController::class, 'store']);
+    Route::get('/{event}', [App\Http\Controllers\Api\EventsApiController::class, 'show']);
+    Route::put('/{event}', [App\Http\Controllers\Api\EventsApiController::class, 'update']);
+    Route::delete('/{event}', [App\Http\Controllers\Api\EventsApiController::class, 'destroy']);
+    Route::post('/dispatch', [App\Http\Controllers\Api\EventsApiController::class, 'dispatch']);
+    Route::get('/timeline', [App\Http\Controllers\Api\EventsApiController::class, 'timeline']);
+    Route::post('/replay', [App\Http\Controllers\Api\EventsApiController::class, 'replay']);
+    Route::get('/webhooks', [App\Http\Controllers\Api\EventsApiController::class, 'webhooks']);
+    Route::post('/webhooks', [App\Http\Controllers\Api\EventsApiController::class, 'createWebhook']);
+    Route::delete('/webhooks/{webhook}', [App\Http\Controllers\Api\EventsApiController::class, 'deleteWebhook']);
+});
+
+// Monitoring API Routes (Super Admin only)
+Route::prefix('monitoring')->middleware(['auth:sanctum', 'can:viewSystemMonitoring'])->group(function () {
+    Route::get('/health', [App\Http\Controllers\Api\MonitoringApiController::class, 'health']);
+    Route::get('/metrics', [App\Http\Controllers\Api\MonitoringApiController::class, 'metrics']);
+    Route::get('/api-endpoints', [App\Http\Controllers\Api\MonitoringApiController::class, 'apiEndpoints']);
+    Route::get('/errors', [App\Http\Controllers\Api\MonitoringApiController::class, 'errors']);
+    Route::get('/database', [App\Http\Controllers\Api\MonitoringApiController::class, 'database']);
+    Route::get('/queues', [App\Http\Controllers\Api\MonitoringApiController::class, 'queues']);
+    Route::post('/alerts', [App\Http\Controllers\Api\MonitoringApiController::class, 'createAlert']);
+    Route::post('/report', [App\Http\Controllers\Api\MonitoringApiController::class, 'generateReport']);
+    Route::get('/realtime', [App\Http\Controllers\Api\MonitoringApiController::class, 'realtime']);
+    Route::post('/test-alert', [App\Http\Controllers\Api\MonitoringApiController::class, 'testAlert']);
 });

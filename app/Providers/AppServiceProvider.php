@@ -35,9 +35,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Cal.com Migration Service (handles V1 to V2 migration)
         $this->app->singleton(\App\Services\CalcomMigrationService::class, function ($app) {
+            // Create V1 service directly (uses backwards compatibility)
+            $v1Service = new \App\Services\CalcomService();
+            
+            // Get V2 service from container
+            $v2Service = $app->make(\App\Services\CalcomV2Service::class);
+            
             return new \App\Services\CalcomMigrationService(
-                $app->make(\App\Services\CalcomV2Service::class),
-                $app->make(\App\Services\CalcomV2Service::class)
+                $v1Service,
+                $v2Service
             );
         });
 
@@ -140,11 +146,30 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(Router $router): void
     {
+        // CRITICAL: Set company context for authenticated users
+        $this->app->booted(function () {
+            if (request() && !app()->runningInConsole()) {
+                if (auth()->check() && auth()->user() && auth()->user()->company_id) {
+                    app()->instance('current_company_id', auth()->user()->company_id);
+                    app()->instance('company_context_source', 'web_auth');
+                }
+            }
+        });
+        
         /* Alias **jedes Mal** beim Booten registrieren */
         $router->aliasMiddleware(
             'calcom.signature',
             \App\Http\Middleware\VerifyCalcomSignature::class
         );
+        
+        // Override Filament's LoginResponse to fix session persistence
+        $this->app->bind(
+            \Filament\Http\Responses\Auth\Contracts\LoginResponse::class,
+            \App\Http\Responses\Auth\CustomLoginResponse::class
+        );
+        
+        // Fix session cookie parameters
+        // REMOVED - ini_set() cannot be called after session starts
 
         // Setze die Locale auf Deutsch
         App::setLocale('de');
@@ -157,6 +182,27 @@ class AppServiceProvider extends ServiceProvider
 
         // Zeitzone für Deutschland setzen
         date_default_timezone_set('Europe/Berlin');
+
+        // Globale Filament-Konfiguration für deutsches Datumsformat
+        \Filament\Forms\Components\DatePicker::configureUsing(function (\Filament\Forms\Components\DatePicker $datePicker) {
+            return $datePicker
+                ->format('d.m.Y')
+                ->displayFormat('DD.MM.YYYY')
+                ->timezone('Europe/Berlin');
+        });
+
+        \Filament\Forms\Components\DateTimePicker::configureUsing(function (\Filament\Forms\Components\DateTimePicker $dateTimePicker) {
+            return $dateTimePicker
+                ->format('d.m.Y H:i')
+                ->displayFormat('DD.MM.YYYY HH:mm')
+                ->timezone('Europe/Berlin');
+        });
+
+        // Globale Table-Konfiguration für deutsches Datumsformat
+        \Filament\Tables\Columns\TextColumn::configureUsing(function (\Filament\Tables\Columns\TextColumn $column) {
+            // Nur für Datums-Spalten das Format setzen
+            return $column;
+        });
 
         // Initialize Security Layer - DISABLED due to infinite loop
         // if (!app()->runningInConsole() || app()->runningUnitTests()) {

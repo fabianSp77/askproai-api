@@ -48,6 +48,8 @@ const { useBreakpoint } = Grid;
 
 function PortalApp({ initialAuth, csrfToken }) {
     const [collapsed, setCollapsed] = useState(false);
+    const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+    const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
     
     // Check for auth override or localStorage user
     const getInitialUser = () => {

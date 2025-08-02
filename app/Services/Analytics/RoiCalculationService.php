@@ -63,30 +63,33 @@ class RoiCalculationService
     }
     
     /**
-     * Get aggregated ROI for all branches
+     * Get aggregated ROI for all branches - optimized for memory efficiency
      */
     public function getCompanyWideRoi(Company $company, Carbon $startDate, Carbon $endDate): array
     {
-        $branches = $company->branches()->get();
+        // Get company total first
         $companyTotal = $this->calculateRoi($company, $startDate, $endDate);
         
+        // Process branches in chunks to avoid memory issues
         $branchBreakdown = [];
-        foreach ($branches as $branch) {
-            $branchRoi = $this->calculateRoi($company, $startDate, $endDate, $branch);
-            $branchBreakdown[] = [
-                'branch_id' => $branch->id,
-                'branch_name' => $branch->name,
-                'roi_percentage' => $branchRoi['summary']['roi_percentage'],
-                'revenue' => $branchRoi['summary']['total_revenue'],
-                'costs' => $branchRoi['summary']['total_costs'],
-                'profit' => $branchRoi['summary']['net_profit'],
-                'calls' => $branchRoi['call_metrics']['total_calls'] ?? 0,
-                'bookings' => $branchRoi['appointment_metrics']['total_appointments'] ?? 0,
-                'conversion_rate' => $branchRoi['call_metrics']['total_calls'] > 0 
-                    ? round(($branchRoi['call_metrics']['calls_with_bookings'] / $branchRoi['call_metrics']['total_calls']) * 100, 2)
-                    : 0,
-            ];
-        }
+        $company->branches()->chunk(10, function ($branches) use ($company, $startDate, $endDate, &$branchBreakdown) {
+            foreach ($branches as $branch) {
+                $branchRoi = $this->calculateRoi($company, $startDate, $endDate, $branch);
+                $branchBreakdown[] = [
+                    'branch_id' => $branch->id,
+                    'branch_name' => $branch->name,
+                    'roi_percentage' => $branchRoi['summary']['roi_percentage'],
+                    'revenue' => $branchRoi['summary']['total_revenue'],
+                    'costs' => $branchRoi['summary']['total_costs'],
+                    'profit' => $branchRoi['summary']['net_profit'],
+                    'calls' => $branchRoi['call_metrics']['total_calls'] ?? 0,
+                    'bookings' => $branchRoi['appointment_metrics']['total_appointments'] ?? 0,
+                    'conversion_rate' => $branchRoi['call_metrics']['total_calls'] > 0 
+                        ? round(($branchRoi['call_metrics']['calls_with_bookings'] / $branchRoi['call_metrics']['total_calls']) * 100, 2)
+                        : 0,
+                ];
+            }
+        });
         
         // Sort branches by ROI
         usort($branchBreakdown, fn($a, $b) => $b['roi_percentage'] <=> $a['roi_percentage']);
@@ -304,22 +307,57 @@ class RoiCalculationService
     }
     
     /**
-     * Get ROI trend for a period
+     * Get ROI trend for a period - optimized to avoid memory issues
      */
     public function getRoiTrend(Company $company, int $days = 30, ?Branch $branch = null): array
     {
-        $trend = [];
         $endDate = Carbon::today();
+        $startDate = $endDate->copy()->subDays($days - 1);
         
+        // Get daily aggregated data in a single query for calls
+        $dailyCalls = DB::table('calls')
+            ->where('company_id', $company->id)
+            ->whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->when($branch, fn($q) => $q->where('branch_id', $branch->id))
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('COALESCE(SUM(cost), 0) as daily_cost'),
+                DB::raw('COUNT(*) as call_count')
+            )
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+            
+        // Get daily aggregated data for appointments
+        $dailyAppointments = DB::table('appointments')
+            ->join('branches', 'appointments.branch_id', '=', 'branches.id')
+            ->where('branches.company_id', $company->id)
+            ->whereBetween('appointments.starts_at', [$startDate->startOfDay(), $endDate->endOfDay()])
+            ->whereIn('appointments.status', ['completed', 'confirmed'])
+            ->when($branch, fn($q) => $q->where('appointments.branch_id', $branch->id))
+            ->select(
+                DB::raw('DATE(appointments.starts_at) as date'),
+                DB::raw('COALESCE(SUM(appointments.price), 0) as daily_revenue')
+            )
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+            
+        // Build trend array
+        $trend = [];
         for ($i = $days - 1; $i >= 0; $i--) {
             $date = $endDate->copy()->subDays($i);
-            $dayRoi = $this->calculateRoi($company, $date, $date, $branch);
+            $dateStr = $date->format('Y-m-d');
+            
+            $dailyCost = $dailyCalls->get($dateStr)?->daily_cost ?? 0;
+            $dailyRevenue = $dailyAppointments->get($dateStr)?->daily_revenue ?? 0;
+            $roi = $dailyCost > 0 ? (($dailyRevenue - $dailyCost) / $dailyCost) * 100 : 0;
             
             $trend[] = [
                 'date' => $date->format('d.m'),
-                'roi' => $dayRoi['summary']['roi_percentage'],
-                'revenue' => $dayRoi['summary']['total_revenue'],
-                'costs' => $dayRoi['summary']['total_costs'],
+                'roi' => round($roi, 2),
+                'revenue' => $dailyRevenue,
+                'costs' => $dailyCost,
             ];
         }
         

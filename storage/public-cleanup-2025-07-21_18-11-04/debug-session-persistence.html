@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Session Persistence Issue</title>
+    <style>
+        body { font-family: monospace; max-width: 1000px; margin: 20px auto; padding: 20px; }
+        .critical { background: #ffebee; color: #c62828; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .success { background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .warning { background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .info { background: #e3f2fd; color: #1565c0; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; border: 1px solid #ddd; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; font-size: 16px; }
+        .highlight { background: yellow; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Session Persistence Issue</h1>
+    
+    <div class="critical">
+        <h3>⚠️ CRITICAL ISSUE FOUND</h3>
+        <p>Your session ID changes between requests! This is why authentication fails.</p>
+    </div>
+
+    <div id="results"></div>
+
+    <button onclick="runSequentialTest()">Run Sequential Test</button>
+    <button onclick="checkBrowserStorage()">Check Browser Storage</button>
+    <button onclick="testCookieAttributes()">Test Cookie Attributes</button>
+
+    <script>
+        const results = document.getElementById('results');
+        let sessionIds = [];
+        
+        function log(content, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = content;
+            results.appendChild(div);
+        }
+
+        async function runSequentialTest() {
+            results.innerHTML = '';
+            sessionIds = [];
+            
+            log('<h2>Sequential Session Test</h2>');
+            
+            // Step 1: Login
+            log('Step 1: Login Request...');
+            const loginRes = await fetch('/business/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    email: 'demo@askproai.de',
+                    password: 'demo123'
+                })
+            });
+            
+            const loginData = await loginRes.json();
+            const loginSessionId = loginData.session_id;
+            sessionIds.push({ step: 'Login', id: loginSessionId });
+            
+            log(`Login Session ID: <span class="highlight">${loginSessionId}</span>`, 
+                loginData.success ? 'success' : 'critical');
+            
+            // Wait a moment
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Step 2: First auth check
+            log('Step 2: First Auth Check...');
+            const auth1Res = await fetch('/business/auth/check', {
+                credentials: 'include'
+            });
+            
+            const auth1Data = await auth1Res.json();
+            const auth1SessionId = auth1Data.session_id;
+            sessionIds.push({ step: 'Auth Check 1', id: auth1SessionId });
+            
+            log(`Auth Check 1 Session ID: <span class="highlight">${auth1SessionId}</span>`, 
+                auth1SessionId === loginSessionId ? 'success' : 'critical');
+            
+            if (auth1SessionId !== loginSessionId) {
+                log(`<strong>❌ SESSION ID CHANGED!</strong><br>
+                     Expected: ${loginSessionId}<br>
+                     Got: ${auth1SessionId}`, 'critical');
+            }
+            
+            // Step 3: Second auth check
+            log('Step 3: Second Auth Check...');
+            const auth2Res = await fetch('/business/auth/check', {
+                credentials: 'include'
+            });
+            
+            const auth2Data = await auth2Res.json();
+            const auth2SessionId = auth2Data.session_id;
+            sessionIds.push({ step: 'Auth Check 2', id: auth2SessionId });
+            
+            log(`Auth Check 2 Session ID: <span class="highlight">${auth2SessionId}</span>`, 
+                auth2SessionId === loginSessionId ? 'success' : 'critical');
+            
+            // Summary
+            log('<h3>Session ID Summary:</h3>');
+            const uniqueSessions = [...new Set(sessionIds.map(s => s.id))];
+            
+            if (uniqueSessions.length === 1) {
+                log('✅ Session persisted correctly! All requests used the same session.', 'success');
+            } else {
+                log(`❌ Session NOT persisting! Found ${uniqueSessions.length} different session IDs:`, 'critical');
+                sessionIds.forEach(s => {
+                    log(`${s.step}: ${s.id}`);
+                });
+            }
+            
+            // Check authentication status
+            log(`<h3>Authentication Status:</h3>
+                 Authenticated: ${auth2Data.authenticated ? '✅ YES' : '❌ NO'}<br>
+                 User ID: ${auth2Data.session_data?.portal_user_id || 'NULL'}`, 
+                 auth2Data.authenticated ? 'success' : 'critical');
+        }
+
+        function checkBrowserStorage() {
+            results.innerHTML = '';
+            log('<h2>Browser Storage Check</h2>');
+            
+            // Check cookies visible to JS
+            log('<h3>Cookies (visible to JavaScript):</h3>');
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            if (cookies.length === 0 || cookies[0] === '') {
+                log('No cookies visible to JavaScript (normal for HttpOnly)', 'warning');
+            } else {
+                cookies.forEach(cookie => {
+                    log(`• ${cookie}`);
+                });
+            }
+            
+            // Check localStorage
+            log('<h3>LocalStorage:</h3>');
+            if (localStorage.length === 0) {
+                log('LocalStorage is empty');
+            } else {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    log(`• ${key}: ${localStorage.getItem(key)}`);
+                }
+            }
+            
+            // Check sessionStorage
+            log('<h3>SessionStorage:</h3>');
+            if (sessionStorage.length === 0) {
+                log('SessionStorage is empty');
+            } else {
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    log(`• ${key}: ${sessionStorage.getItem(key)}`);
+                }
+            }
+            
+            // Browser info
+            log(`<h3>Browser Context:</h3>
+                 URL: ${window.location.href}<br>
+                 Protocol: ${window.location.protocol}<br>
+                 Hostname: ${window.location.hostname}<br>
+                 Cookies Enabled: ${navigator.cookieEnabled ? 'YES' : 'NO'}`, 'info');
+        }
+
+        async function testCookieAttributes() {
+            results.innerHTML = '';
+            log('<h2>Cookie Attributes Test</h2>');
+            
+            // Get current config
+            const configRes = await fetch('/business/auth/session-test', {
+                credentials: 'include'
+            });
+            const configData = await configRes.json();
+            
+            log(`<h3>Current Session Info:</h3>
+                 Session Name: ${configData.session_name}<br>
+                 Session ID: ${configData.session_id}`, 'info');
+            
+            // Test different cookie scenarios
+            log('<h3>Testing Cookie Storage:</h3>');
+            
+            // Test 1: Simple cookie
+            document.cookie = 'test_simple=works; path=/';
+            const hasSimple = document.cookie.includes('test_simple');
+            log(`Simple cookie test: ${hasSimple ? '✅ WORKS' : '❌ FAILED'}`, 
+                hasSimple ? 'success' : 'critical');
+            
+            // Clean up
+            document.cookie = 'test_simple=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // Show diagnosis
+            log(`<h3>Diagnosis:</h3>
+                 <p>If session IDs are changing, possible causes:</p>
+                 <ol>
+                     <li>Cookie domain mismatch (cookie set for different domain)</li>
+                     <li>Secure flag on HTTP connection</li>
+                     <li>SameSite policy blocking</li>
+                     <li>Browser privacy settings</li>
+                     <li>Session regeneration on each request</li>
+                 </ol>`, 'warning');
+        }
+
+        // Auto-run on load
+        window.onload = () => {
+            log(`<div class="critical">
+                <h3>Known Issue: Session IDs Changing</h3>
+                <p>Your test showed:</p>
+                <ul>
+                    <li>Login creates session: QHzcXOEKsdAyaI5TJeHyAk4Ke9xD3l2VfXfnjevo</li>
+                    <li>Auth check uses: M4ZUnTnwei50fJOsMmEFKChtPi5pdtmRVt5V64oe</li>
+                </ul>
+                <p>This is why authentication fails - it's a different session!</p>
+            </div>`);
+        };
+    </script>
+</body>
+</html>

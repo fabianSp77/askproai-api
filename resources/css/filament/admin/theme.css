@@ -1,18 +1,52 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
 
-/* Core responsive and mobile functionality */
-@import '../../mobile-framework.css';
-@import '../../filament-mobile-overrides.css';
+/* ================================================================
+   UNIFIED RESPONSIVE SYSTEM
+   ================================================================ */
+/* IMPORTANT: The order of these imports matters! */
+
+/* Base responsive system - may cause overlays, overridden below */
+@import './unified-responsive.css';
+
+/* Other fixes that may conflict */
+/* @import './emergency-fix.css'; */ /* Disabled - replaced by targeted-fixes */
+/* @import './critical-fixes.css'; */ /* Disabled - too aggressive, breaking UI */
+@import './targeted-fixes.css';
+@import './overlay-fix-v2.css';
+@import './content-area-fix.css';
+
+/* Layout fixes */
+@import './sidebar-layout-fix.css'; /* FIX: Duplicate logos and layout issue #434 */
+@import './icon-fixes.css';
+@import './icon-sizes-fix-issues-429-431.css'; /* FIX: Icon size issues #429-431 */
+@import './form-layout-fixes.css';
+@import './table-scroll-indicators.css';
+@import './table-horizontal-scroll-fix.css'; /* FIX: Table horizontal scroll #440 */
+@import './action-group-fix.css'; /* FIX: Duplicate arrows in action groups #457 */
+
+/* MUST BE LAST - Override all conflicts for issue #448 */
+@import './issue-448-fix.css'; /* FIX: Black screen & large icons issue #448 */
+@import './fix-login-overlay.css'; /* FIX: Login page mouse clicks blocked */
+@import './fix-dropdown-clicks.css'; /* FIX: Dropdowns and interactive elements not clickable */
+@import './fix-all-clicks.css'; /* CRITICAL FIX: Ensure everything is clickable on all pages */
+@import './ultimate-click-fix.css'; /* ULTIMATE FIX: Override ALL pointer-events: none rules */
+
+/* ================================================================
+   CORE FUNCTIONALITY (Keep these)
+   ================================================================ */
 
 /* Resource-specific styles */
 @import './call-resource.css';
 @import './dashboard.css';
 @import './appointments.css';
 @import './calls.css';
+@import './calls-page-fix.css'; /* FIX: Black content on calls page #431 */
 @import './customers.css';
 
 /* UI Components */
 @import '../../column-toggle-fix.css';
+@import './tooltips.css'; /* Enhanced tooltip styles */
+@import './animation-fixes.css'; /* CRITICAL: Smooth, delightful animations across the interface */
 @import '../../tab-tooltips.css';
 @import '../../column-editor-modern.css';
 @import '../../contrast-fix.css';
@@ -25,34 +59,58 @@
 @import './retell-configuration-center.css';
 @import './retell-ultimate-modern.css';
 
-/* Layout fixes */
-/* DISABLED - Causing horizontal scroll issues
-@import './table-responsive-fix.css';
-@import './table-column-optimization.css';
-@import './staff-table-fix.css';
-@import './call-detail.css';
-@import './table-layout-fix.css';
-*/
-
-/* NEW: Clean responsive layout without horizontal scrolling */
-@import './clean-responsive-layout.css';
-
 /* Theme customization */
 @import './askproai-theme.css';
 @import './professional-navigation.css';
+@import './menu-usability-improvements.css';
+@import './menu-mobile-enhancements.css';
+@import './menu-hover-feedback.css';
 
 /* Wizard components */
 @import './wizard-progress-fix.css';
 @import './wizard-form-fix.css';
 @import './wizard-v2-fixes.css';
 
-/* CRITICAL: This must be loaded LAST - Single source of truth for dropdown/sidebar fixes */
-@import './minimal-dropdown-fix.css';
-
 /* Non-billable calls styling */
 @import './non-billable-calls.css';
 
-/* Theme color variables */
+/* ================================================================
+   DISABLED CSS FILES - Replaced by unified-responsive.css
+   ================================================================ */
+
+/* Mobile Framework - REPLACED
+@import '../../mobile-framework.css';
+@import '../../filament-mobile-overrides.css';
+*/
+
+/* Layout fixes - REPLACED
+@import './clean-responsive-layout.css';
+@import './minimal-dropdown-fix.css';
+*/
+
+/* Table fixes - REPLACED BY UNIFIED SYSTEM
+@import './calls-table-fix.css';
+@import './calls-table-ultimate-fix.css';
+@import './calls-overflow-force.css';
+@import './calls-table-inline-fix.css';
+@import './global-table-overflow-fix.css';
+@import './table-scroll-emergency-fix.css';
+@import './force-horizontal-scroll.css';
+@import './global-filament-table-fix.css';
+@import './responsive-table-solution.css';
+@import './smart-responsive-tables.css';
+*/
+
+/* Mobile fixes - REPLACED BY UNIFIED SYSTEM
+@import './mobile-portal-fix.css';
+@import './mobile-sidebar-fix.css';
+@import './mobile-navigation-simple.css';
+*/
+
+/* ================================================================
+   THEME VARIABLES
+   ================================================================ */
+
 :root {
     --color-primary-50: 254 252 232;
     --color-primary-100: 254 249 195;
@@ -65,7 +123,15 @@
     --color-primary-800: 133 77 14;
     --color-primary-900: 113 63 18;
     --color-primary-950: 66 32 6;
+    
+    /* Responsive variables */
+    --sidebar-width: 16rem;
+    --topbar-height: 4rem;
 }
+
+/* ================================================================
+   CUSTOM OVERRIDES
+   ================================================================ */
 
 /* Sidebar customization */
 .fi-sidebar-header {
@@ -96,8 +162,11 @@
     display: none !important; 
 }
 
-/* ========== WIDGET DISPLAY FIX ========== */
-/* Force widgets to be visible on calls page */
+/* ================================================================
+   WIDGET VISIBILITY FIXES
+   ================================================================ */
+
+/* Force widgets to be visible */
 .fi-page-header-widgets,
 .fi-widgets-container,
 .fi-widgets-grid {
@@ -122,112 +191,23 @@
     margin-bottom: 1rem !important;
 }
 
-.fi-wi-stats-overview-stats-container {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
-    gap: 1rem !important;
+/* ================================================================
+   PERFORMANCE OPTIMIZATIONS
+   ================================================================ */
+
+/* Reduce repaints */
+.fi-sidebar,
+.fi-topbar {
+    will-change: transform;
 }
 
-.fi-wi-stats-overview-stat {
-    display: flex !important;
-    flex-direction: column !important;
-    padding: 1rem !important;
+/* Hardware acceleration for transitions */
+.fi-sidebar {
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
-/* Live status widget */
-.fi-wi-live-status-widget {
-    display: block !important;
-    margin-bottom: 1rem !important;
+/* Optimize touch scrolling */
+.fi-ta-content {
+    -webkit-overflow-scrolling: touch;
 }
-
-/* Global filter widget */
-.fi-wi-global-filter {
-    display: block !important;
-    margin-bottom: 1rem !important;
-}
-
-/* Header widgets container on list pages */
-.fi-resource-view > div:first-child > div {
-    display: block !important;
-}
-
-/* Ensure grid layout for multiple widgets */
-.fi-page > div:has(.fi-wi) {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 1rem !important;
-    margin-bottom: 1rem !important;
-}
-
-/* CRITICAL FIX: Force widget container visibility on resource pages */
-.fi-resource-view > div:first-child {
-    display: block !important;
-    min-height: 50px !important;
-}
-
-/* Force any Livewire component that might be a widget to show */
-[wire\:id]:has(.fi-wi),
-[wire\:id]:has(.fi-widget) {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-/* Debug mode - add red border to see widget containers */
-.fi-page > div:empty {
-    border: 2px dashed red !important;
-    min-height: 100px !important;
-    position: relative !important;
-}
-
-.fi-page > div:empty::after {
-    content: "Widget container (empty)" !important;
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    color: red !important;
-    font-weight: bold !important;
-}
-/* ========== END WIDGET DISPLAY FIX ========== */
-/* ========== DASHBOARD WIDGET VISIBILITY FIX ========== */
-/* Dashboard Widget Visibility Fix */
-.fi-page.operations-dashboard .fi-widgets-container,
-.fi-page.operations-dashboard .fi-widgets-grid {
-    display: grid \!important;
-    visibility: visible \!important;
-    opacity: 1 \!important;
-}
-
-/* Ensure Filament widgets component displays properly */
-.fi-page.operations-dashboard [x-data] {
-    display: contents;
-}
-
-/* Force dashboard widgets to show */
-.fi-wi-compact-operations,
-.fi-wi-insights-actions,
-.fi-wi-financial-intelligence,
-.fi-wi-branch-performance-matrix,
-.fi-wi-live-activity-feed {
-    display: block \!important;
-    visibility: visible \!important;
-    opacity: 1 \!important;
-    min-height: 100px;
-}
-
-/* Fix widget grid layout */
-.fi-page.operations-dashboard .grid {
-    display: grid \!important;
-}
-
-/* Ensure widget component wrappers don't hide content */
-.fi-page.operations-dashboard > div > div {
-    display: contents;
-}
-
-/* Fix empty widget containers on dashboard */
-.fi-page.operations-dashboard .fi-widgets-container:empty {
-    display: none \!important;
-}
-/* ========== END DASHBOARD WIDGET VISIBILITY FIX ========== */

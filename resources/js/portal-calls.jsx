@@ -4,6 +4,7 @@ import CallsIndex from './Pages/Portal/Calls/Index';
 import CallShow from './Pages/Portal/Calls/Show';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { BrowserRouter } from 'react-router-dom';
 import '../css/app.css';
 
 // Get CSRF token
@@ -14,11 +15,13 @@ const callsIndexRoot = document.getElementById('calls-index-root');
 if (callsIndexRoot) {
     const root = ReactDOM.createRoot(callsIndexRoot);
     root.render(
-        <ThemeProvider defaultTheme="system">
-            <AuthProvider csrfToken={csrfToken}>
-                <CallsIndex />
-            </AuthProvider>
-        </ThemeProvider>
+        <BrowserRouter basename="/business">
+            <ThemeProvider defaultTheme="system">
+                <AuthProvider csrfToken={csrfToken}>
+                    <CallsIndex />
+                </AuthProvider>
+            </ThemeProvider>
+        </BrowserRouter>
     );
 }
 
@@ -28,10 +31,12 @@ if (callShowRoot) {
     const callId = callShowRoot.dataset.callId;
     const root = ReactDOM.createRoot(callShowRoot);
     root.render(
-        <ThemeProvider defaultTheme="system">
-            <AuthProvider csrfToken={csrfToken}>
-                <CallShow callId={callId} />
-            </AuthProvider>
-        </ThemeProvider>
+        <BrowserRouter basename="/business">
+            <ThemeProvider defaultTheme="system">
+                <AuthProvider csrfToken={csrfToken}>
+                    <CallShow callId={callId} />
+                </AuthProvider>
+            </ThemeProvider>
+        </BrowserRouter>
     );
 }

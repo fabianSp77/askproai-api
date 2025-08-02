@@ -1,5 +1,19 @@
 /* Action Group Dropdown Fix for Filament Tables */
 
+/* FIX FOR ISSUE #457: Duplicate arrows in action groups */
+/* Hide any duplicate chevron/arrow icons */
+.fi-ta-actions .fi-dropdown-trigger svg.fi-btn-icon + svg,
+.fi-ta-actions .fi-ac-btn-action svg + svg,
+.fi-ta-actions svg[class*="chevron"]:not(:first-of-type) {
+    display: none !important;
+}
+
+/* Remove pseudo-element arrows */
+.fi-ta-actions .fi-dropdown-trigger::after,
+.fi-ta-actions .fi-ac-btn-action::after {
+    content: none !important;
+}
+
 /* Ensure proper z-index for dropdown menus */
 .fi-ta-actions-group-dropdown {
     z-index: 60 !important;

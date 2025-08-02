@@ -4,68 +4,80 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Call;
+use App\Models\Appointment;
+use App\Models\Customer;
+use App\Models\Invoice;
+use Carbon\Carbon;
 
 class SimpleDashboardController extends Controller
 {
+    /**
+     * Show simple portal dashboard without MCP dependencies.
+     */
     public function index(Request $request)
     {
-        // Get user from session
-        $userId = session("portal_user_id");
+        $user = Auth::guard('portal')->user();
         
-        if (!$userId) {
-            return redirect("/business/login");
+        if (!$user) {
+            return redirect('/business/login');
         }
         
-        // Return a simple HTML view
-        return '<!DOCTYPE html>
-<html>
-<head>
-    <title>Business Portal Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; text-align: center; }
-        .card h3 { margin: 0 0 10px 0; }
-        .btn { display: inline-block; padding: 10px 20px; background: #3B82F6; color: white; text-decoration: none; border-radius: 6px; margin: 5px; }
-        .btn:hover { background: #2563EB; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Business Portal Dashboard</h1>
-            <p>Welcome! You are logged in. (User ID: ' . $userId . ')</p>
-        </div>
+        $companyId = $user->company_id;
         
-        <div class="grid">
-            <div class="card">
-                <h3>📞 Calls</h3>
-                <p>Manage your calls</p>
-                <a href="/business/calls" class="btn">View Calls</a>
-            </div>
+        // Simple statistics
+        $stats = [
+            'total_calls' => Call::where('company_id', $companyId)
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->count(),
             
-            <div class="card">
-                <h3>📅 Appointments</h3>
-                <p>View appointments</p>
-                <a href="/business/appointments" class="btn">Appointments</a>
-            </div>
+            'total_appointments' => Appointment::where('company_id', $companyId)
+                ->whereMonth('starts_at', Carbon::now()->month)
+                ->count(),
             
-            <div class="card">
-                <h3>👥 Customers</h3>
-                <p>Customer management</p>
-                <a href="/business/customers" class="btn">Customers</a>
-            </div>
+            'new_customers' => Customer::where('company_id', $companyId)
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->count(),
             
-            <div class="card">
-                <h3>⚙️ Settings</h3>
-                <p>Configure settings</p>
-                <a href="/business/settings" class="btn">Settings</a>
-            </div>
-        </div>
-    </div>
-</body>
-</html>';
+            'monthly_revenue' => Invoice::where('company_id', $companyId)
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->sum('total'),
+        ];
+        
+        // Recent calls
+        $recentCalls = Call::where('company_id', $companyId)
+            ->with(['customer', 'staff'])
+            ->latest()
+            ->limit(10)
+            ->get();
+        
+        // Upcoming appointments today
+        $upcomingTasks = Appointment::where('company_id', $companyId)
+            ->whereDate('starts_at', Carbon::today())
+            ->where('starts_at', '>', Carbon::now())
+            ->with(['customer', 'service', 'staff'])
+            ->orderBy('starts_at')
+            ->limit(5)
+            ->get()
+            ->map(function ($appointment) {
+                return [
+                    'id' => $appointment->id,
+                    'title' => $appointment->service->name ?? 'Appointment',
+                    'customer' => $appointment->customer->name ?? 'Unknown',
+                    'time' => $appointment->starts_at->format('H:i'),
+                    'staff' => $appointment->staff->name ?? 'Unassigned'
+                ];
+            });
+        
+        $teamPerformance = null;
+        
+        return view('portal.dashboard-simple', compact(
+            'user',
+            'stats',
+            'recentCalls',
+            'upcomingTasks',
+            'teamPerformance'
+        ));
     }
 }

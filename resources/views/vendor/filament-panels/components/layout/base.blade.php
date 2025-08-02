@@ -12,29 +12,22 @@
     ])
 >
     <head>
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_START, scopes: $livewire->getRenderHookScopes()) }}
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_START, scopes: $livewire?->getRenderHookScopes() ?? []) }}
 
         <meta charset="utf-8" />
         <meta name="csrf-token" content="{{ csrf_token() }}" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        
-        {{-- Must load before Livewire/Alpine --}}
-        {{-- Temporarily disabled: <script src="{{ asset('js/livewire-config-fix.js') }}?v={{ time() }}"></script> --}}
 
         @if ($favicon = filament()->getFavicon())
             <link rel="icon" href="{{ $favicon }}" />
         @endif
 
-        @php
-            $title = trim(strip_tags(($livewire ?? null)?->getTitle() ?? ''));
-            $brandName = trim(strip_tags(filament()->getBrandName()));
-        @endphp
-
         <title>
-            {{ filled($title) ? "{$title} - " : null }} {{ $brandName }}
+            {{ filled($title = strip_tags(($livewire ?? null)?->getTitle() ?? '')) ? "{$title} - " : null }}
+            {{ strip_tags(filament()->getBrandName()) }}
         </title>
 
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::STYLES_BEFORE, scopes: $livewire->getRenderHookScopes()) }}
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::STYLES_BEFORE, scopes: $livewire?->getRenderHookScopes() ?? []) }}
 
         <style>
             [x-cloak=''],
@@ -57,9 +50,6 @@
         </style>
 
         @filamentStyles
-        
-        {{-- Filament Core App CSS manuell einbinden --}}
-        <link href="https://api.askproai.de/css/filament/filament/app.css?v=3.3.14.0" rel="stylesheet">
 
         {{ filament()->getTheme()->getHtml() }}
         {{ filament()->getFontHtml() }}
@@ -71,14 +61,91 @@
                 --collapsed-sidebar-width: {{ filament()->getCollapsedSidebarWidth() }};
                 --default-theme-mode: {{ filament()->getDefaultThemeMode()->value }};
             }
+            
+            /* CRITICAL FIX: Ensure ALL interactive elements are clickable */
+            a, button, input, select, textarea,
+            [role="button"], [role="link"], [role="menuitem"],
+            [wire\:click], [x-on\:click], [onclick],
+            .cursor-pointer, .fi-btn, .fi-link, .fi-dropdown-item,
+            .fi-sidebar-nav-item, .fi-topbar-item, .fi-ac-trigger,
+            .fi-ta-header-cell-label, .fi-ta-row, .fi-ta-cell,
+            .fi-pagination-item, .fi-breadcrumb-item {
+                pointer-events: auto !important;
+                cursor: pointer !important;
+                position: relative !important;
+                z-index: 1 !important;
+            }
+            
+            /* Ensure main content areas don't block interactions */
+            body, .fi-body, .fi-main, .fi-main-ctn, .fi-page,
+            .fi-section, .fi-resource, .fi-ta-ctn {
+                pointer-events: auto !important;
+            }
+            
+            /* Specifically fix dropdowns and navigation */
+            .fi-dropdown-panel, .fi-dropdown-list, .fi-sidebar-nav,
+            .fi-topbar, .fi-breadcrumbs {
+                pointer-events: auto !important;
+                z-index: 1000 !important;
+            }
+
+            /* Fix for black screen issues */
+            body.fi-sidebar-open::before,
+            body.fi-sidebar-open::after {
+                display: none !important;
+                content: none !important;
+            }
+            
+            /* Ensure body and login forms are visible */
+            body {
+                overflow: visible !important;
+                background-color: rgb(249 250 251) !important;
+            }
+            
+            .fi-simple-page,
+            .fi-login-panel,
+            form {
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            
+            /* Fix icon sizes */
+            .fi-icon svg,
+            .fi-ta-icon svg {
+                max-width: 1.25rem !important;
+                max-height: 1.25rem !important;
+            }
+            
+            .fi-modal-icon svg,
+            .fi-empty-state-icon svg {
+                max-width: 2rem !important;
+                max-height: 2rem !important;
+            }
+            
+            /* Hide stuck loading spinners */
+            .fi-login .fi-loading-indicator,
+            .fi-login .animate-spin,
+            .fi-simple-page .fi-loading-indicator,
+            .fi-simple-page .animate-spin {
+                display: none !important;
+            }
+
+            /* Fix for animation conflicts */
+            .fi-dropdown-panel {
+                transition: all 0.2s ease !important;
+            }
+
+            /* Ensure proper event handling */
+            .fi-dropdown-trigger:hover,
+            .fi-btn:hover,
+            .fi-link:hover {
+                cursor: pointer !important;
+            }
         </style>
 
         @stack('styles')
-        
-        {{-- Admin Layout Fix - DISABLED causing horizontal scroll --}}
-        {{-- <link rel="stylesheet" href="{{ asset('css/admin-layout-fix.css') }}?v={{ time() }}"> --}}
 
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::STYLES_AFTER, scopes: $livewire->getRenderHookScopes()) }}
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::STYLES_AFTER, scopes: $livewire?->getRenderHookScopes() ?? []) }}
 
         @if (! filament()->hasDarkMode())
             <script>
@@ -90,36 +157,22 @@
             </script>
         @else
             <script>
-                const loadDarkMode = () => {
-                    window.theme = localStorage.getItem('theme') ?? @js(filament()->getDefaultThemeMode()->value)
-
-                    if (
-                        window.theme === 'dark' ||
-                        (window.theme === 'system' &&
-                            window.matchMedia('(prefers-color-scheme: dark)')
-                                .matches)
-                    ) {
-                        document.documentElement.classList.add('dark')
-                    }
+                const theme = localStorage.getItem('theme') ?? @js(filament()->getDefaultThemeMode()->value)
+                
+                if (
+                    theme === 'dark' ||
+                    (theme === 'system' &&
+                        window.matchMedia('(prefers-color-scheme: dark)')
+                            .matches)
+                ) {
+                    document.documentElement.classList.add('dark')
                 }
-
-                loadDarkMode()
-
-                document.addEventListener('livewire:navigated', loadDarkMode)
             </script>
         @endif
 
         @livewireStyles
-        
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_END, scopes: $livewire->getRenderHookScopes()) }}
-        
-        {{-- Block problematic requests early --}}
-        {{-- Temporarily disabled: <script src="{{ asset('js/block-mount-params.js') }}?v={{ time() }}"></script> --}}
-        
-        {{-- Console cleanup to reduce noise --}}
-        {{-- @if(!config('app.debug'))
-            <script src="{{ asset('js/console-cleanup.js') }}?v={{ time() }}"></script>
-        @endif --}}
+
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_END, scopes: $livewire?->getRenderHookScopes() ?? []) }}
     </head>
 
     <body
@@ -131,84 +184,119 @@
                     'min-h-screen bg-gray-50 font-normal text-gray-950 antialiased dark:bg-gray-950 dark:text-white',
                 ]) }}
     >
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_START, scopes: $livewire->getRenderHookScopes()) }}
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_START, scopes: $livewire?->getRenderHookScopes() ?? []) }}
 
         {{ $slot }}
 
         @livewire(Filament\Livewire\Notifications::class)
 
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_BEFORE, scopes: $livewire->getRenderHookScopes()) }}
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_BEFORE, scopes: $livewire?->getRenderHookScopes() ?? []) }}
 
         @livewireScripts
         
-        {{-- Fix document.write violations before other scripts --}}
-        {{-- <script src="{{ asset('js/document-write-fix.js') }}?v={{ time() }}"></script> --}}
-        
-        {{-- Prevent Livewire error modals --}}
-        {{-- Temporarily disabled: <script src="{{ asset('js/livewire-modal-fix.js') }}?v={{ time() }}"></script> --}}
-        
-        {{-- Handle Livewire errors gracefully --}}
-        {{-- Temporarily disabled: <script src="{{ asset('js/livewire-error-handler.js') }}?v={{ time() }}"></script> --}}
-        
         @filamentScripts(withCore: true)
-        
-        {{-- Fix Alpine stores after Filament loads --}}
-        <script src="{{ asset('js/filament-alpine-fix.js') }}?v={{ time() }}"></script>
-        
-        {{-- Fix modal outerHTML errors --}}
-        <script src="{{ asset('js/modal-fix.js') }}?v={{ time() }}"></script>
-        
-        {{-- Remove error overlay --}}
-        <script src="{{ asset('js/remove-error-overlay.js') }}?v={{ time() }}"></script>
-        
-        {{-- Ensure button functionality --}}
-        <script src="{{ asset('js/button-click-handler.js') }}?v={{ time() }}"></script>
-        
-        {{-- Fix Filament Toggle Buttons --}}
-        <script src="{{ asset('js/filament-toggle-buttons-fix.js') }}?v={{ time() }}"></script>
-        
-        {{-- Fix Livewire Reactive Components --}}
-        <script src="{{ asset('js/livewire-reactive-fix.js') }}?v={{ time() }}"></script>
-        
-        {{-- Debug wizard form --}}
-        <script src="{{ asset('js/debug-wizard-form.js') }}?v={{ time() }}"></script>
-        
-        {{-- Force wizard reactivity --}}
-        <script src="{{ asset('js/force-wizard-reactivity.js') }}?v={{ time() }}"></script>
-        
-        {{-- Fix wizard toggle directly --}}
-        <script src="{{ asset('js/fix-wizard-toggle.js') }}?v={{ time() }}"></script>
-        
-        {{-- Final wizard fix --}}
-        <script src="{{ asset('js/final-wizard-fix.js') }}?v={{ time() }}"></script>
-        
-        {{-- Wizard form handler --}}
-        <script src="{{ asset('js/wizard-form-handler.js') }}?v={{ time() }}"></script>
-        
-        {{-- Clean table layout - NO horizontal scrolling --}}
-        <script src="{{ asset('js/clean-table-layout.js') }}?v={{ time() }}"></script>
-        
-        {{-- Test minimal setup --}}
-        <script src="{{ asset('js/test-minimal-setup.js') }}?v={{ time() }}"></script>
+
+        {{-- CRITICAL: Load admin bundle for admin panel --}}
+        @if(filament()->getId() === 'admin')
+            @vite(['resources/js/bundles/admin.js'])
+        @endif
+
+        {{-- Essential JavaScript fixes --}}
+        <script>
+            // Wait for Alpine and Livewire to be ready
+            document.addEventListener('alpine:init', () => {
+                console.log('[Admin Panel] Alpine initialized');
+                
+                // Fix dropdown behavior
+                Alpine.data('adminDropdown', () => ({
+                    open: false,
+                    
+                    toggle() {
+                        this.open = !this.open;
+                    },
+                    
+                    close() {
+                        this.open = false;
+                    }
+                }));
+            });
+
+            // Ensure all elements are clickable after DOM loads
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('[Admin Panel] DOM loaded, fixing interactions...');
+                
+                // Fix any elements that might have pointer-events: none
+                const fixClickability = () => {
+                    document.querySelectorAll('a, button, [role="button"], .fi-btn, .fi-link, .fi-dropdown-trigger').forEach(el => {
+                        if (getComputedStyle(el).pointerEvents === 'none') {
+                            el.style.pointerEvents = 'auto';
+                            el.style.cursor = 'pointer';
+                        }
+                    });
+                };
+
+                // Fix immediately and after any dynamic content changes
+                fixClickability();
+                
+                // Use MutationObserver to fix dynamically added elements
+                const observer = new MutationObserver(() => {
+                    fixClickability();
+                });
+                
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            });
+
+            // Fix Livewire interactions
+            document.addEventListener('livewire:load', () => {
+                console.log('[Admin Panel] Livewire loaded');
+                
+                // Ensure Livewire events work properly
+                Livewire.on('refreshComponent', () => {
+                    setTimeout(() => {
+                        document.querySelectorAll('[wire\\:click]').forEach(el => {
+                            el.style.pointerEvents = 'auto';
+                            el.style.cursor = 'pointer';
+                        });
+                    }, 100);
+                });
+            });
+
+            // Global debug function
+            window.debugAdminPanel = function() {
+                const info = {
+                    alpine: typeof Alpine !== 'undefined',
+                    livewire: typeof Livewire !== 'undefined',
+                    clickableElements: document.querySelectorAll('a, button, [role="button"]').length,
+                    blockedElements: 0,
+                    dropdowns: document.querySelectorAll('[x-data*="open"]').length
+                };
+                
+                document.querySelectorAll('a, button, [role="button"], .fi-btn, .fi-link').forEach(el => {
+                    if (getComputedStyle(el).pointerEvents === 'none') {
+                        info.blockedElements++;
+                        console.warn('Blocked element:', el);
+                    }
+                });
+                
+                console.table(info);
+                return info;
+            };
+        </script>
 
         @if (filament()->hasBroadcasting() && config('filament.broadcasting.echo'))
             <script data-navigate-once>
                 window.Echo = new window.EchoFactory(@js(config('filament.broadcasting.echo')))
-
                 window.dispatchEvent(new CustomEvent('EchoLoaded'))
-            </script>
-        @endif
-
-        @if (filament()->hasDarkMode() && (! filament()->hasDarkModeForced()))
-            <script>
-                loadDarkMode()
             </script>
         @endif
 
         @stack('scripts')
 
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_AFTER, scopes: $livewire->getRenderHookScopes()) }}
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_AFTER, scopes: $livewire?->getRenderHookScopes() ?? []) }}
 
-        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_END, scopes: $livewire->getRenderHookScopes()) }}
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_END, scopes: $livewire?->getRenderHookScopes() ?? []) }}
     </body>
 </html>

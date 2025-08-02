@@ -51,6 +51,7 @@ import 'dayjs/locale/de';
 import axiosInstance from '../../../services/axiosInstance';
 import MobileAppointmentList from '../../../components/Portal/Mobile/MobileAppointmentList';
 import useResponsive from '../../../hooks/useResponsive';
+import { useAppointmentUpdates } from '../../../hooks/useEcho';
 
 dayjs.locale('de');
 
@@ -91,6 +92,40 @@ const AppointmentsIndex = () => {
     const [userPermissions, setUserPermissions] = useState({
         is_admin: false,
         can_delete_business_data: false
+    });
+    
+    // Handle real-time appointment updates
+    useAppointmentUpdates((update) => {
+        console.log('Appointment update received:', update);
+        
+        if (update.event === 'created') {
+            // New appointment created
+            message.success(`Neuer Termin erstellt für ${update.appointment?.customer?.name || 'Kunde'}`);
+            // Refresh the appointments list
+            fetchAppointments();
+        } else if (update.event === 'updated' || !update.event) {
+            // Existing appointment updated
+            const updatedAppointment = update.appointment;
+            if (updatedAppointment) {
+                // Update the appointment in the list
+                setAppointments(prevAppointments => {
+                    const index = prevAppointments.findIndex(a => a.id === updatedAppointment.id);
+                    if (index !== -1) {
+                        const newAppointments = [...prevAppointments];
+                        newAppointments[index] = { ...newAppointments[index], ...updatedAppointment };
+                        return newAppointments;
+                    } else {
+                        // Appointment not in current list, might be new or filtered
+                        return prevAppointments;
+                    }
+                });
+                
+                // Show notification for status changes
+                if (updatedAppointment.status) {
+                    message.info(`Termin-Status aktualisiert: ${getStatusText(updatedAppointment.status)}`);
+                }
+            }
+        }
     });
 
     useEffect(() => {

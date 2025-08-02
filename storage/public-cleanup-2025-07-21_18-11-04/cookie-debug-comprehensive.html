@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Debug - Comprehensive Analysis</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 20px auto; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: white; padding: 10px; overflow-x: auto; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #e0e0e0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Cookie Debug - Comprehensive Analysis</h1>
+    
+    <div class="section">
+        <h2>Browser Information</h2>
+        <div id="browserInfo"></div>
+    </div>
+
+    <div class="section">
+        <h2>Current Page Context</h2>
+        <div id="pageContext"></div>
+    </div>
+
+    <div class="section">
+        <h2>Cookie Tests</h2>
+        <button onclick="testSimpleCookie()">1. Test Simple Cookie</button>
+        <button onclick="testSecureCookie()">2. Test Secure Cookie</button>
+        <button onclick="testLogin()">3. Test Login (Sets Session Cookie)</button>
+        <button onclick="checkAllCookies()">4. Check All Cookies</button>
+        <button onclick="testThirdPartyCookies()">5. Test Third-Party Cookie Support</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        // Display browser info
+        function showBrowserInfo() {
+            const info = {
+                userAgent: navigator.userAgent,
+                cookieEnabled: navigator.cookieEnabled,
+                doNotTrack: navigator.doNotTrack,
+                language: navigator.language,
+                platform: navigator.platform,
+                vendor: navigator.vendor
+            };
+            
+            document.getElementById('browserInfo').innerHTML = `
+                <table>
+                    ${Object.entries(info).map(([key, value]) => `
+                        <tr>
+                            <th>${key}</th>
+                            <td>${value}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+                <p class="${navigator.cookieEnabled ? 'success' : 'error'}">
+                    Cookies are ${navigator.cookieEnabled ? 'ENABLED' : 'DISABLED'} in this browser
+                </p>
+            `;
+        }
+
+        // Display page context
+        function showPageContext() {
+            const context = {
+                protocol: window.location.protocol,
+                hostname: window.location.hostname,
+                port: window.location.port || '(default)',
+                pathname: window.location.pathname,
+                isSecure: window.location.protocol === 'https:',
+                origin: window.location.origin
+            };
+            
+            document.getElementById('pageContext').innerHTML = `
+                <table>
+                    ${Object.entries(context).map(([key, value]) => `
+                        <tr>
+                            <th>${key}</th>
+                            <td class="${key === 'isSecure' ? (value ? 'success' : 'warning') : ''}">${value}</td>
+                        </tr>
+                    `).join('')}
+                </table>
+                ${!context.isSecure ? '<p class="warning">⚠️ Not on HTTPS - Secure cookies won\'t work!</p>' : ''}
+            `;
+        }
+
+        function log(title, content, type = '') {
+            const section = document.createElement('div');
+            section.className = 'section';
+            section.innerHTML = `
+                <h3 class="${type}">${title}</h3>
+                ${typeof content === 'object' ? `<pre>${JSON.stringify(content, null, 2)}</pre>` : `<p>${content}</p>`}
+            `;
+            results.appendChild(section);
+        }
+
+        // Test 1: Simple cookie
+        function testSimpleCookie() {
+            log('Test 1: Simple Cookie', 'Setting a basic cookie...');
+            
+            // Set cookie
+            document.cookie = 'test_simple=hello; path=/';
+            
+            // Check if set
+            const hasCookie = document.cookie.includes('test_simple=hello');
+            
+            if (hasCookie) {
+                log('✅ Simple Cookie Test', 'Cookie was set and retrieved successfully', 'success');
+            } else {
+                log('❌ Simple Cookie Test', 'Cookie could not be set! Browser may be blocking all cookies.', 'error');
+            }
+            
+            // Clean up
+            document.cookie = 'test_simple=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        }
+
+        // Test 2: Secure cookie
+        function testSecureCookie() {
+            log('Test 2: Secure Cookie', 'Setting a secure cookie...');
+            
+            const isHttps = window.location.protocol === 'https:';
+            
+            if (!isHttps) {
+                log('⚠️ Secure Cookie Test', 'Cannot test secure cookies on HTTP', 'warning');
+                return;
+            }
+            
+            // Set secure cookie
+            document.cookie = 'test_secure=secure_value; path=/; secure; samesite=lax';
+            
+            // Check if set
+            const hasCookie = document.cookie.includes('test_secure=secure_value');
+            
+            if (hasCookie) {
+                log('✅ Secure Cookie Test', 'Secure cookie was set successfully', 'success');
+            } else {
+                log('❌ Secure Cookie Test', 'Secure cookie could not be set', 'error');
+            }
+            
+            // Clean up
+            document.cookie = 'test_secure=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;';
+        }
+
+        // Test 3: Login
+        async function testLogin() {
+            log('Test 3: Login Request', 'Sending login request to set session cookie...');
+            
+            try {
+                const response = await fetch('/business/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include', // Critical for cookies
+                    body: JSON.stringify({
+                        email: 'demo@askproai.de',
+                        password: 'demo123'
+                    })
+                });
+
+                const data = await response.json();
+                
+                log('Login Response', data, data.success ? 'success' : 'error');
+                
+                // Check cookies immediately
+                setTimeout(() => {
+                    const cookies = document.cookie;
+                    const hasSession = cookies.includes('askproai_session');
+                    
+                    log(
+                        'Cookie Check After Login',
+                        `Session cookie ${hasSession ? 'IS' : 'IS NOT'} present in browser\nAll cookies: ${cookies || 'NONE'}`,
+                        hasSession ? 'success' : 'error'
+                    );
+                    
+                    if (!hasSession && window.location.protocol === 'https:') {
+                        log('🔍 Possible Issues', `
+                            <ul>
+                                <li>Browser blocking third-party cookies</li>
+                                <li>SameSite policy blocking cross-origin cookies</li>
+                                <li>Browser privacy mode / incognito</li>
+                                <li>Browser extensions blocking cookies</li>
+                                <li>Domain mismatch between cookie and current page</li>
+                            </ul>
+                        `, 'warning');
+                    }
+                }, 100);
+                
+            } catch (error) {
+                log('Login Error', error.toString(), 'error');
+            }
+        }
+
+        // Test 4: Check all cookies
+        function checkAllCookies() {
+            const cookies = document.cookie;
+            
+            if (!cookies) {
+                log('All Cookies', 'No cookies found', 'warning');
+                return;
+            }
+            
+            const cookieList = cookies.split(';').map(c => c.trim());
+            const cookieData = cookieList.map(cookie => {
+                const [name, value] = cookie.split('=');
+                return { name, value: value ? value.substring(0, 50) + '...' : '' };
+            });
+            
+            log('All Cookies', cookieData);
+        }
+
+        // Test 5: Third-party cookie test
+        function testThirdPartyCookies() {
+            log('Test 5: Third-Party Cookies', 'Checking if third-party cookies are allowed...');
+            
+            // Create iframe to different domain
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = 'https://example.com';
+            
+            iframe.onload = function() {
+                // Try to access iframe
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    log('✅ Third-Party Access', 'Third-party content accessible', 'success');
+                } catch (e) {
+                    log('⚠️ Third-Party Access', 'Cannot access third-party content (normal for cross-origin)', 'warning');
+                }
+                
+                document.body.removeChild(iframe);
+            };
+            
+            iframe.onerror = function() {
+                log('❌ Third-Party Test', 'Failed to load third-party content', 'error');
+                document.body.removeChild(iframe);
+            };
+            
+            document.body.appendChild(iframe);
+        }
+
+        // Network analysis
+        async function analyzeNetworkRequest() {
+            log('Network Analysis', 'Analyzing response headers...');
+            
+            try {
+                // Use fetch with method that shows headers
+                const response = await fetch('/business/auth/session-test', {
+                    credentials: 'include'
+                });
+                
+                const headers = {};
+                for (let [key, value] of response.headers.entries()) {
+                    headers[key] = value;
+                }
+                
+                log('Response Headers (visible to JS)', headers, 'info');
+                
+            } catch (error) {
+                log('Network Analysis Error', error.toString(), 'error');
+            }
+        }
+
+        // Initialize
+        window.onload = () => {
+            showBrowserInfo();
+            showPageContext();
+            log('Ready', 'Click the test buttons above to diagnose cookie issues', 'info');
+        };
+    </script>
+</body>
+</html>

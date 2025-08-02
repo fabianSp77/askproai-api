@@ -78,6 +78,15 @@ Route::prefix('v2')->middleware(['auth:sanctum', 'throttle:api'])->group(functio
         Route::get('/{service}', [ServiceController::class, 'show']);
         Route::get('/{service}/staff', [ServiceController::class, 'staff']);
     });
+
+    // MCP Gateway - Unified API for all MCP servers
+    Route::prefix('mcp')->group(function () {
+        Route::post('/execute', [\App\Http\Controllers\Portal\Api\MCPGatewayController::class, 'execute']);
+        Route::post('/discover', [\App\Http\Controllers\Portal\Api\MCPGatewayController::class, 'discover']);
+        Route::post('/batch', [\App\Http\Controllers\Portal\Api\MCPGatewayController::class, 'batch']);
+        Route::get('/servers', [\App\Http\Controllers\Portal\Api\MCPGatewayController::class, 'listServers']);
+        Route::get('/servers/{server}', [\App\Http\Controllers\Portal\Api\MCPGatewayController::class, 'serverInfo']);
+    });
 });
 
 // Public endpoints (no auth required)
@@ -86,9 +95,9 @@ Route::prefix('v2/public')->middleware(['throttle:public'])->group(function () {
     Route::get('/availability', [AppointmentController::class, 'publicAvailability']);
     
     // Webhook endpoints with signature verification
-    Route::post('/webhooks/retell', [App\Http\Controllers\API\V2\WebhookController::class, 'retell'])
-        ->middleware('verify.retell.signature');
+    // Route::post('/webhooks/retell', [App\Http\Controllers\API\V2\WebhookController::class, 'retell'])
+    //     ->middleware('verify.retell.signature');
     
-    Route::post('/webhooks/calcom', [App\Http\Controllers\API\V2\WebhookController::class, 'calcom'])
-        ->middleware('calcom.signature');
+    // Route::post('/webhooks/calcom', [App\Http\Controllers\API\V2\WebhookController::class, 'calcom'])
+    //     ->middleware('calcom.signature');
 });

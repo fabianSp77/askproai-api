@@ -39,6 +39,16 @@ use App\Services\MCP\NotionMCPServer;
 use App\Services\MCP\MemoryBankMCPServer;
 use App\Services\MCP\FigmaMCPServer;
 use App\Services\MCP\AuthenticationMCPServer;
+use App\Services\MCP\DebugMCPServer;
+use App\Services\MCP\CallMCPServer;
+use App\Services\MCP\BillingMCPServer;
+use App\Services\MCP\WebSocketMCPServer;
+use App\Services\MCP\EventMCPServer;
+use App\Services\MCP\DashboardMCPServer;
+use App\Services\MCP\SettingsMCPServer;
+use App\Services\MCP\BranchMCPServer;
+use App\Services\MCP\CompanyMCPServer;
+use App\Services\MCP\SentryMCPServer;
 use Illuminate\Support\Facades\Log;
 
 class MCPServiceProvider extends ServiceProvider
@@ -118,6 +128,16 @@ class MCPServiceProvider extends ServiceProvider
         $this->app->singleton(MemoryBankMCPServer::class);
         $this->app->singleton(FigmaMCPServer::class);
         $this->app->singleton(AuthenticationMCPServer::class);
+        $this->app->singleton(DebugMCPServer::class);
+        $this->app->singleton(CallMCPServer::class);
+        $this->app->singleton(BillingMCPServer::class);
+        $this->app->singleton(WebSocketMCPServer::class);
+        $this->app->singleton(EventMCPServer::class);
+        $this->app->singleton(DashboardMCPServer::class);
+        $this->app->singleton(SettingsMCPServer::class);
+        $this->app->singleton(BranchMCPServer::class);
+        $this->app->singleton(CompanyMCPServer::class);
+        $this->app->singleton(SentryMCPServer::class);
     }
 
     /**
