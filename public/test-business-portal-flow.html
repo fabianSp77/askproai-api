@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Login Test</title>
+    <meta name="csrf-token" content="">
+</head>
+<body>
+    <h1>Business Portal Login Test</h1>
+    
+    <div id="status"></div>
+    <div id="error" style="color: red;"></div>
+    
+    <button onclick="testLoginFlow()">Test Login Flow</button>
+    
+    <div id="response" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none;">
+        <h3>Response:</h3>
+        <pre id="responseContent"></pre>
+    </div>
+
+    <script>
+    async function testLoginFlow() {
+        const status = document.getElementById('status');
+        const error = document.getElementById('error');
+        const responseDiv = document.getElementById('response');
+        const responseContent = document.getElementById('responseContent');
+        
+        status.innerHTML = 'Testing login flow...<br>';
+        error.innerHTML = '';
+        responseDiv.style.display = 'none';
+        
+        try {
+            // Step 1: Get login page to fetch CSRF token
+            status.innerHTML += '1. Fetching login page...<br>';
+            const loginPageResponse = await fetch('/business/login', {
+                credentials: 'include'
+            });
+            const loginPageHtml = await loginPageResponse.text();
+            
+            // Extract CSRF token
+            const csrfMatch = loginPageHtml.match(/name="_token"\s+value="([^"]+)"/);
+            if (!csrfMatch) {
+                throw new Error('CSRF token not found in login page');
+            }
+            const csrfToken = csrfMatch[1];
+            status.innerHTML += `✓ CSRF token obtained: ${csrfToken.substring(0, 20)}...<br>`;
+            
+            // Also get XSRF token from meta tag if present
+            const xsrfMatch = loginPageHtml.match(/name="csrf-token"\s+content="([^"]+)"/);
+            const xsrfToken = xsrfMatch ? xsrfMatch[1] : null;
+            
+            // Step 2: Submit login
+            status.innerHTML += '2. Submitting login...<br>';
+            const loginResponse = await fetch('/business/login', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': xsrfToken || csrfToken
+                },
+                body: new URLSearchParams({
+                    '_token': csrfToken,
+                    'email': 'demo@askproai.de',
+                    'password': 'password'
+                })
+            });
+            
+            status.innerHTML += `✓ Login response status: ${loginResponse.status}<br>`;
+            
+            // Check if redirect
+            if (loginResponse.redirected) {
+                status.innerHTML += `✓ Redirected to: ${loginResponse.url}<br>`;
+                
+                // Follow redirect
+                const redirectResponse = await fetch(loginResponse.url, {
+                    credentials: 'include'
+                });
+                const redirectHtml = await redirectResponse.text();
+                
+                // Check if we're on the dashboard or still on login
+                if (loginResponse.url.includes('/dashboard')) {
+                    status.innerHTML += '<strong style="color: green;">✓ Login successful! Redirected to dashboard.</strong><br>';
+                } else if (loginResponse.url.includes('/login')) {
+                    status.innerHTML += '<strong style="color: red;">✗ Login failed - redirected back to login page.</strong><br>';
+                    
+                    // Try to extract error message
+                    const errorMatch = redirectHtml.match(/<div[^>]*class="[^"]*alert[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+                    if (errorMatch) {
+                        error.innerHTML = 'Error message: ' + errorMatch[1].trim();
+                    }
+                    
+                    // Show the login page content for debugging
+                    responseDiv.style.display = 'block';
+                    responseContent.textContent = redirectHtml.substring(0, 2000) + '...';
+                }
+            } else {
+                // No redirect, check response
+                const responseText = await loginResponse.text();
+                
+                if (loginResponse.status === 302 || loginResponse.status === 200) {
+                    status.innerHTML += 'Response received without redirect. Checking content...<br>';
+                    responseDiv.style.display = 'block';
+                    responseContent.textContent = responseText;
+                } else {
+                    status.innerHTML += `<strong style="color: red;">✗ Login failed with status ${loginResponse.status}</strong><br>`;
+                    error.innerHTML = responseText;
+                }
+            }
+            
+            // Step 3: Check auth status
+            status.innerHTML += '3. Checking auth status...<br>';
+            const authCheckResponse = await fetch('/business/api/auth/check', {
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (authCheckResponse.ok) {
+                const authData = await authCheckResponse.json();
+                status.innerHTML += `✓ Auth check response: ${JSON.stringify(authData)}<br>`;
+            } else {
+                status.innerHTML += `✗ Auth check failed: ${authCheckResponse.status}<br>`;
+            }
+            
+        } catch (err) {
+            error.innerHTML = `Error: ${err.message}`;
+            console.error(err);
+        }
+    }
+    </script>
+</body>
+</html>

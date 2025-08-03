@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Click Diagnostics</title>
+    <script>
+        function diagnoseClicks() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>Diagnostic Results:</h2>';
+            
+            // 1. Check for blocking overlays
+            const overlays = document.querySelectorAll('.fi-modal-overlay, .fixed.inset-0, [class*="overlay"]');
+            results.innerHTML += `<p>Found ${overlays.length} potential blocking overlays</p>`;
+            overlays.forEach(el => {
+                const computed = window.getComputedStyle(el);
+                results.innerHTML += `<li>${el.className}: z-index=${computed.zIndex}, pointer-events=${computed.pointerEvents}</li>`;
+            });
+            
+            // 2. Check body and main containers
+            const body = document.body;
+            const bodyStyle = window.getComputedStyle(body);
+            results.innerHTML += `<p>Body: pointer-events=${bodyStyle.pointerEvents}, transform=${bodyStyle.transform}</p>`;
+            
+            // 3. Check specific elements
+            const firstLink = document.querySelector('a');
+            if (firstLink) {
+                const linkStyle = window.getComputedStyle(firstLink);
+                results.innerHTML += `<p>First link: pointer-events=${linkStyle.pointerEvents}, cursor=${linkStyle.cursor}</p>`;
+                
+                // Try to simulate click
+                firstLink.addEventListener('click', (e) => {
+                    results.innerHTML += '<p style="color:green">✓ Click event fired!</p>';
+                });
+            }
+            
+            // 4. Check for event listeners
+            const hasLivewire = !!window.Livewire;
+            const hasAlpine = !!window.Alpine;
+            results.innerHTML += `<p>Livewire: ${hasLivewire ? 'Present' : 'Missing'}</p>`;
+            results.innerHTML += `<p>Alpine.js: ${hasAlpine ? 'Present' : 'Missing'}</p>`;
+            
+            // 5. Check CSS rules
+            const sheets = document.styleSheets;
+            let pointerNoneCount = 0;
+            try {
+                for (let sheet of sheets) {
+                    try {
+                        for (let rule of sheet.cssRules) {
+                            if (rule.cssText && rule.cssText.includes('pointer-events: none')) {
+                                pointerNoneCount++;
+                            }
+                        }
+                    } catch (e) {
+                        // Cross-origin stylesheets
+                    }
+                }
+            } catch (e) {}
+            results.innerHTML += `<p>CSS rules with pointer-events: none: ${pointerNoneCount}</p>`;
+            
+            // 6. Test click propagation
+            document.addEventListener('click', (e) => {
+                results.innerHTML += `<p style="color:orange">Document received click at: ${e.target.tagName}</p>`;
+            }, true);
+        }
+    </script>
+</head>
+<body onload="diagnoseClicks()">
+    <h1>Click Diagnostics for Admin Panel</h1>
+    <div id="results"></div>
+    
+    <p>Now go to your admin panel and run this in console:</p>
+    <pre style="background:#f0f0f0; padding:10px;">
+// Copy this entire block:
+(function() {
+    console.log('=== CLICK DIAGNOSTIC ===');
+    
+    // Check first link
+    const link = document.querySelector('a');
+    if (link) {
+        console.log('First link:', link);
+        console.log('Computed style:', window.getComputedStyle(link).pointerEvents);
+        console.log('Has wire:click:', link.hasAttribute('wire:click'));
+        console.log('Has x-on:click:', link.hasAttribute('x-on:click'));
+        
+        // Try direct click
+        link.click();
+        console.log('Direct click() called');
+        
+        // Try event dispatch
+        const evt = new MouseEvent('click', {bubbles: true, cancelable: true});
+        link.dispatchEvent(evt);
+        console.log('MouseEvent dispatched');
+    }
+    
+    // Check overlays
+    const overlays = document.querySelectorAll('[style*="z-index: 9"], .fixed.inset-0');
+    console.log('Blocking overlays found:', overlays.length);
+    
+    // Check event listeners
+    console.log('Livewire present:', !!window.Livewire);
+    console.log('Alpine present:', !!window.Alpine);
+})();
+    </pre>
+</body>
+</html>

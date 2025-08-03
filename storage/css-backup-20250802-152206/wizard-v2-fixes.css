@@ -1,0 +1,289 @@
+/* Quick Setup Wizard V2 - Progress Bar & Form Fixes */
+
+/* ================================================================
+   FIX FOR LARGE ICONS ON QUICK SETUP WIZARD V2 - Issue #433
+   ================================================================ */
+
+/* Override icon-fixes.css for wizard page specifically */
+.fi-page-quick-setup-wizard-v2 svg[viewBox],
+.fi-page-quick-setup-wizard-v2 [class*="x-heroicon-"] svg {
+    width: inherit !important;
+    height: inherit !important;
+}
+
+/* Ensure Tailwind classes are respected for heroicons */
+.fi-page-quick-setup-wizard-v2 .w-4 svg {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+.fi-page-quick-setup-wizard-v2 .w-5 svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+.fi-page-quick-setup-wizard-v2 .w-6 svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+}
+
+/* Wizard-specific icon containers */
+.fi-page-quick-setup-wizard-v2 .fi-icon svg {
+    max-width: 1.5rem !important;
+    max-height: 1.5rem !important;
+}
+
+/* Fix navigation icons specifically */
+.fi-page-quick-setup-wizard-v2 .fi-sidebar-item-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Fix für Wizard Progress Bar Sichtbarkeit */
+.fi-fo-wizard nav[role="tablist"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin-bottom: 2rem;
+}
+
+/* Wizard Steps Container */
+.fi-fo-wizard nav ol {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    padding: 0 1rem;
+}
+
+/* Connection Lines zwischen Steps */
+.fi-fo-wizard nav ol::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 2rem;
+    right: 2rem;
+    height: 2px;
+    background-color: rgb(229 231 235);
+    transform: translateY(-50%);
+    z-index: 0;
+}
+
+/* Progress Line (für abgeschlossene Steps) */
+.fi-fo-wizard nav ol::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 2rem;
+    height: 2px;
+    background-color: rgb(59 130 246);
+    transform: translateY(-50%);
+    z-index: 1;
+    transition: width 0.3s ease;
+    width: var(--wizard-progress, 0%);
+}
+
+/* Individual Step Styling */
+.fi-fo-wizard nav li {
+    position: relative;
+    z-index: 2;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Step Button/Icon Container */
+.fi-fo-wizard nav li button,
+.fi-fo-wizard nav li > span {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    background-color: white;
+    border: 2px solid rgb(229 231 235);
+    transition: all 0.2s ease;
+    position: relative;
+    z-index: 2;
+}
+
+/* Active Step */
+.fi-fo-wizard nav li[aria-current="step"] button,
+.fi-fo-wizard nav li[aria-current="step"] > span {
+    background-color: rgb(59 130 246);
+    border-color: rgb(59 130 246);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Completed Step */
+.fi-fo-wizard nav li.fi-completed button,
+.fi-fo-wizard nav li.fi-completed > span {
+    background-color: rgb(34 197 94);
+    border-color: rgb(34 197 94);
+    color: white;
+}
+
+/* Step Icon */
+.fi-fo-wizard nav li svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Step Label */
+.fi-fo-wizard nav li .fi-fo-wizard-label {
+    display: block !important;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    max-width: 120px;
+    line-height: 1.2;
+    margin-top: 0.5rem;
+}
+
+/* Active Step Label */
+.fi-fo-wizard nav li[aria-current="step"] .fi-fo-wizard-label {
+    color: rgb(59 130 246);
+    font-weight: 600;
+}
+
+/* Fix Form Interactivity */
+.fi-fo-wizard-step {
+    position: relative;
+    z-index: 10;
+}
+
+/* Ensure all form inputs are clickable */
+.fi-fo-wizard input,
+.fi-fo-wizard textarea,
+.fi-fo-wizard select,
+.fi-fo-wizard button {
+    position: relative !important;
+    z-index: 20 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix overlapping elements */
+.fi-fo-wizard .fi-fo-field-wrp {
+    position: relative;
+    z-index: 15;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .fi-fo-wizard nav ol {
+        flex-direction: column;
+        align-items: flex-start;
+        padding-left: 2rem;
+    }
+    
+    .fi-fo-wizard nav ol::before,
+    .fi-fo-wizard nav ol::after {
+        top: 2rem;
+        bottom: 2rem;
+        left: 3rem;
+        right: auto;
+        width: 2px;
+        height: auto;
+        transform: translateX(-50%);
+    }
+    
+    .fi-fo-wizard nav li {
+        flex-direction: row;
+        margin-bottom: 2rem;
+    }
+    
+    .fi-fo-wizard nav li .fi-fo-wizard-label {
+        text-align: left;
+        margin-top: 0;
+        margin-left: 1rem;
+    }
+}
+
+/* Animation for step transitions */
+.fi-fo-wizard nav li button,
+.fi-fo-wizard nav li > span {
+    animation: stepPulse 0.3s ease-out;
+}
+
+@keyframes stepPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Wizard Content Area */
+.fi-fo-wizard-step-content {
+    min-height: 400px;
+    padding: 2rem;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Submit Button Enhancement */
+.fi-fo-wizard button[type="submit"] {
+    background-color: rgb(34 197 94) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 2rem !important;
+    font-size: 1rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.fi-fo-wizard button[type="submit"]:hover {
+    background-color: rgb(22 163 74) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Step Navigation Buttons */
+.fi-fo-wizard-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgb(229 231 235);
+}
+
+/* Success State */
+.wizard-complete {
+    text-align: center;
+    padding: 3rem;
+}
+
+.wizard-complete svg {
+    width: 5rem;
+    height: 5rem;
+    color: rgb(34 197 94);
+    margin: 0 auto 1rem;
+}
+
+/* Loading States */
+.fi-fo-wizard.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.fi-fo-wizard.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2rem;
+    height: 2rem;
+    margin: -1rem 0 0 -1rem;
+    border: 2px solid rgb(59 130 246);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

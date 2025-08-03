@@ -11,7 +11,7 @@ class CallQueueWidget extends Widget
     protected static string $view = 'filament.admin.widgets.call-queue-widget';
     protected int | string | array $columnSpan = 'full';
     protected static ?int $sort = 3;
-    protected static ?string $pollingInterval = '10s';
+    protected static ?string $pollingInterval = '60s';
 
     public ?int $companyId = null;
     public ?int $selectedBranchId = null;

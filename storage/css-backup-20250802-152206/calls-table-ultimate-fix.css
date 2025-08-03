@@ -1,0 +1,130 @@
+/* ULTIMATE Calls Table Fix - FORCE horizontales Scrollen */
+
+/* Globale Regel für ALLE Calls-Seiten */
+[wire\:id*="calls"],
+[x-data*="calls"],
+.fi-resource-list-records-ctn[wire\:id*="calls"],
+body:has([wire\:id*="calls"]) .fi-ta-ctn,
+body:has([x-data*="calls"]) .fi-ta-ctn {
+    overflow: visible !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* Spezifisch für die Table-Wrapper */
+[wire\:id*="calls"] .fi-ta-table-wrap,
+[x-data*="calls"] .fi-ta-table-wrap,
+.fi-ta-table-wrap:has(.fi-ta-table) {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+    position: relative !important;
+}
+
+/* Tabelle selbst */
+[wire\:id*="calls"] .fi-ta-table,
+[x-data*="calls"] .fi-ta-table {
+    width: max-content !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+    display: table !important;
+}
+
+/* Verhindern dass parent container die Breite limitieren */
+body:has([wire\:id*="calls"]) .fi-main,
+body:has([wire\:id*="calls"]) .fi-main-ctn,
+body:has([wire\:id*="calls"]) .fi-page {
+    overflow-x: visible !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* FORCE: Entferne ALLE overflow-x hidden in der Hierarchie */
+body:has([wire\:id*="calls"]) * {
+    overflow-x: visible !important;
+}
+
+/* NUR der table-wrap darf scrollen */
+body:has([wire\:id*="calls"]) .fi-ta-table-wrap {
+    overflow-x: auto !important;
+}
+
+/* Sichtbare Scrollbar */
+.fi-ta-table-wrap {
+    scrollbar-width: thin !important;
+    scrollbar-color: #d1d5db #f3f4f6 !important;
+}
+
+.fi-ta-table-wrap::-webkit-scrollbar {
+    height: 10px !important;
+    display: block !important;
+}
+
+.fi-ta-table-wrap::-webkit-scrollbar-track {
+    background: #f3f4f6 !important;
+    border-radius: 5px !important;
+}
+
+.fi-ta-table-wrap::-webkit-scrollbar-thumb {
+    background: #d1d5db !important;
+    border-radius: 5px !important;
+}
+
+.fi-ta-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af !important;
+}
+
+/* DEBUG MODE - Aktiviere um Container zu sehen */
+/*
+[wire\:id*="calls"] * {
+    outline: 1px solid red !important;
+}
+
+.fi-ta-table-wrap {
+    outline: 3px solid blue !important;
+    background: rgba(0,0,255,0.05) !important;
+}
+
+.fi-ta-table {
+    outline: 3px solid green !important;
+}
+*/
+
+/* ULTRA FORCE - Nuclear Option */
+@media screen {
+    /* Calls Page spezifisch */
+    .fi-page:has(.fi-resource-list-records-ctn[wire\:id*="calls"]) {
+        display: flex !important;
+        flex-direction: column !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    
+    /* Table Container */
+    .fi-page:has(.fi-resource-list-records-ctn[wire\:id*="calls"]) .fi-ta-ctn {
+        display: flex !important;
+        flex-direction: column !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    
+    /* Table Wrapper - NUR HIER darf gescrollt werden */
+    .fi-page:has(.fi-resource-list-records-ctn[wire\:id*="calls"]) .fi-ta-table-wrap {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        flex: 1 1 auto !important;
+    }
+    
+    /* Table */
+    .fi-page:has(.fi-resource-list-records-ctn[wire\:id*="calls"]) .fi-ta-table {
+        width: max-content !important;
+        min-width: 100% !important;
+    }
+}

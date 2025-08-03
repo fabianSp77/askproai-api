@@ -22,7 +22,7 @@ class VerifyCsrfToken extends Middleware
         'livewire/*',
         // Auth API endpoints (using Sanctum tokens instead)
         'api/auth/*',
-        // Only specific auth endpoints that need CSRF exemption
+        // Only API auth endpoints that need CSRF exemption
         'business/api/auth/login',
         'business/api/auth/logout',
         'business/api/auth/refresh',

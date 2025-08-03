@@ -157,11 +157,11 @@ class PortalAuthService
      */
     protected function storeSessionData(PortalUser $user): void
     {
-        // Store the standard Laravel auth session key
-        $sessionKey = 'login_portal_' . sha1(\App\Models\PortalUser::class);
-        Session::put($sessionKey, $user->id);
+        // Store the standard Laravel auth session key using the guard's session key
+        // This is already handled by Auth::guard('portal')->login() in the authenticate method
+        // We don't need to manually set it here as it can cause inconsistencies
         
-        // Store additional portal-specific data
+        // Store additional portal-specific data for fallback
         Session::put('portal_user_id', $user->id);
         Session::put('portal_company_id', $user->company_id);
         Session::put('portal_authenticated', true);

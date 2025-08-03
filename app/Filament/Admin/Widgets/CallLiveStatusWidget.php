@@ -13,7 +13,7 @@ class CallLiveStatusWidget extends Widget
 
     protected int|string|array $columnSpan = 'full';
 
-    protected static ?string $pollingInterval = '5s';
+    protected static ?string $pollingInterval = '30s';
 
     public static function canView(): bool
     {

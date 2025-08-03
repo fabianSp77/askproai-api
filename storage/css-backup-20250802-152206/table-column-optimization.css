@@ -1,0 +1,298 @@
+/* Table Column Width Optimization for Better Space Usage */
+
+/* =================================================================
+   APPOINTMENT TABLE SPECIFIC OPTIMIZATIONS
+   ================================================================= */
+
+/* Appointments - Optimize column widths */
+.appointments-index .fi-ta-table {
+    table-layout: fixed !important;
+}
+
+/* ID column - narrower */
+.appointments-index th:nth-child(1),
+.appointments-index td:nth-child(1) {
+    width: 60px !important;
+    max-width: 60px !important;
+}
+
+/* Customer column - wider for names */
+.appointments-index th:nth-child(2),
+.appointments-index td:nth-child(2) {
+    width: 220px !important;
+    min-width: 200px !important;
+}
+
+/* Service column - medium width */
+.appointments-index th:nth-child(3),
+.appointments-index td:nth-child(3) {
+    width: 180px !important;
+}
+
+/* Staff column - medium width */
+.appointments-index th:nth-child(4),
+.appointments-index td:nth-child(4) {
+    width: 160px !important;
+}
+
+/* Date/Time columns - consistent width */
+.appointments-index th:contains("Termin"),
+.appointments-index th:contains("Erstellt"),
+.appointments-index td:has(.fi-ta-date-time) {
+    width: 150px !important;
+}
+
+/* Status column - narrow */
+.appointments-index th:contains("Status"),
+.appointments-index td:has(.fi-badge) {
+    width: 120px !important;
+}
+
+/* Actions column - fixed width */
+.appointments-index th:last-child,
+.appointments-index td:last-child {
+    width: 80px !important;
+}
+
+/* =================================================================
+   CALLS TABLE SPECIFIC OPTIMIZATIONS
+   ================================================================= */
+
+/* Calls - Better column distribution */
+.calls-index .fi-ta-table {
+    table-layout: auto !important;
+}
+
+/* Phone number columns */
+.calls-index th:contains("Anrufer"),
+.calls-index th:contains("Nummer"),
+.calls-index td:has([class*="phone"]) {
+    width: 140px !important;
+}
+
+/* Duration column - narrow */
+.calls-index th:contains("Dauer"),
+.calls-index td:has(.fi-ta-text:contains("Min")) {
+    width: 80px !important;
+}
+
+/* Transcript column - expandable */
+.calls-index th:contains("Transkript"),
+.calls-index td:has(.fi-ta-text-column-wrap) {
+    min-width: 300px !important;
+    max-width: 500px !important;
+}
+
+/* =================================================================
+   CUSTOMERS TABLE SPECIFIC OPTIMIZATIONS
+   ================================================================= */
+
+/* Customers - Optimize for customer data */
+.customers-index .fi-ta-table {
+    table-layout: auto !important;
+}
+
+/* Name column - wider */
+.customers-index th:contains("Name"),
+.customers-index td:has(.fi-ta-text:first-child) {
+    min-width: 200px !important;
+}
+
+/* Email column - medium width */
+.customers-index th:contains("E-Mail"),
+.customers-index td:has(a[href^="mailto:"]) {
+    width: 220px !important;
+    word-break: break-word !important;
+}
+
+/* Phone column - fixed width */
+.customers-index th:contains("Telefon"),
+.customers-index td:has(a[href^="tel:"]) {
+    width: 140px !important;
+}
+
+/* Tags column - flexible */
+.customers-index th:contains("Tags"),
+.customers-index td:has(.fi-badge) {
+    min-width: 150px !important;
+}
+
+/* =================================================================
+   UNIVERSAL TABLE IMPROVEMENTS
+   ================================================================= */
+
+/* Better text wrapping in cells */
+.fi-ta-text {
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+}
+
+/* Optimize badge sizes */
+.fi-badge {
+    white-space: nowrap !important;
+    max-width: 150px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Compact action buttons */
+.fi-ta-actions {
+    white-space: nowrap !important;
+}
+
+.fi-ta-actions .fi-btn {
+    padding: 0.25rem 0.5rem !important;
+}
+
+/* =================================================================
+   RESPONSIVE BREAKPOINTS
+   ================================================================= */
+
+/* Large screens (1920px+) - Use all available space */
+@media (min-width: 1920px) {
+    /* Wider columns for large screens */
+    .fi-ta-text-column {
+        min-width: 180px !important;
+    }
+    
+    /* Expand customer name columns */
+    th:contains("Kunde"),
+    th:contains("Name"),
+    td:has(.fi-ta-text[class*="customer"]) {
+        min-width: 250px !important;
+    }
+    
+    /* Wider service columns */
+    th:contains("Leistung"),
+    th:contains("Service"),
+    td:has(.fi-badge[class*="service"]) {
+        min-width: 200px !important;
+    }
+}
+
+/* Medium screens (1280px-1919px) */
+@media (min-width: 1280px) and (max-width: 1919px) {
+    /* Balanced column widths */
+    .fi-ta-text-column {
+        min-width: 140px !important;
+    }
+}
+
+/* Small screens (1024px-1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    /* Compact columns */
+    .fi-ta-text-column {
+        min-width: 120px !important;
+    }
+    
+    /* Smaller padding */
+    .fi-ta-table th,
+    .fi-ta-table td {
+        padding: 0.5rem 0.75rem !important;
+    }
+}
+
+/* =================================================================
+   HOVER AND INTERACTION STATES
+   ================================================================= */
+
+/* Expand on hover for truncated content */
+.fi-ta-text:hover {
+    position: relative;
+    z-index: 10;
+}
+
+.fi-ta-text:hover .truncate {
+    overflow: visible !important;
+    white-space: normal !important;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    max-width: 400px !important;
+}
+
+/* Dark mode hover */
+.dark .fi-ta-text:hover .truncate {
+    background: rgb(31, 41, 55);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* =================================================================
+   STICKY COLUMNS (First and Last)
+   ================================================================= */
+
+/* Make first column (usually ID/checkbox) sticky */
+.fi-ta-table thead th:first-child,
+.fi-ta-table tbody td:first-child {
+    position: sticky !important;
+    left: 0 !important;
+    z-index: 20 !important;
+    background: white !important;
+}
+
+/* Make actions column sticky on the right */
+.fi-ta-table thead th:last-child,
+.fi-ta-table tbody td:last-child {
+    position: sticky !important;
+    right: 0 !important;
+    z-index: 20 !important;
+    background: white !important;
+}
+
+/* Dark mode sticky columns */
+.dark .fi-ta-table thead th:first-child,
+.dark .fi-ta-table tbody td:first-child,
+.dark .fi-ta-table thead th:last-child,
+.dark .fi-ta-table tbody td:last-child {
+    background: rgb(17, 24, 39) !important;
+}
+
+/* =================================================================
+   COLUMN GROUPS AND VISUAL HIERARCHY
+   ================================================================= */
+
+/* Group related columns visually */
+/* Customer info group */
+th:contains("Kunde"),
+th:contains("E-Mail"),
+th:contains("Telefon") {
+    background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+/* Date/Time group */
+th:contains("Datum"),
+th:contains("Zeit"),
+th:contains("Erstellt") {
+    background-color: rgba(168, 85, 247, 0.05) !important;
+}
+
+/* Status/State group */
+th:contains("Status"),
+th:contains("Quelle") {
+    background-color: rgba(34, 197, 94, 0.05) !important;
+}
+
+/* =================================================================
+   ZEBRA STRIPING WITH COLUMN HIGHLIGHTS
+   ================================================================= */
+
+/* Enhanced zebra striping */
+.fi-ta-table tbody tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Highlight on hover */
+.fi-ta-table tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* Dark mode */
+.dark .fi-ta-table tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+.dark .fi-ta-table tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+}

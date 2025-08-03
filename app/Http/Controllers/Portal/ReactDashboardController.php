@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Call;
 use App\Models\Appointment;
 use App\Models\Customer;
+use App\Models\Invoice;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +19,76 @@ class ReactDashboardController extends Controller
      */
     public function index(Request $request)
     {
-        return view('portal.dashboard-react');
+        // The portal.auth middleware should have already verified authentication
+        // If we're here, user should be authenticated
+        $user = Auth::guard('portal')->user();
+        
+        if (!$user) {
+            \Log::error('ReactDashboardController: No authenticated user despite middleware', [
+                'guard_check' => Auth::guard('portal')->check(),
+                'session_id' => session()->getId(),
+                'url' => $request->url(),
+                'all_session_keys' => array_keys(session()->all()),
+            ]);
+            abort(401, 'Unauthorized - Please login');
+        }
+        
+        $companyId = $user->company_id;
+        
+        // Simple statistics
+        $stats = [
+            'total_calls' => Call::where('company_id', $companyId)
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->count(),
+            
+            'total_appointments' => Appointment::where('company_id', $companyId)
+                ->whereMonth('starts_at', Carbon::now()->month)
+                ->count(),
+            
+            'new_customers' => Customer::where('company_id', $companyId)
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->count(),
+            
+            'monthly_revenue' => Invoice::where('company_id', $companyId)
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->sum('total'),
+        ];
+        
+        // Recent calls
+        $recentCalls = Call::where('company_id', $companyId)
+            ->with(['customer', 'staff'])
+            ->latest()
+            ->limit(10)
+            ->get();
+        
+        // Upcoming appointments today
+        $upcomingTasks = Appointment::where('company_id', $companyId)
+            ->whereDate('starts_at', Carbon::today())
+            ->where('starts_at', '>', Carbon::now())
+            ->with(['customer', 'service', 'staff'])
+            ->orderBy('starts_at')
+            ->limit(5)
+            ->get()
+            ->map(function ($appointment) {
+                return [
+                    'id' => $appointment->id,
+                    'title' => $appointment->service->name ?? 'Appointment',
+                    'customer' => $appointment->customer->name ?? 'Unknown',
+                    'time' => $appointment->starts_at->format('H:i'),
+                    'staff' => $appointment->staff->name ?? 'Unassigned'
+                ];
+            });
+        
+        $teamPerformance = null;
+        
+        // Use unified layout for consistency
+        return view('portal.dashboard-unified', compact(
+            'user',
+            'stats',
+            'recentCalls',
+            'upcomingTasks',
+            'teamPerformance'
+        ));
     }
     
     /**

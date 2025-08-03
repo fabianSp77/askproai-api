@@ -141,7 +141,39 @@
             .fi-link:hover {
                 cursor: pointer !important;
             }
+            
+            /* Remove overly aggressive pointer-events fix */
+            /* Only target specific problem areas */
+            .fi-sidebar-open::before {
+                display: none !important;
+                content: none !important;
+                pointer-events: none !important;
+                z-index: -9999 !important;
+            }
+            
+            a, button, input, select, textarea,
+            .fi-btn, .fi-link, .fi-sidebar-nav a {
+                pointer-events: auto !important;
+                cursor: pointer !important;
+                position: relative !important;
+                z-index: 10 !important;
+            }
         </style>
+
+        {{-- Emergency CSS fixes for GitHub Issues #476 & #478 --}}
+        @if(filament()->getId() === 'admin')
+            {{-- Emergency fix for login inputs --}}
+            @if(request()->routeIs('filament.*.auth.login'))
+                <link rel="stylesheet" href="{{ asset('css/login-input-force-fix.css') }}?v={{ time() }}">
+            @endif
+            
+            @vite([
+                'resources/css/filament/admin/emergency-fix-476.css',
+                'resources/css/filament/admin/emergency-icon-fix-478.css',
+                'resources/css/filament/admin/consolidated-interactions.css',
+                'resources/css/filament/admin/consolidated-layout.css'
+            ])
+        @endif
 
         @stack('styles')
 
@@ -173,6 +205,81 @@
         @livewireStyles
 
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_END, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+        
+        {{-- ABSOLUTE EMERGENCY FIX --}}
+        <script>
+        // INLINE EMERGENCY FIX - No external dependencies
+        (function() {
+            console.error('🚨 INLINE EMERGENCY FIX ACTIVATED');
+            
+            function createEmergencyMenu() {
+                if (document.getElementById('inline-emergency-menu')) return;
+                
+                const menu = document.createElement('div');
+                menu.id = 'inline-emergency-menu';
+                menu.style.cssText = 'position:fixed;top:20px;right:20px;background:white;border:3px solid red;padding:20px;z-index:2147483647;box-shadow:0 0 30px rgba(0,0,0,0.5);max-height:80vh;overflow-y:auto;';
+                
+                menu.innerHTML = `
+                    <h3 style="color:red;margin:0 0 10px 0;">🚨 EMERGENCY NAV</h3>
+                    <div id="emergency-links"></div>
+                    <button onclick="this.parentElement.remove()" style="width:100%;margin-top:10px;padding:10px;background:red;color:white;border:none;cursor:pointer;">Close</button>
+                `;
+                
+                document.body.appendChild(menu);
+                
+                const linksContainer = document.getElementById('emergency-links');
+                const links = [
+                    {url: '/admin', text: '🏠 Dashboard'},
+                    {url: '/admin/calls', text: '📞 Calls'},
+                    {url: '/admin/customers', text: '👥 Customers'},
+                    {url: '/admin/appointments', text: '📅 Appointments'},
+                    {url: '/admin/companies', text: '🏢 Companies'},
+                    {url: '/admin/branches', text: '🏪 Branches'},
+                    {url: '/admin/staff', text: '👷 Staff'},
+                    {url: '/admin/language-settings', text: '🌐 Language Settings'},
+                    {url: '/admin/a-i-call-center', text: '🤖 AI Call Center'},
+                    {url: '/admin/retell-configuration-center', text: '⚙️ Retell Config'}
+                ];
+                
+                links.forEach(link => {
+                    const btn = document.createElement('button');
+                    btn.style.cssText = 'display:block;width:100%;padding:10px;margin:5px 0;background:#3B82F6;color:white;border:none;cursor:pointer;';
+                    btn.textContent = link.text;
+                    btn.onclick = function() {
+                        console.log('Emergency nav to:', link.url);
+                        window.location.href = link.url;
+                    };
+                    linksContainer.appendChild(btn);
+                });
+            }
+            
+            // Create menu when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', createEmergencyMenu);
+            } else {
+                createEmergencyMenu();
+            }
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.altKey && e.key === 'h') {
+                    createEmergencyMenu();
+                    alert('Emergency menu created. Use Alt+D for Dashboard, Alt+C for Calls');
+                }
+                if (e.altKey && e.key === 'd') window.location.href = '/admin';
+                if (e.altKey && e.key === 'c') window.location.href = '/admin/calls';
+            });
+        })();
+        </script>
+        
+        {{-- Console cleanup must load first --}}
+        <script src="{{ asset('js/console-cleanup.js') }}?v={{ time() }}"></script>
+        
+        {{-- Alpine missing components - fixes undefined component errors --}}
+        <script src="{{ asset('js/alpine-missing-components.js') }}?v={{ time() }}"></script>
+        
+        {{-- Navigation fix - ensures all links are clickable --}}
+        <script src="{{ asset('js/navigation-fix-clean.js') }}?v={{ time() }}"></script>
     </head>
 
     <body
@@ -194,18 +301,30 @@
 
         @livewireScripts
         
+        {{-- Load Alpine components BEFORE Alpine.js initialization --}}
+        @if(filament()->getId() === 'admin')
+            {{-- Alpine components removed - causing conflicts --}}
+        @endif
+        
         @filamentScripts(withCore: true)
 
         {{-- CRITICAL: Load admin bundle for admin panel --}}
         @if(filament()->getId() === 'admin')
             @vite(['resources/js/bundles/admin.js'])
+            {{-- Removed conflicting scripts - using minimal fix instead --}}
+            
+            {{-- Login page optimization --}}
+            @if(request()->routeIs('filament.*.auth.login'))
+                <script src="{{ asset('js/login-input-emergency-fix.js') }}?v={{ time() }}"></script>
+                <script src="{{ asset('js/login-page-optimized.js') }}?v={{ time() }}"></script>
+            @endif
         @endif
 
         {{-- Essential JavaScript fixes --}}
         <script>
             // Wait for Alpine and Livewire to be ready
             document.addEventListener('alpine:init', () => {
-                console.log('[Admin Panel] Alpine initialized');
+                // console.log('[Admin Panel] Alpine initialized');
                 
                 // Fix dropdown behavior
                 Alpine.data('adminDropdown', () => ({
@@ -223,7 +342,37 @@
 
             // Ensure all elements are clickable after DOM loads
             document.addEventListener('DOMContentLoaded', () => {
-                console.log('[Admin Panel] DOM loaded, fixing interactions...');
+                // console.log('[Admin Panel] DOM loaded, fixing interactions...');
+                
+                // EMERGENCY FIX: Force all inputs to be interactive on login page
+                if (window.location.pathname.includes('login')) {
+                    // console.log('🚨 Applying login input emergency fix...');
+                    
+                    // Fix all inputs immediately
+                    const fixAllInputs = () => {
+                        const inputs = document.querySelectorAll('input, textarea, select');
+                        inputs.forEach(input => {
+                            input.style.pointerEvents = 'auto';
+                            input.style.userSelect = 'text';
+                            input.style.webkitUserSelect = 'text';
+                            input.style.cursor = 'text';
+                            input.removeAttribute('readonly');
+                            input.removeAttribute('disabled');
+                            // console.log('Fixed input:', input.type || input.tagName);
+                        });
+                        
+                        // Remove any blocking overlays
+                        document.querySelectorAll('.fi-modal-overlay, .fixed.inset-0').forEach(el => {
+                            el.style.display = 'none';
+                        });
+                    };
+                    
+                    // Run multiple times to catch dynamic content
+                    fixAllInputs();
+                    setTimeout(fixAllInputs, 100);
+                    setTimeout(fixAllInputs, 500);
+                    setTimeout(fixAllInputs, 1000);
+                }
                 
                 // Fix any elements that might have pointer-events: none
                 const fixClickability = () => {
@@ -296,6 +445,8 @@
         @stack('scripts')
 
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SCRIPTS_AFTER, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+        
+        {{-- Removed emergency framework fix - replaced with minimal fix --}}
 
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::BODY_END, scopes: $livewire?->getRenderHookScopes() ?? []) }}
     </body>

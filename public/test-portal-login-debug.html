@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Login Debug</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <h1>Business Portal Login Debug</h1>
+    
+    <div id="log" style="white-space: pre-wrap; font-family: monospace; background: #f5f5f5; padding: 10px; margin: 10px 0;"></div>
+    
+    <button onclick="debugLogin()">Debug Login</button>
+    
+    <script>
+        const log = document.getElementById('log');
+        
+        function addLog(message) {
+            log.textContent += message + '\n';
+        }
+        
+        async function debugLogin() {
+            log.textContent = ''; // Clear log
+            
+            try {
+                // Step 1: Test basic connectivity
+                addLog('=== Step 1: Testing connectivity ===');
+                const testResponse = await fetch('/business/login', {
+                    method: 'HEAD',
+                    credentials: 'same-origin'
+                });
+                addLog(`HEAD request status: ${testResponse.status}`);
+                addLog(`Headers: ${[...testResponse.headers.entries()].map(([k,v]) => `${k}: ${v}`).join(', ')}`);
+                
+                // Step 2: Get login page
+                addLog('\n=== Step 2: Getting login page ===');
+                const loginPageResponse = await fetch('/business/login', {
+                    credentials: 'same-origin'
+                });
+                addLog(`GET status: ${loginPageResponse.status}`);
+                const loginHtml = await loginPageResponse.text();
+                addLog(`Page length: ${loginHtml.length} bytes`);
+                
+                // Extract CSRF token
+                const tokenMatch = loginHtml.match(/name="_token" value="([^"]+)"/);
+                if (!tokenMatch) {
+                    addLog('ERROR: No CSRF token found!');
+                    return;
+                }
+                const csrfToken = tokenMatch[1];
+                addLog(`CSRF token: ${csrfToken.substring(0, 20)}...`);
+                
+                // Check cookies
+                addLog(`\n=== Cookies ===`);
+                addLog(`document.cookie: ${document.cookie || '(empty)'}`);
+                
+                // Step 3: Attempt login with detailed error handling
+                addLog('\n=== Step 3: Attempting login ===');
+                
+                const formData = new FormData();
+                formData.append('_token', csrfToken);
+                formData.append('email', 'demo@askproai.de');
+                formData.append('password', 'password');
+                
+                try {
+                    const loginResponse = await fetch('/business/login', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                        redirect: 'manual',
+                        mode: 'same-origin'
+                    });
+                    
+                    addLog(`POST status: ${loginResponse.status}`);
+                    addLog(`Type: ${loginResponse.type}`);
+                    addLog(`Redirected: ${loginResponse.redirected}`);
+                    addLog(`URL: ${loginResponse.url}`);
+                    
+                    // Log all headers
+                    addLog('\nResponse headers:');
+                    for (const [key, value] of loginResponse.headers.entries()) {
+                        addLog(`  ${key}: ${value}`);
+                    }
+                    
+                    if (loginResponse.status === 0) {
+                        addLog('\nERROR: Status 0 indicates:');
+                        addLog('- CORS issue (unlikely for same-origin)');
+                        addLog('- Network error');
+                        addLog('- Request blocked by browser');
+                        addLog('- SSL/TLS issue');
+                    } else if (loginResponse.status === 302 || loginResponse.status === 303) {
+                        addLog('\nSUCCESS: Login redirect received');
+                        const location = loginResponse.headers.get('Location');
+                        addLog(`Redirect to: ${location}`);
+                    } else if (loginResponse.status === 200) {
+                        const text = await loginResponse.text();
+                        if (text.includes('Die angegebenen Zugangsdaten sind ungültig')) {
+                            addLog('\nERROR: Invalid credentials');
+                        } else {
+                            addLog('\nERROR: Returned to login page');
+                        }
+                    } else if (loginResponse.status === 419) {
+                        addLog('\nERROR: CSRF token mismatch');
+                    } else {
+                        addLog(`\nERROR: Unexpected status ${loginResponse.status}`);
+                    }
+                    
+                } catch (innerError) {
+                    addLog(`\nInner fetch error: ${innerError.name}: ${innerError.message}`);
+                    addLog(`Stack: ${innerError.stack}`);
+                }
+                
+            } catch (error) {
+                addLog(`\nOuter error: ${error.name}: ${error.message}`);
+                addLog(`Stack: ${error.stack}`);
+            }
+        }
+    </script>
+</body>
+</html>

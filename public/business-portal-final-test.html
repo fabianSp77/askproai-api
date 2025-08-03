@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal - Final Login Test</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Business Portal - Final Login Test</h1>
+    
+    <div id="status"></div>
+    
+    <button onclick="testLogin()">Test Login with demo@askproai.de</button>
+    <button onclick="clearAll()">Clear All Sessions & Cookies</button>
+    
+    <h2>Steps:</h2>
+    <ol id="steps"></ol>
+    
+    <script>
+    function log(message, type = 'info') {
+        const li = document.createElement('li');
+        li.className = type;
+        li.textContent = message;
+        document.getElementById('steps').appendChild(li);
+    }
+    
+    async function clearAll() {
+        document.getElementById('steps').innerHTML = '';
+        log('Clearing all cookies...');
+        
+        // Clear cookies
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/;domain=.askproai.de"); 
+        });
+        
+        log('All cookies cleared', 'success');
+        log('Refreshing page in 2 seconds...');
+        
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    }
+    
+    async function testLogin() {
+        document.getElementById('steps').innerHTML = '';
+        
+        try {
+            // Step 1: Get login page
+            log('Fetching login page to get CSRF token...');
+            const loginPageResponse = await fetch('/business/login');
+            const loginPageText = await loginPageResponse.text();
+            
+            // Extract CSRF token
+            const csrfMatch = loginPageText.match(/name="_token"\s+value="([^"]+)"/);
+            if (!csrfMatch) {
+                throw new Error('CSRF token not found in login page');
+            }
+            const csrfToken = csrfMatch[1];
+            log(`CSRF token obtained: ${csrfToken.substring(0, 20)}...`, 'success');
+            
+            // Step 2: Submit login
+            log('Submitting login credentials...');
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('email', 'demo@askproai.de');
+            formData.append('password', 'password');
+            
+            const loginResponse = await fetch('/business/login', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                redirect: 'follow'
+            });
+            
+            log(`Login response status: ${loginResponse.status}`);
+            
+            // Check where we ended up
+            if (loginResponse.url.includes('/dashboard')) {
+                log('Successfully redirected to dashboard!', 'success');
+                log('Login successful! Redirecting to dashboard...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/business/dashboard';
+                }, 2000);
+            } else if (loginResponse.url.includes('/login')) {
+                log('Still on login page - authentication failed', 'error');
+                
+                // Try to get error message
+                const responseText = await loginResponse.text();
+                const errorMatch = responseText.match(/Die angegebenen Zugangsdaten sind ungültig/);
+                if (errorMatch) {
+                    log('Error: Invalid credentials', 'error');
+                }
+                
+                // Show current page for debugging
+                log(`Current URL: ${loginResponse.url}`);
+            } else {
+                log(`Redirected to: ${loginResponse.url}`, 'info');
+            }
+            
+            // Step 3: Check auth status
+            log('Checking authentication status...');
+            const authResponse = await fetch('/business/api/auth/check', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            if (authResponse.ok) {
+                const authData = await authResponse.json();
+                log(`Authentication status: ${authData.authenticated ? 'Authenticated' : 'Not authenticated'}`, 
+                    authData.authenticated ? 'success' : 'error');
+                if (authData.user) {
+                    log(`Logged in as: ${authData.user.email}`, 'success');
+                }
+            } else {
+                log(`Auth check failed: ${authResponse.status}`, 'error');
+            }
+            
+        } catch (error) {
+            log(`Error: ${error.message}`, 'error');
+            console.error(error);
+        }
+    }
+    
+    // Check current auth status on load
+    window.addEventListener('load', async () => {
+        try {
+            const response = await fetch('/business/api/auth/check', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const status = document.getElementById('status');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.authenticated) {
+                    status.innerHTML = '<p class="success">Already authenticated as ' + data.user.email + '</p>';
+                } else {
+                    status.innerHTML = '<p class="info">Not authenticated. Click "Test Login" to login.</p>';
+                }
+            } else {
+                status.innerHTML = '<p class="info">Not authenticated. Click "Test Login" to login.</p>';
+            }
+        } catch (error) {
+            document.getElementById('status').innerHTML = '<p class="error">Error checking auth status</p>';
+        }
+    });
+    </script>
+</body>
+</html>

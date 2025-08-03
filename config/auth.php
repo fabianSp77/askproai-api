@@ -50,11 +50,12 @@ return [
             'provider' => 'customers',
         ],
         
-        /*  ────────── Business Portal Guard ─────── */
-        'portal' => [
-            'driver'   => 'session',
-            'provider' => 'portal_users',
-        ],
+        /*  ────────── Business Portal Guard (DEPRECATED - Use 'web' guard) ─────── */
+        // Kept for backward compatibility during migration
+        // 'portal' => [
+        //     'driver'   => 'session',
+        //     'provider' => 'portal_users',
+        // ],
         
         /*  ────────── Customer API Guard ─────── */
         'customer-api' => [
@@ -84,10 +85,11 @@ return [
             'model'  => App\Models\CustomerAuth::class,
         ],
         
-        'portal_users' => [
-            'driver' => 'portal_eloquent',  // Use our custom provider that bypasses CompanyScope
-            'model'  => App\Models\PortalUser::class,
-        ],
+        // DEPRECATED - portal_users migrated to main users table
+        // 'portal_users' => [
+        //     'driver' => 'portal_eloquent',
+        //     'model'  => App\Models\PortalUser::class,
+        // ],
     ],
 
     /*

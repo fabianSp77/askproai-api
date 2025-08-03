@@ -1,0 +1,181 @@
+/* 
+ * Responsive Design System
+ * Mobile-first approach with consistent breakpoints
+ */
+
+/* Mobile Navigation */
+@media (max-width: 1023px) {
+    /* Hide sidebar off-screen by default */
+    .fi-sidebar {
+        transform: translateX(-100%);
+    }
+    
+    /* Show sidebar when open */
+    .fi-sidebar.translate-x-0,
+    .fi-sidebar-open .fi-sidebar {
+        transform: translateX(0);
+    }
+    
+    /* Sidebar overlay */
+    .fi-sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: var(--z-overlay);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--transition-fast);
+    }
+    
+    .fi-sidebar-open .fi-sidebar-overlay {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    /* Main content doesn't shift on mobile */
+    .fi-main {
+        margin-left: 0 !important;
+    }
+    
+    /* Mobile header adjustments */
+    .fi-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    /* Ensure nav button is visible and clickable */
+    .fi-sidebar-nav-toggle {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        cursor: pointer;
+    }
+}
+
+/* Tablet Adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+    /* Wider sidebar on tablets */
+    .fi-sidebar {
+        width: 20rem;
+    }
+    
+    /* Better spacing on tablets */
+    .fi-main-ctn {
+        padding: var(--spacing-xl);
+    }
+}
+
+/* Desktop Enhancements */
+@media (min-width: 1024px) {
+    /* Hide mobile nav toggle */
+    .fi-sidebar-nav-toggle {
+        display: none !important;
+    }
+    
+    /* No overlay needed on desktop */
+    .fi-sidebar-overlay {
+        display: none !important;
+    }
+}
+
+/* Ultra-wide Support */
+@media (min-width: 1920px) {
+    .fi-main-ctn {
+        max-width: 1600px;
+    }
+}
+
+/* Touch-friendly Targets */
+@media (hover: none) and (pointer: coarse) {
+    /* Minimum 44x44px touch targets */
+    button,
+    a,
+    .fi-btn,
+    .fi-link,
+    .fi-dropdown-trigger {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    /* Better spacing between interactive elements */
+    .fi-ta-actions {
+        gap: var(--spacing-sm);
+    }
+    
+    /* Larger form inputs on touch devices */
+    input,
+    select,
+    textarea {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* Table Responsiveness */
+@media (max-width: 767px) {
+    /* Horizontal scroll for tables */
+    .fi-ta-ctn {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Minimum table width */
+    .fi-ta-table {
+        min-width: 600px;
+    }
+    
+    /* Stack table actions vertically */
+    .fi-ta-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .fi-ta-actions > * {
+        width: 100%;
+    }
+}
+
+/* Form Responsiveness */
+@media (max-width: 640px) {
+    /* Stack form fields on mobile */
+    .fi-fo-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Full-width form sections */
+    .fi-fo-section {
+        padding: var(--spacing-md);
+    }
+    
+    /* Stack form actions */
+    .fi-form-actions {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .fi-form-actions > * {
+        width: 100%;
+    }
+}
+
+/* Widget Grid Responsiveness */
+@media (max-width: 1279px) {
+    .fi-wi-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+}
+
+/* Print Styles */
+@media print {
+    .fi-sidebar,
+    .fi-header,
+    .fi-ta-actions,
+    .no-print {
+        display: none !important;
+    }
+    
+    .fi-main {
+        margin: 0 !important;
+    }
+}

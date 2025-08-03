@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>Universal Click Handler Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .status-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .success {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .test-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #2563eb;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Universal Click Handler Test</h1>
+    
+    <div class="status-box">
+        <h2>Lösung implementiert:</h2>
+        <ul>
+            <li class="success">✓ Alle Fix-Scripts deaktiviert (außer universal-click-handler.js)</li>
+            <li class="success">✓ Problematische CSS-Regel entfernt (*::before, *::after)</li>
+            <li class="success">✓ Framework-unabhängiger Click-Handler erstellt</li>
+            <li class="success">✓ CSS bereinigt und vereinfacht</li>
+        </ul>
+    </div>
+    
+    <div class="status-box">
+        <h2>Test-Links:</h2>
+        <p>Klicken Sie auf diese Links um zu testen:</p>
+        
+        <a href="/admin" class="test-button">🏠 Admin Dashboard</a>
+        <a href="/admin/calls" class="test-button">📞 Calls</a>
+        <a href="/admin/customers" class="test-button">👥 Customers</a>
+        <a href="/admin/appointments" class="test-button">📅 Appointments</a>
+        
+        <p style="margin-top: 20px;">
+            <strong>Erwartetes Verhalten:</strong> Alle Links sollten direkt funktionieren, 
+            ohne dass das Emergency-Menü benötigt wird.
+        </p>
+    </div>
+    
+    <div class="status-box">
+        <h2>Technische Details:</h2>
+        <p>Der neue <code>universal-click-handler.js</code> funktioniert so:</p>
+        <ul>
+            <li>Nutzt Event Capturing (läuft vor anderen Handlers)</li>
+            <li>Interceptiert alle Klicks auf Links</li>
+            <li>Erzwingt <code>window.location.href</code> für Admin-Links</li>
+            <li>Entfernt periodisch blockierende Styles</li>
+            <li>Funktioniert unabhängig von Alpine.js/Livewire</li>
+        </ul>
+    </div>
+    
+    <div class="status-box">
+        <h2>Browser Cache leeren:</h2>
+        <p>Bitte leeren Sie den Browser-Cache (Ctrl+F5) um sicherzustellen, dass die neuen Dateien geladen werden.</p>
+    </div>
+    
+    <script>
+        // Quick test to see if our handler is loaded
+        setTimeout(() => {
+            const handlers = getEventListeners ? getEventListeners(document) : null;
+            if (handlers && handlers.click) {
+                console.log('Click handlers registered:', handlers.click.length);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -21,7 +21,7 @@ class OperationsMonitorWidget extends Widget
         'xl' => 'full',       // Large screens: volle Breite
     ];
     protected static ?int $sort = 1;
-    protected static ?string $pollingInterval = '5s'; // Live updates every 5 seconds
+    protected static ?string $pollingInterval = '30s'; // Live updates every 5 seconds
     
     public ?int $companyId = null;
     

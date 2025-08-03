@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Static Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; }
+        input, button { display: block; width: 100%; margin: 10px 0; padding: 10px; }
+        button { background: #3b82f6; color: white; border: none; cursor: pointer; }
+        .info { background: #f0f0f0; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Static Business Portal Login Test</h1>
+    
+    <div class="info">
+        <strong>Test Credentials:</strong><br>
+        Email: demo@askproai.de<br>
+        Password: password
+    </div>
+    
+    <form method="POST" action="/business/login">
+        <input type="email" name="email" placeholder="Email" value="demo@askproai.de" required>
+        <input type="password" name="password" placeholder="Password" value="password" required>
+        <button type="submit">Login (No CSRF)</button>
+    </form>
+    
+    <p style="color: red; margin-top: 20px;">Note: This form doesn't include CSRF token, so it might fail with 419 error. Use for testing only.</p>
+    
+    <h2>Alternative Test Users:</h2>
+    <ul>
+        <li>demo@example.com / password</li>
+        <li>fabianspitzer@icloud.com / (unknown password)</li>
+    </ul>
+</body>
+</html>

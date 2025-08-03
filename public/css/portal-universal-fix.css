@@ -15,9 +15,10 @@ a:not([disabled]),
     pointer-events: auto !important;
 }
 
-/* Remove any blocking overlays */
-*::before,
-*::after {
+/* Remove any blocking overlays - FIXED: This was blocking ALL clicks! */
+/* Only disable pointer events for specific decorative elements */
+.decorative::before,
+.decorative::after {
     pointer-events: none !important;
 }
 

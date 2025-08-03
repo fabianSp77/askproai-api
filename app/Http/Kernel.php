@@ -55,18 +55,22 @@ class Kernel extends HttpKernel
         
         'business-portal' => [
             // Use individual middleware instead of inheriting from web
+            \App\Http\Middleware\PortalSessionConfig::class, // Must be first to configure session
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\PortalStartSession::class, // Use portal-specific session handler
+            \App\Http\Middleware\SharePortalSession::class, // Restore portal session from session storage
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
         
         'business-api' => [
+            \App\Http\Middleware\PortalSessionConfig::class, // Must be first to configure session
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\PortalStartSession::class, // Use portal-specific session handler
+            \App\Http\Middleware\SharePortalSession::class, // Restore portal session from session storage
             \App\Http\Middleware\PortalAuth::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -102,6 +106,7 @@ class Kernel extends HttpKernel
         
         // Portal Middleware - Simplified
         'portal.auth' => Middleware\PortalAuth::class,
+        'portal.auth.fixed' => Middleware\PortalAuthFixed::class,
         'portal.permission' => Middleware\PortalPermission::class,
         'portal.2fa' => Middleware\PortalTwoFactorAuth::class,
         

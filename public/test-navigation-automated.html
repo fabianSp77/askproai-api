@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>Automated Navigation Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-result {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .success {
+            border-left: 4px solid #10b981;
+        }
+        .error {
+            border-left: 4px solid #ef4444;
+        }
+        .warning {
+            border-left: 4px solid #f59e0b;
+        }
+        .test-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .test-details {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        #testFrame {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Automated Navigation Test</h1>
+        
+        <div class="test-result warning">
+            <div class="test-header">⚠️ Hinweis</div>
+            <div class="test-details">
+                Dieser Test prüft die Navigation im Admin Panel. 
+                Bitte stellen Sie sicher, dass Sie im Admin Panel eingeloggt sind.
+            </div>
+        </div>
+        
+        <button onclick="startTest()">🚀 Test starten</button>
+        
+        <div id="testResults"></div>
+        
+        <iframe id="testFrame" style="display:none;"></iframe>
+    </div>
+    
+    <script>
+        const testUrls = [
+            { url: '/admin', name: 'Dashboard' },
+            { url: '/admin/calls', name: 'Calls' },
+            { url: '/admin/customers', name: 'Customers' },
+            { url: '/admin/appointments', name: 'Appointments' },
+        ];
+        
+        let currentTestIndex = 0;
+        const results = [];
+        
+        function startTest() {
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('testFrame').style.display = 'block';
+            currentTestIndex = 0;
+            results.length = 0;
+            testNextUrl();
+        }
+        
+        function testNextUrl() {
+            if (currentTestIndex >= testUrls.length) {
+                showSummary();
+                return;
+            }
+            
+            const test = testUrls[currentTestIndex];
+            const iframe = document.getElementById('testFrame');
+            
+            addResult('info', `Testing ${test.name}...`, `Loading ${test.url}`);
+            
+            // Set timeout for slow loads
+            const timeout = setTimeout(() => {
+                addResult('error', `${test.name} - Timeout`, 'Page took too long to load');
+                currentTestIndex++;
+                testNextUrl();
+            }, 10000);
+            
+            iframe.onload = function() {
+                clearTimeout(timeout);
+                
+                try {
+                    // Check if we can access the iframe content
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Check for universal click handler
+                    const hasUniversalHandler = iframeDoc.querySelector('script[src*="universal-click-handler.js"]');
+                    
+                    // Check for problematic CSS
+                    const hasProblematicCSS = iframeDoc.documentElement.innerHTML.includes('pointer-events: none');
+                    
+                    // Try to find clickable links
+                    const links = iframeDoc.querySelectorAll('a[href], button');
+                    
+                    let status = 'success';
+                    let details = [];
+                    
+                    if (hasUniversalHandler) {
+                        details.push('✅ Universal click handler loaded');
+                    } else {
+                        details.push('❌ Universal click handler NOT loaded');
+                        status = 'error';
+                    }
+                    
+                    if (hasProblematicCSS) {
+                        details.push('⚠️ Found pointer-events: none in CSS');
+                        if (status === 'success') status = 'warning';
+                    }
+                    
+                    details.push(`Found ${links.length} clickable elements`);
+                    
+                    addResult(status, `${test.name} - Loaded`, details.join(' | '));
+                    
+                } catch (e) {
+                    // Cross-origin error - probably redirected to login
+                    addResult('warning', `${test.name} - Access Denied`, 'Redirected to login or cross-origin error');
+                }
+                
+                currentTestIndex++;
+                setTimeout(testNextUrl, 1000);
+            };
+            
+            iframe.src = test.url;
+        }
+        
+        function addResult(type, header, details) {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = `
+                <div class="test-header">${header}</div>
+                <div class="test-details">${details}</div>
+            `;
+            resultsDiv.appendChild(resultDiv);
+            
+            results.push({ type, header, details });
+        }
+        
+        function showSummary() {
+            const successCount = results.filter(r => r.type === 'success').length;
+            const errorCount = results.filter(r => r.type === 'error').length;
+            const warningCount = results.filter(r => r.type === 'warning').length;
+            
+            let summaryType = 'success';
+            if (errorCount > 0) summaryType = 'error';
+            else if (warningCount > 0) summaryType = 'warning';
+            
+            addResult(summaryType, 
+                '📊 Test Summary', 
+                `Success: ${successCount} | Warnings: ${warningCount} | Errors: ${errorCount}`
+            );
+            
+            // Test direct link clicking
+            addResult('info', '🖱️ Manual Test Required', 
+                'Please try clicking on menu items in the iframe below to verify they work correctly.'
+            );
+        }
+    </script>
+</body>
+</html>

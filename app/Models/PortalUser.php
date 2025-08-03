@@ -7,11 +7,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use App\Traits\BelongsToCompany;
+// REMOVED BelongsToCompany - it applies CompanyScope which breaks login
+// Portal users need to be found BEFORE we have a company context
 
 class PortalUser extends Authenticatable
 {
-    use HasFactory, HasApiTokens, Notifiable, TwoFactorAuthenticatable, BelongsToCompany;
+    use HasFactory, HasApiTokens, Notifiable, TwoFactorAuthenticatable;
 
     protected $table = 'portal_users';
     
@@ -97,6 +98,14 @@ class PortalUser extends Authenticatable
             'feedback.create'
         ],
     ];
+
+    /**
+     * Company relationship
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     /**
      * Get display name for role
@@ -243,11 +252,11 @@ class PortalUser extends Authenticatable
     /**
      * Record login
      */
-    public function recordLogin(string $ip): void
+    public function recordLogin(?string $ip = null): void
     {
         $this->update([
             'last_login_at' => now(),
-            'last_login_ip' => $ip,
+            'last_login_ip' => $ip ?? '127.0.0.1',
         ]);
     }
 

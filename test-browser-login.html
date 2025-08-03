@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Login Test</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Business Portal Login Test</h1>
+    
+    <h2>Test 1: Get CSRF Token</h2>
+    <button onclick="getCSRF()">Get CSRF Token</button>
+    <div id="csrf-result"></div>
+    
+    <h2>Test 2: Login Form</h2>
+    <form id="login-form" action="https://api.askproai.de/business/login" method="POST">
+        <input type="hidden" name="_token" id="csrf-token" value="">
+        <div>
+            <label>Email:</label>
+            <input type="email" name="email" value="demo@askproai.de" required>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" name="password" value="password123" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    
+    <h2>Results:</h2>
+    <div id="results"></div>
+    
+    <script>
+    async function getCSRF() {
+        try {
+            const response = await fetch('https://api.askproai.de/business/login');
+            const text = await response.text();
+            
+            // Extract CSRF token from HTML
+            const tokenMatch = text.match(/name="_token" value="([^"]+)"/);
+            if (tokenMatch) {
+                const token = tokenMatch[1];
+                document.getElementById('csrf-token').value = token;
+                document.getElementById('csrf-result').innerHTML = 
+                    '<p>✅ CSRF Token found: ' + token.substring(0, 20) + '...</p>';
+            } else {
+                document.getElementById('csrf-result').innerHTML = 
+                    '<p>❌ CSRF Token not found in response</p>';
+            }
+        } catch (error) {
+            document.getElementById('csrf-result').innerHTML = 
+                '<p>❌ Error: ' + error.message + '</p>';
+        }
+    }
+    
+    // Auto-get CSRF on load
+    window.onload = function() {
+        getCSRF();
+    };
+    
+    // Intercept form submit to show results
+    document.getElementById('login-form').onsubmit = function(e) {
+        document.getElementById('results').innerHTML = 
+            '<p>Form submitted. If you see a 500 error, check browser console for details.</p>';
+    };
+    </script>
+</body>
+</html>

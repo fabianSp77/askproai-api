@@ -32,7 +32,13 @@ export default defineConfig({
                 'filament.admin.icon-container-sizes': 'resources/css/filament/admin/icon-container-sizes.css',
                 'filament.admin.form-layout-fixes': 'resources/css/filament/admin/form-layout-fixes.css',
                 'filament.admin.table-scroll-indicators': 'resources/css/filament/admin/table-scroll-indicators.css',
-                'filament.admin.content-width-fix': 'resources/css/filament/admin/content-width-fix.css'
+                'filament.admin.content-width-fix': 'resources/css/filament/admin/content-width-fix.css',
+                
+                // Emergency fixes for GitHub Issues #476 & #478
+                'filament.admin.emergency-fix-476': 'resources/css/filament/admin/emergency-fix-476.css',
+                'filament.admin.emergency-icon-fix-478': 'resources/css/filament/admin/emergency-icon-fix-478.css',
+                'filament.admin.consolidated-interactions': 'resources/css/filament/admin/consolidated-interactions.css',
+                'filament.admin.consolidated-layout': 'resources/css/filament/admin/consolidated-layout.css'
             },
             refresh: true,
         }),

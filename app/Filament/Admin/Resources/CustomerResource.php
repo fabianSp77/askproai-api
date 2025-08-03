@@ -118,7 +118,7 @@ class CustomerResource extends EnhancedResourceSimple
 
     protected static ?string $navigationLabel = null;
 
-    protected static ?string $navigationGroup = null;
+    protected static ?string $navigationGroup = 'Kundenverwaltung';
     
     public static function getNavigationLabel(): string
     {

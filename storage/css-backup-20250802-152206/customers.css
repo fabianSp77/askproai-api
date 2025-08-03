@@ -1,0 +1,395 @@
+/* ========================================
+   CUSTOMERS RESOURCE - Professional Design
+   Consistent with Appointments & Company Portal
+   ======================================== */
+
+/* Table Container Styling */
+.fi-resource-customers .fi-ta-table-container {
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Table Header Styling */
+.fi-resource-customers .fi-ta-header-toolbar {
+    background: linear-gradient(to right, #f9fafb, #ffffff);
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+}
+
+/* Search Input Styling */
+.fi-resource-customers .fi-ta-search-field input {
+    border-radius: 0.75rem;
+    border: 2px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.fi-resource-customers .fi-ta-search-field input:focus {
+    border-color: rgb(16, 185, 129);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    outline: none;
+}
+
+/* Filter Pills Styling */
+.fi-resource-customers .fi-ta-filters {
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.fi-resource-customers .fi-ta-filter {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.fi-resource-customers .fi-ta-filter:hover {
+    border-color: rgb(16, 185, 129);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.fi-resource-customers .fi-ta-filter.fi-active {
+    background: rgb(16, 185, 129);
+    border-color: rgb(16, 185, 129);
+    color: white;
+}
+
+/* Table Row Styling */
+.fi-resource-customers .fi-ta-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: all 0.2s ease;
+}
+
+.fi-resource-customers .fi-ta-table tbody tr:hover {
+    background-color: rgba(16, 185, 129, 0.02);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+}
+
+/* Table Cell Styling */
+.fi-resource-customers .fi-ta-table td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+}
+
+.fi-resource-customers .fi-ta-table th {
+    padding: 0.75rem 1.5rem;
+    background: #fafbfc;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+/* Customer Badges */
+.fi-resource-customers .fi-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+/* Customer Tag Badges */
+.fi-resource-customers .fi-badge-color-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e3a8a;
+    border: 1px solid #60a5fa;
+}
+
+/* Appointment Count Badges */
+.fi-resource-customers .fi-badge-color-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.fi-resource-customers .fi-badge-color-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fbbf24;
+}
+
+.fi-resource-customers .fi-badge-color-gray {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+/* Portal Status Icon */
+.fi-resource-customers .fi-ta-icon-column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.fi-resource-customers .fi-ta-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Action Buttons Styling */
+.fi-resource-customers .fi-ta-actions {
+    gap: 0.5rem;
+}
+
+.fi-resource-customers .fi-ta-action {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.fi-resource-customers .fi-ta-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Bulk Actions Bar */
+.fi-resource-customers .fi-ta-bulk-actions {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Pagination Styling */
+.fi-resource-customers .fi-ta-pagination {
+    padding: 1rem 1.5rem;
+    background: #fafbfc;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Filter Collapsible Section */
+.fi-resource-customers .fi-ta-filters-container {
+    background: #f9fafb;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Empty State Styling */
+.fi-resource-customers .fi-ta-empty-state {
+    padding: 3rem;
+    text-align: center;
+}
+
+/* Header Actions Styling */
+.fi-resource-customers .fi-page-header-actions {
+    gap: 0.75rem;
+}
+
+.fi-resource-customers .fi-page-header-actions .fi-btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.fi-resource-customers .fi-page-header-actions .fi-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Primary Button (Customer themed) */
+.fi-resource-customers .fi-btn-color-primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+}
+
+.fi-resource-customers .fi-btn-color-primary:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Secondary Button */
+.fi-resource-customers .fi-btn-color-gray {
+    background: white;
+    color: #374151;
+    border: 2px solid #e5e7eb;
+}
+
+/* Stats Overview Widget Styling */
+.fi-resource-customers .fi-wi-stats-overview-stat {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.fi-resource-customers .fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient backgrounds for customer stat cards */
+.customer-stat-gradient-primary {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.customer-stat-gradient-primary .fi-wi-stats-overview-stat-value {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.customer-stat-gradient-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.customer-stat-gradient-info .fi-wi-stats-overview-stat-value {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.customer-stat-gradient-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.customer-stat-gradient-warning .fi-wi-stats-overview-stat-value {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.customer-stat-gradient-success {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+}
+
+.customer-stat-gradient-success .fi-wi-stats-overview-stat-value {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+/* Chart Widget Styling */
+.fi-resource-customers .fi-wi-chart {
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    background: white;
+}
+
+/* Timeline Modal Styling */
+.fi-resource-customers .customer-timeline {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.fi-resource-customers .timeline-item {
+    position: relative;
+    padding-left: 2rem;
+    padding-bottom: 2rem;
+    border-left: 2px solid #e5e7eb;
+}
+
+.fi-resource-customers .timeline-item:last-child {
+    border-left: none;
+}
+
+.fi-resource-customers .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgb(16, 185, 129);
+    border: 2px solid white;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* Form Section Styling */
+.fi-resource-customers .fi-form-section {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Help Section Styling */
+.fi-resource-customers .help-section {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .fi-resource-customers .fi-ta-table-container {
+        border-radius: 0;
+        box-shadow: none;
+    }
+    
+    .fi-resource-customers .fi-ta-header-toolbar {
+        padding: 1rem;
+    }
+    
+    .fi-resource-customers .fi-ta-table td,
+    .fi-resource-customers .fi-ta-table th {
+        padding: 0.75rem;
+    }
+}
+
+/* Dark Mode Support */
+.dark .fi-resource-customers .fi-ta-table-container {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark .fi-resource-customers .fi-ta-header-toolbar {
+    background: linear-gradient(to right, #1f2937, #111827);
+    border-color: #374151;
+}
+
+.dark .fi-resource-customers .fi-ta-table tbody tr:hover {
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+.dark .fi-resource-customers .fi-ta-search-field input {
+    background: #374151;
+    border-color: #4b5563;
+    color: white;
+}
+
+.dark .fi-resource-customers .fi-wi-chart {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark .fi-resource-customers .help-section {
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* Smooth Transitions */
+.fi-resource-customers * {
+    transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}

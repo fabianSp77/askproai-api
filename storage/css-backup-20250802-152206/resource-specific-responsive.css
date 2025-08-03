@@ -1,0 +1,200 @@
+/* Resource-Specific Responsive Optimizations */
+
+/* 1. Appointment Resource */
+@media (max-width: 767px) {
+    /* Priority columns for appointments */
+    .fi-resource-appointments-index .fi-ta-col-customer\.name::before {
+        content: "Kunde";
+    }
+    .fi-resource-appointments-index .fi-ta-col-starts_at::before {
+        content: "Termin";
+    }
+    .fi-resource-appointments-index .fi-ta-col-status::before {
+        content: "Status";
+    }
+    .fi-resource-appointments-index .fi-ta-col-service\.name::before {
+        content: "Leistung";
+    }
+    .fi-resource-appointments-index .fi-ta-col-staff\.name::before {
+        content: "Mitarbeiter";
+    }
+    
+    /* Hide less important columns on mobile */
+    .fi-resource-appointments-index .fi-ta-col-duration,
+    .fi-resource-appointments-index .fi-ta-col-created_at,
+    .fi-resource-appointments-index .fi-ta-col-updated_at {
+        display: none;
+    }
+}
+
+/* 2. Customer Resource */
+@media (max-width: 767px) {
+    /* Priority columns for customers */
+    .fi-resource-customers-index .fi-ta-col-name::before {
+        content: "Name";
+    }
+    .fi-resource-customers-index .fi-ta-col-email::before {
+        content: "E-Mail";
+    }
+    .fi-resource-customers-index .fi-ta-col-phone::before {
+        content: "Telefon";
+    }
+    .fi-resource-customers-index .fi-ta-col-appointments_count::before {
+        content: "Termine";
+    }
+    
+    /* Hide less important columns */
+    .fi-resource-customers-index .fi-ta-col-created_at,
+    .fi-resource-customers-index .fi-ta-col-last_appointment_date {
+        display: none;
+    }
+}
+
+/* 3. Call Resource */
+@media (max-width: 767px) {
+    /* Priority columns for calls */
+    .fi-resource-calls-index .fi-ta-col-caller_phone_number::before {
+        content: "Anrufer";
+    }
+    .fi-resource-calls-index .fi-ta-col-status::before {
+        content: "Status";
+    }
+    .fi-resource-calls-index .fi-ta-col-created_at::before {
+        content: "Datum";
+    }
+    .fi-resource-calls-index .fi-ta-col-duration::before {
+        content: "Dauer";
+    }
+    .fi-resource-calls-index .fi-ta-col-appointment_created::before {
+        content: "Termin erstellt";
+    }
+    
+    /* Hide less important columns */
+    .fi-resource-calls-index .fi-ta-col-recording_url,
+    .fi-resource-calls-index .fi-ta-col-agent_id {
+        display: none;
+    }
+}
+
+/* 4. Tablet View Optimizations (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    /* Reduce padding for more content */
+    .fi-ta-table th,
+    .fi-ta-table td {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Optimize column widths */
+    .fi-ta-col-email,
+    .fi-ta-col-customer\.email {
+        max-width: 200px;
+    }
+    
+    /* Compact badges */
+    .fi-badge {
+        padding: 0.125rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* 5. Wide Screen Optimizations (> 1536px) */
+@media (min-width: 1536px) {
+    /* Allow more breathing room on wide screens */
+    .fi-ta-table-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    /* Larger text for better readability */
+    .fi-ta-table {
+        font-size: 0.9375rem;
+    }
+}
+
+/* 6. Status Badge Responsiveness */
+@media (max-width: 767px) {
+    .fi-ta-table .fi-badge {
+        display: inline-flex;
+        width: auto;
+        min-width: 80px;
+        justify-content: center;
+    }
+}
+
+/* 7. Action Buttons Mobile Optimization */
+@media (max-width: 767px) {
+    .fi-ta-actions {
+        flex-direction: row;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+    
+    .fi-ta-actions .fi-btn-label {
+        display: none; /* Hide labels, show only icons */
+    }
+    
+    .fi-ta-actions .fi-btn {
+        padding: 0.5rem;
+        min-width: 2.5rem;
+        height: 2.5rem;
+    }
+}
+
+/* 8. Search and Filter Mobile Layout */
+@media (max-width: 767px) {
+    .fi-ta-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .fi-ta-search-field {
+        width: 100%;
+    }
+    
+    .fi-ta-filters {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .fi-ta-filters .fi-btn {
+        flex: 1;
+        min-width: calc(50% - 0.25rem);
+    }
+}
+
+/* 9. Pagination Mobile Optimization */
+@media (max-width: 767px) {
+    .fi-ta-pagination {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .fi-ta-pagination-records-per-page {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .fi-ta-pagination-navigator {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* 10. Empty State Responsive */
+@media (max-width: 767px) {
+    .fi-ta-empty-state {
+        padding: 2rem 1rem;
+    }
+    
+    .fi-ta-empty-state-icon {
+        width: 4rem;
+        height: 4rem;
+    }
+    
+    .fi-ta-empty-state-heading {
+        font-size: 1.125rem;
+    }
+}

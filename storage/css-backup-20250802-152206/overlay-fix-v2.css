@@ -1,0 +1,69 @@
+/* ================================================================
+   TARGETED FIX FOR BLACK OVERLAY - Issue #430
+   ================================================================ */
+
+/* Completely disable the sidebar overlay on ALL screen sizes */
+.fi-sidebar-open::before,
+body.fi-sidebar-open::before {
+    display: none !important;
+    content: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+}
+
+/* Ensure the body is always interactive */
+body.fi-sidebar-open {
+    overflow: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Make sure all page content is clickable */
+.fi-main,
+.fi-main-ctn,
+.fi-page,
+.fi-simple-page {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Ensure forms and buttons work */
+form,
+button,
+a,
+input,
+select,
+textarea,
+.fi-btn,
+.fi-link {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix for the specific unified-responsive.css overlay */
+@media (max-width: 1023px) {
+    /* Override the mobile overlay from unified-responsive.css */
+    .fi-sidebar-open::before {
+        position: static !important;
+        inset: auto !important;
+        z-index: -1 !important;
+    }
+}
+
+/* Desktop specific fixes */
+@media (min-width: 1024px) {
+    /* Ensure no overlay on desktop */
+    body::before,
+    body::after {
+        display: none !important;
+    }
+    
+    /* Remove sidebar-open class effects */
+    body.fi-sidebar-open {
+        /* Same as body without the class */
+        overflow: auto !important;
+    }
+}

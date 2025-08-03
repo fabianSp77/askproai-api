@@ -1,0 +1,94 @@
+/**
+ * Emergency CSS Fix for Login Input Fields
+ * Ensures inputs are always accessible
+ */
+
+/* Force all inputs to be interactive */
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[name="email"],
+input[name="password"],
+.fi-input,
+.fi-input-wrapper input {
+    pointer-events: auto !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative !important;
+    z-index: 10 !important;
+    cursor: text !important;
+}
+
+/* Ensure form is interactive */
+form,
+.fi-form,
+.fi-simple-form {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* Fix input wrappers */
+.fi-input-wrapper,
+.fi-fo-field-wrapper,
+.fi-fo-text-input {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: auto !important;
+}
+
+/* Remove any blocking overlays on login page */
+.fi-login-panel .fi-modal-overlay,
+.fi-login-panel .fixed.inset-0,
+.fi-login-panel [class*="overlay"] {
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Ensure no element blocks the form */
+.fi-simple-page * {
+    pointer-events: inherit !important;
+}
+
+/* Fix for potential invisible blockers */
+.fi-login-panel::before,
+.fi-login-panel::after,
+.fi-simple-page::before,
+.fi-simple-page::after {
+    display: none !important;
+}
+
+/* Force remove any blocking pseudo elements */
+input::before,
+input::after {
+    display: none !important;
+}
+
+/* Ensure labels don't block inputs */
+label {
+    pointer-events: none !important;
+}
+
+/* But keep label text selectable */
+label * {
+    pointer-events: auto !important;
+}
+
+/* Fix for Livewire loading states */
+.fi-input-wrapper[wire\:loading] input {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+
+/* Ensure focus states work */
+input:focus,
+input:focus-visible {
+    outline: 2px solid rgb(251, 191, 36) !important;
+    outline-offset: 2px !important;
+}
+
+/* Debug removed - inputs are working */

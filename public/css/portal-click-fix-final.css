@@ -1,0 +1,98 @@
+/**
+ * Portal Click Fix - Final Solution
+ * This file ensures all interactive elements in the portal are clickable
+ * Load this AFTER all other CSS files
+ */
+
+/* === CRITICAL FIX: Enable all clicks === */
+
+/* Ensure ALL links are clickable */
+a,
+a *,
+[href],
+[href] * {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Ensure ALL buttons are clickable */
+button,
+button *,
+[type="button"],
+[type="submit"],
+[role="button"],
+[role="button"] * {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Ensure form elements are interactive */
+input,
+textarea,
+select,
+label {
+    pointer-events: auto !important;
+    cursor: auto !important;
+}
+
+/* Ensure Alpine.js elements are clickable */
+[x-on\:click],
+[x-on\:click] *,
+[@click],
+[@click] *,
+[wire\:click],
+[wire\:click] * {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix for sidebar navigation */
+.sidebar-item,
+.sidebar-item * {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix for mobile menu button */
+button[class*="md:hidden"],
+button[class*="md:hidden"] * {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix for dropdown menus */
+.dropdown,
+.dropdown *,
+[data-dropdown],
+[data-dropdown] * {
+    pointer-events: auto !important;
+}
+
+/* Remove any global pointer-events blocking */
+body * {
+    pointer-events: initial;
+}
+
+/* Only disable pointer events for truly decorative elements */
+.decoration-only::before,
+.decoration-only::after,
+.background-pattern::before,
+.background-pattern::after {
+    pointer-events: none;
+}
+
+/* Ensure proper z-index hierarchy */
+.sidebar-mobile {
+    z-index: 40 !important;
+}
+
+.sidebar-overlay {
+    z-index: 30 !important;
+}
+
+/* Debug helper - adds visible outline to all clickable elements */
+.debug-clicks a,
+.debug-clicks button,
+.debug-clicks [role="button"] {
+    outline: 2px solid red !important;
+}

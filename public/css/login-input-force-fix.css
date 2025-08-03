@@ -1,0 +1,93 @@
+/**
+ * FORCE FIX for Login Input Fields
+ * This overrides ALL other CSS rules
+ */
+
+/* Remove ALL pointer-events: none from the entire page */
+* {
+    pointer-events: auto !important;
+}
+
+/* Specifically ensure all form elements work */
+input,
+textarea,
+select,
+button,
+a,
+label,
+form {
+    pointer-events: auto !important;
+    user-select: auto !important;
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    -ms-user-select: auto !important;
+    cursor: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative !important;
+    z-index: auto !important;
+}
+
+/* Specific fix for email and password fields */
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[name="email"],
+input[name="password"],
+#email,
+#password,
+[wire\:model="data.email"],
+[wire\:model="data.password"],
+[wire\:model="email"],
+[wire\:model="password"] {
+    pointer-events: auto !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    cursor: text !important;
+    background-color: white !important;
+    color: black !important;
+    border: 2px solid #3B82F6 !important;
+    padding: 10px !important;
+    font-size: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Dark mode fix */
+@media (prefers-color-scheme: dark) {
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+        background-color: #374151 !important;
+        color: white !important;
+        border-color: #4B5563 !important;
+    }
+}
+
+/* Focus states to show inputs are working */
+input:focus {
+    outline: 3px solid #FCD34D !important;
+    outline-offset: 2px !important;
+    border-color: #F59E0B !important;
+}
+
+/* Remove any blocking overlays */
+.fi-modal-overlay,
+.fixed.inset-0,
+[class*="overlay"],
+.fi-simple-page::before,
+.fi-simple-page::after,
+.fi-login-panel::before,
+.fi-login-panel::after {
+    display: none !important;
+}
+
+/* Ensure form is on top */
+form {
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+/* Debug removed - inputs are now working properly */

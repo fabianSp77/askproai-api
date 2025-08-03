@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Business Portal Login</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Simple Business Portal Login Test</h1>
+    
+    <h2>Direct Login Form</h2>
+    <form action="/business/login" method="POST">
+        <div>
+            <label>Email:</label>
+            <input type="email" name="email" value="demo@askproai.de" required>
+        </div>
+        <div>
+            <label>Password:</label>
+            <input type="password" name="password" value="password" required>
+        </div>
+        <button type="submit">Login</button>
+    </form>
+    
+    <p><strong>Note:</strong> This form will fail with CSRF error, which is expected. Use the button below to login properly.</p>
+    
+    <hr>
+    
+    <h2>Login with CSRF Token</h2>
+    <button onclick="loginWithCSRF()">Login with CSRF Token</button>
+    
+    <div id="result" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none;">
+        <h3>Result:</h3>
+        <pre id="resultContent"></pre>
+    </div>
+    
+    <script>
+    async function loginWithCSRF() {
+        const resultDiv = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        resultDiv.style.display = 'block';
+        resultContent.textContent = 'Fetching login page...';
+        
+        try {
+            // Step 1: Get login page to fetch CSRF
+            const loginPageResponse = await fetch('/business/login');
+            const loginPageHtml = await loginPageResponse.text();
+            
+            // Extract CSRF token
+            const csrfMatch = loginPageHtml.match(/name="_token"\s+value="([^"]+)"/);
+            if (!csrfMatch) {
+                throw new Error('CSRF token not found');
+            }
+            const csrfToken = csrfMatch[1];
+            
+            resultContent.textContent = `CSRF token obtained: ${csrfToken.substring(0, 20)}...\n\nSubmitting login...`;
+            
+            // Step 2: Submit login
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('email', 'demo@askproai.de');
+            formData.append('password', 'password');
+            
+            const loginResponse = await fetch('/business/login', {
+                method: 'POST',
+                body: formData,
+                redirect: 'manual' // Don't follow redirects automatically
+            });
+            
+            resultContent.textContent += `\n\nLogin response status: ${loginResponse.status}`;
+            resultContent.textContent += `\nLogin response type: ${loginResponse.type}`;
+            
+            if (loginResponse.type === 'opaqueredirect') {
+                // Browser is following redirect, we can't see where
+                resultContent.textContent += '\n\nBrowser is redirecting...';
+                
+                // Check where we ended up
+                setTimeout(async () => {
+                    if (window.location.pathname === '/business/login') {
+                        resultContent.textContent += '\n\n❌ FAILED: Still on login page';
+                        
+                        // Check for error messages in DOM
+                        const errorElement = document.querySelector('.alert-danger, .text-red-600, [role="alert"]');
+                        if (errorElement) {
+                            resultContent.textContent += '\nError message: ' + errorElement.textContent.trim();
+                        }
+                    } else if (window.location.pathname.includes('/dashboard')) {
+                        resultContent.textContent += '\n\n✅ SUCCESS: Redirected to dashboard';
+                    } else {
+                        resultContent.textContent += '\n\nRedirected to: ' + window.location.pathname;
+                    }
+                }, 100);
+            } else {
+                // We can see the response
+                const responseText = await loginResponse.text();
+                resultContent.textContent += '\n\nResponse preview:\n' + responseText.substring(0, 500);
+            }
+            
+        } catch (error) {
+            resultContent.textContent = `Error: ${error.message}`;
+        }
+    }
+    </script>
+</body>
+</html>

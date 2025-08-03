@@ -1,0 +1,81 @@
+/* EMERGENCY FIX for Issue #476 - Remove after proper fix */
+/* Created: 2025-08-02 */
+
+/* 1. Fix ALL click blocking - HIGHEST PRIORITY */
+.fi-sidebar-open .fi-main-ctn,
+.fi-main-ctn,
+.fi-body,
+body * {
+    pointer-events: auto !important;
+}
+
+/* 2. Remove black overlay completely */
+.fi-sidebar-open::before,
+.fi-sidebar-open::after,
+.fi-main-ctn::before,
+.fi-main-ctn::after,
+body::before,
+body::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* 3. Fix z-index hierarchy properly */
+.fi-dropdown-panel { z-index: 50 !important; }
+.fi-modal { z-index: 60 !important; }
+.fi-notifications { z-index: 70 !important; }
+.fi-sidebar { z-index: 40 !important; }
+
+/* 4. Fix login page specifically */
+.fi-login-panel,
+.fi-login-panel *,
+.fi-login-panel form,
+.fi-login-panel form * {
+    pointer-events: auto !important;
+}
+
+/* 5. Force all interactive elements to be clickable */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="link"],
+[wire\:click],
+[x-on\:click],
+[onclick] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* 6. Fix table actions specifically */
+.fi-ta-actions,
+.fi-ta-action,
+.fi-ac-action,
+.fi-ac-btn-action {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* 7. Ensure dropdowns work */
+.fi-dropdown-trigger,
+.fi-dropdown-panel,
+.fi-dropdown-list {
+    pointer-events: auto !important;
+}
+
+/* 8. Fix overlapping sidebar on mobile */
+@media (max-width: 1024px) {
+    .fi-sidebar-open .fi-sidebar {
+        z-index: 50 !important;
+    }
+    
+    .fi-sidebar-close-overlay {
+        display: none !important;
+    }
+}

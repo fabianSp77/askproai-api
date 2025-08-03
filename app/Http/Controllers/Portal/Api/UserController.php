@@ -8,6 +8,14 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
+    /**
+     * Get current authenticated user
+     */
+    public function current(Request $request)
+    {
+        return $this->user($request);
+    }
+    
     public function user(Request $request)
     {
         // Quick response to prevent timeout

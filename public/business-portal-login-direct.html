@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal - Direct Login</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .form-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        .info { background: #f0f9ff; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Business Portal - Direct Login Form</h1>
+    
+    <div class="info">
+        <p><strong>This is a direct HTML form submission</strong> that bypasses any JavaScript or AJAX issues.</p>
+        <p>Credentials: demo@askproai.de / password</p>
+    </div>
+    
+    <?php
+    // If this is accessed as PHP, show the CSRF token
+    if (isset($_SERVER['SCRIPT_NAME']) && strpos($_SERVER['SCRIPT_NAME'], '.php') !== false) {
+        session_start();
+        $_SESSION['_token'] = bin2hex(random_bytes(32));
+        echo '<div class="info success">CSRF Token generated: ' . substr($_SESSION['_token'], 0, 20) . '...</div>';
+    }
+    ?>
+    
+    <form action="/business/login" method="POST">
+        <input type="hidden" name="_token" value="" id="csrf_token">
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" value="demo@askproai.de" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" name="password" id="password" value="password" required>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="remember" value="1"> Remember me
+            </label>
+        </div>
+        
+        <button type="submit">Login</button>
+    </form>
+    
+    <div style="margin-top: 30px; padding: 15px; background: #f3f4f6; border-radius: 5px;">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>First, visit <a href="/business/login" target="_blank">the login page</a> to get a CSRF token</li>
+            <li>View page source and find the _token value</li>
+            <li>Copy the token value and paste it in the hidden field above</li>
+            <li>Submit the form</li>
+        </ol>
+        
+        <p><strong>Or use the automated version:</strong></p>
+        <button onclick="fetchAndSubmit()">Fetch CSRF Token and Submit</button>
+    </div>
+    
+    <script>
+    async function fetchAndSubmit() {
+        try {
+            // Fetch login page to get CSRF token
+            const response = await fetch('/business/login');
+            const html = await response.text();
+            
+            // Extract CSRF token
+            const match = html.match(/name="_token"\s+value="([^"]+)"/);
+            if (match) {
+                document.getElementById('csrf_token').value = match[1];
+                alert('CSRF token fetched: ' + match[1].substring(0, 20) + '...\n\nForm will now submit.');
+                document.querySelector('form').submit();
+            } else {
+                alert('Could not find CSRF token. Please try manually.');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+    </script>
+</body>
+</html>

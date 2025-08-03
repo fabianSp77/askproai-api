@@ -16,6 +16,7 @@ return [
     App\Providers\FilamentBadgeServiceProvider::class,
     // App\Providers\FilamentSafeFixesServiceProvider::class, // Disabled - using consolidated JS modules
     App\Providers\Filament\AdminPanelProvider::class,
+    App\Providers\Filament\BusinessPanelProvider::class, // Business portal panel
     App\Providers\FilamentServiceProvider::class, // Global Filament customizations
     App\Providers\FilamentCompanyContextProvider::class, // Must be after AdminPanelProvider
     App\Providers\FortifyServiceProvider::class,

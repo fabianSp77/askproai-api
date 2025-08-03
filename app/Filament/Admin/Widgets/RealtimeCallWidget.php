@@ -16,7 +16,7 @@ class RealtimeCallWidget extends Widget
     protected static ?int $sort = 2;
     
     // Enable real-time updates every 5 seconds
-    protected static ?string $pollingInterval = '5s';
+    protected static ?string $pollingInterval = '30s';
     
     public Collection $activeCalls;
     public Collection $recentCalls;

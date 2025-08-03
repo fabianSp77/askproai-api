@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Login - Final Fix Test</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        button { padding: 10px 20px; margin: 10px 5px; cursor: pointer; }
+        .btn-primary { background: #3b82f6; color: white; border: none; border-radius: 5px; }
+        .btn-danger { background: #dc2626; color: white; border: none; border-radius: 5px; }
+        .step { margin: 10px 0; padding: 10px; border-left: 3px solid #ddd; }
+        .step.success { border-color: green; background: #f0fdf4; }
+        .step.error { border-color: red; background: #fef2f2; }
+        .step.info { border-color: blue; background: #eff6ff; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Business Portal Login - Final Fix Test</h1>
+    
+    <div id="status" style="margin: 20px 0; padding: 15px; background: #f3f4f6; border-radius: 5px;">
+        <p>Ready to test. Click "Test Login Flow" to begin.</p>
+    </div>
+    
+    <div style="margin: 20px 0;">
+        <button class="btn-primary" onclick="testLoginFlow()">🚀 Test Login Flow</button>
+        <button class="btn-danger" onclick="clearAndReload()">🗑️ Clear & Reload</button>
+        <button onclick="window.location.href='/business/login'">📝 Go to Login Page</button>
+    </div>
+    
+    <h2>Test Steps:</h2>
+    <div id="results"></div>
+    
+    <script>
+    function addStep(message, type = 'info', details = null) {
+        const div = document.createElement('div');
+        div.className = 'step ' + type;
+        const time = new Date().toLocaleTimeString();
+        let html = `<strong>${time}</strong> - ${message}`;
+        if (details) {
+            html += `<pre>${JSON.stringify(details, null, 2)}</pre>`;
+        }
+        div.innerHTML = html;
+        document.getElementById('results').appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+    
+    function updateStatus(message, type = 'info') {
+        const status = document.getElementById('status');
+        status.className = 'step ' + type;
+        status.innerHTML = `<p>${message}</p>`;
+    }
+    
+    async function clearAndReload() {
+        updateStatus('Clearing all data...', 'warning');
+        
+        // Clear cookies
+        document.cookie.split(";").forEach(function(c) { 
+            const eqPos = c.indexOf("=");
+            const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+            // Clear for all possible domains
+            ['', '.askproai.de', 'askproai.de', 'api.askproai.de'].forEach(domain => {
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + domain;
+                document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            });
+        });
+        
+        // Clear storage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        updateStatus('All data cleared. Reloading...', 'success');
+        setTimeout(() => window.location.reload(), 1000);
+    }
+    
+    async function testLoginFlow() {
+        document.getElementById('results').innerHTML = '';
+        updateStatus('Testing login flow...', 'info');
+        
+        try {
+            // Step 1: Check current auth status
+            addStep('Checking current authentication status...', 'info');
+            let authResponse = await fetch('/business/api/auth/check', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            if (authResponse.ok) {
+                const authData = await authResponse.json();
+                if (authData.authenticated) {
+                    addStep(`Already authenticated as: ${authData.user.email}`, 'success', authData.user);
+                    updateStatus('Already logged in! Redirecting to dashboard...', 'success');
+                    setTimeout(() => window.location.href = '/business/dashboard', 2000);
+                    return;
+                }
+            }
+            
+            addStep('Not authenticated. Proceeding with login test.', 'info');
+            
+            // Step 2: Get CSRF token
+            addStep('Fetching login page for CSRF token...', 'info');
+            const loginPageResponse = await fetch('/business/login');
+            const loginPageText = await loginPageResponse.text();
+            
+            const csrfMatch = loginPageText.match(/name="_token"\s+value="([^"]+)"/);
+            if (!csrfMatch) {
+                throw new Error('CSRF token not found in login page');
+            }
+            const csrfToken = csrfMatch[1];
+            addStep(`CSRF token obtained: ${csrfToken.substring(0, 30)}...`, 'success');
+            
+            // Step 3: Submit login
+            addStep('Submitting login credentials (demo@askproai.de)...', 'info');
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('email', 'demo@askproai.de');
+            formData.append('password', 'password');
+            
+            const loginResponse = await fetch('/business/login', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                redirect: 'manual'
+            });
+            
+            addStep(`Login response: ${loginResponse.status} ${loginResponse.statusText}`, 
+                    loginResponse.status === 302 ? 'success' : 'warning');
+            
+            if (loginResponse.status === 302) {
+                const location = loginResponse.headers.get('location');
+                addStep(`Redirect location: ${location}`, 'info');
+                
+                // Step 4: Verify authentication
+                addStep('Verifying authentication after login...', 'info');
+                authResponse = await fetch('/business/api/auth/check', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (authResponse.ok) {
+                    const authData = await authResponse.json();
+                    if (authData.authenticated) {
+                        addStep(`✅ LOGIN SUCCESSFUL! Authenticated as: ${authData.user.email}`, 'success', authData.user);
+                        updateStatus('Login successful! Redirecting to dashboard...', 'success');
+                        setTimeout(() => window.location.href = '/business/dashboard', 2000);
+                    } else {
+                        addStep('❌ Authentication failed - not logged in after redirect', 'error');
+                        updateStatus('Login failed - authentication not persisted', 'error');
+                    }
+                } else {
+                    addStep(`❌ Auth check failed: ${authResponse.status}`, 'error');
+                    updateStatus('Login failed - could not verify authentication', 'error');
+                }
+            } else if (loginResponse.status === 200) {
+                // Login page returned - check for errors
+                const responseText = await loginResponse.text();
+                if (responseText.includes('Die angegebenen Zugangsdaten sind ungültig')) {
+                    addStep('❌ Invalid credentials error returned', 'error');
+                    updateStatus('Login failed - invalid credentials', 'error');
+                } else {
+                    addStep('❌ Login failed - returned to login page', 'error');
+                    updateStatus('Login failed - unknown error', 'error');
+                }
+            } else {
+                addStep(`❌ Unexpected response: ${loginResponse.status}`, 'error');
+                updateStatus('Login failed - unexpected response', 'error');
+            }
+            
+        } catch (error) {
+            addStep(`❌ Error: ${error.message}`, 'error');
+            updateStatus(`Test failed: ${error.message}`, 'error');
+            console.error(error);
+        }
+    }
+    
+    // Check auth status on load
+    window.addEventListener('load', async () => {
+        try {
+            const response = await fetch('/business/api/auth/check', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.authenticated) {
+                    updateStatus(`Already authenticated as ${data.user.email}. Click "Test Login Flow" to test re-authentication.`, 'success');
+                } else {
+                    updateStatus('Not authenticated. Click "Test Login Flow" to test login.', 'info');
+                }
+            }
+        } catch (error) {
+            updateStatus('Ready to test. Click "Test Login Flow" to begin.', 'info');
+        }
+    });
+    </script>
+</body>
+</html>

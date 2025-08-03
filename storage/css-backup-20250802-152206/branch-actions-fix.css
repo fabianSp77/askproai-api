@@ -1,0 +1,68 @@
+/* Fix for branch table action visibility */
+
+/* Ensure action group is visible */
+.fi-ta-actions {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Always show action buttons on branch table */
+.fi-resource-branches-list-branches .fi-ta-actions {
+    display: flex !important;
+    opacity: 1 !important;
+}
+
+/* Fix action group dropdown button */
+.fi-dropdown-trigger {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ensure three-dot menu is visible */
+.fi-ta-action-group {
+    display: inline-flex !important;
+}
+
+/* Fix dropdown panel positioning */
+.fi-dropdown-panel {
+    z-index: 50;
+    position: absolute;
+    right: 0;
+    margin-top: 0.5rem;
+}
+
+/* Make action icons more visible */
+.fi-ta-action {
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.fi-ta-action:hover {
+    opacity: 1;
+}
+
+/* Fix for mobile view */
+@media (max-width: 640px) {
+    .fi-ta-actions {
+        position: relative;
+    }
+    
+    .fi-dropdown-panel {
+        right: auto;
+        left: -100px;
+    }
+}
+
+/* Debug: Add border to see if element exists */
+.fi-ta-action-group button {
+    border: 1px solid transparent;
+}
+
+.fi-ta-action-group button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .fi-ta-action-group button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}

@@ -112,28 +112,25 @@ return Application::configure(basePath: dirname(__DIR__))
                 /* ---------------------------------------------------------
          |  BUSINESS-PORTAL-Gruppe  (Business Portal specific)
          * -------------------------------------------------------- */
+        // Use standard web middleware for now - session isolation is too complex
         $middleware->group('business-portal', [
             App\Http\Middleware\EncryptCookies::class,
             Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            Illuminate\Session\Middleware\StartSession::class,
+            Illuminate\Session\Middleware\StartSession::class, // Use standard session
             Illuminate\View\Middleware\ShareErrorsFromSession::class,
             App\Http\Middleware\VerifyCsrfToken::class,
             Illuminate\Routing\Middleware\SubstituteBindings::class,
-            App\Http\Middleware\HandleInertiaRequests::class,
         ]);
 
         /* ---------------------------------------------------------
          |  BUSINESS-API-Gruppe  (Business API specific middleware)
          * -------------------------------------------------------- */
         $middleware->group('business-api', [
-            // Removed PortalSessionConfig - causing issues
-            App\Http\Middleware\IsolatePortalAuth::class, // Isolate from admin auth
-            Illuminate\Cookie\Middleware\EncryptCookies::class,
+            App\Http\Middleware\EncryptCookies::class,
             Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            Illuminate\Session\Middleware\StartSession::class,
+            Illuminate\Session\Middleware\StartSession::class, // Use standard session
             App\Http\Middleware\SharePortalSession::class,
-            // DISABLED: DemoModeAuth was causing conflicts
-            // \App\Http\Middleware\DemoModeAuth::class,
+            App\Http\Middleware\PortalAuth::class,
             'throttle:api',
             Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);

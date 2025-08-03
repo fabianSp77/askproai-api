@@ -1,0 +1,136 @@
+/* ================================================================
+   FIX FOR BLACK/BROKEN CONTENT AREA - Issue #431
+   ================================================================ */
+
+/* Ensure main content area is visible and properly styled */
+.fi-main-ctn {
+    background-color: rgb(249 250 251) !important; /* Light gray background */
+    color: rgb(17 24 39) !important; /* Dark text */
+    min-height: 100vh !important;
+    position: relative !important;
+    z-index: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* Also apply to body for full coverage */
+body {
+    background-color: rgb(249 250 251) !important;
+}
+
+.dark body {
+    background-color: rgb(17 24 39) !important;
+}
+
+/* Dark mode support */
+.dark .fi-main-ctn {
+    background-color: rgb(17 24 39) !important; /* Dark background */
+    color: rgb(243 244 246) !important; /* Light text */
+}
+
+/* Main content wrapper */
+.fi-main {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    background: transparent !important;
+}
+
+/* Page container */
+.fi-page {
+    background-color: white !important;
+    color: inherit !important;
+    position: relative !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    min-height: calc(100vh - 4rem) !important; /* Full height minus topbar */
+}
+
+/* Dark mode page */
+.dark .fi-page {
+    background-color: rgb(31 41 55) !important;
+}
+
+/* Content sections */
+.fi-section {
+    background-color: white !important;
+    position: relative !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.dark .fi-section {
+    background-color: rgb(31 41 55) !important;
+}
+
+/* Cards and panels */
+.fi-section-content,
+.fi-card {
+    background-color: white !important;
+    position: relative !important;
+}
+
+.dark .fi-section-content,
+.dark .fi-card {
+    background-color: rgb(31 41 55) !important;
+}
+
+/* Remove any filters or transforms that might cause black screen */
+.fi-main-ctn *,
+.fi-page * {
+    filter: none !important;
+    transform: none !important;
+}
+
+/* Ensure proper layout on desktop */
+@media (min-width: 1024px) {
+    .fi-main-ctn {
+        margin-left: var(--sidebar-width, 16rem) !important;
+        width: calc(100% - var(--sidebar-width, 16rem)) !important;
+    }
+}
+
+/* Fix any overflow issues */
+.fi-main-ctn {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* Ensure text is readable */
+.fi-main-ctn,
+.fi-main-ctn * {
+    color: inherit !important;
+}
+
+/* Fix for specific Filament components */
+.fi-header,
+.fi-section-header,
+.fi-simple-page {
+    background: transparent !important;
+    position: relative !important;
+}
+
+/* Tables should have proper background */
+.fi-ta-table {
+    background-color: white !important;
+}
+
+.dark .fi-ta-table {
+    background-color: rgb(31 41 55) !important;
+}
+
+/* Form backgrounds */
+.fi-form {
+    background-color: transparent !important;
+}
+
+/* Remove any remaining black overlays */
+.fi-main-ctn::before,
+.fi-main-ctn::after,
+.fi-page::before,
+.fi-page::after {
+    display: none !important;
+}

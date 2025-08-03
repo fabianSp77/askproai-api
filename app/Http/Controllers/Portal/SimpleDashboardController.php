@@ -20,8 +20,17 @@ class SimpleDashboardController extends Controller
     {
         $user = Auth::guard('portal')->user();
         
+        // Don't redirect here - let middleware handle it
+        // This prevents redirect loops
         if (!$user) {
-            return redirect('/business/login');
+            \Log::error('SimpleDashboardController: No authenticated user', [
+                'guard_check' => Auth::guard('portal')->check(),
+                'session_id' => session()->getId(),
+                'url' => $request->url(),
+            ]);
+            
+            // Return error instead of redirect
+            abort(401, 'Unauthorized - Please login');
         }
         
         $companyId = $user->company_id;

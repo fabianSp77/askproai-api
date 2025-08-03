@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>Click Functionality Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .status-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-menu {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-menu a {
+            display: block;
+            padding: 10px 15px;
+            color: white;
+            text-decoration: none;
+            margin: 5px 0;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .test-menu a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .test-menu a.clicked {
+            background: #10b981;
+        }
+        .code-block {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        #eventLog {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Click Functionality Test</h1>
+        
+        <div class="status-card">
+            <h2>Test-Navigation (Simuliert Admin Panel)</h2>
+            <div class="test-menu">
+                <a href="#dashboard" data-test="dashboard">🏠 Dashboard</a>
+                <a href="#calls" data-test="calls">📞 Calls</a>
+                <a href="#customers" data-test="customers">👥 Customers</a>
+                <a href="#appointments" data-test="appointments">📅 Appointments</a>
+                <a href="/admin" data-test="real-admin">🔗 Real Admin Link</a>
+            </div>
+            <p><strong>Klicken Sie auf die Links oben.</strong> Sie sollten grün werden wenn der Click funktioniert.</p>
+        </div>
+        
+        <div class="status-card">
+            <h2>Event Log</h2>
+            <div id="eventLog"></div>
+        </div>
+        
+        <div class="status-card">
+            <h2>Test-Aktionen</h2>
+            <button class="button" onclick="checkEventListeners()">🔍 Check Event Listeners</button>
+            <button class="button" onclick="simulateClick()">🖱️ Simulate Click</button>
+            <button class="button" onclick="checkStyles()">🎨 Check Styles</button>
+            <button class="button" onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+        
+        <div class="status-card">
+            <h2>Diagnose-Informationen</h2>
+            <div id="diagnostics"></div>
+        </div>
+    </div>
+    
+    <script>
+        const log = document.getElementById('eventLog');
+        const diagnostics = document.getElementById('diagnostics');
+        
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#94a3b8';
+            log.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // Track all clicks
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            if (target.tagName === 'A') {
+                addLog(`Click captured: ${target.textContent} (${target.href})`, 'success');
+                target.classList.add('clicked');
+                
+                // Check if universal handler should intercept
+                if (target.href.includes('/admin')) {
+                    addLog('Universal handler should intercept this!', 'warning');
+                }
+            }
+        }, true); // Capture phase
+        
+        // Check for universal click handler
+        window.addEventListener('load', function() {
+            const scripts = Array.from(document.scripts);
+            const hasUniversalHandler = scripts.some(s => s.src.includes('universal-click-handler.js'));
+            
+            if (hasUniversalHandler) {
+                addLog('✅ Universal click handler detected', 'success');
+            } else {
+                addLog('❌ Universal click handler NOT found', 'error');
+                addLog('Loading it now...', 'info');
+                
+                // Try to load it
+                const script = document.createElement('script');
+                script.src = '/js/universal-click-handler.js?' + Date.now();
+                script.onload = () => addLog('✅ Universal handler loaded', 'success');
+                script.onerror = () => addLog('❌ Failed to load universal handler', 'error');
+                document.head.appendChild(script);
+            }
+        });
+        
+        function checkEventListeners() {
+            addLog('Checking event listeners...', 'info');
+            
+            // Check document listeners
+            const links = document.querySelectorAll('a');
+            let clickableCount = 0;
+            
+            links.forEach(link => {
+                const computed = window.getComputedStyle(link);
+                if (computed.pointerEvents !== 'none') {
+                    clickableCount++;
+                }
+            });
+            
+            addLog(`Found ${links.length} links, ${clickableCount} are clickable`, 'info');
+            
+            // Show diagnostics
+            updateDiagnostics();
+        }
+        
+        function simulateClick() {
+            const firstLink = document.querySelector('a[data-test="dashboard"]');
+            if (firstLink) {
+                addLog('Simulating click on Dashboard link...', 'info');
+                firstLink.click();
+            }
+        }
+        
+        function checkStyles() {
+            addLog('Checking problematic styles...', 'info');
+            
+            const elements = document.querySelectorAll('*');
+            let blockedCount = 0;
+            
+            elements.forEach(el => {
+                const computed = window.getComputedStyle(el);
+                if (computed.pointerEvents === 'none') {
+                    blockedCount++;
+                    if (el.tagName === 'A' || el.tagName === 'BUTTON') {
+                        addLog(`Found blocked ${el.tagName}: ${el.textContent}`, 'error');
+                    }
+                }
+            });
+            
+            addLog(`Total elements with pointer-events: none = ${blockedCount}`, 
+                   blockedCount > 0 ? 'warning' : 'success');
+        }
+        
+        function clearLog() {
+            log.innerHTML = '';
+            addLog('Log cleared', 'info');
+        }
+        
+        function updateDiagnostics() {
+            const info = {
+                'Browser': navigator.userAgent.split(')')[0] + ')',
+                'Screen Size': `${window.innerWidth} x ${window.innerHeight}`,
+                'Scripts Loaded': document.scripts.length,
+                'Universal Handler': document.querySelector('script[src*="universal-click-handler.js"]') ? '✅ Yes' : '❌ No',
+                'Console Cleanup': document.querySelector('script[src*="console-cleanup.js"]') ? '✅ Yes' : '❌ No',
+            };
+            
+            diagnostics.innerHTML = Object.entries(info)
+                .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
+                .join('');
+        }
+        
+        // Initial setup
+        addLog('Test page loaded', 'success');
+        updateDiagnostics();
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Available Routes</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f3f4f6;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1f2937;
+            margin-bottom: 30px;
+        }
+        .route-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .route-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+        .route-card:hover {
+            background: #f3f4f6;
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .route-card h3 {
+            margin: 0 0 10px 0;
+            color: #1f2937;
+            font-size: 18px;
+        }
+        .route-card a {
+            display: inline-block;
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            background: #eff6ff;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .route-card a:hover {
+            background: #dbeafe;
+        }
+        .icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+        .category {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .note {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Panel - Available Routes</h1>
+        
+        <div class="note">
+            <strong>Note:</strong> There is no general "/admin/settings" page. Settings are organized into specific pages based on functionality.
+        </div>
+
+        <h2>Main Resources</h2>
+        <div class="route-grid">
+            <div class="route-card">
+                <div class="category">Dashboard</div>
+                <h3><span class="icon">🏠</span>Dashboard</h3>
+                <a href="/admin">Go to Dashboard</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">Communication</div>
+                <h3><span class="icon">📞</span>Calls</h3>
+                <a href="/admin/calls">View Calls</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">Contacts</div>
+                <h3><span class="icon">👥</span>Customers</h3>
+                <a href="/admin/customers">Manage Customers</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">Scheduling</div>
+                <h3><span class="icon">📅</span>Appointments</h3>
+                <a href="/admin/appointments">View Appointments</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">Organization</div>
+                <h3><span class="icon">🏢</span>Companies</h3>
+                <a href="/admin/companies">Manage Companies</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">Organization</div>
+                <h3><span class="icon">🏪</span>Branches</h3>
+                <a href="/admin/branches">Manage Branches</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">Team</div>
+                <h3><span class="icon">👷</span>Staff</h3>
+                <a href="/admin/staff">Manage Staff</a>
+            </div>
+        </div>
+
+        <h2>Settings & Configuration</h2>
+        <div class="route-grid">
+            <div class="route-card">
+                <div class="category">User Settings</div>
+                <h3><span class="icon">🌐</span>Language Settings</h3>
+                <a href="/admin/language-settings">Configure Language</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">AI Configuration</div>
+                <h3><span class="icon">⚙️</span>Retell Configuration</h3>
+                <a href="/admin/retell-configuration-center">Configure Retell AI</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">AI Management</div>
+                <h3><span class="icon">🤖</span>AI Call Center</h3>
+                <a href="/admin/a-i-call-center">Manage AI Calls</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">Integration</div>
+                <h3><span class="icon">🔧</span>Company Integration Portal</h3>
+                <a href="/admin/company-integration-portal">Integration Settings</a>
+            </div>
+        </div>
+
+        <h2>Tools & Wizards</h2>
+        <div class="route-grid">
+            <div class="route-card">
+                <div class="category">Setup</div>
+                <h3><span class="icon">🚀</span>Quick Setup Wizard</h3>
+                <a href="/admin/quick-setup-wizard-v2">Run Setup</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">Import</div>
+                <h3><span class="icon">📥</span>Event Type Import</h3>
+                <a href="/admin/event-type-import-wizard">Import Events</a>
+            </div>
+            
+            <div class="route-card">
+                <div class="category">Monitoring</div>
+                <h3><span class="icon">📊</span>System Monitoring</h3>
+                <a href="/admin/system-monitoring-dashboard">View Status</a>
+            </div>
+        </div>
+
+        <h2>Using the Emergency Menu</h2>
+        <p>If navigation still doesn't work, you can use the emergency menu by pressing <strong>Alt+H</strong> on any admin page.</p>
+    </div>
+</body>
+</html>

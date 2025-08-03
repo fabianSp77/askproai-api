@@ -47,16 +47,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             // ->locale('de') // Deutsche Lokalisierung für Filament - Not available in Filament v3
-            ->viteTheme([
-                'resources/css/filament/admin/theme.css',
-                'resources/css/filament/admin/sidebar-layout-fix.css',
-                'resources/css/filament/admin/unified-responsive.css',
-                'resources/css/filament/admin/icon-fixes.css',
-                'resources/css/filament/admin/icon-container-sizes.css',
-                'resources/css/filament/admin/form-layout-fixes.css',
-                'resources/css/filament/admin/table-scroll-indicators.css',
-                'resources/css/filament/admin/content-width-fix.css'
-            ])
+            // ->viteTheme('resources/css/filament/admin/theme.css')
             ->maxContentWidth(MaxWidth::Full) // Use full width for content
             ->navigationGroups([
                 'Täglicher Betrieb',        // Daily operations - most important

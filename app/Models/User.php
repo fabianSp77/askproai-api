@@ -36,7 +36,13 @@ class User extends Authenticatable implements FilamentUser
         'fname', 'lname', 'name', 'email', 'password', 'username', 'tenant_id', 'company_id',
         'date_created', 'date_updated', 'email_verified_at',
         'two_factor_enforced', 'two_factor_method', 'two_factor_phone_number', 'two_factor_phone_verified',
-        'interface_language', 'content_language', 'auto_translate_content'
+        'interface_language', 'content_language', 'auto_translate_content',
+        // New fields from portal_users
+        'phone', 'portal_role', 'legacy_permissions', 'is_active',
+        'can_access_child_companies', 'accessible_company_ids',
+        'settings', 'notification_preferences', 'call_notification_preferences',
+        'preferred_language', 'timezone', 'last_login_at', 'last_login_ip',
+        'failed_login_attempts', 'locked_until'
     ];
     
     // Removed company_id from appends to prevent memory exhaustion
@@ -53,6 +59,16 @@ class User extends Authenticatable implements FilamentUser
         'two_factor_enforced' => 'boolean',
         'two_factor_phone_verified' => 'boolean',
         'auto_translate_content' => 'boolean',
+        // New casts from portal_users
+        'legacy_permissions' => 'array',
+        'settings' => 'array',
+        'notification_preferences' => 'array',
+        'call_notification_preferences' => 'array',
+        'accessible_company_ids' => 'array',
+        'is_active' => 'boolean',
+        'can_access_child_companies' => 'boolean',
+        'last_login_at' => 'datetime',
+        'locked_until' => 'datetime',
     ];
     
     public function tenant(): BelongsTo
@@ -89,8 +105,18 @@ class User extends Authenticatable implements FilamentUser
     
     public function canAccessPanel(Panel $panel): bool
     {
-        // Allow all authenticated users to access the admin panel
-        // Since Gate::before() was removed, we need to ensure access
+        // Check panel ID to determine access
+        if ($panel->getId() === 'admin') {
+            // Admin panel: Only for super admins and system administrators
+            return $this->hasAnyRole(['Super Admin', 'super_admin', 'Admin']);
+        }
+        
+        if ($panel->getId() === 'business') {
+            // Business panel: For company users
+            return $this->hasAnyRole(['company_owner', 'company_admin', 'company_manager', 'company_staff']);
+        }
+        
+        // Allow authenticated users by default
         return true;
     }
     
@@ -99,6 +125,16 @@ class User extends Authenticatable implements FilamentUser
      */
     public function getFilamentDefaultUrl(): string
     {
+        // Redirect to appropriate panel based on role
+        if ($this->hasAnyRole(['Super Admin', 'super_admin', 'Admin'])) {
+            return '/admin';
+        }
+        
+        if ($this->hasAnyRole(['company_owner', 'company_admin', 'company_manager', 'company_staff'])) {
+            return '/business';
+        }
+        
+        // Default to admin panel
         return '/admin';
     }
     
@@ -198,5 +234,212 @@ class User extends Authenticatable implements FilamentUser
     public function workflowExecutions(): HasMany
     {
         return $this->hasMany(WorkflowExecution::class);
+    }
+    
+    /**
+     * Check if user has a specific permission (company-level)
+     */
+    public function hasCompanyPermission(string $permission): bool
+    {
+        // Super admin has all permissions
+        if ($this->hasRole('Super Admin') || $this->hasRole('super_admin')) {
+            return true;
+        }
+        
+        // Company owner has all company permissions
+        if ($this->hasRole('company_owner')) {
+            return true;
+        }
+        
+        // Check through Spatie permissions
+        return $this->hasPermissionTo($permission);
+    }
+    
+    /**
+     * Check if user can view all company data
+     */
+    public function canViewAllCompanyData(): bool
+    {
+        return $this->hasAnyRole(['Super Admin', 'super_admin', 'company_owner', 'company_admin']);
+    }
+    
+    /**
+     * Check if user can manage team
+     */
+    public function canManageTeam(): bool
+    {
+        return $this->hasCompanyPermission('company.team.manage');
+    }
+    
+    /**
+     * Check if user can view billing
+     */
+    public function canViewBilling(): bool
+    {
+        return $this->hasCompanyPermission('company.billing.view');
+    }
+    
+    /**
+     * Check if user can manage billing
+     */
+    public function canManageBilling(): bool
+    {
+        return $this->hasCompanyPermission('company.billing.manage');
+    }
+    
+    /**
+     * Get notification preferences with defaults
+     */
+    public function getNotificationPreferences(): array
+    {
+        $defaults = [
+            'channels' => ['email'],
+            'frequency' => 'daily',
+            'time' => '09:00',
+            'types' => [
+                'calls' => ['daily_summary'],
+                'appointments' => $this->company?->needsAppointmentBooking() ? ['reminder_24h'] : [],
+                'billing' => $this->canViewBilling() ? ['new_invoice'] : [],
+            ],
+        ];
+
+        return array_merge($defaults, $this->notification_preferences ?? []);
+    }
+    
+    /**
+     * Update notification preferences
+     */
+    public function updateNotificationPreferences(array $preferences): void
+    {
+        $this->notification_preferences = array_merge(
+            $this->getNotificationPreferences(),
+            $preferences
+        );
+        $this->save();
+    }
+    
+    /**
+     * Get user settings with defaults
+     */
+    public function getSettings(): array
+    {
+        $defaults = [
+            'theme' => 'light',
+            'date_format' => 'd.m.Y',
+            'time_format' => 'H:i',
+            'rows_per_page' => 25,
+            'call_columns' => ['date', 'from', 'to', 'duration', 'status'],
+        ];
+
+        return array_merge($defaults, $this->settings ?? []);
+    }
+    
+    /**
+     * Update settings
+     */
+    public function updateSettings(array $settings): void
+    {
+        $this->settings = array_merge($this->getSettings(), $settings);
+        $this->save();
+    }
+    
+    /**
+     * Record login
+     */
+    public function recordLogin(?string $ip = null): void
+    {
+        $this->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $ip ?? '127.0.0.1',
+        ]);
+    }
+    
+    /**
+     * Check if 2FA is required based on role
+     */
+    public function requires2FA(): bool
+    {
+        // Enforced by role
+        if ($this->hasAnyRole(['Super Admin', 'super_admin', 'company_owner', 'company_admin'])) {
+            return true;
+        }
+
+        // Or manually enforced
+        return $this->two_factor_enforced;
+    }
+    
+    /**
+     * Scope for active users
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+    
+    /**
+     * Scope by portal role (for backward compatibility during migration)
+     */
+    public function scopePortalRole($query, string $role)
+    {
+        return $query->where('portal_role', $role);
+    }
+    
+    /**
+     * Get team members (for managers)
+     */
+    public function teamMembers()
+    {
+        if (!$this->hasAnyRole(['Super Admin', 'super_admin', 'company_owner', 'company_admin', 'company_manager'])) {
+            return collect();
+        }
+
+        return static::where('company_id', $this->company_id)
+            ->when($this->hasRole('company_manager'), function ($query) {
+                // Managers can only see staff
+                $query->role('company_staff');
+            })
+            ->where('id', '!=', $this->id)
+            ->active()
+            ->get();
+    }
+    
+    /**
+     * Balance transactions created by this user
+     */
+    public function createdBalanceTransactions()
+    {
+        return $this->hasMany(\App\Models\BalanceTransaction::class, 'created_by');
+    }
+
+    /**
+     * Balance topups initiated by this user
+     */
+    public function initiatedTopups()
+    {
+        return $this->hasMany(\App\Models\BalanceTopup::class, 'initiated_by');
+    }
+    
+    /**
+     * Check if user has access to multiple companies
+     */
+    public function hasMultiCompanyAccess(): bool
+    {
+        return $this->can_access_child_companies && !empty($this->accessible_company_ids);
+    }
+    
+    /**
+     * Get accessible company IDs
+     */
+    public function getAccessibleCompanyIds(): array
+    {
+        if ($this->hasRole(['Super Admin', 'super_admin'])) {
+            return \App\Models\Company::pluck('id')->toArray();
+        }
+        
+        if ($this->hasMultiCompanyAccess()) {
+            return array_merge([$this->company_id], $this->accessible_company_ids ?? []);
+        }
+        
+        return [$this->company_id];
     }
 }

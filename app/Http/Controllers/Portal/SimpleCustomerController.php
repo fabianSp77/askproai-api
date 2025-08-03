@@ -3,46 +3,44 @@
 namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SimpleCustomerController extends Controller
 {
     /**
      * Display customers list
      */
-    public function index()
+    public function index(Request $request)
     {
-        $customers = [
-            [
-                'id' => 1,
-                'name' => 'Max Mustermann',
-                'email' => 'max@example.com',
-                'phone' => '+49 123 456789',
-                'appointments_count' => 5,
-                'last_appointment' => now()->subDays(7),
-                'created_at' => now()->subMonths(3)
-            ],
-            [
-                'id' => 2,
-                'name' => 'Erika Musterfrau',
-                'email' => 'erika@example.com',
-                'phone' => '+49 987 654321',
-                'appointments_count' => 3,
-                'last_appointment' => now()->subDays(14),
-                'created_at' => now()->subMonths(2)
-            ],
-            [
-                'id' => 3,
-                'name' => 'Thomas Schmidt',
-                'email' => 'thomas@example.com',
-                'phone' => '+49 555 123456',
-                'appointments_count' => 8,
-                'last_appointment' => now()->subDays(2),
-                'created_at' => now()->subMonths(6)
-            ]
-        ];
+        $user = Auth::guard('portal')->user();
         
-        return view('portal.customers.simple-index', compact('customers'));
+        if (!$user || !$user->company_id) {
+            abort(401, 'Unauthorized');
+        }
+        
+        $query = Customer::where('company_id', $user->company_id)
+            ->withCount('appointments')
+            ->with(['appointments' => function($q) {
+                $q->latest()->limit(1);
+            }]);
+            
+        // Search functionality
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        
+        $customers = $query->orderBy('created_at', 'desc')
+            ->paginate(20);
+        
+        // Use unified layout for consistency
+        return view('portal.customers.index-unified', compact('customers'));
     }
     
     /**
@@ -50,30 +48,31 @@ class SimpleCustomerController extends Controller
      */
     public function show($id)
     {
-        $customer = [
-            'id' => $id,
-            'name' => 'Max Mustermann',
-            'email' => 'max@example.com',
-            'phone' => '+49 123 456789',
-            'address' => 'Musterstraße 123, 12345 Musterstadt',
-            'notes' => 'Bevorzugt Termine am Nachmittag',
-            'created_at' => now()->subMonths(3),
-            'appointments' => [
-                [
-                    'id' => 1,
-                    'service' => 'Beratung',
-                    'scheduled_at' => now()->subDays(7),
-                    'status' => 'completed'
-                ],
-                [
-                    'id' => 2,
-                    'service' => 'Nachuntersuchung',
-                    'scheduled_at' => now()->addDays(3),
-                    'status' => 'confirmed'
-                ]
-            ]
+        $user = Auth::guard('portal')->user();
+        
+        if (!$user || !$user->company_id) {
+            abort(401, 'Unauthorized');
+        }
+        
+        $customer = Customer::where('company_id', $user->company_id)
+            ->where('id', $id)
+            ->with(['appointments' => function($q) {
+                $q->with(['service', 'staff', 'branch'])
+                  ->orderBy('starts_at', 'desc')
+                  ->limit(10);
+            }])
+            ->withCount('appointments')
+            ->firstOrFail();
+        
+        // Calculate stats
+        $stats = [
+            'total_appointments' => $customer->appointments_count,
+            'completed_appointments' => $customer->appointments()->where('status', 'completed')->count(),
+            'cancelled_appointments' => $customer->appointments()->where('status', 'cancelled')->count(),
+            'no_show_appointments' => $customer->appointments()->where('status', 'no_show')->count(),
         ];
         
-        return view('portal.customers.simple-show', compact('customer'));
+        // Use unified layout for consistency
+        return view('portal.customers.show-unified', compact('customer', 'stats'));
     }
 }

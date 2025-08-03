@@ -1,0 +1,32 @@
+{
+  "testsprite": {
+    "apiKey": "sk-user-uCnLDtTopQf3D_bd_S-vQhpUATq067TWS2HWydNlrU8Fzf9L3Nf91AnxispsF9vw_rg1LU7U7BhYfFiln7GEdEVSmO5h0EEOiRzzKEQHHBFhndIiospHfL2mlDw-iiVAhUc",
+    "baseUrl": "https://api.askproai.de",
+    "testConfig": {
+      "projectName": "AskProAI Admin Panel",
+      "environment": "production",
+      "browser": "chrome",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "timeout": 30000,
+      "retries": 2
+    },
+    "selectors": {
+      "adminLogin": {
+        "emailInput": "input[name='email']",
+        "passwordInput": "input[name='password']",
+        "submitButton": "button[type='submit']"
+      },
+      "adminNavigation": {
+        "sidebar": ".fi-sidebar",
+        "dashboardLink": "a[href='/admin']",
+        "callsLink": "a[href='/admin/calls']",
+        "customersLink": "a[href='/admin/customers']",
+        "appointmentsLink": "a[href='/admin/appointments']",
+        "menuToggle": ".fi-topbar-open-sidebar-btn"
+      }
+    }
+  }
+}

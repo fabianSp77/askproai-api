@@ -1,0 +1,322 @@
+/* Professional Navigation Styles for Filament Admin Panel */
+
+/* Enhanced User Menu and Branch Switcher Styles */
+.fi-user-btn {
+    @apply relative transition-all duration-200;
+}
+
+.fi-user-btn:hover {
+    @apply transform scale-105;
+}
+
+/* Professional Dropdown Styles */
+.fi-dropdown-panel {
+    @apply backdrop-blur-lg bg-white/95 dark:bg-gray-800/95;
+    backdrop-filter: blur(10px);
+}
+
+/* Mobile-First Responsive Design */
+@media (max-width: 1024px) {
+    /* Hide desktop navigation on mobile */
+    .fi-sidebar {
+        @apply hidden lg:flex;
+    }
+    
+    /* Show mobile menu button */
+    .mobile-menu-button {
+        @apply lg:hidden;
+    }
+    
+    /* Full-screen mobile menu */
+    .mobile-menu-panel {
+        @apply fixed inset-0 z-50 bg-white dark:bg-gray-900;
+        height: 100vh;
+        overflow-y: auto;
+    }
+}
+
+/* Smooth Transitions for All Interactive Elements */
+.branch-switcher-item,
+.navigation-item {
+    @apply transition-all duration-150 ease-in-out;
+}
+
+/* Enhanced Focus States for Accessibility */
+.branch-switcher-item:focus,
+.navigation-item:focus {
+    @apply outline-none ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-gray-800;
+}
+
+/* Custom Scrollbar for Dropdown Menus */
+.branch-dropdown-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.gray.400') theme('colors.gray.100');
+}
+
+.branch-dropdown-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.branch-dropdown-scroll::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-700 rounded-full;
+}
+
+.branch-dropdown-scroll::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-500 rounded-full;
+}
+
+.branch-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-400;
+}
+
+/* Animated Burger Menu Icon */
+.burger-menu-icon {
+    @apply relative w-6 h-6;
+}
+
+.burger-menu-icon span {
+    @apply absolute left-0 w-full h-0.5 bg-current transition-all duration-300 ease-in-out;
+}
+
+.burger-menu-icon span:nth-child(1) {
+    @apply top-0;
+}
+
+.burger-menu-icon span:nth-child(2) {
+    @apply top-1/2 -translate-y-1/2;
+}
+
+.burger-menu-icon span:nth-child(3) {
+    @apply bottom-0;
+}
+
+/* Burger Menu Animation when Open */
+.burger-menu-icon.open span:nth-child(1) {
+    @apply top-1/2 -translate-y-1/2 rotate-45;
+}
+
+.burger-menu-icon.open span:nth-child(2) {
+    @apply opacity-0;
+}
+
+.burger-menu-icon.open span:nth-child(3) {
+    @apply bottom-1/2 translate-y-1/2 -rotate-45;
+}
+
+/* Professional Badge Styles */
+.branch-indicator-badge {
+    @apply absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full;
+    @apply bg-blue-600 dark:bg-blue-400;
+    @apply ring-2 ring-white dark:ring-gray-800;
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-ring {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--blue-600), 0.5);
+    }
+    100% {
+        box-shadow: 0 0 0 8px rgba(var(--blue-600), 0);
+    }
+}
+
+/* Enhanced Search Input */
+.branch-search-input {
+    @apply w-full pl-9 pr-3 py-2 text-sm;
+    @apply border-gray-300 dark:border-gray-600;
+    @apply rounded-md;
+    @apply focus:border-blue-500 focus:ring-blue-500;
+    @apply dark:bg-gray-700 dark:text-white;
+    @apply transition-all duration-200;
+}
+
+.branch-search-input:focus {
+    @apply transform scale-[1.02];
+}
+
+/* Mobile Menu Overlay */
+.mobile-menu-overlay {
+    @apply fixed inset-0 bg-black/50 z-40 lg:hidden;
+    backdrop-filter: blur(4px);
+}
+
+/* Slide-in Animation for Mobile Menu */
+@keyframes slide-in-right {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slide-out-right {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.mobile-menu-panel {
+    animation: slide-in-right 0.3s ease-out;
+}
+
+.mobile-menu-panel.closing {
+    animation: slide-out-right 0.3s ease-in;
+}
+
+/* Responsive Typography */
+@media (max-width: 640px) {
+    .fi-topbar {
+        @apply px-4;
+    }
+    
+    .branch-switcher-dropdown {
+        @apply w-full max-w-none mx-4;
+        left: 0 !important;
+        right: 0 !important;
+    }
+}
+
+/* Enhanced Hover Effects */
+.navigation-item {
+    @apply relative overflow-hidden;
+}
+
+.navigation-item::before {
+    content: '';
+    @apply absolute inset-0 bg-blue-100 dark:bg-blue-900/20;
+    @apply transform -translate-x-full;
+    @apply transition-transform duration-300 ease-out;
+}
+
+.navigation-item:hover::before {
+    @apply translate-x-0;
+}
+
+/* Professional Loading States */
+.branch-loading {
+    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
+}
+
+/* Smooth Color Transitions */
+/* Removed global transition that interferes with active states
+* {
+    @apply transition-colors duration-200;
+}
+*/
+
+/* Enhanced Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .branch-switcher-dropdown {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Tablet-Specific Adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .fi-sidebar {
+        @apply w-20;
+    }
+    
+    .fi-sidebar-nav-item-label {
+        @apply sr-only;
+    }
+    
+    .fi-sidebar:hover {
+        @apply w-64;
+    }
+    
+    .fi-sidebar:hover .fi-sidebar-nav-item-label {
+        @apply not-sr-only;
+    }
+}
+
+/* Mobile Sidebar Toggle Styles */
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        @apply fixed inset-y-0 left-0 z-40 w-64;
+        transform: translateX(-100%);
+        @apply transition-transform duration-300 ease-in-out;
+        @apply bg-white dark:bg-gray-900;
+        @apply shadow-xl;
+    }
+    
+    .fi-sidebar.translate-x-0 {
+        transform: translateX(0);
+    }
+    
+    /* Overlay when sidebar is open */
+    body:has(.fi-sidebar.translate-x-0)::before {
+        content: '';
+        @apply fixed inset-0 bg-black/50 z-30;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .branch-switcher,
+    .mobile-menu-button,
+    .fi-user-menu {
+        @apply hidden;
+    }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .branch-switcher-item {
+        @apply border border-current;
+    }
+    
+    .branch-indicator-badge {
+        @apply ring-4;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Touch-Friendly Tap Targets */
+@media (pointer: coarse) {
+    .fi-user-btn,
+    .branch-switcher-item,
+    .navigation-item {
+        @apply min-h-[44px] min-w-[44px];
+    }
+}
+
+/* Professional Focus Indicators */
+:focus-visible {
+    @apply outline-none ring-2 ring-offset-2 ring-blue-500;
+}
+
+/* Smooth Page Transitions */
+.page-transition {
+    @apply transition-opacity duration-300 ease-in-out;
+}
+
+.page-transition-enter {
+    @apply opacity-0;
+}
+
+.page-transition-enter-active {
+    @apply opacity-100;
+}
+
+.page-transition-leave {
+    @apply opacity-100;
+}
+
+.page-transition-leave-active {
+    @apply opacity-0;
+}

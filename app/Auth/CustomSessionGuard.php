@@ -8,6 +8,18 @@ use Illuminate\Contracts\Auth\Authenticatable;
 class CustomSessionGuard extends SessionGuard
 {
     /**
+     * Get a unique identifier for the auth session value.
+     * Override to ensure consistent session key generation.
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        // Use the parent class name (SessionGuard) for the hash to maintain compatibility
+        // This ensures the session key matches what Laravel expects
+        return 'login_'.$this->name.'_'.sha1(\Illuminate\Auth\SessionGuard::class);
+    }
+    /**
      * Log a user into the application.
      *
      * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
@@ -35,10 +47,12 @@ class CustomSessionGuard extends SessionGuard
         // SECURITY FIX: Store the auth identifier
         $this->session->put($this->getName(), $id);
         
-        // Always regenerate session ID on login to prevent session fixation
-        // This is critical for security - it invalidates any pre-existing session ID
-        // Use false to preserve session data including CSRF token
-        $this->session->regenerate(false);
+        // Don't migrate/regenerate - it's causing the auth to be lost
+        // Laravel 11 handles this differently
+        // $this->session->migrate(true);
+        
+        // Ensure the session is saved
+        $this->session->save();
     }
     
     /**

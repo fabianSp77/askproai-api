@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Portal Login - Simple Form</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 100px auto; padding: 20px; }
+        .container { background: #f9fafb; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #1f2937; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; color: #374151; font-weight: 500; }
+        input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 5px; font-size: 16px; }
+        button { background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; width: 100%; }
+        button:hover { background: #2563eb; }
+        .info { background: #eff6ff; border: 1px solid #3b82f6; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .error { background: #fee; border: 1px solid #f87171; color: #991b1b; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .links { margin-top: 20px; text-align: center; }
+        .links a { color: #3b82f6; text-decoration: none; margin: 0 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Business Portal Login</h1>
+        
+        <div class="info">
+            <strong>Test Credentials:</strong><br>
+            Email: demo@askproai.de<br>
+            Password: password
+        </div>
+        
+        <div id="error" style="display:none;" class="error"></div>
+        
+        <form id="loginForm" action="/business/login" method="POST">
+            <input type="hidden" name="_token" id="csrf_token" value="">
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" value="demo@askproai.de" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" value="password" required>
+            </div>
+            
+            <button type="button" onclick="doLogin()">Login</button>
+        </form>
+        
+        <div class="links">
+            <a href="/business/login">Original Login Page</a>
+            <a href="/business/dashboard">Dashboard</a>
+        </div>
+    </div>
+    
+    <script>
+    // First, get CSRF token
+    async function getCSRFToken() {
+        try {
+            const response = await fetch('/business/login');
+            const html = await response.text();
+            const match = html.match(/name="_token"\s+value="([^"]+)"/);
+            if (match) {
+                return match[1];
+            }
+        } catch (e) {
+            console.error('Error getting CSRF:', e);
+        }
+        return null;
+    }
+    
+    async function doLogin() {
+        const errorDiv = document.getElementById('error');
+        errorDiv.style.display = 'none';
+        
+        // Get CSRF token
+        const token = await getCSRFToken();
+        if (!token) {
+            errorDiv.textContent = 'Could not get CSRF token. Please try the original login page.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        
+        // Set token and submit
+        document.getElementById('csrf_token').value = token;
+        document.getElementById('loginForm').submit();
+    }
+    
+    // Auto-fill CSRF token on load
+    window.addEventListener('load', async () => {
+        const token = await getCSRFToken();
+        if (token) {
+            document.getElementById('csrf_token').value = token;
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+/* ================================================================
+   FIX DROPDOWN AND INTERACTIVE ELEMENTS
+   Ensures all dropdowns, buttons, and form elements are clickable
+   ================================================================ */
+
+/* Ensure all interactive elements are clickable */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="checkbox"],
+[role="radio"],
+[role="switch"],
+.fi-dropdown-trigger,
+.fi-dropdown-panel,
+.fi-input,
+.fi-select,
+.fi-checkbox,
+.fi-radio,
+.fi-toggle,
+.fi-button,
+.fi-link,
+.fi-ta-col-wrp button,
+.fi-ta-actions button,
+[x-on\:click],
+[wire\:click] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Ensure form inputs have proper cursor */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea,
+select {
+    cursor: text !important;
+}
+
+/* Dropdown specific fixes */
+.fi-dropdown {
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+.fi-dropdown-trigger {
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+.fi-dropdown-panel {
+    pointer-events: auto !important;
+    z-index: 50 !important;
+}
+
+/* Filter button fixes */
+.fi-ta-filters button,
+.fi-ta-filters-trigger {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+}
+
+/* Table action buttons */
+.fi-ta-actions-container button,
+.fi-ta-bulk-actions button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Radio and checkbox fixes */
+input[type="radio"],
+input[type="checkbox"],
+.fi-checkbox-input,
+.fi-radio-input {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Toggle/Switch fixes */
+.fi-toggle,
+.fi-toggle-input {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Ensure nothing blocks our interactive elements */
+.fi-page-content::before,
+.fi-page-content::after,
+.fi-main::before,
+.fi-main::after,
+.fi-layout::before,
+.fi-layout::after {
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* Remove any invisible overlays */
+div[style*="position: fixed"][style*="inset: 0"],
+div[style*="position: absolute"][style*="inset: 0"] {
+    pointer-events: none !important;
+}
+
+/* Alpine.js dropdown fixes */
+[x-data*="open"] button,
+[x-data*="dropdown"] button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Ensure Filament action modals work */
+.fi-modal,
+.fi-modal-window {
+    pointer-events: auto !important;
+}
+
+/* Fix for nested elements in buttons */
+button > *,
+a > *,
+[role="button"] > * {
+    pointer-events: none !important;
+}
+
+/* But keep the parent clickable */
+button,
+a,
+[role="button"] {
+    pointer-events: auto !important;
+}

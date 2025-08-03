@@ -31,8 +31,22 @@ class ReactBillingController extends Controller
             return redirect()->route('business.login');
         }
         
-        // React app will fetch data via API
-        return view('portal.billing.react-index');
+        $company = Company::find($user->company_id);
+        
+        // Get current balance and recent transactions
+        $currentBalance = $company->current_balance ?? 0;
+        $transactions = BalanceTransaction::where('company_id', $user->company_id)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        
+        $topups = BalanceTopup::where('company_id', $user->company_id)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+        
+        // Use unified layout for consistency
+        return view('portal.billing.index-unified', compact('currentBalance', 'transactions', 'topups', 'company'));
     }
     
     /**

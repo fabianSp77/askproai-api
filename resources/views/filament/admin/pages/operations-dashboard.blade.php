@@ -288,220 +288,102 @@
     
     @push('scripts')
     <script>
-        // Global fallbacks for all required functions
-        window.hasSearchResults = function() {
-            console.log('[Global Fallback] hasSearchResults called');
-            return true; // Default behavior
-        };
+        // Operations Dashboard Initialization and Testing
+        document.addEventListener('alpine:initialized', () => {
+            console.log('📊 Operations Dashboard Alpine components ready');
+            
+            // Test component availability immediately after Alpine init
+            setTimeout(() => {
+                testDashboardComponents();
+            }, 100);
+        });
         
-        window.isCompanySelected = function(companyId) {
-            console.log('[Global Fallback] isCompanySelected called for:', companyId);
-            return false; // Default behavior
-        };
+        // Ensure Livewire integration works properly
+        document.addEventListener('livewire:load', () => {
+            console.log('📊 Operations Dashboard Livewire ready');
+        });
         
-        window.isBranchSelected = function(branchId) {
-            console.log('[Global Fallback] isBranchSelected called for:', branchId);
-            return false; // Default behavior
-        };
-        
-        window.matchesSearch = function(text) {
-            console.log('[Global Fallback] matchesSearch called for:', text);
-            return true; // Show all by default
-        };
-        
-        window.toggleCompany = function(companyId) {
-            console.log('[Global Fallback] toggleCompany called for:', companyId);
-        };
-        
-        window.toggleBranch = function(companyId, branchId) {
-            console.log('[Global Fallback] toggleBranch called for:', companyId, branchId);
-        };
-        
-        // Removed - script was moved to deprecated folder
-        // const dropdownScript = document.createElement('script');
-        // dropdownScript.src = '/js/dropdown-fix-global.js';
-        // document.head.appendChild(dropdownScript);
-        
-        function companyBranchSelect() {
-            return {
-                showDropdown: false,
-                searchQuery: '',
-                selectedCompany: @entangle('selectedCompany'),
-                selectedBranches: @entangle('selectedBranches'),
-                expandedCompanies: [],
-                
-                init() {
-                    // Initialize with current selections
-                    if (this.selectedCompany) {
-                        this.expandedCompanies.push(this.selectedCompany);
+        // Comprehensive component testing function
+        function testDashboardComponents() {
+            console.log('🧪 Testing dashboard components...');
+            
+            const tests = {
+                companyBranchSelect: {
+                    globalFunction: typeof window.companyBranchSelect === 'function',
+                    domElements: document.querySelectorAll('[x-data*="companyBranchSelect"]').length,
+                    canInitialize: false
+                },
+                dateFilterDropdownEnhanced: {
+                    globalFunction: typeof window.dateFilterDropdownEnhanced === 'function',
+                    domElements: document.querySelectorAll('[x-data*="dateFilterDropdownEnhanced"]').length,
+                    canInitialize: false
+                }
+            };
+            
+            // Test component initialization
+            Object.keys(tests).forEach(componentName => {
+                if (tests[componentName].globalFunction) {
+                    try {
+                        const testInstance = window[componentName]();
+                        tests[componentName].canInitialize = typeof testInstance === 'object' && testInstance !== null;
+                        console.log(`✅ ${componentName}: Available and can initialize`);
+                    } catch (e) {
+                        console.error(`❌ ${componentName}: Error during initialization:`, e);
                     }
-                    
-                    // Ensure all methods are available in the component scope
-                    // This helps with Alpine's reactivity system
-                    this.isCompanySelected = this.isCompanySelected.bind(this);
-                    this.isBranchSelected = this.isBranchSelected.bind(this);
-                    this.hasSearchResults = this.hasSearchResults.bind(this);
-                    this.matchesSearch = this.matchesSearch.bind(this);
-                },
-                
-                // Dropdown control methods
-                toggleDropdown() {
-                    this.showDropdown = !this.showDropdown;
-                },
-                
-                closeDropdown() {
-                    this.showDropdown = false;
-                },
-                
-                openDropdown() {
-                    this.showDropdown = true;
-                },
-                
-                matchesSearch(text) {
-                    if (!this.searchQuery) return true;
-                    return text.toLowerCase().includes(this.searchQuery.toLowerCase());
-                },
-                
-                toggleCompany(companyId) {
-                    if (this.selectedCompany === companyId) {
-                        // Deselect company and all its branches
-                        this.selectedCompany = null;
-                        this.selectedBranches = [];
-                    } else {
-                        // Select new company, reset branches
-                        this.selectedCompany = companyId;
-                        this.selectedBranches = [];
-                        
-                        // Expand to show branches
-                        if (!this.expandedCompanies.includes(companyId)) {
-                            this.expandedCompanies.push(companyId);
-                        }
-                    }
-                    
-                    // Update backend
-                    @this.set('selectedCompany', this.selectedCompany);
-                    @this.set('selectedBranches', this.selectedBranches);
-                    @this.refresh();
-                },
-                
-                toggleBranch(companyId, branchId) {
-                    // Auto-select company if not selected
-                    if (this.selectedCompany !== companyId) {
-                        this.selectedCompany = companyId;
-                    }
-                    
-                    // Toggle branch selection
-                    const index = this.selectedBranches.indexOf(branchId);
-                    if (index > -1) {
-                        this.selectedBranches.splice(index, 1);
-                    } else {
-                        this.selectedBranches.push(branchId);
-                    }
-                    
-                    // Update backend
-                    @this.set('selectedCompany', this.selectedCompany);
-                    @this.set('selectedBranches', this.selectedBranches);
-                    @this.refresh();
-                },
-                
-                isCompanySelected(companyId) {
-                    return this.selectedCompany === companyId;
-                },
-                
-                isBranchSelected(branchId) {
-                    return this.selectedBranches.includes(branchId);
-                },
-                
-                getSelectionLabel() {
-                    if (!this.selectedCompany) {
-                        return 'Alle Unternehmen';
-                    }
-                    
-                    // Get company name
-                    const companyEl = document.querySelector(`[data-company-id="${this.selectedCompany}"]`);
-                    return companyEl ? companyEl.textContent.trim() : 'Unternehmen';
-                },
-                
-                getSelectionDetails() {
-                    if (!this.selectedCompany) {
-                        return 'Zeige Daten aller Unternehmen';
-                    }
-                    
-                    if (this.selectedBranches.length === 0) {
-                        return 'Alle Filialen ausgewählt';
-                    } else if (this.selectedBranches.length === 1) {
-                        return '1 Filiale ausgewählt';
-                    } else {
-                        return `${this.selectedBranches.length} Filialen ausgewählt`;
-                    }
-                },
-                
-                resetFilters() {
-                    this.selectedCompany = null;
-                    this.selectedBranches = [];
-                    this.searchQuery = '';
-                    @this.set('selectedCompany', null);
-                    @this.set('selectedBranches', []);
-                    @this.refresh();
-                },
-                
-                getCompactLabel() {
-                    if (!this.selectedCompany) {
-                        return 'Alle Unternehmen';
-                    }
-                    
-                    // Get company name
-                    const companyEl = document.querySelector(`[data-company-id="${this.selectedCompany}"]`);
-                    const companyName = companyEl ? companyEl.textContent.trim() : 'Unternehmen';
-                    
-                    if (this.selectedBranches.length === 0) {
-                        return companyName + ' (Alle Filialen)';
-                    } else if (this.selectedBranches.length === 1) {
-                        return companyName + ' (1 Filiale)';
-                    } else {
-                        return companyName + ` (${this.selectedBranches.length} Filialen)`;
-                    }
-                },
-                
-                hasSearchResults() {
-                    if (!this.searchQuery || this.searchQuery.trim() === '') {
-                        return true; // No search, show all
-                    }
-                    
-                    // Check if any company or branch matches the search
-                    const companies = @json($this->getCompaniesWithBranches());
-                    
-                    if (!companies || !Array.isArray(companies)) {
-                        return true; // Show all if no data
-                    }
-                    
-                    for (const company of companies) {
-                        if (company && company.name && this.matchesSearch(company.name)) {
-                            return true;
-                        }
-                        
-                        if (company && company.branches && Array.isArray(company.branches)) {
-                            for (const branch of company.branches) {
-                                if (branch && branch.name && this.matchesSearch(branch.name)) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                    
-                    return false;
-                },
-                
-                getCurrentDateRange() {
-                    // This would be populated from the backend
-                    return 'Letzte 7 Tage';
+                } else {
+                    console.warn(`⚠️ ${componentName}: Global function not found`);
+                }
+            });
+            
+            // Log summary
+            const summary = {
+                totalComponents: Object.keys(tests).length,
+                availableComponents: Object.values(tests).filter(t => t.globalFunction).length,
+                activeInDom: Object.values(tests).filter(t => t.domElements > 0).length,
+                canInitializeAll: Object.values(tests).every(t => t.canInitialize || t.domElements === 0)
+            };
+            
+            console.log('📊 Dashboard Component Summary:', summary);
+            
+            if (!summary.canInitializeAll) {
+                console.warn('⚠️ Some dashboard components have issues. Running debug helper...');
+                if (typeof window.debugAlpineComponents === 'function') {
+                    window.debugAlpineComponents();
+                }
+                if (typeof window.fixAlpineComponents === 'function') {
+                    window.fixAlpineComponents();
                 }
             }
+            
+            return tests;
         }
+        
+        // Debug function for troubleshooting
+        window.debugOperationsDashboard = function() {
+            const basicInfo = {
+                alpineComponents: {
+                    companyBranchSelect: typeof window.companyBranchSelect === 'function',
+                    dateFilterDropdownEnhanced: typeof window.dateFilterDropdownEnhanced === 'function'
+                },
+                alpineRegistered: typeof Alpine !== 'undefined' && Alpine.version,
+                livewireReady: typeof Livewire !== 'undefined',
+                componentsLoaded: !!document.querySelector('[x-data="companyBranchSelect()"]')
+            };
+            
+            const detailedTests = testDashboardComponents();
+            
+            return { basicInfo, detailedTests };
+        };
+        
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait for all scripts to load
+            setTimeout(() => {
+                console.log('📊 Running initial dashboard component check...');
+                testDashboardComponents();
+            }, 1500);
+        });
     </script>
-    
-    {{-- Operations Center Fix - Defines missing Alpine components --}}
-    <script src="{{ asset('js/operations-center-fix.js') }}?v={{ time() }}"></script>
     @endpush
 
 </x-filament-panels::page>

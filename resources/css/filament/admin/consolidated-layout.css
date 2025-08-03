@@ -1,0 +1,257 @@
+/* ==========================================================================
+   Consolidated Layout & Display Fixes - Issue #476
+   Created: 2025-08-02
+   
+   This file consolidates all layout/display related fixes from:
+   - issue-448-fix.css (black overlay)
+   - black-overlay-solution.css
+   - black-overlay-final-fix.css
+   - overlay-fix-v2.css
+   - content-area-fix.css
+   - content-width-fix.css
+   - sidebar-layout-fix.css
+   - form-layout-fixes.css
+   - wizard-form-fix.css
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. Black Overlay Removal (Critical Fix)
+   --------------------------------------------------------------------- */
+
+/* Remove ALL overlay pseudo-elements that cause black screen */
+.fi-sidebar-open::before,
+.fi-sidebar-open::after,
+body.fi-sidebar-open::before,
+body.fi-sidebar-open::after,
+.fi-main-ctn::before,
+.fi-main-ctn::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Remove sidebar overlay backdrop */
+.fi-sidebar-close-overlay {
+    display: none !important;
+}
+
+/* Ensure main content is always visible */
+.fi-main-ctn {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* ---------------------------------------------------------------------
+   2. Content Area and Width Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix content area positioning */
+.fi-main {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+}
+
+/* Content width constraints */
+.fi-page-content {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Fix page padding and margins */
+.fi-page {
+    padding: 1rem;
+}
+
+@media (min-width: 1024px) {
+    .fi-page {
+        padding: 2rem;
+    }
+}
+
+/* ---------------------------------------------------------------------
+   3. Sidebar Layout Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix sidebar positioning and overflow */
+.fi-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 40;
+}
+
+/* Fix sidebar width transitions */
+.fi-sidebar-nav {
+    width: 100%;
+}
+
+/* Prevent sidebar from overlapping content */
+@media (min-width: 1024px) {
+    .fi-main-ctn {
+        margin-left: var(--fi-sidebar-width, 16rem);
+    }
+}
+
+/* ---------------------------------------------------------------------
+   4. Form Layout Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix form field spacing */
+.fi-form-component {
+    margin-bottom: 1rem;
+}
+
+/* Fix form grid layouts */
+.fi-form-component-container {
+    display: grid;
+    gap: 1rem;
+}
+
+/* Fix inline form fields */
+.fi-form-field-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Fix form field icons */
+.fi-form-field-wrapper .fi-input-wrapper {
+    position: relative;
+}
+
+.fi-form-field-wrapper .fi-input-wrapper-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* ---------------------------------------------------------------------
+   5. Modal and Wizard Layout Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix modal centering */
+.fi-modal-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1rem;
+}
+
+/* Fix wizard step layout */
+.fi-wizard-step {
+    width: 100%;
+}
+
+.fi-wizard-step-content {
+    padding: 1.5rem;
+}
+
+/* Fix wizard navigation */
+.fi-wizard-nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    border-top: 1px solid rgba(var(--gray-200), 1);
+}
+
+/* ---------------------------------------------------------------------
+   6. Table Layout Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix table container */
+.fi-table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix table width */
+.fi-table {
+    width: 100%;
+    min-width: 100%;
+}
+
+/* ---------------------------------------------------------------------
+   7. Card and Section Layout
+   --------------------------------------------------------------------- */
+
+/* Fix card spacing */
+.fi-section {
+    margin-bottom: 1.5rem;
+}
+
+.fi-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Fix card content overflow */
+.fi-card {
+    overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------
+   8. Header Layout Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix page header layout */
+.fi-page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Fix header actions positioning */
+.fi-page-header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+/* ---------------------------------------------------------------------
+   9. Responsive Layout Fixes
+   --------------------------------------------------------------------- */
+
+/* Mobile layout adjustments */
+@media (max-width: 640px) {
+    .fi-page-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .fi-page-header-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .fi-page-header-actions > * {
+        flex: 1;
+    }
+}
+
+/* ---------------------------------------------------------------------
+   10. Z-Index Management
+   --------------------------------------------------------------------- */
+
+/* Establish layout z-index hierarchy */
+.fi-main { z-index: 1; }
+.fi-page-header { z-index: 10; }
+.fi-sidebar { z-index: 40; }
+.fi-modal-backdrop { z-index: 50; }
+.fi-modal { z-index: 60; }
+
+/* ---------------------------------------------------------------------
+   WARNING: This file contains critical fixes for the black overlay issue.
+   DO NOT remove the pseudo-element overrides without extensive testing.
+   --------------------------------------------------------------------- */

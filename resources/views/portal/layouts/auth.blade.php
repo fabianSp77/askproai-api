@@ -15,36 +15,25 @@
     @if(file_exists(public_path('build/manifest.json')))
         @vite(['resources/css/app.css'])
     @else
+        <!-- Inline base styles for auth pages -->
         <style>
-            /* Fallback styles */
-            .min-h-screen { min-height: 100vh; }
-            .flex { display: flex; }
-            .items-center { align-items: center; }
-            .justify-center { justify-content: center; }
-            .bg-gray-50 { background-color: #f9fafb; }
-            .bg-gray-100 { background-color: #f3f4f6; }
-            .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
-            .px-4 { padding-left: 1rem; padding-right: 1rem; }
-            .max-w-md { max-width: 28rem; }
-            .w-full { width: 100%; }
-            .space-y-8 > * + * { margin-top: 2rem; }
-            .text-center { text-align: center; }
-            .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
-            .font-extrabold { font-weight: 800; }
-            .text-gray-900 { color: #111827; }
-            .text-gray-600 { color: #4b5563; }
-            .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-            .rounded-md { border-radius: 0.375rem; }
-            .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-            .border { border-width: 1px; }
-            .border-gray-300 { border-color: #d1d5db; }
-            .block { display: block; }
-            .relative { position: relative; }
-            .appearance-none { appearance: none; }
-            .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-            .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-            .focus\:outline-none:focus { outline: 2px solid transparent; outline-offset: 2px; }
-            .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+            /* Base reset and typography */
+            *, ::before, ::after {
+                box-sizing: border-box;
+                border-width: 0;
+                border-style: solid;
+                border-color: #e5e7eb;
+            }
+            html {
+                line-height: 1.5;
+                -webkit-text-size-adjust: 100%;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            }
+            body {
+                margin: 0;
+                font-family: inherit;
+                line-height: inherit;
+            }
         </style>
     @endif
     
@@ -72,12 +61,22 @@
         .focus\:border-primary-500:focus { border-color: var(--primary-500); }
     </style>
     
-    {{-- Portal Login Fix - Temporarily disabled due to form submission issues
-    <script src="{{ asset('js/portal-login-fix.js') }}?v={{ time() }}"></script> --}}
+    <!-- Fix for clickable elements -->
+    <link href="/css/portal-click-fix-final.css" rel="stylesheet">
+    
+    <!-- CSRF Setup -->
+    <script src="/js/portal-csrf-setup.js"></script>
 </head>
 <body class="font-sans antialiased">
     <div class="min-h-screen bg-gray-100">
         @yield('content')
     </div>
+    
+    {{-- Service Worker Cleanup - Only run if needed --}}
+    @if(request()->has('clear-sw'))
+        <script src="{{ asset('js/force-unregister-business-sw.js') }}?v={{ time() }}"></script>
+    @endif
+    
+    @stack('scripts')
 </body>
 </html>

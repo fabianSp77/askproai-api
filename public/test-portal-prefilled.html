@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Login - Prefilled</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <h1>Business Portal Login Test - Prefilled Form</h1>
+    
+    <p>This will redirect you to the actual login page with the form pre-filled:</p>
+    
+    <a href="/business/login" onclick="localStorage.setItem('demo_test', '1')">Go to Login Page</a>
+    
+    <script>
+        // When on the login page, auto-fill the form
+        if (window.location.pathname === '/business/login' && localStorage.getItem('demo_test')) {
+            localStorage.removeItem('demo_test');
+            
+            window.addEventListener('DOMContentLoaded', function() {
+                // Fill in the form
+                const emailField = document.getElementById('email');
+                const passwordField = document.getElementById('password');
+                
+                if (emailField && passwordField) {
+                    emailField.value = 'demo@askproai.de';
+                    passwordField.value = 'password';
+                    
+                    // Add a message
+                    const form = document.getElementById('login-form');
+                    if (form) {
+                        const msg = document.createElement('div');
+                        msg.style.cssText = 'background: #4ade80; color: white; padding: 10px; margin: 10px 0; border-radius: 5px;';
+                        msg.textContent = 'Form auto-filled with demo credentials. Click "Anmelden" to login.';
+                        form.insertBefore(msg, form.firstChild);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

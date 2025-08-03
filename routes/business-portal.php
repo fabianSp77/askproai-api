@@ -16,8 +16,6 @@ use App\Http\Controllers\Portal\ReactAppointmentController;
 use App\Http\Controllers\Portal\ReactDashboardController;
 use App\Http\Controllers\Portal\CallController;
 use App\Http\Controllers\Portal\SimpleCallController;
-use App\Http\Controllers\Portal\TestCallsController;
-use App\Http\Controllers\Portal\PublicTestCallsController;
 use App\Http\Controllers\Portal\SimpleCallShowController;
 use App\Http\Controllers\Portal\CustomerController;
 use App\Http\Controllers\Portal\SimpleCustomerController;
@@ -40,33 +38,55 @@ use Illuminate\Support\Facades\Route;
 // 1. PUBLIC ROUTES (No Auth Required)
 // ========================================
 Route::prefix('business')->name('business.')->group(function () {
+    // TEST ROUTE - Direct auth check without middleware
+    Route::get('/auth-test', function() {
+        return response()->json([
+            'portal_check' => Auth::guard('portal')->check(),
+            'portal_user' => Auth::guard('portal')->user(),
+            'session_id' => session()->getId(),
+            'session_all' => session()->all(),
+        ]);
+    });
+    
+    
+    // Auth test view
+    Route::get('/auth-test', function() {
+        return view('portal.auth-test');
+    })->middleware(['business-portal']);
+    
+    // Debug route
+    Route::get('/login-debug', [\App\Http\Controllers\Portal\LoginDebugController::class, 'debug']);
+    
     // Login routes - NO AUTH MIDDLEWARE, but WITH RATE LIMITING
-    Route::middleware(['web'])->group(function () {
+    Route::middleware(['business-portal'])->group(function () {
         Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
         Route::post('/login', [LoginController::class, 'login'])
-            ->middleware('auth.rate.limit')
+            ->middleware('rate.limit')
             ->name('login.post');
         
         // AJAX Authentication Routes
         Route::prefix('api/auth')->name('api.auth.')->group(function () {
             Route::post('/login', [AjaxLoginController::class, 'login'])
-                ->middleware('auth.rate.limit')
+                ->middleware('rate.limit')
                 ->name('login');
             Route::get('/check', [AjaxLoginController::class, 'check'])->name('check');
         });
         
-        // TEMPORARY: Public test endpoint for calls
-        Route::get('/api/public/calls', [PublicTestCallsController::class, 'apiIndex'])->name('api.public.calls');
     });
 });
 
 // ========================================
 // 2. AUTHENTICATED ROUTES
 // ========================================
-Route::prefix('business')->middleware(['web', 'portal.auth'])->name('business.')->group(function () {
-    // Main portal routes - Using ReactDashboardController with React UI
-    Route::get('/', [ReactDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard', [ReactDashboardController::class, 'index'])->name('dashboard.main');
+Route::prefix('business')->middleware(['business-portal', 'portal.auth'])->name('business.')->group(function () {
+    // Main portal routes - Using WorkingDashboardController temporarily
+    Route::get('/', [\App\Http\Controllers\Portal\WorkingDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Portal\WorkingDashboardController::class, 'index'])->name('dashboard.main');
+    
+    // Test dashboard route
+    Route::get('/test-dashboard', function() {
+        return view('portal.test-dashboard');
+    })->name('test-dashboard');
     
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -81,9 +101,9 @@ Route::prefix('business')->middleware(['web', 'portal.auth'])->name('business.')
     Route::post('/2fa', [TwoFactorController::class, 'verify'])->name('2fa.verify');
     Route::post('/2fa/resend', [TwoFactorController::class, 'resend'])->name('2fa.resend');
     
-    // Calls - Using ReactCallController with React UI
+    // Calls - Temporarily using SimpleCallController
     Route::prefix('calls')->name('calls.')->group(function () {
-        Route::get('/', [ReactCallController::class, 'index'])->name('index');
+        Route::get('/', [SimpleCallController::class, 'index'])->name('index');
         Route::get('/{call}', [ReactCallController::class, 'show'])->name('show');
     });
     
@@ -144,7 +164,7 @@ Route::prefix('business')->middleware(['web', 'portal.auth'])->name('business.')
 // ========================================
 // 3. API ROUTES (Authenticated)
 // ========================================
-Route::prefix('business/api')->middleware(['web', 'portal.auth'])->name('business.api.')->group(function () {
+Route::prefix('business/api')->middleware(['business-api'])->name('business.api.')->group(function () {
     // Dashboard data - Using ReactDashboardController for React app
     Route::get('/dashboard/stats', [ReactDashboardController::class, 'stats'])->name('dashboard.stats');
     Route::get('/dashboard/recent-calls', [ReactDashboardController::class, 'recentCalls'])->name('dashboard.recent-calls');

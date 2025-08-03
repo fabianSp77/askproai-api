@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal - Auth Test</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        button { padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        .step { margin: 10px 0; padding: 10px; border-left: 3px solid #ddd; }
+        .step.success { border-color: green; }
+        .step.error { border-color: red; }
+    </style>
+</head>
+<body>
+    <h1>Business Portal - Authentication Test</h1>
+    
+    <div id="status"></div>
+    
+    <div style="margin: 20px 0;">
+        <button onclick="runFullTest()">🚀 Run Full Test</button>
+        <button onclick="clearAllData()">🗑️ Clear All Data</button>
+        <button onclick="checkCurrentAuth()">🔍 Check Current Auth</button>
+    </div>
+    
+    <h2>Test Results:</h2>
+    <div id="results"></div>
+    
+    <script>
+    function addResult(message, type = 'info') {
+        const div = document.createElement('div');
+        div.className = 'step ' + type;
+        div.innerHTML = `<span class="${type}">${new Date().toLocaleTimeString()}</span> - ${message}`;
+        document.getElementById('results').appendChild(div);
+    }
+    
+    async function clearAllData() {
+        addResult('Clearing all cookies and session data...', 'warning');
+        
+        // Clear all cookies
+        document.cookie.split(";").forEach(function(c) { 
+            const eqPos = c.indexOf("=");
+            const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.askproai.de";
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=askproai.de";
+        });
+        
+        // Clear local storage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        addResult('All data cleared. Refreshing page...', 'success');
+        setTimeout(() => window.location.reload(), 1000);
+    }
+    
+    async function checkCurrentAuth() {
+        try {
+            const response = await fetch('/business/api/auth/check', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.authenticated) {
+                    addResult(`✅ Already authenticated as: ${data.user.email}`, 'success');
+                    addResult(`User ID: ${data.user.id}, Company: ${data.user.company_id}`, 'info');
+                } else {
+                    addResult('❌ Not authenticated', 'error');
+                }
+            } else {
+                addResult(`❌ Auth check failed: ${response.status} ${response.statusText}`, 'error');
+            }
+        } catch (error) {
+            addResult(`❌ Error checking auth: ${error.message}`, 'error');
+        }
+    }
+    
+    async function runFullTest() {
+        document.getElementById('results').innerHTML = '';
+        
+        try {
+            // Step 1: Clear existing auth
+            addResult('Step 1: Clearing existing authentication...', 'info');
+            await fetch('/business/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            // Step 2: Get CSRF token
+            addResult('Step 2: Fetching CSRF token...', 'info');
+            const loginPageResponse = await fetch('/business/login');
+            const loginPageText = await loginPageResponse.text();
+            
+            const csrfMatch = loginPageText.match(/name="_token"\s+value="([^"]+)"/);
+            if (!csrfMatch) {
+                throw new Error('CSRF token not found');
+            }
+            const csrfToken = csrfMatch[1];
+            addResult(`CSRF token obtained: ${csrfToken.substring(0, 20)}...`, 'success');
+            
+            // Step 3: Submit login
+            addResult('Step 3: Submitting login credentials...', 'info');
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('email', 'demo@askproai.de');
+            formData.append('password', 'password');
+            
+            const loginResponse = await fetch('/business/login', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                redirect: 'manual' // Don't follow redirects automatically
+            });
+            
+            addResult(`Login response status: ${loginResponse.status}`, loginResponse.status === 302 ? 'success' : 'warning');
+            
+            if (loginResponse.status === 302) {
+                const location = loginResponse.headers.get('location');
+                addResult(`Redirect location: ${location}`, 'info');
+                
+                // Step 4: Check auth after login
+                addResult('Step 4: Checking authentication status...', 'info');
+                const authResponse = await fetch('/business/api/auth/check', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                });
+                
+                if (authResponse.ok) {
+                    const authData = await authResponse.json();
+                    if (authData.authenticated) {
+                        addResult(`✅ LOGIN SUCCESSFUL! Authenticated as: ${authData.user.email}`, 'success');
+                        addResult('🎉 The business portal login is now working correctly!', 'success');
+                        
+                        // Test dashboard access
+                        addResult('Step 5: Testing dashboard access...', 'info');
+                        const dashResponse = await fetch('/business/dashboard', {
+                            credentials: 'same-origin'
+                        });
+                        addResult(`Dashboard access: ${dashResponse.status === 200 ? '✅ Success' : '❌ Failed'}`, 
+                                dashResponse.status === 200 ? 'success' : 'error');
+                        
+                        addResult('🚀 Redirecting to dashboard in 3 seconds...', 'success');
+                        setTimeout(() => {
+                            window.location.href = '/business/dashboard';
+                        }, 3000);
+                    } else {
+                        addResult('❌ Authentication check failed - not logged in', 'error');
+                    }
+                } else {
+                    addResult(`❌ Auth check failed: ${authResponse.status}`, 'error');
+                }
+            } else {
+                // Try to read error
+                const responseText = await loginResponse.text();
+                if (responseText.includes('Die angegebenen Zugangsdaten sind ungültig')) {
+                    addResult('❌ Invalid credentials error', 'error');
+                } else if (responseText.includes('419')) {
+                    addResult('❌ CSRF token error (419)', 'error');
+                } else {
+                    addResult('❌ Unknown login error', 'error');
+                }
+            }
+            
+        } catch (error) {
+            addResult(`❌ Test failed: ${error.message}`, 'error');
+            console.error(error);
+        }
+    }
+    
+    // Check initial status
+    window.addEventListener('load', () => {
+        checkCurrentAuth();
+    });
+    </script>
+</body>
+</html>

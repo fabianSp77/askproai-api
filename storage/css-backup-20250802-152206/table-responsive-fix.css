@@ -1,0 +1,266 @@
+/* Table Responsive Fixes - Professional Design Compatible */
+
+/* 1. Base Table Container Fix */
+.fi-ta-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    width: 100%;
+}
+
+/* 2. Prevent Table from Expanding Beyond Container */
+.fi-ta-table {
+    width: 100%;
+    table-layout: fixed; /* Force fixed layout for better control */
+}
+
+/* 3. Column Width Management */
+@media (min-width: 1024px) {
+    /* Desktop: Optimize column widths */
+    .fi-ta-table th,
+    .fi-ta-table td {
+        padding: 0.75rem 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Specific column optimizations */
+    .fi-ta-col-created_at,
+    .fi-ta-col-updated_at,
+    .fi-ta-col-appointment_date {
+        width: 140px;
+        min-width: 140px;
+    }
+    
+    .fi-ta-col-status {
+        width: 120px;
+        min-width: 120px;
+    }
+    
+    .fi-ta-col-actions {
+        width: 100px;
+        min-width: 100px;
+        text-align: right;
+    }
+    
+    /* Customer/Name columns get remaining space */
+    .fi-ta-col-customer\.name,
+    .fi-ta-col-name {
+        width: auto;
+        min-width: 200px;
+    }
+    
+    /* Email columns */
+    .fi-ta-col-email,
+    .fi-ta-col-customer\.email {
+        width: 250px;
+        min-width: 200px;
+    }
+    
+    /* Phone columns */
+    .fi-ta-col-phone,
+    .fi-ta-col-customer\.phone,
+    .fi-ta-col-caller_phone_number {
+        width: 150px;
+        min-width: 150px;
+    }
+}
+
+/* 4. Tablet Responsive (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    /* Hide less important columns */
+    .fi-ta-col-created_at,
+    .fi-ta-col-updated_at,
+    .fi-ta-col-branch\.name,
+    .fi-ta-col-service\.name {
+        display: none;
+    }
+    
+    /* Adjust remaining columns */
+    .fi-ta-table th,
+    .fi-ta-table td {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Compact action buttons */
+    .fi-ta-actions {
+        gap: 0.25rem;
+    }
+    
+    .fi-ta-actions .fi-btn {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* 5. Mobile Responsive (< 768px) */
+@media (max-width: 767px) {
+    /* Convert table to card layout */
+    .fi-ta-table,
+    .fi-ta-table tbody,
+    .fi-ta-table tr {
+        display: block;
+        width: 100%;
+    }
+    
+    /* Hide table header */
+    .fi-ta-table thead {
+        display: none;
+    }
+    
+    /* Style rows as cards */
+    .fi-ta-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Display cells as rows */
+    .fi-ta-table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        text-align: left;
+        width: 100%;
+    }
+    
+    .fi-ta-table td:last-child {
+        border-bottom: none;
+    }
+    
+    /* Add labels before content */
+    .fi-ta-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        margin-right: 1rem;
+        flex-shrink: 0;
+        width: 40%;
+        color: rgb(107, 114, 128);
+    }
+    
+    /* Actions at the bottom */
+    .fi-ta-col-actions {
+        margin-top: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        justify-content: flex-end;
+    }
+    
+    .fi-ta-col-actions::before {
+        display: none;
+    }
+    
+    /* Full width action buttons on mobile */
+    .fi-ta-actions {
+        width: 100%;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+}
+
+/* 6. Fix Column Toggle on Mobile */
+@media (max-width: 767px) {
+    .fi-ta-col-toggle {
+        display: none; /* Hide column toggle on mobile since we use card layout */
+    }
+}
+
+/* 7. Text Truncation for Long Content */
+.fi-ta-text-item {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Allow wrapping for important content */
+.fi-ta-col-customer\.name .fi-ta-text-item,
+.fi-ta-col-name .fi-ta-text-item {
+    white-space: normal;
+    line-height: 1.4;
+}
+
+/* 8. Ensure Proper Scrollbar Styling */
+.fi-ta-table-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.fi-ta-table-wrapper::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.fi-ta-table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.fi-ta-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* 9. Dark Mode Adjustments */
+.dark .fi-ta-table tr {
+    background: rgb(31, 41, 55);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .fi-ta-table td {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .fi-ta-table td::before {
+    color: rgb(156, 163, 175);
+}
+
+/* 10. Fix Table Actions Overflow */
+.fi-ta-actions {
+    flex-wrap: nowrap;
+    min-width: fit-content;
+}
+
+/* Ensure dropdown menus don't get cut off */
+.fi-dropdown {
+    position: relative;
+}
+
+.fi-dropdown-panel {
+    position: absolute;
+    z-index: 50;
+    min-width: 12rem;
+}
+
+/* 11. Responsive Bulk Actions */
+@media (max-width: 767px) {
+    .fi-ta-bulk-actions {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        z-index: 40;
+        box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dark .fi-ta-bulk-actions {
+        background: rgb(31, 41, 55);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* 12. Loading State Optimization */
+.fi-ta-loading-overlay {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+}
+
+.dark .fi-ta-loading-overlay {
+    background: rgba(31, 41, 55, 0.9);
+}

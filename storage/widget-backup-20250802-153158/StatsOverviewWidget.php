@@ -1,0 +1,32 @@
+<?php
+namespace App\Filament\Admin\Widgets;
+
+use App\Models\Customer;
+use App\Models\Company;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+
+class StatsOverviewWidget extends BaseWidget
+{
+    protected static ?int $sort = 0;
+    
+    protected function getStats(): array
+    {
+        return [
+            Stat::make('Kunden', Customer::count())
+                ->description('Gesamt-Anzahl der Kunden')
+                ->descriptionIcon('heroicon-o-users')
+                ->color('success'),
+            
+            Stat::make('Neue Kunden', Customer::whereMonth('created_at', now()->month)->count())
+                ->description('In diesem Monat')
+                ->descriptionIcon('heroicon-o-user-plus')
+                ->color('primary'),
+                
+            Stat::make('Unternehmen', Company::count())
+                ->description('Registrierte Firmen')
+                ->descriptionIcon('heroicon-o-building-office')
+                ->color('warning'),
+        ];
+    }
+}

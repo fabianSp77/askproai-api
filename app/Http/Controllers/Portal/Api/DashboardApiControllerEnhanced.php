@@ -16,12 +16,17 @@ class DashboardApiControllerEnhanced extends BaseApiController
     {
         $user = Auth::guard('portal')->user();
         if (! $user) {
+            // Get the correct session key from the guard
+            $guard = Auth::guard('portal');
+            $sessionKey = $guard->getName();
+            
             \Log::error('DashboardAPI: No authenticated user', [
                 'session_id' => session()->getId(),
                 'guards' => array_keys(config('auth.guards')),
                 'has_session' => $request->hasSession(),
-                'portal_session_key' => session()->has('login_portal_' . sha1(\App\Models\PortalUser::class)),
-                'portal_user_id' => session('login_portal_' . sha1(\App\Models\PortalUser::class)),
+                'portal_session_key' => session()->has($sessionKey),
+                'portal_user_id' => session($sessionKey),
+                'expected_key' => $sessionKey,
                 'all_session_keys' => array_keys(session()->all()),
             ]);
             
@@ -29,8 +34,9 @@ class DashboardApiControllerEnhanced extends BaseApiController
                 'message' => 'Unauthenticated.',
                 'debug' => config('app.debug') ? [
                     'session_id' => session()->getId(),
-                    'has_portal_session' => $request->hasSession() && session()->has('login_portal_' . sha1(\App\Models\PortalUser::class)),
-                    'portal_user_id' => session('login_portal_' . sha1(\App\Models\PortalUser::class)),
+                    'has_portal_session' => $request->hasSession() && session()->has($sessionKey),
+                    'portal_user_id' => session($sessionKey),
+                    'portal_user_id_fallback' => session('portal_user_id'),
                     'user_found' => !is_null($user),
                     'is_admin_viewing' => session('is_admin_viewing'),
                     'web_user' => Auth::user() ? Auth::user()->id : null,

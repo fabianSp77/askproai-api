@@ -18,6 +18,16 @@ class AnalyticsMCPServer extends BaseMCPServer
     protected string $version = '1.0.0';
     protected string $description = 'Advanced analytics and predictive insights for business intelligence';
     
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    
+    public function getVersion(): string
+    {
+        return $this->version;
+    }
+    
     public function getTools(): array
     {
         return [

@@ -22,52 +22,54 @@ class ForcePortalSession
             return $next($request);
         }
 
-        // Try to restore session manually
-        $sessionId = session()->getId();
-        $sessionFile = storage_path('framework/sessions/portal/' . $sessionId);
+        // Try to restore session from standard session storage
+        $guard = Auth::guard('portal');
+        $authKey = $guard->getName();
         
         Log::debug('ForcePortalSession attempting restore', [
-            'session_id' => $sessionId,
-            'file_exists' => file_exists($sessionFile),
+            'session_id' => session()->getId(),
+            'session_keys' => array_keys(session()->all()),
+            'expected_key' => $authKey,
             'url' => $request->url(),
         ]);
         
-        if (file_exists($sessionFile)) {
-            try {
-                $sessionData = unserialize(file_get_contents($sessionFile));
+        // Primary method: Check using guard's session key
+        if (session()->has($authKey)) {
+            $userId = session($authKey);
+            $user = PortalUser::find($userId);
+            
+            if ($user && $user->is_active) {
+                // Manually authenticate the user
+                $guard->loginUsingId($userId);
                 
-                // Look for Laravel's auth session key
-                $authKey = 'login_portal_' . sha1(PortalUser::class);
+                // Set company context
+                app()->instance('current_company_id', $user->company_id);
+                app()->instance('company_context_source', 'force_portal_session');
                 
-                if (isset($sessionData[$authKey])) {
-                    $userId = $sessionData[$authKey];
-                    $user = PortalUser::find($userId);
-                    
-                    if ($user && $user->is_active) {
-                        // Manually authenticate the user
-                        Auth::guard('portal')->loginUsingId($userId);
-                        
-                        // Set company context
-                        app()->instance('current_company_id', $user->company_id);
-                        
-                        // Update session with current data
-                        foreach ($sessionData as $key => $value) {
-                            if (!session()->has($key)) {
-                                session([$key => $value]);
-                            }
-                        }
-                        
-                        Log::info('ForcePortalSession restored user', [
-                            'user_id' => $userId,
-                            'email' => $user->email,
-                            'session_id' => $sessionId,
-                        ]);
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::error('ForcePortalSession failed', [
-                    'error' => $e->getMessage(),
-                    'session_id' => $sessionId,
+                Log::info('ForcePortalSession restored user from session', [
+                    'user_id' => $userId,
+                    'email' => $user->email,
+                    'session_id' => session()->getId(),
+                ]);
+            }
+        }
+        // Fallback method: Check portal_user_id
+        else if (session()->has('portal_user_id')) {
+            $userId = session('portal_user_id');
+            $user = PortalUser::find($userId);
+            
+            if ($user && $user->is_active) {
+                // Manually authenticate the user
+                $guard->loginUsingId($userId);
+                
+                // Set company context
+                app()->instance('current_company_id', $user->company_id);
+                app()->instance('company_context_source', 'force_portal_session_fallback');
+                
+                Log::info('ForcePortalSession restored user from fallback', [
+                    'user_id' => $userId,
+                    'email' => $user->email,
+                    'session_id' => session()->getId(),
                 ]);
             }
         }

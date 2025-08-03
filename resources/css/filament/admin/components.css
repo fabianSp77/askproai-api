@@ -1,0 +1,178 @@
+/* 
+ * Component Styles
+ * Specific component customizations and fixes
+ */
+
+/* Buttons */
+.fi-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    transition: all var(--transition-fast);
+}
+
+.fi-btn:hover {
+    transform: translateY(-1px);
+}
+
+.fi-btn:active {
+    transform: translateY(0);
+}
+
+/* Dropdowns */
+.fi-dropdown-panel {
+    z-index: var(--z-dropdown) !important;
+    min-width: 200px;
+}
+
+/* Ensure dropdowns close properly */
+.fi-dropdown-trigger[aria-expanded="false"] + .fi-dropdown-panel {
+    display: none !important;
+}
+
+/* Icons - Consistent Sizing */
+.fi-icon svg,
+.fi-btn svg,
+.fi-link svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Large icons for special cases */
+.fi-empty-state-icon svg,
+.fi-modal-icon svg {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Small icons for compact areas */
+.fi-badge svg,
+.fi-ta-icon svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Tables */
+.fi-ta-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.fi-ta-row {
+    transition: background-color var(--transition-fast);
+}
+
+.fi-ta-row:hover {
+    background-color: var(--gray-50);
+}
+
+/* Fix table action dropdowns */
+.fi-ta-actions {
+    position: static !important;
+}
+
+.fi-ta-actions .fi-dropdown {
+    position: relative;
+}
+
+/* Forms */
+.fi-input,
+.fi-select {
+    width: 100%;
+    transition: border-color var(--transition-fast);
+}
+
+.fi-input:focus,
+.fi-select:focus {
+    border-color: var(--primary-500);
+    outline: none;
+}
+
+/* Modals */
+.fi-modal {
+    z-index: var(--z-modal) !important;
+}
+
+.fi-modal-overlay {
+    z-index: calc(var(--z-modal) - 1) !important;
+}
+
+/* Notifications */
+.fi-notification {
+    z-index: var(--z-notification) !important;
+}
+
+/* Widgets */
+.fi-wi-stats-overview-stat {
+    transition: transform var(--transition-fast);
+}
+
+.fi-wi-stats-overview-stat:hover {
+    transform: scale(1.02);
+}
+
+/* Navigation Items */
+.fi-sidebar-item {
+    position: relative;
+    transition: all var(--transition-fast);
+}
+
+.fi-sidebar-item:hover {
+    background-color: var(--gray-100);
+}
+
+.fi-sidebar-item.fi-active {
+    background-color: var(--primary-50);
+}
+
+.fi-sidebar-item.fi-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--primary-500);
+}
+
+/* Loading States */
+.fi-loading-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+/* Ensure spinners don't block interactions */
+.fi-loading-indicator svg {
+    pointer-events: none;
+}
+
+/* Badge Improvements */
+.fi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.875rem;
+}
+
+/* Card Components */
+.fi-section {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    padding: var(--spacing-lg);
+}
+
+/* Dark Mode Support */
+.dark .fi-ta-row:hover {
+    background-color: var(--gray-800);
+}
+
+.dark .fi-sidebar-item:hover {
+    background-color: var(--gray-800);
+}
+
+.dark .fi-sidebar-item.fi-active {
+    background-color: var(--gray-900);
+}

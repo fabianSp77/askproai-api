@@ -1,0 +1,266 @@
+/* Z-Index Layer Management Fix for Filament Portal
+ * 
+ * Z-Index Scale (Based on Filament v3 Best Practices):
+ * - Base content: 0-10
+ * - Sticky elements: 20-30
+ * - Dropdowns: 40-50
+ * - Overlays/Sheets: 60-70
+ * - Modals: 80-90
+ * - Tooltips: 100
+ * - Notifications: 110
+ * - Critical UI: 9999
+ */
+
+/* ========================================
+   DROPDOWNS & ACTION GROUPS
+   ======================================== */
+
+/* COMMENTED OUT - Now managed by stacking-context-fix.css
+/* Action Group Dropdowns in Tables */
+/*
+.fi-ta-actions-group-dropdown,
+.fi-ac-dropdown,
+.fi-dropdown {
+    z-index: 50 !important;
+}
+*/
+
+/* Dropdown Panels (must be above table content) */
+/*
+.fi-dropdown-panel {
+    z-index: 51 !important;
+    position: relative !important;
+}
+*/
+
+/* Dropdown Lists */
+/*
+.fi-dropdown-list {
+    z-index: 52 !important;
+    max-height: 400px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+*/
+
+/* Branch Selector Dropdown (Higher priority) */
+/*
+.fi-global-search-field,
+.branch-selector-dropdown,
+[x-data*="branch"] .fi-dropdown-panel {
+    z-index: 55 !important;
+}
+*/
+
+/* User Menu Dropdown */
+/*
+.fi-user-menu .fi-dropdown-panel {
+    z-index: 56 !important;
+}
+*/
+
+/* ========================================
+   TABLES & TABLE ACTIONS
+   ======================================== */
+
+/* Table Container */
+.fi-ta-table {
+    position: relative;
+    z-index: 1;
+}
+
+/* Table Actions Container */
+.fi-ta-actions {
+    position: relative;
+    z-index: 10 !important;
+}
+
+/* Table Filters Dropdown */
+.fi-ta-filters-dropdown {
+    z-index: 45 !important;
+}
+
+/* Column Toggle Dropdown */
+.fi-ta-col-toggle .fi-dropdown-panel {
+    z-index: 46 !important;
+}
+
+/* ========================================
+   MODALS & OVERLAYS
+   ======================================== */
+
+/* Modal Backdrop */
+.fi-modal-backdrop {
+    z-index: 80 !important;
+}
+
+/* Modal Container */
+.fi-modal {
+    z-index: 90 !important;
+}
+
+/* Modal Close Button */
+.fi-modal-close-btn {
+    z-index: 91 !important;
+}
+
+/* Slide-overs */
+.fi-modal-slide-over {
+    z-index: 85 !important;
+}
+
+/* ========================================
+   NAVIGATION & SIDEBARS
+   ======================================== */
+
+/* COMMENTED OUT - Now managed by stacking-context-fix.css
+/* Main Sidebar */
+/*
+.fi-sidebar {
+    z-index: 30 !important;
+}
+*/
+
+/* Mobile Navigation Overlay */
+/*
+.fi-sidebar-backdrop {
+    z-index: 35 !important;
+}
+*/
+
+/* Top Navigation Bar */
+/*
+.fi-topbar {
+    z-index: 25 !important;
+}
+*/
+
+/* ========================================
+   NOTIFICATIONS & TOOLTIPS
+   ======================================== */
+
+/* Notifications */
+.fi-no-notification {
+    z-index: 110 !important;
+}
+
+/* Tooltips */
+[role="tooltip"],
+.fi-tooltip {
+    z-index: 100 !important;
+}
+
+/* ========================================
+   FORM ELEMENTS
+   ======================================== */
+
+/* Select Dropdown Options */
+.fi-select-option-list {
+    z-index: 45 !important;
+}
+
+/* Date Picker */
+.fi-fo-date-time-picker .flatpickr-calendar {
+    z-index: 50 !important;
+}
+
+/* Color Picker */
+.fi-fo-color-picker .picker_wrapper {
+    z-index: 50 !important;
+}
+
+/* ========================================
+   FIXES FOR SPECIFIC ISSUES
+   ======================================== */
+
+/* Fix for "Mehr" button dropdown behind content */
+.fi-ta-record-actions .fi-dropdown-panel,
+.fi-ta-actions .fi-ac-dropdown .fi-dropdown-panel {
+    z-index: 60 !important;
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    margin-top: 0.5rem !important;
+}
+
+/* Ensure dropdown trigger buttons have proper stacking */
+.fi-ac-btn-group > button,
+.fi-dropdown-trigger {
+    position: relative;
+    z-index: 2;
+}
+
+/* Fix for dropdowns in sticky table headers */
+.fi-ta-header-toolbar {
+    position: relative;
+    z-index: 20;
+}
+
+/* Fix for dropdowns cutting off at table edges */
+.fi-ta-content {
+    overflow: visible !important;
+}
+
+.fi-ta-content-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 1024px) {
+    /* Mobile dropdowns need higher z-index */
+    .fi-dropdown-panel {
+        z-index: 70 !important;
+    }
+    
+    /* Mobile modals */
+    .fi-modal {
+        z-index: 95 !important;
+    }
+}
+
+/* ========================================
+   ALPINE.JS SPECIFIC FIXES
+   ======================================== */
+
+/* Ensure Alpine dropdowns are properly layered */
+[x-show][x-transition] {
+    position: relative;
+}
+
+/* Branch selector specific Alpine fix */
+[x-data*="open"] > div[x-show="open"] {
+    z-index: 60 !important;
+}
+
+/* ========================================
+   LIVEWIRE LOADING STATES
+   ======================================== */
+
+/* Loading overlay */
+.fi-loading-overlay {
+    z-index: 120 !important;
+}
+
+/* ========================================
+   DEBUG HELPER CLASSES
+   ======================================== */
+
+/* Add these classes to debug z-index issues */
+.z-debug-high {
+    z-index: 9999 !important;
+    border: 2px solid red !important;
+}
+
+.z-debug-medium {
+    z-index: 500 !important;
+    border: 2px solid yellow !important;
+}
+
+.z-debug-low {
+    z-index: 10 !important;
+    border: 2px solid green !important;
+}

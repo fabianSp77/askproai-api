@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Portal Login</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <h1>Test Portal Login</h1>
+    
+    <div id="status"></div>
+    
+    <button onclick="testLogin()">Test Login</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function testLogin() {
+            const status = document.getElementById('status');
+            const result = document.getElementById('result');
+            
+            status.innerHTML = 'Step 1: Getting login page...';
+            
+            // Step 1: Get CSRF token
+            const loginPageResponse = await fetch('/business/login');
+            const loginPageHtml = await loginPageResponse.text();
+            
+            // Extract CSRF token
+            const tokenMatch = loginPageHtml.match(/name="_token" value="([^"]+)"/);
+            if (!tokenMatch) {
+                result.innerHTML = 'Error: Could not find CSRF token';
+                return;
+            }
+            
+            const csrfToken = tokenMatch[1];
+            status.innerHTML = `Step 2: Got CSRF token: ${csrfToken.substring(0, 20)}...`;
+            
+            // Step 2: Perform login
+            const formData = new FormData();
+            formData.append('_token', csrfToken);
+            formData.append('email', 'demo@askproai.de');
+            formData.append('password', 'password');
+            
+            try {
+                const loginResponse = await fetch('/business/login', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    redirect: 'manual' // Handle redirect manually to check status
+                });
+                
+                status.innerHTML = `Step 3: Login response status: ${loginResponse.status}`;
+                
+                if (loginResponse.status === 302 || loginResponse.status === 303) {
+                    // Login successful - we got a redirect
+                    const redirectUrl = loginResponse.headers.get('Location') || '/business/dashboard';
+                    status.innerHTML += `<br>Redirect to: ${redirectUrl}`;
+                    result.innerHTML = '<strong style="color: green">✅ Login successful!</strong>';
+                        
+                        // Test authenticated API
+                        const apiResponse = await fetch('/business/api/user', {
+                            credentials: 'same-origin',
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        if (apiResponse.ok) {
+                            const userData = await apiResponse.json();
+                            result.innerHTML += `<br>Authenticated as: ${userData.email}`;
+                        } else {
+                            result.innerHTML += `<br>API test failed: ${apiResponse.status}`;
+                        }
+                } else if (loginResponse.status === 200) {
+                    // Got back the login page - check for error
+                    const responseText = await loginResponse.text();
+                    if (responseText.includes('Die angegebenen Zugangsdaten sind ungültig')) {
+                        result.innerHTML = '<strong style="color: red">❌ Invalid credentials</strong>';
+                    } else {
+                        result.innerHTML = '<strong style="color: red">❌ Login failed - returned to login page</strong>';
+                    }
+                } else if (loginResponse.status === 419) {
+                    result.innerHTML = '<strong style="color: red">❌ CSRF token mismatch</strong>';
+                } else {
+                    result.innerHTML = `<strong style="color: red">❌ Unknown error: ${loginResponse.status}</strong>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<strong style="color: red">❌ Error: ${error.message}</strong>`;
+            }
+        }
+    </script>
+</body>
+</html>

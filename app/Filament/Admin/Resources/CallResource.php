@@ -32,7 +32,7 @@ class CallResource extends Resource
 
     protected static ?string $navigationLabel = null;
 
-    protected static ?string $navigationGroup = null;
+    protected static ?string $navigationGroup = 'Täglicher Betrieb';
     
     public static function getNavigationLabel(): string
     {

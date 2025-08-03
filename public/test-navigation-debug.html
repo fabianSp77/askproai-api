@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background: #3B82F6;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #2563EB;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #F3F4F6;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { background: #D1FAE5; color: #065F46; }
+        .error { background: #FEE2E2; color: #991B1B; }
+        .warning { background: #FEF3C7; color: #92400E; }
+    </style>
+</head>
+<body>
+    <h1>Navigation Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Navigation Links</h2>
+        <a href="/admin" class="test-button">Admin Dashboard</a>
+        <a href="/admin/calls" class="test-button">Calls</a>
+        <a href="/admin/customers" class="test-button">Customers</a>
+        <button class="test-button" onclick="testNavigationLinks()">Test All Links</button>
+        <div id="nav-test-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Check CSS Issues</h2>
+        <button class="test-button" onclick="checkCSSIssues()">Check CSS Conflicts</button>
+        <div id="css-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Test Click Handler</h2>
+        <button class="test-button" onclick="testClickHandler()">Test Click Events</button>
+        <div id="click-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Check Alpine.js Status</h2>
+        <button class="test-button" onclick="checkAlpineStatus()">Check Alpine Components</button>
+        <div id="alpine-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Test Direct Navigation</h2>
+        <button class="test-button" onclick="window.location.href='/admin'">Direct to Admin</button>
+        <button class="test-button" onclick="document.querySelector('a[href=\'/admin\']').click()">Click Admin Link</button>
+    </div>
+
+    <script>
+        function log(message, type = 'info', targetId = 'nav-test-result') {
+            const result = document.getElementById(targetId);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'warning';
+            result.className = 'result ' + className;
+            result.textContent += message + '\n';
+        }
+
+        function testNavigationLinks() {
+            const result = document.getElementById('nav-test-result');
+            result.textContent = '';
+            
+            // Test actual navigation elements in iframe
+            const iframe = document.createElement('iframe');
+            iframe.src = '/admin';
+            iframe.style.width = '100%';
+            iframe.style.height = '600px';
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const navLinks = iframeDoc.querySelectorAll('.fi-sidebar-nav a, .fi-sidebar-item a');
+                    
+                    log(`Found ${navLinks.length} navigation links`, 'info');
+                    
+                    navLinks.forEach((link, index) => {
+                        const computedStyle = iframe.contentWindow.getComputedStyle(link);
+                        const isClickable = computedStyle.pointerEvents !== 'none';
+                        const href = link.getAttribute('href') || 'No href';
+                        const text = link.textContent.trim();
+                        
+                        if (!isClickable) {
+                            log(`❌ Link ${index}: "${text}" - NOT CLICKABLE (pointer-events: ${computedStyle.pointerEvents})`, 'error');
+                        } else {
+                            log(`✅ Link ${index}: "${text}" - Clickable (${href})`, 'success');
+                        }
+                    });
+                    
+                    // Check for blocking elements
+                    const blockingElements = iframeDoc.querySelectorAll('*');
+                    let blockers = [];
+                    blockingElements.forEach(el => {
+                        const style = iframe.contentWindow.getComputedStyle(el);
+                        if (style.pointerEvents === 'none' && el.querySelector('a, button')) {
+                            blockers.push(el);
+                        }
+                    });
+                    
+                    if (blockers.length > 0) {
+                        log(`\n⚠️ Found ${blockers.length} elements with pointer-events: none that contain interactive elements`, 'warning');
+                    }
+                    
+                } catch (e) {
+                    log('Could not access iframe content: ' + e.message, 'error');
+                }
+            };
+            
+            result.appendChild(iframe);
+        }
+
+        function checkCSSIssues() {
+            const result = document.getElementById('css-result');
+            result.textContent = '';
+            
+            // Check loaded CSS files
+            const styleSheets = document.styleSheets;
+            log(`Total stylesheets loaded: ${styleSheets.length}`, 'info', 'css-result');
+            
+            // Look for problematic rules
+            let problematicRules = 0;
+            for (let i = 0; i < styleSheets.length; i++) {
+                try {
+                    const rules = styleSheets[i].cssRules || styleSheets[i].rules;
+                    if (rules) {
+                        for (let j = 0; j < rules.length; j++) {
+                            const rule = rules[j];
+                            if (rule.style && rule.style.pointerEvents === 'none') {
+                                problematicRules++;
+                                log(`Found pointer-events: none in ${rule.selectorText}`, 'warning', 'css-result');
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Cross-origin stylesheets can't be accessed
+                }
+            }
+            
+            log(`\nTotal problematic rules found: ${problematicRules}`, problematicRules > 0 ? 'error' : 'success', 'css-result');
+        }
+
+        function testClickHandler() {
+            const result = document.getElementById('click-result');
+            result.textContent = '';
+            
+            // Create test link
+            const testLink = document.createElement('a');
+            testLink.href = '#test';
+            testLink.textContent = 'Test Link';
+            testLink.className = 'test-button';
+            
+            let clickFired = false;
+            testLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                clickFired = true;
+            });
+            
+            result.appendChild(testLink);
+            
+            // Simulate click
+            testLink.click();
+            
+            if (clickFired) {
+                log('\n✅ Click handler working correctly', 'success', 'click-result');
+            } else {
+                log('\n❌ Click handler NOT working', 'error', 'click-result');
+            }
+            
+            // Check if universal-click-handler.js is loaded
+            if (typeof ensureClickability !== 'undefined') {
+                log('✅ universal-click-handler.js is loaded', 'success', 'click-result');
+            } else {
+                log('⚠️ universal-click-handler.js may not be loaded', 'warning', 'click-result');
+            }
+        }
+
+        function checkAlpineStatus() {
+            const result = document.getElementById('alpine-result');
+            result.textContent = '';
+            
+            // Check in iframe
+            const iframe = document.createElement('iframe');
+            iframe.src = '/admin';
+            iframe.style.display = 'none';
+            iframe.onload = function() {
+                try {
+                    const iframeWindow = iframe.contentWindow;
+                    
+                    // Check Alpine
+                    if (iframeWindow.Alpine) {
+                        log('✅ Alpine.js is loaded', 'success', 'alpine-result');
+                        
+                        // Check for common Alpine components
+                        const components = [
+                            'expandedCompanies',
+                            'matchesSearch',
+                            'closeDropdown',
+                            'isCompanySelected',
+                            'isBranchSelected',
+                            'dateFilterDropdown',
+                            'searchQuery',
+                            'showDateFilter',
+                            'hasSearchResults'
+                        ];
+                        
+                        components.forEach(comp => {
+                            // This is a simplified check
+                            log(`Checking for Alpine component: ${comp}`, 'info', 'alpine-result');
+                        });
+                    } else {
+                        log('❌ Alpine.js NOT loaded', 'error', 'alpine-result');
+                    }
+                    
+                    // Check Livewire
+                    if (iframeWindow.Livewire) {
+                        log('✅ Livewire is loaded', 'success', 'alpine-result');
+                    } else {
+                        log('❌ Livewire NOT loaded', 'error', 'alpine-result');
+                    }
+                    
+                } catch (e) {
+                    log('Error checking Alpine/Livewire: ' + e.message, 'error', 'alpine-result');
+                }
+                
+                document.body.removeChild(iframe);
+            };
+            
+            document.body.appendChild(iframe);
+        }
+    </script>
+</body>
+</html>

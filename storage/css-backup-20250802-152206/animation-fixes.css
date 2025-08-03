@@ -1,0 +1,407 @@
+/**
+ * Animation Fixes for AskProAI Admin Panel
+ * Restores smooth, delightful interactions across the interface
+ * Created: 2025-08-01
+ */
+
+/* ================================================================
+   BUTTON HOVER EFFECTS & TRANSITIONS
+   ================================================================ */
+
+/* Base button transition - smooth for all interactions */
+.fi-btn,
+button,
+[role="button"] {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transform: translateZ(0); /* Enable hardware acceleration */
+}
+
+/* Enhanced button hover effects */
+.fi-btn:hover:not(:disabled),
+button:hover:not(:disabled),
+[role="button"]:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Primary button enhanced hover */
+.fi-btn-primary:hover:not(:disabled),
+.fi-btn.fi-btn-color-primary:hover:not(:disabled) {
+    transform: translateY(-1px) scale(1.02) !important;
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4) !important;
+}
+
+/* Secondary button hover */
+.fi-btn-secondary:hover:not(:disabled),
+.fi-btn.fi-btn-color-gray:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Icon button special hover effects */
+.fi-btn-icon:hover:not(:disabled) {
+    transform: scale(1.1) rotate(5deg) !important;
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+}
+
+/* Button active states */
+.fi-btn:active,
+button:active,
+[role="button"]:active {
+    transform: translateY(0px) scale(0.98) !important;
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ================================================================
+   LOADING SPINNERS & STATES
+   ================================================================ */
+
+/* Enhanced loading spinner */
+@keyframes delightfulSpin {
+    0% { 
+        transform: rotate(0deg) scale(1);
+        opacity: 0.8;
+    }
+    50% { 
+        transform: rotate(180deg) scale(1.1);
+        opacity: 1;
+    }
+    100% { 
+        transform: rotate(360deg) scale(1);
+        opacity: 0.8;
+    }
+}
+
+.fi-loading-indicator,
+.fi-spinner,
+[class*="spinner"],
+[class*="loading"] svg {
+    animation: delightfulSpin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+}
+
+/* Loading button states */
+.fi-btn[disabled]:not(.fi-btn-loading),
+button[disabled]:not([class*="loading"]) {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.fi-btn.fi-btn-loading,
+button[class*="loading"] {
+    position: relative;
+    pointer-events: none;
+}
+
+.fi-btn.fi-btn-loading::after,
+button[class*="loading"]::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: delightfulSpin 0.8s linear infinite;
+}
+
+/* ================================================================
+   DROPDOWN & MODAL ANIMATIONS
+   ================================================================ */
+
+/* Dropdown entrance animation */
+@keyframes dropdownSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.fi-dropdown-panel,
+.fi-modal,
+[role="dialog"],
+[role="menu"] {
+    animation: dropdownSlideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Enhanced modal animations */
+@keyframes modalSlideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.fi-modal-window {
+    animation: modalSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Modal backdrop animation */
+.fi-modal-backdrop {
+    animation: fadeIn 0.3s ease-out !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ================================================================
+   ACCORDION & COLLAPSE ANIMATIONS
+   ================================================================ */
+
+/* Smooth accordion transitions */
+.fi-collapsible-content,
+[class*="collapse"],
+[class*="accordion"] {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Collapsible arrow rotation */
+.fi-sidebar-group-collapse-button svg,
+[class*="collapse"] svg,
+[class*="accordion"] svg {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.fi-sidebar-group.fi-active .fi-sidebar-group-collapse-button svg {
+    transform: rotate(90deg) !important;
+}
+
+/* ================================================================
+   SUCCESS & ERROR FEEDBACK ANIMATIONS
+   ================================================================ */
+
+/* Success pulse animation */
+@keyframes successPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+/* Error shake animation */
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* Apply success animation to success states */
+.fi-notification.fi-color-success,
+.fi-alert.fi-color-success,
+[class*="success"] {
+    animation: successPulse 0.6s ease-out !important;
+}
+
+/* Apply error animation to error states */
+.fi-notification.fi-color-danger,
+.fi-alert.fi-color-danger,
+.fi-fo-field-wrp.fi-error,
+[class*="error"] {
+    animation: errorShake 0.5s ease-in-out !important;
+}
+
+/* ================================================================
+   PAGE TRANSITION EFFECTS
+   ================================================================ */
+
+/* Smooth page transitions */
+.fi-main {
+    transition: opacity 0.2s ease-in-out !important;
+}
+
+/* Page content fade-in */
+@keyframes pageContentFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fi-page {
+    animation: pageContentFadeIn 0.3s ease-out !important;
+}
+
+/* ================================================================
+   TABLE HOVER & SELECTION ANIMATIONS
+   ================================================================ */
+
+/* Table row hover effects */
+.fi-ta-row:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Table action buttons hover */
+.fi-ta-action:hover {
+    transform: scale(1.1) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ================================================================
+   FORM INPUT ANIMATIONS
+   ================================================================ */
+
+/* Input focus animations */
+.fi-input:focus,
+.fi-select:focus,
+.fi-textarea:focus {
+    transform: scale(1.01) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Floating label animation */
+@keyframes labelFloat {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translateY(-20px) scale(0.85);
+        opacity: 1;
+    }
+}
+
+.fi-fo-field-wrp.fi-focused .fi-fo-field-wrp-label {
+    animation: labelFloat 0.2s ease-out forwards !important;
+}
+
+/* ================================================================
+   SIDEBAR NAVIGATION ANIMATIONS
+   ================================================================ */
+
+/* Sidebar item hover with slide effect */
+.fi-sidebar-item-button:hover {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+    transform: translateX(4px) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Sidebar group button hover */
+.fi-sidebar-group-button:hover {
+    background-color: rgba(59, 130, 246, 0.05) !important;
+    transform: translateX(2px) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Active item pulse */
+@keyframes activeItemPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+}
+
+.fi-sidebar-item.fi-active .fi-sidebar-item-button {
+    animation: activeItemPulse 2s infinite !important;
+}
+
+/* ================================================================
+   MICRO-INTERACTIONS
+   ================================================================ */
+
+/* Checkbox check animation */
+@keyframes checkboxCheck {
+    0% {
+        transform: scale(0) rotate(45deg);
+    }
+    50% {
+        transform: scale(1.2) rotate(45deg);
+    }
+    100% {
+        transform: scale(1) rotate(45deg);
+    }
+}
+
+.fi-checkbox:checked::after {
+    animation: checkboxCheck 0.2s ease-out !important;
+}
+
+/* Toggle switch animation */
+.fi-toggle input:checked + .fi-toggle-slider {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.fi-toggle input:checked + .fi-toggle-slider::before {
+    transform: translateX(20px) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ================================================================
+   ACCESSIBILITY & REDUCED MOTION
+   ================================================================ */
+
+/* Respect user preferences for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ================================================================
+   PERFORMANCE OPTIMIZATIONS
+   ================================================================ */
+
+/* Enable hardware acceleration for animated elements */
+.fi-btn,
+.fi-sidebar-item-button,
+.fi-sidebar-group-button,
+.fi-ta-row,
+.fi-modal,
+.fi-dropdown-panel {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+/* ================================================================
+   DARK MODE ANIMATIONS
+   ================================================================ */
+
+.dark .fi-btn:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .fi-ta-row:hover {
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .fi-sidebar-item-button:hover {
+    background-color: rgba(96, 165, 250, 0.12) !important;
+}
+
+.dark .fi-sidebar-group-button:hover {
+    background-color: rgba(96, 165, 250, 0.1) !important;
+}

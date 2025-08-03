@@ -1,0 +1,85 @@
+/* ================================================================
+   SPECIFIC FIX FOR CALLS PAGE BLACK CONTENT - Issue #431
+   ================================================================ */
+
+/* Ensure the calls page has proper background */
+.fi-resource-calls,
+.fi-page.fi-resource-calls {
+    background-color: rgb(249 250 251) !important; /* Light gray */
+    min-height: 100vh !important;
+}
+
+/* Dark mode support */
+.dark .fi-resource-calls,
+.dark .fi-page.fi-resource-calls {
+    background-color: rgb(17 24 39) !important;
+}
+
+/* Fix the main content wrapper specifically for calls */
+.fi-resource-calls .fi-main-ctn,
+.fi-resource-calls .fi-page-content {
+    background-color: transparent !important;
+}
+
+/* Ensure table container has white background */
+.fi-resource-calls .fi-ta-content,
+.fi-resource-calls .fi-ta-table-container {
+    background-color: white !important;
+}
+
+.dark .fi-resource-calls .fi-ta-content,
+.dark .fi-resource-calls .fi-ta-table-container {
+    background-color: rgb(31 41 55) !important;
+}
+
+/* Fix any sections that might be black */
+.fi-resource-calls .fi-section {
+    background-color: white !important;
+    margin-bottom: 1rem;
+}
+
+.dark .fi-resource-calls .fi-section {
+    background-color: rgb(31 41 55) !important;
+}
+
+/* Ensure widgets have proper background */
+.fi-resource-calls .fi-widgets-container,
+.fi-resource-calls .fi-widget {
+    background-color: transparent !important;
+}
+
+.fi-resource-calls .fi-wi-container {
+    background-color: white !important;
+}
+
+.dark .fi-resource-calls .fi-wi-container {
+    background-color: rgb(31 41 55) !important;
+}
+
+/* Fix page header background */
+.fi-resource-calls .fi-page-header {
+    background-color: transparent !important;
+}
+
+/* Remove any black overlays from calls page */
+.fi-resource-calls::before,
+.fi-resource-calls::after,
+.fi-resource-calls .fi-main-ctn::before,
+.fi-resource-calls .fi-main-ctn::after {
+    display: none !important;
+}
+
+/* Force visibility */
+.fi-resource-calls * {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Specific fix for the content area */
+body:has(.fi-resource-calls) .fi-main-ctn {
+    background-color: rgb(249 250 251) !important;
+}
+
+.dark body:has(.fi-resource-calls) .fi-main-ctn {
+    background-color: rgb(17 24 39) !important;
+}

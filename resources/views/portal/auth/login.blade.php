@@ -137,3 +137,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="/js/business-login-fix.js"></script>
+@endpush

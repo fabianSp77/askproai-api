@@ -1,0 +1,101 @@
+/* ================================================================
+   ULTIMATE CLICK FIX - OVERRIDE ALL BLOCKING RULES
+   This MUST be the very last CSS file loaded
+   ================================================================ */
+
+/* FORCE all elements to be clickable */
+* {
+    pointer-events: auto !important;
+}
+
+/* Only allow pointer-events: none on pseudo-elements */
+*::before,
+*::after {
+    pointer-events: none !important;
+}
+
+/* But ensure interactive elements remain clickable even with pseudo-elements */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="link"],
+[role="checkbox"],
+[role="radio"],
+[role="switch"],
+[role="tab"],
+[role="menuitem"],
+.fi-btn,
+.fi-link,
+.fi-dropdown-trigger,
+.fi-ta-action {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: auto !important;
+}
+
+/* CRITICAL: Fix for Filament components */
+.fi-page,
+.fi-page-wrapper,
+.fi-page-content,
+.fi-section,
+.fi-section-content,
+.fi-form,
+.fi-form-component-container,
+.fi-ta-table,
+.fi-ta-content {
+    pointer-events: auto !important;
+    position: relative !important;
+}
+
+/* Fix for table elements */
+table,
+thead,
+tbody,
+tr,
+td,
+th {
+    pointer-events: auto !important;
+}
+
+/* Ensure Livewire elements work */
+[wire\:id],
+[wire\:click],
+[wire\:loading] {
+    pointer-events: auto !important;
+}
+
+/* Alpine.js elements must be interactive */
+[x-data],
+[x-show],
+[x-on\:click],
+[x-ref] {
+    pointer-events: auto !important;
+}
+
+/* Override any loading states that block interaction */
+.fi-loading-overlay,
+.loading-overlay,
+[wire\:loading] {
+    pointer-events: none !important;
+}
+
+/* But ensure the content below loading overlays is still interactive */
+.fi-page-content {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Debug: Add visual indicator for clickable elements on hover */
+button:hover,
+a:hover,
+[role="button"]:hover,
+.fi-btn:hover,
+.fi-link:hover {
+    outline: 1px solid rgba(59, 130, 246, 0.5) !important;
+    outline-offset: 2px !important;
+}

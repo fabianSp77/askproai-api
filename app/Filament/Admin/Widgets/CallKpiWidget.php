@@ -8,7 +8,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class CallKpiWidget extends BaseWidget
 {
-    protected static ?string $pollingInterval = '5s';
+    protected static ?string $pollingInterval = '30s';
 
     public static function canView(): bool
     {

@@ -14,7 +14,7 @@ class LiveCallsWidget extends Widget
     
     protected static ?int $sort = -100; // Show at top
     
-    protected static ?string $pollingInterval = '5s'; // Slower polling when using Pusher
+    protected static ?string $pollingInterval = '30s'; // Slower polling when using Pusher
     
     public $activeCalls = [];
     public $realtimeEnabled = true;

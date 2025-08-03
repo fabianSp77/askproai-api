@@ -1,65 +1,145 @@
 <?php
 
-/**
- * Test Portal Login Fix
- * 
- * This script tests if the login functionality works correctly
- * after our session configuration fixes.
- */
-
 require_once __DIR__ . '/vendor/autoload.php';
+
 $app = require_once __DIR__ . '/bootstrap/app.php';
+
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
-echo "🔍 Testing Portal Login Fix\n";
-echo "==========================\n\n";
+// Bootstrap the application
+$request = Illuminate\Http\Request::capture();
+$response = $kernel->handle($request);
+$kernel->terminate($request, $response);
 
-// Test 1: Check ENV configuration
-echo "1. Checking ENV configuration:\n";
-echo "   - APP_URL: " . env('APP_URL') . "\n";
-echo "   - SESSION_SECURE_COOKIE: " . (env('SESSION_SECURE_COOKIE') ? 'true ✅' : 'false ❌') . "\n";
-echo "   - SESSION_COOKIE: " . env('SESSION_COOKIE', 'default') . "\n";
-echo "   - ADMIN_SESSION_COOKIE: " . env('ADMIN_SESSION_COOKIE', 'not set') . "\n";
-echo "   - PORTAL_SESSION_COOKIE: " . env('PORTAL_SESSION_COOKIE', 'not set') . "\n\n";
+echo "=== PORTAL LOGIN SESSION KEY FIX TEST ===\n\n";
 
-// Test 2: Check session directories
-echo "2. Checking session directories:\n";
-$adminDir = storage_path('framework/sessions/admin');
-$portalDir = storage_path('framework/sessions/portal');
-echo "   - Admin dir exists: " . (is_dir($adminDir) ? 'Yes ✅' : 'No ❌') . "\n";
-echo "   - Portal dir exists: " . (is_dir($portalDir) ? 'Yes ✅' : 'No ❌') . "\n";
-echo "   - Admin dir writable: " . (is_writable($adminDir) ? 'Yes ✅' : 'No ❌') . "\n";
-echo "   - Portal dir writable: " . (is_writable($portalDir) ? 'Yes ✅' : 'No ❌') . "\n\n";
+// Step 1: Verify session key generation consistency
+echo "1. CHECKING SESSION KEY GENERATION\n";
 
-// Test 3: Check middleware configuration
-echo "3. Checking middleware configuration:\n";
-$bootstrapFile = file_get_contents(__DIR__ . '/bootstrap/app.php');
-echo "   - UnifiedSessionConfig removed: " . (!str_contains($bootstrapFile, 'UnifiedSessionConfig::class') ? 'Yes ✅' : 'No ❌') . "\n";
-echo "   - AdminSessionConfig in admin group: " . (str_contains($bootstrapFile, 'AdminSessionConfig::class') ? 'Yes ✅' : 'No ❌') . "\n";
-echo "   - PortalSessionConfig in portal groups: " . (str_contains($bootstrapFile, 'PortalSessionConfig::class') ? 'Yes ✅' : 'No ❌') . "\n\n";
+$guard = $app->make('auth')->guard('portal');
+$expectedKey = $guard->getName();
+$calculatedKey = 'login_portal_' . sha1(Illuminate\Auth\SessionGuard::class);
 
-// Test 4: Test user exists
-echo "4. Checking test users:\n";
-try {
-    $demoUser = \App\Models\PortalUser::withoutGlobalScopes()->where('email', 'demo@askproai.de')->first();
-    echo "   - Demo user exists: " . ($demoUser ? 'Yes ✅' : 'No ❌') . "\n";
-    
-    $adminUser = \App\Models\User::where('email', 'fabian@askproai.de')->first();
-    echo "   - Admin user exists: " . ($adminUser ? 'Yes ✅' : 'No ❌') . "\n";
-} catch (Exception $e) {
-    echo "   - Error checking users: " . $e->getMessage() . " ❌\n";
+echo "Guard session key: $expectedKey\n";
+echo "Calculated key: $calculatedKey\n";
+echo "Keys match: " . ($expectedKey === $calculatedKey ? "YES ✅" : "NO ❌") . "\n\n";
+
+// Step 2: Check all locations where session keys are referenced
+echo "2. CHECKING MIDDLEWARE SESSION KEY USAGE\n";
+
+$middlewareToCheck = [
+    'SharePortalSession' => '\App\Http\Middleware\SharePortalSession',
+    'FixPortalApiAuth' => '\App\Http\Middleware\FixPortalApiAuth',
+    'ForcePortalSession' => '\App\Http\Middleware\ForcePortalSession',
+    'PortalAuth' => '\App\Http\Middleware\PortalAuth',
+];
+
+foreach ($middlewareToCheck as $name => $class) {
+    if (class_exists($class)) {
+        echo "✅ $name middleware exists\n";
+    } else {
+        echo "❌ $name middleware missing\n";
+    }
 }
 
-echo "\n5. Summary:\n";
-echo "   - Session configuration should now work correctly\n";
-echo "   - Each portal has its own session cookie\n";
-echo "   - HTTPS cookie security is enabled\n";
-echo "   - Session directories are properly separated\n";
+echo "\n3. SIMULATING LOGIN FLOW\n";
 
-echo "\n🎯 Next steps:\n";
-echo "   1. Test admin login at: https://api.askproai.de/admin/login\n";
-echo "   2. Test business login at: https://api.askproai.de/business/login\n";
-echo "   3. Verify no 419 CSRF errors\n";
-echo "   4. Check that sessions persist across page refreshes\n";
+// Create a test request to login page
+$loginGetRequest = Illuminate\Http\Request::create('/business/login', 'GET');
+$loginGetResponse = $kernel->handle($loginGetRequest);
+echo "Login page status: " . $loginGetResponse->getStatusCode() . "\n";
 
-echo "\n✅ Configuration fixes completed!\n";
+// Get CSRF token
+$app->instance('request', $loginGetRequest);
+$csrfToken = $app->make('session')->token();
+echo "CSRF token generated: " . substr($csrfToken, 0, 8) . "...\n";
+
+// Simulate login POST
+echo "\n4. TESTING LOGIN POST\n";
+$loginPostRequest = Illuminate\Http\Request::create('/business/login', 'POST', [
+    'email' => 'demo@askproai.de',
+    'password' => 'password',
+    '_token' => $csrfToken,
+]);
+
+$loginPostRequest->headers->set('Accept', 'text/html');
+$loginPostRequest->headers->set('Content-Type', 'application/x-www-form-urlencoded');
+$loginPostRequest->setSession($app['session']);
+
+try {
+    $loginResponse = $kernel->handle($loginPostRequest);
+    echo "Login response status: " . $loginResponse->getStatusCode() . "\n";
+    
+    if ($loginResponse->getStatusCode() === 302) {
+        echo "Redirect location: " . $loginResponse->headers->get('location') . "\n";
+    }
+    
+    // Check if user is authenticated
+    $isAuthenticated = $app->make('auth')->guard('portal')->check();
+    echo "User authenticated: " . ($isAuthenticated ? "YES ✅" : "NO ❌") . "\n";
+    
+    if ($isAuthenticated) {
+        $user = $app->make('auth')->guard('portal')->user();
+        echo "Authenticated user: " . $user->email . "\n";
+        echo "User ID: " . $user->id . "\n";
+        echo "Company ID: " . $user->company_id . "\n";
+    }
+    
+} catch (Exception $e) {
+    echo "Login error: " . $e->getMessage() . "\n";
+}
+
+echo "\n5. CHECKING SESSION DATA\n";
+$session = $app->make('session');
+$sessionData = $session->all();
+echo "Session ID: " . $session->getId() . "\n";
+echo "Session has portal auth key: " . (isset($sessionData[$expectedKey]) ? "YES ✅" : "NO ❌") . "\n";
+echo "Session has portal_user_id: " . (isset($sessionData['portal_user_id']) ? "YES ✅" : "NO ❌") . "\n";
+echo "Session has company_id: " . (isset($sessionData['company_id']) ? "YES ✅" : "NO ❌") . "\n";
+
+// Show session keys
+echo "\nAll session keys:\n";
+foreach (array_keys($sessionData) as $key) {
+    echo "  - $key\n";
+}
+
+echo "\n6. TESTING DASHBOARD ACCESS\n";
+$dashboardRequest = Illuminate\Http\Request::create('/business/dashboard', 'GET');
+$dashboardRequest->setSession($app['session']);
+
+try {
+    $dashboardResponse = $kernel->handle($dashboardRequest);
+    echo "Dashboard response status: " . $dashboardResponse->getStatusCode() . "\n";
+    
+    if ($dashboardResponse->getStatusCode() === 302) {
+        $location = $dashboardResponse->headers->get('location');
+        echo "Redirect location: " . $location . "\n";
+        
+        if (str_contains($location, '/business/login')) {
+            echo "⚠️  WARNING: Redirected back to login (possible session issue)\n";
+        }
+    } elseif ($dashboardResponse->getStatusCode() === 200) {
+        echo "✅ Dashboard loaded successfully!\n";
+    }
+    
+} catch (Exception $e) {
+    echo "Dashboard error: " . $e->getMessage() . "\n";
+}
+
+echo "\n7. SESSION KEY VERIFICATION\n";
+echo "Expected session key format: login_portal_" . sha1(Illuminate\Auth\SessionGuard::class) . "\n";
+echo "Old incorrect format: login_portal_" . sha1(\App\Models\PortalUser::class) . "\n";
+
+// Check if old keys exist
+$oldKey = 'login_portal_' . sha1(\App\Models\PortalUser::class);
+if (isset($sessionData[$oldKey])) {
+    echo "⚠️  WARNING: Old session key still exists in session!\n";
+}
+
+echo "\n=== TEST COMPLETE ===\n";
+echo "Summary:\n";
+echo "- Session key consistency: " . ($expectedKey === $calculatedKey ? "PASS ✅" : "FAIL ❌") . "\n";
+echo "- Authentication works: " . ($app->make('auth')->guard('portal')->check() ? "PASS ✅" : "FAIL ❌") . "\n";
+echo "- Dashboard accessible: " . (isset($dashboardResponse) && $dashboardResponse->getStatusCode() !== 302 ? "PASS ✅" : "FAIL ❌") . "\n";
+
+$app->terminate($loginPostRequest, $loginResponse ?? $loginGetResponse);

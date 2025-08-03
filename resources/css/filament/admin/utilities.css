@@ -1,0 +1,136 @@
+/* 
+ * Utility Classes
+ * Helper classes and critical fixes
+ */
+
+/* Visibility Utilities */
+.hidden {
+    display: none !important;
+}
+
+.invisible {
+    visibility: hidden !important;
+}
+
+/* Spacing Utilities */
+.p-0 { padding: 0 !important; }
+.m-0 { margin: 0 !important; }
+
+/* Text Utilities */
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Overflow Utilities */
+.overflow-hidden {
+    overflow: hidden !important;
+}
+
+.overflow-auto {
+    overflow: auto !important;
+}
+
+.overflow-x-auto {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Position Utilities */
+.relative {
+    position: relative !important;
+}
+
+.absolute {
+    position: absolute !important;
+}
+
+.fixed {
+    position: fixed !important;
+}
+
+/* Z-Index Utilities using CSS variables */
+.z-dropdown { z-index: var(--z-dropdown) !important; }
+.z-modal { z-index: var(--z-modal) !important; }
+.z-tooltip { z-index: var(--z-tooltip) !important; }
+
+/* Accessibility Utilities */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Animation Utilities */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Critical Fixes */
+
+/* Ensure all Filament components are interactive */
+.fi-dropdown-trigger,
+.fi-ta-action,
+.fi-global-search-field,
+.fi-tabs-item {
+    cursor: pointer !important;
+}
+
+/* Fix for sticky table headers */
+.fi-ta-header {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: var(--z-sticky);
+}
+
+.dark .fi-ta-header {
+    background-color: var(--gray-900);
+}
+
+/* Ensure modals and overlays work correctly */
+body.fi-modal-open {
+    overflow: hidden;
+}
+
+/* Print utilities */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .page-break-after {
+        page-break-after: always;
+    }
+    
+    .page-break-before {
+        page-break-before: always;
+    }
+}
+
+/* Development/Debug Utilities (remove in production) */
+.debug-border {
+    border: 2px solid red !important;
+}
+
+.debug-bg {
+    background-color: rgba(255, 0, 0, 0.1) !important;
+}
+
+/* IMPORTANT: No more !important wars! */
+/* This file should contain the ONLY !important rules in our CSS */
+/* Everything else should use proper specificity and cascade */

@@ -1,0 +1,50 @@
+/* EMERGENCY FIX: Prevent black screen overlay bug */
+/* Created: 2025-07-29 - Critical fix for GitHub issues #427/#428 */
+
+/* Remove sidebar overlay that blocks entire screen */
+.fi-sidebar-open::before {
+    display: none !important;
+}
+
+/* Only show overlay on actual mobile devices */
+@media (max-width: 1023px) {
+    .fi-sidebar-open::before {
+        display: block !important;
+        pointer-events: auto;
+    }
+}
+
+/* Desktop: Ensure no overlay and proper overflow */
+@media (min-width: 1024px) {
+    body.fi-sidebar-open {
+        overflow: visible !important;
+    }
+    
+    .fi-sidebar-open::before {
+        content: none !important;
+        display: none !important;
+        visibility: hidden !important;
+        position: static !important;
+    }
+}
+
+/* Fix body overflow issues */
+body {
+    overflow-x: auto !important; /* Override hidden */
+    min-height: 100vh;
+}
+
+/* Ensure login form is always accessible */
+.fi-login-panel,
+.fi-simple-page,
+form[wire\:submit] {
+    position: relative;
+    z-index: 50;
+}
+
+/* Emergency icon size fix as well */
+.fi-icon svg,
+.heroicon {
+    max-width: 1.5rem !important;
+    max-height: 1.5rem !important;
+}

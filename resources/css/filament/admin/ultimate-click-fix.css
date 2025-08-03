@@ -1,11 +1,13 @@
 /* ================================================================
-   ULTIMATE CLICK FIX - OVERRIDE ALL BLOCKING RULES
-   This MUST be the very last CSS file loaded
+   TARGETED CLICK FIX - Fix specific menu issues
    ================================================================ */
 
-/* FORCE all elements to be clickable */
-* {
+/* Fix sidebar navigation menu items */
+.fi-sidebar-nav a,
+.fi-sidebar-item button,
+.fi-sidebar-nav-link {
     pointer-events: auto !important;
+    cursor: pointer !important;
 }
 
 /* Only allow pointer-events: none on pseudo-elements */

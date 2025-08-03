@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <title>TestSprite Simulation - Admin Panel Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .header {
+            background: #2a2a2a;
+            padding: 20px;
+            border-bottom: 2px solid #0ea5e9;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0ea5e9;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-suite {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-result {
+            background: #1a1a1a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid #6b7280;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .test-result.success {
+            border-left-color: #10b981;
+        }
+        .test-result.error {
+            border-left-color: #ef4444;
+        }
+        .test-result.warning {
+            border-left-color: #f59e0b;
+        }
+        .test-result.info {
+            border-left-color: #0ea5e9;
+        }
+        .test-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .test-details {
+            color: #9ca3af;
+            font-size: 13px;
+        }
+        button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #0284c7;
+        }
+        button:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+        #testFrame {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            background: white;
+            margin-top: 20px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .metric {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0ea5e9;
+        }
+        .metric-label {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-indicator.success { background: #10b981; }
+        .status-indicator.error { background: #ef4444; }
+        .status-indicator.warning { background: #f59e0b; }
+        .status-indicator.info { background: #0ea5e9; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🧪 TestSprite</div>
+        <div>Admin Panel Navigation Test Suite</div>
+    </div>
+    
+    <div class="container">
+        <div class="test-suite">
+            <h2>Test Configuration</h2>
+            <p>Project: AskProAI Admin Panel | Environment: Production | Browser: Chrome</p>
+            <button id="runTests" onclick="runAllTests()">▶️ Run All Tests</button>
+            <button id="clearResults" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+        
+        <div class="test-suite">
+            <h2>Test Results</h2>
+            <div id="testResults"></div>
+        </div>
+        
+        <div class="test-suite">
+            <h2>Performance Metrics</h2>
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-value" id="totalTests">0</div>
+                    <div class="metric-label">Total Tests</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="passedTests">0</div>
+                    <div class="metric-label">Passed</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="failedTests">0</div>
+                    <div class="metric-label">Failed</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="avgLoadTime">0ms</div>
+                    <div class="metric-label">Avg Load Time</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-suite">
+            <h2>Live Test Frame</h2>
+            <iframe id="testFrame" src="/admin"></iframe>
+        </div>
+    </div>
+    
+    <script>
+        let testResults = [];
+        let metrics = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            loadTimes: []
+        };
+        
+        async function runAllTests() {
+            document.getElementById('runTests').disabled = true;
+            clearResults();
+            
+            addResult('info', '🚀 Starting TestSprite Test Suite', 'Initializing tests...');
+            
+            // Test 1: Universal Click Handler
+            await testUniversalClickHandler();
+            
+            // Test 2: Navigation Links
+            await testNavigationLinks();
+            
+            // Test 3: CSS Analysis
+            await testCSSAnalysis();
+            
+            // Test 4: Performance Test
+            await testPerformance();
+            
+            // Test 5: Mobile Responsiveness
+            await testMobileResponsiveness();
+            
+            updateMetrics();
+            addResult('info', '✅ Test Suite Completed', `Total: ${metrics.total}, Passed: ${metrics.passed}, Failed: ${metrics.failed}`);
+            
+            document.getElementById('runTests').disabled = false;
+        }
+        
+        async function testUniversalClickHandler() {
+            addResult('info', '📋 Test 1: Universal Click Handler', 'Checking if handler is loaded...');
+            
+            const iframe = document.getElementById('testFrame');
+            
+            try {
+                const hasHandler = await checkInFrame(() => {
+                    const scripts = Array.from(document.scripts);
+                    return scripts.some(s => s.src.includes('universal-click-handler.js'));
+                });
+                
+                const hasCleanup = await checkInFrame(() => {
+                    const scripts = Array.from(document.scripts);
+                    return scripts.some(s => s.src.includes('console-cleanup.js'));
+                });
+                
+                metrics.total += 2;
+                
+                if (hasHandler) {
+                    addResult('success', '  ✅ Universal Click Handler', 'Script is loaded and active');
+                    metrics.passed++;
+                } else {
+                    addResult('error', '  ❌ Universal Click Handler', 'Script NOT found');
+                    metrics.failed++;
+                }
+                
+                if (hasCleanup) {
+                    addResult('success', '  ✅ Console Cleanup', 'Script is loaded');
+                    metrics.passed++;
+                } else {
+                    addResult('error', '  ❌ Console Cleanup', 'Script NOT found');
+                    metrics.failed++;
+                }
+            } catch (e) {
+                addResult('error', '  ❌ Test Failed', e.message);
+                metrics.failed += 2;
+                metrics.total += 2;
+            }
+        }
+        
+        async function testNavigationLinks() {
+            addResult('info', '📋 Test 2: Navigation Links', 'Testing clickability of menu items...');
+            
+            const links = [
+                { selector: 'a[href="/admin/calls"]', name: 'Calls' },
+                { selector: 'a[href="/admin/customers"]', name: 'Customers' },
+                { selector: 'a[href="/admin/appointments"]', name: 'Appointments' }
+            ];
+            
+            for (const link of links) {
+                metrics.total++;
+                
+                try {
+                    const isClickable = await checkInFrame((selector) => {
+                        const el = document.querySelector(selector);
+                        if (!el) return false;
+                        
+                        const computed = window.getComputedStyle(el);
+                        return computed.pointerEvents !== 'none' && 
+                               computed.cursor === 'pointer' &&
+                               computed.display !== 'none';
+                    }, link.selector);
+                    
+                    if (isClickable) {
+                        addResult('success', `  ✅ ${link.name} Link`, 'Clickable and properly styled');
+                        metrics.passed++;
+                    } else {
+                        addResult('error', `  ❌ ${link.name} Link`, 'NOT clickable or blocked');
+                        metrics.failed++;
+                    }
+                } catch (e) {
+                    addResult('warning', `  ⚠️ ${link.name} Link`, 'Could not test: ' + e.message);
+                }
+            }
+        }
+        
+        async function testCSSAnalysis() {
+            addResult('info', '📋 Test 3: CSS Analysis', 'Checking for problematic styles...');
+            
+            metrics.total++;
+            
+            try {
+                const blockedElements = await checkInFrame(() => {
+                    const elements = document.querySelectorAll('*');
+                    let blocked = 0;
+                    let problematicSelectors = [];
+                    
+                    elements.forEach(el => {
+                        const computed = window.getComputedStyle(el);
+                        if (computed.pointerEvents === 'none') {
+                            blocked++;
+                            if (el.tagName === 'A' || el.tagName === 'BUTTON') {
+                                problematicSelectors.push(el.tagName + (el.className ? '.' + el.className : ''));
+                            }
+                        }
+                    });
+                    
+                    return { blocked, problematicSelectors };
+                });
+                
+                if (blockedElements.blocked === 0) {
+                    addResult('success', '  ✅ CSS Clean', 'No elements have pointer-events: none');
+                    metrics.passed++;
+                } else if (blockedElements.problematicSelectors.length === 0) {
+                    addResult('warning', '  ⚠️ CSS Warning', `${blockedElements.blocked} elements have pointer-events: none (no critical elements)`);
+                    metrics.passed++;
+                } else {
+                    addResult('error', '  ❌ CSS Issues', `Found ${blockedElements.blocked} blocked elements including: ${blockedElements.problematicSelectors.join(', ')}`);
+                    metrics.failed++;
+                }
+            } catch (e) {
+                addResult('error', '  ❌ CSS Test Failed', e.message);
+                metrics.failed++;
+            }
+        }
+        
+        async function testPerformance() {
+            addResult('info', '📋 Test 4: Performance', 'Measuring navigation speed...');
+            
+            const iframe = document.getElementById('testFrame');
+            const startTime = Date.now();
+            
+            metrics.total++;
+            
+            try {
+                // Navigate to calls
+                iframe.src = '/admin/calls';
+                await waitForLoad(iframe);
+                const loadTime = Date.now() - startTime;
+                
+                metrics.loadTimes.push(loadTime);
+                
+                if (loadTime < 1000) {
+                    addResult('success', '  ✅ Load Performance', `Page loaded in ${loadTime}ms (excellent)`);
+                    metrics.passed++;
+                } else if (loadTime < 2000) {
+                    addResult('warning', '  ⚠️ Load Performance', `Page loaded in ${loadTime}ms (acceptable)`);
+                    metrics.passed++;
+                } else {
+                    addResult('error', '  ❌ Load Performance', `Page loaded in ${loadTime}ms (too slow)`);
+                    metrics.failed++;
+                }
+                
+                // Navigate back
+                iframe.src = '/admin';
+                await waitForLoad(iframe);
+            } catch (e) {
+                addResult('error', '  ❌ Performance Test Failed', e.message);
+                metrics.failed++;
+            }
+        }
+        
+        async function testMobileResponsiveness() {
+            addResult('info', '📋 Test 5: Mobile Responsiveness', 'Checking mobile menu functionality...');
+            
+            metrics.total++;
+            
+            try {
+                // Simulate mobile viewport
+                const iframe = document.getElementById('testFrame');
+                iframe.style.width = '375px';
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                const mobileMenuExists = await checkInFrame(() => {
+                    const toggle = document.querySelector('.fi-topbar-open-sidebar-btn');
+                    return toggle && window.getComputedStyle(toggle).display !== 'none';
+                });
+                
+                // Reset viewport
+                iframe.style.width = '100%';
+                
+                if (mobileMenuExists) {
+                    addResult('success', '  ✅ Mobile Menu', 'Toggle button visible on mobile');
+                    metrics.passed++;
+                } else {
+                    addResult('error', '  ❌ Mobile Menu', 'Toggle button NOT found on mobile');
+                    metrics.failed++;
+                }
+            } catch (e) {
+                addResult('warning', '  ⚠️ Mobile Test', 'Could not test: ' + e.message);
+            }
+        }
+        
+        function addResult(type, header, details) {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            
+            const indicator = document.createElement('span');
+            indicator.className = `status-indicator ${type}`;
+            
+            resultDiv.innerHTML = `
+                <div class="test-header">${header}</div>
+                <div class="test-details">${details}</div>
+            `;
+            
+            resultsDiv.appendChild(resultDiv);
+            testResults.push({ type, header, details });
+        }
+        
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            testResults = [];
+            metrics = { total: 0, passed: 0, failed: 0, loadTimes: [] };
+            updateMetrics();
+        }
+        
+        function updateMetrics() {
+            document.getElementById('totalTests').textContent = metrics.total;
+            document.getElementById('passedTests').textContent = metrics.passed;
+            document.getElementById('failedTests').textContent = metrics.failed;
+            
+            if (metrics.loadTimes.length > 0) {
+                const avgTime = Math.round(metrics.loadTimes.reduce((a, b) => a + b, 0) / metrics.loadTimes.length);
+                document.getElementById('avgLoadTime').textContent = avgTime + 'ms';
+            }
+        }
+        
+        async function checkInFrame(fn, ...args) {
+            const iframe = document.getElementById('testFrame');
+            try {
+                const result = iframe.contentWindow.eval(`(${fn.toString()})(${args.map(a => JSON.stringify(a)).join(',')})`);
+                return result;
+            } catch (e) {
+                throw new Error('Cross-origin or access error');
+            }
+        }
+        
+        function waitForLoad(iframe) {
+            return new Promise((resolve) => {
+                const checkLoad = () => {
+                    try {
+                        if (iframe.contentDocument.readyState === 'complete') {
+                            resolve();
+                        } else {
+                            setTimeout(checkLoad, 100);
+                        }
+                    } catch (e) {
+                        // Cross-origin, assume loaded
+                        setTimeout(resolve, 1000);
+                    }
+                };
+                checkLoad();
+            });
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            addResult('info', '🧪 TestSprite Simulation Ready', 'Click "Run All Tests" to begin automated testing');
+        });
+    </script>
+</body>
+</html>

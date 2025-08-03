@@ -34,9 +34,11 @@ class ReactCallController extends Controller
         
         $call = Call::where('company_id', $user->company_id)
             ->where('id', $id)
+            ->with(['customer', 'branch', 'staff'])
             ->firstOrFail();
         
-        return view('portal.calls.show-react', compact('call'));
+        // Use unified layout for consistency
+        return view('portal.calls.show-unified', compact('call'));
     }
     
     /**

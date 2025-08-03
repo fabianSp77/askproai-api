@@ -2,53 +2,59 @@
 
 namespace App\Http\Middleware;
 
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Http\Request;
+use Illuminate\Session\SessionManager;
 
 class PortalStartSession extends StartSession
 {
     /**
+     * Create a new session middleware.
+     */
+    public function __construct(SessionManager $manager, callable $cacheFactoryResolver = null)
+    {
+        parent::__construct($manager, $cacheFactoryResolver);
+    }
+
+    /**
      * Get the session implementation from the manager.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Session\SessionInterface
+     * @return \Illuminate\Session\Store
      */
-    public function getSession(Request $request)
+    public function getSession($request)
     {
-        // Use portal-specific session configuration
-        if ($request->is('business/*') || $request->is('business-api/*')) {
-            return $this->manager->driver();
-        }
-        
-        return parent::getSession($request);
+        return tap($this->manager->driver(), function ($session) use ($request) {
+            // Configure the session specifically for portal
+            $session->setName('askproai_portal_session');
+        });
     }
-    
+
     /**
-     * Start the session for the given request.
+     * Determine if the configuration odds hit the lottery.
+     *
+     * @param  array  $config
+     * @return bool
+     */
+    protected function configHitsLottery(array $config)
+    {
+        return random_int(1, $config['lottery'][1]) <= $config['lottery'][0];
+    }
+
+    /**
+     * Store the current URL for the request if necessary.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Contracts\Session\Session
+     * @param  \Illuminate\Session\Store  $session
+     * @return void
      */
-    protected function startSession(Request $request)
+    protected function storeCurrentUrl($request, $session)
     {
-        $session = $this->getSession($request);
-        
-        // For portal routes, check for portal session cookie
-        if ($request->is('business/*') || $request->is('business-api/*')) {
-            $sessionId = $request->cookies->get('askproai_portal_session');
-            
-            if ($sessionId) {
-                $session->setId($sessionId);
-                \Log::debug('PortalStartSession: Using existing portal session', [
-                    'session_id' => $sessionId,
-                    'url' => $request->url(),
-                ]);
-            }
+        if ($request->isMethod('GET') &&
+            $request->route() instanceof \Illuminate\Routing\Route &&
+            ! $request->ajax() &&
+            ! $request->prefetch()) {
+            $session->setPreviousUrl($request->fullUrl());
         }
-        
-        return tap($session, function ($session) use ($request) {
-            $session->setRequestOnHandler($request);
-            $session->start();
-        });
     }
 }

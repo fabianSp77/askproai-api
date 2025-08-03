@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Menu Fix Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        button {
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin Panel Menu Fix Test</h1>
+    
+    <div class="test-section">
+        <h2>Console Output Test</h2>
+        <button onclick="testConsole()">Test Console</button>
+        <button onclick="localStorage.setItem('debugMode', 'true'); location.reload();">Enable Debug Mode</button>
+        <button onclick="localStorage.removeItem('debugMode'); location.reload();">Disable Debug Mode</button>
+        <div id="console-status" class="status info">Click "Test Console" to check if console is cleaned</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Menu Click Test</h2>
+        <button onclick="window.location.href='/admin'">Go to Admin Panel</button>
+        <div class="status info">
+            <strong>What to test in Admin Panel:</strong>
+            <ul>
+                <li>Click on sidebar menu items - they should navigate properly</li>
+                <li>Check console - should be minimal output</li>
+                <li>Mobile menu toggle should work</li>
+                <li>Dropdowns should be clickable</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Debug Mode Status</h2>
+        <div id="debug-status" class="status info"></div>
+    </div>
+    
+    <script>
+        // Check debug mode status
+        function checkDebugMode() {
+            const debugMode = localStorage.getItem('debugMode') === 'true';
+            const statusEl = document.getElementById('debug-status');
+            statusEl.className = 'status ' + (debugMode ? 'error' : 'success');
+            statusEl.innerHTML = debugMode ? 
+                '<strong>Debug Mode: ENABLED</strong> - Console will show all output' : 
+                '<strong>Debug Mode: DISABLED</strong> - Console output is filtered';
+        }
+        
+        // Test console output
+        function testConsole() {
+            console.log('This is a regular log - should be hidden');
+            console.warn('This is a warning - may be shown');
+            console.error('This is an error - should be shown');
+            console.log('🔍 Debug message with emoji - should be hidden');
+            console.error('🔍 Debug error with emoji - should be hidden');
+            console.warn('Deprecated function warning - should be shown');
+            
+            const statusEl = document.getElementById('console-status');
+            statusEl.className = 'status success';
+            statusEl.textContent = 'Console test complete - check browser console (F12)';
+        }
+        
+        // Check on load
+        checkDebugMode();
+    </script>
+</body>
+</html>

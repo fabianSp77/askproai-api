@@ -27,7 +27,7 @@ class TodayOverviewWidget extends Widget
     public $revenueTrend = 0;
     
     // Enable real-time updates
-    protected static ?string $pollingInterval = '10s';
+    protected static ?string $pollingInterval = '60s';
     
     public function mount(): void
     {

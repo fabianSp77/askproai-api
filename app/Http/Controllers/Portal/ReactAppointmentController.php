@@ -20,7 +20,19 @@ class ReactAppointmentController extends Controller
      */
     public function index(Request $request)
     {
-        return view('portal.appointments.react');
+        $user = Auth::guard('portal')->user();
+        
+        if (!$user || !$user->company_id) {
+            abort(401, 'Unauthorized');
+        }
+        
+        $appointments = Appointment::where('company_id', $user->company_id)
+            ->with(['customer', 'staff', 'service', 'branch'])
+            ->orderBy('starts_at', 'desc')
+            ->paginate(20);
+            
+        // Use unified layout for consistency
+        return view('portal.appointments.index-unified', compact('appointments'));
     }
     
     /**
@@ -28,7 +40,20 @@ class ReactAppointmentController extends Controller
      */
     public function create(Request $request)
     {
-        return view('portal.appointments.react-create');
+        $user = Auth::guard('portal')->user();
+        
+        if (!$user || !$user->company_id) {
+            abort(401, 'Unauthorized');
+        }
+        
+        // Get data for the form
+        $customers = Customer::where('company_id', $user->company_id)->get();
+        $staff = Staff::where('company_id', $user->company_id)->get();
+        $services = Service::where('company_id', $user->company_id)->get();
+        $branches = Branch::where('company_id', $user->company_id)->get();
+        
+        // Use unified layout for consistency
+        return view('portal.appointments.create-unified', compact('customers', 'staff', 'services', 'branches'));
     }
     
     /**

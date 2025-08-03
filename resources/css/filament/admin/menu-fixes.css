@@ -1,0 +1,114 @@
+/* ================================================================
+   MENU FIXES - Specific fixes for sidebar navigation
+   ================================================================ */
+
+/* Ensure sidebar is above other elements */
+.fi-sidebar {
+    z-index: 40 !important;
+    pointer-events: auto !important;
+}
+
+/* Fix sidebar navigation container */
+.fi-sidebar-nav {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Make all menu items clickable */
+.fi-sidebar-nav a,
+.fi-sidebar-nav button,
+.fi-sidebar-item,
+.fi-sidebar-nav-link,
+.fi-sidebar-group button,
+.fi-sidebar-group-trigger {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 2 !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Pseudo-elements should not interfere with clicks */
+.fi-sidebar-nav a::before,
+.fi-sidebar-nav a::after,
+.fi-sidebar-nav button::before,
+.fi-sidebar-nav button::after {
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Fix hover states */
+.fi-sidebar-nav a:hover,
+.fi-sidebar-nav button:hover,
+.fi-sidebar-item:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Dark mode hover */
+.dark .fi-sidebar-nav a:hover,
+.dark .fi-sidebar-nav button:hover,
+.dark .fi-sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Fix mobile menu toggle */
+.fi-topbar-open-sidebar-btn,
+.fi-sidebar-close-btn,
+.fi-sidebar-nav-toggle {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 50 !important;
+    position: relative !important;
+}
+
+/* Icons should inherit pointer events from parent */
+.fi-sidebar-nav svg,
+.fi-sidebar-item svg,
+.fi-sidebar-nav-icon {
+    pointer-events: inherit !important;
+}
+
+/* Fix submenu items */
+.fi-sidebar-group-items {
+    pointer-events: auto !important;
+}
+
+.fi-sidebar-group-items a,
+.fi-sidebar-group-items button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Mobile sidebar handling */
+@media (max-width: 1024px) {
+    /* Sidebar should be clickable when visible */
+    .fi-sidebar {
+        z-index: 41 !important;
+    }
+    
+    /* Overlay only blocks when sidebar is open */
+    .fi-sidebar-open .fi-sidebar-overlay {
+        pointer-events: auto !important;
+    }
+}
+
+/* Debug: Visual feedback for clickable areas */
+.debug-mode .fi-sidebar-nav a,
+.debug-mode .fi-sidebar-nav button {
+    outline: 1px dashed red;
+}
+
+/* Remove any transforms that might interfere */
+.fi-sidebar-nav a,
+.fi-sidebar-nav button {
+    transform: none !important;
+}
+
+/* Ensure proper hit areas */
+.fi-sidebar-nav-link {
+    min-height: 44px !important;
+    padding: 0.75rem 1rem !important;
+    margin: 0 !important;
+}

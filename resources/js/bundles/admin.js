@@ -1,7 +1,10 @@
 // Admin Panel JavaScript Bundle
 // Consolidated admin-specific JavaScript functionality
 
-console.log('[Admin Bundle] Loading admin panel enhancements...');
+// Silent loading - no console output
+
+// Import mobile navigation
+import '../../js/mobile-navigation-final.js';
 
 // Wait for frameworks to be ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeAdminEnhancements() {
-    console.log('[Admin Bundle] Initializing admin enhancements...');
+    // Initialize silently
     
     // Fix dropdown interactions
     fixDropdownInteractions();
@@ -23,11 +26,11 @@ function initializeAdminEnhancements() {
     // Fix form interactions
     fixFormInteractions();
     
-    console.log('[Admin Bundle] Admin enhancements initialized');
+    // Initialization complete
 }
 
 function fixDropdownInteractions() {
-    console.log('[Admin Bundle] Fixing dropdown interactions...');
+    // Fix dropdown interactions silently
     
     // Use event delegation for dropdown triggers
     document.addEventListener('click', (e) => {
@@ -49,7 +52,7 @@ function fixDropdownInteractions() {
             const alpineData = dropdown._x_dataStack[0];
             if (alpineData && 'open' in alpineData) {
                 alpineData.open = !alpineData.open;
-                console.log('[Admin Bundle] Toggled dropdown via Alpine:', alpineData.open);
+                // Dropdown toggled
             }
         }
     }, true);
@@ -70,7 +73,7 @@ function fixDropdownInteractions() {
 }
 
 function fixTableInteractions() {
-    console.log('[Admin Bundle] Fixing table interactions...');
+    // Fix table interactions silently
     
     // Enable horizontal scrolling for tables
     document.querySelectorAll('.fi-ta-table-container').forEach(container => {
@@ -98,7 +101,7 @@ function fixTableInteractions() {
 }
 
 function initializeMobileNavigation() {
-    console.log('[Admin Bundle] Initializing mobile navigation...');
+    // Initialize mobile navigation silently
     
     // Fix mobile sidebar toggle
     const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
@@ -117,7 +120,7 @@ function initializeMobileNavigation() {
 }
 
 function fixFormInteractions() {
-    console.log('[Admin Bundle] Fixing form interactions...');
+    // Fix form interactions silently
     
     // Fix form buttons
     document.querySelectorAll('.fi-btn').forEach(btn => {
@@ -183,4 +186,4 @@ if (typeof Alpine !== 'undefined') {
     });
 }
 
-console.log('[Admin Bundle] Admin bundle loaded successfully');
+// Admin bundle loaded

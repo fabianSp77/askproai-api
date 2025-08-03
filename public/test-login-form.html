@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Login Test</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Business Portal Login Test</h1>
+    
+    <div id="status"></div>
+    
+    <button onclick="performLogin()">Test Login</button>
+    
+    <h2>Response:</h2>
+    <pre id="response"></pre>
+    
+    <script>
+    async function performLogin() {
+        const status = document.getElementById('status');
+        const responseDiv = document.getElementById('response');
+        
+        try {
+            // Step 1: Get login page to fetch CSRF token
+            status.textContent = 'Fetching CSRF token...';
+            const loginPageResponse = await fetch('https://api.askproai.de/business/login', {
+                credentials: 'include'
+            });
+            const loginPageHtml = await loginPageResponse.text();
+            
+            // Extract CSRF token
+            const tokenMatch = loginPageHtml.match(/name="_token" value="([^"]+)"/);
+            if (!tokenMatch) {
+                throw new Error('CSRF token not found');
+            }
+            const csrfToken = tokenMatch[1];
+            status.textContent = 'CSRF token: ' + csrfToken.substring(0, 20) + '...';
+            
+            // Step 2: Perform login
+            const formData = new URLSearchParams();
+            formData.append('_token', csrfToken);
+            formData.append('email', 'demo@askproai.de');
+            formData.append('password', 'password123');
+            
+            const loginResponse = await fetch('https://api.askproai.de/business/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'text/html,application/xhtml+xml'
+                },
+                body: formData,
+                credentials: 'include',
+                redirect: 'manual'
+            });
+            
+            responseDiv.textContent = `Status: ${loginResponse.status} ${loginResponse.statusText}\n`;
+            responseDiv.textContent += `Type: ${loginResponse.type}\n`;
+            
+            // Show headers
+            responseDiv.textContent += '\nHeaders:\n';
+            for (const [key, value] of loginResponse.headers.entries()) {
+                responseDiv.textContent += `${key}: ${value}\n`;
+            }
+            
+            if (loginResponse.status === 302 || loginResponse.status === 303) {
+                const location = loginResponse.headers.get('Location');
+                responseDiv.textContent += `\n✅ Login successful! Redirect to: ${location}`;
+            } else {
+                const text = await loginResponse.text();
+                responseDiv.textContent += `\n❌ Login failed\n`;
+                // Try to extract error from HTML
+                const errorMatch = text.match(/class="[^"]*error[^"]*"[^>]*>([^<]+)</);
+                if (errorMatch) {
+                    responseDiv.textContent += `Error: ${errorMatch[1]}\n`;
+                }
+                if (text.length < 1000) {
+                    responseDiv.textContent += `\nFull response:\n${text}`;
+                } else {
+                    responseDiv.textContent += `\nResponse preview:\n${text.substring(0, 500)}...`;
+                }
+            }
+            
+        } catch (error) {
+            responseDiv.textContent = `Error: ${error.message}`;
+        }
+    }
+    </script>
+</body>
+</html>

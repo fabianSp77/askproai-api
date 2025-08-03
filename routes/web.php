@@ -43,9 +43,20 @@ Route::get('/auth-debug', function () {
     ]);
 });
 
-// Root route - redirect to admin
+// Root route - redirect to login
 Route::get('/', function () {
-    return redirect('/admin');
+    return redirect('/login');
+});
+
+// Unified Login Routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [App\Http\Controllers\UnifiedLoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [App\Http\Controllers\UnifiedLoginController::class, 'login']);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [App\Http\Controllers\UnifiedLoginController::class, 'logout'])->name('logout');
+    Route::get('/logout', [App\Http\Controllers\UnifiedLoginController::class, 'logout']);
 });
 
 // Admin route - let Filament handle it

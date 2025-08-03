@@ -22,15 +22,18 @@ class FixPortalApiAuth
             ]);
             
             // If not authenticated but session has user ID, restore auth
-            $sessionKey = 'login_portal_' . sha1(\App\Models\PortalUser::class);
+            // Get the correct session key from the guard itself
+            $guard = auth()->guard('portal');
+            $sessionKey = $guard->getName();
             
-            if (!auth()->guard('portal')->check()) {
+            if (!$guard->check()) {
+                // Primary method: Check using guard's session key
                 if (session()->has($sessionKey)) {
                     $userId = session($sessionKey);
                     $user = \App\Models\PortalUser::find($userId);
                     
                     if ($user && $user->is_active) {
-                        auth()->guard('portal')->loginUsingId($userId);
+                        $guard->loginUsingId($userId);
                         
                         // Set company context
                         app()->instance('current_company_id', $user->company_id);
@@ -41,6 +44,7 @@ class FixPortalApiAuth
                             'email' => $user->email,
                             'company_id' => $user->company_id,
                             'session_id' => session()->getId(),
+                            'session_key' => $sessionKey,
                         ]);
                     } else {
                         Log::warning('FixPortalApiAuth - User not found or inactive', [
@@ -48,16 +52,37 @@ class FixPortalApiAuth
                             'session_id' => session()->getId(),
                         ]);
                     }
-                } else {
+                }
+                // Fallback method: Check portal_user_id
+                else if (session()->has('portal_user_id')) {
+                    $userId = session('portal_user_id');
+                    $user = \App\Models\PortalUser::find($userId);
+                    
+                    if ($user && $user->is_active) {
+                        $guard->loginUsingId($userId);
+                        
+                        // Set company context
+                        app()->instance('current_company_id', $user->company_id);
+                        app()->instance('company_context_source', 'portal_auth_fallback');
+                        
+                        Log::info('FixPortalApiAuth - Successfully restored auth from fallback', [
+                            'user_id' => $userId,
+                            'email' => $user->email,
+                            'company_id' => $user->company_id,
+                            'session_id' => session()->getId(),
+                        ]);
+                    }
+                }
+                else {
                     Log::debug('FixPortalApiAuth - No session key found', [
-                        'session_key' => $sessionKey,
+                        'expected_session_key' => $sessionKey,
                         'session_id' => session()->getId(),
-                        'session_data' => session()->all(),
+                        'session_keys' => array_keys(session()->all()),
                     ]);
                 }
             } else {
                 Log::debug('FixPortalApiAuth - Already authenticated', [
-                    'user_id' => auth()->guard('portal')->id(),
+                    'user_id' => $guard->id(),
                     'session_id' => session()->getId(),
                 ]);
             }

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Click Test</title>
+    <style>
+        body {
+            padding: 50px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .test-button {
+            background: #3B82F6;
+            color: white;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 10px;
+            display: inline-block;
+        }
+        
+        .test-button:hover {
+            background: #2563EB;
+        }
+        
+        .test-link {
+            color: #3B82F6;
+            font-size: 20px;
+            margin: 10px;
+            display: inline-block;
+        }
+        
+        #output {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+        
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Click Test</h1>
+    
+    <button class="test-button" onclick="testClick('Button clicked!')">Test Button</button>
+    
+    <a href="#" class="test-link" onclick="testClick('Link clicked!'); return false;">Test Link</a>
+    
+    <input type="text" placeholder="Type here to test input" style="padding: 10px; font-size: 16px;">
+    
+    <div id="output"></div>
+    
+    <script>
+        function testClick(message) {
+            const output = document.getElementById('output');
+            output.innerHTML += '<div class="success">' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+        }
+        
+        // Test if page is interactive
+        document.addEventListener('DOMContentLoaded', function() {
+            testClick('Page loaded successfully!');
+        });
+    </script>
+</body>
+</html>

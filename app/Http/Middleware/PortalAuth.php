@@ -12,8 +12,10 @@ class PortalAuth
         // Session configuration is already handled by ConfigurePortalSession middleware
         // which runs BEFORE StartSession. Don't duplicate that logic here.
         
-        // Get session key
-        $sessionKey = 'login_portal_' . sha1(\App\Models\PortalUser::class);
+        // Get session key - must match what SessionGuard uses
+        // SessionGuard uses sha1 of the guard class, not the user model
+        $guard = auth()->guard('portal');
+        $sessionKey = $guard->getName();
         
         // Debug logging
         \Log::debug('PortalAuth middleware START', [
@@ -57,6 +59,7 @@ class PortalAuth
             \Log::debug('PortalAuth - User authenticated', [
                 'user_id' => $user->id,
                 'email' => $user->email,
+                'url' => $request->url(),
             ]);
             return $next($request);
         }

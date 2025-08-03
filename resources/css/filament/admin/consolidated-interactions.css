@@ -1,0 +1,216 @@
+/* ==========================================================================
+   Consolidated Interaction Fixes - Issue #476
+   Created: 2025-08-02
+   
+   This file consolidates all click/interaction related fixes from:
+   - ultimate-click-fix.css
+   - fix-dropdown-clicks.css
+   - fix-all-clicks.css
+   - fix-login-overlay.css
+   - checkbox-fix-force.css
+   - checkbox-state-fix.css
+   - branch-dropdown-fix.css
+   - dropdown-fixes.css
+   - dropdown-fix-minimal.css
+   - dropdown-fix-safe.css
+   - dropdown-overflow-fix.css
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. Global Click Fix (from multiple files)
+   --------------------------------------------------------------------- */
+
+/* Ensure all interactive elements are clickable */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="link"],
+[wire\:click],
+[x-on\:click],
+[onclick],
+.clickable {
+    pointer-events: auto !important;
+    cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------
+   2. Dropdown Specific Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix dropdown triggers and panels */
+.fi-dropdown-trigger {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative;
+    z-index: 10;
+}
+
+.fi-dropdown-panel {
+    pointer-events: auto !important;
+    z-index: 50 !important;
+    overflow: visible !important;
+}
+
+/* Fix dropdown list items */
+.fi-dropdown-list-item {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+.fi-dropdown-list-item:hover {
+    background-color: rgba(var(--gray-50), var(--tw-bg-opacity, 1));
+}
+
+/* ---------------------------------------------------------------------
+   3. Checkbox and Form Control Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix checkbox interactions */
+input[type="checkbox"],
+input[type="radio"],
+.fi-checkbox-input,
+.fi-radio-input {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix checkbox labels */
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]) {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix toggle switches */
+.fi-toggle {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* ---------------------------------------------------------------------
+   4. Table Action Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix table row actions */
+.fi-ta-actions,
+.fi-ta-action {
+    pointer-events: auto !important;
+}
+
+.fi-ta-action button,
+.fi-ta-action a {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix bulk actions */
+.fi-ta-bulk-actions {
+    pointer-events: auto !important;
+}
+
+/* ---------------------------------------------------------------------
+   5. Modal and Dialog Fixes
+   --------------------------------------------------------------------- */
+
+/* Ensure modals are interactive */
+.fi-modal {
+    pointer-events: auto !important;
+}
+
+.fi-modal-window {
+    pointer-events: auto !important;
+}
+
+/* Fix modal close buttons */
+.fi-modal-close-btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10;
+}
+
+/* ---------------------------------------------------------------------
+   6. Login Page Specific Fixes
+   --------------------------------------------------------------------- */
+
+/* Ensure login form is fully interactive */
+.fi-login-panel {
+    pointer-events: auto !important;
+}
+
+.fi-login-panel form,
+.fi-login-panel form * {
+    pointer-events: auto !important;
+}
+
+.fi-login-panel button[type="submit"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* ---------------------------------------------------------------------
+   7. Action Group Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix action groups in tables and forms */
+.fi-ac-action-group {
+    pointer-events: auto !important;
+}
+
+.fi-ac-action {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* ---------------------------------------------------------------------
+   8. Navigation and Sidebar Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix navigation items */
+.fi-sidebar-nav-item {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+.fi-sidebar-nav-item a {
+    pointer-events: auto !important;
+}
+
+/* Fix user menu */
+.fi-user-menu button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* ---------------------------------------------------------------------
+   9. Overflow Menu Fixes
+   --------------------------------------------------------------------- */
+
+/* Fix overflow menus in constrained spaces */
+.fi-dropdown-panel {
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* Ensure dropdowns can extend outside containers */
+.fi-ta-content {
+    overflow: visible !important;
+}
+
+/* ---------------------------------------------------------------------
+   10. Z-Index Hierarchy
+   --------------------------------------------------------------------- */
+
+/* Establish proper z-index stacking */
+.fi-dropdown-panel { z-index: 50; }
+.fi-modal-container { z-index: 60; }
+.fi-notifications { z-index: 70; }
+.fi-tooltip { z-index: 80; }
+
+/* ---------------------------------------------------------------------
+   WARNING: This file uses !important extensively as an emergency fix.
+   These rules should be refactored into the base styles once the
+   root cause of pointer-events blocking is identified and fixed.
+   --------------------------------------------------------------------- */

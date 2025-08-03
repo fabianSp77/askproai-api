@@ -13,7 +13,7 @@ class CompactLiveCallsWidget extends BaseWidget
     
     protected int | string | array $columnSpan = 'full';
     
-    protected static ?string $pollingInterval = '5s';
+    protected static ?string $pollingInterval = '30s';
     
     protected static ?string $heading = 'Aktive Anrufe (Kompakt)';
     

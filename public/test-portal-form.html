@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Business Portal Form Test</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <h1>Business Portal Form Test</h1>
+    
+    <p>This will submit a real form to test the login:</p>
+    
+    <form action="/business/login" method="POST" id="testForm">
+        <input type="hidden" name="_token" id="csrf_token" value="">
+        <input type="hidden" name="email" value="demo@askproai.de">
+        <input type="hidden" name="password" value="password">
+        <button type="submit">Submit Login Form</button>
+    </form>
+    
+    <div id="status"></div>
+    
+    <script>
+        // First, get the CSRF token
+        fetch('/business/login')
+            .then(response => response.text())
+            .then(html => {
+                const match = html.match(/name="_token" value="([^"]+)"/);
+                if (match) {
+                    document.getElementById('csrf_token').value = match[1];
+                    document.getElementById('status').innerHTML = 'CSRF token loaded. Ready to submit.';
+                } else {
+                    document.getElementById('status').innerHTML = 'Error: Could not find CSRF token';
+                }
+            })
+            .catch(error => {
+                document.getElementById('status').innerHTML = 'Error loading page: ' + error.message;
+            });
+    </script>
+</body>
+</html>

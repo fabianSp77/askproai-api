@@ -91,20 +91,22 @@ class ErrorBoundary extends React.Component {
 function PortalApp() {
     return (
         <ErrorBoundary>
-            <BrowserRouter basename="/business">
+            {/* Remove basename to prevent conflicts with Laravel routes */}
+            <BrowserRouter>
                 <Routes>
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/dashboard" element={<DashboardOptimized />} />
-                    <Route path="/calls" element={<CallsOptimized />} />
-                    <Route path="/calls/:id" element={<CallsOptimized />} />
-                    <Route path="/appointments" element={<AppointmentsOptimized />} />
-                    <Route path="/customers" element={<CustomersOptimized />} />
-                    <Route path="/customers/:id" element={<CustomersOptimized />} />
-                    <Route path="/team" element={<TeamOptimized />} />
-                    <Route path="/analytics" element={<AnalyticsOptimized />} />
-                    <Route path="/settings" element={<SettingsOptimized />} />
-                    <Route path="/billing" element={<BillingOptimized />} />
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                    {/* Direct route match for dashboard - no redirect */}
+                    <Route path="/business/dashboard" element={<DashboardOptimized />} />
+                    <Route path="/business/calls" element={<CallsOptimized />} />
+                    <Route path="/business/calls/:id" element={<CallsOptimized />} />
+                    <Route path="/business/appointments" element={<AppointmentsOptimized />} />
+                    <Route path="/business/customers" element={<CustomersOptimized />} />
+                    <Route path="/business/customers/:id" element={<CustomersOptimized />} />
+                    <Route path="/business/team" element={<TeamOptimized />} />
+                    <Route path="/business/analytics" element={<AnalyticsOptimized />} />
+                    <Route path="/business/settings" element={<SettingsOptimized />} />
+                    <Route path="/business/billing" element={<BillingOptimized />} />
+                    {/* Fallback for any unmatched business routes */}
+                    <Route path="/business/*" element={<DashboardOptimized />} />
                 </Routes>
             </BrowserRouter>
         </ErrorBoundary>
@@ -126,6 +128,11 @@ export function mountPortal(elementId = 'app') {
 // Auto-mount if there's a portal app container
 if (document.getElementById('portal-app')) {
     mountPortal('portal-app');
+}
+
+// Auto-mount for default app container used in blade template
+if (document.getElementById('app')) {
+    mountPortal('app');
 }
 
 // Export for manual mounting

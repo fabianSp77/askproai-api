@@ -16,5 +16,5 @@
 
 @push('scripts')
 <!-- Load React app -->
-<script src="{{ asset('build/assets/portal-dashboard-d9320FVW.js') }}" type="module"></script>
+@vite(['resources/js/bundles/portal.jsx'])
 @endpush

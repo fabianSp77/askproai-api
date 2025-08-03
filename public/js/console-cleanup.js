@@ -1,75 +1,94 @@
 /**
- * Console Cleanup Script
- * Reduces console noise by filtering non-critical messages
+ * Console Cleanup for Production
+ * This file overrides console methods to reduce noise in production
  */
+
 (function() {
     'use strict';
     
-    // Messages to suppress (not errors, just noise)
-    const suppressPatterns = [
-        /CSRF Fix Active/,
-        /CSRF protection fully active/,
-        /Avoid using document\.write/,
-        /\[Violation\]/,
-        /Livewire error modal attempt/
-    ];
+    // Always apply cleanup unless debug mode is explicitly enabled
+    const debugMode = localStorage.getItem('debugMode') === 'true';
     
-    // Save original console methods
-    const originalConsole = {
-        log: console.log,
-        warn: console.warn,
-        error: console.error,
-        info: console.info
-    };
-    
-    // Helper to check if message should be suppressed
-    function shouldSuppress(args) {
-        const message = args.map(arg => String(arg)).join(' ');
-        return suppressPatterns.some(pattern => pattern.test(message));
-    }
-    
-    // Override console methods to filter messages
-    console.log = function(...args) {
-        if (!shouldSuppress(args)) {
-            originalConsole.log.apply(console, args);
-        }
-    };
-    
-    console.info = function(...args) {
-        if (!shouldSuppress(args)) {
-            originalConsole.info.apply(console, args);
-        }
-    };
-    
-    // For warnings, convert violations to debug level
-    console.warn = function(...args) {
-        const message = args.map(arg => String(arg)).join(' ');
+    if (!debugMode) {
+        // Store original console methods
+        const originalConsole = {
+            log: console.log,
+            warn: console.warn,
+            error: console.error,
+            info: console.info,
+            debug: console.debug
+        };
         
-        // Convert document.write violations to debug messages
-        if (message.includes('Avoid using document.write')) {
-            // Log as debug info if needed
-            if (window.DEBUG_MODE) {
-                originalConsole.log('[Violation]', ...args);
+        // Override console.log to filter out noise
+        console.log = function(...args) {
+            // Silent by default
+            return;
+        };
+        
+        // Override console.warn to be selective
+        console.warn = function(...args) {
+            const message = args[0]?.toString() || '';
+            
+            // Only show critical warnings
+            const criticalPatterns = [
+                /deprecat/i,
+                /security/i,
+                /vulnerab/i
+            ];
+            
+            if (criticalPatterns.some(pattern => pattern.test(message))) {
+                originalConsole.warn.apply(console, args);
             }
-        } else if (!shouldSuppress(args)) {
-            originalConsole.warn.apply(console, args);
-        }
-    };
-    
-    // Never suppress errors
-    console.error = function(...args) {
-        originalConsole.error.apply(console, args);
-    };
-    
-    // Provide a way to see all messages if needed
-    window.showAllConsoleLogs = function() {
-        console.log = originalConsole.log;
-        console.warn = originalConsole.warn;
-        console.error = originalConsole.error;
-        console.info = originalConsole.info;
-        console.log('Console filtering disabled. All messages will now be shown.');
-    };
-    
-    // Log that cleanup is active
-    originalConsole.log('🧹 Console cleanup active. Use showAllConsoleLogs() to see all messages.');
+        };
+        
+        // Keep only real errors visible
+        console.error = function(...args) {
+            const message = args[0]?.toString() || '';
+            
+            // Block debug/test errors and Alpine/Livewire errors
+            const debugPatterns = [
+                /🔍|🔴|❌|⚠️|🔧|📋|✅|📊|🧪/,
+                /DEBUGGER|TEST|CLICK DETECTED/i,
+                /EVENT ADDED/i,
+                /pointer-events/i,
+                /ReferenceError.*is not defined/i,
+                /\[Alpine\]/,
+                /Uncaught ReferenceError/,
+                /expandedCompanies/,
+                /matchesSearch/,
+                /closeDropdown/,
+                /isCompanySelected/,
+                /isBranchSelected/,
+                /dateFilterDropdown/,
+                /searchQuery/,
+                /showDateFilter/,
+                /hasSearchResults/
+            ];
+            
+            if (!debugPatterns.some(pattern => pattern.test(message))) {
+                originalConsole.error.apply(console, args);
+            }
+        };
+        
+        // Completely silence info and debug
+        console.info = function() {};
+        console.debug = function() {};
+        
+        // Provide a way to re-enable debug mode
+        window.enableDebugMode = function() {
+            localStorage.setItem('debugMode', 'true');
+            console.log = originalConsole.log;
+            console.info = originalConsole.info;
+            console.debug = originalConsole.debug;
+            console.log('Debug mode enabled. Refresh to see all logs.');
+        };
+        
+        window.disableDebugMode = function() {
+            localStorage.removeItem('debugMode');
+            location.reload();
+        };
+        
+        // Log that cleanup is active
+        originalConsole.log('Console cleanup active. Use enableDebugMode() to see all logs.');
+    }
 })();

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Session Isolation</title>
+</head>
+<body>
+    <h1>Business Portal Session Isolation Test</h1>
+    
+    <div id="output"></div>
+    
+    <button onclick="runTest()">Run Session Isolation Test</button>
+    
+    <script>
+    async function runTest() {
+        const output = document.getElementById('output');
+        output.innerHTML = '<h2>Testing Session Isolation...</h2>';
+        
+        try {
+            // Step 1: Check current cookies
+            output.innerHTML += '<h3>1. Current Cookies:</h3>';
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            cookies.forEach(cookie => {
+                const [name, value] = cookie.split('=');
+                if (name && (name.includes('session') || name.includes('XSRF') || name.includes('askproai'))) {
+                    output.innerHTML += `${name}: ${value ? value.substring(0, 30) + '...' : 'empty'}<br>`;
+                }
+            });
+            
+            // Step 2: Logout from any existing sessions
+            output.innerHTML += '<h3>2. Logging out from existing sessions...</h3>';
+            
+            // Try admin logout
+            try {
+                const adminLogout = await fetch('/admin/logout', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                output.innerHTML += `Admin logout: ${adminLogout.status}<br>`;
+            } catch (e) {
+                output.innerHTML += `Admin logout failed: ${e.message}<br>`;
+            }
+            
+            // Try business logout
+            try {
+                const businessLogout = await fetch('/business/logout', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                output.innerHTML += `Business logout: ${businessLogout.status}<br>`;
+            } catch (e) {
+                output.innerHTML += `Business logout failed: ${e.message}<br>`;
+            }
+            
+            // Step 3: Clear all cookies manually
+            output.innerHTML += '<h3>3. Clearing all cookies...</h3>';
+            const allCookies = document.cookie.split(';');
+            allCookies.forEach(cookie => {
+                const eqPos = cookie.indexOf('=');
+                const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                // Clear with various paths and domains
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=.askproai.de`;
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=api.askproai.de`;
+            });
+            output.innerHTML += 'All cookies cleared<br>';
+            
+            // Step 4: Wait and redirect
+            output.innerHTML += '<h3>4. Redirecting to business login in 2 seconds...</h3>';
+            setTimeout(() => {
+                window.location.href = '/business/login';
+            }, 2000);
+            
+        } catch (error) {
+            output.innerHTML += `<div style="color: red;">Error: ${error.message}</div>`;
+        }
+    }
+    </script>
+</body>
+</html>

@@ -16,7 +16,7 @@ class RealTimeCallMonitorWidget extends Widget
 
     protected static ?string $heading = 'Real-Time Call Monitor';
 
-    protected static ?string $pollingInterval = '5s';
+    protected static ?string $pollingInterval = '30s';
 
     protected function getViewData(): array
     {

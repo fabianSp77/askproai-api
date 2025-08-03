@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Sessions and Test Login</title>
+</head>
+<body>
+    <h1>Clear Sessions and Test Business Portal Login</h1>
+    
+    <div id="status"></div>
+    
+    <button onclick="clearAndTest()">Clear All Sessions and Test Login</button>
+    
+    <script>
+    async function clearAndTest() {
+        const status = document.getElementById('status');
+        status.innerHTML = 'Clearing sessions...<br>';
+        
+        try {
+            // Step 1: Clear all cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            // Also try to clear with domain
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/;domain=.askproai.de"); 
+            });
+            
+            status.innerHTML += 'Cookies cleared<br>';
+            
+            // Step 2: Logout from admin if logged in
+            try {
+                await fetch('/admin/logout', { method: 'POST', credentials: 'include' });
+                status.innerHTML += 'Logged out from admin<br>';
+            } catch (e) {
+                status.innerHTML += 'Admin logout skipped<br>';
+            }
+            
+            // Step 3: Wait a moment
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Step 4: Navigate to business portal login
+            status.innerHTML += 'Redirecting to business portal login...<br>';
+            window.location.href = '/business/login';
+            
+        } catch (err) {
+            status.innerHTML += `Error: ${err.message}<br>`;
+        }
+    }
+    </script>
+</body>
+</html>
