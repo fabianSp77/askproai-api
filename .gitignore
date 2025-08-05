@@ -49,6 +49,15 @@ test-results/
 .pest/
 vitest.config.ts.timestamp-*
 
+# Large files that should never be committed
+storage/logs/
+backups/
+tmp/
+*.log
+*.gz
+*.zip
+*.sql
+
 # Newman/Postman
 newman/
 postman/
