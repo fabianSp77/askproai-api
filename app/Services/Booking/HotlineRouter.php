@@ -130,7 +130,7 @@ class HotlineRouter
         
         // Get branches for company
         $branches = Branch::where('company_id', $phoneRecord->company_id)
-            ->where('active', true)
+            ->where('is_active', true)
             ->get();
             
         // Find nearest branch based on area code mapping
@@ -160,7 +160,7 @@ class HotlineRouter
     private function handleLoadBalancedRouting($phoneRecord, array $callData): array
     {
         $branches = Branch::where('company_id', $phoneRecord->company_id)
-            ->where('active', true)
+            ->where('is_active', true)
             ->get();
             
         if ($branches->isEmpty()) {
@@ -199,7 +199,7 @@ class HotlineRouter
     private function handleBusinessHoursRouting($phoneRecord, array $callData): array
     {
         $branches = Branch::where('company_id', $phoneRecord->company_id)
-            ->where('active', true)
+            ->where('is_active', true)
             ->get();
             
         $currentTime = now();

@@ -41,7 +41,8 @@ class ListRetellAgents extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            RetellAgentResource\Widgets\AgentPerformanceStats::class,
+            // Temporarily disabled due to Livewire loading issues
+            // RetellAgentResource\Widgets\AgentPerformanceStats::class,
         ];
     }
 }

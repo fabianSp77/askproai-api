@@ -271,7 +271,7 @@ class UniversalBookingOrchestrator
     private function findSuitableBranches(array $serviceRequirements, Customer $customer, array $tenantContext): array
     {
         $query = Branch::where('company_id', $tenantContext['company_id'])
-            ->where('active', true);
+            ->where('is_active', true);
         
         // If a specific branch was requested
         if (!empty($tenantContext['branch_id'])) {

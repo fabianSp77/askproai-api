@@ -2,10 +2,8 @@
 
 namespace App\Models;
 
-use App\Scopes\TenantScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PricingPlan extends Model
@@ -13,65 +11,29 @@ class PricingPlan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'company_id',
         'name',
         'description',
-        'type',
-        'billing_interval',
-        'interval_count',
-        'base_price',
+        'stripe_price_id',
+        'amount',
         'currency',
-        'included_minutes',
-        'included_appointments',
-        'included_features',
-        'overage_price_per_minute',
-        'overage_price_per_appointment',
-        'volume_discounts',
-        'is_active',
-        'is_default',
-        'trial_days',
-        'sort_order',
+        'interval',
+        'interval_count',
+        'trial_period_days',
+        'features',
         'metadata',
+        'is_active',
     ];
 
     protected $casts = [
-        'base_price' => 'decimal:2',
-        'overage_price_per_minute' => 'decimal:4',
-        'overage_price_per_appointment' => 'decimal:2',
-        'included_features' => 'array',
-        'volume_discounts' => 'array',
+        'amount' => 'decimal:2',
+        'trial_period_days' => 'integer',
+        'features' => 'array',
         'metadata' => 'array',
         'is_active' => 'boolean',
-        'is_default' => 'boolean',
     ];
 
     /**
-     * The "booted" method of the model.
-     */
-    protected static function booted(): void
-    {
-        static::addGlobalScope(new TenantScope);
-        
-        // Ensure only one default plan per company
-        static::saving(function ($plan) {
-            if ($plan->is_default) {
-                static::where('company_id', $plan->company_id)
-                    ->where('id', '!=', $plan->id)
-                    ->update(['is_default' => false]);
-            }
-        });
-    }
-
-    /**
-     * Get the company.
-     */
-    public function company(): BelongsTo
-    {
-        return $this->belongsTo(Company::class);
-    }
-
-    /**
-     * Get the subscriptions.
+     * Get the subscriptions for this pricing plan.
      */
     public function subscriptions(): HasMany
     {
@@ -79,84 +41,46 @@ class PricingPlan extends Model
     }
 
     /**
-     * Get the price rules.
+     * Scope a query to only include active pricing plans.
      */
-    public function priceRules(): HasMany
+    public function scopeActive($query)
     {
-        return $this->hasMany(PriceRule::class);
+        return $query->where('is_active', true);
     }
 
     /**
-     * Calculate price with volume discount.
-     */
-    public function calculatePriceWithDiscount(int $quantity, string $type = 'minutes'): float
-    {
-        if (empty($this->volume_discounts)) {
-            return $this->base_price;
-        }
-
-        $discount = 0;
-        foreach ($this->volume_discounts as $tier) {
-            if ($quantity >= ($tier['threshold'] ?? 0)) {
-                $discount = $tier['discount_percent'] ?? 0;
-            }
-        }
-
-        $price = $this->base_price;
-        if ($discount > 0) {
-            $price = $price * (1 - ($discount / 100));
-        }
-
-        return round($price, 2);
-    }
-
-    /**
-     * Check if a feature is included.
-     */
-    public function hasFeature(string $feature): bool
-    {
-        return in_array($feature, $this->included_features ?? []);
-    }
-
-    /**
-     * Get overage cost for usage.
-     */
-    public function calculateOverageCost(int $usedMinutes, int $usedAppointments): array
-    {
-        $minuteOverage = max(0, $usedMinutes - $this->included_minutes);
-        $appointmentOverage = max(0, $usedAppointments - $this->included_appointments);
-
-        return [
-            'minutes' => [
-                'overage' => $minuteOverage,
-                'cost' => $minuteOverage * ($this->overage_price_per_minute ?? 0),
-            ],
-            'appointments' => [
-                'overage' => $appointmentOverage,
-                'cost' => $appointmentOverage * ($this->overage_price_per_appointment ?? 0),
-            ],
-            'total' => ($minuteOverage * ($this->overage_price_per_minute ?? 0)) + 
-                      ($appointmentOverage * ($this->overage_price_per_appointment ?? 0)),
-        ];
-    }
-
-    /**
-     * Get display price (formatted).
+     * Get the display price.
      */
     public function getDisplayPriceAttribute(): string
     {
-        return number_format($this->base_price, 2) . ' ' . $this->currency;
+        $amount = number_format($this->amount / 100, 2, ',', '.');
+        return "{$amount} {$this->currency}";
     }
 
     /**
-     * Get billing period display.
+     * Get the billing period display.
      */
-    public function getBillingPeriodDisplayAttribute(): string
+    public function getBillingPeriodAttribute(): string
     {
-        if ($this->interval_count === 1) {
-            return $this->billing_interval;
+        $interval = $this->interval;
+        $count = $this->interval_count;
+        
+        if ($count === 1) {
+            return match($interval) {
+                'day' => 'täglich',
+                'week' => 'wöchentlich',
+                'month' => 'monatlich',
+                'year' => 'jährlich',
+                default => $interval,
+            };
         }
         
-        return "every {$this->interval_count} " . str_plural(rtrim($this->billing_interval, 'ly'));
+        return "alle {$count} " . match($interval) {
+            'day' => 'Tage',
+            'week' => 'Wochen',
+            'month' => 'Monate',
+            'year' => 'Jahre',
+            default => $interval,
+        };
     }
 }

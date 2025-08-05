@@ -1,5 +1,7 @@
 <?php
 
+// WARNING: Potential circular reference detected. Consider using method injection instead of constructor injection.
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
@@ -8,12 +10,12 @@ use Symfony\Component\Finder\Finder;
 
 class FileWatcherService
 {
-    protected KnowledgeBaseService $knowledgeService;
+    protected $knowledgeService;
     protected array $watchPaths;
     protected string $cacheKey = 'knowledge_file_watcher';
     protected int $checkInterval = 60; // seconds
     
-    public function __construct(KnowledgeBaseService $knowledgeService)
+    public function __construct($knowledgeService = null)
     {
         $this->knowledgeService = $knowledgeService;
         $this->watchPaths = config('knowledge.watch_paths', [

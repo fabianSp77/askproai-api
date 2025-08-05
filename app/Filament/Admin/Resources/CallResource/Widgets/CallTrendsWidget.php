@@ -53,7 +53,7 @@ class CallTrendsWidget extends ChartWidget
                             $query->whereDate('start_timestamp', $date)
                                   ->orWhereDate('created_at', $date);
                         })
-                        ->whereNotNull('appointment_id')
+                        ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                         ->count();
                     
                     // Conversion Rate berechnen
@@ -183,7 +183,7 @@ class CallTrendsWidget extends ChartWidget
             ->count();
             
         $thisWeekBooked = Call::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
             
         $lastWeek = Call::whereBetween('created_at', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])
@@ -191,7 +191,7 @@ class CallTrendsWidget extends ChartWidget
             ->count();
             
         $lastWeekBooked = Call::whereBetween('created_at', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
         
         $thisWeekRate = $thisWeek > 0 ? round(($thisWeekBooked / $thisWeek) * 100) : 0;

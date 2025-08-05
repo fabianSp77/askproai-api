@@ -29,17 +29,17 @@ class ManageApiCredentials extends Page
 
     public function mount($record): void
     {
-        $this->company = Company::with('apiCredentials')->findOrFail($record);
+        $this->company = Company::findOrFail($record);
         
         // Cal.com Daten laden
         $this->calcomData = [
-            'api_key' => $this->company->apiCredentials()->where('service', 'calcom')->where('key_type', 'api_key')->first()?->value ?? '',
-            'user_id' => $this->company->apiCredentials()->where('service', 'calcom')->where('key_type', 'user_id')->first()?->value ?? '',
+            'api_key' => $this->company->calcom_api_key ?? '',
+            'user_id' => $this->company->calcom_user_id ?? '',
         ];
         
         // Retell Daten laden
         $this->retellData = [
-            'api_key' => $this->company->apiCredentials()->where('service', 'retell')->where('key_type', 'api_key')->first()?->value ?? '',
+            'api_key' => $this->company->retell_api_key ?? '',
         ];
     }
 
@@ -97,14 +97,14 @@ class ManageApiCredentials extends Page
         ];
     }
 
-    public function save(): void
+        public function save(): void
     {
-        // Cal.com Credentials speichern
-        $this->saveCredential('calcom', 'api_key', $this->calcomData['api_key']);
-        $this->saveCredential('calcom', 'user_id', $this->calcomData['user_id']);
+        // Update company fields directly
+        $this->company->calcom_api_key = $this->calcomData['api_key'] ?: null;
+        $this->company->calcom_user_id = $this->calcomData['user_id'] ?: null;
+        $this->company->retell_api_key = $this->retellData['api_key'] ?: null;
         
-        // Retell Credentials speichern
-        $this->saveCredential('retell', 'api_key', $this->retellData['api_key']);
+        $this->company->save();
         
         Notification::make()
             ->title('Zugangsdaten gespeichert')
@@ -112,27 +112,7 @@ class ManageApiCredentials extends Page
             ->send();
     }
 
-    private function saveCredential(string $service, string $keyType, ?string $value): void
-    {
-        if (!$value) {
-            $this->company->apiCredentials()
-                ->where('service', $service)
-                ->where('key_type', $keyType)
-                ->delete();
-            return;
-        }
-
-        $this->company->apiCredentials()->updateOrCreate(
-            [
-                'service' => $service,
-                'key_type' => $keyType,
-            ],
-            [
-                'value' => $value,
-                'is_inherited' => false,
-            ]
-        );
-    }
+    // saveCredential method removed - using direct field updates
 
     public function testCalcomConnection(): void
     {

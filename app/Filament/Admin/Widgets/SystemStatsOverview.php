@@ -36,7 +36,7 @@ class SystemStatsOverview extends BaseWidget
         
         // Active companies
         $activeCompanies = Company::whereHas('branches', function($query) {
-            $query->where('active', true);
+            $query->where('is_active', true);
         })->count();
         
         // Total revenue this month (placeholder)

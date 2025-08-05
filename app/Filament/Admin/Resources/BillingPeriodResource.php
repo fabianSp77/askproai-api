@@ -45,8 +45,10 @@ class BillingPeriodResource extends Resource
                 Forms\Components\Select::make('branch_id')
                     ->relationship('branch', 'name'),
                 Forms\Components\DatePicker::make('start_date')
+                    ->label('Start')
                     ->required(),
                 Forms\Components\DatePicker::make('end_date')
+                    ->label('Ende')
                     ->required(),
                 Forms\Components\Select::make('status')
                     ->options([
@@ -134,7 +136,7 @@ class BillingPeriodResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\CallsRelationManager::class,
+            // RelationManagers\CallsRelationManager::class, // Removed - not a true DB relationship
         ];
     }
 

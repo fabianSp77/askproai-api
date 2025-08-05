@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PrepaidBalance extends Model
 {
@@ -34,211 +35,147 @@ class PrepaidBalance extends Model
         'auto_topup_threshold' => 'decimal:2',
         'auto_topup_amount' => 'decimal:2',
         'auto_topup_monthly_limit' => 'decimal:2',
+        'auto_topup_enabled' => 'boolean',
         'last_warning_sent_at' => 'datetime',
         'last_auto_topup_at' => 'datetime',
-        'auto_topup_enabled' => 'boolean',
-        'auto_topup_daily_count' => 'integer',
     ];
 
-    // Relationships
-    public function company()
+    /**
+     * Get the company that owns the prepaid balance.
+     */
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
-    public function transactions()
+    /**
+     * Get all transactions for this prepaid balance.
+     */
+    public function transactions(): HasMany
     {
-        return $this->hasMany(BalanceTransaction::class, 'company_id', 'company_id');
+        return $this->hasMany(PrepaidTransaction::class, 'company_id', 'company_id');
     }
 
-    // Atomic Operations
-    public function addBalance(float $amount, string $description, string $referenceType = null, string $referenceId = null)
+    /**
+     * Get the effective balance (balance + bonus - reserved)
+     */
+    public function getEffectiveBalanceAttribute(): float
     {
-        return DB::transaction(function () use ($amount, $description, $referenceType, $referenceId) {
-            $this->lockForUpdate();
-            
-            $balanceBefore = $this->balance;
-            $this->increment('balance', $amount);
-            
-            return BalanceTransaction::create([
-                'company_id' => $this->company_id,
-                'type' => 'topup',
-                'amount' => $amount,
-                'balance_before' => $balanceBefore,
-                'balance_after' => $this->balance,
-                'description' => $description,
-                'reference_type' => $referenceType,
-                'reference_id' => $referenceId,
-                'created_by' => auth()->guard('portal')->user()->id ?? null,
-            ]);
-        });
-    }
-    
-    public function addBonusBalance(float $amount, string $description, string $referenceType = null, string $referenceId = null)
-    {
-        return DB::transaction(function () use ($amount, $description, $referenceType, $referenceId) {
-            $this->lockForUpdate();
-            
-            $bonusBefore = $this->bonus_balance;
-            $this->increment('bonus_balance', $amount);
-            
-            return BalanceTransaction::create([
-                'company_id' => $this->company_id,
-                'type' => 'bonus',
-                'amount' => $amount,
-                'balance_before' => $this->balance,
-                'balance_after' => $this->balance,
-                'bonus_amount' => $amount,
-                'affects_bonus' => true,
-                'description' => $description,
-                'reference_type' => $referenceType,
-                'reference_id' => $referenceId,
-                'created_by' => auth()->guard('portal')->user()->id ?? null,
-            ]);
-        });
+        return $this->balance + $this->bonus_balance - $this->reserved_balance;
     }
 
-    public function deductBalance(float $amount, string $description, string $referenceType = null, string $referenceId = null)
-    {
-        return DB::transaction(function () use ($amount, $description, $referenceType, $referenceId) {
-            $this->lockForUpdate();
-            
-            if ($this->getEffectiveTotalBalance() < $amount) {
-                throw new \Exception('Insufficient balance');
-            }
-            
-            $balanceBefore = $this->balance;
-            $bonusBefore = $this->bonus_balance;
-            $remainingAmount = $amount;
-            $bonusUsed = 0;
-            
-            // Erst Bonus-Guthaben verwenden
-            if ($this->bonus_balance > 0 && $remainingAmount > 0) {
-                $bonusToUse = min($this->bonus_balance, $remainingAmount);
-                $this->decrement('bonus_balance', $bonusToUse);
-                $bonusUsed = $bonusToUse;
-                $remainingAmount -= $bonusToUse;
-            }
-            
-            // Dann normales Guthaben
-            if ($remainingAmount > 0) {
-                $this->decrement('balance', $remainingAmount);
-            }
-            
-            return BalanceTransaction::create([
-                'company_id' => $this->company_id,
-                'type' => 'charge',
-                'amount' => -$amount,
-                'balance_before' => $balanceBefore,
-                'balance_after' => $this->balance,
-                'bonus_amount' => -$bonusUsed,
-                'affects_bonus' => $bonusUsed > 0,
-                'description' => $description,
-                'reference_type' => $referenceType,
-                'reference_id' => $referenceId,
-                'created_by' => auth()->guard('portal')->user()->id ?? null,
-            ]);
-        });
-    }
-
-    public function reserveBalance(float $amount): bool
-    {
-        return DB::transaction(function () use ($amount) {
-            $this->lockForUpdate();
-            
-            if ($this->getEffectiveTotalBalance() < $amount) {
-                return false;
-            }
-            
-            $this->increment('reserved_balance', $amount);
-            
-            BalanceTransaction::create([
-                'company_id' => $this->company_id,
-                'type' => 'reservation',
-                'amount' => -$amount,
-                'balance_before' => $this->balance,
-                'balance_after' => $this->balance,
-                'description' => 'Balance reserved for ongoing call',
-                'created_by' => null,
-            ]);
-            
-            return true;
-        });
-    }
-
-    public function releaseReservedBalance(float $amount)
-    {
-        return DB::transaction(function () use ($amount) {
-            $this->lockForUpdate();
-            
-            $this->decrement('reserved_balance', min($amount, $this->reserved_balance));
-            
-            BalanceTransaction::create([
-                'company_id' => $this->company_id,
-                'type' => 'release',
-                'amount' => $amount,
-                'balance_before' => $this->balance,
-                'balance_after' => $this->balance,
-                'description' => 'Reserved balance released',
-                'created_by' => null,
-            ]);
-        });
-    }
-
-    // Helper Methods
-    public function getEffectiveBalance(): float
-    {
-        return $this->balance - $this->reserved_balance;
-    }
-    
-    public function getTotalBalance(): float
-    {
-        return $this->balance + $this->bonus_balance;
-    }
-    
-    public function getEffectiveTotalBalance(): float
-    {
-        return $this->getTotalBalance() - $this->reserved_balance;
-    }
-    
-    public function getWithdrawableBalance(): float
-    {
-        // Nur normales Guthaben kann ausgezahlt werden, nicht Bonus
-        return max(0, $this->balance - $this->reserved_balance);
-    }
-
+    /**
+     * Check if balance is low
+     */
     public function isLowBalance(): bool
     {
-        $threshold = ($this->low_balance_threshold / 100) * $this->balance;
-        return $this->getEffectiveBalance() <= $threshold;
+        return $this->effective_balance < $this->low_balance_threshold;
     }
 
-    public function hasInsufficientBalance(float $requiredAmount): bool
+    /**
+     * Check if auto-topup should be triggered
+     */
+    public function shouldAutoTopup(): bool
     {
-        return $this->getEffectiveBalance() < $requiredAmount;
+        if (!$this->auto_topup_enabled) {
+            return false;
+        }
+
+        if (!$this->auto_topup_threshold || !$this->auto_topup_amount) {
+            return false;
+        }
+
+        if (!$this->stripe_payment_method_id) {
+            return false;
+        }
+
+        return $this->effective_balance <= $this->auto_topup_threshold;
     }
 
-    public function getBalancePercentage(): float
+    /**
+     * Add balance
+     */
+    public function addBalance(float $amount, string $description = '', bool $isBonus = false): void
     {
-        if ($this->balance <= 0) {
-            return 0;
+        if ($isBonus) {
+            $this->bonus_balance += $amount;
+        } else {
+            $this->balance += $amount;
         }
         
-        return ($this->getEffectiveBalance() / $this->balance) * 100;
+        $this->save();
+
+        // Log transaction
+        if (class_exists(\App\Models\PrepaidTransaction::class)) {
+            \App\Models\PrepaidTransaction::create([
+                'company_id' => $this->company_id,
+                'type' => 'credit',
+                'amount' => $amount,
+                'balance_before' => $this->balance - $amount,
+                'balance_after' => $this->balance,
+                'description' => $description,
+                'is_bonus' => $isBonus,
+            ]);
+        }
     }
 
-    // Scopes
-    public function scopeLowBalance($query)
+    /**
+     * Deduct balance
+     */
+    public function deductBalance(float $amount, string $description = ''): bool
     {
-        return $query->whereRaw('(balance - reserved_balance) <= (low_balance_threshold / 100) * balance');
+        if ($this->effective_balance < $amount) {
+            return false;
+        }
+
+        // First deduct from regular balance
+        if ($this->balance >= $amount) {
+            $this->balance -= $amount;
+        } else {
+            // Use bonus balance for the remainder
+            $remainder = $amount - $this->balance;
+            $this->balance = 0;
+            $this->bonus_balance -= $remainder;
+        }
+
+        $this->save();
+
+        // Log transaction
+        if (class_exists(\App\Models\PrepaidTransaction::class)) {
+            \App\Models\PrepaidTransaction::create([
+                'company_id' => $this->company_id,
+                'type' => 'debit',
+                'amount' => $amount,
+                'balance_before' => $this->effective_balance + $amount,
+                'balance_after' => $this->effective_balance,
+                'description' => $description,
+            ]);
+        }
+
+        return true;
     }
 
-    public function scopeNeedsWarning($query)
+    /**
+     * Reserve balance
+     */
+    public function reserveBalance(float $amount): bool
     {
-        return $query->lowBalance()
-            ->where(function ($q) {
-                $q->whereNull('last_warning_sent_at')
-                  ->orWhere('last_warning_sent_at', '<', now()->subHours(24));
-            });
+        if ($this->effective_balance < $amount) {
+            return false;
+        }
+
+        $this->reserved_balance += $amount;
+        $this->save();
+
+        return true;
+    }
+
+    /**
+     * Release reserved balance
+     */
+    public function releaseBalance(float $amount): void
+    {
+        $this->reserved_balance = max(0, $this->reserved_balance - $amount);
+        $this->save();
     }
 }

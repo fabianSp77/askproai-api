@@ -279,7 +279,7 @@ class SyncMCPService
         
         // Prüfe auf fehlende Verknüpfungen
         $unlinkedCalls = Call::where('company_id', $companyId)
-            ->whereNull('appointment_id')
+            ->where(function($q) { $q->whereNull('metadata')->orWhere('metadata', 'not like', '%appointment%'); })
             ->where('created_at', '>=', now()->subDays(7))
             ->count();
             

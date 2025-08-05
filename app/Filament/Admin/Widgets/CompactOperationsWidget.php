@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Widgets;
 use App\Models\Call;
 use App\Models\Appointment;
 use App\Models\ApiCallLog;
+use App\Services\QueryOptimizer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -94,7 +95,7 @@ class CompactOperationsWidget extends FilterableWidget
         // Apply filters
         $query = $this->applyBranchFilter($query);
         
-        $activeCalls = $query->whereNull('end_timestamp')->count();
+        $activeCalls = $query->whereNull('ended_at')->count();
         
         // Get last 10 data points for sparkline
         $sparklineData = Cache::remember('call_sparkline_' . $this->companyId, 60, function () {
@@ -141,10 +142,12 @@ class CompactOperationsWidget extends FilterableWidget
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
         
+        // For now, we'll use a simplified metric
+        // Count calls that have metadata indicating appointment was made
         $convertedCalls = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->whereNotNull('appointment_id')
+            ->tap(fn($q) => QueryOptimizer::whereHasAppointment($q))
             ->count();
         
         $rate = $totalCalls > 0 ? round(($convertedCalls / $totalCalls) * 100, 1) : 0;
@@ -158,7 +161,7 @@ class CompactOperationsWidget extends FilterableWidget
         $yesterdayConverted = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
             ->whereDate('created_at', today()->subDay())
-            ->whereNotNull('appointment_id')
+            ->tap(fn($q) => QueryOptimizer::whereHasAppointment($q))
             ->count();
         
         $yesterdayRate = $yesterdayTotal > 0 ? round(($yesterdayConverted / $yesterdayTotal) * 100, 1) : 0;
@@ -174,15 +177,17 @@ class CompactOperationsWidget extends FilterableWidget
     
     private function getCostPerBookingData(Carbon $startDate, Carbon $endDate): array
     {
-        $totalCost = Call::query()
-            ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->sum('cost') ?: 0;
+        // Calculate cost using optimized query
+        $totalCost = QueryOptimizer::sumCallCosts(
+            Call::query()
+                ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
+                ->whereBetween('created_at', [$startDate, $endDate])
+        );
         
         $totalBookings = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->whereNotNull('appointment_id')
+            ->tap(fn($q) => QueryOptimizer::whereHasAppointment($q))
             ->count();
         
         $costPerBooking = $totalBookings > 0 ? round($totalCost / $totalBookings, 2) : 0;

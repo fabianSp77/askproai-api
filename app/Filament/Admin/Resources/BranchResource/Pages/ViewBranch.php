@@ -28,14 +28,14 @@ class ViewBranch extends ViewRecord
     protected function getHeaderWidgets(): array
     {
         return [
-            BranchStatsWidget::class,
+            // BranchStatsWidget::class, // Temporarily disabled due to Livewire registration issue
         ];
     }
     
     protected function getFooterWidgets(): array
     {
         return [
-            BranchDetailsWidget::class,
+            // BranchDetailsWidget::class, // Temporarily disabled due to Livewire registration issue
         ];
     }
 

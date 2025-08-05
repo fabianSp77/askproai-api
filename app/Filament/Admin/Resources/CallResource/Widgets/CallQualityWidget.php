@@ -49,7 +49,7 @@ class CallQualityWidget extends ChartWidget
                         $query->whereJsonContains('analysis->sentiment', 'negative')
                               ->orWhereJsonContains('analysis->urgency', 'high');
                     })
-                    ->whereNull('appointment_id')
+                    ->where(function($q) { $q->whereNull('metadata')->orWhere('metadata', 'not like', '%appointment%'); })
                     ->count();
                 
                 $data = [
@@ -153,7 +153,7 @@ class CallQualityWidget extends ChartWidget
                 $query->whereJsonContains('analysis->sentiment', 'negative')
                       ->orWhereJsonContains('analysis->urgency', 'high');
             })
-            ->whereNull('appointment_id')
+            ->where(function($q) { $q->whereNull('metadata')->orWhere('metadata', 'not like', '%appointment%'); })
             ->count();
         
         if ($criticalCalls > 0) {

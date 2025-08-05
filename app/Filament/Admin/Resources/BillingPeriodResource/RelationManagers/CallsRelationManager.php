@@ -103,7 +103,7 @@ class CallsRelationManager extends RelationManager
                     ->label('Has Booking')
                     ->query(fn (Builder $query): Builder => 
                         $query->where(function ($q) {
-                            $q->whereNotNull('appointment_id')
+                            $q->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                               ->orWhere('appointment_scheduled', true);
                         })
                     )

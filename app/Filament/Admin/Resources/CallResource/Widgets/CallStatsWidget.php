@@ -23,7 +23,7 @@ class CallStatsWidget extends BaseWidget
             ->avg('duration_sec') ?? 0;
             
         $conversionRate = Call::whereDate('created_at', today())
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
         
         $conversionPercentage = $todayCallsCount > 0 
@@ -92,7 +92,7 @@ class CallStatsWidget extends BaseWidget
             $date = today()->subDays($i);
             $totalCalls = Call::whereDate('created_at', $date)->count();
             $conversions = Call::whereDate('created_at', $date)
-                ->whereNotNull('appointment_id')
+                ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                 ->count();
                 
             $data[] = $totalCalls > 0 ? round(($conversions / $totalCalls) * 100) : 0;

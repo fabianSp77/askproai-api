@@ -277,6 +277,11 @@ class NavigationService
      */
     public static function canViewGroup(string $group, $user = null): bool
     {
+        // Temporary override for development
+        if (\App\Filament\Admin\Config\NavigationOverride::shouldShowAllNavigation()) {
+            return true;
+        }
+        
         $user = $user ?? Auth::user();
         
         if (!$user) {

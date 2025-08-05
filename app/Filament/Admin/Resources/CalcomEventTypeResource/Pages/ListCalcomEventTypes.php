@@ -7,6 +7,7 @@ use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Notifications\Notification;
 
 class ListCalcomEventTypes extends ListRecords
 {
@@ -54,9 +55,16 @@ class ListCalcomEventTypes extends ListRecords
                     }
                     
                     if (empty($errors)) {
-                        $this->notify('success', "$totalSynced Event-Types erfolgreich synchronisiert.");
+                        Notification::make()
+                            ->title("$totalSynced Event-Types erfolgreich synchronisiert.")
+                            ->success()
+                            ->send();
                     } else {
-                        $this->notify('warning', "$totalSynced Event-Types synchronisiert. Fehler: " . implode(', ', $errors));
+                        Notification::make()
+                            ->title("$totalSynced Event-Types synchronisiert.")
+                            ->body("Fehler: " . implode(', ', $errors))
+                            ->warning()
+                            ->send();
                     }
                 })
         ];

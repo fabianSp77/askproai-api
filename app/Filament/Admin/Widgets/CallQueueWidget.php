@@ -119,7 +119,7 @@ class CallQueueWidget extends Widget
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
             ->when($this->selectedBranchId, fn($q) => $q->where('branch_id', $this->selectedBranchId))
             ->whereDate('created_at', $today)
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
             
         $avgDuration = Call::query()

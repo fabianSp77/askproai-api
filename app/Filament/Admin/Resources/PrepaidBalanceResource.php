@@ -81,7 +81,7 @@ class PrepaidBalanceResource extends Resource
                     ->sortable(),
                 TextColumn::make('effective_balance')
                     ->label('Verfügbar')
-                    ->getStateUsing(fn ($record) => $record->getEffectiveBalance())
+                    ->getStateUsing(fn ($record) => $record->effective_balance)
                     ->money('EUR')
                     ->sortable()
                     ->color(fn ($state) => $state > 20 ? 'success' : ($state > 0 ? 'warning' : 'danger')),
@@ -93,7 +93,7 @@ class PrepaidBalanceResource extends Resource
                     ->label('Letzte Aufladung')
                     ->getStateUsing(function ($record) {
                         $lastTopup = $record->transactions()
-                            ->where('type', 'credit')
+                            ->where('type', 'topup')
                             ->latest()
                             ->first();
                         return $lastTopup ? $lastTopup->created_at->diffForHumans() : '-';
@@ -102,7 +102,7 @@ class PrepaidBalanceResource extends Resource
                     ->label('Monatliche Nutzung')
                     ->getStateUsing(function ($record) {
                         $usage = $record->transactions()
-                            ->where('type', 'debit')
+                            ->where('type', 'charge')
                             ->whereMonth('created_at', now()->month)
                             ->whereYear('created_at', now()->year)
                             ->sum('amount');

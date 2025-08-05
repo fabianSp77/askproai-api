@@ -61,7 +61,7 @@ class ListStaff extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            StaffProductivityWidget::class,
+            // StaffProductivityWidget::class, // Temporarily disabled due to Livewire registration issue
         ];
     }
     

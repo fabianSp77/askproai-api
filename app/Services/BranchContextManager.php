@@ -95,7 +95,7 @@ class BranchContextManager
             if ($user->hasRole(['super_admin', 'Super Admin'])) {
                 return Branch::withoutGlobalScope(\App\Scopes\TenantScope::class)
                     ->with('company')
-                    ->where('active', true)
+                    ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
             }
@@ -103,7 +103,7 @@ class BranchContextManager
             // Company admin sees all company branches
             if ($user->hasRole(['admin', 'Admin']) && $user->company_id) {
                 return Branch::where('company_id', $user->company_id)
-                    ->where('active', true)
+                    ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
             }
@@ -111,7 +111,7 @@ class BranchContextManager
             // Staff sees assigned branches
             if ($user->staff) {
                 return $user->staff->branches()
-                    ->where('active', true)
+                    ->where('is_active', true)
                     ->orderBy('name')
                     ->get();
             }

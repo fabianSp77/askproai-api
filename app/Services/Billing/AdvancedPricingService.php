@@ -147,7 +147,9 @@ class AdvancedPricingService
         $threeMonthsAgo = Carbon::now()->subMonths(3);
         
         $usage = DB::table('calls')
-            ->join('appointments', 'calls.appointment_id', '=', 'appointments.id')
+            ->leftJoin('appointments', function($join) {
+                $join->whereRaw("JSON_EXTRACT(calls.metadata, '$.appointment_id') = appointments.id");
+            })
             ->where('appointments.customer_id', $customer->id)
             ->where('calls.created_at', '>=', $threeMonthsAgo)
             ->selectRaw('AVG(calls.duration_sec / 60) as avg_minutes_per_month')

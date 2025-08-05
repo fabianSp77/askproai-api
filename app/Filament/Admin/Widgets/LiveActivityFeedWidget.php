@@ -102,10 +102,10 @@ class LiveActivityFeedWidget extends FilterableWidget
         
         // API issues
         $apiErrors = ApiCallLog::query()
-            ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
+            ->withoutGlobalScope(\App\Scopes\TenantScope::class)
             ->where('created_at', '>=', $now->subMinutes(15))
-            ->whereNotIn('response_status', [200, 201, 204]) // Non-success status codes
-            ->whereNotNull('response_status')
+            ->whereNotIn('status_code', [200, 201, 204]) // Non-success status codes
+            ->whereNotNull('status_code')
             ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get()

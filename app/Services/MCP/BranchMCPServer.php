@@ -61,7 +61,7 @@ class BranchMCPServer
                     'phone_numbers' => $branch->phoneNumbers->map(function($phone) {
                         return [
                             'id' => $phone->id,
-                            'number' => $phone->number,
+                            'phone_number' => $phone->number,
                             'type' => $phone->type,
                             'is_primary' => $phone->is_primary,
                             'is_active' => $phone->is_active

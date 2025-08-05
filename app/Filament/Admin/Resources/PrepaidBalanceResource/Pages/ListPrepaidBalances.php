@@ -22,7 +22,8 @@ class ListPrepaidBalances extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            PrepaidBalanceResource\Widgets\PrepaidBalanceStats::class,
+            // Temporarily disabled due to Livewire registration issue
+            // \App\Filament\Admin\Resources\PrepaidBalanceResource\Widgets\PrepaidBalanceStats::class,
         ];
     }
     

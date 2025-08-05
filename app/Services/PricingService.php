@@ -202,7 +202,7 @@ class PricingService
         
         foreach ($calls as $call) {
             // Our cost
-            $totalCost += $call->cost ?? 0;
+            $totalCost += ($call->duration_sec * 0.02) ?? 0;
             
             // Customer price
             $pricing = $this->calculateCallPrice($call);

@@ -81,7 +81,7 @@ class CalcomEventType extends Model
         return $this->belongsToMany(
             Staff::class,
             'staff_event_types',
-            'calcom_event_type_id',
+            'event_type_id',
             'staff_id'
         )
         ->using(StaffEventType::class)

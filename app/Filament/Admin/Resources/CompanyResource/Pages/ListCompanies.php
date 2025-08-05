@@ -18,7 +18,7 @@ class ListCompanies extends ListRecords
                 ->label('🚀 Quick Setup (3 Min)')
                 ->icon('heroicon-o-sparkles')
                 ->color('success')
-                ->url(route('filament.admin.pages.quick-setup-wizard'))
+                ->url('/admin/quick-setup-wizard')
                 ->size('lg'),
             Actions\CreateAction::make()
                 ->label('Manuell anlegen')

@@ -318,7 +318,7 @@ class AppointmentExtractionService
         // Get calls with transcripts but no appointments
         $calls = Call::withoutGlobalScopes()
             ->whereNotNull('transcript')
-            ->whereNull('appointment_id')
+            ->where(function($q) { $q->whereNull('metadata')->orWhere('metadata', 'not like', '%appointment%'); })
             ->where('transcript', 'LIKE', '%termin%')
             ->orderBy('created_at', 'desc')
             ->limit(100)

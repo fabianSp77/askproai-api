@@ -38,7 +38,13 @@ class ListCustomers extends ListRecords
                 ->label('Duplikate finden')
                 ->icon('heroicon-o-magnifying-glass-circle')
                 ->color('warning')
-                ->url(fn () => CustomerResource::getUrl('duplicates')),
+                ->action(function () {
+                    Notification::make()
+                        ->title('Duplikate-Suche')
+                        ->body('Die Duplikate-Funktion wird in Kürze verfügbar sein.')
+                        ->warning()
+                        ->send();
+                }),
             Actions\Action::make('export')
                 ->label('Exportieren')
                 ->icon('heroicon-o-arrow-down-tray')
@@ -56,10 +62,11 @@ class ListCustomers extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
-            \App\Filament\Admin\Widgets\CustomerKpiWidget::class,
-            \App\Filament\Admin\Widgets\CustomerFunnelWidget::class,
-            \App\Filament\Admin\Widgets\CustomerSourceWidget::class,
+            // Temporarily disabled due to Livewire component loading issues
+            // \App\Filament\Admin\Widgets\GlobalFilterWidget::class,
+            // \App\Filament\Admin\Widgets\CustomerKpiWidget::class,
+            // \App\Filament\Admin\Widgets\CustomerFunnelWidget::class,
+            // \App\Filament\Admin\Widgets\CustomerSourceWidget::class,
         ];
     }
     

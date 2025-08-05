@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Models\Customer;
 use Filament\Notifications\Notification;
 use Filament\Forms;
+use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 
 class FindDuplicates extends Page implements HasTable
 {
@@ -20,6 +21,8 @@ class FindDuplicates extends Page implements HasTable
     protected static string $resource = CustomerResource::class;
     
     protected static string $view = 'filament.admin.resources.customer-resource.pages.find-duplicates';
+    
+    protected static string $routePath = 'duplicates';
     
     protected static ?string $title = 'Duplikate finden';
     

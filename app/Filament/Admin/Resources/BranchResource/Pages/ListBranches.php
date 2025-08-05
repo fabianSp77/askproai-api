@@ -55,7 +55,7 @@ class ListBranches extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            BranchPerformanceWidget::class,
+            // BranchPerformanceWidget::class, // Temporarily disabled due to Livewire registration issue
         ];
     }
     

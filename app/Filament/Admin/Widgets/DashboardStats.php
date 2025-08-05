@@ -62,7 +62,7 @@ class DashboardStats extends StatsOverviewWidget
             
             // Conversion rate
             $callsWithAppointment = Call::whereDate('created_at', $today)
-                ->whereNotNull('appointment_id')
+                ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                 ->count();
             $conversionRate = $callsToday > 0 ? round(($callsWithAppointment / $callsToday) * 100, 1) : 0;
             

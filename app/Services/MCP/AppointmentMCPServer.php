@@ -76,7 +76,7 @@ class AppointmentMCPServer
                     'start_time' => $appointment->start_time,
                     'end_time' => $appointment->end_time,
                     'status' => $appointment->status,
-                    'price' => $appointment->price,
+                    'price' => $appointment->service->price,
                     'notes' => $appointment->notes,
                     'calcom_booking_id' => $appointment->calcom_booking_id,
                     'calcom_booking_uid' => $appointment->calcom_booking_uid,

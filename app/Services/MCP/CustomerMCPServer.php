@@ -325,7 +325,7 @@ class CustomerMCPServer
                         'id' => $call->id,
                         'retell_call_id' => $call->retell_call_id,
                         'start_timestamp' => $call->start_timestamp,
-                        'end_timestamp' => $call->end_timestamp,
+                        'ended_at' => $call->end_timestamp,
                         'duration' => $call->duration,
                         'status' => $call->status,
                         'direction' => $call->direction,

@@ -98,7 +98,7 @@ class ViewPrepaidBalanceEnhanced extends ViewRecord
                                     
                                 TextEntry::make('effective_balance')
                                     ->label('Verfügbar')
-                                    ->getStateUsing(fn ($record) => $record->getEffectiveBalance())
+                                    ->getStateUsing(fn ($record) => $record->effective_balance)
                                     ->money('EUR')
                                     ->size('lg')
                                     ->color(fn ($state) => $state > 20 ? 'success' : ($state > 0 ? 'warning' : 'danger'))

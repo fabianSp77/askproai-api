@@ -118,9 +118,9 @@ class SmartBookingService
         // Zuerst über Telefonnummer
         if ($toNumber) {
             $branch = DB::table('phone_numbers')
-                ->where('number', $toNumber)
+                ->where('phone_number', $toNumber)
                 ->join('branches', 'phone_numbers.branch_id', '=', 'branches.id')
-                ->where('branches.active', true)
+                ->where('branches.is_active', true)
                 ->select('branches.*')
                 ->first();
                 

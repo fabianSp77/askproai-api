@@ -63,7 +63,7 @@ class KpiOverviewWidget extends BaseWidget
             $callStats = DB::table('calls')
                 ->selectRaw('
                     COUNT(*) as total_calls,
-                    SUM(CASE WHEN appointment_id IS NOT NULL THEN 1 ELSE 0 END) as converted_calls
+                    SUM(CASE WHEN (metadata IS NOT NULL AND metadata LIKE '%appointment%') THEN 1 ELSE 0 END) as converted_calls
                 ')
                 ->when($companyId, function ($q) use ($companyId) {
                     $q->whereExists(function ($q) use ($companyId) {

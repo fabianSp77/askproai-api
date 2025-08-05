@@ -1,5 +1,7 @@
 <?php
 
+// WARNING: Potential circular reference detected. Consider using method injection instead of constructor injection.
+
 namespace App\Services;
 
 use App\Models\BalanceTopup;

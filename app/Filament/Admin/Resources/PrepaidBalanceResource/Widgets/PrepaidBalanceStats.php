@@ -5,25 +5,28 @@ namespace App\Filament\Admin\Resources\PrepaidBalanceResource\Widgets;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Models\PrepaidBalance;
-use App\Models\BalanceTransaction;
+use App\Models\PrepaidTransaction;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Lazy;
 
+#[Lazy]
 class PrepaidBalanceStats extends BaseWidget
 {
+    protected static ?string $pollingInterval = '10s';
     protected function getStats(): array
     {
         $totalBalance = PrepaidBalance::sum('balance');
         $totalReserved = PrepaidBalance::sum('reserved_balance');
         $companiesWithLowBalance = PrepaidBalance::whereRaw('balance - reserved_balance < low_balance_threshold')->count();
         
-        // Monthly revenue
-        $monthlyRevenue = BalanceTransaction::where('type', 'credit')
+        // Monthly revenue - fixed query
+        $monthlyRevenue = PrepaidTransaction::where('type', 'topup')
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('amount');
             
-        // Monthly usage
-        $monthlyUsage = BalanceTransaction::where('type', 'debit')
+        // Monthly usage - fixed query
+        $monthlyUsage = PrepaidTransaction::where('type', 'deduction')
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('amount');

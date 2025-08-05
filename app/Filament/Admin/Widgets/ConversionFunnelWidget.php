@@ -69,7 +69,7 @@ class ConversionFunnelWidget extends Widget
             $bookingAttempts = Call::where('company_id', $companyId)
                 ->whereBetween('created_at', $dateRange)
                 ->where(function ($query) {
-                    $query->whereNotNull('appointment_id')
+                    $query->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                         ->orWhere('call_type', 'appointment_request')
                         ->orWhere('transcript', 'like', '%termin%')
                         ->orWhere('transcript', 'like', '%appointment%');
@@ -79,7 +79,7 @@ class ConversionFunnelWidget extends Widget
             // Stage 4: Successful Bookings
             $successfulBookings = Call::where('company_id', $companyId)
                 ->whereBetween('created_at', $dateRange)
-                ->whereNotNull('appointment_id')
+                ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                 ->count();
             
             // Stage 5: Confirmed Appointments

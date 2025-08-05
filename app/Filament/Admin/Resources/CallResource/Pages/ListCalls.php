@@ -150,11 +150,11 @@ class ListCalls extends ListRecords
                 ->where('company_id', $companyId)
                 ->selectRaw("
                     COUNT(*) as total,
-                    SUM(CASE WHEN DATE(start_timestamp) = CURDATE() THEN 1 ELSE 0 END) as today,
-                    SUM(CASE WHEN appointment_id IS NOT NULL THEN 1 ELSE 0 END) as with_appointments,
-                    SUM(CASE WHEN appointment_id IS NULL THEN 1 ELSE 0 END) as without_appointments,
+                    SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) as today,
+                    SUM(CASE WHEN (metadata IS NOT NULL AND metadata LIKE '%appointment%') THEN 1 ELSE 0 END) as with_appointments,
+                    SUM(CASE WHEN (metadata IS NULL OR metadata NOT LIKE '%appointment%') THEN 1 ELSE 0 END) as without_appointments,
                     SUM(CASE WHEN duration_sec > 300 THEN 1 ELSE 0 END) as long_calls,
-                    SUM(CASE WHEN call_status = 'failed' THEN 1 ELSE 0 END) as failed
+                    SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed
                 ")
                 ->first();
         });
@@ -167,19 +167,19 @@ class ListCalls extends ListRecords
                 
             'today' => Tab::make('Heute')
                 ->icon('heroicon-m-calendar')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereDate('start_timestamp', today()))
+                ->modifyQueryUsing(fn (Builder $query) => $query->whereDate('created_at', today()))
                 ->badge($counts->today)
                 ->badgeColor('primary'),
                 
             'with_appointments' => Tab::make('Mit Termin')
                 ->icon('heroicon-m-check-circle')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereNotNull('appointment_id'))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); }))
                 ->badge($counts->with_appointments)
                 ->badgeColor('success'),
                 
             'without_appointments' => Tab::make('Ohne Termin')
                 ->icon('heroicon-m-x-circle')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereNull('appointment_id'))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where(function($q) { $q->whereNull('metadata')->orWhere('metadata', 'not like', '%appointment%'); }))
                 ->badge($counts->without_appointments)
                 ->badgeColor('warning'),
                 
@@ -191,7 +191,7 @@ class ListCalls extends ListRecords
                 
             'failed' => Tab::make('Fehlgeschlagen')
                 ->icon('heroicon-m-exclamation-triangle')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('call_status', 'failed'))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', 'failed'))
                 ->badge($counts->failed)
                 ->badgeColor('danger'),
         ];

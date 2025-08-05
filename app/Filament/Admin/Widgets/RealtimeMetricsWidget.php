@@ -43,7 +43,7 @@ class RealtimeMetricsWidget extends Widget
         // Current metrics - active calls have start_timestamp but no end_timestamp
         $activeCalls = Call::where('company_id', $companyId)
             ->whereNotNull('start_timestamp')
-            ->whereNull('end_timestamp')
+            ->whereNull('ended_at')
             ->where('created_at', '>=', $fiveMinutesAgo)
             ->count();
         

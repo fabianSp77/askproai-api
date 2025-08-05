@@ -113,9 +113,9 @@ class RoiCalculationService
             ->when($branch, fn($q) => $q->where('branch_id', $branch->id))
             ->select(
                 DB::raw('COUNT(*) as total_calls'),
-                DB::raw('COALESCE(SUM(cost), 0) as total_cost'),
-                DB::raw('COALESCE(AVG(cost), 0) as avg_cost_per_call'),
-                DB::raw('SUM(CASE WHEN appointment_id IS NOT NULL THEN 1 ELSE 0 END) as calls_with_bookings'),
+                DB::raw('COALESCE(SUM(duration_sec * 0.02), 0) as total_cost'),
+                DB::raw('COALESCE(AVG(duration_sec * 0.02), 0) as avg_cost_per_call'),
+                DB::raw('SUM(CASE WHEN metadata IS NOT NULL AND metadata LIKE \'%appointment%\' THEN 1 ELSE 0 END) as calls_with_bookings'),
                 DB::raw('COALESCE(AVG(duration_sec), 0) as avg_duration_seconds'),
                 DB::raw('COALESCE(SUM(duration_sec), 0) as total_duration_seconds')
             )
@@ -139,6 +139,7 @@ class RoiCalculationService
     {
         $query = DB::table('appointments')
             ->join('branches', 'appointments.branch_id', '=', 'branches.id')
+            ->leftJoin('services', 'appointments.service_id', '=', 'services.id')
             ->where('branches.company_id', $company->id)
             ->whereBetween('appointments.starts_at', [$startDate->startOfDay(), $endDate->endOfDay()])
             ->whereIn('appointments.status', ['completed', 'confirmed'])
@@ -146,8 +147,8 @@ class RoiCalculationService
             
         $result = $query->select(
             DB::raw('COUNT(*) as total_appointments'),
-            DB::raw('COALESCE(SUM(appointments.price), 0) as total_revenue'),
-            DB::raw('COALESCE(AVG(appointments.price), 0) as avg_revenue_per_appointment'),
+            DB::raw('COALESCE(SUM(services.price), 0) as total_revenue'),
+            DB::raw('COALESCE(AVG(services.price), 0) as avg_revenue_per_appointment'),
             DB::raw('COUNT(DISTINCT appointments.customer_id) as unique_customers')
         )->first();
         
@@ -173,8 +174,8 @@ class RoiCalculationService
             ->select(
                 DB::raw('HOUR(created_at) as hour'),
                 DB::raw('COUNT(*) as call_count'),
-                DB::raw('COALESCE(SUM(cost), 0) as hour_cost'),
-                DB::raw('SUM(CASE WHEN appointment_id IS NOT NULL THEN 1 ELSE 0 END) as bookings')
+                DB::raw('COALESCE(SUM(duration_sec * 0.02), 0) as hour_cost'),
+                DB::raw('SUM(CASE WHEN metadata IS NOT NULL AND metadata LIKE \'%appointment%\' THEN 1 ELSE 0 END) as bookings')
             )
             ->groupBy('hour')
             ->get()
@@ -183,13 +184,14 @@ class RoiCalculationService
         // Get appointment revenue by hour
         $hourlyRevenue = DB::table('appointments')
             ->join('branches', 'appointments.branch_id', '=', 'branches.id')
+            ->leftJoin('services', 'appointments.service_id', '=', 'services.id')
             ->where('branches.company_id', $company->id)
             ->whereBetween('appointments.starts_at', [$startDate->startOfDay(), $endDate->endOfDay()])
             ->whereIn('appointments.status', ['completed', 'confirmed'])
             ->when($branch, fn($q) => $q->where('appointments.branch_id', $branch->id))
             ->select(
                 DB::raw('HOUR(appointments.starts_at) as hour'),
-                DB::raw('COALESCE(SUM(appointments.price), 0) as hour_revenue')
+                DB::raw('COALESCE(SUM(services.price), 0) as hour_revenue')
             )
             ->groupBy('hour')
             ->get()
@@ -321,7 +323,7 @@ class RoiCalculationService
             ->when($branch, fn($q) => $q->where('branch_id', $branch->id))
             ->select(
                 DB::raw('DATE(created_at) as date'),
-                DB::raw('COALESCE(SUM(cost), 0) as daily_cost'),
+                DB::raw('COALESCE(SUM(duration_sec * 0.02), 0) as daily_cost'),
                 DB::raw('COUNT(*) as call_count')
             )
             ->groupBy('date')
@@ -331,13 +333,14 @@ class RoiCalculationService
         // Get daily aggregated data for appointments
         $dailyAppointments = DB::table('appointments')
             ->join('branches', 'appointments.branch_id', '=', 'branches.id')
+            ->leftJoin('services', 'appointments.service_id', '=', 'services.id')
             ->where('branches.company_id', $company->id)
             ->whereBetween('appointments.starts_at', [$startDate->startOfDay(), $endDate->endOfDay()])
             ->whereIn('appointments.status', ['completed', 'confirmed'])
             ->when($branch, fn($q) => $q->where('appointments.branch_id', $branch->id))
             ->select(
                 DB::raw('DATE(appointments.starts_at) as date'),
-                DB::raw('COALESCE(SUM(appointments.price), 0) as daily_revenue')
+                DB::raw('COALESCE(SUM(services.price), 0) as daily_revenue')
             )
             ->groupBy('date')
             ->get()

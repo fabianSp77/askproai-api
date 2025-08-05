@@ -26,6 +26,21 @@ class WhatsAppBusinessMCPServer extends BaseMCPServer
         $this->phoneNumberId = config('services.whatsapp.phone_number_id');
     }
 
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    
+    public function getVersion(): string
+    {
+        return $this->version;
+    }
+    
+    public function getTools(): array
+    {
+        return $this->listTools();
+    }
+    
     public function setCompany(Company $company): self
     {
         $this->company = $company;

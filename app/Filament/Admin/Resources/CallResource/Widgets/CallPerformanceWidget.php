@@ -127,7 +127,7 @@ class CallPerformanceWidget extends BaseWidget
                       ->orWhereDate('created_at', $today);
             })
             ->whereJsonContains('analysis->appointment_requested', true)
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
         
         $bookingRate = $appointmentRequests > 0 ? round(($successfulBookings / $appointmentRequests) * 100) : 0;
@@ -145,7 +145,7 @@ class CallPerformanceWidget extends BaseWidget
                       ->orWhereDate('created_at', today()->subDay());
             })
             ->whereJsonContains('analysis->appointment_requested', true)
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
             
         $yesterdayRate = $yesterdayRequests > 0 ? round(($yesterdayBookings / $yesterdayRequests) * 100) : 0;
@@ -163,7 +163,7 @@ class CallPerformanceWidget extends BaseWidget
     {
         // Anrufe mit Terminwunsch aber ohne gebuchten Termin
         $followUpNeeded = Call::whereJsonContains('analysis->appointment_requested', true)
-            ->whereNull('appointment_id')
+            ->where(function($q) { $q->whereNull('metadata')->orWhere('metadata', 'not like', '%appointment%'); })
             ->where(function($query) {
                 $query->whereDate('created_at', '>=', now()->subDays(7));
             })
@@ -171,7 +171,7 @@ class CallPerformanceWidget extends BaseWidget
         
         // Zusätzlich: Negative Stimmung ohne Termin
         $negativeMood = Call::whereJsonContains('analysis->sentiment', 'negative')
-            ->whereNull('appointment_id')
+            ->where(function($q) { $q->whereNull('metadata')->orWhere('metadata', 'not like', '%appointment%'); })
             ->where(function($query) {
                 $query->whereDate('created_at', '>=', now()->subDays(3));
             })
@@ -207,7 +207,7 @@ class CallPerformanceWidget extends BaseWidget
                 $query->whereDate('start_timestamp', $today)
                       ->orWhereDate('created_at', $today);
             })
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
         
         $costPerAppointment = $bookedAppointments > 0 ? round($totalCost / $bookedAppointments, 2) : 0;
@@ -217,7 +217,7 @@ class CallPerformanceWidget extends BaseWidget
             ->sum('cost');
             
         $weekAppointments = Call::where('created_at', '>=', now()->subDays(7))
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
             
         $weekAverage = $weekAppointments > 0 ? round($weekCost / $weekAppointments, 2) : 0;
@@ -269,7 +269,7 @@ class CallPerformanceWidget extends BaseWidget
                           ->orWhereDate('created_at', $date);
                 })
                 ->whereJsonContains('analysis->appointment_requested', true)
-                ->whereNotNull('appointment_id')
+                ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                 ->count();
             
             $data[] = $requests > 0 ? round(($bookings / $requests) * 100) : 0;
@@ -284,7 +284,7 @@ class CallPerformanceWidget extends BaseWidget
             $date = today()->subDays($i);
             $cost = Call::whereDate('created_at', $date)->sum('cost');
             $appointments = Call::whereDate('created_at', $date)
-                ->whereNotNull('appointment_id')
+                ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                 ->count();
             
             $data[] = $appointments > 0 ? round($cost / $appointments, 2) : 0;

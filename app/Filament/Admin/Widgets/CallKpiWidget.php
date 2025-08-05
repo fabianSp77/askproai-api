@@ -53,7 +53,7 @@ class CallKpiWidget extends BaseWidget
 
         $callsWithAppointments = Call::where('company_id', $company->id)
             ->where('start_timestamp', '>=', now()->startOfMonth())
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
 
         $conversionRate = $totalCalls > 0

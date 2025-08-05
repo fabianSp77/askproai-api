@@ -42,13 +42,15 @@ class IntegrationTestService
             $appointmentTime = Carbon::tomorrow()->setHour(10)->setMinute(0);
             
             $appointment = Appointment::create([
+                'company_id' => $branch->company_id,
                 'customer_id' => $customer->id,
                 'branch_id' => $branch->id,
                 'staff_id' => $branch->staff()->first()?->id,
-                'start_time' => $appointmentTime,
-                'end_time' => $appointmentTime->copy()->addMinutes(30),
+                'starts_at' => $appointmentTime,
+                'ends_at' => $appointmentTime->copy()->addMinutes(30),
                 'status' => 'confirmed',
                 'notes' => 'Test-Buchung erstellt über Integration Test',
+                'source' => 'phone',
             ]);
 
             // TODO: Actually book in Cal.com using CalcomService

@@ -34,7 +34,8 @@ class ViewCustomer extends ViewRecord
     protected function getHeaderWidgets(): array
     {
         return [
-            CustomerResource\Widgets\CustomerStatsWidget::class,
+            // Temporarily disabled due to Livewire component loading issues
+            // CustomerResource\Widgets\CustomerStatsWidget::class,
         ];
     }
 }

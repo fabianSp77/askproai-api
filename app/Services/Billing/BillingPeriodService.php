@@ -70,12 +70,12 @@ class BillingPeriodService
     {
         // Get all calls for the period
         $calls = Call::where('company_id', $period->company_id)
-            ->whereBetween('start_time', [$period->start_date, $period->end_date->endOfDay()])
+            ->whereBetween('start_timestamp', [$period->start_date, $period->end_date->endOfDay()])
             ->where('status', 'completed')
             ->get();
 
         // Calculate total minutes
-        $totalSeconds = $calls->sum('duration_seconds');
+        $totalSeconds = $calls->sum('duration_sec');
         $totalMinutes = round($totalSeconds / 60, 2);
 
         // Calculate overage

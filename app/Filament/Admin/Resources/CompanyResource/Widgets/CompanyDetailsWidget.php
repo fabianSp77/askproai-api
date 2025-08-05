@@ -4,7 +4,7 @@ namespace App\Filament\Admin\Resources\CompanyResource\Widgets;
 
 use App\Models\PhoneNumber;
 use App\Models\Call;
-use App\Models\BalanceTransaction;
+use App\Models\PrepaidTransaction;
 use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
@@ -43,7 +43,7 @@ class CompanyDetailsWidget extends Widget
             ->get();
 
         // Letzte Transaktionen
-        $recentTransactions = BalanceTransaction::where('company_id', $this->record->id)
+        $recentTransactions = PrepaidTransaction::where('company_id', $this->record->id)
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();

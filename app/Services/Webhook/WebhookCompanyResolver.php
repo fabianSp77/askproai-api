@@ -184,7 +184,7 @@ class WebhookCompanyResolver
         
         // Direct lookup in phone_numbers table without tenant scope
         $phoneRecord = PhoneNumber::withoutGlobalScope(\App\Models\Scopes\CompanyScope::class)
-            ->where('number', $cleanNumber)
+            ->where('phone_number', $cleanNumber)
             ->where('is_active', true)
             ->first();
             

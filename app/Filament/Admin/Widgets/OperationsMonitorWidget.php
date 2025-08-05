@@ -165,7 +165,7 @@ class OperationsMonitorWidget extends Widget
         $activeCalls = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
             ->where(function ($q) use ($now) {
-                $q->whereNull('end_timestamp')
+                $q->whereNull('ended_at')
                     ->orWhere('end_timestamp', '>', $now->subMinute());
             })
             ->count();
@@ -187,7 +187,7 @@ class OperationsMonitorWidget extends Widget
             ->map(fn($call) => [
                 'branch' => $call->branch?->name ?? 'Unknown',
                 'duration' => gmdate('i:s', $call->duration_sec),
-                'cost' => $call->cost ?? 0,
+                'cost' => ($call->duration_sec * 0.02) ?? 0,
             ]);
         
         return [
@@ -212,7 +212,7 @@ class OperationsMonitorWidget extends Widget
         $convertedCalls = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
             ->whereDate('created_at', $today)
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
         
         $conversionRate = $totalCalls > 0 
@@ -243,7 +243,7 @@ class OperationsMonitorWidget extends Widget
         $convertedCalls = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
             ->whereDate('created_at', $yesterday)
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
         
         return $totalCalls > 0 
@@ -265,7 +265,7 @@ class OperationsMonitorWidget extends Widget
         $totalBookings = Call::query()
             ->when($this->companyId, fn($q) => $q->where('company_id', $this->companyId))
             ->whereDate('created_at', $today)
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
         
         $costPerBooking = $totalBookings > 0 
@@ -314,7 +314,7 @@ class OperationsMonitorWidget extends Widget
             ->selectRaw('
                 branch_id,
                 COUNT(*) as total_calls,
-                SUM(CASE WHEN appointment_id IS NOT NULL THEN 1 ELSE 0 END) as converted_calls
+                SUM(CASE WHEN (metadata IS NOT NULL AND metadata LIKE '%appointment%') THEN 1 ELSE 0 END) as converted_calls
             ')
             ->groupBy('branch_id')
             ->get();

@@ -56,9 +56,9 @@ class EditBranch extends EditRecord
     protected function getHeaderWidgets(): array
     {
         return [
-            RetellAgentProvisioningWidget::make([
-                'record' => $this->record,
-            ]),
+            // RetellAgentProvisioningWidget::make([
+            //     'record' => $this->record,
+            // ]), // Temporarily disabled due to Livewire registration issue
         ];
     }
     

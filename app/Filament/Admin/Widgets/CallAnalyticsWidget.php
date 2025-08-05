@@ -29,7 +29,7 @@ class CallAnalyticsWidget extends ChartWidget
                 $hour->copy()->startOfHour(),
                 $hour->copy()->endOfHour()
             ])->selectRaw('COUNT(*) as total')
-            ->selectRaw('COUNT(CASE WHEN appointment_id IS NOT NULL THEN 1 END) as converted')
+            ->selectRaw('COUNT(CASE WHEN metadata IS NOT NULL AND metadata LIKE '%appointment%' THEN 1 END) as converted')
             ->selectRaw('AVG(duration_sec) as avg_duration')->first();
             
             $data['calls'][] = $hourData && property_exists($hourData, 'total') ? ($hourData->total ?? 0) : 0;
@@ -143,7 +143,7 @@ class CallAnalyticsWidget extends ChartWidget
         $todayStats = Call::whereDate('created_at', $today)
             ->select(
                 DB::raw('COUNT(*) as total'),
-                DB::raw('COUNT(CASE WHEN appointment_id IS NOT NULL THEN 1 END) as appointments'),
+                DB::raw('COUNT(CASE WHEN metadata IS NOT NULL AND metadata LIKE '%appointment%' THEN 1 END) as appointments'),
                 DB::raw('AVG(duration_sec) as avg_duration')
             )->first();
         

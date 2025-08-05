@@ -40,7 +40,7 @@ class RecentActivityWidget extends Widget
         
         // Recent calls (last 5)
         $recentCalls = Call::with(['appointment', 'appointment.customer'])
-            ->whereNotNull('end_timestamp')
+            ->whereNotNull('ended_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()

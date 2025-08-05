@@ -2,127 +2,160 @@
 
 namespace App\Filament\Admin\Resources\CallResource\Widgets;
 
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Models\Call;
 use Carbon\Carbon;
+use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 
-class CallAnalyticsWidget extends BaseWidget
+class CallAnalyticsWidget extends ChartWidget
 {
-    protected static ?string $pollingInterval = '30s';
+    protected static ?string $heading = '📞 KI-Telefon Analytics';
+    protected static ?int $sort = 1;
+    protected int | string | array $columnSpan = 'full';
+    protected static ?string $pollingInterval = '60s';
     
-    protected function getStats(): array
+    protected function getData(): array
     {
-        $today = Carbon::today();
-        $yesterday = Carbon::yesterday();
+        $now = Carbon::now();
+        $data = [];
+        $labels = [];
         
-        // Get current user's company_id (if not super admin)
-        $user = auth()->user();
-        $companyId = null;
-        
-        if ($user && !$user->hasRole('super_admin')) {
-            $companyId = $user->company_id;
-        }
-        
-        // Build base query
-        $baseQuery = $companyId 
-            ? Call::where('company_id', $companyId)
-            : Call::withoutGlobalScope(\App\Scopes\TenantScope::class);
-        
-        // Today's calls
-        $todaysCalls = (clone $baseQuery)->whereDate('created_at', $today)->count();
-        $yesterdaysCalls = (clone $baseQuery)->whereDate('created_at', $yesterday)->count();
-        $callsChange = $yesterdaysCalls > 0 
-            ? round((($todaysCalls - $yesterdaysCalls) / $yesterdaysCalls) * 100)
-            : 0;
-        
-        // Average duration
-        $avgDurationToday = (clone $baseQuery)
-            ->whereDate('created_at', $today)
-            ->whereNotNull('duration_sec')
-            ->avg('duration_sec') ?? 0;
-        $avgDurationFormatted = gmdate('i:s', $avgDurationToday);
-        
-        // Conversion rate (calls that resulted in appointments)
-        $totalCallsThisMonth = (clone $baseQuery)
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->count();
-        $callsWithAppointments = (clone $baseQuery)
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->whereNotNull('appointment_id')
-            ->count();
-        $conversionRate = $totalCallsThisMonth > 0 
-            ? round(($callsWithAppointments / $totalCallsThisMonth) * 100, 1)
-            : 0;
-        
-        // Sentiment distribution
-        $sentimentCalls = (clone $baseQuery)
-            ->whereDate('created_at', '>=', now()->subDays(7))
-            ->whereNotNull('analysis')
-            ->get();
-        
-        $sentimentCounts = [
-            'positive' => 0,
-            'negative' => 0,
-            'neutral' => 0
-        ];
-        
-        foreach ($sentimentCalls as $call) {
-            if ($call->analysis && isset($call->analysis['sentiment'])) {
-                $sentiment = $call->analysis['sentiment'];
-                if (isset($sentimentCounts[$sentiment])) {
-                    $sentimentCounts[$sentiment]++;
-                }
-            }
-        }
-        
-        $positiveCount = $sentimentCounts['positive'];
-        $negativeCount = $sentimentCounts['negative'];
-        $neutralCount = $sentimentCounts['neutral'];
-        $totalSentiment = $positiveCount + $negativeCount + $neutralCount;
-        
-        $positiveRate = $totalSentiment > 0 
-            ? round(($positiveCount / $totalSentiment) * 100, 1)
-            : 0;
-        
-        // Chart data for last 7 days
-        $chartData = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $chartData[] = (clone $baseQuery)
-                ->whereDate('created_at', now()->subDays($i))
-                ->count();
+        // Get hourly call data for the last 24 hours
+        for ($i = 23; $i >= 0; $i--) {
+            $hour = $now->copy()->subHours($i);
+            $labels[] = $hour->format('H:00');
+            
+            $hourData = Call::whereBetween('created_at', [
+                $hour->copy()->startOfHour(),
+                $hour->copy()->endOfHour()
+            ])->selectRaw('COUNT(*) as total')
+            ->selectRaw('COUNT(CASE WHEN metadata IS NOT NULL AND metadata LIKE '%appointment%' THEN 1 END) as converted')
+            ->selectRaw('AVG(duration_sec) as avg_duration')->first();
+            
+            $data['calls'][] = $hourData && property_exists($hourData, 'total') ? ($hourData->total ?? 0) : 0;
+            $data['conversions'][] = $hourData && property_exists($hourData, 'converted') ? ($hourData->converted ?? 0) : 0;
+            $data['avg_duration'][] = ($hourData && property_exists($hourData, 'avg_duration') && $hourData->avg_duration) ? round($hourData->avg_duration / 60, 1) : 0;
         }
         
         return [
-            Stat::make('Anrufe heute', $todaysCalls)
-                ->description($callsChange >= 0 ? "+{$callsChange}% vs. gestern" : "{$callsChange}% vs. gestern")
-                ->descriptionIcon($callsChange >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
-                ->chart($chartData)
-                ->color($callsChange >= 0 ? 'success' : 'danger'),
-                
-            Stat::make('Ø Anrufdauer', $avgDurationFormatted)
-                ->description('Heute')
-                ->descriptionIcon('heroicon-m-clock')
-                ->color('info'),
-                
-            Stat::make('Konversionsrate', "{$conversionRate}%")
-                ->description("{$callsWithAppointments} von {$totalCallsThisMonth} Anrufen")
-                ->descriptionIcon('heroicon-m-calendar-days')
-                ->color($conversionRate > 30 ? 'success' : 'warning'),
-                
-            Stat::make('Positive Stimmung', "{$positiveRate}%")
-                ->description("Letzte 7 Tage")
-                ->descriptionIcon('heroicon-m-face-smile')
-                ->chart([$negativeCount, $neutralCount, $positiveCount])
-                ->color($positiveRate > 60 ? 'success' : 'warning'),
+            'datasets' => [
+                [
+                    'label' => 'Anrufe',
+                    'data' => $data['calls'],
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.2)',
+                    'borderColor' => 'rgba(59, 130, 246, 1)',
+                    'borderWidth' => 2,
+                    'tension' => 0.4,
+                ],
+                [
+                    'label' => 'Terminbuchungen',
+                    'data' => $data['conversions'],
+                    'backgroundColor' => 'rgba(16, 185, 129, 0.2)',
+                    'borderColor' => 'rgba(16, 185, 129, 1)',
+                    'borderWidth' => 2,
+                    'tension' => 0.4,
+                ],
+                [
+                    'label' => 'Ø Dauer (Min)',
+                    'data' => $data['avg_duration'],
+                    'backgroundColor' => 'rgba(251, 191, 36, 0.2)',
+                    'borderColor' => 'rgba(251, 191, 36, 1)',
+                    'borderWidth' => 2,
+                    'tension' => 0.4,
+                    'yAxisID' => 'y1',
+                ],
+            ],
+            'labels' => $labels,
         ];
     }
     
-    public static function canView(): bool
+    protected function getOptions(): array
     {
-        return true;
+        return [
+            'responsive' => true,
+            'maintainAspectRatio' => false,
+            'plugins' => [
+                'legend' => [
+                    'display' => true,
+                    'position' => 'top',
+                ],
+                'tooltip' => [
+                    'mode' => 'index',
+                    'intersect' => false,
+                    'callbacks' => [],
+                ],
+            ],
+            'scales' => [
+                'x' => [
+                    'display' => true,
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Uhrzeit',
+                    ],
+                ],
+                'y' => [
+                    'type' => 'linear',
+                    'display' => true,
+                    'position' => 'left',
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Anzahl',
+                    ],
+                ],
+                'y1' => [
+                    'type' => 'linear',
+                    'display' => true,
+                    'position' => 'right',
+                    'title' => [
+                        'display' => true,
+                        'text' => 'Minuten',
+                    ],
+                    'grid' => [
+                        'drawOnChartArea' => false,
+                    ],
+                ],
+            ],
+        ];
+    }
+    
+    protected function getType(): string
+    {
+        return 'line';
+    }
+    
+    public function getDescription(): ?string
+    {
+        $stats = $this->getQuickStats();
+        
+        return sprintf(
+            '📊 Heute: %d Anrufe • %d Termine gebucht • %.1f%% Conversion • Ø %.1f Min/Anruf',
+            $stats['total_calls'],
+            $stats['appointments'],
+            $stats['conversion_rate'],
+            $stats['avg_duration']
+        );
+    }
+    
+    private function getQuickStats(): array
+    {
+        $today = Carbon::today();
+        
+        $todayStats = Call::whereDate('created_at', $today)
+            ->select(
+                DB::raw('COUNT(*) as total'),
+                DB::raw('COUNT(CASE WHEN metadata IS NOT NULL AND metadata LIKE '%appointment%' THEN 1 END) as appointments'),
+                DB::raw('AVG(duration_sec) as avg_duration')
+            )->first();
+        
+        $conversionRate = ($todayStats && property_exists($todayStats, 'total') && property_exists($todayStats, 'appointments') && $todayStats->total > 0) 
+            ? round(($todayStats->appointments / $todayStats->total) * 100, 1)
+            : 0;
+        
+        return [
+            'total_calls' => $todayStats && property_exists($todayStats, 'total') ? ($todayStats->total ?? 0) : 0,
+            'appointments' => $todayStats && property_exists($todayStats, 'appointments') ? ($todayStats->appointments ?? 0) : 0,
+            'conversion_rate' => $conversionRate,
+            'avg_duration' => ($todayStats && property_exists($todayStats, 'avg_duration') && $todayStats->avg_duration) ? round($todayStats->avg_duration / 60, 1) : 0,
+        ];
     }
 }

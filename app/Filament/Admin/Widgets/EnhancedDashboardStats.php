@@ -57,7 +57,7 @@ class EnhancedDashboardStats extends StatsOverviewWidget
         
         // Calls with appointments are considered successful
         $successfulCalls = Call::whereDate('created_at', $today)
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
         
         $successRate = $totalCallsToday > 0 
@@ -119,7 +119,7 @@ class EnhancedDashboardStats extends StatsOverviewWidget
         // Calls to appointments conversion
         $totalCalls = Call::where('created_at', '>=', $last7Days)->count();
         $callsWithAppointments = Call::where('created_at', '>=', $last7Days)
-            ->whereNotNull('appointment_id')
+            ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
             ->count();
         
         $conversionRate = $totalCalls > 0 
@@ -297,7 +297,7 @@ class EnhancedDashboardStats extends StatsOverviewWidget
             $date = Carbon::today()->subDays($i);
             $calls = Call::whereDate('created_at', $date)->count();
             $conversions = Call::whereDate('created_at', $date)
-                ->whereNotNull('appointment_id')
+                ->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                 ->count();
             $data[] = $calls > 0 ? round(($conversions / $calls) * 100) : 0;
         }

@@ -80,7 +80,7 @@ class PerformanceMetricsWidget extends ChartWidget
                     $hour,
                     $hour->copy()->addHour()
                 ])->where(function($query) {
-                    $query->whereNotNull('appointment_id')
+                    $query->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                           ->orWhereHas('appointmentViaCallId');
                 })->count();
                 
@@ -122,7 +122,7 @@ class PerformanceMetricsWidget extends ChartWidget
                     $current,
                     $nextPeriod
                 ])->where(function($query) {
-                    $query->whereNotNull('appointment_id')
+                    $query->where(function($q) { $q->whereNotNull('metadata')->where('metadata', 'like', '%appointment%'); })
                           ->orWhereHas('appointmentViaCallId');
                 })->count();
                 

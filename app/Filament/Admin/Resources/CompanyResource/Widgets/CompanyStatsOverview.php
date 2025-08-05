@@ -31,7 +31,7 @@ class CompanyStatsOverview extends BaseWidget
         // Mitarbeiter
         $staffCount = Staff::withoutGlobalScope(\App\Scopes\TenantScope::class)
             ->where('company_id', $this->record->id)
-            ->where('is_active', true)
+            ->where('active', true)
             ->count();
 
         // Kunden

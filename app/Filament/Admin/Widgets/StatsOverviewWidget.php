@@ -1,5 +1,5 @@
 <?php
-namespace App\Filament\Admin\Widgets;
+namespace App\Filament\Widgets;
 
 use App\Models\Customer;
 use App\Models\Company;
@@ -15,17 +15,17 @@ class StatsOverviewWidget extends BaseWidget
         return [
             Stat::make('Kunden', Customer::count())
                 ->description('Gesamt-Anzahl der Kunden')
-                ->descriptionIcon('heroicon-o-users')
+                ->descriptionIcon('heroicon-m-users')
                 ->color('success'),
             
             Stat::make('Neue Kunden', Customer::whereMonth('created_at', now()->month)->count())
                 ->description('In diesem Monat')
-                ->descriptionIcon('heroicon-o-user-plus')
+                ->descriptionIcon('heroicon-m-user-plus')
                 ->color('primary'),
                 
             Stat::make('Unternehmen', Company::count())
                 ->description('Registrierte Firmen')
-                ->descriptionIcon('heroicon-o-building-office')
+                ->descriptionIcon('heroicon-m-building-office')
                 ->color('warning'),
         ];
     }
