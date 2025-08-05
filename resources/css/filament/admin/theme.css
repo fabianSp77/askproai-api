@@ -1,31 +1,34 @@
 /* 
  * AskProAI Admin Theme - Clean Architecture
- * Date: 2025-08-02
- * Version: 2.0
+ * Date: 2025-08-05
+ * Version: 2.1 - Fixed Navigation Issue #479
  * 
  * This replaces 85+ CSS files with a clean, maintainable structure
  */
 
 /* Base Filament Theme */
-@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import "../../../../vendor/filament/filament/resources/css/theme.css";
 
 /* Core Layout & Structure */
-@import './core.css';
+@import "./core.css";
 
 /* Responsive Design System */
-@import './responsive.css';
+@import "./responsive.css";
 
 /* Component Styles */
-@import './components.css';
+@import "./components.css";
 
 /* Utility Classes */
-@import './utilities.css';
+@import "./utilities.css";
 
 /* Menu Fixes - Ensures navigation is clickable */
-@import './menu-fixes.css';
+@import "./menu-fixes.css";
 
 /* Login Page Optimization - Clean and accessible login */
-@import './login-optimized.css';
+@import "./login-optimized.css";
+
+/* NAVIGATION PRIORITY FIX - MUST BE LAST - Issue #479 */
+@import "./navigation-priority-fix.css";
 
 /* EMERGENCY CLICK FIX - Override blocking overlay */
 @media (max-width: 1023px) {
@@ -70,5 +73,3 @@ textarea,
     cursor: pointer !important;
     z-index: 1 !important;
 }
-
-/* Pseudo-elements should not block clicks by default - removed pointer-events: none */

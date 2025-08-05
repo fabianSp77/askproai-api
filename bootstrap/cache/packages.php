@@ -101,25 +101,18 @@
       0 => 'Filament\\Widgets\\WidgetsServiceProvider',
     ),
   ),
+  'inertiajs/inertia-laravel' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Inertia\\ServiceProvider',
+    ),
+  ),
   'kirschbaum-development/eloquent-power-joins' => 
   array (
     'providers' => 
     array (
       0 => 'Kirschbaum\\PowerJoins\\PowerJoinsServiceProvider',
-    ),
-  ),
-  'kirschbaum-development/laravel-loop' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Kirschbaum\\Loop\\LoopServiceProvider',
-    ),
-  ),
-  'laravel/breeze' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Laravel\\Breeze\\BreezeServiceProvider',
     ),
   ),
   'laravel/fortify' => 
@@ -147,25 +140,11 @@
       0 => 'Laravel\\Passport\\PassportServiceProvider',
     ),
   ),
-  'laravel/sail' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Laravel\\Sail\\SailServiceProvider',
-    ),
-  ),
   'laravel/sanctum' => 
   array (
     'providers' => 
     array (
       0 => 'Laravel\\Sanctum\\SanctumServiceProvider',
-    ),
-  ),
-  'laravel/tinker' => 
-  array (
-    'providers' => 
-    array (
-      0 => 'Laravel\\Tinker\\TinkerServiceProvider',
     ),
   ),
   'livewire/livewire' => 
@@ -209,17 +188,6 @@
     'providers' => 
     array (
       0 => 'PragmaRX\\Google2FALaravel\\ServiceProvider',
-    ),
-  ),
-  'prism-php/prism' => 
-  array (
-    'aliases' => 
-    array (
-      'PrismServer' => 'Prism\\Prism\\Facades\\PrismServer',
-    ),
-    'providers' => 
-    array (
-      0 => 'Prism\\Prism\\PrismServiceProvider',
     ),
   ),
   'ryangjchandler/blade-capture-directive' => 

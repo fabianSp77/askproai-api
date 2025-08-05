@@ -35,7 +35,7 @@ try {
             'subscription_status' => 'trial',
             'trial_ends_at' => now()->addDays(30),
             'is_active' => true,
-            'retell_api_key' => 'key_6ff998ba48e842092e04a5455d19',
+            'retell_api_key' => env('RETELL_API_KEY'),
             'settings' => [
                 'needs_appointment_booking' => false,
                 'service_type' => 'call_center',
