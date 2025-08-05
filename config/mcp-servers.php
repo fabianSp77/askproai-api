@@ -30,6 +30,12 @@ return [
             'description' => 'Direct database operations with safety checks',
         ],
 
+        'testsprite' => [
+            'enabled' => true,
+            'class' => App\Services\MCP\TestSpriteMCPServer::class,
+            'description' => 'AI-powered automated testing and test generation',
+        ],
+
         'queue' => [
             'enabled' => true,
             'class' => App\Services\MCP\QueueMCPServer::class,

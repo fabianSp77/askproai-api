@@ -183,4 +183,9 @@ return [
         'api_token' => env('FIGMA_API_TOKEN'),
         'base_url' => 'https://api.figma.com/v1',
     ],
+
+    'testsprite' => [
+        'api_key' => env('TESTSPRITE_API_KEY'),
+        'api_url' => env('TESTSPRITE_API_URL', 'https://api.testsprite.com/v1'),
+    ],
 ];
