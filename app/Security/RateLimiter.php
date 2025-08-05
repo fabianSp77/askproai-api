@@ -104,7 +104,7 @@ class RateLimiter
     /**
      * Get limit configuration for endpoint
      */
-    public function getLimit(string $endpoint): array
+    private function getLimit(string $endpoint): array
     {
         // Check exact match first
         if (isset($this->limits[$endpoint])) {

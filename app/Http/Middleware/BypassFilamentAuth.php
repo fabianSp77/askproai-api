@@ -13,17 +13,11 @@ class BypassFilamentAuth
      */
     public function handle(Request $request, Closure $next)
     {
-        // Check if we're in the admin panel
-        if ($request->is('admin*')) {
-            // Force login demo user if not authenticated
-            if (! Auth::check()) {
-                $user = \App\Models\User::where('email', 'demo@askproai.de')->first();
-                if ($user) {
-                    Auth::login($user);
-                }
-            }
-        }
-
+        // SECURITY FIX: Disabled auto-login bypass
+        // This middleware was automatically logging in users without authentication
+        // which is a CRITICAL security vulnerability
+        
+        // Simply pass through without any authentication bypass
         return $next($request);
     }
 }

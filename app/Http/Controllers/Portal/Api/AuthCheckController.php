@@ -3,37 +3,25 @@
 namespace App\Http\Controllers\Portal\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class AuthCheckController extends Controller
 {
-    public function check()
+    /**
+     * Check if the user is authenticated
+     */
+    public function check(Request $request): JsonResponse
     {
-        $portalUser = Auth::guard('portal')->user();
-        $webUser = Auth::guard('web')->user();
-        
+        if (auth()->check()) {
+            return response()->json([
+                'authenticated' => true,
+                'user' => auth()->user()->only(['id', 'name', 'email']),
+            ]);
+        }
+
         return response()->json([
-            'authenticated' => $portalUser !== null || $webUser !== null,
-            'portal' => [
-                'authenticated' => $portalUser !== null,
-                'user' => $portalUser ? [
-                    'id' => $portalUser->id,
-                    'email' => $portalUser->email,
-                    'name' => $portalUser->name,
-                    'company_id' => $portalUser->company_id,
-                ] : null
-            ],
-            'web' => [
-                'authenticated' => $webUser !== null,
-                'user' => $webUser ? [
-                    'id' => $webUser->id,
-                    'email' => $webUser->email,
-                    'name' => $webUser->name,
-                ] : null
-            ],
-            'csrf_token' => csrf_token(),
-            'session_id' => session()->getId(),
-        ]);
+            'authenticated' => false,
+        ], 401);
     }
 }
