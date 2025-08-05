@@ -8,42 +8,30 @@ import focus from '@alpinejs/focus';
 // Import cookie consent manager
 import './cookie-consent';
 
-// Import sidebar fix for black screen issue
-import './sidebar-fix';
+// Import Company Integration Portal enhancements
+import './company-integration-portal-clean';
 
-// Import unified dropdown manager - ONLY ONE dropdown solution
-import './dropdown-manager';
+// Import Alpine dropdown fixes
+import './alpine-dropdown-fix';
+
+// Import Ultimate Portal Interactions
+import './ultimate-portal-interactions';
 
 // Import Table Responsive Enhancements
 import './table-responsive';
 
-// Import Ultimate UI System
+// Import Ultimate UI System - The complete UI/UX implementation
 import './ultimate-ui-system';
 
 // Import Retell Configuration Center
 import './retell-configuration-center';
-
-// Import Menu State Manager
-import './menu-state-manager';
-import './menu-state-integration';
-
-// Import Admin Tooltips System
-import './admin-tooltips';
 
 window.Alpine = Alpine;
 
 Alpine.plugin(collapse);
 Alpine.plugin(persist);
 Alpine.plugin(focus);
-
-// Single Alpine.start() call
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        Alpine.start();
-    });
-} else {
-    Alpine.start();
-}
+Alpine.start();
 
 // Initialize hotkeys for command palette
 import hotkeys from 'hotkeys-js';

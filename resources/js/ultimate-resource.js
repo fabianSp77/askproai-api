@@ -323,7 +323,7 @@ document.addEventListener('alpine:init', () => {
             preview.style.left = `${rect.left}px`;
             
             // Fetch preview data
-            fetch(`/api/preview/${recordId}`, { credentials: 'include' })
+            fetch(`/api/preview/${recordId}`)
                 .then(res => res.json())
                 .then(data => {
                     preview.innerHTML = this.renderPreview(data);

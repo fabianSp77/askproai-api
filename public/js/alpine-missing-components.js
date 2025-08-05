@@ -157,5 +157,14 @@ window.isBranchSelected = function(id) {
     return false;
 };
 
+// Add missing showDateFilter global
+window.showDateFilter = false;
+
+// Add other potentially missing globals
+window.expandedCompanies = [];
+window.searchQuery = '';
+window.dateFilterDropdown = false;
+window.hasSearchResults = function() { return true; };
+
 // Log that components are loaded
 console.log('✅ Alpine missing components loaded');

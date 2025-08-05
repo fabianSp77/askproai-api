@@ -299,7 +299,6 @@ class QuickDocsEnhanced {
             const response = await fetch('/api/docs/ai-answer', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify({ question })
             });
             
@@ -385,8 +384,7 @@ class QuickDocsEnhanced {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                credentials: 'include'
+                }
             });
             
             if (response.ok) {
@@ -467,7 +465,6 @@ class QuickDocsEnhanced {
         fetch('/api/analytics/track', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
             body: JSON.stringify({
                 event: eventName,
                 properties: data,

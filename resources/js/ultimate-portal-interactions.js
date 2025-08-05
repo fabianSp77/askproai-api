@@ -204,12 +204,23 @@ class UltimatePortal {
         });
     }
 
-    // Smooth page transitions - DISABLED due to click handler conflicts
+    // Smooth page transitions
     initializePageTransitions() {
-        // DISABLED: This was preventing normal clicks from working
-        // The preventDefault on all links was causing the double-click issue
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a[href^="/"]');
+            if (link && !link.hasAttribute('wire:click')) {
+                e.preventDefault();
+                const href = link.getAttribute('href');
+                
+                document.body.classList.add('page-transition-exit-active');
+                
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 300);
+            }
+        });
         
-        // Only add entrance animation
+        // Entrance animation
         document.body.classList.add('page-transition-enter');
         setTimeout(() => {
             document.body.classList.remove('page-transition-enter');

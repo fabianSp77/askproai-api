@@ -89,7 +89,6 @@ document.addEventListener('alpine:init', () => {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                credentials: 'include',
                     body: JSON.stringify({
                         test: true
                     })
@@ -111,8 +110,7 @@ document.addEventListener('alpine:init', () => {
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                credentials: 'include'
+                    }
                 });
                 
                 const data = await response.json();

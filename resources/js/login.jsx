@@ -1,33 +1,31 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
-import deDE from 'antd/locale/de_DE';
-import Login from './pages/auth/Login';
-import 'antd/dist/reset.css';
+// Login Page Bundle
+import "./bootstrap";
+import React from "react";
+import ReactDOM from "react-dom/client";
 
-// Setup axios defaults
-import axios from 'axios';
-axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-axios.defaults.headers.common['Accept'] = 'application/json';
+// Login styles
+import "../css/app.css";
 
-// Setup CSRF token
-const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-if (token) {
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = token;
-}
-
-// Mount the login app
-const appElement = document.getElementById('login-app');
-if (appElement) {
-    const csrfToken = appElement.dataset.csrf || '';
-    
-    const root = ReactDOM.createRoot(appElement);
-    root.render(
-        <BrowserRouter>
-            <ConfigProvider locale={deDE}>
-                <Login csrfToken={csrfToken} />
-            </ConfigProvider>
-        </BrowserRouter>
+// Simple login component
+function LoginApp() {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="max-w-md w-full space-y-8">
+                <div>
+                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        AskProAI Login
+                    </h2>
+                </div>
+            </div>
+        </div>
     );
 }
+
+// Initialize login if container exists
+const loginContainer = document.getElementById("login-app");
+if (loginContainer) {
+    const root = ReactDOM.createRoot(loginContainer);
+    root.render(<LoginApp />);
+}
+
+console.log("AskProAI Login initialized");
