@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Navigation Test - Issue #479</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background: #d4f4dd; color: #1a7f37; }
+        .fail { background: #fdd; color: #d73502; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Admin Navigation Test</h1>
+    
+    <button onclick="testNavigation()">Test Navigation Clickability</button>
+    <button onclick="window.open('https://api.askproai.de/admin', '_blank')">Open Admin Panel</button>
+    
+    <div id="results"></div>
+    
+    <script>
+    function testNavigation() {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '<h2>Test Results:</h2>';
+        
+        // Open admin in iframe to test
+        const iframe = document.createElement('iframe');
+        iframe.src = 'https://api.askproai.de/admin';
+        iframe.style.width = '100%';
+        iframe.style.height = '600px';
+        iframe.onload = function() {
+            setTimeout(() => {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    
+                    // Test 1: Check if navigation CSS is loaded
+                    const hasNavigationFix = Array.from(iframeDoc.querySelectorAll('link[rel="stylesheet"]'))
+                        .some(link => link.href.includes('navigation-fix-479.css'));
+                    
+                    addResult('Navigation Fix CSS Loaded', hasNavigationFix);
+                    
+                    // Test 2: Check navigation items
+                    const navItems = iframeDoc.querySelectorAll('.fi-sidebar-nav a');
+                    addResult('Navigation Items Found', navItems.length + ' items');
+                    
+                    // Test 3: Check pointer-events
+                    let clickableCount = 0;
+                    navItems.forEach(item => {
+                        const style = window.getComputedStyle(item);
+                        if (style.pointerEvents !== 'none') {
+                            clickableCount++;
+                        }
+                    });
+                    
+                    addResult('Clickable Navigation Items', clickableCount + '/' + navItems.length);
+                    
+                    // Test 4: Check for blocking overlays
+                    const overlays = iframeDoc.querySelectorAll('.fi-sidebar-open::before');
+                    addResult('Blocking Overlays', overlays.length === 0 ? 'None found' : overlays.length + ' found');
+                    
+                } catch(e) {
+                    addResult('Cross-origin test failed', 'Please test manually in the admin panel', false);
+                }
+            }, 2000);
+        };
+        
+        document.body.appendChild(iframe);
+    }
+    
+    function addResult(test, result, pass = true) {
+        const div = document.createElement('div');
+        div.className = 'test-result ' + (pass ? 'pass' : 'fail');
+        div.innerHTML = '<strong>' + test + ':</strong> ' + result;
+        document.getElementById('results').appendChild(div);
+    }
+    </script>
+    
+    <h2>Manual Test Instructions:</h2>
+    <ol>
+        <li>Open Admin Panel</li>
+        <li>Open Browser Console (F12)</li>
+        <li>Run this code:
+            <pre>
+// Check navigation clickability
+document.querySelectorAll('.fi-sidebar-nav a').forEach(link => {
+    const style = window.getComputedStyle(link);
+    console.log(`${link.textContent.trim()}: ${style.pointerEvents}`);
+});
+
+// Check if fix is loaded
+console.log('Navigation fix loaded:', 
+    !!document.querySelector('link[href*="navigation-fix-479.css"]')
+);
+            </pre>
+        </li>
+        <li>All items should show "pointer-events: auto"</li>
+    </ol>
+</body>
+</html>

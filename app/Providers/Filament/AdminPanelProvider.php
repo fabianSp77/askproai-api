@@ -137,6 +137,9 @@ class AdminPanelProvider extends PanelProvider
                 ' : ''
             ) */
             ->sidebarCollapsibleOnDesktop() // Only use one collapsible option
-            ;
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => '<link rel="stylesheet" href="/css/navigation-fix-479.css">'
+            );
     }
 }

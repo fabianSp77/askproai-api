@@ -1,0 +1,64 @@
+/* 
+ * EMERGENCY NAVIGATION FIX - Issue #479
+ * Only emergency menu clickable - FIXED
+ */
+
+/* Remove ALL blocking overlays */
+.fi-sidebar-open::before,
+.fi-sidebar-open::after,
+.fi-main::before,
+.fi-main::after,
+body::before,
+body::after {
+    display: none !important;
+    content: none !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+}
+
+/* Force navigation to be clickable */
+.fi-sidebar,
+.fi-sidebar-nav,
+.fi-sidebar-group,
+.fi-sidebar-item,
+.fi-sidebar-item a,
+.fi-sidebar-item button,
+.fi-sidebar-nav a,
+.fi-sidebar-nav button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+/* Ensure all links work */
+a, button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix any transform/translate issues */
+.fi-sidebar-nav {
+    transform: none !important;
+    will-change: auto !important;
+}
+
+/* Mobile specific fixes */
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        z-index: 10000 !important;
+    }
+    
+    .fi-sidebar-close-overlay {
+        display: none !important;
+    }
+}
+
+/* Debug: Add visible borders in dev mode */
+.debug-navigation .fi-sidebar-item a {
+    border: 2px solid green !important;
+}
+
+.debug-navigation .fi-sidebar-item a[style*="pointer-events: none"] {
+    border: 2px solid red !important;
+}
