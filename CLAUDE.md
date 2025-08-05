@@ -133,6 +133,7 @@ php artisan db:show
 - [API Documentation](./docs/API_DOCUMENTATION.md) - Endpoint reference
 
 ### Deep Dives
+- [Codebase Analysis](./codebase_analysis.md) - Complete system overview
 - [Retell Integration](./docs/integrations/RETELL_INTEGRATION.md)
 - [Cal.com Setup](./docs/integrations/CALCOM_SETUP.md)
 - [Multi-tenancy](./docs/architecture/MULTI_TENANCY.md)
