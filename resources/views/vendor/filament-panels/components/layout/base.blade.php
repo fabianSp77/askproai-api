@@ -171,7 +171,8 @@
                 'resources/css/filament/admin/emergency-fix-476.css',
                 'resources/css/filament/admin/emergency-icon-fix-478.css',
                 'resources/css/filament/admin/consolidated-interactions.css',
-                'resources/css/filament/admin/consolidated-layout.css'
+                'resources/css/filament/admin/consolidated-layout.css',
+                'resources/css/filament/admin/navigation-ultimate-fix.css'
             ])
         @endif
 
@@ -205,6 +206,9 @@
         @livewireStyles
 
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::HEAD_END, scopes: $livewire?->getRenderHookScopes() ?? []) }}
+        
+        {{-- TEMPORARY INLINE FIX FOR NAVIGATION --}}
+        @include('vendor.filament-panels.components.layout.navigation-inline-fix')
         
         {{-- ABSOLUTE EMERGENCY FIX --}}
         <script>

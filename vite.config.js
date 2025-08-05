@@ -31,7 +31,10 @@ export default defineConfig({
                 "filament.admin.emergency-fix-476": "resources/css/filament/admin/emergency-fix-476.css",
                 "filament.admin.emergency-icon-fix-478": "resources/css/filament/admin/emergency-icon-fix-478.css",
                 "filament.admin.consolidated-interactions": "resources/css/filament/admin/consolidated-interactions.css",
-                "filament.admin.consolidated-layout": "resources/css/filament/admin/consolidated-layout.css"
+                "filament.admin.consolidated-layout": "resources/css/filament/admin/consolidated-layout.css",
+                
+                // ULTIMATE FIX - Must be loaded last
+                "filament.admin.navigation-ultimate-fix": "resources/css/filament/admin/navigation-ultimate-fix.css"
             },
             refresh: true,
         }),
