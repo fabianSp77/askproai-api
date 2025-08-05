@@ -27,19 +27,11 @@ export default defineConfig({
                 // CONSOLIDATED FILAMENT THEME - Single entry point
                 "filament.admin.theme": "resources/css/filament/admin/theme.css",
                 
-                // REMOVE CONFLICTING CSS ENTRIES TO FIX NAVIGATION ISSUE #479
-                // These were causing load order conflicts:
-                // "filament.admin.sidebar-layout-fix": "resources/css/filament/admin/sidebar-layout-fix.css",
-                // "filament.admin.unified-responsive": "resources/css/filament/admin/unified-responsive.css",
-                // "filament.admin.icon-fixes": "resources/css/filament/admin/icon-fixes.css",
-                // "filament.admin.icon-container-sizes": "resources/css/filament/admin/icon-container-sizes.css",
-                // "filament.admin.form-layout-fixes": "resources/css/filament/admin/form-layout-fixes.css",
-                // "filament.admin.table-scroll-indicators": "resources/css/filament/admin/table-scroll-indicators.css",
-                // "filament.admin.content-width-fix": "resources/css/filament/admin/content-width-fix.css",
-                // "filament.admin.emergency-fix-476": "resources/css/filament/admin/emergency-fix-476.css",
-                // "filament.admin.emergency-icon-fix-478": "resources/css/filament/admin/emergency-icon-fix-478.css",
-                // "filament.admin.consolidated-interactions": "resources/css/filament/admin/consolidated-interactions.css",
-                // "filament.admin.consolidated-layout": "resources/css/filament/admin/consolidated-layout.css"
+                // Emergency fixes needed for production
+                "filament.admin.emergency-fix-476": "resources/css/filament/admin/emergency-fix-476.css",
+                "filament.admin.emergency-icon-fix-478": "resources/css/filament/admin/emergency-icon-fix-478.css",
+                "filament.admin.consolidated-interactions": "resources/css/filament/admin/consolidated-interactions.css",
+                "filament.admin.consolidated-layout": "resources/css/filament/admin/consolidated-layout.css"
             },
             refresh: true,
         }),
