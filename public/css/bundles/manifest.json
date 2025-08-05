@@ -1,0 +1,31 @@
+{
+    "bundles": {
+        "admin": {
+            "file": "admin.bundle.css",
+            "minified": "admin.bundle.min.css",
+            "description": "Admin panel styles",
+            "size": 568371
+        },
+        "portal": {
+            "file": "portal.bundle.css",
+            "minified": "portal.bundle.min.css",
+            "description": "Business portal styles",
+            "size": 8181
+        },
+        "components": {
+            "file": "components.bundle.css",
+            "minified": "components.bundle.min.css",
+            "description": "Shared UI components",
+            "size": 7302
+        },
+        "critical": {
+            "file": "critical.bundle.css",
+            "minified": "critical.bundle.min.css",
+            "description": "Critical inline CSS",
+            "size": 1473
+        }
+    },
+    "generated": "2025-08-03T17:46:11Z",
+    "total_files_processed": 150,
+    "bundle_count": 4
+}

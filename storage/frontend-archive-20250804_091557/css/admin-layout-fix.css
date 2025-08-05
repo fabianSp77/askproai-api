@@ -1,0 +1,165 @@
+/**
+ * Admin Layout Fix
+ * Behebt Darstellungsprobleme im Admin Panel
+ * - Tabellen werden rechts abgeschnitten
+ * - Checkboxen werden nicht vollständig angezeigt
+ */
+
+/* Fix für die Hauptcontainer-Breite */
+.fi-page {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+}
+
+/* Fix für den Content-Bereich */
+.fi-main {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+}
+
+/* Fix für Tabellen-Container */
+.fi-ta-ctn {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+}
+
+/* Fix für die Tabelle selbst */
+.fi-ta-table {
+    min-width: max-content !important;
+}
+
+/* Responsive Tabellen-Wrapper */
+.fi-ta-content {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* Fix für abgeschnittene Checkboxen */
+.fi-ta-record-checkbox,
+.fi-ta-header-checkbox {
+    min-width: 24px !important;
+    width: 24px !important;
+    margin-right: 8px !important;
+}
+
+/* Fix für Checkbox-Container */
+.fi-checkbox-input {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Fix für den gesamten Page-Container */
+.fi-page-wrapper {
+    overflow-x: hidden !important;
+}
+
+/* Sicherstellen dass der Content scrollbar ist */
+.fi-main-ctn {
+    overflow-x: auto !important;
+    padding-right: 1rem !important;
+}
+
+/* Fix für den Sidebar-Layout */
+.fi-sidebar-open .fi-main {
+    margin-left: auto !important;
+    width: calc(100% - var(--sidebar-width)) !important;
+    max-width: none !important;
+}
+
+/* Mobile Responsive Fix */
+@media (max-width: 1024px) {
+    .fi-main {
+        width: 100% !important;
+        padding: 1rem !important;
+    }
+    
+    .fi-ta-content {
+        padding: 0 !important;
+    }
+    
+    /* Horizontales Scrollen für mobile Geräte */
+    .fi-ta-table-wrp {
+        overflow-x: scroll !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* Fix für spezifische Tabellen-Spalten */
+.fi-ta-col-wrp {
+    min-width: fit-content !important;
+}
+
+/* Sicherstellen dass Actions-Spalte sichtbar ist */
+.fi-ta-actions {
+    position: sticky !important;
+    right: 0 !important;
+    background-color: inherit !important;
+    z-index: 10 !important;
+}
+
+/* Box-shadow für sticky Actions */
+.fi-ta-actions::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -20px;
+    width: 20px;
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.05));
+    pointer-events: none;
+}
+
+/* Dark mode Anpassungen */
+.dark .fi-ta-actions {
+    background-color: rgb(31 41 55) !important;
+}
+
+.dark .fi-ta-actions::before {
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.05));
+}
+
+/* Fix für den Hauptinhalt wenn Sidebar offen ist */
+@media (min-width: 1024px) {
+    .fi-sidebar-open .fi-main-ctn {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* Zusätzlicher Fix für sehr breite Tabellen */
+.fi-resource-list-records-ctn {
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+/* Debug: Zeige Scrollbars immer (kann später entfernt werden) */
+.fi-ta-content::-webkit-scrollbar {
+    height: 8px;
+}
+
+.fi-ta-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.fi-ta-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.fi-ta-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Dark mode scrollbar */
+.dark .fi-ta-content::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+.dark .fi-ta-content::-webkit-scrollbar-thumb {
+    background: #6b7280;
+}
+
+.dark .fi-ta-content::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}

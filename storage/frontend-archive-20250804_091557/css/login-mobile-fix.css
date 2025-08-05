@@ -1,0 +1,160 @@
+/**
+ * Login Mobile Fix CSS
+ * Stellt sicher, dass Login-Formular auf Mobile funktioniert
+ */
+
+/* Entferne alle Pseudo-Element-Overlays auf Login-Seite */
+.fi-login *::before,
+.fi-login *::after,
+.fi-simple-page *::before,
+.fi-simple-page *::after {
+    pointer-events: none !important;
+}
+
+/* Login Form muss immer klickbar sein */
+.fi-login form,
+.fi-simple-page form {
+    position: relative !important;
+    z-index: 100 !important;
+    pointer-events: auto !important;
+}
+
+/* Alle Inputs müssen klickbar sein */
+.fi-login input,
+.fi-login textarea,
+.fi-login select,
+.fi-login button,
+.fi-simple-page input,
+.fi-simple-page textarea,
+.fi-simple-page select,
+.fi-simple-page button {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 101 !important;
+    -webkit-appearance: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Text Inputs spezifisch */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+textarea {
+    cursor: text !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+    font-size: 16px !important; /* Verhindert Zoom auf iOS */
+}
+
+/* Submit Button */
+button[type="submit"] {
+    cursor: pointer !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    touch-action: manipulation !important;
+}
+
+/* Focus States */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+    z-index: 102 !important;
+}
+
+/* iOS-spezifische Fixes */
+@supports (-webkit-touch-callout: none) {
+    /* iOS Safari */
+    input,
+    textarea,
+    select {
+        font-size: 16px !important; /* Verhindert Zoom */
+        transform: translateZ(0); /* Hardware Acceleration */
+    }
+    
+    /* Verhindere iOS Glow */
+    input:focus,
+    textarea:focus,
+    select:focus {
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+
+/* Entferne alle blockierenden Overlays */
+.fi-login::before,
+.fi-login::after,
+.fi-simple-page::before,
+.fi-simple-page::after,
+body.fi-login::before,
+body.fi-login::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Form Container */
+.fi-simple-main {
+    position: relative !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+}
+
+/* Card Container */
+.fi-simple-card {
+    position: relative !important;
+    z-index: 20 !important;
+    pointer-events: auto !important;
+}
+
+/* Verhindere dass andere Elemente darüber liegen */
+.fi-login .fi-modal,
+.fi-login .fi-notification {
+    z-index: 1000 !important;
+}
+
+/* Mobile-spezifische Anpassungen */
+@media (max-width: 640px) {
+    /* Größere Touch-Targets */
+    input,
+    button,
+    select,
+    textarea {
+        min-height: 44px !important;
+    }
+    
+    /* Mehr Abstand zwischen Elementen */
+    .fi-form-component {
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Submit Button größer */
+    button[type="submit"] {
+        min-height: 48px !important;
+        font-size: 16px !important;
+    }
+}
+
+/* Debug Mode */
+body.debug-login-form input {
+    border: 2px solid green !important;
+}
+
+body.debug-login-form button[type="submit"] {
+    border: 2px solid blue !important;
+}
+
+/* Absolute sicherstellen dass nichts drüber liegt */
+* {
+    /* Nichts darf höher als 1000 sein außer Modals */
+    max-height: 999 !important;
+}
+
+.fi-modal,
+.fi-notification {
+    max-height: none !important;
+}

@@ -1,0 +1,194 @@
+<?php
+
+namespace App\Scopes;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * Secure TenantScope that enforces strict multi-tenant isolation
+ * 
+ * SECURITY IMPROVEMENTS:
+ * - No debug_backtrace for performance
+ * - No arbitrary company fallbacks
+ * - Strict tenant isolation
+ * - Audit logging for violations
+ */
+class SecureTenantScope implements Scope
+{
+    /**
+     * Operations that legitimately need to bypass tenant scope
+     * Only during authentication flow
+     */
+    protected static array $allowedBypassOperations = [
+        'authentication' => [
+            'Illuminate\Auth\EloquentUserProvider@retrieveByCredentials',
+            'Illuminate\Auth\EloquentUserProvider@retrieveById',
+            'App\Services\SecureAuthenticationService@findUserByEmail',
+        ],
+        'system' => [
+            'Laravel\Sanctum\PersonalAccessToken@findToken',
+        ]
+    ];
+    
+    /**
+     * Apply the scope to a given Eloquent query builder.
+     */
+    public function apply(Builder $builder, Model $model)
+    {
+        // Skip during specific authentication operations
+        if ($this->isAuthenticationOperation($builder)) {
+            $this->logScopeBypass('authentication', $model);
+            return;
+        }
+        
+        // Skip for console commands unless company context is set
+        if (app()->runningInConsole() && !app()->bound('tenant.company_id')) {
+            return;
+        }
+        
+        // Get company context
+        $companyId = $this->resolveCompanyId();
+        
+        if ($companyId) {
+            // Apply tenant filter
+            $builder->where($model->getTable() . '.company_id', $companyId);
+        } else {
+            // SECURITY: No company context = no data access
+            // This prevents accidental cross-tenant data exposure
+            $this->handleMissingCompanyContext($builder, $model);
+        }
+    }
+    
+    /**
+     * Check if this is a legitimate authentication operation
+     */
+    protected function isAuthenticationOperation(Builder $builder): bool
+    {
+        // Check if we're querying by authentication fields
+        $query = $builder->getQuery();
+        
+        if ($query->wheres) {
+            foreach ($query->wheres as $where) {
+                if (isset($where['column'])) {
+                    // Allow email/username lookups only during auth
+                    if (in_array($where['column'], ['email', 'username'])) {
+                        // Additional check: only allow if not already authenticated
+                        if (!Auth::check()) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Resolve current company ID from various sources
+     * NO FALLBACKS - returns null if no legitimate context
+     */
+    protected function resolveCompanyId(): ?int
+    {
+        // 1. Check explicit binding (highest priority)
+        if (app()->bound('tenant.company_id')) {
+            return (int) app('tenant.company_id');
+        }
+        
+        // 2. Check authenticated user (various guards)
+        $user = $this->getAuthenticatedUser();
+        
+        if ($user && isset($user->company_id) && $user->company_id) {
+            return (int) $user->company_id;
+        }
+        
+        // 3. NO FALLBACK - return null if no context
+        // This is critical for security - never guess or use arbitrary companies
+        return null;
+    }
+    
+    /**
+     * Get authenticated user from any guard
+     */
+    protected function getAuthenticatedUser()
+    {
+        // Check web guard (admin panel)
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user();
+        }
+        
+        // Check API guard
+        if (Auth::guard('api')->check()) {
+            return Auth::guard('api')->user();
+        }
+        
+        // Check Sanctum for API tokens
+        if (Auth::guard('sanctum')->check()) {
+            return Auth::guard('sanctum')->user();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Handle missing company context
+     * SECURITY: Return empty results instead of all data
+     */
+    protected function handleMissingCompanyContext(Builder $builder, Model $model): void
+    {
+        // Log security event
+        $this->logSecurityEvent('missing_company_context', [
+            'model' => get_class($model),
+            'user_id' => Auth::id(),
+            'ip' => request()->ip(),
+            'url' => request()->url(),
+        ]);
+        
+        // Return empty results - never expose data without context
+        $builder->whereRaw('1 = 0');
+    }
+    
+    /**
+     * Log scope bypass for audit trail
+     */
+    protected function logScopeBypass(string $reason, Model $model): void
+    {
+        // Only log in development or when explicitly enabled
+        if (app()->environment('local', 'development') || config('secure-auth.audit_scope_bypasses', false)) {
+            Log::channel('security')->info('Tenant scope bypassed', [
+                'reason' => $reason,
+                'model' => get_class($model),
+                'user_id' => Auth::id(),
+                'ip' => request()->ip(),
+            ]);
+        }
+    }
+    
+    /**
+     * Log security events
+     */
+    protected function logSecurityEvent(string $event, array $context): void
+    {
+        Log::channel('security')->warning("Security Event: {$event}", $context);
+        
+        // Also trigger alert for critical events
+        if (in_array($event, ['missing_company_context', 'cross_tenant_attempt'])) {
+            $this->triggerSecurityAlert($event, $context);
+        }
+    }
+    
+    /**
+     * Trigger security alert for critical events
+     */
+    protected function triggerSecurityAlert(string $event, array $context): void
+    {
+        // Send to monitoring system
+        if (class_exists('\App\Services\SecurityMonitoringService')) {
+            app(\App\Services\SecurityMonitoringService::class)->alert($event, $context);
+        }
+    }
+}

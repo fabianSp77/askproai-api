@@ -1,0 +1,44 @@
+/* ================================================================
+   FIX FOR ENDLESS LOADING SPINNERS ON LOGIN PAGE - Issue #452
+   Temporary fix to hide stuck loading indicators
+   ================================================================ */
+
+/* Hide all loading indicators on login page */
+.fi-login .fi-loading-indicator,
+.fi-login .animate-spin,
+.fi-simple-page .fi-loading-indicator,
+.fi-simple-page .animate-spin,
+form[wire\:submit="authenticate"] .fi-loading-indicator,
+form[wire\:submit="authenticate"] .animate-spin {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Also hide any Livewire loading states on login */
+.fi-login [wire\:loading],
+.fi-simple-page [wire\:loading],
+form[wire\:submit="authenticate"] [wire\:loading] {
+    display: none !important;
+}
+
+/* Ensure login button is always visible and clickable */
+.fi-login button[type="submit"],
+.fi-simple-page button[type="submit"],
+form[wire\:submit="authenticate"] button[type="submit"] {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: relative !important;
+}
+
+/* Remove any animations from login form elements */
+.fi-login *,
+.fi-simple-page *,
+form[wire\:submit="authenticate"] * {
+    animation: none !important;
+}
+
+/* Exception: Keep necessary transitions for hover states */
+.fi-login button:hover,
+.fi-simple-page button:hover {
+    transition: background-color 0.2s, color 0.2s !important;
+}

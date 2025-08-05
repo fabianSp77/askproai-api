@@ -1,0 +1,117 @@
+/**
+ * Admin Portal Pointer Events Fix
+ * Ensures all interactive elements are clickable
+ * This file MUST be loaded LAST to override all other styles
+ */
+
+/* Fix all buttons */
+button,
+[role="button"],
+.fi-btn,
+.fi-icon-btn,
+.filament-button,
+.filament-icon-button,
+.fi-dropdown-trigger,
+[x-on\\:click],
+[wire\\:click],
+[onclick] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    position: relative !important;
+}
+
+/* Fix dropdown items */
+.fi-dropdown-item,
+.fi-dropdown-list-item,
+[role="menuitem"],
+.filament-dropdown-item {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix links */
+a,
+.fi-link,
+.filament-link {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix form inputs */
+input,
+textarea,
+select,
+.fi-input,
+.fi-select,
+.fi-textarea {
+    pointer-events: auto !important;
+    cursor: text !important;
+}
+
+/* Fix table actions */
+.fi-ta-action,
+.fi-ta-icon-button,
+.filament-tables-action,
+.filament-tables-icon-button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix modal buttons */
+.fi-modal-action,
+.filament-modal-action {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Remove any overlays that might block clicks */
+.pointer-events-none {
+    pointer-events: none !important;
+}
+
+/* Ensure dropdowns are above other content */
+.fi-dropdown,
+.fi-dropdown-panel,
+[x-ref="panel"] {
+    z-index: 50 !important;
+    pointer-events: auto !important;
+}
+
+/* Fix navigation items */
+.fi-sidebar-item,
+.fi-topbar-item,
+.filament-sidebar-item {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Fix any elements with inline pointer-events: none */
+[style*="pointer-events: none"] {
+    pointer-events: auto !important;
+}
+
+/* Ensure interactive elements inside disabled containers still work */
+.opacity-50 button,
+.opacity-50 a,
+.opacity-50 [role="button"] {
+    pointer-events: auto !important;
+}
+
+/* Fix z-index stacking issues */
+.fi-dropdown-panel,
+.filament-dropdown-panel {
+    z-index: 9999 !important;
+}
+
+/* Remove any blocking overlays */
+.fixed.inset-0:not(.fi-modal-close-overlay) {
+    pointer-events: none !important;
+}
+
+/* Ensure Livewire elements are clickable */
+[wire\\:loading],
+[wire\\:loading\\.delay],
+[wire\\:loading\\.remove] {
+    pointer-events: auto !important;
+}

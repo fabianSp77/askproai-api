@@ -1,0 +1,67 @@
+/* ================================================================
+   NAVIGATION PRIORITY FIX - Issue #479
+   This file must load AFTER all other CSS to ensure navigation works
+   Date: 2025-08-05
+   ================================================================ */
+
+/* CRITICAL: Force navigation items to be clickable above all other rules */
+.fi-sidebar-nav,
+.fi-sidebar-nav * {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 50 !important;
+}
+
+/* Sidebar navigation links and buttons must be clickable */
+.fi-sidebar-nav a,
+.fi-sidebar-nav button,
+.fi-sidebar-item,
+.fi-sidebar-item-button,
+.fi-sidebar-item-icon,
+.fi-sidebar-item-label {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 51 !important;
+    position: relative !important;
+}
+
+/* Remove any blocking overlays on mobile */
+@media (max-width: 1023px) {
+    .fi-sidebar-open::before {
+        display: none !important;
+        content: none !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        position: static !important;
+        z-index: -999 !important;
+    }
+}
+
+/* Ensure sidebar container has proper z-index */
+.fi-sidebar {
+    z-index: 40 !important;
+    pointer-events: auto !important;
+    position: relative !important;
+}
+
+/* Fix for nested navigation groups */
+.fi-sidebar-nav-group,
+.fi-sidebar-nav-group-header,
+.fi-sidebar-nav-group-items {
+    pointer-events: auto !important;
+    z-index: 45 !important;
+}
+
+/* Debug: Add hover states to verify clickability */
+.fi-sidebar-nav a:hover,
+.fi-sidebar-item:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    transition: background-color 0.2s ease !important;
+}
+
+/* Override any Alpine.js or Livewire pointer events */
+[x-data] .fi-sidebar-nav a,
+[wire-id] .fi-sidebar-nav a {
+    pointer-events: auto !important;
+}

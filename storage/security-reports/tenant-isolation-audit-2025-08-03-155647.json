@@ -1,0 +1,712 @@
+{
+    "timestamp": "2025-08-03T15:56:47+02:00",
+    "summary": {
+        "total_violations": 99,
+        "critical": 63,
+        "by_type": {
+            "raw_db_query": 36,
+            "without_global_scope": 61,
+            "without_company_scope": 2
+        },
+        "by_severity": {
+            "warning": 36,
+            "critical": 63
+        }
+    },
+    "violations": [
+        {
+            "file": "app\/Jobs\/CollectMetricsJob.php",
+            "line": 100,
+            "code": "$appointmentStats = DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Jobs\/CollectMetricsJob.php",
+            "line": 119,
+            "code": "$callStats = DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Jobs\/ProcessRetellCallEndedJobEnhanced.php",
+            "line": 58,
+            "code": "$company = Company::withoutGlobalScope(TenantScope::class)->first();",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Jobs\/ProcessRetellCallEndedJobEnhanced.php",
+            "line": 67,
+            "code": "$existingCall = Call::withoutGlobalScope(TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Jobs\/ProcessRetellCallEndedJobFixed.php",
+            "line": 58,
+            "code": "$company = Company::withoutGlobalScope(TenantScope::class)->first();",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Jobs\/ProcessRetellCallEndedJobFixed.php",
+            "line": 67,
+            "code": "$existingCall = Call::withoutGlobalScope(TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Jobs\/ProcessRetellCallStartedJob.php",
+            "line": 60,
+            "code": "$call = Call::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Jobs\/TrainMLModelJob.php",
+            "line": 104,
+            "code": "$query = DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Listeners\/UpdateCustomerCallStats.php",
+            "line": 26,
+            "code": "DB::table('customers')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Mail\/CallSummaryEmail.php",
+            "line": 61,
+            "code": "$this->call = Call::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/AdditionalService.php",
+            "line": 45,
+            "code": "$builder->withoutGlobalScope(TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/Branch.php",
+            "line": 586,
+            "code": "$hasServices = $this->services()->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)->exists();",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/Branch.php",
+            "line": 593,
+            "code": "$hasStaff = $this->staff()->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)->exists() ||",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/Branch.php",
+            "line": 594,
+            "code": "$this->availableStaff()->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)->exists();",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 141,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 154,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 168,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 190,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 203,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 215,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 223,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 233,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 254,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalFunnelStep.php",
+            "line": 271,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 164,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 180,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 189,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 200,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 216,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 224,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 233,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 242,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 251,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 261,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 280,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Models\/GoalMetric.php",
+            "line": 298,
+            "code": "->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Repositories\/OptimizedAppointmentRepository.php",
+            "line": 136,
+            "code": "$appointments = DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/AppointmentExtractionService.php",
+            "line": 216,
+            "code": "\\DB::table('appointments')->insert([",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/BranchContextManager.php",
+            "line": 96,
+            "code": "return Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/CallExportService.php",
+            "line": 327,
+            "code": "$branch = \\App\\Models\\Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/CallFinancialService.php",
+            "line": 124,
+            "code": "$stats = Call::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/CallFinancialService.php",
+            "line": 149,
+            "code": "$sampleCalls = Call::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/CustomerService.php",
+            "line": 155,
+            "code": "$appointmentCount = DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/CustomerService.php",
+            "line": 166,
+            "code": "$callCount = DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/CustomerService.php",
+            "line": 229,
+            "code": "$calls = DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/CustomerService.php",
+            "line": 281,
+            "code": "$found = DB::table('customers')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/CustomerService.php",
+            "line": 294,
+            "code": "$found = DB::table('customers')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/DashboardStatsService.php",
+            "line": 156,
+            "code": "$statusStats = DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/DashboardStatsService.php",
+            "line": 264,
+            "code": "$callTrends = DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/DashboardStatsService.php",
+            "line": 280,
+            "code": "$appointmentTrends = DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 32,
+            "code": "$phoneRecord = PhoneNumber::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 41,
+            "code": "$phoneRecord = PhoneNumber::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 54,
+            "code": "$branch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 78,
+            "code": "$branch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 126,
+            "code": "$branch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 232,
+            "code": "$phoneRecord = PhoneNumber::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 245,
+            "code": "$branch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 266,
+            "code": "$branch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 318,
+            "code": "$branch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 405,
+            "code": "$branch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 445,
+            "code": "$branch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 584,
+            "code": "$testBranch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 593,
+            "code": "$testBranch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 653,
+            "code": "$recentCall = Call::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 678,
+            "code": "$phoneRecord = PhoneNumber::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/PhoneNumberResolver.php",
+            "line": 684,
+            "code": "$branch = Branch::withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 32,
+            "code": "'total' => DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 37,
+            "code": "'by_status' => DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 45,
+            "code": "'by_branch' => DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 54,
+            "code": "'by_staff' => DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 65,
+            "code": "'revenue' => DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 86,
+            "code": "'total' => DB::table('customers')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 90,
+            "code": "'new_this_month' => DB::table('customers')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 95,
+            "code": "'active' => DB::table('customers')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 106,
+            "code": "'top_customers' => DB::table('customers')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 133,
+            "code": "'total' => DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 138,
+            "code": "'successful' => DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 144,
+            "code": "'with_appointments' => DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 150,
+            "code": "'avg_duration' => DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 155,
+            "code": "'total_cost' => DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 160,
+            "code": "'by_hour' => DB::table('calls')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 218,
+            "code": "return DB::table('branches')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 337,
+            "code": "return DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 352,
+            "code": "return DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 369,
+            "code": "$oldCustomers = DB::table('customers')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 378,
+            "code": "$activeOldCustomers = DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/QueryCache.php",
+            "line": 392,
+            "code": "return DB::table('customers')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/StaffAssignmentService.php",
+            "line": 160,
+            "code": "$lastAssignment = \\DB::table('appointments')",
+            "type": "raw_db_query",
+            "severity": "warning"
+        },
+        {
+            "file": "app\/Services\/UnifiedSearchService.php",
+            "line": 114,
+            "code": "$searchQuery->withoutGlobalScope(\\App\\Scopes\\TenantScope::class);",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/UnifiedSearchService.php",
+            "line": 123,
+            "code": "$searchQuery->withoutGlobalScope(\\App\\Scopes\\TenantScope::class);",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/UnifiedSearchService.php",
+            "line": 128,
+            "code": "$q->withoutGlobalScope(\\App\\Scopes\\TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/UnifiedSearchService.php",
+            "line": 153,
+            "code": "$q->withoutGlobalScope(\\App\\Scopes\\TenantScope::class);",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/UnifiedSearchService.php",
+            "line": 156,
+            "code": "$q->withoutGlobalScope(\\App\\Scopes\\TenantScope::class);",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/UnifiedSearchService.php",
+            "line": 159,
+            "code": "$q->withoutGlobalScope(\\App\\Scopes\\TenantScope::class);",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Services\/UnifiedSearchService.php",
+            "line": 162,
+            "code": "$q->withoutGlobalScope(\\App\\Scopes\\TenantScope::class);",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Traits\/BelongsToCompany.php",
+            "line": 182,
+            "code": "return $query->withoutGlobalScope(CompanyScope::class)",
+            "type": "without_company_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Traits\/BelongsToCompany_SECURE.php",
+            "line": 145,
+            "code": "return $query->withoutGlobalScope(CompanyScope::class)",
+            "type": "without_company_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Traits\/HasTenantScope.php",
+            "line": 41,
+            "code": "return $query->withoutGlobalScope(TenantScope::class);",
+            "type": "without_global_scope",
+            "severity": "critical"
+        },
+        {
+            "file": "app\/Traits\/HasTenantScope.php",
+            "line": 49,
+            "code": "return $query->withoutGlobalScope(TenantScope::class)",
+            "type": "without_global_scope",
+            "severity": "critical"
+        }
+    ],
+    "fixed": []
+}

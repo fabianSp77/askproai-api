@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Scopes;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Scope;
+
+/**
+ * EMERGENCY: Simplified Tenant Scope to prevent authentication memory exhaustion
+ * This bypasses complex logic that was causing circular references during login
+ */
+class SecureTenantScope implements Scope
+{
+    public function apply(Builder $builder, Model $model)
+    {
+        // EMERGENCY BYPASS: Skip all scoping during admin authentication
+        if ($this->isAdminAuthenticationFlow()) {
+            return;
+        }
+        
+        // Skip in console commands
+        if (app()->runningInConsole()) {
+            return;
+        }
+        
+        // Simple company context without recursion
+        $companyId = null;
+        
+        // Check explicit binding first
+        if (app()->bound("tenant.company_id")) {
+            $companyId = (int) app("tenant.company_id");
+        }
+        
+        if ($companyId) {
+            $builder->where($model->getTable() . ".company_id", $companyId);
+        } else {
+            // No company context = no data (security)
+            $builder->whereRaw("1 = 0");
+        }
+    }
+    
+    /**
+     * Check if we are in admin authentication flow
+     * Uses simple request-based detection to avoid memory issues
+     */
+    protected function isAdminAuthenticationFlow(): bool
+    {
+        // Check if this is an admin login request
+        if (request()->is("admin/login") || request()->is("admin/logout")) {
+            return true;
+        }
+        
+        // Check if auth guards are not resolved yet (indicates authentication in progress)
+        try {
+            return !\Illuminate\Support\Facades\Auth::hasResolvedGuards();
+        } catch (Exception $e) {
+            // If there's any error checking guards, assume authentication flow
+            return true;
+        }
+    }
+}

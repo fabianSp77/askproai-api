@@ -1,0 +1,40 @@
+/* Emergency Dashboard Fixes */
+.dashboard-loading {
+    display: none !important;
+}
+
+/* Fix stat cards alignment */
+.stat-card {
+    min-height: 120px;
+}
+
+/* Fix empty chart placeholders */
+.recharts-surface:empty::before {
+    content: "Keine Daten verfügbar";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #999;
+    font-size: 14px;
+}
+
+/* Fix loading spinners */
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* German number formatting */
+.currency-value::before {
+    content: "€ ";
+}
+
+/* Hide error alerts after 5 seconds */
+.alert-destructive {
+    animation: fadeOut 5s ease-in-out forwards;
+}
+
+@keyframes fadeOut {
+    0%, 80% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+}

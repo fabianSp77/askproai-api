@@ -1,0 +1,43 @@
+/* Consolidated Emergency Fixes - Generated on $(date) */
+
+/* Mobile responsive fixes */
+@media (max-width: 768px) {
+    .filament-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .filament-sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .filament-main {
+        margin-left: 0 !important;
+    }
+}
+
+/* Form input fixes */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Table scroll fixes */
+.filament-tables-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Z-index fixes for modals and dropdowns */
+.filament-modal {
+    z-index: 9999 !important;
+}
+
+.filament-dropdown {
+    z-index: 9998 !important;
+}

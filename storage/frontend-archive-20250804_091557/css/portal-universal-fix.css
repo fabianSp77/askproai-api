@@ -1,0 +1,222 @@
+/**
+ * Portal Universal CSS Fix
+ * Ensures all interactive elements work correctly
+ */
+
+/* === CRITICAL FIXES === */
+
+/* Ensure all interactive elements are clickable */
+button:not([disabled]),
+a:not([disabled]),
+[role="button"]:not([disabled]),
+[wire\:click]:not([disabled]),
+[x-on\:click]:not([disabled]) {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Remove any blocking overlays - FIXED: This was blocking ALL clicks! */
+/* Only disable pointer events for specific decorative elements */
+.decorative::before,
+.decorative::after {
+    pointer-events: none !important;
+}
+
+/* Except for actual content */
+.fi-dropdown::before,
+.fi-dropdown::after {
+    content: none !important;
+}
+
+/* === STATISTICS WIDGETS FIX === */
+
+/* Ensure stat values are visible */
+.fi-wi-stats-overview-stat-value,
+.fi-wi-stats-overview-stat-label,
+.fi-wi-stats-overview-stat-description {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Fix stat widget layout */
+.fi-wi-stats-overview-stat {
+    min-height: auto !important;
+    position: relative !important;
+}
+
+/* Ensure text is readable */
+.fi-wi-stats-overview-stat * {
+    color: inherit !important;
+    font-size: inherit !important;
+}
+
+/* === DROPDOWN FIXES === */
+
+/* Dropdown panels must be on top */
+.fi-dropdown-panel {
+    z-index: 9999 !important;
+    position: absolute !important;
+    display: none;
+}
+
+/* Show when open */
+[x-data*="open: true"] .fi-dropdown-panel,
+.fi-dropdown-panel[style*="display: block"] {
+    display: block !important;
+}
+
+/* Dropdown items must be clickable */
+.fi-dropdown-list-item,
+.fi-dropdown-list-item *,
+.fi-dropdown-panel button,
+.fi-dropdown-panel a {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* Hover states */
+.fi-dropdown-list-item:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* === SELECT/SEARCH COMPONENTS === */
+
+.fi-fo-select button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.fi-fo-select [role="listbox"] {
+    z-index: 9999 !important;
+    position: absolute !important;
+}
+
+.fi-fo-select [role="option"] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.fi-fo-select [role="option"]:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* === TABLE FILTERS === */
+
+.fi-ta-filters .fi-dropdown {
+    position: relative !important;
+}
+
+.fi-ta-filters .fi-dropdown-panel {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: auto !important;
+    min-width: 200px !important;
+}
+
+/* === DATE PICKERS === */
+
+.fi-fo-date-time-picker button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.fi-fo-date-time-picker .fi-dropdown-panel {
+    min-width: 300px !important;
+}
+
+/* === WIRE:MODEL ELEMENTS === */
+
+[wire\:model] {
+    cursor: auto !important;
+    pointer-events: auto !important;
+}
+
+select[wire\:model] {
+    cursor: pointer !important;
+}
+
+/* === FOCUS STATES === */
+
+button:focus,
+a:focus,
+[role="button"]:focus,
+.fi-dropdown-list-item:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.5) !important;
+    outline-offset: -2px !important;
+}
+
+/* === LOADING STATES === */
+
+/* Don't hide elements during loading */
+[wire\:loading\.remove] {
+    opacity: 0.7 !important;
+    display: block !important;
+}
+
+/* === MOBILE SPECIFIC === */
+
+@media (max-width: 768px) {
+    .fi-dropdown-panel {
+        position: fixed !important;
+        left: 1rem !important;
+        right: 1rem !important;
+        width: auto !important;
+    }
+    
+    /* Ensure touch targets are large enough */
+    .fi-dropdown-list-item {
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+}
+
+/* === PREVENT LAYOUT SHIFTS === */
+
+.fi-dropdown {
+    position: relative !important;
+}
+
+/* === ENSURE VISIBILITY === */
+
+/* Remove any accidental hiding */
+.fi-page [style*="display: none"]:not(.fi-dropdown-panel):not([x-show]) {
+    display: block !important;
+}
+
+/* Fix for content that might be hidden by x-cloak */
+[x-cloak] {
+    display: none !important;
+}
+
+/* But show elements that have been initialized */
+[x-data][x-cloak][data-alpine-init] {
+    display: block !important;
+}
+
+/* === DEBUG HELPERS === */
+
+/* Add visual indicator for clickable elements in debug mode */
+body.debug-mode [wire\:click]:not([disabled]) {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+}
+
+body.debug-mode .fi-dropdown {
+    border: 1px dashed rgba(239, 68, 68, 0.5) !important;
+}
+
+/* === TRANSITION FIXES === */
+
+/* Disable transitions that might interfere */
+.fi-dropdown-panel {
+    transition: none !important;
+}
+
+/* === Z-INDEX HIERARCHY === */
+
+.fi-modal { z-index: 10000 !important; }
+.fi-dropdown-panel { z-index: 9999 !important; }
+.fi-notifications { z-index: 9998 !important; }
+.fi-sidebar { z-index: 9997 !important; }
