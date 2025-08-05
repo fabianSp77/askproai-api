@@ -5,8 +5,7 @@
 ## 🎯 Current Focus
 
 ### Active Issues
-- **Admin Panel Navigation** ([#479](https://github.com/fabianSp77/askproai-api/issues/479)): Only emergency menu clickable
-- **TestSprite Integration** ([#480](https://github.com/fabianSp77/askproai-api/issues/480)): MCP setup needed
+- Keine kritischen Issues offen
 
 ### Quick Context
 ```yaml
