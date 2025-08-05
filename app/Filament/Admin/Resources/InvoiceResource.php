@@ -547,10 +547,9 @@ class InvoiceResource extends Resource
                             );
                     }),
             ])
-            ->actions(static::applyTableActionTooltips([
+            ->actions([
                 Tables\Actions\Action::make('preview')
                     ->label('Vorschau')
-                    ->tooltip(static::tooltip('preview_invoice'))
                     ->icon('heroicon-o-eye')
                     ->modalContent(fn (Invoice $record): \Illuminate\Contracts\View\View => 
                         view('filament.admin.resources.invoice-preview', ['invoice' => $record])
@@ -560,7 +559,6 @@ class InvoiceResource extends Resource
                     
                 Tables\Actions\Action::make('finalize')
                     ->label('Finalisieren')
-                    ->tooltip(static::tooltip('finalize_invoice'))
                     ->icon('heroicon-o-check')
                     ->action(function (Invoice $record) {
                         $service = new \App\Services\Stripe\EnhancedStripeInvoiceService();
@@ -584,12 +582,11 @@ class InvoiceResource extends Resource
                     
                 Tables\Actions\Action::make('download')
                     ->label('PDF')
-                    ->tooltip(static::tooltip('download_pdf'))
                     ->icon('heroicon-o-arrow-down-tray')
                     ->url(fn (Invoice $record) => $record->pdf_url)
                     ->openUrlInNewTab()
                     ->visible(fn (Invoice $record) => $record->pdf_url),
-            ]))
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()

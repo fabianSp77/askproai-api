@@ -58,6 +58,7 @@ return [
 
         /* Filament Panel */
         App\Providers\Filament\AdminPanelProvider::class,
+        App\Providers\Filament\BusinessPanelProvider::class,
     ],
     /* --------------------------- Facades -------------------------------- */
     'aliases' => [

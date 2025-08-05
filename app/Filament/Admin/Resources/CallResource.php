@@ -250,7 +250,7 @@ class CallResource extends Resource
             ->filters([
                 // Temporarily disable complex filters for performance
             ])
-            ->actions(static::applyTableActionTooltips([
+            ->actions([
                 Tables\Actions\ViewAction::make()
                     ->label('Details')
                     ->button()
@@ -273,13 +273,11 @@ class CallResource extends Resource
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Schließen')
                     ->visible(false), // Temporarily hide share button on mobile
-            ]))
-            ->bulkActions(static::applyBulkActionTooltips([
-                MarkAsNonBillableAction::make()
-                    ->tooltip(static::tooltip('mark_non_billable')),
+            ])
+            ->bulkActions([
+                MarkAsNonBillableAction::make(),
                 Tables\Actions\BulkAction::make('createRefund')
                     ->label('Gutschrift erstellen')
-                    ->tooltip(static::tooltip('create_credit_note'))
                     ->icon('heroicon-o-receipt-refund')
                     ->color('warning')
                     ->requiresConfirmation()
@@ -358,8 +356,7 @@ class CallResource extends Resource
                     })
                     ->deselectRecordsAfterCompletion(),
                 Tables\Actions\DeleteBulkAction::make()
-                    ->tooltip(static::tooltip('bulk_delete'))
-            ]));
+            ]);
 
         return static::configureTableForManyColumns($table);
     }

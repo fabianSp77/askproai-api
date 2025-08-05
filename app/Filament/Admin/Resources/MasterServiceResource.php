@@ -19,7 +19,7 @@ class MasterServiceResource extends Resource
     protected static ?string $navigationLabel = 'Leistungen';
     protected static ?string $modelLabel = 'Master Service';
     protected static ?string $pluralModelLabel = 'Master Services';
-    protected static bool $shouldRegisterNavigation = false;
+    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form
     {

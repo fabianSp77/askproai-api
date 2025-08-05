@@ -516,8 +516,12 @@ Route::post('/api/direct-login', [App\Http\Controllers\DirectLoginController::cl
 
 // Debug route for session testing (remove in production)
 if (app()->environment(['local', 'staging', 'production'])) { // Temporarily enabled for all environments
-    require __DIR__ . '/debug-sessions.php';
-    require __DIR__ . '/session-test.php';
+    if (file_exists(__DIR__ . '/debug-sessions.php')) {
+        require __DIR__ . '/debug-sessions.php';
+    }
+    if (file_exists(__DIR__ . '/session-test.php')) {
+        require __DIR__ . '/session-test.php';
+    }
 }
 
 // EMERGENCY TEST ROUTES
@@ -525,4 +529,6 @@ Route::get('/test-admin-auth', [App\Http\Controllers\SimpleAuthTestController::c
 Route::get('/test-portal-auth', [App\Http\Controllers\SimpleAuthTestController::class, 'testPortalLogin']);
 
 // ADMIN EMERGENCY ROUTES (with rate limiting)
-require __DIR__ . '/admin-emergency.php';
+if (file_exists(__DIR__ . '/admin-emergency.php')) {
+    require __DIR__ . '/admin-emergency.php';
+}
