@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Call;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CallRepository extends BaseRepository
 {
@@ -17,15 +18,27 @@ class CallRepository extends BaseRepository
     }
 
     /**
-     * Get calls by status
+     * Get calls by status (paginated)
      */
-    public function getByStatus(string $status): Collection
+    public function getByStatus(string $status, int $perPage = 100): LengthAwarePaginator
     {
         return $this->model
             ->where('status', $status)
             ->with(['customer', 'appointment'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
+    }
+    
+    /**
+     * Get calls by status (all - use for exports)
+     */
+    public function getByStatusAll(string $status): Collection
+    {
+        return $this->pushCriteria(function ($query) use ($status) {
+            $query->where('status', $status)
+                  ->with(['customer', 'appointment'])
+                  ->orderBy('created_at', 'desc');
+        })->allSafe();
     }
 
     /**
@@ -41,46 +54,83 @@ class CallRepository extends BaseRepository
     }
 
     /**
-     * Get calls by phone number
+     * Get calls by phone number (paginated)
      */
-    public function getByPhoneNumber(string $phoneNumber): Collection
+    public function getByPhoneNumber(string $phoneNumber, int $perPage = 50): LengthAwarePaginator
     {
         return $this->model
             ->where('from_number', $phoneNumber)
             ->orWhere('to_number', $phoneNumber)
             ->with(['customer', 'appointment'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
+    }
+    
+    /**
+     * Get calls by phone number (all)
+     */
+    public function getByPhoneNumberAll(string $phoneNumber): Collection
+    {
+        return $this->pushCriteria(function ($query) use ($phoneNumber) {
+            $query->where('from_number', $phoneNumber)
+                  ->orWhere('to_number', $phoneNumber)
+                  ->with(['customer', 'appointment'])
+                  ->orderBy('created_at', 'desc');
+        })->allSafe();
     }
 
     /**
-     * Get calls for date range
+     * Get calls for date range (paginated)
      */
-    public function getByDateRange(Carbon $startDate, Carbon $endDate): Collection
+    public function getByDateRange(Carbon $startDate, Carbon $endDate, int $perPage = 100): LengthAwarePaginator
     {
         return $this->model
             ->whereBetween('created_at', [$startDate, $endDate])
             ->with(['customer', 'appointment'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
+    }
+    
+    /**
+     * Get calls for date range (chunked processing)
+     */
+    public function processCallsByDateRange(Carbon $startDate, Carbon $endDate, callable $processor): bool
+    {
+        return $this->pushCriteria(function ($query) use ($startDate, $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate])
+                  ->with(['customer', 'appointment'])
+                  ->orderBy('created_at', 'desc');
+        })->chunkSafe(500, $processor);
     }
 
     /**
-     * Get calls with appointments
+     * Get calls with appointments (paginated)
      */
-    public function getWithAppointments(): Collection
+    public function getWithAppointments(int $perPage = 100): LengthAwarePaginator
     {
         return $this->model
             ->whereNotNull('appointment_id')
             ->with(['appointment.customer', 'appointment.staff', 'appointment.service'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
+    }
+    
+    /**
+     * Process calls with appointments in chunks
+     */
+    public function processCallsWithAppointments(callable $processor): bool
+    {
+        return $this->pushCriteria(function ($query) {
+            $query->whereNotNull('appointment_id')
+                  ->with(['appointment.customer', 'appointment.staff', 'appointment.service'])
+                  ->orderBy('created_at', 'desc');
+        })->chunkSafe(200, $processor);
     }
 
     /**
-     * Get failed calls
+     * Get failed calls (paginated)
      */
-    public function getFailed(Carbon $since = null): Collection
+    public function getFailed(Carbon $since = null, int $perPage = 100): LengthAwarePaginator
     {
         $query = $this->model->where('status', 'failed');
         
@@ -91,46 +141,57 @@ class CallRepository extends BaseRepository
         return $query
             ->with(['customer'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
     }
 
     /**
-     * Get call statistics
+     * Get call statistics (optimized with single query)
      */
     public function getStatistics(Carbon $startDate, Carbon $endDate): array
     {
-        $calls = $this->model
+        // Use a single aggregation query for better performance
+        $stats = $this->model
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->get();
+            ->selectRaw('
+                COUNT(*) as total_calls,
+                COUNT(CASE WHEN status = "completed" THEN 1 END) as completed_calls,
+                COUNT(CASE WHEN status = "failed" THEN 1 END) as failed_calls,
+                SUM(CASE WHEN status = "completed" THEN duration_sec ELSE 0 END) as total_duration_seconds,
+                SUM(CASE WHEN status = "completed" THEN cost ELSE 0 END) as total_cost,
+                COUNT(CASE WHEN appointment_id IS NOT NULL THEN 1 END) as appointments_booked
+            ')
+            ->first();
             
-        $completedCalls = $calls->where('status', 'completed');
+        $totalCalls = $stats->total_calls ?? 0;
+        $completedCalls = $stats->completed_calls ?? 0;
+        $totalDuration = $stats->total_duration_seconds ?? 0;
         
         return [
-            'total_calls' => $calls->count(),
-            'completed_calls' => $completedCalls->count(),
-            'failed_calls' => $calls->where('status', 'failed')->count(),
-            'total_duration_seconds' => $completedCalls->sum('duration_sec') ?? 0,
-            'average_duration_seconds' => $completedCalls->count() > 0 
-                ? round($completedCalls->sum('duration_sec') / $completedCalls->count()) 
+            'total_calls' => $totalCalls,
+            'completed_calls' => $completedCalls,
+            'failed_calls' => $stats->failed_calls ?? 0,
+            'total_duration_seconds' => $totalDuration,
+            'average_duration_seconds' => $completedCalls > 0 
+                ? round($totalDuration / $completedCalls) 
                 : 0,
-            'total_cost_cents' => $completedCalls->sum('cost') * 100 ?? 0,
-            'appointments_booked' => $calls->whereNotNull('appointment_id')->count(),
-            'conversion_rate' => $calls->count() > 0 
-                ? round(($calls->whereNotNull('appointment_id')->count() / $calls->count()) * 100, 2) 
+            'total_cost_cents' => ($stats->total_cost ?? 0) * 100,
+            'appointments_booked' => $stats->appointments_booked ?? 0,
+            'conversion_rate' => $totalCalls > 0 
+                ? round((($stats->appointments_booked ?? 0) / $totalCalls) * 100, 2) 
                 : 0,
         ];
     }
 
     /**
-     * Get calls by agent
+     * Get calls by agent (paginated)
      */
-    public function getByAgent(string $agentId): Collection
+    public function getByAgent(string $agentId, int $perPage = 100): LengthAwarePaginator
     {
         return $this->model
             ->where('agent_id', $agentId)
             ->with(['customer', 'appointment'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
     }
 
     /**

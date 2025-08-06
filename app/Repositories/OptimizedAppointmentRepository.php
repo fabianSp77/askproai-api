@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Optimized Appointment Repository
@@ -15,9 +16,9 @@ use Carbon\Carbon;
 class OptimizedAppointmentRepository
 {
     /**
-     * Get appointments with all relations efficiently loaded
+     * Get appointments with all relations efficiently loaded (paginated)
      */
-    public function getAppointmentsWithRelations(array $filters = []): Collection
+    public function getAppointmentsWithRelations(array $filters = [], int $perPage = 100): LengthAwarePaginator
     {
         $query = Appointment::query()
             ->with([
@@ -54,7 +55,50 @@ class OptimizedAppointmentRepository
             $query->where('status', $filters['status']);
         }
         
-        return $query->get();
+        return $query->paginate($perPage);
+    }
+    
+    /**
+     * Process appointments with relations in chunks
+     */
+    public function processAppointmentsWithRelations(array $filters, callable $processor, int $chunkSize = 500): bool
+    {
+        $query = Appointment::query()
+            ->with([
+                'customer:id,name,phone,email',
+                'staff:id,name,avatar_url',
+                'branch:id,name,address',
+                'service:id,name,duration,price',
+                'eventType:id,name,slug'
+            ])
+            ->select([
+                'id',
+                'customer_id',
+                'staff_id',
+                'branch_id',
+                'service_id',
+                'event_type_id',
+                'start_time',
+                'end_time',
+                'status',
+                'notes',
+                'created_at'
+            ]);
+        
+        // Apply filters
+        if (isset($filters['branch_id'])) {
+            $query->where('branch_id', $filters['branch_id']);
+        }
+        
+        if (isset($filters['date'])) {
+            $query->whereDate('start_time', $filters['date']);
+        }
+        
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        
+        return $query->chunk($chunkSize, $processor);
     }
     
     /**
@@ -179,7 +223,7 @@ class OptimizedAppointmentRepository
     }
     
     /**
-     * Get upcoming appointments for a customer with minimal queries
+     * Get upcoming appointments for a customer with minimal queries (with limit for safety)
      */
     public function getCustomerUpcomingAppointments(int $customerId, int $limit = 5): Collection
     {

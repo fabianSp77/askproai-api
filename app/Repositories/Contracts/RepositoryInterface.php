@@ -9,7 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 interface RepositoryInterface
 {
     /**
-     * Get all records
+     * Get all records (deprecated for large datasets)
      */
     public function all(array $columns = ['*']): Collection;
 
@@ -29,9 +29,9 @@ interface RepositoryInterface
     public function findOrFail(int $id, array $columns = ['*']): Model;
 
     /**
-     * Find records by criteria
+     * Find records by criteria (paginated)
      */
-    public function findBy(array $criteria, array $columns = ['*']): Collection;
+    public function findBy(array $criteria, array $columns = ['*'], int $perPage = 50): LengthAwarePaginator;
 
     /**
      * Find single record by criteria

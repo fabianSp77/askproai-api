@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Customer;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CustomerRepository extends BaseRepository
 {
@@ -77,9 +78,9 @@ class CustomerRepository extends BaseRepository
     }
 
     /**
-     * Get customers with appointments
+     * Get customers with appointments (paginated)
      */
-    public function getWithAppointments(): Collection
+    public function getWithAppointments(int $perPage = 100): LengthAwarePaginator
     {
         return $this->model->newQuery()
             ->has('appointments')
@@ -87,13 +88,27 @@ class CustomerRepository extends BaseRepository
                 $query->orderBy('starts_at', 'desc')->limit(10);
             }])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
+    }
+    
+    /**
+     * Process customers with appointments in chunks
+     */
+    public function processCustomersWithAppointments(callable $processor): bool
+    {
+        return $this->pushCriteria(function ($query) {
+            $query->has('appointments')
+                  ->with(['appointments' => function ($query) {
+                      $query->orderBy('starts_at', 'desc')->limit(10);
+                  }])
+                  ->orderBy('created_at', 'desc');
+        })->chunkSafe(200, $processor);
     }
 
     /**
-     * Get customers by branch
+     * Get customers by branch (paginated)
      */
-    public function getByBranch(string|int $branchId): Collection
+    public function getByBranch(string|int $branchId, int $perPage = 100): LengthAwarePaginator
     {
         return $this->model->newQuery()
             ->whereHas('appointments', function ($query) use ($branchId) {
@@ -104,13 +119,13 @@ class CustomerRepository extends BaseRepository
                       ->orderBy('starts_at', 'desc');
             }])
             ->orderBy('name')
-            ->get();
+            ->paginate($perPage);
     }
 
     /**
-     * Get customers with no-shows
+     * Get customers with no-shows (paginated)
      */
-    public function getWithNoShows(int $minNoShows = 1): Collection
+    public function getWithNoShows(int $minNoShows = 1, int $perPage = 100): LengthAwarePaginator
     {
         return $this->model->newQuery()
             ->whereHas('appointments', function ($query) {
@@ -120,11 +135,11 @@ class CustomerRepository extends BaseRepository
                 $query->where('status', 'no_show');
             }])
             ->orderBy('no_show_count', 'desc')
-            ->get();
+            ->paginate($perPage);
     }
 
     /**
-     * Get top customers by appointment count
+     * Get top customers by appointment count (with limit for safety)
      */
     public function getTopCustomers(int $limit = 10): Collection
     {
@@ -136,9 +151,9 @@ class CustomerRepository extends BaseRepository
     }
 
     /**
-     * Search customers
+     * Search customers (with limit for safety)
      */
-    public function search(string $term): Collection
+    public function search(string $term, int $limit = 50): Collection
     {
         $normalizedTerm = preg_replace('/[^0-9+]/', '', $term);
         
@@ -153,7 +168,7 @@ class CustomerRepository extends BaseRepository
                 }
             })
             ->orderBy('name')
-            ->limit(50)
+            ->limit($limit)
             ->get();
     }
 
@@ -172,14 +187,14 @@ class CustomerRepository extends BaseRepository
     }
 
     /**
-     * Get customers by tag
+     * Get customers by tag (paginated)
      */
-    public function getByTag(string $tag): Collection
+    public function getByTag(string $tag, int $perPage = 100): LengthAwarePaginator
     {
         return $this->model->newQuery()
             ->whereJsonContains('tags', $tag)
             ->orderBy('name')
-            ->get();
+            ->paginate($perPage);
     }
 
     /**
@@ -219,9 +234,9 @@ class CustomerRepository extends BaseRepository
     }
 
     /**
-     * Get birthday customers
+     * Get birthday customers (limited result for safety)
      */
-    public function getBirthdayCustomers(\Carbon\Carbon $date = null): Collection
+    public function getBirthdayCustomers(\Carbon\Carbon $date = null, int $limit = 100): Collection
     {
         $date = $date ?? now();
         
@@ -229,6 +244,7 @@ class CustomerRepository extends BaseRepository
             ->whereMonth('birthdate', $date->month)
             ->whereDay('birthdate', $date->day)
             ->orderBy('name')
+            ->limit($limit)
             ->get();
     }
 }

@@ -88,13 +88,38 @@ abstract class BaseRepository implements RepositoryInterface
     }
 
     /**
-     * Get all records
+     * Get all records (with memory safety warning)
+     * 
+     * @deprecated Use paginate(), chunk(), or allSafe() for large datasets
      */
     public function all(array $columns = ['*']): Collection
     {
+        // Log warning for potential memory issues in debug mode
+        if (config('app.debug')) {
+            logger()->warning('Repository::all() called - consider pagination for large datasets', [
+                'repository' => get_class($this),
+                'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)
+            ]);
+        }
+        
         $result = $this->query->get($columns);
         $this->resetQuery();
         return $result;
+    }
+    
+    /**
+     * Get all records with automatic memory safety (chunked internally)
+     */
+    public function allSafe(array $columns = ['*'], int $chunkSize = 1000): Collection
+    {
+        $results = collect();
+        
+        $this->query->chunk($chunkSize, function ($chunk) use (&$results) {
+            $results = $results->merge($chunk);
+        });
+        
+        $this->resetQuery();
+        return $results;
     }
 
     /**
@@ -128,12 +153,21 @@ abstract class BaseRepository implements RepositoryInterface
     }
 
     /**
-     * Find records by criteria
+     * Find records by criteria (paginated)
      */
-    public function findBy(array $criteria, array $columns = ['*']): Collection
+    public function findBy(array $criteria, array $columns = ['*'], int $perPage = 50): LengthAwarePaginator
     {
         $this->applyConditions($criteria);
-        return $this->all($columns);
+        return $this->paginate($perPage, $columns);
+    }
+    
+    /**
+     * Find records by criteria (all results - use carefully)
+     */
+    public function findByAll(array $criteria, array $columns = ['*']): Collection
+    {
+        $this->applyConditions($criteria);
+        return $this->allSafe($columns);
     }
 
     /**
@@ -370,9 +404,9 @@ abstract class BaseRepository implements RepositoryInterface
     }
     
     /**
-     * Get for list view (optimized)
+     * Get for list view (optimized with pagination)
      */
-    public function forList(array $columns = ['*']): Collection
+    public function forList(array $columns = ['*'], int $perPage = 50): LengthAwarePaginator
     {
         $this->minimal();
         
@@ -383,7 +417,24 @@ abstract class BaseRepository implements RepositoryInterface
             }
         }
         
-        return $this->all($columns);
+        return $this->paginate($perPage, $columns);
+    }
+    
+    /**
+     * Get for list view (all records - use carefully)
+     */
+    public function forListAll(array $columns = ['*']): Collection
+    {
+        $this->minimal();
+        
+        if (method_exists($this->model, 'getCountableRelations')) {
+            $countable = $this->model->getCountableRelations();
+            if (!empty($countable)) {
+                $this->withCount($countable);
+            }
+        }
+        
+        return $this->allSafe($columns);
     }
     
     /**
@@ -396,9 +447,9 @@ abstract class BaseRepository implements RepositoryInterface
     }
     
     /**
-     * Get for API response
+     * Get for API response (paginated)
      */
-    public function forApi(array $includes = []): Collection
+    public function forApi(array $includes = [], int $perPage = 50): LengthAwarePaginator
     {
         if (method_exists($this->model, 'scopeForApi')) {
             $this->query->forApi($includes);
@@ -409,7 +460,24 @@ abstract class BaseRepository implements RepositoryInterface
             }
         }
         
-        return $this->all();
+        return $this->paginate($perPage);
+    }
+    
+    /**
+     * Get for API response (all records - use for exports only)
+     */
+    public function forApiAll(array $includes = []): Collection
+    {
+        if (method_exists($this->model, 'scopeForApi')) {
+            $this->query->forApi($includes);
+        } else {
+            $this->minimal();
+            if (!empty($includes)) {
+                $this->with($includes);
+            }
+        }
+        
+        return $this->allSafe();
     }
     
     /**
@@ -418,7 +486,43 @@ abstract class BaseRepository implements RepositoryInterface
     public function chunk(int $count, callable $callback, string $profile = 'standard'): bool
     {
         $this->withProfile($profile);
-        return $this->query->chunk($count, $callback);
+        $result = $this->query->chunk($count, $callback);
+        $this->resetQuery();
+        return $result;
+    }
+    
+    /**
+     * Process large datasets in chunks with memory monitoring
+     */
+    public function chunkSafe(int $count, callable $callback, string $profile = 'standard'): bool
+    {
+        $this->withProfile($profile);
+        $processedCount = 0;
+        $startMemory = memory_get_usage();
+        
+        $result = $this->query->chunk($count, function ($chunk) use ($callback, &$processedCount, $startMemory) {
+            $beforeMemory = memory_get_usage();
+            $callback($chunk);
+            $afterMemory = memory_get_usage();
+            
+            $processedCount += $chunk->count();
+            
+            // Log memory usage for monitoring
+            if (config('app.debug')) {
+                logger()->debug('Chunk processed', [
+                    'repository' => get_class($this),
+                    'chunk_size' => $chunk->count(),
+                    'total_processed' => $processedCount,
+                    'memory_before' => round($beforeMemory / 1024 / 1024, 2) . 'MB',
+                    'memory_after' => round($afterMemory / 1024 / 1024, 2) . 'MB',
+                    'memory_delta' => round(($afterMemory - $beforeMemory) / 1024 / 1024, 2) . 'MB',
+                    'total_memory_delta' => round(($afterMemory - $startMemory) / 1024 / 1024, 2) . 'MB'
+                ]);
+            }
+        });
+        
+        $this->resetQuery();
+        return $result;
     }
     
     /**

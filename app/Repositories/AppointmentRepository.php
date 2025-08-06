@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AppointmentRepository extends BaseRepository
 {
@@ -26,20 +27,31 @@ class AppointmentRepository extends BaseRepository
     }
 
     /**
-     * Get appointments for date range
+     * Get appointments for date range (paginated)
      */
-    public function getByDateRange(Carbon $startDate, Carbon $endDate): Collection
+    public function getByDateRange(Carbon $startDate, Carbon $endDate, int $perPage = 100): LengthAwarePaginator
     {
         return $this->pushCriteria(function ($query) use ($startDate, $endDate) {
             $query->whereBetween('starts_at', [$startDate, $endDate])
                   ->orderBy('starts_at');
-        })->standard()->all();
+        })->standard()->paginate($perPage);
+    }
+    
+    /**
+     * Process appointments by date range in chunks
+     */
+    public function processAppointmentsByDateRange(Carbon $startDate, Carbon $endDate, callable $processor): bool
+    {
+        return $this->pushCriteria(function ($query) use ($startDate, $endDate) {
+            $query->whereBetween('starts_at', [$startDate, $endDate])
+                  ->orderBy('starts_at');
+        })->chunkSafe(500, $processor, 'standard');
     }
 
     /**
-     * Get appointments for staff member
+     * Get appointments for staff member (paginated)
      */
-    public function getByStaff(string|int $staffId, ?Carbon $date = null): Collection
+    public function getByStaff(string|int $staffId, ?Carbon $date = null, int $perPage = 100): LengthAwarePaginator
     {
         return $this->pushCriteria(function ($query) use ($staffId, $date) {
             $query->where('staff_id', $staffId);
@@ -49,13 +61,13 @@ class AppointmentRepository extends BaseRepository
             }
             
             $query->orderBy('starts_at');
-        })->standard()->all();
+        })->standard()->paginate($perPage);
     }
 
     /**
-     * Get appointments for customer
+     * Get appointments for customer (paginated)
      */
-    public function getByCustomer(string|int $customerId, bool $onlyFuture = true): Collection
+    public function getByCustomer(string|int $customerId, bool $onlyFuture = true, int $perPage = 50): LengthAwarePaginator
     {
         $query = $this->model->where('customer_id', $customerId);
         
@@ -66,7 +78,24 @@ class AppointmentRepository extends BaseRepository
         return $query
             ->with(['staff', 'service', 'branch'])
             ->orderBy('starts_at')
-            ->get();
+            ->paginate($perPage);
+    }
+    
+    /**
+     * Get appointments for customer (all - for customer history)
+     */
+    public function getByCustomerAll(string|int $customerId, bool $onlyFuture = true): Collection
+    {
+        return $this->pushCriteria(function ($query) use ($customerId, $onlyFuture) {
+            $query->where('customer_id', $customerId);
+            
+            if ($onlyFuture) {
+                $query->where('starts_at', '>=', now());
+            }
+            
+            $query->with(['staff', 'service', 'branch'])
+                  ->orderBy('starts_at');
+        })->allSafe();
     }
 
     /**
@@ -116,9 +145,9 @@ class AppointmentRepository extends BaseRepository
     }
 
     /**
-     * Get appointments by status
+     * Get appointments by status (paginated)
      */
-    public function getByStatus(string $status, ?Carbon $date = null): Collection
+    public function getByStatus(string $status, ?Carbon $date = null, int $perPage = 100): LengthAwarePaginator
     {
         $query = $this->model->where('status', $status);
         
@@ -129,7 +158,7 @@ class AppointmentRepository extends BaseRepository
         return $query
             ->with(['customer', 'staff', 'branch', 'service'])
             ->orderBy('starts_at')
-            ->get();
+            ->paginate($perPage);
     }
 
     /**
@@ -144,30 +173,39 @@ class AppointmentRepository extends BaseRepository
     }
 
     /**
-     * Get appointment statistics
+     * Get appointment statistics (optimized with single query)
      */
     public function getStatistics(Carbon $startDate, Carbon $endDate): array
     {
-        $appointments = $this->model
+        // Use a single aggregation query for better performance
+        $stats = $this->model
             ->whereBetween('starts_at', [$startDate, $endDate])
-            ->get();
+            ->selectRaw('
+                COUNT(*) as total_appointments,
+                COUNT(CASE WHEN status = "completed" THEN 1 END) as completed_appointments,
+                COUNT(CASE WHEN status = "cancelled" THEN 1 END) as cancelled_appointments,
+                COUNT(CASE WHEN status = "no_show" THEN 1 END) as no_show_appointments,
+                SUM(CASE WHEN status = "completed" THEN price ELSE 0 END) as total_revenue
+            ')
+            ->first();
             
-        $completed = $appointments->where('status', 'completed');
+        $completedCount = $stats->completed_appointments ?? 0;
+        $totalRevenue = $stats->total_revenue ?? 0;
         
         return [
-            'total_appointments' => $appointments->count(),
-            'completed_appointments' => $completed->count(),
-            'cancelled_appointments' => $appointments->where('status', 'cancelled')->count(),
-            'no_show_appointments' => $appointments->where('status', 'no_show')->count(),
-            'total_revenue' => $completed->sum('price'),
-            'average_appointment_value' => $completed->count() > 0 ? $completed->sum('price') / $completed->count() : 0,
+            'total_appointments' => $stats->total_appointments ?? 0,
+            'completed_appointments' => $completedCount,
+            'cancelled_appointments' => $stats->cancelled_appointments ?? 0,
+            'no_show_appointments' => $stats->no_show_appointments ?? 0,
+            'total_revenue' => $totalRevenue,
+            'average_appointment_value' => $completedCount > 0 ? round($totalRevenue / $completedCount, 2) : 0,
         ];
     }
 
     /**
-     * Search appointments
+     * Search appointments (with limit for safety)
      */
-    public function search(string $term): Collection
+    public function search(string $term, int $limit = 50): Collection
     {
         return $this->model
             ->whereHas('customer', function ($query) use ($term) {
@@ -181,7 +219,7 @@ class AppointmentRepository extends BaseRepository
             ->orWhere('notes', 'like', "%{$term}%")
             ->with(['customer', 'staff', 'branch', 'service'])
             ->orderBy('starts_at', 'desc')
-            ->limit(50)
+            ->limit($limit)
             ->get();
     }
 }
