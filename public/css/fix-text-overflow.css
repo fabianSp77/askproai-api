@@ -1,0 +1,183 @@
+/* ================================================================
+   FIX TEXT OVERFLOW - GitHub Issue #496
+   Ensures text stays within containers and cards
+   ================================================================ */
+
+/* 1. Global overflow fixes for all cards and containers */
+.fi-section,
+.fi-card,
+.fi-widget,
+.fi-panel,
+.fi-box,
+[class*="card"],
+[class*="panel"],
+[class*="widget"] {
+    overflow: hidden !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+}
+
+/* 2. Fix text in all card content areas */
+.fi-card-content,
+.fi-widget-content,
+.fi-section-content,
+.fi-panel-body,
+.fi-box-content,
+[class*="card-body"],
+[class*="card-content"],
+[class*="panel-body"] {
+    overflow: hidden !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+}
+
+/* 3. Fix long text in paragraphs and divs */
+p, div, span, td, th {
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    hyphens: auto !important;
+}
+
+/* 4. Fix table cells specifically */
+.fi-ta-table td,
+.fi-ta-table th,
+table td,
+table th {
+    max-width: 200px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 5. For description/content fields allow wrapping */
+.fi-ta-table td.fi-ta-text,
+[class*="description"],
+[class*="content"],
+[class*="message"],
+[class*="notes"] {
+    white-space: normal !important;
+    word-break: break-word !important;
+    max-width: 300px !important;
+}
+
+/* 6. Fix stats widgets */
+.fi-stats-card,
+.fi-stats-overview,
+.fi-widget-stats-card {
+    overflow: hidden !important;
+}
+
+.fi-stats-card .fi-stats-card-value,
+.fi-stats-card .fi-stats-card-label {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 7. Fix notification and alert boxes */
+.fi-notification,
+.fi-alert,
+.fi-banner {
+    overflow: hidden !important;
+    word-wrap: break-word !important;
+}
+
+/* 8. Fix form labels and inputs */
+.fi-form-label,
+.fi-input-label,
+label {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+}
+
+/* 9. Fix sidebar items */
+.fi-sidebar-item,
+.fi-sidebar-nav a {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 10. Fix modal content */
+.fi-modal-content,
+.fi-modal-body {
+    overflow: auto !important;
+    max-height: 80vh !important;
+}
+
+/* 11. Fix code blocks and pre tags */
+pre, code {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    white-space: pre-wrap !important;
+}
+
+/* 12. Emergency fix for any element with visible overflow */
+*:not(body):not(html) {
+    max-width: 100% !important;
+}
+
+/* 13. Fix specific widget containers */
+.fi-wi-stats-overview-card,
+.fi-wi-stats-overview-stat {
+    overflow: hidden !important;
+}
+
+.fi-wi-stats-overview-stat-value,
+.fi-wi-stats-overview-stat-label {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* 14. Fix grid and flex containers */
+.grid > *,
+.flex > * {
+    min-width: 0 !important; /* Allow flex items to shrink */
+    overflow: hidden !important;
+}
+
+/* 15. Fix action buttons and links */
+.fi-link,
+.fi-button,
+.fi-action {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 16. Dashboard specific fixes */
+.fi-dashboard-widget {
+    overflow: hidden !important;
+}
+
+.fi-dashboard-widget-content {
+    overflow: auto !important;
+    max-height: 400px !important;
+}
+
+/* 17. Fix long URLs and email addresses */
+a[href^="http"],
+a[href^="mailto"] {
+    word-break: break-all !important;
+    overflow-wrap: break-word !important;
+}
+
+/* 18. Responsive table wrapper */
+.table-responsive,
+.fi-table-wrapper {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* 19. Fix card headers */
+.fi-card-header,
+.fi-widget-header,
+.fi-section-header {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}

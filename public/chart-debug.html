@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chart Debug - Direct Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px; 
+            background: #f3f4f6; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+        }
+        .status-box {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #1f2937;
+            font-size: 18px;
+        }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .warning { color: #f59e0b; font-weight: bold; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        pre {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Analytics Dashboard - Chart Debug</h1>
+        
+        <div class="status-box">
+            <h2>1. Library Status</h2>
+            <div id="library-status"></div>
+        </div>
+        
+        <div class="status-box">
+            <h2>2. Create Test Charts</h2>
+            <button onclick="createTestCharts()">Create Charts</button>
+            <button onclick="destroyTestCharts()">Destroy Charts</button>
+            <button onclick="simulateLivewireUpdate()">Simulate Livewire Update</button>
+            <div id="creation-log" style="margin-top: 10px;"></div>
+        </div>
+        
+        <div class="grid">
+            <div class="chart-container">
+                <h2>Appointments (Bar)</h2>
+                <canvas id="appointmentsChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h2>Revenue (Line)</h2>
+                <canvas id="revenueChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h2>Call Distribution (Doughnut)</h2>
+                <canvas id="callDistributionChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h2>Calls Timeline (Line)</h2>
+                <canvas id="callsTimelineChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h2>Heatmap (ApexCharts)</h2>
+            <div id="heatmap"></div>
+        </div>
+        
+        <div class="status-box">
+            <h2>3. Console Output</h2>
+            <pre id="console-output"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Override console.log to capture output
+        const originalLog = console.log;
+        const logOutput = document.getElementById('console-output');
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg).join(' ');
+            logOutput.innerHTML += message + '\n';
+        };
+
+        // Check libraries
+        function checkLibraries() {
+            const status = document.getElementById('library-status');
+            let html = '<ul>';
+            
+            if (typeof Chart !== 'undefined') {
+                html += '<li class="success">✅ Chart.js loaded (version ' + Chart.version + ')</li>';
+            } else {
+                html += '<li class="error">❌ Chart.js NOT loaded</li>';
+            }
+            
+            if (typeof ApexCharts !== 'undefined') {
+                html += '<li class="success">✅ ApexCharts loaded</li>';
+            } else {
+                html += '<li class="error">❌ ApexCharts NOT loaded</li>';
+            }
+            
+            html += '</ul>';
+            status.innerHTML = html;
+        }
+
+        // Chart storage (like in the real dashboard)
+        window.dashboardCharts = {};
+
+        function destroyExistingCharts() {
+            console.log('🧹 Destroying existing charts...');
+            Object.keys(window.dashboardCharts).forEach(key => {
+                if (window.dashboardCharts[key]) {
+                    if (typeof window.dashboardCharts[key].destroy === 'function') {
+                        window.dashboardCharts[key].destroy();
+                        console.log('Destroyed: ' + key);
+                    }
+                    delete window.dashboardCharts[key];
+                }
+            });
+        }
+
+        function createTestCharts() {
+            console.log('🚀 Creating test charts...');
+            
+            destroyExistingCharts();
+            
+            const log = document.getElementById('creation-log');
+            log.innerHTML = '';
+            
+            // Sample data (same structure as PHP would generate)
+            const chartData = {
+                labels: ['07.07', '08.07', '09.07', '10.07', '11.07', '12.07', '13.07'],
+                appointments: [1, 7, 4, 0, 1, 0, 1],
+                revenue: [0, 50, 120, 0, 30, 0, 45],
+                calls: [5, 0, 0, 0, 30, 0, 0]
+            };
+            
+            // 1. Appointments Chart
+            try {
+                const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+                window.dashboardCharts.appointments = new Chart(appointmentsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: 'Termine',
+                            data: chartData.appointments,
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: 'rgb(59, 130, 246)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+                log.innerHTML += '<p class="success">✅ Appointments chart created</p>';
+                console.log('✅ Appointments chart created');
+            } catch (e) {
+                log.innerHTML += '<p class="error">❌ Appointments chart failed: ' + e.message + '</p>';
+                console.error('❌ Appointments chart failed:', e);
+            }
+            
+            // 2. Revenue Chart
+            try {
+                const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+                window.dashboardCharts.revenue = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: 'Umsatz',
+                            data: chartData.revenue,
+                            borderColor: 'rgb(34, 197, 94)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString('de-DE') + ' €';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                log.innerHTML += '<p class="success">✅ Revenue chart created</p>';
+                console.log('✅ Revenue chart created');
+            } catch (e) {
+                log.innerHTML += '<p class="error">❌ Revenue chart failed: ' + e.message + '</p>';
+                console.error('❌ Revenue chart failed:', e);
+            }
+            
+            // 3. Call Distribution
+            try {
+                const callDistCtx = document.getElementById('callDistributionChart').getContext('2d');
+                window.dashboardCharts.callDistribution = new Chart(callDistCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Eingehend', 'Ausgehend'],
+                        datasets: [{
+                            data: [35, 0],
+                            backgroundColor: [
+                                'rgba(34, 197, 94, 0.8)',
+                                'rgba(59, 130, 246, 0.8)'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+                log.innerHTML += '<p class="success">✅ Call distribution chart created</p>';
+                console.log('✅ Call distribution chart created');
+            } catch (e) {
+                log.innerHTML += '<p class="error">❌ Call distribution failed: ' + e.message + '</p>';
+                console.error('❌ Call distribution failed:', e);
+            }
+            
+            // 4. Calls Timeline
+            try {
+                const callsTimelineCtx = document.getElementById('callsTimelineChart').getContext('2d');
+                window.dashboardCharts.callsTimeline = new Chart(callsTimelineCtx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: 'Anrufe',
+                            data: chartData.calls,
+                            borderColor: 'rgb(168, 85, 247)',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+                log.innerHTML += '<p class="success">✅ Calls timeline chart created</p>';
+                console.log('✅ Calls timeline chart created');
+            } catch (e) {
+                log.innerHTML += '<p class="error">❌ Calls timeline failed: ' + e.message + '</p>';
+                console.error('❌ Calls timeline failed:', e);
+            }
+            
+            // 5. Heatmap
+            try {
+                const heatmapData = [
+                    { name: 'Mo', data: [0, 0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0] },
+                    { name: 'Di', data: [0, 2, 3, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0] },
+                    { name: 'Mi', data: [0, 1, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0] },
+                    { name: 'Do', data: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0] },
+                    { name: 'Fr', data: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+                    { name: 'Sa', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+                    { name: 'So', data: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
+                ];
+                
+                const heatmapOptions = {
+                    series: heatmapData,
+                    chart: {
+                        height: 350,
+                        type: 'heatmap',
+                        toolbar: { show: false }
+                    },
+                    plotOptions: {
+                        heatmap: {
+                            shadeIntensity: 0.5,
+                            colorScale: {
+                                ranges: [
+                                    { from: 0, to: 0, name: 'Keine', color: '#E5E7EB' },
+                                    { from: 1, to: 3, name: 'Wenig', color: '#DBEAFE' },
+                                    { from: 4, to: 6, name: 'Mittel', color: '#93C5FD' },
+                                    { from: 7, to: 10, name: 'Viel', color: '#3B82F6' }
+                                ]
+                            }
+                        }
+                    },
+                    xaxis: {
+                        type: 'category',
+                        categories: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00']
+                    }
+                };
+                
+                window.dashboardCharts.heatmap = new ApexCharts(document.querySelector("#heatmap"), heatmapOptions);
+                window.dashboardCharts.heatmap.render();
+                log.innerHTML += '<p class="success">✅ Heatmap created</p>';
+                console.log('✅ Heatmap created');
+            } catch (e) {
+                log.innerHTML += '<p class="error">❌ Heatmap failed: ' + e.message + '</p>';
+                console.error('❌ Heatmap failed:', e);
+            }
+        }
+
+        function destroyTestCharts() {
+            destroyExistingCharts();
+            document.getElementById('creation-log').innerHTML = '<p class="warning">⚠️ All charts destroyed</p>';
+        }
+
+        function simulateLivewireUpdate() {
+            console.log('🔄 Simulating Livewire update...');
+            destroyTestCharts();
+            setTimeout(() => {
+                console.log('🔄 Re-creating charts after Livewire update...');
+                createTestCharts();
+            }, 500);
+        }
+
+        // Check libraries on load
+        window.addEventListener('DOMContentLoaded', function() {
+            checkLibraries();
+            console.log('Page loaded, ready to test charts');
+        });
+    </script>
+</body>
+</html>

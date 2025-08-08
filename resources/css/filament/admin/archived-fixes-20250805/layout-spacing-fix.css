@@ -1,0 +1,201 @@
+/* ================================================================
+   LAYOUT SPACING FIX - GitHub Issue #498
+   Behebt Abstände zwischen Sidebar und Content + Rechtes Abschneiden
+   ================================================================ */
+
+/* 1. Body und HTML - Grundlegende Fixes */
+html, body {
+    overflow-x: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+.fi-body {
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+}
+
+/* 2. Sidebar - Exakte Breite */
+.fi-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 16rem !important; /* 256px */
+    background: white !important;
+    border-right: 1px solid #e5e7eb !important;
+    z-index: 40 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* 3. Main Content - Korrekter Abstand und volle Breite */
+.fi-main {
+    margin-left: 16rem !important; /* Exakt gleiche Breite wie Sidebar */
+    width: calc(100% - 16rem) !important; /* Verhindert Überlauf */
+    min-height: 100vh !important;
+    position: relative !important;
+}
+
+/* 4. Content Container - Kein zusätzlicher Margin */
+.fi-main-ctn {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1.5rem !important;
+    margin: 0 !important; /* Kein zusätzlicher Margin */
+    box-sizing: border-box !important;
+}
+
+/* 5. Page Container */
+.fi-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 6. Sections und Widgets - Volle Breite nutzen */
+.fi-section,
+.fi-widget {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 1.5rem !important;
+    box-sizing: border-box !important;
+}
+
+/* 7. Stats Grid - Responsive ohne Überlauf */
+.fi-wi-stats-overview {
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+.fi-wi-stats-overview-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    gap: 1rem !important;
+    width: 100% !important;
+}
+
+/* 8. Tables - Scrollbar nur bei Bedarf */
+.fi-ta-ctn {
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+.fi-ta-table {
+    width: 100% !important;
+    min-width: 600px !important; /* Mindestbreite für Lesbarkeit */
+}
+
+/* 9. Forms Container */
+.fi-form {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* 10. Header Bereich */
+.fi-header {
+    width: 100% !important;
+    padding: 1rem 1.5rem !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* 11. Topbar wenn vorhanden */
+.fi-topbar {
+    margin-left: 16rem !important;
+    width: calc(100% - 16rem) !important;
+}
+
+/* 12. Mobile Responsive */
+@media (max-width: 1024px) {
+    .fi-sidebar {
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    .fi-main,
+    .fi-topbar {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    
+    .fi-main-ctn {
+        padding: 1rem !important;
+    }
+}
+
+/* 13. Sidebar Navigation Items - Bessere Struktur */
+.fi-sidebar-header {
+    padding: 1rem !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+.fi-sidebar-nav {
+    padding: 0.5rem 0 !important;
+}
+
+.fi-sidebar-group {
+    margin-bottom: 0.5rem !important;
+}
+
+.fi-sidebar-group-label {
+    padding: 0.5rem 1rem !important;
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    color: #6b7280 !important;
+}
+
+.fi-sidebar-item {
+    margin: 0 !important;
+}
+
+.fi-sidebar-item a,
+.fi-sidebar-item button {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0.625rem 1rem !important;
+    gap: 0.75rem !important;
+    transition: background-color 0.15s ease !important;
+}
+
+.fi-sidebar-item-icon {
+    flex-shrink: 0 !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+.fi-sidebar-item-label {
+    flex: 1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 14. Entferne alle absoluten Positionierungen die Probleme verursachen */
+.fi-main > * {
+    position: relative !important;
+}
+
+/* 15. Debug - Zeige Grenzen (kann später entfernt werden) */
+/*
+.fi-main {
+    border: 2px solid red !important;
+}
+.fi-main-ctn {
+    border: 2px solid blue !important;
+}
+.fi-section {
+    border: 2px solid green !important;
+}
+*/

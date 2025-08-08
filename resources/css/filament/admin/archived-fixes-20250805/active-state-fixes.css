@@ -1,0 +1,114 @@
+/* Active State Fixes - Ensures proper visibility of active/checked states */
+
+/* Preserve Filament's default checkbox and radio button states */
+.fi-checkbox-input:checked,
+input[type="checkbox"]:checked {
+    /* Let Filament handle the styling */
+    background-color: var(--primary-600, #3b82f6);
+    border-color: var(--primary-600, #3b82f6);
+}
+
+/* Ensure radio buttons show checked state */
+.fi-radio-input:checked,
+input[type="radio"]:checked {
+    background-color: var(--primary-600, #3b82f6);
+    border-color: var(--primary-600, #3b82f6);
+}
+
+/* Ensure focus states are visible for accessibility */
+.fi-checkbox-input:focus,
+.fi-radio-input:focus,
+input[type="checkbox"]:focus,
+input[type="radio"]:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Ensure sidebar active states are visible */
+.fi-sidebar-item-active,
+.fi-sidebar-item-active > button,
+.fi-sidebar-item-active > a {
+    background-color: rgb(254 243 199) !important; /* amber-50 */
+    color: rgb(180 83 9) !important; /* amber-700 */
+}
+
+.dark .fi-sidebar-item-active,
+.dark .fi-sidebar-item-active > button,
+.dark .fi-sidebar-item-active > a {
+    background-color: rgb(120 53 15) !important; /* amber-900 */
+    color: rgb(252 211 77) !important; /* amber-300 */
+}
+
+/* Ensure toggle switches show state properly */
+.fi-toggle-input:checked {
+    background-color: var(--success-600, #10b981);
+}
+
+/* Tab active states */
+.fi-tabs-item-active {
+    border-bottom-color: var(--primary-600, #3b82f6) !important;
+    color: var(--primary-600, #3b82f6) !important;
+}
+
+/* Button active/pressed states */
+.fi-btn:active {
+    transform: translateY(1px);
+}
+
+/* Form field focus states */
+.fi-input:focus,
+.fi-select:focus,
+.fi-textarea:focus {
+    border-color: var(--primary-500, #3b82f6);
+    ring-color: var(--primary-500, #3b82f6);
+}
+
+/* Dropdown item hover/active states */
+.fi-dropdown-item:hover {
+    background-color: var(--gray-50, #f9fafb);
+}
+
+.dark .fi-dropdown-item:hover {
+    background-color: var(--gray-700, #374151);
+}
+
+/* Selected dropdown items */
+.fi-dropdown-item-active,
+.fi-dropdown-item[aria-selected="true"] {
+    background-color: var(--primary-50, #eff6ff);
+    color: var(--primary-700, #1d4ed8);
+}
+
+.dark .fi-dropdown-item-active,
+.dark .fi-dropdown-item[aria-selected="true"] {
+    background-color: var(--primary-900, #1e3a8a);
+    color: var(--primary-300, #93bbfe);
+}
+
+/* Navigation active indicators */
+.fi-navigation-item-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--primary-600, #3b82f6);
+}
+
+/* Ensure transitions don't hide state changes */
+* {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* But instant feedback for interactive elements */
+input[type="checkbox"],
+input[type="radio"],
+.fi-toggle-input,
+.fi-checkbox-input,
+.fi-radio-input {
+    transition-duration: 0ms !important;
+}

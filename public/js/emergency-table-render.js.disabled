@@ -1,0 +1,103 @@
+// Emergency table render - fetch and display calls data if table is missing
+
+(function() {
+    console.log('Emergency table render starting...');
+    
+    // Wait for page load
+    setTimeout(async () => {
+        // Check if table already exists
+        const existingTable = document.querySelector('.fi-ta-table tbody tr');
+        if (existingTable && existingTable.textContent.trim() !== '') {
+            console.log('Table already has content, skipping emergency render');
+            return;
+        }
+        
+        console.log('No table content found, fetching data...');
+        
+        try {
+            // Fetch calls data
+            const response = await fetch('/test-calls-data.php');
+            const data = await response.json();
+            
+            if (data.error) {
+                console.error('Not authenticated:', data.error);
+                return;
+            }
+            
+            console.log(`Fetched ${data.recent_calls.length} calls for company ${data.company_id}`);
+            
+            // Find table body or create one
+            let tbody = document.querySelector('.fi-ta-table tbody');
+            if (!tbody) {
+                // Look for any table
+                tbody = document.querySelector('table tbody');
+            }
+            
+            if (!tbody) {
+                console.warn('No table body found to insert data');
+                
+                // Try to find main content area and create a simple table
+                const mainContent = document.querySelector('main, .fi-main, [role="main"]');
+                if (mainContent) {
+                    const tableHtml = `
+                        <div style="padding: 20px; background: #fff; border-radius: 8px; margin: 20px;">
+                            <h2 style="margin-bottom: 20px;">Calls (Emergency Render)</h2>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f3f4f6;">
+                                        <th style="padding: 10px; border: 1px solid #e5e7eb;">ID</th>
+                                        <th style="padding: 10px; border: 1px solid #e5e7eb;">Date</th>
+                                        <th style="padding: 10px; border: 1px solid #e5e7eb;">Duration</th>
+                                        <th style="padding: 10px; border: 1px solid #e5e7eb;">Status</th>
+                                        <th style="padding: 10px; border: 1px solid #e5e7eb;">From</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="emergency-tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    
+                    // Insert at beginning of main content
+                    mainContent.insertAdjacentHTML('afterbegin', tableHtml);
+                    tbody = document.getElementById('emergency-tbody');
+                }
+            }
+            
+            if (tbody) {
+                // Clear existing empty rows
+                if (tbody.children.length === 1 && tbody.children[0].textContent.trim() === '') {
+                    tbody.innerHTML = '';
+                }
+                
+                // Add call data
+                data.recent_calls.forEach(call => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">${call.id}</td>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">${call.date}</td>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">${call.duration} sec</td>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">
+                            <span style="color: ${call.status === 'completed' ? 'green' : 'gray'};">
+                                ${call.status}
+                            </span>
+                        </td>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">${call.from || 'N/A'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+                console.log(`✓ Emergency render complete: ${data.recent_calls.length} calls displayed`);
+                
+                // Add info message
+                const info = document.createElement('div');
+                info.style.cssText = 'background: #fef3c7; border: 1px solid #f59e0b; padding: 10px; margin: 10px 0; border-radius: 4px;';
+                info.textContent = `Emergency render: Showing ${data.recent_calls.length} of ${data.total_calls} total calls`;
+                tbody.parentElement.parentElement.insertBefore(info, tbody.parentElement);
+            }
+            
+        } catch (error) {
+            console.error('Emergency render failed:', error);
+        }
+    }, 2000); // Wait 2 seconds for page to load
+})();

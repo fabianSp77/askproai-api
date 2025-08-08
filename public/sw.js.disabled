@@ -1,0 +1,359 @@
+/*!
+ * AskProAI Service Worker
+ * Performance optimization and offline support
+ * Version: 1.0.0
+ */
+
+const CACHE_VERSION = 'askproai-v1.0.0';
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
+const API_CACHE = `${CACHE_VERSION}-api`;
+
+// Static assets to cache immediately
+const STATIC_ASSETS = [
+    '/',
+    '/admin',
+    '/business/dashboard',
+    '/manifest.json',
+    // Add critical CSS and JS files after build
+];
+
+// Cache strategies
+const CACHE_STRATEGIES = {
+    // Cache first for static assets
+    CACHE_FIRST: 'cache-first',
+    // Network first for dynamic content
+    NETWORK_FIRST: 'network-first',
+    // Stale while revalidate for API calls
+    STALE_WHILE_REVALIDATE: 'stale-while-revalidate'
+};
+
+// Install event - DISABLED for debugging
+self.addEventListener('install', event => {
+    console.log('Service Worker installing (DISABLED)...');
+    // Skip waiting immediately without caching
+    self.skipWaiting();
+});
+
+// Activate event - cleanup old caches
+self.addEventListener('activate', event => {
+    console.log('Service Worker activating...');
+    
+    event.waitUntil(
+        caches.keys()
+            .then(cacheNames => {
+                return Promise.all(
+                    cacheNames
+                        .filter(cacheName => {
+                            return cacheName.startsWith('askproai-') && 
+                                   !cacheName.includes(CACHE_VERSION);
+                        })
+                        .map(cacheName => {
+                            console.log('Deleting old cache:', cacheName);
+                            return caches.delete(cacheName);
+                        })
+                );
+            })
+            .then(() => {
+                console.log('Old caches cleaned up');
+                return self.clients.claim();
+            })
+    );
+});
+
+// Fetch event - DISABLED for debugging
+self.addEventListener('fetch', event => {
+    // Don't intercept any requests - let them go directly to network
+    return;
+});
+
+// Handle requests based on caching strategy
+async function handleRequest(request, strategy, cacheName) {
+    try {
+        switch (strategy) {
+            case CACHE_STRATEGIES.CACHE_FIRST:
+                return await cacheFirst(request, cacheName);
+                
+            case CACHE_STRATEGIES.NETWORK_FIRST:
+                return await networkFirst(request, cacheName);
+                
+            case CACHE_STRATEGIES.STALE_WHILE_REVALIDATE:
+                return await staleWhileRevalidate(request, cacheName);
+                
+            default:
+                return await fetch(request);
+        }
+    } catch (error) {
+        console.error('Request handling failed:', error);
+        return await getOfflineFallback(request);
+    }
+}
+
+// Cache first strategy
+async function cacheFirst(request, cacheName) {
+    const cache = await caches.open(cacheName);
+    const cachedResponse = await cache.match(request);
+    
+    if (cachedResponse) {
+        return cachedResponse;
+    }
+    
+    try {
+        const networkResponse = await fetch(request);
+        
+        if (networkResponse.ok) {
+            cache.put(request, networkResponse.clone());
+        }
+        
+        return networkResponse;
+    } catch (error) {
+        throw error;
+    }
+}
+
+// Network first strategy
+async function networkFirst(request, cacheName) {
+    try {
+        const networkResponse = await fetch(request);
+        
+        if (networkResponse.ok) {
+            const cache = await caches.open(cacheName);
+            cache.put(request, networkResponse.clone());
+        }
+        
+        return networkResponse;
+    } catch (error) {
+        const cache = await caches.open(cacheName);
+        const cachedResponse = await cache.match(request);
+        
+        if (cachedResponse) {
+            return cachedResponse;
+        }
+        
+        throw error;
+    }
+}
+
+// Stale while revalidate strategy
+async function staleWhileRevalidate(request, cacheName) {
+    const cache = await caches.open(cacheName);
+    const cachedResponse = await cache.match(request);
+    
+    // Update cache in background
+    const fetchPromise = fetch(request)
+        .then(networkResponse => {
+            if (networkResponse.ok) {
+                cache.put(request, networkResponse.clone());
+            }
+            return networkResponse;
+        })
+        .catch(error => {
+            console.error('Background fetch failed:', error);
+        });
+    
+    // Return cached response immediately if available
+    if (cachedResponse) {
+        return cachedResponse;
+    }
+    
+    // Wait for network if no cache
+    return await fetchPromise;
+}
+
+// Check if request is for static assets
+function isStaticAsset(url) {
+    const staticAssetExtensions = [
+        '.css', '.js', '.woff', '.woff2', '.ttf', '.otf',
+        '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico',
+        '.webp', '.avif'
+    ];
+    
+    return staticAssetExtensions.some(ext => url.pathname.endsWith(ext));
+}
+
+// Check if request is API call
+function isApiRequest(url) {
+    return url.pathname.startsWith('/api/') || 
+           url.hostname === 'api.askproai.de' ||
+           url.pathname.includes('/livewire/');
+}
+
+// Get offline fallback
+async function getOfflineFallback(request) {
+    const url = new URL(request.url);
+    
+    if (request.headers.get('accept')?.includes('text/html')) {
+        // Return cached page or offline page
+        const cache = await caches.open(DYNAMIC_CACHE);
+        const cachedPage = await cache.match(request);
+        
+        if (cachedPage) {
+            return cachedPage;
+        }
+        
+        // Return offline page
+        return new Response(`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Offline - AskProAI</title>
+                    <style>
+                        body {
+                            font-family: system-ui, -apple-system, sans-serif;
+                            margin: 0;
+                            padding: 2rem;
+                            text-align: center;
+                            background: #f8fafc;
+                            color: #1e293b;
+                        }
+                        .container {
+                            max-width: 400px;
+                            margin: 2rem auto;
+                            padding: 2rem;
+                            background: white;
+                            border-radius: 1rem;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        }
+                        .icon {
+                            font-size: 4rem;
+                            margin-bottom: 1rem;
+                        }
+                        h1 {
+                            color: #475569;
+                            margin-bottom: 1rem;
+                        }
+                        p {
+                            color: #64748b;
+                            margin-bottom: 2rem;
+                        }
+                        button {
+                            background: #3b82f6;
+                            color: white;
+                            border: none;
+                            padding: 0.75rem 1.5rem;
+                            border-radius: 0.5rem;
+                            font-size: 1rem;
+                            cursor: pointer;
+                            transition: background 0.2s;
+                        }
+                        button:hover {
+                            background: #2563eb;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="icon">📡</div>
+                        <h1>Offline</h1>
+                        <p>Sie sind derzeit offline. Bitte überprüfen Sie Ihre Internetverbindung.</p>
+                        <button onclick="window.location.reload()">Erneut versuchen</button>
+                    </div>
+                </body>
+            </html>
+        `, {
+            status: 200,
+            headers: {
+                'Content-Type': 'text/html'
+            }
+        });
+    }
+    
+    // Return offline indicator for other requests
+    return new Response(JSON.stringify({
+        error: 'offline',
+        message: 'Network request failed - you are offline'
+    }), {
+        status: 503,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+}
+
+// Background sync for form submissions
+self.addEventListener('sync', event => {
+    if (event.tag === 'background-sync') {
+        event.waitUntil(doBackgroundSync());
+    }
+});
+
+async function doBackgroundSync() {
+    // TODO: Implement background sync for form submissions
+    console.log('Background sync triggered');
+}
+
+// Push notification handling
+self.addEventListener('push', event => {
+    const options = {
+        body: 'You have new updates available',
+        icon: '/android-chrome-192x192.png',
+        badge: '/android-chrome-192x192.png',
+        vibrate: [100, 50, 100],
+        data: {
+            dateOfArrival: Date.now(),
+            primaryKey: '2'
+        },
+        actions: [
+            {
+                action: 'explore',
+                title: 'View Updates',
+                icon: '/images/checkmark.png'
+            },
+            {
+                action: 'close',
+                title: 'Close Notification',
+                icon: '/images/xmark.png'
+            }
+        ]
+    };
+    
+    event.waitUntil(
+        self.registration.showNotification('AskProAI Update', options)
+    );
+});
+
+// Notification click handling
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    
+    if (event.action === 'explore') {
+        event.waitUntil(clients.openWindow('/admin'));
+    }
+});
+
+// Performance monitoring
+self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+    
+    if (event.data && event.data.type === 'GET_CACHE_SIZE') {
+        getCacheSize().then(size => {
+            event.ports[0].postMessage({ cacheSize: size });
+        });
+    }
+});
+
+async function getCacheSize() {
+    const cacheNames = await caches.keys();
+    let totalSize = 0;
+    
+    for (const cacheName of cacheNames) {
+        const cache = await caches.open(cacheName);
+        const requests = await cache.keys();
+        
+        for (const request of requests) {
+            const response = await cache.match(request);
+            if (response) {
+                const blob = await response.blob();
+                totalSize += blob.size;
+            }
+        }
+    }
+    
+    return totalSize;
+}
+
+console.log('AskProAI Service Worker loaded successfully');

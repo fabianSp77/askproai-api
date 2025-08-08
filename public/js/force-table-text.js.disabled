@@ -1,0 +1,75 @@
+// Force Table Text Display
+(function() {
+    'use strict';
+    
+    function forceTableText() {
+        // Wait for table to exist
+        const table = document.querySelector('.fi-ta-table');
+        if (!table) {
+            setTimeout(forceTableText, 100);
+            return;
+        }
+        
+        console.log('Forcing table text display...');
+        
+        // Find all table cells
+        const cells = table.querySelectorAll('td');
+        console.log('Found ' + cells.length + ' cells');
+        
+        cells.forEach((cell, index) => {
+            // Check if cell has content
+            const textContent = cell.textContent.trim();
+            const innerHTML = cell.innerHTML;
+            
+            if (innerHTML.length > 0 && textContent.length === 0) {
+                // Cell has HTML but no visible text
+                console.log('Cell ' + index + ' has hidden content:', innerHTML);
+                
+                // Try to extract text from nested elements
+                const spans = cell.querySelectorAll('span');
+                spans.forEach(span => {
+                    span.style.color = '#111827';
+                    span.style.visibility = 'visible';
+                    span.style.display = 'inline-block';
+                });
+            }
+            
+            // Force visibility
+            cell.style.color = '#111827';
+            cell.style.visibility = 'visible';
+            cell.style.opacity = '1';
+            
+            // Add debug border
+            cell.style.border = '1px solid red';
+        });
+        
+        // Check for specific Filament text elements
+        document.querySelectorAll('.fi-ta-text-item').forEach(item => {
+            item.style.color = '#111827';
+            item.style.visibility = 'visible';
+            console.log('Text item content:', item.textContent);
+        });
+        
+        // Force all spans in table to be visible
+        table.querySelectorAll('span').forEach(span => {
+            span.style.color = '#111827';
+            span.style.visibility = 'visible';
+            span.style.opacity = '1';
+        });
+    }
+    
+    // Run immediately
+    forceTableText();
+    
+    // Run after Livewire updates
+    if (window.Livewire) {
+        Livewire.hook('message.processed', () => {
+            setTimeout(forceTableText, 100);
+        });
+    }
+    
+    // Run on Alpine init
+    if (window.Alpine) {
+        document.addEventListener('alpine:init', forceTableText);
+    }
+})();

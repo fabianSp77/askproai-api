@@ -1,0 +1,68 @@
+{
+  "agent_id": "",
+  "channel": "voice",
+  "last_modification_timestamp": 1754589299051,
+  "agent_name": "Hair Salon Assistant - MCP Complete",
+  "response_engine": {
+    "type": "retell-llm",
+    "llm_id": "llm_bb0c324b7399c7423385c5c577c7",
+    "version": 12
+  },
+  "webhook_url": "https://api.askproai.de/api/v2/hair-salon-mcp/retell-webhook",
+  "language": "de-DE",
+  "opt_out_sensitive_data_storage": false,
+  "opt_in_signed_url": false,
+  "end_call_after_silence_ms": 34000,
+  "version": 12,
+  "is_published": false,
+  "version_title": "MCP Complete Version",
+  "post_call_analysis_model": "gemini-2.0-flash",
+  "voice_id": "11labs-Carola",
+  "enable_backchannel": true,
+  "backchannel_frequency": 0.4,
+  "backchannel_words": [
+    "ja",
+    "genau",
+    "verstehe",
+    "okay",
+    "mhm"
+  ],
+  "max_call_duration_ms": 433000,
+  "interruption_sensitivity": 1,
+  "responsiveness": 1,
+  "normalize_for_speech": true,
+  "stt_mode": "accurate",
+  "allow_user_dtmf": false,
+  "user_dtmf_options": {},
+  "denoising_mode": "noise-and-background-speech-cancellation",
+  "retellLlmData": {
+    "llm_id": "llm_bb0c324b7399c7423385c5c577c7",
+    "version": 12,
+    "model": "gemini-2.5-flash",
+    "model_temperature": 0.02,
+    "model_high_priority": false,
+    "tool_call_strict_mode": false,
+    "general_prompt": "Du bist die freundliche Empfangsmitarbeiterin vom Friseursalon \"Schönheit & Stil\". \nDeine Aufgabe ist es, Kundenanrufe entgegenzunehmen und Termine zu vereinbaren.\n\n## Deine Mitarbeiterinnen:\n- **Maria** (ID: 1): Spezialistin für Färbungen und Balayage\n- **Anna** (ID: 2): Expertin für Hochsteckfrisuren und Styling  \n- **Lisa** (ID: 3): Meisterin für Schnitte und Dauerwellen\n\n## WICHTIG - MCP Tools nutzen:\nDu hast Zugriff auf MCP Tools die du AKTIV nutzen musst:\n\n1. **list_services**: Rufe dies auf wenn nach Services/Preisen gefragt wird\n2. **check_availability**: Nutze dies um freie Termine zu prüfen\n3. **book_appointment**: Verwende dies um Termine zu buchen\n4. **schedule_callback**: Für Rückruf-Vereinbarungen\n\n## Gesprächsablauf:\n\n### 1. Begrüßung\n\"Guten Tag, Friseursalon Schönheit & Stil, Sie sprechen mit Tina. Wie kann ich Ihnen helfen?\"\n\n### 2. Service-Auswahl\nWenn der Kunde nach Services fragt:\n- Sage: \"Einen Moment, ich schaue nach unseren Services\"\n- NUTZE das Tool: list_services\n- Warte auf die Antwort\n- Präsentiere die Services mit Preisen\n\n### 3. Terminvereinbarung\nWenn ein Termin gewünscht wird:\n- Frage nach dem gewünschten Datum/Zeit\n- NUTZE das Tool: check_availability mit service_id und date\n- Warte auf die Antwort\n- Biete verfügbare Zeiten an\n- NUTZE das Tool: book_appointment zum Buchen\n\n### 4. Abschluss\n- Bestätige alle Details\n- Bedanke dich\n- Verabschiede dich freundlich\n\n## KRITISCH - Tool-Nutzung:\n- Du MUSST die Tools tatsächlich aufrufen\n- Sage nicht nur \"Ich schaue nach\" - rufe wirklich das Tool auf!\n- Bei Fehlern: Entschuldige dich und biete Rückruf an",
+    "general_tools": [],
+    "states": [],
+    "start_speaker": "agent",
+    "begin_message": "Friseursalon Schönheit & Stil, guten Tag! Sie sprechen mit Tina. Wie kann ich Ihnen helfen?",
+    "last_modification_timestamp": 1754589007200,
+    "is_published": false,
+    "mcps": [
+      {
+        "name": "hair_salon_mcp",
+        "url": "https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+        "headers": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "timeout_ms": 30000,
+        "id": "mcp-hair-salon-main"
+      }
+    ],
+    "knowledge_base_ids": []
+  },
+  "conversationFlow": null,
+  "llmURL": null
+}

@@ -1,0 +1,72 @@
+/* EMERGENCY CLICK FIX - Date: 2025-08-02 */
+
+/* CRITICAL: Disable the blocking overlay from unified-responsive.css */
+@media (max-width: 1023px) {
+    .fi-sidebar-open::before {
+        display: none \!important;
+        content: none \!important;
+        pointer-events: none \!important;
+        opacity: 0 \!important;
+        visibility: hidden \!important;
+        position: static \!important;
+        z-index: -1 \!important;
+    }
+}
+
+/* EMERGENCY: Force all elements to be clickable */
+body,
+.fi-main,
+.fi-main-ctn,
+.fi-page,
+.fi-page-wrapper,
+.fi-page-content,
+.fi-section,
+.fi-section-content,
+.fi-form,
+.fi-form-component-container,
+.fi-ta-table,
+.fi-ta-content,
+.fi-sidebar,
+.fi-sidebar-nav {
+    pointer-events: auto \!important;
+    position: relative \!important;
+    z-index: auto \!important;
+}
+
+/* Ensure ALL interactive elements are clickable */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="link"],
+[wire:click],
+[x-on:click],
+.fi-btn,
+.fi-link,
+.fi-dropdown-trigger,
+.fi-ta-action,
+.fi-sidebar-nav a,
+.fi-sidebar-nav button,
+.fi-sidebar-item {
+    pointer-events: auto \!important;
+    cursor: pointer \!important;
+    position: relative \!important;
+    z-index: 1 \!important;
+}
+
+/* Remove ALL pseudo-element overlays */
+*::before,
+*::after {
+    pointer-events: none \!important;
+}
+
+/* Desktop override - no overlay needed */
+@media (min-width: 1024px) {
+    .fi-sidebar-open::before,
+    body.fi-sidebar-open::before {
+        display: none \!important;
+        content: none \!important;
+    }
+}

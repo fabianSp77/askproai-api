@@ -1,0 +1,44 @@
+{
+  "WICHTIG": "Dies ist die KORREKTE MCP Konfiguration für Retell",
+  "instructions": "Kopiere NUR den 'mcps' Block in deinen Retell Agent unter 'Tool calling' -> 'MCP servers'",
+  
+  "mcps": [
+    {
+      "url": "https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+      "headers": {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    }
+  ],
+  
+  "test_commands": {
+    "initialize": "Retell sollte automatisch 'initialize' aufrufen beim Start",
+    "expected_response": "Liste von Tools (list_services, check_availability, etc.)"
+  },
+  
+  "troubleshooting": {
+    "problem_1": "Wenn Retell den MCP nicht aufruft",
+    "solution_1": "Stelle sicher dass 'Tool calling' aktiviert ist im Agent",
+    
+    "problem_2": "Wenn keine Tools erscheinen",
+    "solution_2": "Prüfe ob die URL korrekt ist (ohne Leerzeichen!)",
+    
+    "problem_3": "Wenn Retell nur Webhook nutzt",
+    "solution_3": "MCP ist für Tool-Calling, Webhook ist für Events - beides kann parallel laufen"
+  },
+  
+  "available_tools_after_init": [
+    "list_services - Zeigt alle Friseur-Services",
+    "check_availability - Prüft verfügbare Termine",
+    "book_appointment - Bucht einen Termin",
+    "schedule_callback - Vereinbart Rückruf"
+  ],
+  
+  "notes": {
+    "1": "MCP URL: https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+    "2": "Webhook URL: https://api.askproai.de/api/v2/hair-salon-mcp/retell-webhook",
+    "3": "MCP = Tool Calling (während Gespräch)",
+    "4": "Webhook = Events (call started/ended)"
+  }
+}

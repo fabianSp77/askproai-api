@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Setup Guide - Retell Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 20px;
+            opacity: 0.95;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 30px;
+            position: relative;
+        }
+        
+        .card h2 {
+            color: #f1f5f9;
+            margin-bottom: 20px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .step-number {
+            background: #3b82f6;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .copy-section {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .copy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .copy-label {
+            color: #94a3b8;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .copy-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .copy-btn.success {
+            background: #10b981;
+        }
+        
+        .code-block {
+            background: #020617;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .json-key {
+            color: #94a3b8;
+        }
+        
+        .json-string {
+            color: #86efac;
+        }
+        
+        .json-number {
+            color: #fbbf24;
+        }
+        
+        .important-note {
+            background: #991b1b;
+            border: 1px solid #dc2626;
+            color: #fecaca;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .success-note {
+            background: #14532d;
+            border: 1px solid #16a34a;
+            color: #bbf7d0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .test-section {
+            background: #1e293b;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .test-url {
+            background: #020617;
+            color: #3b82f6;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .test-url:hover {
+            background: #0f172a;
+            color: #60a5fa;
+        }
+        
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+            color: #cbd5e1;
+        }
+        
+        .highlight {
+            background: #3b82f6;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .tool-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .tool-name {
+            color: #3b82f6;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .tool-desc {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .warning-box {
+            background: #7c2d12;
+            border: 2px solid #ea580c;
+            color: #fed7aa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 MCP Setup für Retell Agent</h1>
+            <div class="subtitle">Schritt-für-Schritt Anleitung - Nur Copy & Paste!</div>
+        </div>
+
+        <div class="warning-box">
+            <strong>⚠️ WICHTIG:</strong> Wir verwenden NUR MCP (Model Context Protocol), KEINEN Webhook! 
+            Der MCP ermöglicht es Retell, während des Gesprächs Tools aufzurufen.
+        </div>
+
+        <div class="main-grid">
+            <!-- SCHRITT 1 -->
+            <div class="card">
+                <h2><span class="step-number">1</span> MCP Server Config</h2>
+                <p style="margin-bottom: 15px;">Kopiere diese MCP Konfiguration und füge sie in deinen Retell Agent ein unter <strong>"Tool calling" → "MCP servers"</strong></p>
+                
+                <div class="copy-section">
+                    <div class="copy-header">
+                        <span class="copy-label">MCP Server Configuration</span>
+                        <button class="copy-btn" onclick="copyCode('mcp-config')">📋 Kopieren</button>
+                    </div>
+                    <div class="code-block" id="mcp-config">[
+  {
+    "url": "https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    }
+  }
+]</div>
+                </div>
+                
+                <div class="important-note">
+                    <strong>Wichtig:</strong> 
+                    <ul>
+                        <li>Füge dies unter "MCP servers" ein, NICHT unter "general_tools"!</li>
+                        <li>Stelle sicher, dass "Tool calling" aktiviert ist</li>
+                        <li>KEIN Webhook nötig - lass das Webhook-Feld leer!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- SCHRITT 2 -->
+            <div class="card">
+                <h2><span class="step-number">2</span> System Prompt</h2>
+                <p style="margin-bottom: 15px;">Ersetze den kompletten "General prompt" mit diesem Text:</p>
+                
+                <div class="copy-section">
+                    <div class="copy-header">
+                        <span class="copy-label">General Prompt für Agent</span>
+                        <button class="copy-btn" onclick="copyCode('prompt')">📋 Kopieren</button>
+                    </div>
+                    <div class="code-block" id="prompt">Du bist Tina, die freundliche Empfangsdame vom Friseursalon "Schönheit & Stil".
+
+## VERFÜGBARE MCP TOOLS (NUTZE SIE!):
+- list_services: Zeigt alle Services mit Preisen
+- check_availability: Prüft freie Termine
+- book_appointment: Bucht einen Termin
+- schedule_callback: Plant einen Rückruf
+
+## WICHTIG - So nutzt du die Tools:
+1. Wenn nach Services gefragt wird → NUTZE "list_services"
+2. Wenn nach Terminen gefragt wird → NUTZE "check_availability" 
+3. Zum Buchen → NUTZE "book_appointment"
+
+## Gesprächsablauf:
+
+### Begrüßung:
+"Friseursalon Schönheit & Stil, hier ist Tina. Wie kann ich Ihnen helfen?"
+
+### Bei Service-Anfrage:
+- Sage: "Gerne zeige ich Ihnen unsere Services"
+- NUTZE TOOL: list_services
+- Warte auf Antwort
+- Präsentiere die Services
+
+### Bei Termin-Anfrage:
+- Frage nach Service und Wunschtermin
+- NUTZE TOOL: check_availability
+- Biete verfügbare Termine an
+- NUTZE TOOL: book_appointment zum Buchen
+
+## KRITISCH:
+- Du MUSST die Tools wirklich aufrufen!
+- Erfinde KEINE Preise oder Termine - nutze die Tools!
+- Bei Problemen: Entschuldige dich und biete Rückruf an</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEST SECTION -->
+        <div class="test-section">
+            <h2 style="color: #f1f5f9; margin-bottom: 20px;">🧪 MCP Test - Prüfe ob alles funktioniert</h2>
+            
+            <p>Teste die MCP-Verbindung mit diesem Befehl:</p>
+            
+            <div class="copy-section">
+                <div class="copy-header">
+                    <span class="copy-label">Test Command (Terminal/Postman)</span>
+                    <button class="copy-btn" onclick="copyCode('test-cmd')">📋 Kopieren</button>
+                </div>
+                <div class="code-block" id="test-cmd">curl -X POST https://api.askproai.de/api/v2/hair-salon-mcp/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {}
+    },
+    "id": "test-1"
+  }'</div>
+            </div>
+            
+            <div class="success-note">
+                <strong>✅ Erwartete Antwort:</strong> Du solltest eine Liste von Tools sehen (list_services, check_availability, etc.)
+            </div>
+        </div>
+
+        <!-- VERFÜGBARE TOOLS -->
+        <div class="card">
+            <h2>🛠️ Verfügbare MCP Tools</h2>
+            <p style="margin-bottom: 15px;">Diese Tools werden automatisch erkannt, wenn der MCP korrekt konfiguriert ist:</p>
+            
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <div class="tool-name">list_services</div>
+                    <div class="tool-desc">Listet alle Friseur-Services mit Preisen und Dauer</div>
+                </div>
+                <div class="tool-card">
+                    <div class="tool-name">check_availability</div>
+                    <div class="tool-desc">Prüft verfügbare Termine für einen Service</div>
+                </div>
+                <div class="tool-card">
+                    <div class="tool-name">book_appointment</div>
+                    <div class="tool-desc">Bucht einen Termin für den Kunden</div>
+                </div>
+                <div class="tool-card">
+                    <div class="tool-name">schedule_callback</div>
+                    <div class="tool-desc">Vereinbart einen Rückruf</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TROUBLESHOOTING -->
+        <div class="card">
+            <h2>❓ Troubleshooting</h2>
+            
+            <h3 style="color: #f1f5f9; margin: 20px 0 10px 0;">Problem: Agent nutzt keine Tools</h3>
+            <ul>
+                <li>✓ Ist "Tool calling" aktiviert?</li>
+                <li>✓ Ist der MCP unter "MCP servers" eingetragen (nicht "general_tools")?</li>
+                <li>✓ Hast du den Agent gespeichert und deployed?</li>
+                <li>✓ Nutzt du den richtigen Prompt?</li>
+            </ul>
+            
+            <h3 style="color: #f1f5f9; margin: 20px 0 10px 0;">Problem: "No tools available"</h3>
+            <ul>
+                <li>✓ Prüfe die URL: https://api.askproai.de/api/v2/hair-salon-mcp/mcp</li>
+                <li>✓ Sind die Headers korrekt (Content-Type und Accept)?</li>
+                <li>✓ Keine Leerzeichen in den Headers?</li>
+            </ul>
+            
+            <h3 style="color: #f1f5f9; margin: 20px 0 10px 0;">Problem: Agent erfindet Daten statt Tools zu nutzen</h3>
+            <ul>
+                <li>✓ Der Prompt muss explizit sagen "NUTZE die Tools"</li>
+                <li>✓ Temperature sollte niedrig sein (0.02)</li>
+                <li>✓ Model sollte gemini-2.5-flash oder gpt-4 sein</li>
+            </ul>
+        </div>
+
+        <!-- QUICK CHECKLIST -->
+        <div class="card" style="background: #14532d; border-color: #16a34a;">
+            <h2 style="color: #bbf7d0;">✅ Quick Checklist</h2>
+            <ul style="color: #bbf7d0;">
+                <li>☐ MCP Server URL eingefügt unter "MCP servers"</li>
+                <li>☐ Headers sind Content-Type und Accept (ohne Leerzeichen!)</li>
+                <li>☐ General Prompt ersetzt mit Tool-Anweisungen</li>
+                <li>☐ "Tool calling" ist aktiviert</li>
+                <li>☐ Agent gespeichert und deployed</li>
+                <li>☐ KEIN Webhook konfiguriert (Feld leer lassen)</li>
+                <li>☐ Test-Call gemacht um Tools zu prüfen</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function copyCode(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✅ Kopiert!';
+                button.classList.add('success');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('success');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

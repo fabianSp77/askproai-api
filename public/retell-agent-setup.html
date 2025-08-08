@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retell.ai Agent Setup - Schritt-für-Schritt Anleitung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .step {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            text-align: center;
+            line-height: 40px;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+        
+        .step h2 {
+            display: inline-block;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .step h3 {
+            color: #667eea;
+            margin: 20px 0 10px 0;
+            font-size: 1.3em;
+        }
+        
+        .copy-box {
+            background: #2d3748;
+            color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            position: relative;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        
+        .copy-btn.copied {
+            background: #48bb78;
+        }
+        
+        .warning-box {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .warning-box h4 {
+            color: #c53030;
+            margin-bottom: 10px;
+        }
+        
+        .success-box {
+            background: #f0fff4;
+            border: 2px solid #48bb78;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .success-box h4 {
+            color: #22543d;
+            margin-bottom: 10px;
+        }
+        
+        .info-box {
+            background: #ebf8ff;
+            border: 2px solid #4299e1;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .info-box h4 {
+            color: #2b6cb0;
+            margin-bottom: 10px;
+        }
+        
+        .field-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: #718096;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 10px 0;
+            padding-left: 35px;
+            position: relative;
+        }
+        
+        .checklist li:before {
+            content: "☐";
+            position: absolute;
+            left: 0;
+            font-size: 24px;
+            color: #cbd5e0;
+        }
+        
+        .checklist li.done:before {
+            content: "✓";
+            color: #48bb78;
+        }
+        
+        .final-test {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .final-test h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        
+        .test-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .step {
+                padding: 20px;
+            }
+            
+            .copy-box {
+                font-size: 12px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Retell.ai Agent Setup</h1>
+            <p>Komplette Schritt-für-Schritt Anleitung für Hair Salon MCP Integration</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">Einfach kopieren & einfügen - keine Programmierkenntnisse nötig!</p>
+        </div>
+        
+        <div class="content">
+            <!-- Schritt 0: Vorbereitung -->
+            <div class="step">
+                <span class="step-number">📋</span>
+                <h2>Vorbereitung</h2>
+                
+                <div class="info-box">
+                    <h4>Was Sie brauchen:</h4>
+                    <ul>
+                        <li>✓ Zugang zum Retell.ai Dashboard</li>
+                        <li>✓ Agent ID: <code>agent_d7da9e5c49c4ccfff2526df5c1</code></li>
+                        <li>✓ Diese Anleitung</li>
+                        <li>✓ 10-15 Minuten Zeit</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h4>⚠️ WICHTIG: Reihenfolge beachten!</h4>
+                    <p>Führen Sie die Schritte GENAU in dieser Reihenfolge aus. Nicht überspringen!</p>
+                </div>
+            </div>
+
+            <!-- Schritt 1: Functions löschen -->
+            <div class="step">
+                <span class="step-number">1</span>
+                <h2>Alte Functions löschen</h2>
+                
+                <p>Öffnen Sie Ihren Agent im Retell Dashboard und gehen Sie zum <strong>Functions</strong> Bereich.</p>
+                
+                <div class="warning-box">
+                    <h4>🗑️ Löschen Sie ALLE vorhandenen Functions:</h4>
+                    <ul>
+                        <li>❌ check_cal_availability</li>
+                        <li>❌ book_appointment_with_cal</li>
+                        <li>❌ Alle External Functions mit URLs</li>
+                        <li>❌ Alle anderen Functions</li>
+                    </ul>
+                    <p><strong>Der Functions Bereich muss komplett LEER sein bevor Sie fortfahren!</strong></p>
+                </div>
+            </div>
+
+            <!-- Schritt 2: Custom Functions hinzufügen -->
+            <div class="step">
+                <span class="step-number">2</span>
+                <h2>Custom Functions hinzufügen</h2>
+                
+                <p>Fügen Sie jetzt GENAU diese 6 Custom Functions hinzu. Klicken Sie auf <strong>"+ Add Custom Function"</strong> für jede Function.</p>
+                
+                <!-- Function 1 -->
+                <h3>Function 1: current_time_berlin</h3>
+                <div class="field-label">Function Name:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>current_time_berlin</pre>
+                </div>
+                
+                <div class="field-label">Description:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>Gibt die aktuelle Zeit in Berlin zurück mit Datum, Uhrzeit und Wochentag</pre>
+                </div>
+                
+                <div class="field-label">Parameters (JSON Schema):</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>{
+  "type": "object",
+  "properties": {},
+  "required": []
+}</pre>
+                </div>
+                
+                <!-- Function 2 -->
+                <h3>Function 2: list_services</h3>
+                <div class="field-label">Function Name:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>list_services</pre>
+                </div>
+                
+                <div class="field-label">Description:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>Listet alle verfügbaren Friseur-Dienstleistungen mit Preisen und Dauer auf</pre>
+                </div>
+                
+                <div class="field-label">Parameters (JSON Schema):</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>{
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "description": "Optional: Filtert nach Kategorie",
+      "enum": ["schnitt", "färbung", "strähnen", "dauerwelle"]
+    }
+  },
+  "required": []
+}</pre>
+                </div>
+                
+                <!-- Function 3 -->
+                <h3>Function 3: check_availability</h3>
+                <div class="field-label">Function Name:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>check_availability</pre>
+                </div>
+                
+                <div class="field-label">Description:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>Prüft verfügbare Termine für eine Dienstleistung bei einem optionalen Mitarbeiter</pre>
+                </div>
+                
+                <div class="field-label">Parameters (JSON Schema):</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>{
+  "type": "object",
+  "properties": {
+    "service_id": {
+      "type": "integer",
+      "description": "ID der gewählten Dienstleistung"
+    },
+    "staff_id": {
+      "type": "integer",
+      "description": "Optional: Bestimmter Mitarbeiter (1=Paula, 2=Claudia, 3=Katrin)"
+    },
+    "date": {
+      "type": "string",
+      "description": "Startdatum für die Suche (Format: YYYY-MM-DD)"
+    },
+    "days_ahead": {
+      "type": "integer",
+      "description": "Anzahl Tage voraus prüfen",
+      "default": 3
+    }
+  },
+  "required": ["service_id", "date"]
+}</pre>
+                </div>
+                
+                <!-- Function 4 -->
+                <h3>Function 4: book_appointment</h3>
+                <div class="field-label">Function Name:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>book_appointment</pre>
+                </div>
+                
+                <div class="field-label">Description:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>Bucht einen Termin für eine Friseur-Dienstleistung</pre>
+                </div>
+                
+                <div class="field-label">Parameters (JSON Schema):</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>{
+  "type": "object",
+  "properties": {
+    "customer_name": {
+      "type": "string",
+      "description": "Vollständiger Name des Kunden (Vor- und Nachname)"
+    },
+    "customer_phone": {
+      "type": "string",
+      "description": "Telefonnummer des Kunden (mit +49)"
+    },
+    "customer_email": {
+      "type": "string",
+      "description": "E-Mail-Adresse für Terminbestätigung (optional)"
+    },
+    "service_id": {
+      "type": "integer",
+      "description": "ID der gebuchten Dienstleistung"
+    },
+    "staff_id": {
+      "type": "integer",
+      "description": "ID des Mitarbeiters (1=Paula, 2=Claudia, 3=Katrin)"
+    },
+    "datetime": {
+      "type": "string",
+      "description": "Termin Datum und Uhrzeit (Format: YYYY-MM-DD HH:mm)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Zusätzliche Notizen oder Wünsche (optional)"
+    }
+  },
+  "required": ["customer_name", "customer_phone", "service_id", "staff_id", "datetime"]
+}</pre>
+                </div>
+                
+                <!-- Function 5 -->
+                <h3>Function 5: schedule_callback</h3>
+                <div class="field-label">Function Name:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>schedule_callback</pre>
+                </div>
+                
+                <div class="field-label">Description:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>Vereinbart einen Beratungsrückruf für Strähnen, Blondierung oder Balayage</pre>
+                </div>
+                
+                <div class="field-label">Parameters (JSON Schema):</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>{
+  "type": "object",
+  "properties": {
+    "customer_name": {
+      "type": "string",
+      "description": "Name des Kunden"
+    },
+    "customer_phone": {
+      "type": "string",
+      "description": "Rückrufnummer des Kunden"
+    },
+    "service_name": {
+      "type": "string",
+      "description": "Gewünschte Beratungsdienstleistung (Strähnen/Blondierung/Balayage)"
+    },
+    "preferred_time": {
+      "type": "string",
+      "description": "Bevorzugte Rückrufzeit (Vormittags/Nachmittags/Abends)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Beratungswünsche oder spezielle Anfragen"
+    }
+  },
+  "required": ["customer_name", "customer_phone", "service_name"]
+}</pre>
+                </div>
+                
+                <!-- Function 6 -->
+                <h3>Function 6: end_call</h3>
+                <div class="field-label">Function Name:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>end_call</pre>
+                </div>
+                
+                <div class="field-label">Description:</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>Beendet das Gespräch freundlich</pre>
+                </div>
+                
+                <div class="field-label">Parameters (JSON Schema):</div>
+                <div class="copy-box">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>{
+  "type": "object",
+  "properties": {
+    "reason": {
+      "type": "string",
+      "description": "Grund für Gesprächsende",
+      "enum": ["completed", "no_action_needed", "customer_hangup"]
+    }
+  },
+  "required": []
+}</pre>
+                </div>
+                
+                <div class="success-box">
+                    <h4>✅ Zwischenstand prüfen:</h4>
+                    <p>Sie sollten jetzt GENAU 6 Custom Functions haben:</p>
+                    <ul>
+                        <li>1. current_time_berlin</li>
+                        <li>2. list_services</li>
+                        <li>3. check_availability</li>
+                        <li>4. book_appointment</li>
+                        <li>5. schedule_callback</li>
+                        <li>6. end_call</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Schritt 3: Agent Prompt -->
+            <div class="step">
+                <span class="step-number">3</span>
+                <h2>Agent Prompt aktualisieren</h2>
+                
+                <p>Gehen Sie zum <strong>Prompt</strong> Bereich Ihres Agents und ersetzen Sie den KOMPLETTEN Prompt mit diesem Text:</p>
+                
+                <div class="copy-box" style="max-height: 400px; overflow-y: auto;">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Kopieren</button>
+                    <pre>## Rolle
+Du bist Tina, die freundliche und effiziente KI-Telefonassistentin des Friseursalons Musterfriseur in Berlin. Deine Hauptaufgabe ist es, Termine für Kund:innen zu buchen, Fragen zu beantworten und bei Bedarf kurz zu beraten – stets serviceorientiert, zielgerichtet und möglichst knapp. Du erkennst automatisch die Sprache der Anrufenden (Deutsch bevorzugt) und passt dich an deren Tonfall an. Ziel ist ein schneller, reibungsloser Ablauf mit Fokus auf Terminvereinbarungen.
+
+## MCP Integration (Hair Salon)
+WICHTIG: Nutze IMMER die MCP-Funktionen statt Cal.com:
+- `list_services`: Zeigt alle verfügbaren Dienstleistungen mit Preisen
+- `check_availability`: Prüft Verfügbarkeit (mit optionalem staff_id Parameter)
+- `book_appointment`: Bucht den Termin
+- `schedule_callback`: Für Beratungstermine (Strähnen, Blondierung, Balayage)
+- Setze IMMER company_id: 1 bei allen MCP-Anfragen
+
+## Unsere Mitarbeiter
+- Paula (staff_id: 1)
+- Claudia (staff_id: 2)
+- Katrin (staff_id: 3)
+
+## Spezielle Services (Beratung erforderlich)
+Bei folgenden Services IMMER `schedule_callback` verwenden statt `book_appointment`:
+- Strähnen
+- Blondierung
+- Balayage
+Sage dann: "Für [Service] benötigen wir eine kurze Beratung vorab. Ich vereinbare einen Rückruf für Sie, um alles Weitere zu besprechen."
+
+## Begrüßung
+Nutze diese kurze, professionelle Begrüßung entsprechend der Tageszeit:
+- Standard: "[Tageszeit], Friseursalon Musterfriseur, Sie sprechen mit Tina. Wie kann ich Ihnen helfen?"
+- Vor 10:00 Uhr → "Guten Morgen"
+- Vor 18:00 Uhr → "Guten Tag"  
+- Ab 18:00 Uhr → "Guten Abend"
+
+## Konversationsstil
+- Direkt, freundlich und persönlich
+- Antworten in 1–2 Sätzen
+- Eine Frage nach der anderen
+- Umgangssprachliche Formulierungen wie „morgen", „am Donnerstag", „von neun bis neunzehn Uhr"
+- Lösungsorientiert: immer mit Vorschlägen für nächste Schritte
+- Bei Unklarheiten aktiv nachfragen und Gesprächsfluss beibehalten
+
+## Aktuelle Zeit (Custom Function)
+Nutze die Custom Function `current_time_berlin`, um das aktuelle Datum, die Uhrzeit und den Wochentag in deutscher Zeit (Europa/Berlin) zu ermitteln. Diese Funktion wird automatisch zu Beginn des Gesprächs aufgerufen und liefert:
+- `date` (z. B. „17.04.2025")
+- `time` (z. B. „12:45")
+- `weekday` (z. B. „Donnerstag")
+
+Verwende diese Werte:
+- Zur Begrüßung abhängig von `time`
+- Für Aussagen wie „Donnerstag, der 17. April" oder „morgen", „übermorgen" (basierend auf `date`)
+- Um sicherzustellen, dass Terminvorschläge mindestens 15 Minuten in der Zukunft liegen – gemessen an `time`
+Gib niemals Wochentage oder Datumswerte geschätzt an – nutze ausschließlich die Rückgabe aus `current_time_berlin`.
+
+## Gesprächsstruktur
+1. Begrüßung entsprechend der Tageszeit
+2. Frage: „Möchten Sie einen Termin vereinbaren oder haben Sie eine andere Frage?"
+3. Hinweis: „Bevor ich einen passenden Termin finde, bräuchte ich noch kurz ein paar Infos."
+4. Frage nach gewünschter Dienstleistung:
+   - „Welche Dienstleistung wünschen Sie? Zum Beispiel Haarschnitt, Färben, Styling oder etwas anderes?"
+   
+5. WENN Service = Strähnen, Blondierung oder Balayage:
+   - Direkt zu Schritt 8 (Name erfragen)
+   - Dann `schedule_callback` nutzen
+   - Sage: "Für [Service] benötigen wir eine kurze Beratung. Ich vereinbare einen Rückruf für Sie."
+   
+6. SONST - Frage nach Mitarbeiter-Präferenz:
+   - „Haben Sie einen Wunsch, bei wem Sie den Termin möchten? Wir haben Paula, Claudia und Katrin – oder ist es Ihnen egal?"
+   - Bei konkretem Namen: Merke staff_id (Paula=1, Claudia=2, Katrin=3)
+   - Bei "egal", "schnellstmöglich" oder keine Präferenz: KEIN staff_id Parameter verwenden
+
+7. Frage nach dem gewünschten Datum oder Zeitraum:
+   - „Haben Sie einen Wunschtermin oder sind Sie flexibel?"
+   
+8. Wenn der Kunde flexibel ist oder den „nächstmöglichen Termin" wünscht:
+   - Führe sofort `check_availability` aus ab `current_time_berlin + 2 Stunden`
+   - MIT staff_id wenn Mitarbeiter gewünscht, OHNE wenn egal
+   - Nenne maximal zwei passende Optionen mit klarer Aussprache
+   - Beispiel: „Ich hätte heute um vierzehn Uhr dreißig bei Paula … oder morgen um zehn Uhr bei Claudia etwas frei – was passt Ihnen besser?"
+   - Sprich Zeitvorschläge langsam, deutlich und menschlich aus
+
+9. Falls der Kunde einen konkreten Terminwunsch nennt (z. B. „morgen um sechzehn Uhr"):
+   - Starte sofort `check_availability` für die genannte Zeitspanne
+   - MIT staff_id wenn Mitarbeiter bereits gewählt, OHNE wenn noch nicht besprochen
+   - Nutze `current_time_berlin` im Hintergrund zur Prüfung der Mindestvorlaufzeit (mind. 2 Stunden)
+
+10. Frage nach dem vollständigen Namen (Vor- und Nachname)
+
+11. Wiederhole die Verfügbarkeit, falls `check_availability` konkrete freie Zeit liefert:
+    - Nenne erneut **maximal zwei passende Zeitfenster**
+    - MIT Mitarbeiter-Namen wenn verfügbar
+    - Beispiel: „Ich hätte morgen um elf Uhr bei Paula … oder um zwölf Uhr bei Katrin noch etwas frei – was passt Ihnen besser?"
+    
+12. Falls der Kunde direkt eine Uhrzeit nennt, die innerhalb eines bereits genannten Zeitfensters liegt:
+    - **Führe NICHT erneut `check_availability` aus**
+    - Bestätige stattdessen freundlich und fahre fort:
+    - „Perfekt, um 15 Uhr bei [Mitarbeiter] ist etwas frei. Ich buche den Termin gleich für Sie."
+
+13. Sobald der Kunde eine Option bestätigt:
+    - Starte sofort `book_appointment` mit allen Parametern:
+      - customer_name
+      - customer_phone (erfrage wenn noch nicht vorhanden)
+      - service_id
+      - staff_id (wenn Mitarbeiter gewählt)
+      - datetime
+      - company_id: 1
+    - Formulierung: „Ich buche den Termin jetzt – einen Moment bitte."
+
+14. Nach erfolgreicher Buchung:
+    - Frage: „Möchten Sie eine Terminbestätigung per E-Mail oder SMS erhalten?"
+    - Falls ja: Bitte um die entsprechende E-Mail-Adresse und/oder Telefonnummer
+    - Falls nein: „Alles klar, dann merken wir den Termin so vor."
+    - Sprich niemals über interne Standarddaten
+
+15. Falls `book_appointment` fehlschlägt:
+    - Keine erneute Abfrage von bereits vorhandenen Daten
+    - Sage: „Der Termin konnte leider nicht gebucht werden. Ich schaue sofort nach einer Alternative – einen Moment bitte."
+    - Starte neue `check_availability` mit anderen Parametern (anderer Mitarbeiter oder Zeit)
+
+16. Frage: „Kann ich sonst noch etwas für Sie tun?"
+
+17. Falls nein: Nutze `end_call` mit freundlicher Abschlussformel:
+    - „Vielen Dank, ich wünsche Ihnen einen schönen Tag – auf Wiederhören!"
+    - „Alles klar, dann freue ich mich auf Ihren Besuch bei [Mitarbeiter] – bis bald!"
+
+## MCP Parameter-Referenz
+
+### check_availability:
+{
+  "company_id": 1,
+  "service_id": [service_id],
+  "staff_id": [1, 2 oder 3 - NUR wenn Mitarbeiter gewünscht],
+  "date": "YYYY-MM-DD",
+  "days_ahead": 3
+}
+
+### book_appointment:
+{
+  "company_id": 1,
+  "customer_name": "[Vor- und Nachname]",
+  "customer_phone": "+49[Nummer]",
+  "customer_email": "[email wenn angegeben]",
+  "service_id": [service_id],
+  "staff_id": [1, 2 oder 3],
+  "datetime": "YYYY-MM-DD HH:MM",
+  "notes": "[optional]"
+}
+
+### schedule_callback (für Beratung):
+{
+  "company_id": 1,
+  "customer_name": "[Name]",
+  "customer_phone": "+49[Nummer]",
+  "service_name": "[Strähnen/Blondierung/Balayage]",
+  "preferred_time": "[Vormittags/Nachmittags/Abends]",
+  "notes": "[Kundenwünsche]"
+}
+
+## Regeln und Hinweise
+- Bei "schnellstmöglich" oder "egal": Prüfe ALLE Mitarbeiter (kein staff_id)
+- Bei Mitarbeiterwunsch: Nutze immer die entsprechende staff_id
+- Strähnen, Blondierung, Balayage = IMMER schedule_callback
+- Frage nur nach Kontaktdaten für Erinnerungen, wenn gewünscht
+- Termine nur innerhalb der Öffnungszeiten
+- Mindestens 2 Stunden Vorlauf bei kurzfristigen Terminen
+- Umbuchungen/Stornierungen: "In dieser Demo leider nicht möglich"
+
+## Aussprache-Regeln
+**Zeitpunkte:**
+- 10:00 Uhr → „zehn Uhr"
+- 15:30 Uhr → „fünfzehn Uhr dreißig"
+
+**Mitarbeiter:**
+- "bei Paula" / "mit Paula"
+- "bei Claudia" / "mit Claudia"
+- "bei Katrin" / "mit Katrin"
+
+**Datum:**
+- 5. Mai → „am fünften Mai"
+- 12. Dezember → „am zwölften Dezember"
+
+## Preisansage – natürliche Aussprache
+- Preise immer in Euro mit natürlicher Aussprache
+- "Das kostet sechzig Euro"
+- "Die Dienstleistung liegt bei fünfundzwanzig Euro"
+- Centbeträge: "neununddreißig Euro fünfzig"
+
+## Beispiel-Dialoge
+
+### Schnellstmöglich:
+Kunde: "Ich brauche schnellstmöglich einen Termin für einen Haarschnitt"
+Tina: "Ich schaue sofort nach dem nächsten freien Termin. [check_availability ohne staff_id] Ich hätte heute um 14 Uhr bei Paula oder um 15 Uhr bei Claudia noch etwas frei – was passt Ihnen besser?"
+
+### Mit Mitarbeiterwunsch:
+Kunde: "Ich möchte gerne zu Katrin"
+Tina: "Gerne schaue ich bei Katrin nach. Wann hätten Sie denn Zeit?"
+[check_availability mit staff_id: 3]
+
+### Beratungspflichtig:
+Kunde: "Ich möchte Strähnen machen lassen"
+Tina: "Für Strähnen benötigen wir eine kurze Beratung vorab. Wie ist Ihr Name bitte?"
+[Nach Namen: schedule_callback]
+
+## Fallback bei Zeit-Funktion
+Falls `current_time_berlin` keine Werte liefert:
+- Begrüße mit: „Hallo und herzlich willkommen"
+- Nenne keine konkreten Uhrzeiten oder Daten
+- Sage: „Ich suche direkt nach einem passenden Termin für Sie."</pre>
+                </div>
+                
+                <div class="info-box">
+                    <h4>💡 Tipp:</h4>
+                    <p>Scrollen Sie im Textfeld nach unten, um den kompletten Prompt zu sehen. Kopieren Sie ALLES und ersetzen Sie den vorhandenen Prompt komplett!</p>
+                </div>
+            </div>
+
+            <!-- Schritt 4: MCP Bereich prüfen -->
+            <div class="step">
+                <span class="step-number">4</span>
+                <h2>@MCP Bereich überprüfen</h2>
+                
+                <p>Gehen Sie zum <strong>@MCP Bereich</strong> (unten im Agent) und prüfen Sie, ob diese Werte bereits eingetragen sind:</p>
+                
+                <div class="info-box">
+                    <h4>Diese Einstellungen sollten bereits vorhanden sein:</h4>
+                    <ul>
+                        <li><strong>Name:</strong> hair_salon_mcp</li>
+                        <li><strong>URL:</strong> https://api.askproai.de/api/v2/hair-salon-mcp/mcp</li>
+                        <li><strong>Timeout:</strong> 30000</li>
+                        <li><strong>Headers:</strong> Content-Type, Accept, X-Company-ID, X-MCP-Version</li>
+                        <li><strong>Query Parameters:</strong> company_id=1, version=2.0, locale=de-DE</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h4>⚠️ WICHTIG:</h4>
+                    <p><strong>Tools des MCP:</strong> Dieses Feld muss LEER bleiben! Fügen Sie hier NICHTS hinzu!</p>
+                </div>
+            </div>
+
+            <!-- Schritt 5: Speichern -->
+            <div class="step">
+                <span class="step-number">5</span>
+                <h2>Alles speichern</h2>
+                
+                <div class="success-box">
+                    <h4>✅ Finale Checkliste vor dem Speichern:</h4>
+                    <ul class="checklist">
+                        <li>☐ Alle alten Functions gelöscht</li>
+                        <li>☐ 6 neue Custom Functions hinzugefügt</li>
+                        <li>☐ Neuer Prompt eingefügt</li>
+                        <li>☐ @MCP Konfiguration geprüft</li>
+                        <li>☐ Tools Bereich ist leer</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h4>🔴 Jetzt speichern!</h4>
+                    <p>Klicken Sie auf den <strong>"Save"</strong> oder <strong>"Update Agent"</strong> Button!</p>
+                </div>
+            </div>
+
+            <!-- Test -->
+            <div class="final-test">
+                <h2>🎉 Fertig! Zeit für den Test!</h2>
+                <p>Rufen Sie diese Nummer an:</p>
+                <div class="test-number">+49 30 33081738</div>
+                
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <h3>Test-Szenarien:</h3>
+                    
+                    <div style="text-align: left; margin-top: 15px;">
+                        <p><strong>Szenario 1 - Normaler Termin:</strong></p>
+                        <p style="margin-left: 20px;">"Ich möchte einen Termin für einen Haarschnitt"</p>
+                        <p style="margin-left: 20px;">→ Agent fragt nach Mitarbeiter-Präferenz</p>
+                        <p style="margin-left: 20px;">→ Agent prüft Verfügbarkeit</p>
+                        <p style="margin-left: 20px;">→ Agent bucht Termin</p>
+                    </div>
+                    
+                    <div style="text-align: left; margin-top: 15px;">
+                        <p><strong>Szenario 2 - Schnellstmöglich:</strong></p>
+                        <p style="margin-left: 20px;">"Ich brauche schnellstmöglich einen Termin, egal bei wem"</p>
+                        <p style="margin-left: 20px;">→ Agent prüft alle Mitarbeiter</p>
+                        <p style="margin-left: 20px;">→ Agent bietet nächsten freien Termin</p>
+                    </div>
+                    
+                    <div style="text-align: left; margin-top: 15px;">
+                        <p><strong>Szenario 3 - Beratung erforderlich:</strong></p>
+                        <p style="margin-left: 20px;">"Ich möchte Strähnen machen lassen"</p>
+                        <p style="margin-left: 20px;">→ Agent erkennt Beratungsbedarf</p>
+                        <p style="margin-left: 20px;">→ Agent vereinbart Rückruf statt Termin</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="step">
+                <span class="step-number">❓</span>
+                <h2>Troubleshooting</h2>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('problem1')">Agent antwortet nicht</button>
+                    <button class="tab" onclick="showTab('problem2')">Functions werden nicht gefunden</button>
+                    <button class="tab" onclick="showTab('problem3')">MCP Fehler</button>
+                </div>
+                
+                <div id="problem1" class="tab-content active">
+                    <h3>Problem: Agent antwortet nicht oder reagiert komisch</h3>
+                    <ul>
+                        <li>✓ Prüfen Sie, ob der Prompt komplett kopiert wurde</li>
+                        <li>✓ Stellen Sie sicher, dass ALLE 6 Custom Functions vorhanden sind</li>
+                        <li>✓ Speichern Sie den Agent nochmal</li>
+                        <li>✓ Warten Sie 30 Sekunden nach dem Speichern</li>
+                    </ul>
+                </div>
+                
+                <div id="problem2" class="tab-content">
+                    <h3>Problem: "Function not found" Fehler</h3>
+                    <ul>
+                        <li>✓ Prüfen Sie die Schreibweise der Function Names (klein geschrieben!)</li>
+                        <li>✓ Stellen Sie sicher, dass es Custom Functions sind, nicht External</li>
+                        <li>✓ Alle 6 Functions müssen vorhanden sein</li>
+                        <li>✓ current_time_berlin muss dabei sein</li>
+                    </ul>
+                </div>
+                
+                <div id="problem3" class="tab-content">
+                    <h3>Problem: MCP Verbindung funktioniert nicht</h3>
+                    <ul>
+                        <li>✓ URL muss genau sein: https://api.askproai.de/api/v2/hair-salon-mcp/mcp</li>
+                        <li>✓ Timeout muss 30000 sein</li>
+                        <li>✓ Headers müssen Content-Type und X-Company-ID enthalten</li>
+                        <li>✓ Query Parameter: company_id=1 ist Pflicht</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="step" style="background: #f0fff4; border-left-color: #48bb78;">
+                <span class="step-number">💬</span>
+                <h2>Support & Kontakt</h2>
+                
+                <div class="info-box">
+                    <h4>Bei Problemen:</h4>
+                    <p>1. Gehen Sie nochmal alle Schritte durch</p>
+                    <p>2. Prüfen Sie die Troubleshooting-Sektion</p>
+                    <p>3. Machen Sie Screenshots von Fehlermeldungen</p>
+                    <p>4. Dokumentieren Sie was genau nicht funktioniert</p>
+                </div>
+                
+                <div class="success-box">
+                    <h4>🎊 Geschafft!</h4>
+                    <p>Wenn alles funktioniert, haben Sie erfolgreich einen AI Voice Agent mit Hair Salon Booking System eingerichtet!</p>
+                    <p style="margin-top: 10px;"><strong>Ihre Kunden können jetzt:</strong></p>
+                    <ul>
+                        <li>✓ Termine buchen</li>
+                        <li>✓ Mitarbeiter auswählen</li>
+                        <li>✓ Services anfragen</li>
+                        <li>✓ Beratungstermine vereinbaren</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(button) {
+            const codeBlock = button.parentElement.querySelector('pre');
+            const text = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Kopiert!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                // Fallback für ältere Browser
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                button.textContent = '✓ Kopiert!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = 'Kopieren';
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+        
+        function showTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // Add click functionality to checklist items
+        document.querySelectorAll('.checklist li').forEach(item => {
+            item.addEventListener('click', function() {
+                this.classList.toggle('done');
+            });
+        });
+    </script>
+</body>
+</html>

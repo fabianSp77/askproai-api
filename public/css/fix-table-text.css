@@ -1,0 +1,17 @@
+/* Fix table text visibility issues */
+.filament-table table tbody tr td {
+    color: inherit !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.filament-table table tbody tr td .text-gray-500,
+.filament-table table tbody tr td .text-gray-600 {
+    color: rgb(75 85 99) !important;
+}
+
+/* Ensure content is visible */
+.filament-table table tbody tr td * {
+    visibility: visible !important;
+    opacity: 1 !important;
+}

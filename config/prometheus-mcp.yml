@@ -1,0 +1,69 @@
+# Prometheus configuration for MCP integration monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "mcp_alerts.yml"
+
+scrape_configs:
+  # AskProAI MCP Endpoints
+  - job_name: 'askproai-mcp'
+    static_configs:
+      - targets: ['api.askproai.de:443']
+    scheme: https
+    metrics_path: /api/metrics
+    params:
+      service: ['mcp']
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    honor_labels: true
+    bearer_token: '${MONITORING_METRICS_TOKEN}'
+    
+  # MCP Health Checks
+  - job_name: 'askproai-mcp-health'
+    static_configs:
+      - targets: ['api.askproai.de:443']
+    scheme: https
+    metrics_path: /api/mcp/retell/health
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    
+  # Legacy Webhook Monitoring (for comparison)
+  - job_name: 'askproai-webhooks'
+    static_configs:
+      - targets: ['api.askproai.de:443']
+    scheme: https
+    metrics_path: /api/metrics
+    params:
+      service: ['webhook']
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    bearer_token: '${MONITORING_METRICS_TOKEN}'
+    
+  # Application Metrics
+  - job_name: 'askproai-app'
+    static_configs:
+      - targets: ['api.askproai.de:443']
+    scheme: https
+    metrics_path: /api/metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    bearer_token: '${MONITORING_METRICS_TOKEN}'
+    metric_relabel_configs:
+      # Label MCP vs Webhook requests
+      - source_labels: [__name__, endpoint]
+        regex: 'askproai_http_requests_total;.*mcp.*'
+        target_label: integration_type
+        replacement: 'mcp'
+      - source_labels: [__name__, endpoint]
+        regex: 'askproai_http_requests_total;.*webhook.*'
+        target_label: integration_type
+        replacement: 'webhook'
+        
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093

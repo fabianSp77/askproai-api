@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>🔥 NUCLEAR UNBLOCK TEST - Issue #509</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #1a1a1a;
+            color: white;
+        }
+        .header {
+            background: #ff0000;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .test-section {
+            background: #2a2a2a;
+            border: 2px solid #ff0000;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 3px solid #ff0000;
+            background: white;
+        }
+        button {
+            background: #ff0000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #cc0000;
+        }
+        .console {
+            background: black;
+            color: #00ff00;
+            padding: 15px;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #00ff00;
+        }
+        .status {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #00ff00;
+            color: black;
+        }
+        .status.error {
+            background: #ff0000;
+            color: white;
+        }
+        .warning {
+            background: #ffff00;
+            color: black;
+            padding: 10px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        🔥🔥🔥 NUCLEAR UNBLOCK TEST - REMOVING ALL BLOCKERS 🔥🔥🔥
+    </div>
+
+    <div class="warning">
+        ⚠️ WARNUNG: Diese Seite deaktiviert ALLE Event-Handler und Blocker!
+    </div>
+
+    <div class="test-grid">
+        <div class="test-section">
+            <h2>Login Page Test</h2>
+            <iframe id="loginFrame" src="/admin/login"></iframe>
+            <div style="margin-top: 10px;">
+                <button onclick="testLogin()">Test Login Page</button>
+                <button onclick="forceLoginSubmit()">FORCE SUBMIT</button>
+            </div>
+            <div id="loginStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Admin Panel Test</h2>
+            <iframe id="adminFrame" src="/admin"></iframe>
+            <div style="margin-top: 10px;">
+                <button onclick="testAdmin()">Test Admin Panel</button>
+                <button onclick="forceNavClick()">FORCE NAV CLICK</button>
+            </div>
+            <div id="adminStatus"></div>
+        </div>
+    </div>
+
+    <div class="test-section" style="margin-top: 20px;">
+        <h2>Nuclear Control Panel</h2>
+        <button onclick="removeAllBlockers()">🔥 REMOVE ALL BLOCKERS</button>
+        <button onclick="checkStatus()">📊 CHECK STATUS</button>
+        <button onclick="manualOverride()">💪 MANUAL OVERRIDE</button>
+        <button onclick="clearConsole()">🗑️ CLEAR CONSOLE</button>
+        
+        <div class="console" id="console">
+            Nuclear Unblock Test Console
+            ============================
+            Waiting for initialization...
+        </div>
+    </div>
+
+    <script>
+        const loginFrame = document.getElementById('loginFrame');
+        const adminFrame = document.getElementById('adminFrame');
+        const consoleDiv = document.getElementById('console');
+        let logs = [];
+
+        function log(msg, type = 'INFO') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'ERROR' ? '🔴' : type === 'SUCCESS' ? '🟢' : '🟡';
+            const entry = `[${time}] ${color} ${msg}`;
+            logs.push(entry);
+            if (logs.length > 50) logs.shift();
+            consoleDiv.innerHTML = logs.join('\n');
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function clearConsole() {
+            logs = ['Console cleared.'];
+            consoleDiv.innerHTML = logs[0];
+        }
+
+        function testLogin() {
+            try {
+                const doc = loginFrame.contentDocument;
+                const win = loginFrame.contentWindow;
+                
+                log('Testing login page...', 'INFO');
+                
+                // Check for nuclear mode
+                const hasNuclear = !!win.NUCLEAR_UNBLOCK;
+                log(`Nuclear mode: ${hasNuclear ? 'ACTIVE' : 'NOT FOUND'}`, hasNuclear ? 'SUCCESS' : 'ERROR');
+                
+                // Check for blockers
+                const blocked = doc.querySelectorAll('[style*="pointer-events: none"]').length;
+                log(`Blocked elements: ${blocked}`, blocked > 0 ? 'ERROR' : 'SUCCESS');
+                
+                // Check form
+                const form = doc.querySelector('form');
+                const email = doc.querySelector('input[type="email"], input[wire\\:model="data.email"]');
+                const password = doc.querySelector('input[type="password"], input[wire\\:model="data.password"], input#data\\.password');
+                const submit = doc.querySelector('button[type="submit"]');
+                
+                const status = document.getElementById('loginStatus');
+                status.innerHTML = `
+                    <div class="status ${form ? 'success' : 'error'}">Form: ${form ? 'FOUND' : 'NOT FOUND'}</div>
+                    <div class="status ${email ? 'success' : 'error'}">Email: ${email ? 'FOUND' : 'NOT FOUND'}</div>
+                    <div class="status ${password ? 'success' : 'error'}">Password: ${password ? 'FOUND' : 'NOT FOUND'}</div>
+                    <div class="status ${submit ? 'success' : 'error'}">Submit: ${submit ? 'FOUND' : 'NOT FOUND'}</div>
+                `;
+                
+                if (hasNuclear && win.NUCLEAR_UNBLOCK.status) {
+                    win.NUCLEAR_UNBLOCK.status();
+                }
+                
+            } catch (e) {
+                log('Login test error: ' + e.message, 'ERROR');
+            }
+        }
+
+        function testAdmin() {
+            try {
+                const doc = adminFrame.contentDocument;
+                const win = adminFrame.contentWindow;
+                
+                log('Testing admin panel...', 'INFO');
+                
+                const hasNuclear = !!win.NUCLEAR_UNBLOCK;
+                log(`Nuclear mode: ${hasNuclear ? 'ACTIVE' : 'NOT FOUND'}`, hasNuclear ? 'SUCCESS' : 'ERROR');
+                
+                const navLinks = doc.querySelectorAll('.fi-sidebar a');
+                const blocked = doc.querySelectorAll('[style*="pointer-events: none"]').length;
+                
+                const status = document.getElementById('adminStatus');
+                status.innerHTML = `
+                    <div class="status ${navLinks.length > 0 ? 'success' : 'error'}">Nav Links: ${navLinks.length}</div>
+                    <div class="status ${blocked === 0 ? 'success' : 'error'}">Blocked: ${blocked}</div>
+                `;
+                
+            } catch (e) {
+                log('Admin test error: ' + e.message, 'ERROR');
+            }
+        }
+
+        function forceLoginSubmit() {
+            try {
+                const win = loginFrame.contentWindow;
+                if (win.NUCLEAR_UNBLOCK) {
+                    log('Forcing login form submission...', 'INFO');
+                    win.NUCLEAR_UNBLOCK.forceClick('button[type="submit"]');
+                } else {
+                    log('Nuclear mode not available!', 'ERROR');
+                }
+            } catch (e) {
+                log('Force submit error: ' + e.message, 'ERROR');
+            }
+        }
+
+        function forceNavClick() {
+            try {
+                const win = adminFrame.contentWindow;
+                if (win.NUCLEAR_UNBLOCK) {
+                    log('Forcing navigation click...', 'INFO');
+                    win.NUCLEAR_UNBLOCK.forceClick('.fi-sidebar a');
+                } else {
+                    log('Nuclear mode not available!', 'ERROR');
+                }
+            } catch (e) {
+                log('Force nav error: ' + e.message, 'ERROR');
+            }
+        }
+
+        function removeAllBlockers() {
+            log('🔥 REMOVING ALL BLOCKERS IN BOTH FRAMES...', 'ERROR');
+            
+            [loginFrame, adminFrame].forEach((frame, i) => {
+                try {
+                    const win = frame.contentWindow;
+                    if (win.NUCLEAR_UNBLOCK) {
+                        win.NUCLEAR_UNBLOCK.removeAllBlockers();
+                        log(`Frame ${i+1}: Blockers removed!`, 'SUCCESS');
+                    }
+                } catch (e) {
+                    log(`Frame ${i+1} error: ${e.message}`, 'ERROR');
+                }
+            });
+        }
+
+        function checkStatus() {
+            log('Checking nuclear status...', 'INFO');
+            [loginFrame, adminFrame].forEach((frame, i) => {
+                try {
+                    const win = frame.contentWindow;
+                    if (win.NUCLEAR_UNBLOCK) {
+                        win.NUCLEAR_UNBLOCK.status();
+                    }
+                } catch (e) {
+                    log(`Frame ${i+1}: ${e.message}`, 'ERROR');
+                }
+            });
+        }
+
+        function manualOverride() {
+            log('🔥 MANUAL OVERRIDE ACTIVATED', 'ERROR');
+            
+            // Inject nuclear script directly
+            [loginFrame, adminFrame].forEach(frame => {
+                try {
+                    const doc = frame.contentDocument;
+                    const script = doc.createElement('script');
+                    script.textContent = `
+                        console.error('🔥 MANUAL NUCLEAR INJECTION');
+                        document.querySelectorAll('*').forEach(el => {
+                            el.style.pointerEvents = 'auto';
+                            el.removeAttribute('disabled');
+                        });
+                        document.addEventListener('click', e => {
+                            console.log('NUCLEAR CLICK:', e.target);
+                            if (e.target.href) window.location.href = e.target.href;
+                        }, true);
+                    `;
+                    doc.head.appendChild(script);
+                    log('Manual override injected!', 'SUCCESS');
+                } catch (e) {
+                    log('Injection error: ' + e.message, 'ERROR');
+                }
+            });
+        }
+
+        // Auto-test on load
+        loginFrame.onload = () => {
+            log('Login frame loaded', 'INFO');
+            setTimeout(testLogin, 2000);
+        };
+        
+        adminFrame.onload = () => {
+            log('Admin frame loaded', 'INFO');
+            setTimeout(testAdmin, 2000);
+        };
+
+        log('🔥 NUCLEAR UNBLOCK TEST INITIALIZED', 'ERROR');
+        log('This will remove ALL event blockers!', 'ERROR');
+    </script>
+</body>
+</html>

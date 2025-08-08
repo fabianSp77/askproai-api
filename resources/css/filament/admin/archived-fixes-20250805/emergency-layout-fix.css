@@ -1,0 +1,214 @@
+/* ================================================================
+   EMERGENCY LAYOUT FIX - GitHub Issue #497
+   Direkte Fixes für sichtbare Probleme
+   ================================================================ */
+
+/* 1. Stats Cards - Verhindere Text-Overflow */
+.fi-wi-stats-overview-stat {
+    padding: 1rem !important;
+    overflow: hidden !important;
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.fi-wi-stats-overview-stat-label {
+    margin-top: 0.25rem !important;
+    font-size: 0.875rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.fi-wi-stats-overview-stat-description {
+    margin-top: 0.25rem !important;
+    font-size: 0.75rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    overflow: hidden !important;
+}
+
+/* 2. Hauptlayout - Konsistente Abstände */
+.fi-main-ctn {
+    padding: 1.5rem !important;
+}
+
+.fi-section {
+    margin-bottom: 1.5rem !important;
+}
+
+/* 3. Grid Layout für Stats */
+.fi-wi-stats-overview-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+    gap: 1rem !important;
+}
+
+/* 4. Alle Cards - Einheitliche Gestaltung */
+.fi-section,
+.fi-widget,
+.fi-wi-stats-overview-stat,
+.fi-card {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden !important;
+}
+
+/* 5. Tabellen Container */
+.fi-ta-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.fi-ta-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+.fi-ta-table td,
+.fi-ta-table th {
+    padding: 0.75rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Spezielle Spalten mit mehr Platz */
+.fi-ta-table .fi-ta-text-column {
+    max-width: 300px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+}
+
+/* 6. Navigation Sidebar */
+.fi-sidebar {
+    width: 16rem !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.fi-sidebar-nav {
+    padding: 0.5rem 0 !important;
+}
+
+.fi-sidebar-item {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.fi-sidebar-item > a,
+.fi-sidebar-item > button {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0.625rem 1rem !important;
+    gap: 0.75rem !important;
+    overflow: hidden !important;
+}
+
+.fi-sidebar-item-label {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 7. Content Area richtig positionieren */
+.fi-main {
+    margin-left: 16rem !important;
+}
+
+@media (max-width: 1024px) {
+    .fi-main {
+        margin-left: 0 !important;
+    }
+}
+
+/* 8. Widget Headers */
+.fi-widget-header,
+.fi-section-header {
+    padding: 1rem !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    overflow: hidden !important;
+}
+
+.fi-widget-header-heading,
+.fi-section-header-heading {
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 9. Form Controls einheitlich */
+.fi-input,
+.fi-select {
+    height: 2.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    width: 100% !important;
+}
+
+/* 10. Buttons */
+.fi-btn {
+    height: 2.5rem !important;
+    padding: 0 1rem !important;
+    font-size: 0.875rem !important;
+}
+
+/* 11. Konsistente Margins zwischen Sections */
+.fi-page > .fi-section + .fi-section {
+    margin-top: 1.5rem !important;
+}
+
+/* 12. Modal/Dropdown Z-Index Fix */
+.fi-modal {
+    z-index: 50 !important;
+}
+
+.fi-dropdown-panel {
+    z-index: 40 !important;
+}
+
+/* 13. Entferne doppelte Icons */
+.fi-sidebar-nav svg + svg,
+.fi-sidebar-item-icon + .fi-sidebar-item-icon {
+    display: none !important;
+}
+
+/* 14. Page Header */
+.fi-header {
+    padding: 1rem 1.5rem !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+.fi-header-heading {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+}
+
+/* 15. Globale Text-Größen normalisieren */
+body {
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+}
+
+/* 16. Responsive Grid für kleinere Bildschirme */
+@media (max-width: 640px) {
+    .fi-wi-stats-overview-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .fi-main-ctn {
+        padding: 1rem !important;
+    }
+}

@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate MCP Integration Guide - Retell.ai Professional Setup</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #0f172a;
+            --dark-card: #1e293b;
+            --border: #334155;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-bright: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Premium Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff10" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,112C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+            opacity: 0.1;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #fff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 22px;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        
+        .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Navigation */
+        .nav-container {
+            background: var(--dark-card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            gap: 30px;
+            overflow-x: auto;
+        }
+        
+        .nav-item {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* Section Cards */
+        .section {
+            background: var(--dark-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            position: relative;
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .section-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .section h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-bright);
+            flex: 1;
+        }
+        
+        .section h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+            margin: 30px 0 15px;
+            padding-left: 20px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        /* Copy Blocks */
+        .copy-block {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .copy-header {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .copy-label {
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .copy-btn {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+        
+        .copy-btn.success {
+            background: var(--success);
+            border-color: var(--success);
+        }
+        
+        .code-content {
+            padding: 20px;
+            background: #020617;
+            color: #e2e8f0;
+            font-family: 'JetBrains Mono', 'Fira Code', Monaco, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        /* JSON Syntax Highlighting */
+        .json-key { color: #7dd3fc; }
+        .json-string { color: #86efac; }
+        .json-number { color: #fbbf24; }
+        .json-boolean { color: #c084fc; }
+        .json-null { color: #f87171; }
+        
+        /* Alert Boxes */
+        .alert {
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .alert-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .alert.info {
+            background: #1e3a8a;
+            border: 1px solid #3b82f6;
+            color: #dbeafe;
+        }
+        
+        .alert.success {
+            background: #14532d;
+            border: 1px solid #16a34a;
+            color: #bbf7d0;
+        }
+        
+        .alert.warning {
+            background: #78350f;
+            border: 1px solid #f59e0b;
+            color: #fef3c7;
+        }
+        
+        .alert.danger {
+            background: #7f1d1d;
+            border: 1px solid #ef4444;
+            color: #fecaca;
+        }
+        
+        /* Feature Grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature-card {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+        
+        .feature-title {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .feature-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+        
+        tr:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .tab:hover {
+            color: var(--text);
+        }
+        
+        .tab.active {
+            color: var(--primary);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Checklist */
+        .checklist {
+            background: var(--dark);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: var(--dark-card);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .checklist-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .checkbox.checked {
+            background: var(--primary);
+        }
+        
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* Interactive Demo */
+        .demo-container {
+            background: var(--dark);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .demo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .demo-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 36px; }
+            .section { padding: 20px; }
+            .nav { flex-wrap: wrap; }
+            .feature-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--dark-card);
+            border-top: 1px solid var(--border);
+            padding: 40px;
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        .footer-logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Premium Header -->
+    <div class="header">
+        <div class="header-content">
+            <h1>🚀 Ultimate MCP Integration Guide</h1>
+            <div class="subtitle">Professional Retell.ai Agent Setup mit Model Context Protocol</div>
+            <div class="version-badge">Version 2.0 - Production Ready</div>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <div class="nav-container">
+        <div class="nav">
+            <a class="nav-item active" onclick="showSection('quick-start')">⚡ Quick Start</a>
+            <a class="nav-item" onclick="showSection('mcp-config')">🔧 MCP Config</a>
+            <a class="nav-item" onclick="showSection('agent-settings')">🤖 Agent Settings</a>
+            <a class="nav-item" onclick="showSection('llm-config')">🧠 LLM Config</a>
+            <a class="nav-item" onclick="showSection('voice-settings')">🎙️ Voice Settings</a>
+            <a class="nav-item" onclick="showSection('tools')">🛠️ Tools</a>
+            <a class="nav-item" onclick="showSection('testing')">🧪 Testing</a>
+            <a class="nav-item" onclick="showSection('troubleshooting')">🔍 Troubleshooting</a>
+            <a class="nav-item" onclick="showSection('complete-json')">📦 Complete JSON</a>
+        </div>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Quick Start Section -->
+        <div class="section active" id="quick-start">
+            <div class="section-header">
+                <div class="section-icon">⚡</div>
+                <h2>Quick Start - 3 Minuten Setup</h2>
+            </div>
+            
+            <div class="alert success">
+                <div class="alert-icon">✅</div>
+                <div class="alert-content">
+                    <div class="alert-title">Ready-to-Use Configuration</div>
+                    <div>Kopiere einfach die folgenden 3 Blöcke in deinen Retell Agent und du bist fertig!</div>
+                </div>
+            </div>
+            
+            <h3>1️⃣ MCP Server Configuration</h3>
+            <p style="margin-bottom: 15px;">Füge dies unter <strong>"Tool calling" → "MCP servers"</strong> ein:</p>
+            
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span class="copy-label">MCP Server Config</span>
+                    <button class="copy-btn" onclick="copyCode('quick-mcp')">
+                        <span>📋</span>
+                        <span>Kopieren</span>
+                    </button>
+                </div>
+                <pre class="code-content" id="quick-mcp">[
+  {
+    "name": "hair_salon_mcp",
+    "url": "https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    "timeout_ms": 30000
+  }
+]</pre>
+            </div>
+            
+            <h3>2️⃣ General Prompt</h3>
+            <p style="margin-bottom: 15px;">Ersetze den kompletten <strong>"General prompt"</strong> mit diesem Text:</p>
+            
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span class="copy-label">System Prompt</span>
+                    <button class="copy-btn" onclick="copyCode('quick-prompt')">
+                        <span>📋</span>
+                        <span>Kopieren</span>
+                    </button>
+                </div>
+                <pre class="code-content" id="quick-prompt">Du bist Tina, die professionelle Empfangsdame vom Friseursalon "Schönheit & Stil" in Berlin.
+
+## VERFÜGBARE MCP TOOLS (VERWENDE SIE AKTIV!):
+Du hast Zugriff auf folgende Tools über das MCP System:
+- **list_services**: Zeigt alle verfügbaren Services mit Preisen und Dauer
+- **check_availability**: Prüft freie Termine für einen bestimmten Service
+- **book_appointment**: Bucht einen Termin für den Kunden
+- **schedule_callback**: Plant einen Rückruf für später
+
+## KRITISCHE ANWEISUNGEN:
+1. Du MUSST die Tools tatsächlich aufrufen - sage nicht nur "Ich schaue nach"
+2. Erfinde NIEMALS Preise oder Termine - nutze IMMER die Tools
+3. Warte auf die Tool-Antwort bevor du dem Kunden antwortest
+
+## GESPRÄCHSABLAUF:
+
+### BEGRÜSSUNG:
+"Friseursalon Schönheit & Stil, guten Tag! Hier ist Tina. Wie kann ich Ihnen helfen?"
+
+### BEI SERVICE-ANFRAGE:
+1. Sage: "Gerne zeige ich Ihnen unsere aktuellen Services und Preise."
+2. RUFE AUF: list_services
+3. Warte auf die Antwort
+4. Präsentiere die Services strukturiert mit Preisen
+
+### BEI TERMIN-ANFRAGE:
+1. Frage nach dem gewünschten Service
+2. Frage nach dem Wunschdatum/Zeit
+3. RUFE AUF: check_availability(service_id, date)
+4. Präsentiere verfügbare Termine
+5. Bei Bestätigung RUFE AUF: book_appointment
+6. Bestätige die Buchung mit allen Details
+
+### BEI PROBLEMEN:
+- Entschuldige dich höflich
+- Biete an, die Telefonnummer aufzunehmen
+- Verspreche einen baldigen Rückruf
+
+## UNSERE MITARBEITERINNEN:
+- Maria: Spezialistin für Färbungen und Balayage
+- Anna: Expertin für Hochsteckfrisuren und Styling
+- Lisa: Meisterin für klassische Schnitte und Dauerwellen
+
+## WICHTIGE INFORMATIONEN:
+- Öffnungszeiten: Mo-Fr 9-19 Uhr, Sa 9-16 Uhr
+- Adresse: Kurfürstendamm 123, 10711 Berlin
+- Bei Verspätung über 15 Min verfällt der Termin</pre>
+            </div>
+            
+            <h3>3️⃣ Agent Settings</h3>
+            <p style="margin-bottom: 15px;">Stelle sicher, dass diese Einstellungen korrekt sind:</p>
+            
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span class="copy-label">Required Settings</span>
+                    <button class="copy-btn" onclick="copyCode('quick-settings')">
+                        <span>📋</span>
+                        <span>Kopieren</span>
+                    </button>
+                </div>
+                <pre class="code-content" id="quick-settings">{
+  "language": "de-DE",
+  "voice_id": "11labs-Carola",
+  "model": "gemini-2.5-flash",
+  "model_temperature": 0.02,
+  "interruption_sensitivity": 1,
+  "responsiveness": 1,
+  "tool_call_strict_mode": false,
+  "enable_backchannel": true,
+  "backchannel_frequency": 0.4,
+  "backchannel_words": ["ja", "genau", "verstehe", "okay", "mhm"]
+}</pre>
+            </div>
+            
+            <div class="checklist">
+                <h3 style="margin-top: 0; border: none; padding: 0;">✅ Quick Checklist</h3>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>MCP Server Config unter "MCP servers" eingefügt</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>"Tool calling" ist aktiviert</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>General Prompt ersetzt</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>Agent gespeichert und deployed</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>Telefonnummer mit Agent verknüpft</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MCP Configuration Section -->
+        <div class="section" id="mcp-config">
+            <div class="section-header">
+                <div class="section-icon">🔧</div>
+                <h2>MCP Server Configuration - Detailliert</h2>
+            </div>
+            
+            <div class="alert info">
+                <div class="alert-icon">ℹ️</div>
+                <div class="alert-content">
+                    <div class="alert-title">Was ist MCP?</div>
+                    <div>Model Context Protocol (MCP) ist Anthropics Standard für Tool-Integration. Es ermöglicht Retell.ai, während des Gesprächs dynamisch Tools aufzurufen.</div>
+                </div>
+            </div>
+            
+            <h3>Vollständige MCP Konfiguration</h3>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('mcp-minimal')">Minimal Config</button>
+                <button class="tab" onclick="showTab('mcp-advanced')">Advanced Config</button>
+                <button class="tab" onclick="showTab('mcp-multiple')">Multiple MCPs</button>
+            </div>
+            
+            <div class="tab-content active" id="mcp-minimal">
+                <div class="copy-block">
+                    <div class="copy-header">
+                        <span class="copy-label">Minimal MCP Configuration</span>
+                        <button class="copy-btn" onclick="copyCode('mcp-min-code')">
+                            <span>📋</span>
+                            <span>Kopieren</span>
+                        </button>
+                    </div>
+                    <pre class="code-content" id="mcp-min-code">[
+  {
+    "url": "https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    }
+  }
+]</pre>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="mcp-advanced">
+                <div class="copy-block">
+                    <div class="copy-header">
+                        <span class="copy-label">Advanced MCP Configuration</span>
+                        <button class="copy-btn" onclick="copyCode('mcp-adv-code')">
+                            <span>📋</span>
+                            <span>Kopieren</span>
+                        </button>
+                    </div>
+                    <pre class="code-content" id="mcp-adv-code">[
+  {
+    "name": "hair_salon_mcp",
+    "url": "https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "X-API-Version": "2.0",
+      "X-Client-ID": "retell-agent"
+    },
+    "query_params": {
+      "company_id": "1",
+      "locale": "de-DE"
+    },
+    "timeout_ms": 30000,
+    "retry_policy": {
+      "max_retries": 3,
+      "initial_delay_ms": 1000,
+      "max_delay_ms": 10000,
+      "backoff_multiplier": 2
+    }
+  }
+]</pre>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="mcp-multiple">
+                <div class="copy-block">
+                    <div class="copy-header">
+                        <span class="copy-label">Multiple MCP Servers</span>
+                        <button class="copy-btn" onclick="copyCode('mcp-multi-code')">
+                            <span>📋</span>
+                            <span>Kopieren</span>
+                        </button>
+                    </div>
+                    <pre class="code-content" id="mcp-multi-code">[
+  {
+    "name": "hair_salon_mcp",
+    "url": "https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  {
+    "name": "calendar_mcp",
+    "url": "https://api.askproai.de/api/v2/calendar-mcp/mcp",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  {
+    "name": "payment_mcp",
+    "url": "https://api.askproai.de/api/v2/payment-mcp/mcp",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+]</pre>
+                </div>
+            </div>
+            
+            <h3>MCP Parameter Erklärung</h3>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Pflicht</th>
+                            <th>Beschreibung</th>
+                            <th>Beispiel</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>url</strong></td>
+                            <td>✅ Ja</td>
+                            <td>Die vollständige MCP Endpoint URL</td>
+                            <td>https://api.askproai.de/api/v2/hair-salon-mcp/mcp</td>
+                        </tr>
+                        <tr>
+                            <td><strong>headers</strong></td>
+                            <td>✅ Ja</td>
+                            <td>HTTP Headers für alle Requests</td>
+                            <td>{"Content-Type": "application/json"}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>name</strong></td>
+                            <td>❌ Nein</td>
+                            <td>Eindeutiger Name für den MCP Server</td>
+                            <td>hair_salon_mcp</td>
+                        </tr>
+                        <tr>
+                            <td><strong>timeout_ms</strong></td>
+                            <td>❌ Nein</td>
+                            <td>Timeout in Millisekunden (Default: 10000)</td>
+                            <td>30000</td>
+                        </tr>
+                        <tr>
+                            <td><strong>query_params</strong></td>
+                            <td>❌ Nein</td>
+                            <td>URL Query Parameter für alle Requests</td>
+                            <td>{"company_id": "1"}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>retry_policy</strong></td>
+                            <td>❌ Nein</td>
+                            <td>Retry-Strategie bei Fehlern</td>
+                            <td>{"max_retries": 3}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Agent Settings Section -->
+        <div class="section" id="agent-settings">
+            <div class="section-header">
+                <div class="section-icon">🤖</div>
+                <h2>Agent Settings - Vollständige Konfiguration</h2>
+            </div>
+            
+            <h3>Basis-Einstellungen</h3>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-title">Agent Name</div>
+                    <div class="feature-desc">
+                        <code>agent_name: "Hair Salon MCP Assistant"</code><br>
+                        Ein beschreibender Name für deinen Agent
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-title">Channel</div>
+                    <div class="feature-desc">
+                        <code>channel: "voice"</code><br>
+                        Immer "voice" für Telefon-Agents
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-title">Language</div>
+                    <div class="feature-desc">
+                        <code>language: "de-DE"</code><br>
+                        Deutsch (andere: en-US, fr-FR, es-ES)
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-title">Response Engine</div>
+                    <div class="feature-desc">
+                        <code>type: "retell-llm"</code><br>
+                        Verwende Retells LLM Engine
+                    </div>
+                </div>
+            </div>
+            
+            <h3>Erweiterte Einstellungen</h3>
+            
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span class="copy-label">Complete Agent Settings</span>
+                    <button class="copy-btn" onclick="copyCode('agent-complete')">
+                        <span>📋</span>
+                        <span>Kopieren</span>
+                    </button>
+                </div>
+                <pre class="code-content" id="agent-complete">{
+  "agent_name": "Hair Salon MCP Assistant",
+  "channel": "voice",
+  "language": "de-DE",
+  "response_engine": {
+    "type": "retell-llm",
+    "llm_id": "llm_bb0c324b7399c7423385c5c577c7",
+    "version": 12
+  },
+  "webhook_url": "",  // Leer lassen - wir nutzen nur MCP
+  "opt_out_sensitive_data_storage": false,
+  "opt_in_signed_url": false,
+  "end_call_after_silence_ms": 30000,
+  "max_call_duration_ms": 600000,  // 10 Minuten
+  "post_call_analysis_model": "gemini-2.0-flash",
+  "allow_user_dtmf": false,
+  "denoising_mode": "noise-and-background-speech-cancellation"
+}</pre>
+            </div>
+        </div>
+        
+        <!-- LLM Configuration Section -->
+        <div class="section" id="llm-config">
+            <div class="section-header">
+                <div class="section-icon">🧠</div>
+                <h2>LLM Configuration - AI Model Settings</h2>
+            </div>
+            
+            <div class="alert warning">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content">
+                    <div class="alert-title">Wichtig für Tool-Nutzung</div>
+                    <div>Die Temperature sollte niedrig sein (0.02-0.1) damit der Agent zuverlässig Tools nutzt statt zu halluzinieren.</div>
+                </div>
+            </div>
+            
+            <h3>Empfohlene LLM Einstellungen</h3>
+            
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span class="copy-label">Optimized LLM Config</span>
+                    <button class="copy-btn" onclick="copyCode('llm-settings')">
+                        <span>📋</span>
+                        <span>Kopieren</span>
+                    </button>
+                </div>
+                <pre class="code-content" id="llm-settings">{
+  "model": "gemini-2.5-flash",  // Schnell und günstig
+  "model_temperature": 0.02,     // Sehr niedrig für Präzision
+  "model_high_priority": false,  // Normale Priorität reicht
+  "tool_call_strict_mode": false, // Flexiblere Tool-Nutzung
+  "start_speaker": "agent",      // Agent beginnt das Gespräch
+  "begin_message": "Friseursalon Schönheit & Stil, guten Tag! Hier ist Tina. Wie kann ich Ihnen helfen?",
+  "knowledge_base_ids": []       // Keine zusätzliche Knowledge Base
+}</pre>
+            </div>
+            
+            <h3>Model Vergleich</h3>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Speed</th>
+                            <th>Cost</th>
+                            <th>Quality</th>
+                            <th>Tool Calling</th>
+                            <th>Empfehlung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>gemini-2.5-flash</strong></td>
+                            <td>⚡⚡⚡</td>
+                            <td>💰</td>
+                            <td>⭐⭐⭐⭐</td>
+                            <td>✅ Excellent</td>
+                            <td>✅ Beste Wahl</td>
+                        </tr>
+                        <tr>
+                            <td><strong>gpt-4o</strong></td>
+                            <td>⚡⚡</td>
+                            <td>💰💰💰</td>
+                            <td>⭐⭐⭐⭐⭐</td>
+                            <td>✅ Excellent</td>
+                            <td>Für Premium</td>
+                        </tr>
+                        <tr>
+                            <td><strong>claude-3.5-sonnet</strong></td>
+                            <td>⚡⚡</td>
+                            <td>💰💰</td>
+                            <td>⭐⭐⭐⭐⭐</td>
+                            <td>✅ Very Good</td>
+                            <td>Alternative</td>
+                        </tr>
+                        <tr>
+                            <td><strong>gpt-3.5-turbo</strong></td>
+                            <td>⚡⚡⚡</td>
+                            <td>💰</td>
+                            <td>⭐⭐⭐</td>
+                            <td>⚠️ Basic</td>
+                            <td>Nicht empfohlen</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Voice Settings Section -->
+        <div class="section" id="voice-settings">
+            <div class="section-header">
+                <div class="section-icon">🎙️</div>
+                <h2>Voice & Interaction Settings</h2>
+            </div>
+            
+            <h3>Voice Configuration</h3>
+            
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span class="copy-label">Professional Voice Settings</span>
+                    <button class="copy-btn" onclick="copyCode('voice-config')">
+                        <span>📋</span>
+                        <span>Kopieren</span>
+                    </button>
+                </div>
+                <pre class="code-content" id="voice-config">{
+  "voice_id": "11labs-Carola",           // Deutsche weibliche Stimme
+  "interruption_sensitivity": 1,         // Normal (0.5-1.5)
+  "responsiveness": 1,                   // Schnelle Antworten
+  "normalize_for_speech": true,          // Zahlen ausschreiben
+  "stt_mode": "accurate",                // Genauere Erkennung
+  "enable_backchannel": true,            // Natürliche Bestätigungen
+  "backchannel_frequency": 0.4,          // Häufigkeit (0-1)
+  "backchannel_words": [
+    "ja",
+    "genau", 
+    "verstehe",
+    "okay",
+    "mhm",
+    "richtig",
+    "natürlich"
+  ]
+}</pre>
+            </div>
+            
+            <h3>Deutsche Stimmen (ElevenLabs)</h3>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-title">👩 Carola</div>
+                    <div class="feature-desc">Professionell, freundlich, 30-40 Jahre</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">👩 Lena</div>
+                    <div class="feature-desc">Jung, energisch, 20-30 Jahre</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">👨 Markus</div>
+                    <div class="feature-desc">Männlich, vertrauenswürdig, 35-45 Jahre</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">👩 Sarah</div>
+                    <div class="feature-desc">Warm, mütterlich, 40-50 Jahre</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tools Section -->
+        <div class="section" id="tools">
+            <div class="section-header">
+                <div class="section-icon">🛠️</div>
+                <h2>MCP Tools - Verfügbare Funktionen</h2>
+            </div>
+            
+            <div class="alert success">
+                <div class="alert-icon">✅</div>
+                <div class="alert-content">
+                    <div class="alert-title">Automatische Tool-Erkennung</div>
+                    <div>Diese Tools werden automatisch erkannt, wenn der MCP Server korrekt konfiguriert ist. Du musst sie NICHT manuell hinzufügen!</div>
+                </div>
+            </div>
+            
+            <h3>Verfügbare MCP Tools</h3>
+            
+            <div class="demo-container">
+                <div class="demo-header">
+                    <h4 style="color: var(--text-bright);">Live Tool Testing</h4>
+                    <div class="demo-status">
+                        <span class="status-dot"></span>
+                        <span>MCP Server Online</span>
+                    </div>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="showToolTab('tool-list-services')">list_services</button>
+                    <button class="tab" onclick="showToolTab('tool-check-availability')">check_availability</button>
+                    <button class="tab" onclick="showToolTab('tool-book-appointment')">book_appointment</button>
+                    <button class="tab" onclick="showToolTab('tool-schedule-callback')">schedule_callback</button>
+                </div>
+                
+                <div class="tab-content active" id="tool-list-services">
+                    <h4>📋 list_services</h4>
+                    <p>Listet alle verfügbaren Friseur-Services mit Preisen und Dauer</p>
+                    
+                    <div class="copy-block">
+                        <div class="copy-header">
+                            <span class="copy-label">Example Request</span>
+                        </div>
+                        <pre class="code-content">{
+  "jsonrpc": "2.0",
+  "method": "list_services",
+  "params": {
+    "company_id": 1
+  },
+  "id": "1"
+}</pre>
+                    </div>
+                    
+                    <div class="copy-block">
+                        <div class="copy-header">
+                            <span class="copy-label">Example Response</span>
+                        </div>
+                        <pre class="code-content">{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "result": {
+    "services": [
+      {
+        "id": 26,
+        "name": "Herrenhaarschnitt",
+        "price": "35.00",
+        "duration": 30,
+        "description": "Klassischer Herrenschnitt mit Beratung"
+      },
+      {
+        "id": 27,
+        "name": "Damenhaarschnitt",
+        "price": "55.00",
+        "duration": 45,
+        "description": "Damen Haarschnitt mit Föhnen"
+      }
+    ]
+  }
+}</pre>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tool-check-availability">
+                    <h4>📅 check_availability</h4>
+                    <p>Prüft verfügbare Termine für einen Service</p>
+                    
+                    <div class="copy-block">
+                        <div class="copy-header">
+                            <span class="copy-label">Parameters</span>
+                        </div>
+                        <pre class="code-content">{
+  "service_id": 26,        // Required: Service ID
+  "date": "2024-03-15",   // Optional: YYYY-MM-DD format
+  "staff_id": 1           // Optional: Specific staff member
+}</pre>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tool-book-appointment">
+                    <h4>📝 book_appointment</h4>
+                    <p>Bucht einen Termin für den Kunden</p>
+                    
+                    <div class="copy-block">
+                        <div class="copy-header">
+                            <span class="copy-label">Parameters</span>
+                        </div>
+                        <pre class="code-content">{
+  "service_id": 26,
+  "datetime": "2024-03-15T14:30:00",
+  "customer_name": "Max Mustermann",
+  "customer_phone": "+49 170 1234567",
+  "staff_id": 1,
+  "notes": "Kunde wünscht kurzen Schnitt"
+}</pre>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tool-schedule-callback">
+                    <h4>📞 schedule_callback</h4>
+                    <p>Plant einen Rückruf für später</p>
+                    
+                    <div class="copy-block">
+                        <div class="copy-header">
+                            <span class="copy-label">Parameters</span>
+                        </div>
+                        <pre class="code-content">{
+  "customer_name": "Max Mustermann",
+  "phone_number": "+49 170 1234567",
+  "preferred_time": "2024-03-15T15:00:00",
+  "reason": "Beratung zu Färbung"
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Testing Section -->
+        <div class="section" id="testing">
+            <div class="section-header">
+                <div class="section-icon">🧪</div>
+                <h2>Testing & Validation</h2>
+            </div>
+            
+            <h3>1. MCP Connection Test</h3>
+            
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span class="copy-label">Test MCP Initialize</span>
+                    <button class="copy-btn" onclick="copyCode('test-init')">
+                        <span>📋</span>
+                        <span>Kopieren</span>
+                    </button>
+                </div>
+                <pre class="code-content" id="test-init">curl -X POST https://api.askproai.de/api/v2/hair-salon-mcp/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {}
+    },
+    "id": "test-init"
+  }'</pre>
+            </div>
+            
+            <div class="alert success">
+                <div class="alert-icon">✅</div>
+                <div class="alert-content">
+                    <div class="alert-title">Erwartete Antwort</div>
+                    <div>Du solltest eine Liste der verfügbaren Tools sehen (list_services, check_availability, etc.)</div>
+                </div>
+            </div>
+            
+            <h3>2. Test Tool Calls</h3>
+            
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span class="copy-label">Test list_services</span>
+                    <button class="copy-btn" onclick="copyCode('test-services')">
+                        <span>📋</span>
+                        <span>Kopieren</span>
+                    </button>
+                </div>
+                <pre class="code-content" id="test-services">curl -X POST https://api.askproai.de/api/v2/hair-salon-mcp/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "list_services",
+    "params": {},
+    "id": "test-services"
+  }'</pre>
+            </div>
+            
+            <h3>3. Test Phone Call Script</h3>
+            
+            <div class="alert info">
+                <div class="alert-icon">📞</div>
+                <div class="alert-content">
+                    <div class="alert-title">Test-Anruf Szenarios</div>
+                    <div>Teste diese Sätze beim Anruf:</div>
+                </div>
+            </div>
+            
+            <div class="checklist">
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>"Was kosten eure Haarschnitte?" → Sollte list_services aufrufen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>"Habt ihr morgen um 14 Uhr Zeit?" → Sollte check_availability aufrufen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>"Ich möchte einen Termin buchen" → Sollte nach Details fragen und book_appointment nutzen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>"Könnt ihr mich später zurückrufen?" → Sollte schedule_callback aufrufen</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Troubleshooting Section -->
+        <div class="section" id="troubleshooting">
+            <div class="section-header">
+                <div class="section-icon">🔍</div>
+                <h2>Troubleshooting Guide</h2>
+            </div>
+            
+            <div class="alert danger">
+                <div class="alert-icon">❌</div>
+                <div class="alert-content">
+                    <div class="alert-title">Häufigster Fehler</div>
+                    <div>MCP Config unter "general_tools" statt "mcps" eingetragen! Es MUSS unter "Tool calling" → "MCP servers" sein!</div>
+                </div>
+            </div>
+            
+            <h3>Problem: Agent nutzt keine Tools</h3>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-title">✓ Tool Calling aktiviert?</div>
+                    <div class="feature-desc">
+                        Prüfe ob "Tool calling" im Agent aktiviert ist.
+                        Dies findest du in den Agent Settings.
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-title">✓ MCP richtig platziert?</div>
+                    <div class="feature-desc">
+                        MCP Config muss unter "mcps" oder "MCP servers" sein,
+                        NICHT unter "general_tools"!
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-title">✓ URL korrekt?</div>
+                    <div class="feature-desc">
+                        Exakte URL ohne Leerzeichen:
+                        https://api.askproai.de/api/v2/hair-salon-mcp/mcp
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-title">✓ Headers richtig?</div>
+                    <div class="feature-desc">
+                        Keine Leerzeichen in Header-Namen!
+                        "Content-Type" nicht " Content-Type "
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-title">✓ Agent deployed?</div>
+                    <div class="feature-desc">
+                        Nach Änderungen muss der Agent gespeichert
+                        UND deployed werden!
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-title">✓ Prompt korrekt?</div>
+                    <div class="feature-desc">
+                        Der Prompt muss explizit sagen, dass Tools
+                        genutzt werden sollen.
+                    </div>
+                </div>
+            </div>
+            
+            <h3>Debug Checklist</h3>
+            
+            <div class="checklist">
+                <h4 style="margin-bottom: 15px;">Schritt-für-Schritt Debugging:</h4>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>1. Teste MCP direkt mit curl (siehe Testing Section)</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>2. Prüfe Retell Dashboard → Logs für Tool Call Attempts</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>3. Checke ob "initialize" aufgerufen wird beim Start</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>4. Verifiziere dass Tools in der Response sind</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>5. Kontrolliere Model Temperature (sollte < 0.1 sein)</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checkbox" onclick="toggleCheck(this)"></div>
+                    <span>6. Stelle sicher dass kein Webhook konfiguriert ist</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Complete JSON Section -->
+        <div class="section" id="complete-json">
+            <div class="section-header">
+                <div class="section-icon">📦</div>
+                <h2>Complete Agent JSON - Ready to Import</h2>
+            </div>
+            
+            <div class="alert success">
+                <div class="alert-icon">🚀</div>
+                <div class="alert-content">
+                    <div class="alert-title">Production-Ready Configuration</div>
+                    <div>Dieser komplette JSON kann direkt in Retell importiert werden. Alle Einstellungen sind optimiert für MCP-Integration.</div>
+                </div>
+            </div>
+            
+            <div class="copy-block">
+                <div class="copy-header">
+                    <span class="copy-label">Complete Agent Configuration JSON</span>
+                    <button class="copy-btn" onclick="copyCode('complete-agent-json')">
+                        <span>📋</span>
+                        <span>Alles kopieren</span>
+                    </button>
+                </div>
+                <pre class="code-content" id="complete-agent-json">{
+  "agent_id": "",
+  "channel": "voice",
+  "agent_name": "Hair Salon MCP Professional",
+  "response_engine": {
+    "type": "retell-llm",
+    "llm_id": "llm_bb0c324b7399c7423385c5c577c7",
+    "version": 12
+  },
+  "language": "de-DE",
+  "voice_id": "11labs-Carola",
+  "webhook_url": "",
+  "opt_out_sensitive_data_storage": false,
+  "opt_in_signed_url": false,
+  "end_call_after_silence_ms": 30000,
+  "max_call_duration_ms": 600000,
+  "version": 12,
+  "is_published": false,
+  "version_title": "MCP Production v2.0",
+  "post_call_analysis_model": "gemini-2.0-flash",
+  "enable_backchannel": true,
+  "backchannel_frequency": 0.4,
+  "backchannel_words": ["ja", "genau", "verstehe", "okay", "mhm", "richtig"],
+  "interruption_sensitivity": 1,
+  "responsiveness": 1,
+  "normalize_for_speech": true,
+  "stt_mode": "accurate",
+  "allow_user_dtmf": false,
+  "user_dtmf_options": {},
+  "denoising_mode": "noise-and-background-speech-cancellation",
+  "retellLlmData": {
+    "llm_id": "llm_bb0c324b7399c7423385c5c577c7",
+    "version": 12,
+    "model": "gemini-2.5-flash",
+    "model_temperature": 0.02,
+    "model_high_priority": false,
+    "tool_call_strict_mode": false,
+    "general_prompt": "Du bist Tina, die professionelle Empfangsdame vom Friseursalon 'Schönheit & Stil' in Berlin.\n\n## VERFÜGBARE MCP TOOLS (VERWENDE SIE AKTIV!):\nDu hast Zugriff auf folgende Tools über das MCP System:\n- **list_services**: Zeigt alle verfügbaren Services mit Preisen und Dauer\n- **check_availability**: Prüft freie Termine für einen bestimmten Service\n- **book_appointment**: Bucht einen Termin für den Kunden\n- **schedule_callback**: Plant einen Rückruf für später\n\n## KRITISCHE ANWEISUNGEN:\n1. Du MUSST die Tools tatsächlich aufrufen - sage nicht nur 'Ich schaue nach'\n2. Erfinde NIEMALS Preise oder Termine - nutze IMMER die Tools\n3. Warte auf die Tool-Antwort bevor du dem Kunden antwortest\n\n## GESPRÄCHSABLAUF:\n\n### BEGRÜSSUNG:\n'Friseursalon Schönheit & Stil, guten Tag! Hier ist Tina. Wie kann ich Ihnen helfen?'\n\n### BEI SERVICE-ANFRAGE:\n1. Sage: 'Gerne zeige ich Ihnen unsere aktuellen Services und Preise.'\n2. RUFE AUF: list_services\n3. Warte auf die Antwort\n4. Präsentiere die Services strukturiert mit Preisen\n\n### BEI TERMIN-ANFRAGE:\n1. Frage nach dem gewünschten Service\n2. Frage nach dem Wunschdatum/Zeit\n3. RUFE AUF: check_availability(service_id, date)\n4. Präsentiere verfügbare Termine\n5. Bei Bestätigung RUFE AUF: book_appointment\n6. Bestätige die Buchung mit allen Details\n\n### BEI PROBLEMEN:\n- Entschuldige dich höflich\n- Biete an, die Telefonnummer aufzunehmen\n- Verspreche einen baldigen Rückruf\n\n## UNSERE MITARBEITERINNEN:\n- Maria: Spezialistin für Färbungen und Balayage\n- Anna: Expertin für Hochsteckfrisuren und Styling\n- Lisa: Meisterin für klassische Schnitte und Dauerwellen\n\n## WICHTIGE INFORMATIONEN:\n- Öffnungszeiten: Mo-Fr 9-19 Uhr, Sa 9-16 Uhr\n- Adresse: Kurfürstendamm 123, 10711 Berlin\n- Bei Verspätung über 15 Min verfällt der Termin",
+    "general_tools": [],
+    "states": [],
+    "start_speaker": "agent",
+    "begin_message": "Friseursalon Schönheit & Stil, guten Tag! Hier ist Tina. Wie kann ich Ihnen helfen?",
+    "last_modification_timestamp": 1754589007200,
+    "is_published": false,
+    "mcps": [
+      {
+        "name": "hair_salon_mcp",
+        "url": "https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+        "headers": {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        "timeout_ms": 30000
+      }
+    ],
+    "knowledge_base_ids": []
+  },
+  "conversationFlow": null,
+  "llmURL": null
+}</pre>
+            </div>
+            
+            <div class="alert info">
+                <div class="alert-icon">💡</div>
+                <div class="alert-content">
+                    <div class="alert-title">Import Instructions</div>
+                    <div>
+                        1. Kopiere den kompletten JSON oben<br>
+                        2. Gehe zu Retell.ai → Agents → Import<br>
+                        3. Füge den JSON ein und klicke Import<br>
+                        4. Speichere und deploye den Agent<br>
+                        5. Verknüpfe deine Telefonnummer
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-logo">AskProAI MCP Integration</div>
+        <div class="footer-text">© 2024 - Professional Retell.ai Integration Guide</div>
+    </div>
+    
+    <script>
+        // Section Navigation
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        // Tab Navigation
+        function showTab(tabId) {
+            // Hide all tab contents in parent
+            const parent = event.target.closest('.section');
+            parent.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            
+            // Update tab buttons
+            event.target.parentElement.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        // Tool Tab Navigation
+        function showToolTab(tabId) {
+            const container = event.target.closest('.demo-container');
+            container.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+            
+            event.target.parentElement.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        // Copy Code Function
+        function copyCode(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const button = event.target.closest('.copy-btn');
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<span>✅</span><span>Kopiert!</span>';
+                button.classList.add('success');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('success');
+                }, 2000);
+            }).catch(err => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                const button = event.target.closest('.copy-btn');
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<span>✅</span><span>Kopiert!</span>';
+                button.classList.add('success');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('success');
+                }, 2000);
+            });
+        }
+        
+        // Toggle Checkbox
+        function toggleCheck(element) {
+            element.classList.toggle('checked');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add smooth scrolling
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

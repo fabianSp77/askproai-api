@@ -1,0 +1,245 @@
+/* Comprehensive Dropdown & Z-Index Fix for Filament v3
+ * Based on Filament Best Practices from Context7
+ * 
+ * This fixes dropdown visibility issues throughout the portal
+ */
+
+/* ========================================
+   CRITICAL: Table Container Overflow Fix
+   ======================================== */
+
+/* Allow dropdowns to overflow table containers */
+.fi-ta-ctn {
+    overflow: visible !important;
+}
+
+.fi-ta-content {
+    overflow: visible !important;
+}
+
+.fi-ta-content-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Table wrapper should not clip dropdowns */
+.fi-ta-table-ctn {
+    overflow: visible !important;
+}
+
+.fi-ta-table-wrap {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* The actual table element can scroll horizontally */
+.fi-ta-table {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* ========================================
+   ACTION GROUP DROPDOWN POSITIONING
+   ======================================== */
+
+/* Action group containers need proper positioning context */
+.fi-ta-actions,
+.fi-ta-actions-cell {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* Action dropdown panels must be absolutely positioned */
+.fi-ac-dropdown .fi-dropdown-panel,
+.fi-ta-actions .fi-dropdown-panel {
+    position: absolute !important;
+    right: 0 !important;
+    top: 100% !important;
+    z-index: 9999 !important;
+    margin-top: 0.25rem !important;
+}
+
+/* Ensure dropdown trigger has proper stacking context */
+.fi-ac-btn-group {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* ========================================
+   Z-INDEX HIERARCHY (Filament v3 Standards)
+   ======================================== */
+
+/* Level 1: Base content */
+.fi-ta-table {
+    z-index: 1 !important;
+}
+
+/* Level 2: Sticky elements */
+.fi-ta-header,
+.fi-ta-header-toolbar {
+    z-index: 20 !important;
+}
+
+/* Level 3: Dropdowns - Must be above all table content */
+.fi-dropdown-panel {
+    z-index: 50 !important;
+}
+
+/* Level 4: Action dropdowns need higher priority */
+.fi-ac-dropdown .fi-dropdown-panel,
+.fi-ta-actions .fi-dropdown-panel {
+    z-index: 60 !important;
+}
+
+/* Level 5: Modals and overlays */
+.fi-modal-backdrop {
+    z-index: 80 !important;
+}
+
+.fi-modal {
+    z-index: 90 !important;
+}
+
+/* Level 6: Notifications */
+.fi-no-notification {
+    z-index: 100 !important;
+}
+
+/* ========================================
+   DROPDOWN WIDTH & HEIGHT CONSTRAINTS
+   ======================================== */
+
+/* Based on Filament's dropdownWidth() method */
+.fi-ac-dropdown .fi-dropdown-panel {
+    min-width: 12rem !important; /* Equivalent to MaxWidth::ExtraSmall */
+    max-width: 20rem !important;
+}
+
+/* Based on Filament's maxHeight() method */
+.fi-ac-dropdown .fi-dropdown-list {
+    max-height: 400px !important;
+    overflow-y: auto !important;
+}
+
+/* ========================================
+   SPECIFIC FIXES FOR COMMON ISSUES
+   ======================================== */
+
+/* Fix for "Mehr" button dropdown */
+.fi-ta-record .fi-ac-dropdown .fi-dropdown-panel {
+    right: 0 !important;
+    left: auto !important;
+}
+
+/* Fix for dropdowns at table edges */
+.fi-ta-table tr:last-child .fi-dropdown-panel {
+    bottom: 100% !important;
+    top: auto !important;
+    margin-bottom: 0.25rem !important;
+    margin-top: 0 !important;
+}
+
+/* Fix for dropdowns in modal contexts */
+.fi-modal .fi-dropdown-panel {
+    z-index: 91 !important;
+}
+
+/* ========================================
+   REMOVE CONFLICTING OVERFLOW STYLES
+   ======================================== */
+
+/* Override any overflow: hidden on table cells */
+.fi-ta-cell {
+    overflow: visible !important;
+}
+
+/* Remove clip-path that might cut off dropdowns */
+.fi-ta-row {
+    clip-path: none !important;
+}
+
+/* ========================================
+   MOBILE RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Mobile dropdowns need full width */
+    .fi-ac-dropdown .fi-dropdown-panel {
+        position: fixed !important;
+        left: 1rem !important;
+        right: 1rem !important;
+        max-width: none !important;
+        width: auto !important;
+    }
+    
+    /* Higher z-index on mobile to avoid navigation conflicts */
+    .fi-ac-dropdown .fi-dropdown-panel {
+        z-index: 70 !important;
+    }
+}
+
+/* ========================================
+   SCROLLBAR STYLING FOR DROPDOWNS
+   ======================================== */
+
+.fi-dropdown-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.fi-dropdown-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fi-dropdown-list::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.dark .fi-dropdown-list::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ========================================
+   ANIMATION FIXES
+   ======================================== */
+
+/* Ensure dropdowns animate properly without being clipped */
+.fi-dropdown-panel[x-show] {
+    transform-origin: top right !important;
+}
+
+/* ========================================
+   BRANCH SELECTOR SPECIFIC FIX
+   ======================================== */
+
+.branch-selector-dropdown,
+[x-data*="branch"] .fi-dropdown-panel {
+    z-index: 65 !important;
+}
+
+/* ========================================
+   USER MENU SPECIFIC FIX
+   ======================================== */
+
+.fi-user-menu .fi-dropdown-panel {
+    z-index: 66 !important;
+}
+
+/* ========================================
+   DEBUG HELPERS (Remove in production)
+   ======================================== */
+
+/* Uncomment to visualize dropdown issues */
+/*
+.fi-dropdown-panel {
+    border: 2px solid red !important;
+}
+
+.fi-ta-content-ctn {
+    border: 2px solid blue !important;
+}
+
+.fi-ta-actions {
+    border: 2px solid green !important;
+}
+*/

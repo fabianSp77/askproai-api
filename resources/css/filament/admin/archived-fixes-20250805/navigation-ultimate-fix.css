@@ -1,0 +1,188 @@
+/* ================================================================
+   ULTIMATE NAVIGATION FIX - GitHub Issue #487
+   This file must be the LAST CSS file loaded to ensure it overrides everything
+   Date: 2025-08-05
+   ================================================================ */
+
+/* 1. NUCLEAR OPTION: Reset ALL pointer-events blocking */
+* {
+    pointer-events: auto !important;
+}
+
+/* 2. Remove ALL overlays and pseudo-elements that might block clicks */
+*::before,
+*::after {
+    pointer-events: none !important;
+}
+
+/* But allow specific pseudo-elements that need interaction */
+.fi-sidebar-nav a::before,
+.fi-sidebar-nav button::before,
+.fi-dropdown-trigger::before {
+    pointer-events: auto !important;
+}
+
+/* 3. Fix duplicate arrows issue - hide extra navigation indicators */
+.fi-sidebar-nav-group-header svg + svg,
+.fi-sidebar-item-icon + .fi-sidebar-item-icon {
+    display: none !important;
+}
+
+/* 4. Force proper z-index hierarchy */
+.fi-sidebar {
+    z-index: 40 !important;
+    position: sticky !important;
+    isolation: isolate !important;
+}
+
+.fi-sidebar-nav {
+    z-index: 41 !important;
+    position: relative !important;
+}
+
+.fi-sidebar-nav a,
+.fi-sidebar-nav button {
+    z-index: 42 !important;
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* 5. Fix spacing between sidebar and main content */
+.fi-main-ctn {
+    margin-left: var(--sidebar-width, 16rem) !important;
+    transition: margin-left 0.3s ease !important;
+}
+
+@media (max-width: 1023px) {
+    .fi-main-ctn {
+        margin-left: 0 !important;
+    }
+}
+
+/* When sidebar is collapsed */
+.fi-sidebar-collapsed + .fi-main-ctn {
+    margin-left: 0 !important;
+}
+
+/* 6. Ensure ALL navigation links are clickable */
+.fi-sidebar-nav a,
+.fi-sidebar-nav button,
+.fi-sidebar-item,
+.fi-sidebar-item-button,
+[href*="/admin"],
+[wire\:navigate] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 7. Fix any blocking overlays */
+.fi-sidebar-open::before,
+.fi-sidebar-close-overlay,
+.fi-main-ctn::before,
+[class*="overlay"] {
+    pointer-events: none !important;
+    display: none !important;
+}
+
+/* 8. Debug helpers - add visual feedback */
+.fi-sidebar-nav a:hover,
+.fi-sidebar-nav button:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    outline: 2px solid rgba(59, 130, 246, 0.3) !important;
+    outline-offset: -2px !important;
+}
+
+.fi-sidebar-nav a:active,
+.fi-sidebar-nav button:active {
+    transform: scale(0.98) !important;
+    background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* 9. Fix dropdown menus */
+.fi-dropdown-panel {
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+    position: absolute !important;
+}
+
+.fi-dropdown-list-item {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* 10. Ensure forms and inputs work */
+input,
+select,
+textarea,
+button[type="submit"],
+.fi-btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+    position: relative !important;
+}
+
+/* 11. Fix table actions */
+.fi-ta-actions,
+.fi-ta-action,
+.fi-ac-action {
+    pointer-events: auto !important;
+    z-index: 20 !important;
+    position: relative !important;
+}
+
+/* 12. Mobile-specific fixes */
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        position: fixed !important;
+        height: 100vh !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    /* Remove any blocking mobile overlays */
+    body::before,
+    body::after {
+        display: none !important;
+    }
+}
+
+/* 13. Alpine.js and Livewire specific fixes */
+[x-data],
+[wire\:id],
+[wire\:click],
+[x-on\:click] {
+    pointer-events: auto !important;
+}
+
+/* 14. Final override for any stubborn elements */
+body * {
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    user-select: auto !important;
+}
+
+/* 15. Fix specific Filament components */
+.fi-modal-close-btn,
+.fi-modal-cancel-btn,
+.fi-notifications-close-btn {
+    pointer-events: auto !important;
+    z-index: 9999 !important;
+}
+
+/* DEBUG MODE - Uncomment to see all clickable areas
+.fi-sidebar-nav a,
+.fi-sidebar-nav button,
+[wire\:click],
+[x-on\:click] {
+    border: 2px solid red !important;
+    background-color: rgba(255, 0, 0, 0.1) !important;
+}
+*/

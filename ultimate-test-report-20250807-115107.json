@@ -1,0 +1,292 @@
+{
+    "timestamp": "2025-08-07 11:51:07",
+    "environment": "production",
+    "company": {
+        "id": 1,
+        "name": "Kr\u00fcckeberg Servicegruppe"
+    },
+    "summary": {
+        "total_tests": 35,
+        "passed": 30,
+        "failed": 0,
+        "errors": 5,
+        "success_rate": 85.71,
+        "duration_ms": 7373.76
+    },
+    "performance": {
+        "average_ms": 210.4,
+        "slowest": {
+            "API Rate Limiting Check": 4044.69,
+            "API Version Compatibility": 749.21,
+            "Concurrent API Requests": 737.31,
+            "Sync Phone Numbers": 631.25,
+            "Get Specific Agent": 491.84
+        },
+        "fastest": {
+            "MCP Server Configuration": 0.02,
+            "CORS Configuration": 0.02,
+            "PHP Version Check": 0.01,
+            "Laravel Version": 0.01,
+            "Memory Usage": 0.01
+        }
+    },
+    "test_results": {
+        "PHP Version Check": {
+            "status": "passed",
+            "duration": 0.01,
+            "data": null
+        },
+        "Laravel Version": {
+            "status": "passed",
+            "duration": 0.01,
+            "data": null
+        },
+        "Database Connection": {
+            "status": "passed",
+            "duration": 1.36,
+            "data": null
+        },
+        "Retell API Key Configuration": {
+            "status": "passed",
+            "duration": 0.03,
+            "data": null
+        },
+        "MCP Server Configuration": {
+            "status": "passed",
+            "duration": 0.02,
+            "data": null
+        },
+        "Cache System": {
+            "status": "passed",
+            "duration": 3.81,
+            "data": null
+        },
+        "Direct API Health Check": {
+            "status": "passed",
+            "duration": 1.68,
+            "data": {
+                "healthy": true,
+                "status": true,
+                "message": "Retell API is healthy",
+                "agent_count": 93,
+                "checked_at": "2025-08-07T11:51:00+02:00"
+            }
+        },
+        "API Rate Limiting Check": {
+            "status": "passed",
+            "duration": 4044.69,
+            "data": null
+        },
+        "API Version Compatibility": {
+            "status": "passed",
+            "duration": 749.21,
+            "data": null
+        },
+        "List All Agents": {
+            "status": "passed",
+            "duration": 5.78,
+            "data": {
+                "count": 93
+            }
+        },
+        "Get Specific Agent": {
+            "status": "error",
+            "duration": 491.84,
+            "exception": "Undefined array key \"error\""
+        },
+        "Sync Agent Details": {
+            "status": "error",
+            "duration": 3.94,
+            "exception": "Undefined array key \"error\""
+        },
+        "Get Phone Numbers": {
+            "status": "passed",
+            "duration": 10.56,
+            "data": null
+        },
+        "Sync Phone Numbers": {
+            "status": "error",
+            "duration": 631.25,
+            "exception": "Undefined array key \"error\""
+        },
+        "Get Recent Calls": {
+            "status": "passed",
+            "duration": 15.67,
+            "data": null
+        },
+        "Search Calls": {
+            "status": "passed",
+            "duration": 5.04,
+            "data": null
+        },
+        "Get Call Stats": {
+            "status": "error",
+            "duration": 7.03,
+            "exception": "Undefined array key \"error\""
+        },
+        "Call Analytics (7 days)": {
+            "status": "passed",
+            "duration": 16.54,
+            "data": null
+        },
+        "Call Analytics (30 days)": {
+            "status": "passed",
+            "duration": 9.16,
+            "data": null
+        },
+        "Test Webhook Endpoint": {
+            "status": "passed",
+            "duration": 210.58,
+            "data": null
+        },
+        "Validate Webhook Security": {
+            "status": "passed",
+            "duration": 0.03,
+            "data": null
+        },
+        "Get Available Slots": {
+            "status": "error",
+            "duration": 1.37,
+            "exception": "Undefined array key \"error\""
+        },
+        "Customer Phone Lookup": {
+            "status": "passed",
+            "duration": 3.32,
+            "data": null
+        },
+        "Invalid Agent ID Handling": {
+            "status": "passed",
+            "duration": 0.41,
+            "data": null
+        },
+        "Empty Company ID Handling": {
+            "status": "passed",
+            "duration": 1.27,
+            "data": null
+        },
+        "Cache Clear Function": {
+            "status": "passed",
+            "duration": 0.44,
+            "data": null
+        },
+        "Concurrent API Requests": {
+            "status": "passed",
+            "duration": 737.31,
+            "data": null
+        },
+        "Database Query Performance": {
+            "status": "passed",
+            "duration": 18.24,
+            "data": null
+        },
+        "Memory Usage": {
+            "status": "passed",
+            "duration": 0.01,
+            "data": null
+        },
+        "API Key Security": {
+            "status": "passed",
+            "duration": 2.97,
+            "data": null
+        },
+        "SQL Injection Protection": {
+            "status": "passed",
+            "duration": 3.36,
+            "data": null
+        },
+        "CORS Configuration": {
+            "status": "passed",
+            "duration": 0.02,
+            "data": null
+        },
+        "Database Tables Structure": {
+            "status": "passed",
+            "duration": 1.26,
+            "data": null
+        },
+        "Foreign Key Constraints": {
+            "status": "passed",
+            "duration": 382.42,
+            "data": null
+        },
+        "Data Consistency Check": {
+            "status": "passed",
+            "duration": 3.43,
+            "data": null
+        }
+    },
+    "categories": {
+        "Configuration": {
+            "total": 6,
+            "passed": 6,
+            "failed": 0,
+            "errors": 0
+        },
+        "API Connectivity": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0
+        },
+        "Agent Management": {
+            "total": 3,
+            "passed": 1,
+            "failed": 0,
+            "errors": 2
+        },
+        "Phone Numbers": {
+            "total": 2,
+            "passed": 1,
+            "failed": 0,
+            "errors": 1
+        },
+        "Call Management": {
+            "total": 3,
+            "passed": 2,
+            "failed": 0,
+            "errors": 1
+        },
+        "Analytics": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+        },
+        "Webhooks": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0
+        },
+        "Appointments": {
+            "total": 2,
+            "passed": 1,
+            "failed": 0,
+            "errors": 1
+        },
+        "Error Handling": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0
+        },
+        "Performance": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0
+        },
+        "Security": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0
+        },
+        "Database": {
+            "total": 3,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0
+        }
+    }
+}

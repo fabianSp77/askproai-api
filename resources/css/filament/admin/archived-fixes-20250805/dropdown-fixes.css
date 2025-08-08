@@ -1,0 +1,124 @@
+/**
+ * Filament v3 Dropdown Fixes
+ * Resolves z-index and positioning issues with dropdowns
+ */
+
+/* Fix z-index for dropdown panels */
+.fi-dropdown-panel,
+.choices__list--dropdown,
+[role="listbox"],
+[x-ref="panel"] {
+    z-index: 50 !important;
+}
+
+/* Fix for modals containing dropdowns */
+.fi-modal .fi-dropdown-panel,
+.fi-modal .choices__list--dropdown {
+    z-index: 10050 !important; /* Higher than modal z-index */
+}
+
+/* Fix searchable select dropdowns */
+.fi-fo-select .choices__list--dropdown.is-active {
+    z-index: 9999 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure dropdown triggers are clickable */
+.fi-dropdown-trigger,
+.choices__input,
+button[x-on\:click*="open"] {
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+/* Fix dropdown positioning */
+.fi-dropdown {
+    position: relative;
+}
+
+.fi-dropdown-panel {
+    position: absolute !important;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+}
+
+/* Fix for dropdowns that should open upward */
+.fi-dropdown-panel.bottom-full {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+/* Ensure dropdown panels are above other elements */
+.fi-dropdown-list,
+.fi-dropdown-list-item {
+    position: relative;
+    z-index: auto;
+}
+
+/* Fix for nested dropdowns */
+.fi-dropdown .fi-dropdown {
+    z-index: 51 !important;
+}
+
+/* Fix branch selector specific issues */
+.branch-selector-dropdown .fi-dropdown-panel {
+    min-width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Fix for overlapping with fixed headers */
+.fi-header ~ * .fi-dropdown-panel {
+    z-index: 40 !important; /* Below header but above content */
+}
+
+/* Smooth transitions */
+.fi-dropdown-panel {
+    transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hidden state */
+.fi-dropdown-panel:not(.is-active):not([x-show="true"]) {
+    opacity: 0;
+    transform: scale(0.95);
+    pointer-events: none;
+}
+
+/* Visible state */
+.fi-dropdown-panel.is-active,
+.fi-dropdown-panel[x-show="true"] {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+/* Fix for autocomplete warnings */
+input[autocomplete="off"] {
+    /* Ensure browser respects autocomplete attribute */
+    -webkit-appearance: none;
+}
+
+/* Fix focus styles */
+.fi-dropdown-trigger:focus,
+.choices__input:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgb(251 191 36 / 0.2);
+}
+
+/* Ensure dropdowns in tables work correctly */
+.fi-ta-table .fi-dropdown-panel {
+    z-index: 50 !important;
+}
+
+/* Fix for dropdowns in sticky table headers */
+.fi-ta-header-cell .fi-dropdown-panel {
+    position: fixed !important;
+    z-index: 51 !important;
+}

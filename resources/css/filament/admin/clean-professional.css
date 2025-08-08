@@ -1,0 +1,272 @@
+/* ================================================================
+   CLEAN PROFESSIONAL DESIGN - Issue #510
+   Sauberes, professionelles Design ohne Debug-Elemente
+   ================================================================ */
+
+/* 1. LAYOUT GRUNDLAGEN - Saubere Struktur */
+.fi-layout {
+    display: flex;
+    flex-direction: row-reverse; /* Filament Standard */
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.fi-sidebar {
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    background: var(--sidebar-bg, #1f2937);
+}
+
+.fi-main {
+    flex: 1;
+    min-width: 0;
+    padding: 1rem;
+}
+
+.fi-main-ctn {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* 2. NAVIGATION - Klickbar ohne aggressive Overrides */
+.fi-sidebar-nav a,
+.fi-sidebar-nav button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.fi-sidebar-nav a:hover,
+.fi-sidebar-nav button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Entferne doppelte Chevron-Icons */
+.fi-sidebar-item .fi-sidebar-item-icon + svg {
+    display: none;
+}
+
+/* 3. FORM STYLING - Professionell und funktional */
+.fi-input-wrp {
+    position: relative;
+    width: 100%;
+}
+
+input.fi-input,
+textarea.fi-input,
+select.fi-input {
+    width: 100%;
+    border-radius: 0.375rem;
+    border: 1px solid var(--input-border, #d1d5db);
+    background: var(--input-bg, white);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+input.fi-input:focus,
+textarea.fi-input:focus,
+select.fi-input:focus {
+    outline: none;
+    border-color: var(--primary, #3b82f6);
+    ring: 2px solid rgba(59, 130, 246, 0.1);
+}
+
+/* 4. BUTTONS - Moderne, klickbare Buttons */
+.fi-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.fi-btn-primary {
+    background: var(--primary, #3b82f6);
+    color: white;
+}
+
+.fi-btn-primary:hover {
+    background: var(--primary-hover, #2563eb);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 5. TABLES - Responsive und sauber */
+.fi-ta-ctn {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.fi-ta-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.fi-ta-table th,
+.fi-ta-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+}
+
+.fi-ta-table tbody tr:hover {
+    background-color: var(--hover-bg, #f9fafb);
+}
+
+/* 6. WIDGETS - Moderne Dashboard-Widgets */
+.fi-wi-stats-overview-card {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #111827);
+}
+
+/* 7. DARK MODE SUPPORT */
+.dark .fi-sidebar {
+    background: #111827;
+}
+
+.dark .fi-input {
+    background: #1f2937;
+    border-color: #374151;
+    color: white;
+}
+
+.dark .fi-btn-primary {
+    background: #3b82f6;
+}
+
+.dark .fi-btn-primary:hover {
+    background: #2563eb;
+}
+
+/* 8. RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+    .fi-layout {
+        flex-direction: column;
+    }
+    
+    .fi-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 40;
+    }
+    
+    .fi-sidebar-open .fi-sidebar {
+        transform: translateX(0);
+    }
+}
+
+/* 9. SCROLLBAR STYLING */
+.fi-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.fi-sidebar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.fi-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+/* 10. ENTFERNE ALLE DEBUG-ELEMENTE */
+/* Keine roten Banner, keine Debug-Indikatoren, keine Warning-Messages */
+body::before,
+body::after,
+.fi-simple-page::before,
+.fi-simple-page::after {
+    display: none !important;
+}
+
+/* Verstecke alle Debug-Divs */
+#nuclear-unblock-style,
+#admin-fix-debug,
+#navigation-fix-debug,
+#ultimate-login-fix-indicator {
+    display: none !important;
+}
+
+/* 11. FOKUS AUF ZUGÄNGLICHKEIT */
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid var(--primary, #3b82f6);
+    outline-offset: 2px;
+}
+
+/* 12. SMOOTH TRANSITIONS */
+* {
+    transition: background-color 0.2s ease, 
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+/* 13. PROFESSIONAL SPACING */
+.fi-page {
+    padding: 2rem;
+}
+
+.fi-section {
+    margin-bottom: 2rem;
+}
+
+.fi-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+/* 14. CARD STYLING */
+.fi-card {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* 15. ENSURE CLICKABILITY WITHOUT AGGRESSIVE OVERRIDES */
+a, button, input, select, textarea,
+[role="button"], [role="link"] {
+    cursor: pointer;
+}
+
+/* Buttons sollten nicht disabled aussehen */
+button:not(:disabled) {
+    opacity: 1;
+    cursor: pointer;
+}
+
+/* Links sollten erkennbar sein */
+a {
+    color: var(--link-color, #3b82f6);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}

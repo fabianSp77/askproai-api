@@ -1,0 +1,106 @@
+/* User Menu and Branch Switcher Fixes */
+
+/* Fix user avatar button positioning */
+.fi-user-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ensure proper spacing in topbar */
+.fi-topbar-item {
+    display: flex;
+    align-items: center;
+}
+
+/* Branch switcher button styling */
+.fi-user-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Improve dropdown positioning */
+.fi-dropdown-panel {
+    margin-top: 0.5rem;
+}
+
+/* Fix icon sizes in user menu */
+.fi-user-menu .fi-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Active branch indicator */
+.branch-indicator {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    height: 8px;
+    width: 8px;
+    border-radius: 9999px;
+    background-color: #10b981;
+    border: 2px solid white;
+}
+
+.dark .branch-indicator {
+    border-color: #1f2937;
+}
+
+/* Dropdown list improvements */
+.fi-dropdown-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* Check icon for selected items */
+.fi-dropdown-list-item .check-icon {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+    .fi-topbar {
+        padding: 0.5rem;
+    }
+    
+    .fi-user-btn {
+        height: 2.25rem;
+        width: 2.25rem;
+    }
+}
+
+/* Account widget improvements */
+.fi-wi-account {
+    margin-bottom: 0;
+}
+
+.fi-wi-account .fi-section {
+    padding: 1rem;
+}
+
+/* Fix avatar sizing */
+.fi-avatar-lg {
+    height: 3rem;
+    width: 3rem;
+}
+
+/* Ensure proper icon colors */
+.fi-user-btn svg {
+    color: #6b7280;
+}
+
+.fi-user-btn:hover svg {
+    color: #374151;
+}
+
+.dark .fi-user-btn svg {
+    color: #9ca3af;
+}
+
+.dark .fi-user-btn:hover svg {
+    color: #d1d5db;
+}

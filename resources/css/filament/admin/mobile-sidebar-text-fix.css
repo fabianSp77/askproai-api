@@ -1,0 +1,73 @@
+/* Mobile Sidebar Text Fix - Force text visibility */
+
+@media (max-width: 1024px) {
+    /* Force all sidebar text to be visible when sidebar is open */
+    body.fi-sidebar-open .fi-sidebar span.fi-sidebar-item-label,
+    body.fi-sidebar-open .fi-sidebar span.fi-sidebar-group-label {
+        display: inline-block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+        clip: auto !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    
+    /* Override any x-show conditions that hide text */
+    body.fi-sidebar-open .fi-sidebar [x-show="$store.sidebar.isOpen"] {
+        display: initial !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Force all spans in sidebar to show */
+    body.fi-sidebar-open .fi-sidebar-item span,
+    body.fi-sidebar-open .fi-sidebar-group span {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+    
+    /* Ensure proper button layout */
+    body.fi-sidebar-open .fi-sidebar-item-button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 0.75rem !important;
+        width: 100% !important;
+        padding: 0.5rem !important;
+    }
+    
+    /* Ensure icons and text are both visible */
+    body.fi-sidebar-open .fi-sidebar-item-icon {
+        flex-shrink: 0 !important;
+    }
+    
+    /* Fix group button layout */
+    body.fi-sidebar-open .fi-sidebar-group-button {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+        width: 100% !important;
+    }
+    
+    /* Override any desktop-specific hiding */
+    body.fi-sidebar-open .fi-sidebar [x-transition\:enter],
+    body.fi-sidebar-open .fi-sidebar [x-transition\:enter-start],
+    body.fi-sidebar-open .fi-sidebar [x-transition\:enter-end] {
+        opacity: 1 !important;
+        transition: none !important;
+    }
+    
+    /* Fix badges visibility */
+    body.fi-sidebar-open .fi-sidebar .fi-badge {
+        display: inline-flex !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ensure sidebar has full width */
+    body.fi-sidebar-open .fi-sidebar {
+        width: 16rem !important;
+    }
+}

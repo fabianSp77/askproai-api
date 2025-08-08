@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chart Test Standalone</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Chart.js & ApexCharts Test</h1>
+        <p>Diese Seite testet, ob die Chart-Bibliotheken korrekt funktionieren.</p>
+        
+        <div class="grid">
+            <div class="chart-container">
+                <h2>Chart.js - Termine</h2>
+                <canvas id="appointmentsChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h2>Chart.js - Umsatz</h2>
+                <canvas id="revenueChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h2>Chart.js - Anrufverteilung</h2>
+                <canvas id="callDistributionChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h2>ApexCharts - Heatmap</h2>
+                <div id="heatmap"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test data - same structure as PHP would generate
+        const chartData = {
+            labels: ['07.07', '08.07', '09.07', '10.07', '11.07', '12.07', '13.07'],
+            appointments: [1, 7, 4, 0, 1, 0, 1],
+            revenue: [0, 50, 120, 0, 30, 0, 45],
+            calls: [5, 0, 0, 0, 30, 0, 0]
+        };
+
+        // 1. Appointments Bar Chart
+        const appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+        new Chart(appointmentsCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Termine',
+                    data: chartData.appointments,
+                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // 2. Revenue Line Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Umsatz',
+                    data: chartData.revenue,
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('de-DE') + ' €';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Call Distribution Donut Chart
+        const callDistCtx = document.getElementById('callDistributionChart').getContext('2d');
+        new Chart(callDistCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Eingehend', 'Ausgehend'],
+                datasets: [{
+                    data: [35, 0],
+                    backgroundColor: [
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(59, 130, 246, 0.8)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // 4. ApexCharts Heatmap
+        const heatmapData = [
+            { name: 'Mo', data: [0, 0, 1, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0] },
+            { name: 'Di', data: [0, 2, 3, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0] },
+            { name: 'Mi', data: [0, 1, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0] },
+            { name: 'Do', data: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0] },
+            { name: 'Fr', data: [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+            { name: 'Sa', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+            { name: 'So', data: [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
+        ];
+
+        const heatmapOptions = {
+            series: heatmapData,
+            chart: {
+                height: 350,
+                type: 'heatmap',
+                toolbar: {
+                    show: false
+                }
+            },
+            plotOptions: {
+                heatmap: {
+                    shadeIntensity: 0.5,
+                    colorScale: {
+                        ranges: [
+                            { from: 0, to: 0, name: 'Keine', color: '#E5E7EB' },
+                            { from: 1, to: 3, name: 'Wenig', color: '#DBEAFE' },
+                            { from: 4, to: 6, name: 'Mittel', color: '#93C5FD' },
+                            { from: 7, to: 10, name: 'Viel', color: '#3B82F6' }
+                        ]
+                    }
+                }
+            },
+            xaxis: {
+                type: 'category',
+                categories: ['8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00']
+            },
+            title: {
+                text: 'Termine nach Wochentag und Uhrzeit'
+            }
+        };
+
+        const heatmap = new ApexCharts(document.querySelector("#heatmap"), heatmapOptions);
+        heatmap.render();
+
+        console.log('✅ All charts initialized successfully!');
+    </script>
+</body>
+</html>

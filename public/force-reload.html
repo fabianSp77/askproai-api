@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Force Reload - Clear All Caches</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body>
+    <h1>Force Complete Reload</h1>
+    <p>Führen Sie diese Schritte aus:</p>
+    <ol>
+        <li>Drücken Sie <strong>Strg+Shift+Entf</strong> (Chrome/Edge) oder <strong>Strg+Shift+Backspace</strong> (Firefox)</li>
+        <li>Wählen Sie "Gesamte Zeit" / "Alles"</li>
+        <li>Aktivieren Sie:
+            <ul>
+                <li>✓ Browserverlauf</li>
+                <li>✓ Cookies und andere Websitedaten</li>
+                <li>✓ Bilder und Dateien im Cache</li>
+            </ul>
+        </li>
+        <li>Klicken Sie auf "Daten löschen"</li>
+        <li>Schließen Sie den Browser komplett</li>
+        <li>Öffnen Sie den Browser neu</li>
+        <li>Besuchen Sie <a href="/admin/calls">/admin/calls</a></li>
+    </ol>
+    
+    <h2>Alternative: Inkognito/Privat Modus</h2>
+    <p>Öffnen Sie ein neues Inkognito/Privates Fenster:</p>
+    <ul>
+        <li>Chrome/Edge: <strong>Strg+Shift+N</strong></li>
+        <li>Firefox: <strong>Strg+Shift+P</strong></li>
+    </ul>
+    
+    <h2>Test Links</h2>
+    <ul>
+        <li><a href="/admin/calls?v=<?= time() ?>" target="_blank">Calls mit Cache-Buster</a></li>
+        <li><a href="/calls-table.php" target="_blank">Alternative Calls Tabelle</a></li>
+    </ul>
+    
+    <script>
+        // Force clear all caches
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => {
+                    caches.delete(name);
+                    console.log('Cache deleted:', name);
+                });
+            });
+        }
+        
+        // Clear localStorage and sessionStorage
+        localStorage.clear();
+        sessionStorage.clear();
+        console.log('Storage cleared');
+    </script>
+</body>
+</html>

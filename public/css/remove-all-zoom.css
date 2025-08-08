@@ -1,0 +1,99 @@
+/* ================================================================
+   REMOVE ALL ZOOM - GitHub Issue #495
+   Forcefully removes any zoom/scale transforms
+   ================================================================ */
+
+/* 1. NUCLEAR RESET - Remove ALL zoom and scale */
+*, *::before, *::after,
+html, body, 
+.fi-body,
+.fi-main-ctn,
+.fi-sidebar,
+.fi-wrapper {
+    zoom: 1 !important;
+    -webkit-zoom: 1 !important;
+    -moz-transform: none !important;
+    -webkit-transform: none !important;
+    transform: none !important;
+    transform-origin: unset !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+/* 2. Specifically target html and body */
+html {
+    font-size: 16px !important;
+    zoom: 1 !important;
+    -webkit-zoom: 1 !important;
+    transform: none !important;
+}
+
+body {
+    zoom: 1 !important;
+    -webkit-zoom: 1 !important;
+    transform: none !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* 3. Remove all media query zooms */
+@media all {
+    html, body {
+        zoom: 1 !important;
+        -webkit-zoom: 1 !important;
+        transform: none !important;
+    }
+}
+
+@media screen {
+    html, body {
+        zoom: 1 !important;
+        -webkit-zoom: 1 !important;
+        transform: none !important;
+    }
+}
+
+@media (min-width: 0px) {
+    html, body {
+        zoom: 1 !important;
+        -webkit-zoom: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* 4. Target MacBook Air screens specifically to REMOVE zoom */
+@media (min-width: 1400px) and (max-width: 1500px) {
+    html, body, * {
+        zoom: 1 !important;
+        -webkit-zoom: 1 !important;
+        transform: none !important;
+        transform-origin: initial !important;
+        width: initial !important;
+        height: initial !important;
+    }
+}
+
+/* 5. Remove any viewport scaling */
+@viewport {
+    zoom: 1;
+    min-zoom: 1;
+    max-zoom: 1;
+    user-zoom: fixed;
+}
+
+/* 6. Force computed styles to be normal */
+@supports (zoom: 1) {
+    * {
+        zoom: 1 !important;
+    }
+}
+
+/* 7. Remove debug indicators */
+body::before,
+body::after,
+.debug-indicator,
+[class*="debug"] {
+    display: none !important;
+}

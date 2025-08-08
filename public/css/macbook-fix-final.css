@@ -1,0 +1,109 @@
+/* ================================================================
+   FINAL MacBook Air Fix - Complete Override
+   This MUST override all other CSS files
+   ================================================================ */
+
+/* 1. FORCE proper base font size for ALL screen sizes */
+html {
+    font-size: 16px !important;
+}
+
+/* 2. Override the problematic media query from critical.css */
+@media (max-width: 640px) {
+    html {
+        font-size: 16px !important; /* NOT 14px */
+    }
+}
+
+/* 3. Ensure proper scaling for MacBook Air */
+@media screen and (min-width: 1400px) {
+    html {
+        font-size: 16px !important;
+    }
+}
+
+/* 4. USE CSS ZOOM for entire interface on MacBook */
+@media (min-width: 1400px) and (max-width: 1500px) {
+    /* Zoom entire page to 125% */
+    body {
+        zoom: 1.25 !important;
+    }
+    
+    /* Adjust sidebar width to compensate */
+    .fi-sidebar {
+        width: 16rem !important;
+    }
+    
+    .fi-main-ctn {
+        margin-left: 16rem !important;
+    }
+}
+
+/* 5. Force minimum sizes for all text */
+* {
+    font-size: max(0.875rem, 1em) !important;
+}
+
+/* 6. Specific component overrides */
+.fi-body {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+}
+
+.fi-sidebar-nav a,
+.fi-sidebar-item {
+    font-size: 0.9375rem !important;
+    padding: 0.75rem 1rem !important;
+}
+
+.fi-header-heading {
+    font-size: 1.875rem !important;
+}
+
+.fi-btn {
+    font-size: 0.9375rem !important;
+    padding: 0.625rem 1.25rem !important;
+    min-height: 2.75rem !important;
+}
+
+.fi-input,
+.fi-select,
+.fi-textarea {
+    font-size: 1rem !important;
+    min-height: 2.75rem !important;
+}
+
+/* 7. Table readability */
+.fi-ta-table {
+    font-size: 0.9375rem !important;
+}
+
+.fi-ta-table th,
+.fi-ta-table td {
+    padding: 0.875rem 1rem !important;
+    font-size: 0.9375rem !important;
+}
+
+/* 8. Override any transform scales */
+body {
+    transform: none !important;
+    transform-origin: unset !important;
+    width: 100% !important;
+}
+
+/* 9. Debug indicator - shows zoom is active */
+@media (min-width: 1400px) and (max-width: 1500px) {
+    body::before {
+        content: "125% Zoom Active";
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        background: #059669;
+        color: white;
+        padding: 4px 8px;
+        font-size: 12px;
+        border-radius: 4px;
+        z-index: 9999;
+        pointer-events: none;
+    }
+}

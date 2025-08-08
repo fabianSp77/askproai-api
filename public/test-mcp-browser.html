@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Browser Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .test-button:hover {
+            background: #5a67d8;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+        .success {
+            background: #c6f6d5;
+            border: 2px solid #48bb78;
+        }
+        .error {
+            background: #fed7d7;
+            border: 2px solid #fc8181;
+        }
+        .info {
+            background: #bee3f8;
+            border: 2px solid #4299e1;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 MCP Browser Test</h1>
+    <p>Diese Seite testet die MCP Verbindung direkt im Browser.</p>
+    
+    <div>
+        <button class="test-button" onclick="testSimple()">📡 Simple Test</button>
+        <button class="test-button" onclick="testDetailed()">🔍 Detailed Test</button>
+        <button class="test-button" onclick="testWithFetch()">🌐 Fetch API Test</button>
+        <button class="test-button" onclick="testWithXHR()">📨 XMLHttpRequest Test</button>
+    </div>
+    
+    <div id="result">Klicken Sie auf einen Test-Button...</div>
+
+    <script>
+        const MCP_URL = 'https://api.askproai.de/api/v2/hair-salon-mcp/mcp';
+        
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = type;
+            resultDiv.textContent = message;
+        }
+        
+        async function testSimple() {
+            showResult('Testing...', 'info');
+            
+            try {
+                const response = await fetch(MCP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'initialize',
+                        params: { company_id: 1 },
+                        id: 1
+                    })
+                });
+                
+                if (response.ok) {
+                    showResult('✅ SUCCESS! HTTP ' + response.status + '\n\nMCP Server is working!', 'success');
+                } else {
+                    showResult('❌ HTTP Error: ' + response.status, 'error');
+                }
+            } catch (error) {
+                showResult('❌ Network Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function testDetailed() {
+            showResult('Running detailed test...', 'info');
+            
+            try {
+                const startTime = Date.now();
+                
+                const response = await fetch(MCP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'initialize',
+                        params: { company_id: 1 },
+                        id: 'test-' + Date.now()
+                    })
+                });
+                
+                const responseTime = Date.now() - startTime;
+                const responseText = await response.text();
+                
+                let result = '=== RESPONSE DETAILS ===\n\n';
+                result += 'Status: ' + response.status + ' ' + response.statusText + '\n';
+                result += 'Response Time: ' + responseTime + 'ms\n';
+                result += 'Content-Type: ' + response.headers.get('content-type') + '\n';
+                result += 'CORS Origin: ' + response.headers.get('access-control-allow-origin') + '\n';
+                result += '\n=== RESPONSE BODY (first 500 chars) ===\n\n';
+                result += responseText.substring(0, 500);
+                
+                if (responseText.length > 500) {
+                    result += '\n... (' + (responseText.length - 500) + ' more characters)';
+                }
+                
+                // Try to parse JSON
+                try {
+                    const data = JSON.parse(responseText);
+                    result += '\n\n=== PARSED JSON ===\n\n';
+                    result += 'JSON Valid: ✅\n';
+                    result += 'Has Result: ' + (data.result ? '✅' : '❌') + '\n';
+                    result += 'Has Error: ' + (data.error ? '❌' : '✅ No error') + '\n';
+                    
+                    if (data.result && data.result.capabilities && data.result.capabilities.tools) {
+                        result += 'Tools Count: ' + data.result.capabilities.tools.length + '\n';
+                        result += 'Protocol Version: ' + (data.result.protocolVersion || 'unknown') + '\n';
+                    }
+                } catch (parseError) {
+                    result += '\n\n=== JSON PARSE ERROR ===\n\n';
+                    result += parseError.message;
+                }
+                
+                showResult(result, response.ok ? 'success' : 'error');
+                
+            } catch (error) {
+                showResult('❌ Test Failed\n\n' + error.toString() + '\n\nStack:\n' + error.stack, 'error');
+            }
+        }
+        
+        function testWithFetch() {
+            showResult('Testing with Fetch API...', 'info');
+            
+            fetch(MCP_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'initialize',
+                    params: { company_id: 1 },
+                    id: 1
+                })
+            })
+            .then(response => {
+                return response.text().then(text => ({
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: response.headers,
+                    body: text
+                }));
+            })
+            .then(result => {
+                let output = '=== FETCH API RESULT ===\n\n';
+                output += 'Status: ' + result.status + ' ' + result.statusText + '\n';
+                output += 'Body Length: ' + result.body.length + ' chars\n';
+                output += '\nFirst 300 chars:\n' + result.body.substring(0, 300);
+                showResult(output, result.status === 200 ? 'success' : 'error');
+            })
+            .catch(error => {
+                showResult('❌ Fetch Error: ' + error.message, 'error');
+            });
+        }
+        
+        function testWithXHR() {
+            showResult('Testing with XMLHttpRequest...', 'info');
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', MCP_URL, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    let output = '=== XMLHttpRequest RESULT ===\n\n';
+                    output += 'Status: ' + xhr.status + ' ' + xhr.statusText + '\n';
+                    output += 'Response Type: ' + xhr.responseType + '\n';
+                    output += 'Response Text Length: ' + (xhr.responseText ? xhr.responseText.length : 0) + '\n';
+                    
+                    if (xhr.responseText) {
+                        output += '\nFirst 300 chars:\n' + xhr.responseText.substring(0, 300);
+                    }
+                    
+                    showResult(output, xhr.status === 200 ? 'success' : 'error');
+                }
+            };
+            
+            xhr.onerror = function() {
+                showResult('❌ XMLHttpRequest Network Error', 'error');
+            };
+            
+            xhr.send(JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'initialize',
+                params: { company_id: 1 },
+                id: 1
+            }));
+        }
+        
+        // Auto-run simple test on page load
+        window.addEventListener('load', () => {
+            setTimeout(testSimple, 500);
+        });
+    </script>
+</body>
+</html>

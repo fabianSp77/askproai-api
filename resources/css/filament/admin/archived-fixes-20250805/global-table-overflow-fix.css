@@ -1,0 +1,110 @@
+/* Global Table Overflow Fix for ALL Filament Tables */
+
+/* Fix the table content wrapper */
+.fi-ta-content {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    display: block !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* Ensure tables can expand horizontally */
+.fi-ta-table {
+    width: max-content !important;
+    min-width: 100% !important;
+    table-layout: auto !important;
+}
+
+/* Fix parent containers */
+.fi-ta-ctn {
+    overflow: visible !important;
+    max-width: 100% !important;
+}
+
+/* Main content area should not restrict width */
+.fi-main,
+.fi-main-ctn {
+    overflow-x: visible !important;
+    max-width: 100% !important;
+}
+
+/* Page content should use full width */
+.fi-page {
+    max-width: 100% !important;
+    overflow-x: visible !important;
+}
+
+/* Specific fixes for different table types */
+
+/* Calls table */
+.fi-resource-calls .fi-ta-content,
+.fi-resource-call .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Appointments table */
+.fi-resource-appointments .fi-ta-content,
+.fi-resource-appointment .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Customers table */
+.fi-resource-customers .fi-ta-content,
+.fi-resource-customer .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Staff table */
+.fi-resource-staff .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Companies table */
+.fi-resource-companies .fi-ta-content,
+.fi-resource-company .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 1024px) {
+    .fi-ta-content {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .fi-ta-table {
+        min-width: auto !important;
+    }
+}
+
+/* Fix for tables inside modals */
+.fi-modal .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Fix for tables in widgets */
+.fi-wi .fi-ta-content {
+    overflow-x: auto !important;
+}
+
+/* Debug mode - uncomment to see which elements have overflow */
+/*
+.fi-ta-content {
+    border: 3px solid red !important;
+    position: relative !important;
+}
+
+.fi-ta-content::after {
+    content: "overflow-x: " attr(style) !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    background: red !important;
+    color: white !important;
+    padding: 2px 5px !important;
+    font-size: 10px !important;
+    z-index: 9999 !important;
+}
+*/

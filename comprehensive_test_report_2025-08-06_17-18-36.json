@@ -1,0 +1,183 @@
+{
+    "admin_panel": {
+        "filament_config": {
+            "has_navigation_groups": true,
+            "has_middleware": true,
+            "has_auth_middleware": true,
+            "has_vite_theme": true,
+            "status": "PASS"
+        },
+        "js_bundle": {
+            "status": "FOUND",
+            "size_kb": 6.01,
+            "has_error_handling": true,
+            "has_initialization": true
+        },
+        "css_bundle": {
+            "status": "FOUND",
+            "size_kb": 0.55
+        },
+        "routes": {
+            "routes_found": 0,
+            "sample_routes": []
+        },
+        "vite_build": {
+            "status": "BUILT",
+            "entries": 26,
+            "last_modified": "2025-08-06 17:12:50"
+        }
+    },
+    "database": {
+        "queries": {
+            "calls_count": {
+                "duration_ms": 0.52,
+                "result": {
+                    "COUNT(*)": 207
+                },
+                "status": "EXCELLENT"
+            },
+            "companies_count": {
+                "duration_ms": 0.6,
+                "result": {
+                    "COUNT(*)": 13
+                },
+                "status": "EXCELLENT"
+            },
+            "users_count": {
+                "duration_ms": 0.34,
+                "result": {
+                    "COUNT(*)": 9
+                },
+                "status": "EXCELLENT"
+            },
+            "dashboard_stats": {
+                "duration_ms": 0.71,
+                "result": {
+                    "total_calls": 30,
+                    "avg_duration": "32.4000",
+                    "total_cost": "1.33"
+                },
+                "status": "EXCELLENT"
+            }
+        },
+        "indexes": {
+            "calls_indexes": 93,
+            "companies_indexes": 13,
+            "users_indexes": 12
+        }
+    },
+    "pagination": {
+        "memory_used_bytes": 6290512,
+        "memory_used_mb": 6,
+        "processed_items": 10000,
+        "status": "EXCELLENT"
+    },
+    "type_safety": {
+        "syntax_errors": [],
+        "status": "PASS"
+    },
+    "job_memory": {
+        "initial_memory_mb": 4.35,
+        "peak_memory_mb": 10.43,
+        "memory_with_data_mb": 16.09,
+        "memory_after_gc_mb": 4.35,
+        "memory_reclaimed_mb": 11.74,
+        "gc_efficiency": "72.96%"
+    },
+    "cache": {
+        "redis_available": true,
+        "cache_driver": "file",
+        "session_driver": "file",
+        "redis_performance": {
+            "write_read_time_ms": 0.39,
+            "status": "EXCELLENT"
+        }
+    },
+    "frontend": {
+        "bundles": {
+            "assets\/admin.analytics-nOH0NO_2.js": {
+                "size_bytes": 8555,
+                "size_kb": 8.35,
+                "status": "OPTIMAL"
+            },
+            "assets\/admin.core-Cwrp3zK5.js": {
+                "size_bytes": 1983,
+                "size_kb": 1.94,
+                "status": "OPTIMAL"
+            },
+            "assets\/admin.dashboard-frUsWYYi.js": {
+                "size_bytes": 9668,
+                "size_kb": 9.44,
+                "status": "OPTIMAL"
+            },
+            "assets\/admin.mcp-gN2jsRLs.js": {
+                "size_bytes": 25628,
+                "size_kb": 25.03,
+                "status": "OPTIMAL"
+            },
+            "assets\/app-Bmlj9y7M.js": {
+                "size_bytes": 10293,
+                "size_kb": 10.05,
+                "status": "OPTIMAL"
+            },
+            "assets\/login-TAz9L9WF.js": {
+                "size_bytes": 679,
+                "size_kb": 0.66,
+                "status": "OPTIMAL"
+            },
+            "assets\/portal.core-JaFe9l7-.js": {
+                "size_bytes": 8724,
+                "size_kb": 8.52,
+                "status": "OPTIMAL"
+            },
+            "css\/critical-BDgyC2K2.css": {
+                "size_bytes": 1398,
+                "size_kb": 1.37,
+                "status": "OPTIMAL"
+            },
+            "css\/styles-BPcAz7bm.css": {
+                "size_bytes": 22557,
+                "size_kb": 22.03,
+                "status": "OPTIMAL"
+            },
+            "css\/styles-C0rkBVFr.css": {
+                "size_bytes": 2509,
+                "size_kb": 2.45,
+                "status": "OPTIMAL"
+            },
+            "css\/styles-C6G_3qQV.css": {
+                "size_bytes": 57,
+                "size_kb": 0.06,
+                "status": "OPTIMAL"
+            },
+            "css\/styles-CE6MP9ux.css": {
+                "size_bytes": 7567,
+                "size_kb": 7.39,
+                "status": "OPTIMAL"
+            },
+            "css\/styles-DXdqpaYF.css": {
+                "size_bytes": 13308,
+                "size_kb": 13,
+                "status": "OPTIMAL"
+            },
+            "css\/styles-xg8m-Xq3.css": {
+                "size_bytes": 9131,
+                "size_kb": 8.92,
+                "status": "OPTIMAL"
+            }
+        },
+        "total_bundles": 14
+    },
+    "load_testing": {
+        "php_memory_limit": "-1",
+        "php_max_execution_time": "0",
+        "php_max_input_vars": "1000",
+        "opcache_enabled": false,
+        "cpu_cores": 10,
+        "concurrent_simulation": {
+            "simulated_requests": 10,
+            "total_time_seconds": 0.5,
+            "avg_response_time_ms": 50.13
+        }
+    }
+}

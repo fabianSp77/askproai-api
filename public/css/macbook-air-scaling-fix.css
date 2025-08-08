@@ -1,0 +1,138 @@
+/* ================================================================
+   MacBook Air Scaling Fix - GitHub Issue #490
+   Forces larger base font-size to fix tiny text on high DPI displays
+   Date: 2025-08-05
+   ================================================================ */
+
+/* CORRECT FIX for MacBook Air 13" (1470x956 logical resolution) */
+html {
+    font-size: 16px !important; /* Back to normal base */
+}
+
+/* Override ALL media queries with correct size */
+@media all {
+    html {
+        font-size: 16px !important;
+    }
+}
+
+/* Specific for MacBook Air 13" logical resolution */
+@media (min-width: 1400px) and (max-width: 1500px) {
+    html {
+        font-size: 18px !important;
+    }
+}
+
+/* MacBook Air with Retina display (your exact case) */
+@media (min-width: 1400px) and (max-width: 1500px) and (-webkit-min-device-pixel-ratio: 2) {
+    html {
+        font-size: 18px !important;
+    }
+    
+    /* Use transform scale instead of zoom */
+    body {
+        transform: scale(1.1);
+        transform-origin: top left;
+        width: 90.91%; /* 100% / 1.1 to prevent horizontal scroll */
+    }
+}
+
+/* Ensure body and all elements scale properly */
+body, 
+.fi-body {
+    font-size: 1rem !important; /* Will be 20-22px */
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+}
+
+/* Normal layout with proper sizes */
+.fi-sidebar {
+    width: 16rem !important;
+    font-size: 0.875rem !important;
+}
+
+.fi-main-ctn {
+    margin-left: 16rem !important;
+    padding: 1.5rem !important;
+    font-size: 1rem !important;
+}
+
+/* Fix the tiny appearance on MacBook Air */
+@media (min-width: 1400px) and (max-width: 1500px) {
+    /* Increase all component sizes */
+    .fi-sidebar {
+        width: 18rem !important;
+    }
+    
+    .fi-main-ctn {
+        margin-left: 18rem !important;
+    }
+    
+    .fi-sidebar-nav a {
+        font-size: 0.9375rem !important; /* 15px */
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .fi-ta-table {
+        font-size: 0.9375rem !important;
+    }
+    
+    .fi-btn {
+        font-size: 0.9375rem !important;
+        padding: 0.625rem 1.25rem !important;
+    }
+    
+    .fi-input,
+    .fi-select,
+    .fi-textarea {
+        font-size: 1rem !important;
+        min-height: 2.75rem !important;
+    }
+    
+    /* Larger headers */
+    .fi-header-heading {
+        font-size: 2rem !important;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        font-size: 125% !important;
+    }
+}
+
+/* Ensure all text is readable */
+.fi-body {
+    -webkit-text-size-adjust: none !important;
+    text-size-adjust: none !important;
+}
+
+/* Fix table text */
+.fi-ta-table {
+    font-size: 0.875rem !important;
+}
+
+.fi-ta-table th,
+.fi-ta-table td {
+    padding: 0.875rem 1rem !important;
+}
+
+/* Fix form inputs */
+.fi-input,
+.fi-select,
+.fi-textarea {
+    font-size: 1rem !important;
+    min-height: 2.75rem !important;
+}
+
+/* Fix buttons */
+.fi-btn {
+    font-size: 0.9375rem !important;
+    padding: 0.625rem 1.25rem !important;
+    min-height: 2.75rem !important;
+}
+
+/* Fix header text */
+.fi-header-heading {
+    font-size: 2rem !important;
+}
+
+/* Remove visual indicator - it was making things worse */

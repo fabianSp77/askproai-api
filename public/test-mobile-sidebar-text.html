@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Sidebar Text Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .test-btn { padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin: 10px 5px; }
+        .test-btn:hover { background: #2563eb; }
+        .status { margin-top: 20px; padding: 20px; background: #f3f4f6; border-radius: 8px; }
+        .success { background: #d1fae5; color: #065f46; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .info { background: #dbeafe; color: #1e40af; }
+        iframe { width: 100%; height: 600px; border: 1px solid #e5e7eb; border-radius: 8px; margin-top: 20px; }
+        .mobile-frame { max-width: 375px; margin: 0 auto; }
+        code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Mobile Sidebar Text Test</h1>
+    
+    <div style="margin-bottom: 20px;">
+        <p><strong>Test Status:</strong> Testing if text labels appear in mobile sidebar</p>
+        <p><strong>Issue:</strong> "In der Mobile Variante sehe ich nur Icons und kein Text"</p>
+    </div>
+    
+    <div>
+        <button class="test-btn" onclick="testInIframe()">Test in Mobile Iframe</button>
+        <button class="test-btn" onclick="openInNewWindow()">Open in New Window</button>
+        <button class="test-btn" onclick="checkCSS()">Check CSS Applied</button>
+    </div>
+    
+    <div id="status" class="status">
+        <p>Ready to test...</p>
+    </div>
+    
+    <div class="mobile-frame">
+        <iframe id="testFrame" src="/admin" style="display: none;"></iframe>
+    </div>
+    
+    <script>
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status ' + type;
+            statusEl.innerHTML = '<p>' + message + '</p>';
+        }
+        
+        function testInIframe() {
+            const iframe = document.getElementById('testFrame');
+            iframe.style.display = 'block';
+            
+            updateStatus('Loading admin panel in mobile viewport...', 'info');
+            
+            iframe.onload = function() {
+                setTimeout(() => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        
+                        // Check if mobile CSS is loaded
+                        const hasCSS = Array.from(iframeDoc.styleSheets).some(sheet => {
+                            try {
+                                return sheet.href && sheet.href.includes('mobile-sidebar-text-fix');
+                            } catch (e) {
+                                return false;
+                            }
+                        });
+                        
+                        updateStatus('Admin panel loaded. Mobile CSS loaded: ' + hasCSS + '<br><br>' +
+                            '<strong>Instructions:</strong><br>' +
+                            '1. Click the burger menu icon in the iframe<br>' +
+                            '2. Check if text labels appear next to icons<br>' +
+                            '3. If only icons show, the fix needs adjustment', 
+                            hasCSS ? 'success' : 'error');
+                    } catch (e) {
+                        updateStatus('Could not access iframe content. Open in new window instead.', 'error');
+                    }
+                }, 1000);
+            };
+        }
+        
+        function openInNewWindow() {
+            const width = 375;
+            const height = 800;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+            
+            window.open('/admin', 'mobileTest', 
+                `width=${width},height=${height},left=${left},top=${top},resizable=yes`);
+            
+            updateStatus('Opened admin panel in mobile-sized window. Check if text appears in sidebar.', 'info');
+        }
+        
+        function checkCSS() {
+            updateStatus('Checking CSS rules...', 'info');
+            
+            fetch('/build/manifest.json')
+                .then(r => r.json())
+                .then(manifest => {
+                    const cssFiles = Object.entries(manifest)
+                        .filter(([key]) => key.includes('css'))
+                        .map(([key, val]) => val.file);
+                    
+                    let message = '<strong>CSS Files in Build:</strong><br>';
+                    cssFiles.forEach(file => {
+                        message += `<code>${file}</code><br>`;
+                    });
+                    
+                    message += '<br><strong>Expected Fix:</strong><br>';
+                    message += 'CSS should force <code>.fi-sidebar-item-label</code> to display when <code>body.fi-sidebar-open</code> is active';
+                    
+                    updateStatus(message, 'info');
+                })
+                .catch(e => {
+                    updateStatus('Error checking CSS: ' + e.message, 'error');
+                });
+        }
+        
+        // Auto-check on load
+        window.onload = function() {
+            updateStatus('Test page loaded. Use the buttons above to test mobile sidebar text visibility.', 'success');
+        };
+    </script>
+</body>
+</html>

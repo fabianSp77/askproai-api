@@ -1,0 +1,61 @@
+/* ================================================================
+   MINIMAL FIXES - Nur kritische Korrekturen ohne Layout-Änderungen
+   GitHub Issue #501
+   ================================================================ */
+
+/* 1. Entferne alle Zoom/Transform Issues */
+html, body {
+    zoom: 1 !important;
+    transform: none !important;
+}
+
+/* 2. Stelle sicher dass Navigation klickbar ist */
+.fi-sidebar-item a,
+.fi-sidebar-item button,
+.fi-sidebar-nav a,
+.fi-sidebar-nav button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* 3. Entferne doppelte Pfeile in der Navigation */
+.fi-sidebar-nav svg + svg,
+.fi-sidebar-item-icon + .fi-sidebar-item-icon,
+.fi-sidebar-item button svg:nth-child(2),
+.fi-sidebar-item button svg:last-child:not(:first-child) {
+    display: none !important;
+}
+
+/* 4. Text-Overflow in Stats Widgets verhindern */
+.fi-wi-stats-overview-stat-value {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.fi-wi-stats-overview-stat-label {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* 5. Scrollbar für bessere Usability */
+::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: #f3f4f6 !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d1d5db !important;
+    border-radius: 4px !important;
+}
+
+/* 6. Tabellen-Overflow verhindern */
+.fi-ta-ctn {
+    overflow-x: auto !important;
+}
+
+/* KEINE Layout-Änderungen! Kein margin-left, width, position etc. */

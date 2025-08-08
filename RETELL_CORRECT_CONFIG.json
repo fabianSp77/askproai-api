@@ -1,0 +1,31 @@
+{
+  "comment": "KORRIGIERTE MCP KONFIGURATION FÜR RETELL",
+  "instructions": "Kopiere den 'mcps' Block unten in deinen Retell Agent",
+  "mcps": [
+    {
+      "name": "hair_salon_mcp",
+      "url": "https://api.askproai.de/api/v2/hair-salon-mcp/mcp",
+      "headers": {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      "query_params": {
+        "company_id": "1"
+      },
+      "timeout_ms": 30000,
+      "id": "mcp-hair-salon"
+    }
+  ],
+  "notes": {
+    "1": "Headers dürfen KEINE Leerzeichen haben",
+    "2": "X-MCP-Version wird nicht benötigt",
+    "3": "X-Company-ID wird über query_params gesendet",
+    "4": "Nach dem Speichern sollte Retell automatisch 'initialize' aufrufen um die Tools zu entdecken"
+  },
+  "available_tools": [
+    "list_services - Listet alle verfügbaren Friseur-Services",
+    "check_availability - Prüft verfügbare Termine",
+    "book_appointment - Bucht einen Termin",
+    "schedule_callback - Vereinbart einen Rückruf"
+  ]
+}

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Resource Delights - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/filament/admin/theme.css">
+    <link rel="stylesheet" href="/resources/css/filament/admin/modern-call-resource.css">
+    <style>
+        /* Inline test styles */
+        .call-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .call-card:hover {
+            transform: translateY(-2px) scale(1.005);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.03);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        .duration-badge {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .duration-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .duration-badge:hover::before {
+            left: 100%;
+        }
+
+        .call-action-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .call-action-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            z-index: 0;
+        }
+        
+        .call-action-btn:hover::before {
+            width: 120%;
+            height: 120%;
+        }
+
+        .appointment-success-confetti {
+            position: relative;
+        }
+        
+        .appointment-success-confetti::before,
+        .appointment-success-confetti::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #10b981;
+            animation: confetti-fall 2s ease-out infinite;
+        }
+        
+        .appointment-success-confetti::before {
+            left: 20%;
+            animation-delay: 0.1s;
+            background: #059669;
+        }
+        
+        .appointment-success-confetti::after {
+            right: 20%;
+            animation-delay: 0.3s;
+            background: #34d399;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-20px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(40px) rotate(180deg);
+                opacity: 0;
+            }
+        }
+
+        .call-status-live {
+            position: relative;
+            animation: status-pulse 2s infinite;
+        }
+        
+        .call-status-live::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #10b981, #059669);
+            border-radius: inherit;
+            z-index: -1;
+            opacity: 0.7;
+            animation: pulse-ring 2s infinite;
+        }
+        
+        @keyframes status-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.02); opacity: 0.3; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <div class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <h1 class="text-3xl font-bold text-gray-900">📞 Call Resource Delights - Test</h1>
+                    <div class="flex items-center space-x-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            🎨 Live Demo
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Call Cards Demo -->
+            <div class="px-4 py-6 sm:px-0">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    
+                    <!-- Successful Call with Appointment -->
+                    <div class="call-card bg-white p-6 shadow-sm border border-gray-200" data-call-id="1" data-call-status="completed">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900">📞 Max Mustermann</h3>
+                                <p class="text-sm text-gray-500 mt-1">Heute, 14:30 Uhr</p>
+                                <div class="mt-3 flex items-center space-x-3">
+                                    <span class="phone-number-masked cursor-pointer text-primary-600 hover:text-primary-800" 
+                                          data-phone-masked="true" data-copy-phone="true">
+                                        📞 +49 123 ***4567
+                                    </span>
+                                    <span class="duration-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                        ⏱️ 03:45 Min
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="appointment-success-confetti">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    ✅ Termin gebucht
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex justify-end space-x-2">
+                            <button class="call-action-btn inline-flex items-center p-2 border border-transparent rounded-md text-success-700 bg-success-100 hover:bg-success-200 transition-colors"
+                                    data-action="call_customer">
+                                📞
+                            </button>
+                            <button class="call-action-btn inline-flex items-center p-2 border border-transparent rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 transition-colors"
+                                    data-action="add_note">
+                                📝
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ongoing Call -->
+                    <div class="call-card bg-white p-6 shadow-sm border border-gray-200" data-call-id="2" data-call-status="ongoing">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900">📞 Lisa Schmidt</h3>
+                                <p class="text-sm text-gray-500 mt-1">Gerade eben</p>
+                                <div class="mt-3 flex items-center space-x-3">
+                                    <span class="phone-number-masked cursor-pointer text-primary-600 hover:text-primary-800" 
+                                          data-phone-masked="true" data-copy-phone="true">
+                                        📞 +49 987 ***1234
+                                    </span>
+                                    <span class="duration-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                        ⏱️ 01:23 Min
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="call-status-live">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    🔴 Live
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex justify-end space-x-2">
+                            <button class="call-action-btn inline-flex items-center p-2 border border-transparent rounded-md text-gray-500 bg-gray-100 cursor-not-allowed">
+                                📞
+                            </button>
+                            <button class="call-action-btn inline-flex items-center p-2 border border-transparent rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 transition-colors"
+                                    data-action="add_note">
+                                📝
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Call with Error -->
+                    <div class="call-card bg-white p-6 shadow-sm border border-gray-200" data-call-id="3" data-call-status="error">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900">📞 Anonymer Anruf</h3>
+                                <p class="text-sm text-gray-500 mt-1">Heute, 12:15 Uhr</p>
+                                <div class="mt-3 flex items-center space-x-3">
+                                    <span class="text-gray-400">
+                                        📞 Nummer unbekannt
+                                    </span>
+                                    <span class="duration-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                        ⏱️ —
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    ❌ Fehler
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 flex justify-end space-x-2">
+                            <button class="call-action-btn inline-flex items-center p-2 border border-transparent rounded-md text-gray-400 bg-gray-50 cursor-not-allowed">
+                                📞
+                            </button>
+                            <button class="call-action-btn inline-flex items-center p-2 border border-transparent rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 transition-colors"
+                                    data-action="add_note">
+                                📝
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Buttons Demo -->
+                <div class="bg-white shadow rounded-lg p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">🎮 Interactive Demo</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="triggerCopyFeedback(this)" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                            📋 Test Copy Feedback
+                        </button>
+                        <button onclick="triggerSuccessCelebration(this)" class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                            🎉 Test Success Animation
+                        </button>
+                        <button onclick="triggerConfetti()" class="w-full px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+                            🎊 Test Konfetti
+                        </button>
+                        <button onclick="testKonamiCode()" class="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
+                            🎮 Konami Code
+                        </button>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-medium text-gray-900 mb-2">🔧 Easter Eggs & Shortcuts:</h3>
+                        <ul class="text-sm text-gray-600 space-y-1">
+                            <li>• <kbd class="px-1 py-0.5 bg-gray-200 rounded text-xs">↑↑↓↓←→←→BA</kbd> - Konami Code</li>
+                            <li>• <kbd class="px-1 py-0.5 bg-gray-200 rounded text-xs">Alt + C</kbd> - Copy erste Telefonnummer</li>
+                            <li>• <kbd class="px-1 py-0.5 bg-gray-200 rounded text-xs">Alt + N</kbd> - Neue Notiz</li>
+                            <li>• <kbd class="px-1 py-0.5 bg-gray-200 rounded text-xs">Alt + R</kbd> - Refresh mit Style</li>
+                            <li>• Hover über Call Cards für subtile Animationen</li>
+                            <li>• Click auf Phone Numbers für Copy mit Feedback</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Toast Container -->
+                <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test Functions
+        function triggerCopyFeedback(button) {
+            button.classList.add('copy-success');
+            showToast('📞 Nummer kopiert! Bereit zum Anrufen!', 'success');
+            setTimeout(() => {
+                button.classList.remove('copy-success');
+            }, 2000);
+        }
+
+        function triggerSuccessCelebration(button) {
+            button.classList.add('call-success-celebration');
+            showToast('🎉 Super! Termin erfolgreich gebucht!', 'success');
+            setTimeout(() => {
+                button.classList.remove('call-success-celebration');
+            }, 800);
+        }
+
+        function triggerConfetti() {
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    createConfettiPiece();
+                }, i * 50);
+            }
+            showToast('🎊 Konfetti-Explosion! Du bist ein Profi!', 'success');
+        }
+
+        function testKonamiCode() {
+            const easter = document.createElement('div');
+            easter.className = 'call-resource-konami fixed top-20 right-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-lg shadow-lg z-50';
+            easter.innerHTML = '🎮 Konami Code entdeckt! Du bist ein echter Profi! 🚀';
+            document.body.appendChild(easter);
+            
+            setTimeout(() => {
+                easter.remove();
+            }, 3000);
+            
+            triggerConfetti();
+        }
+
+        function createConfettiPiece() {
+            const confetti = document.createElement('div');
+            confetti.style.position = 'fixed';
+            confetti.style.width = '8px';
+            confetti.style.height = '8px';
+            confetti.style.backgroundColor = ['#10b981', '#059669', '#34d399', '#6ee7b7', '#3b82f6', '#8b5cf6'][Math.floor(Math.random() * 6)];
+            confetti.style.left = Math.random() * window.innerWidth + 'px';
+            confetti.style.top = '-10px';
+            confetti.style.zIndex = '9999';
+            confetti.style.pointerEvents = 'none';
+            confetti.style.borderRadius = '50%';
+            confetti.style.animation = `confetti-fall ${2 + Math.random() * 2}s ease-out forwards`;
+            
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => confetti.remove(), 4000);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-100 border-green-200 text-green-800' :
+                           type === 'warning' ? 'bg-yellow-100 border-yellow-200 text-yellow-800' :
+                           'bg-blue-100 border-blue-200 text-blue-800';
+            
+            toast.className = `${bgColor} border px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full opacity-0`;
+            toast.innerHTML = `<div class="flex items-center space-x-2"><span>${message}</span></div>`;
+            
+            document.getElementById('toast-container').appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+            }, 100);
+            
+            // Remove after delay
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Copy functionality
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('[data-copy-phone]')) {
+                const phoneNumber = e.target.textContent.replace(/[^\d+]/g, '');
+                navigator.clipboard.writeText(phoneNumber).then(() => {
+                    triggerCopyFeedback(e.target);
+                }).catch(err => {
+                    showToast('🤖 Copy-Funktion nicht verfügbar', 'warning');
+                });
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && e.key === 'c') {
+                e.preventDefault();
+                const firstPhone = document.querySelector('[data-copy-phone]');
+                if (firstPhone) {
+                    firstPhone.click();
+                } else {
+                    showToast('📞 Keine Telefonnummer gefunden', 'warning');
+                }
+            }
+            
+            if (e.altKey && e.key === 'n') {
+                e.preventDefault();
+                showToast('📝 Notiz-Modus aktiviert! Was möchtest du festhalten?', 'info');
+            }
+            
+            if (e.altKey && e.key === 'r') {
+                e.preventDefault();
+                document.body.style.background = 'linear-gradient(45deg, #f0f9ff, #e0f2fe)';
+                showToast('🔄 Refresh mit Style - Seite wurde aktualisiert!', 'success');
+                setTimeout(() => {
+                    document.body.style.background = '';
+                }, 1000);
+            }
+        });
+
+        // Add hover effects to call cards
+        document.querySelectorAll('.call-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const status = card.dataset.callStatus;
+                if (status === 'ongoing') {
+                    card.classList.add('call-status-live');
+                }
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('call-status-live');
+            });
+        });
+
+        // Konami Code Easter Egg
+        let konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+        let konamiIndex = 0;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === konamiSequence[konamiIndex]) {
+                konamiIndex++;
+                if (konamiIndex === konamiSequence.length) {
+                    testKonamiCode();
+                    konamiIndex = 0;
+                }
+            } else {
+                konamiIndex = 0;
+            }
+        });
+
+        // Show welcome message
+        setTimeout(() => {
+            showToast('🎨 Call Resource Delights geladen! Probiere die Interaktionen aus!', 'success');
+        }, 500);
+    </script>
+</body>
+</html>

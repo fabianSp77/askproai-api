@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Force Refresh</title>
+    <script>
+        // Force clear all caches
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) {
+                    caches.delete(name);
+                    console.log('Deleted cache:', name);
+                }
+            });
+        }
+        
+        // Unregister all service workers
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                    console.log('Unregistered service worker:', registration);
+                }
+            });
+        }
+        
+        // Clear local storage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Add timestamp to force fresh load
+        setTimeout(function() {
+            window.location.href = '/admin/event-analytics?t=' + Date.now();
+        }, 1000);
+    </script>
+</head>
+<body>
+    <h1>Clearing caches and refreshing...</h1>
+</body>
+</html>

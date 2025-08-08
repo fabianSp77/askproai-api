@@ -1,0 +1,12 @@
+Last Full Backup
+================
+Date: 20250805-230451
+Location: /var/www/backups/askproai-full-backup-20250805-230451.tar.gz
+Size: 17M
+Created: Di 5. Aug 23:06:33 CEST 2025
+
+To restore, extract the archive and run:
+./restore-backup.sh
+
+To verify backup:
+tar -tzf /var/www/backups/askproai-full-backup-20250805-230451.tar.gz | head -20

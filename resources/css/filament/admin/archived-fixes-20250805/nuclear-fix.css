@@ -1,0 +1,258 @@
+/* ================================================================
+   NUCLEAR FIX - Extreme Maßnahmen für GitHub Issue #506
+   ================================================================ */
+
+/* 1. NUCLEAR: Alle Pointer-Events zurücksetzen */
+* {
+    pointer-events: auto !important;
+}
+
+/* 2. NUCLEAR: Entferne ALLE möglichen Overlays */
+*::before,
+*::after {
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* 3. SIDEBAR: Muss über allem sein und klickbar */
+.fi-sidebar,
+.fi-sidebar * {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+/* Sidebar selbst */
+body .fi-sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    z-index: 9999 !important;
+}
+
+/* 4. NAVIGATION: Absolut klickbar machen */
+.fi-sidebar-nav,
+.fi-sidebar-nav *,
+.fi-sidebar-item,
+.fi-sidebar-item *,
+.fi-sidebar-item a,
+.fi-sidebar-item button,
+.fi-sidebar-group,
+.fi-sidebar-group * {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 10000 !important;
+    user-select: none !important;
+}
+
+/* Links und Buttons explizit */
+.fi-sidebar a,
+.fi-sidebar button {
+    display: block !important;
+    width: 100% !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10001 !important;
+}
+
+/* 5. LAYOUT FIX: Kein Overflow-Hidden! */
+html,
+body,
+.fi-body,
+.fi-layout,
+.fi-main,
+.fi-main-ctn,
+.fi-page {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+}
+
+/* Spezifisch für Layout */
+.fi-layout {
+    display: flex !important;
+    flex-direction: row-reverse !important;
+    overflow: visible !important;
+    min-height: 100vh !important;
+}
+
+/* 6. MAIN CONTENT: Volle Breite erzwingen */
+.fi-main-ctn {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important;
+    overflow: visible !important;
+}
+
+.fi-main {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+}
+
+/* 7. OVERLAYS: Komplett deaktivieren */
+.fi-modal-close-overlay,
+.fi-sidebar-close-overlay,
+[class*="overlay"],
+[class*="backdrop"] {
+    display: none !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+}
+
+/* 8. TABELLEN: Horizontales Scrollen erlauben */
+.fi-ta-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
+}
+
+.fi-ta-table {
+    min-width: max-content !important;
+}
+
+/* 9. NUCLEAR Z-INDEX für Navigation */
+.fi-sidebar-header { z-index: 10002 !important; }
+.fi-sidebar-nav { z-index: 10003 !important; }
+.fi-sidebar-item { z-index: 10004 !important; }
+.fi-sidebar-item a { z-index: 10005 !important; }
+.fi-sidebar-item button { z-index: 10006 !important; }
+
+/* 10. ENTFERNE Transform von allem */
+.fi-sidebar,
+.fi-sidebar *,
+.fi-main,
+.fi-main * {
+    transform: none !important;
+    -webkit-transform: none !important;
+}
+
+/* 11. BODY und HTML Reset */
+html {
+    overflow: visible !important;
+    height: auto !important;
+}
+
+body {
+    overflow-x: visible !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100vh !important;
+}
+
+/* 12. Mobile Overrides */
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        position: fixed !important;
+        transform: none !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        z-index: 20000 !important;
+    }
+    
+    .fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+}
+
+/* 13. Page und Sections volle Breite */
+.fi-page,
+.fi-section,
+.fi-section-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+}
+
+/* 14. Entferne doppelte Icons aggressiv */
+.fi-sidebar-item svg:nth-child(2),
+.fi-sidebar-item svg:last-child:not(:only-child) {
+    display: none !important;
+}
+
+/* 15. DEBUG: Rote Warnung oben */
+body::before {
+    content: "NUCLEAR FIX ACTIVE - Report if still broken!" !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #dc2626 !important;
+    color: white !important;
+    padding: 10px !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    z-index: 99999 !important;
+    font-size: 14px !important;
+}
+
+/* 16. ULTRA-SPECIFIC: Override theme.css mit maximaler Spezifität */
+html body .fi-body .fi-layout .fi-sidebar .fi-sidebar-nav .fi-sidebar-item a,
+html body .fi-body .fi-layout .fi-sidebar .fi-sidebar-nav .fi-sidebar-item button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 99999 !important;
+}
+
+/* 17. FIX CONTENT CUT-OFF: Force proper widths and padding */
+.fi-main {
+    padding-right: 1rem !important;
+    padding-left: 1rem !important;
+    width: calc(100% - 2rem) !important;
+    margin: 0 auto !important;
+}
+
+.fi-main-ctn {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+}
+
+/* Ensure tables and cards don't overflow */
+.fi-ta-content,
+.fi-section-content,
+.fi-fo-field-wrp,
+.fi-in-field-wrp {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+}
+
+/* Fix widget grid */
+.fi-wi-grid {
+    gap: 1rem !important;
+    padding: 0 !important;
+}
+
+.fi-wi-widget {
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Fix page header */
+.fi-header {
+    padding-right: 1rem !important;
+    max-width: 100% !important;
+}
+
+/* 18. SIDEBAR SCROLLING FIX */
+.fi-sidebar-nav {
+    overflow-y: auto !important;
+    max-height: calc(100vh - 8rem) !important;
+    scrollbar-width: thin !important;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-radius: 3px !important;
+}

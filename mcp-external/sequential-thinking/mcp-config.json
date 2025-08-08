@@ -1,0 +1,52 @@
+{
+  "name": "sequential-thinking",
+  "description": "Dynamic and reflective problem-solving through structured thinking process",
+  "version": "1.0.0",
+  "provider": "modelcontextprotocol",
+  "type": "external",
+  "enabled": true,
+  "capabilities": [
+    "problem_decomposition",
+    "thought_revision",
+    "alternative_reasoning",
+    "hypothesis_generation"
+  ],
+  "tools": [
+    {
+      "name": "sequential_thinking",
+      "description": "Break down complex problems into manageable steps with dynamic revision capabilities",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "problem": {
+            "type": "string",
+            "description": "The complex problem to solve"
+          },
+          "context": {
+            "type": "string",
+            "description": "Additional context for problem solving"
+          },
+          "max_steps": {
+            "type": "integer",
+            "description": "Maximum number of thinking steps",
+            "default": 10
+          }
+        },
+        "required": ["problem"]
+      }
+    }
+  ],
+  "launch": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-sequential-thinking"
+    ]
+  },
+  "settings": {
+    "auto_start": true,
+    "restart_on_failure": true,
+    "max_restarts": 3,
+    "timeout": 30000
+  }
+}

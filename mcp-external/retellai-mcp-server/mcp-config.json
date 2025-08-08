@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "retellai": {
+      "command": "node",
+      "args": ["/var/www/api-gateway/mcp-external/retellai-mcp-server/node_modules/@abhaybabbar/retellai-mcp-server/build/index.js"],
+      "env": {
+        "RETELL_API_KEY": "key_6ff998ba48e842092e04a5455d19"
+      },
+      "disabled": false
+    }
+  }
+}

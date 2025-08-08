@@ -1,0 +1,182 @@
+/* ================================================================
+   MacBook Air Responsive Fix - GitHub Issue #489
+   Fixes tiny text and broken layout on MacBook Air at 100% zoom
+   Date: 2025-08-05
+   ================================================================ */
+
+/* 1. Reset base font sizes for better readability */
+:root {
+    --font-size-xs: 0.75rem !important;  /* 12px */
+    --font-size-sm: 0.875rem !important; /* 14px */
+    --font-size-base: 1rem !important;   /* 16px */
+    --font-size-lg: 1.125rem !important; /* 18px */
+    --font-size-xl: 1.25rem !important;  /* 20px */
+}
+
+/* 2. Force minimum readable font sizes */
+html {
+    font-size: 16px !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+}
+
+body {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+}
+
+/* 3. Fix sidebar width and font sizes */
+.fi-sidebar {
+    width: 16rem !important; /* 256px */
+    min-width: 16rem !important;
+    font-size: 0.875rem !important;
+}
+
+.fi-sidebar-nav a,
+.fi-sidebar-item-label {
+    font-size: 0.875rem !important;
+    padding: 0.75rem 1rem !important;
+}
+
+/* 4. Fix main content area */
+.fi-main-ctn {
+    margin-left: 16rem !important;
+    padding: 2rem !important;
+    max-width: none !important;
+    width: calc(100vw - 16rem) !important;
+}
+
+/* 5. Fix page header sizes */
+.fi-header-heading {
+    font-size: 1.875rem !important; /* 30px */
+    line-height: 2.25rem !important;
+}
+
+.fi-breadcrumbs {
+    font-size: 0.875rem !important;
+}
+
+/* 6. Fix table font sizes */
+.fi-ta-table {
+    font-size: 0.875rem !important;
+}
+
+.fi-ta-table th,
+.fi-ta-table td {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+}
+
+/* 7. Fix form elements */
+.fi-input,
+.fi-select,
+.fi-textarea {
+    font-size: 1rem !important;
+    padding: 0.5rem 0.75rem !important;
+    min-height: 2.5rem !important;
+}
+
+.fi-field-wrp label {
+    font-size: 0.875rem !important;
+}
+
+/* 8. Fix buttons */
+.fi-btn {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 1rem !important;
+    min-height: 2.5rem !important;
+}
+
+/* 9. Fix cards and widgets */
+.fi-widget {
+    padding: 1.5rem !important;
+}
+
+.fi-widget-heading {
+    font-size: 1.125rem !important;
+}
+
+.fi-stats-value {
+    font-size: 2rem !important;
+}
+
+/* 10. MacBook-specific media query (1440px width) */
+@media (min-width: 1366px) and (max-width: 1440px) {
+    html {
+        font-size: 16px !important;
+    }
+    
+    .fi-main-ctn {
+        padding: 1.5rem !important;
+    }
+}
+
+/* 11. Fix modal sizes */
+.fi-modal-window {
+    max-width: 90vw !important;
+    font-size: 1rem !important;
+}
+
+/* 12. Fix notification sizes */
+.fi-notification {
+    font-size: 0.875rem !important;
+}
+
+/* 13. Ensure no element is too small */
+* {
+    min-font-size: 0.75rem !important;
+}
+
+p, span, div, a, button {
+    font-size: inherit !important;
+}
+
+/* 14. Fix line heights globally */
+* {
+    line-height: normal !important;
+}
+
+/* 15. Fix specific Filament components */
+.fi-sidebar-nav-group-label {
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+.fi-topbar {
+    height: 4rem !important;
+    font-size: 0.875rem !important;
+}
+
+/* 16. Fix dropdown menus */
+.fi-dropdown-panel {
+    font-size: 0.875rem !important;
+}
+
+.fi-dropdown-list-item {
+    padding: 0.5rem 1rem !important;
+}
+
+/* 17. Remove any zoom restrictions */
+@viewport {
+    zoom: 1.0;
+    user-zoom: zoom;
+}
+
+/* 18. Fix icons to match text */
+.fi-icon,
+svg {
+    width: 1.25em !important;
+    height: 1.25em !important;
+}
+
+/* 19. Ensure content doesn't overflow */
+.fi-page {
+    overflow-x: auto !important;
+    min-width: 0 !important;
+}
+
+/* 20. Debug helper - remove in production */
+body.debug-responsive * {
+    outline: 1px solid rgba(255, 0, 0, 0.2) !important;
+}

@@ -1,0 +1,200 @@
+/* EMERGENCY ICON FIX for Issue #478 */
+/* Aggressive icon sizing to fix oversized icons */
+
+/* Force ALL Filament icons to reasonable sizes */
+.fi-icon svg,
+[class*="fi-"] svg {
+    max-width: 1.5rem !important;
+    max-height: 1.5rem !important;
+}
+
+/* Sidebar icons - smaller */
+.fi-sidebar-item-icon svg,
+.fi-sidebar-nav svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Table action icons - standard size */
+.fi-ta-icon svg,
+.fi-ta-action svg,
+.fi-ac-icon svg,
+.fi-ac-action svg,
+.fi-table svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Widget icons - medium */
+.fi-wi-icon svg,
+[class*="fi-wi-"] .fi-icon svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+}
+
+/* Badge and status icons - tiny */
+.fi-badge svg,
+.fi-status svg,
+.fi-indicator svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+}
+
+/* Button icons - match button size */
+.fi-btn svg {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+}
+
+.fi-btn-sm svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+}
+
+.fi-btn-lg svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Dropdown chevrons - small */
+.fi-dropdown-trigger svg,
+[class*="chevron"] svg {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+/* Form field icons */
+.fi-fo-field-wrp svg,
+.fi-input-wrp svg {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+}
+
+/* Loading spinners */
+.fi-loading-indicator svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* User avatar fallback icons */
+.fi-avatar svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+}
+
+/* Empty state icons - can be larger */
+.fi-empty-state-icon svg {
+    width: 3rem !important;
+    height: 3rem !important;
+}
+
+/* Modal header icons */
+.fi-modal-icon svg {
+    width: 2rem !important;
+    height: 2rem !important;
+}
+
+/* Global search icon */
+.fi-global-search svg {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+}
+
+/* Notification icons */
+.fi-notification svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Fix heroicon sizing specifically */
+svg.heroicon,
+svg[class*="heroicon-"] {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Mini heroicons should be smaller */
+svg.heroicon-m,
+svg[class*="heroicon-m-"] {
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+/* Outline heroicons standard size */
+svg.heroicon-o,
+svg[class*="heroicon-o-"] {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Fix container sizing to prevent overflow */
+.fi-icon-wrapper,
+.fi-icon-ctn,
+[class*="fi-icon"] {
+    overflow: hidden !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Remove any min-width/height that might force large sizes */
+.fi-icon,
+.fi-icon-wrapper,
+[class*="fi-icon"] {
+    min-width: unset !important;
+    min-height: unset !important;
+}
+
+/* Specific fixes for known problem areas */
+
+/* Stats overview icons */
+.fi-wi-stats-overview-stat svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+}
+
+/* KPI widget icons */
+.fi-wi-kpi-icon svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+}
+
+/* Column toggle icon */
+.fi-ta-col-toggle svg {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+}
+
+/* Bulk action icons */
+.fi-ta-bulk-action svg {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+}
+
+/* Call resource specific icons */
+.calls-icon svg,
+.call-status-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Mobile adjustments - even smaller */
+@media (max-width: 640px) {
+    .fi-icon svg,
+    [class*="fi-"] svg {
+        max-width: 1.25rem !important;
+        max-height: 1.25rem !important;
+    }
+    
+    .fi-sidebar-item-icon svg {
+        width: 1.125rem !important;
+        height: 1.125rem !important;
+    }
+}
+
+/* Debug: Add red border to oversized icons */
+/*
+svg {
+    border: 1px solid red !important;
+}
+*/

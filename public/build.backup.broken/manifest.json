@@ -1,0 +1,197 @@
+{
+  "_bootstrap-BQPa8_R7.js": {
+    "file": "js/chunks/bootstrap-BQPa8_R7.js",
+    "name": "bootstrap",
+    "imports": [
+      "_vendor-network-ztdpVPaQ.js"
+    ]
+  },
+  "_portal-features-Bu6oVy6-.js": {
+    "file": "js/chunks/portal-features-Bu6oVy6-.js",
+    "name": "portal-features",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-react-BkZkwsx9.js"
+    ]
+  },
+  "_preload-helper-COvn9nVN.js": {
+    "file": "js/chunks/preload-helper-COvn9nVN.js",
+    "name": "preload-helper"
+  },
+  "_vendor-alpine-BA52dRyX.js": {
+    "file": "js/vendor/vendor-alpine-BA52dRyX.js",
+    "name": "vendor-alpine"
+  },
+  "_vendor-components-1jqlrV-B.js": {
+    "file": "js/vendor/vendor-components-1jqlrV-B.js",
+    "name": "vendor-components"
+  },
+  "_vendor-misc-BtoTmB29.js": {
+    "file": "js/vendor/vendor-misc-BtoTmB29.js",
+    "name": "vendor-misc"
+  },
+  "_vendor-network-ztdpVPaQ.js": {
+    "file": "js/vendor/vendor-network-ztdpVPaQ.js",
+    "name": "vendor-network"
+  },
+  "_vendor-react-BkZkwsx9.js": {
+    "file": "js/vendor/vendor-react-BkZkwsx9.js",
+    "name": "vendor-react",
+    "imports": [
+      "_vendor-misc-BtoTmB29.js",
+      "_vendor-components-1jqlrV-B.js"
+    ]
+  },
+  "public/css/analytics-charts-enhanced.css": {
+    "file": "css/styles-C0rkBVFr.css",
+    "src": "public/css/analytics-charts-enhanced.css",
+    "isEntry": true
+  },
+  "public/css/premium-analytics-dashboard.css": {
+    "file": "css/styles-CE6MP9ux.css",
+    "src": "public/css/premium-analytics-dashboard.css",
+    "isEntry": true
+  },
+  "public/js/analytics-charts-enhanced.js": {
+    "file": "assets/admin.analytics-nOH0NO_2.js",
+    "name": "admin.analytics",
+    "src": "public/js/analytics-charts-enhanced.js",
+    "isEntry": true
+  },
+  "public/js/premium-analytics-dashboard.js": {
+    "file": "assets/admin.dashboard-frUsWYYi.js",
+    "name": "admin.dashboard",
+    "src": "public/js/premium-analytics-dashboard.js",
+    "isEntry": true
+  },
+  "resources/css/app.css": {
+    "file": "css/styles-C6G_3qQV.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/css/bundles/admin.css": {
+    "file": "css/styles-BPcAz7bm.css",
+    "src": "resources/css/bundles/admin.css",
+    "isEntry": true
+  },
+  "resources/css/bundles/critical.css": {
+    "file": "css/critical-BDgyC2K2.css",
+    "src": "resources/css/bundles/critical.css",
+    "isEntry": true
+  },
+  "resources/css/filament/admin/theme.css": {
+    "file": "css/filament-DXdqpaYF.css",
+    "src": "resources/css/filament/admin/theme.css",
+    "isEntry": true
+  },
+  "resources/css/mcp-configuration.css": {
+    "file": "css/styles-xg8m-Xq3.css",
+    "src": "resources/css/mcp-configuration.css",
+    "isEntry": true
+  },
+  "resources/js/alpine-sidebar-store.js": {
+    "file": "js/chunks/alpine-sidebar-store-DqbT0PbK.js",
+    "name": "alpine-sidebar-store",
+    "src": "resources/js/alpine-sidebar-store.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-Bmlj9y7M.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "_bootstrap-BQPa8_R7.js",
+      "_vendor-alpine-BA52dRyX.js",
+      "resources/js/alpine-sidebar-store.js",
+      "resources/js/mobile-interactions.js",
+      "resources/js/sidebar-toggle-fix.js",
+      "resources/js/mobile-sidebar-text-fix.js",
+      "_vendor-misc-BtoTmB29.js",
+      "_vendor-network-ztdpVPaQ.js"
+    ]
+  },
+  "resources/js/bundles/admin.js": {
+    "file": "assets/admin.core-Cwrp3zK5.js",
+    "name": "admin.core",
+    "src": "resources/js/bundles/admin.js",
+    "isEntry": true,
+    "imports": [
+      "_preload-helper-COvn9nVN.js"
+    ],
+    "dynamicImports": [
+      "resources/js/alpine-sidebar-store.js",
+      "resources/js/sidebar-toggle-fix.js",
+      "resources/js/mobile-sidebar-text-fix.js",
+      "resources/js/mobile-interactions.js"
+    ]
+  },
+  "resources/js/bundles/portal.jsx": {
+    "file": "assets/portal.core-JaFe9l7-.js",
+    "name": "portal.core",
+    "src": "resources/js/bundles/portal.jsx",
+    "isEntry": true,
+    "imports": [
+      "_preload-helper-COvn9nVN.js",
+      "_vendor-react-BkZkwsx9.js",
+      "_vendor-misc-BtoTmB29.js",
+      "_vendor-components-1jqlrV-B.js"
+    ],
+    "dynamicImports": [
+      "_portal-features-Bu6oVy6-.js",
+      "_portal-features-Bu6oVy6-.js",
+      "_portal-features-Bu6oVy6-.js",
+      "_portal-features-Bu6oVy6-.js",
+      "_portal-features-Bu6oVy6-.js",
+      "_portal-features-Bu6oVy6-.js",
+      "_portal-features-Bu6oVy6-.js",
+      "_portal-features-Bu6oVy6-.js"
+    ]
+  },
+  "resources/js/login.jsx": {
+    "file": "assets/login-TAz9L9WF.js",
+    "name": "login",
+    "src": "resources/js/login.jsx",
+    "isEntry": true,
+    "imports": [
+      "_vendor-react-BkZkwsx9.js",
+      "_bootstrap-BQPa8_R7.js",
+      "_vendor-misc-BtoTmB29.js",
+      "_vendor-components-1jqlrV-B.js",
+      "_vendor-network-ztdpVPaQ.js"
+    ],
+    "css": [
+      "css/styles-C6G_3qQV.css"
+    ]
+  },
+  "resources/js/mcp-configuration-mount.jsx": {
+    "file": "assets/admin.mcp-gN2jsRLs.js",
+    "name": "admin.mcp",
+    "src": "resources/js/mcp-configuration-mount.jsx",
+    "isEntry": true,
+    "imports": [
+      "_vendor-react-BkZkwsx9.js",
+      "_vendor-misc-BtoTmB29.js",
+      "_vendor-network-ztdpVPaQ.js",
+      "_vendor-components-1jqlrV-B.js"
+    ]
+  },
+  "resources/js/mobile-interactions.js": {
+    "file": "js/chunks/mobile-interactions-DuwNssOf.js",
+    "name": "mobile-interactions",
+    "src": "resources/js/mobile-interactions.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/mobile-sidebar-text-fix.js": {
+    "file": "js/chunks/mobile-sidebar-text-fix-C78EM9r9.js",
+    "name": "mobile-sidebar-text-fix",
+    "src": "resources/js/mobile-sidebar-text-fix.js",
+    "isDynamicEntry": true
+  },
+  "resources/js/sidebar-toggle-fix.js": {
+    "file": "js/chunks/sidebar-toggle-fix-DKfcCgpc.js",
+    "name": "sidebar-toggle-fix",
+    "src": "resources/js/sidebar-toggle-fix.js",
+    "isDynamicEntry": true
+  }
+}

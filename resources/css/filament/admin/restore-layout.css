@@ -1,0 +1,95 @@
+/* ================================================================
+   RESTORE FILAMENT DEFAULT LAYOUT
+   Überschreibt problematische Styles aus theme.css
+   ================================================================ */
+
+/* 1. Body Layout Reset */
+.fi-body {
+    display: flex !important;
+    flex-direction: row !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 2. Sidebar - Standard Filament Position */
+.fi-sidebar {
+    flex-shrink: 0 !important;
+    width: var(--fi-sidebar-width, 16rem) !important;
+    position: relative !important; /* NICHT fixed! */
+    height: 100vh !important;
+    overflow-y: auto !important;
+}
+
+/* 3. Main Content - Neben der Sidebar */
+.fi-main {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+    margin-left: 0 !important; /* Kein margin-left! */
+}
+
+/* 4. Navigation Items müssen klickbar sein */
+.fi-sidebar-item a,
+.fi-sidebar-item button,
+.fi-sidebar-nav a,
+.fi-sidebar-nav button {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* 5. Entferne doppelte Icons */
+.fi-sidebar-item svg + svg {
+    display: none !important;
+}
+
+/* 6. Page Wrapper */
+.fi-page {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* 7. Header Position */
+.fi-header {
+    flex-shrink: 0 !important;
+}
+
+/* 8. Content Area */
+.fi-main-ctn {
+    flex: 1 !important;
+    padding: var(--fi-content-padding, 1.5rem) !important;
+}
+
+/* 9. Responsive - Sidebar wird mobil ausgeblendet */
+@media (max-width: 1024px) {
+    .fi-sidebar {
+        position: fixed !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s !important;
+        z-index: 50 !important;
+    }
+    
+    .fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+}
+
+/* 10. Debug Indicator */
+body::after {
+    content: "Layout Restored" !important;
+    position: fixed !important;
+    bottom: 10px !important;
+    right: 10px !important;
+    background: #10b981 !important;
+    color: white !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    z-index: 9999 !important;
+}

@@ -1,0 +1,199 @@
+/* ================================================================
+   LOGIN PAGE FIX - Issue #507
+   State-of-the-art styling for perfect login experience
+   ================================================================ */
+
+/* 1. ENSURE LOGIN FORM IS FULLY VISIBLE */
+.fi-simple-page form,
+.fi-login form {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 10 !important;
+}
+
+/* 2. FIX ALL INPUTS IN LOGIN FORM */
+.fi-simple-page input,
+.fi-simple-page textarea,
+.fi-simple-page select,
+.fi-simple-page button,
+.fi-login input,
+.fi-login textarea,
+.fi-login select,
+.fi-login button {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    cursor: auto !important;
+    user-select: auto !important;
+    -webkit-user-select: auto !important;
+    -moz-user-select: auto !important;
+    -ms-user-select: auto !important;
+}
+
+/* 3. SPECIFIC PASSWORD FIELD FIX */
+input[type="password"],
+input[wire\:model="data.password"],
+input#data\.password {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    -webkit-text-security: disc !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 2.5rem !important;
+}
+
+/* 4. EMAIL FIELD FIX */
+input[type="email"],
+input[wire\:model="data.email"],
+input#data\.email {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* 5. SUBMIT BUTTON FIX */
+button[type="submit"],
+.fi-btn-submit,
+form button:last-child {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    user-select: none !important;
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+/* 6. HOVER STATES */
+button[type="submit"]:hover,
+.fi-btn:hover {
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 7. FOCUS STATES */
+input:focus,
+textarea:focus,
+select:focus {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+    border-color: #3b82f6 !important;
+}
+
+/* 8. REMOVE ALL OVERLAYS ON LOGIN PAGE */
+.fi-simple-page .fixed.inset-0,
+.fi-simple-page [class*="overlay"],
+.fi-login .fixed.inset-0,
+.fi-login [class*="overlay"] {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+/* 9. ENSURE PROPER Z-INDEX HIERARCHY */
+.fi-simple-main-ctn { z-index: 1 !important; }
+.fi-simple-main { z-index: 2 !important; }
+.fi-simple-page form { z-index: 3 !important; }
+.fi-simple-page input { z-index: 4 !important; }
+.fi-simple-page button { z-index: 5 !important; }
+
+/* 10. FIX LIVEWIRE LOADING STATES */
+.fi-simple-page [wire\:loading],
+.fi-login [wire\:loading] {
+    pointer-events: none !important;
+}
+
+/* But keep form interactive during loading */
+.fi-simple-page form[wire\:loading] input,
+.fi-simple-page form[wire\:loading] button {
+    pointer-events: auto !important;
+}
+
+/* 11. ALPINE.JS PASSWORD TOGGLE FIX */
+[x-data*="isPasswordRevealed"] input {
+    pointer-events: auto !important;
+}
+
+.fi-input-wrp-suffix button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+}
+
+/* 12. REMOVE ANIMATIONS THAT MIGHT BREAK INTERACTION */
+.fi-simple-page *,
+.fi-login * {
+    animation-play-state: running !important;
+}
+
+/* 13. ENSURE LABELS ARE CLICKABLE */
+label[for] {
+    cursor: pointer !important;
+    user-select: none !important;
+}
+
+/* 14. FIX REMEMBER ME CHECKBOX */
+input[type="checkbox"][wire\:model="data.remember"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* 15. ERROR MESSAGES SHOULD BE VISIBLE */
+.fi-fo-field-wrp-error-message {
+    display: block !important;
+    opacity: 1 !important;
+    color: #ef4444 !important;
+}
+
+/* 16. LOADING SPINNER FIX */
+.fi-simple-page .animate-spin,
+.fi-login .animate-spin {
+    pointer-events: none !important;
+}
+
+/* 17. RESPONSIVE FIXES */
+@media (max-width: 640px) {
+    .fi-simple-main {
+        margin: 1rem !important;
+        width: calc(100% - 2rem) !important;
+    }
+    
+    input, button {
+        font-size: 16px !important; /* Prevent zoom on iOS */
+    }
+}
+
+/* 18. DARK MODE SUPPORT */
+.dark .fi-simple-page input,
+.dark .fi-simple-page button {
+    opacity: 1 !important;
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* 19. DISABLE USER SCALING ON INPUTS (iOS fix) */
+input, textarea, select {
+    touch-action: manipulation !important;
+}
+
+/* 20. DEBUG INDICATOR FOR LOGIN PAGE */
+.fi-simple-page::before {
+    content: "Login Fix Active ✓" !important;
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    background: #10b981 !important;
+    color: white !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    z-index: 99999 !important;
+    font-family: monospace !important;
+}

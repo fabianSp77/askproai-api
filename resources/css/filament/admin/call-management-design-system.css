@@ -1,0 +1,646 @@
+/**
+ * Call Management Design System
+ * Modern, Stress-Reducing Interface for German Support Agents
+ * 
+ * DESIGN PRINCIPLES:
+ * 1. Visual Hierarchy - Quick information scanning
+ * 2. Cognitive Load Reduction - Clean, minimal design
+ * 3. Agent Empowerment - Positive feedback loops
+ * 4. German Professional Standards - Clean, efficient
+ * 5. Mobile-First Responsive - Touch-optimized
+ * 6. Accessibility - WCAG AA compliant
+ */
+
+@layer components {
+    /* ========================================
+     * 1. CALL DASHBOARD LAYOUT SYSTEM
+     * ======================================== */
+    
+    .call-dashboard-container {
+        @apply min-h-screen bg-gradient-to-br from-slate-50 to-blue-50;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    }
+    
+    .call-dashboard-header {
+        @apply sticky top-0 z-30 bg-white/95 backdrop-blur-lg border-b border-slate-200/60;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    
+    .call-dashboard-grid {
+        @apply grid gap-6 p-6;
+        grid-template-columns: 1fr;
+    }
+    
+    @media (min-width: 1024px) {
+        .call-dashboard-grid {
+            grid-template-columns: 320px 1fr 280px;
+        }
+    }
+    
+    /* ========================================
+     * 2. SMART PRIORITY QUEUE SYSTEM
+     * ======================================== */
+    
+    .priority-queue-container {
+        @apply bg-white/90 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200/60;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .priority-queue-header {
+        @apply p-6 border-b border-slate-100;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    .priority-queue-title {
+        @apply text-xl font-semibold text-slate-800 mb-2;
+        background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .priority-indicator-legend {
+        @apply flex items-center gap-4 text-sm;
+    }
+    
+    .priority-dot {
+        @apply w-3 h-3 rounded-full;
+    }
+    
+    .priority-dot-urgent { @apply bg-red-500; }
+    .priority-dot-high { @apply bg-orange-500; }
+    .priority-dot-normal { @apply bg-blue-500; }
+    .priority-dot-low { @apply bg-slate-400; }
+    
+    /* ========================================
+     * 3. MODERN CALL CARDS SYSTEM
+     * ======================================== */
+    
+    .call-card-modern {
+        @apply relative bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200/60 p-4 mb-3;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%);
+    }
+    
+    .call-card-modern:hover {
+        @apply shadow-lg border-blue-300/60 -translate-y-1;
+        background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    }
+    
+    .call-card-urgent {
+        @apply border-l-4 border-red-500 bg-red-50/50;
+        animation: urgentPulse 2s infinite;
+    }
+    
+    .call-card-high {
+        @apply border-l-4 border-orange-500 bg-orange-50/50;
+    }
+    
+    .call-card-normal {
+        @apply border-l-4 border-blue-500 bg-blue-50/30;
+    }
+    
+    .call-card-low {
+        @apply border-l-2 border-slate-300 bg-slate-50/30;
+    }
+    
+    @keyframes urgentPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+    
+    /* Call Card Content Layout */
+    .call-card-header {
+        @apply flex items-start justify-between mb-3;
+    }
+    
+    .call-card-customer {
+        @apply text-lg font-semibold text-slate-800 mb-1 hover:text-blue-600 transition-colors;
+    }
+    
+    .call-card-time {
+        @apply text-sm text-slate-500;
+    }
+    
+    .call-card-priority-badge {
+        @apply px-2 py-1 text-xs font-medium rounded-full;
+    }
+    
+    .call-card-body {
+        @apply space-y-3;
+    }
+    
+    .call-card-phone {
+        @apply flex items-center gap-2 text-sm text-slate-600;
+    }
+    
+    .call-card-duration {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+    }
+    
+    .duration-excellent {
+        @apply bg-emerald-100 text-emerald-800 border border-emerald-200;
+    }
+    
+    .duration-good {
+        @apply bg-blue-100 text-blue-800 border border-blue-200;
+    }
+    
+    .duration-quick {
+        @apply bg-amber-100 text-amber-800 border border-amber-200;
+    }
+    
+    /* ========================================
+     * 4. STATUS INDICATORS SYSTEM
+     * ======================================== */
+    
+    .status-indicator-modern {
+        @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .status-live {
+        @apply bg-red-100 text-red-800 border border-red-200 relative;
+        animation: liveCallPulse 1.5s infinite;
+    }
+    
+    .status-live::before {
+        content: '';
+        @apply absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full;
+        animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    
+    .status-completed {
+        @apply bg-emerald-100 text-emerald-800 border border-emerald-200 relative;
+    }
+    
+    .status-completed::after {
+        content: '✓';
+        @apply absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-xs rounded-full flex items-center justify-center;
+        animation: successBounce 0.6s ease-out;
+    }
+    
+    .status-follow-up {
+        @apply bg-amber-100 text-amber-800 border border-amber-200;
+        animation: followUpGlow 2s infinite;
+    }
+    
+    .status-missed {
+        @apply bg-red-100 text-red-800 border border-red-200;
+    }
+    
+    @keyframes liveCallPulse {
+        0%, 100% { background-color: rgb(254 242 242); }
+        50% { background-color: rgb(252 165 165); }
+    }
+    
+    @keyframes successBounce {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    
+    @keyframes followUpGlow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+        50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+    }
+    
+    /* ========================================
+     * 5. INLINE NOTE-TAKING INTERFACE
+     * ======================================== */
+    
+    .note-taking-panel {
+        @apply bg-white/95 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200/60 p-6;
+    }
+    
+    .quick-note-trigger {
+        @apply w-full p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 text-left cursor-pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .quick-note-trigger:hover {
+        @apply border-blue-400 bg-gradient-to-r from-blue-100 to-indigo-100;
+        transform: scale(1.02);
+    }
+    
+    .quick-note-placeholder {
+        @apply text-blue-400 font-medium;
+    }
+    
+    .note-editor-expanded {
+        @apply mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200;
+        animation: expandIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes expandIn {
+        0% { transform: scaleY(0.5); opacity: 0; }
+        100% { transform: scaleY(1); opacity: 1; }
+    }
+    
+    .note-editor-avatar {
+        @apply w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white;
+    }
+    
+    .note-editor-textarea {
+        @apply w-full border-0 bg-transparent placeholder-blue-400 text-slate-800 resize-none focus:outline-none;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .note-editor-actions {
+        @apply flex justify-between items-center mt-4;
+    }
+    
+    .note-save-btn {
+        @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg font-medium;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+    }
+    
+    .note-save-btn:hover {
+        @apply from-blue-600 to-blue-700 shadow-lg;
+        transform: translateY(-1px);
+    }
+    
+    .note-save-btn:active {
+        transform: translateY(0) scale(0.98);
+    }
+    
+    /* ========================================
+     * 6. CUSTOMER JOURNEY TIMELINE
+     * ======================================== */
+    
+    .customer-timeline-container {
+        @apply bg-white/95 backdrop-blur-xl rounded-2xl shadow-sm border border-slate-200/60 p-6;
+    }
+    
+    .customer-timeline {
+        @apply relative pl-8;
+    }
+    
+    .customer-timeline::before {
+        content: '';
+        @apply absolute left-3 top-0 bottom-0 w-0.5;
+        background: linear-gradient(to bottom, #3b82f6, #1d4ed8, #60a5fa);
+    }
+    
+    .timeline-item {
+        @apply relative mb-6 bg-white/90 rounded-xl p-4 shadow-sm border border-slate-100;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .timeline-item:hover {
+        @apply shadow-md border-blue-200;
+        transform: translateX(4px);
+    }
+    
+    .timeline-item::before {
+        content: '';
+        @apply absolute -left-6 top-5 w-4 h-4 rounded-full border-2 border-white;
+        box-shadow: 0 0 0 2px #3b82f6;
+    }
+    
+    .timeline-item-success::before {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        box-shadow: 0 0 0 2px #10b981;
+    }
+    
+    .timeline-item-warning::before {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        box-shadow: 0 0 0 2px #f59e0b;
+    }
+    
+    .timeline-item-error::before {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 0 0 2px #ef4444;
+    }
+    
+    .timeline-content-header {
+        @apply flex items-center justify-between mb-2;
+    }
+    
+    .timeline-content-title {
+        @apply font-medium text-slate-800;
+    }
+    
+    .timeline-content-time {
+        @apply text-sm text-slate-500;
+    }
+    
+    .timeline-content-body {
+        @apply text-sm text-slate-600 leading-relaxed;
+    }
+    
+    /* ========================================
+     * 7. ACTION BUTTONS SYSTEM
+     * ======================================== */
+    
+    .action-button-group {
+        @apply flex items-center gap-2;
+    }
+    
+    .action-btn-primary {
+        @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+    }
+    
+    .action-btn-primary:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        @apply shadow-lg;
+        transform: translateY(-1px);
+    }
+    
+    .action-btn-primary:active {
+        transform: translateY(0) scale(0.98);
+    }
+    
+    .action-btn-success {
+        @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .action-btn-success:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        @apply shadow-lg;
+        transform: translateY(-1px);
+    }
+    
+    .action-btn-secondary {
+        @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-slate-700 bg-slate-100 border border-slate-200;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .action-btn-secondary:hover {
+        @apply bg-slate-200 border-slate-300 shadow-md;
+        transform: translateY(-1px);
+    }
+    
+    /* Phone Number Interactions */
+    .phone-number-display {
+        @apply inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-lg text-sm font-mono cursor-pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        filter: blur(1px);
+    }
+    
+    .phone-number-display:hover {
+        @apply bg-blue-100 text-blue-800 border border-blue-200;
+        filter: blur(0);
+        transform: scale(1.05);
+    }
+    
+    .phone-copy-feedback {
+        animation: phoneSuccess 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes phoneSuccess {
+        0% { background-color: #10b981; color: white; transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { background-color: transparent; color: inherit; transform: scale(1); }
+    }
+    
+    /* ========================================
+     * 8. MOBILE-FIRST RESPONSIVE DESIGN
+     * ======================================== */
+    
+    @media (max-width: 768px) {
+        .call-dashboard-grid {
+            @apply p-4 gap-4;
+        }
+        
+        .call-card-modern {
+            @apply p-3 rounded-lg;
+        }
+        
+        .mobile-action-bar {
+            @apply flex justify-between items-center mt-4 gap-2;
+        }
+        
+        .mobile-action-btn {
+            @apply flex-1 min-h-[48px] flex items-center justify-center rounded-lg font-medium text-sm;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .mobile-action-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .mobile-call-btn {
+            @apply bg-emerald-500 text-white;
+        }
+        
+        .mobile-note-btn {
+            @apply bg-blue-500 text-white;
+        }
+        
+        .mobile-view-btn {
+            @apply bg-slate-500 text-white;
+        }
+        
+        /* Touch-optimized elements */
+        .touch-target {
+            min-width: 44px;
+            min-height: 44px;
+        }
+        
+        .quick-note-trigger {
+            @apply text-base p-6;
+        }
+        
+        .action-btn-primary,
+        .action-btn-success,
+        .action-btn-secondary {
+            @apply min-h-[48px] text-base;
+        }
+    }
+    
+    /* ========================================
+     * 9. AGENT EMPOWERMENT FEATURES
+     * ======================================== */
+    
+    .empowerment-notification {
+        @apply fixed bottom-6 right-6 max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 z-50;
+        animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .empowerment-notification-success {
+        @apply border-l-4 border-emerald-500;
+    }
+    
+    .empowerment-notification-progress {
+        @apply border-l-4 border-blue-500;
+    }
+    
+    .empowerment-notification-encouragement {
+        @apply border-l-4 border-amber-500;
+    }
+    
+    @keyframes slideInUp {
+        0% { transform: translateY(100%); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+    
+    .efficiency-badge {
+        @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        animation: efficiencyGlow 3s infinite;
+    }
+    
+    @keyframes efficiencyGlow {
+        0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+        50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+    }
+    
+    .success-celebration {
+        animation: celebrate 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes celebrate {
+        0% { transform: scale(1) rotate(0deg); }
+        25% { transform: scale(1.05) rotate(2deg); }
+        50% { transform: scale(0.95) rotate(-1deg); }
+        75% { transform: scale(1.05) rotate(1deg); }
+        100% { transform: scale(1) rotate(0deg); }
+    }
+    
+    /* ========================================
+     * 10. ACCESSIBILITY & GERMAN STANDARDS
+     * ======================================== */
+    
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+        .call-card-modern {
+            @apply border-2 border-slate-900;
+        }
+        
+        .status-indicator-modern {
+            @apply border-2;
+        }
+        
+        .action-btn-primary {
+            background: #1e40af;
+        }
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+        
+        .call-card-modern:hover,
+        .timeline-item:hover {
+            transform: none !important;
+        }
+    }
+    
+    /* Focus indicators for keyboard navigation */
+    .call-card-modern:focus-within,
+    .quick-note-trigger:focus,
+    .action-btn-primary:focus,
+    .action-btn-success:focus,
+    .action-btn-secondary:focus {
+        @apply ring-2 ring-blue-500 ring-offset-2 outline-none;
+    }
+    
+    /* Screen reader support */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+}
+
+/* ========================================
+ * UTILITY CLASSES
+ * ======================================== */
+
+@layer utilities {
+    /* German Professional Colors */
+    .text-professional-blue { color: #1e40af; }
+    .text-success-green { color: #059669; }
+    .text-warning-amber { color: #d97706; }
+    .text-neutral-slate { color: #475569; }
+    .text-urgent-red { color: #dc2626; }
+    
+    /* Professional Gradients */
+    .bg-professional-gradient {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+    
+    .bg-success-gradient {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .bg-warning-gradient {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    
+    .bg-urgent-gradient {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    
+    /* Professional Shadows */
+    .shadow-professional {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    
+    .shadow-professional-lg {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    
+    .shadow-professional-xl {
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.03);
+    }
+    
+    /* Glass Morphism */
+    .glass-light {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .glass-ultra-light {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Animation Utilities */
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes fadeInUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-slide-in-right {
+        animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes slideInRight {
+        0% { opacity: 0; transform: translateX(20px); }
+        100% { opacity: 1; transform: translateX(0); }
+    }
+    
+    .animate-scale-in {
+        animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes scaleIn {
+        0% { opacity: 0; transform: scale(0.95); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+}

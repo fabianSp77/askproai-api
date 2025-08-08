@@ -1,0 +1,63 @@
+// Force table visibility in case CSS is hiding it
+
+(function() {
+    console.log('Forcing table visibility...');
+    
+    // Wait for page to load
+    setTimeout(() => {
+        // Find all tables
+        const tables = document.querySelectorAll('table, .fi-ta-table, [role="table"]');
+        console.log(`Found ${tables.length} table elements`);
+        
+        tables.forEach((table, index) => {
+            // Force visibility
+            table.style.display = 'table';
+            table.style.visibility = 'visible';
+            table.style.opacity = '1';
+            table.style.position = 'relative';
+            table.style.zIndex = '1';
+            
+            console.log(`Table ${index + 1} forced visible`);
+        });
+        
+        // Also check for table containers
+        const containers = document.querySelectorAll('.fi-ta-ctn, .fi-ta-content, [wire\\:id*="table"]');
+        containers.forEach(container => {
+            container.style.display = 'block';
+            container.style.visibility = 'visible';
+            container.style.opacity = '1';
+        });
+        
+        // Remove any overlays
+        const overlays = document.querySelectorAll('.overlay, .modal-backdrop, [class*="loading"]');
+        overlays.forEach(overlay => {
+            if (!overlay.querySelector('table')) { // Don't remove if it contains a table
+                overlay.style.display = 'none';
+            }
+        });
+        
+        // Check if main content area is hidden
+        const main = document.querySelector('main, .fi-main');
+        if (main) {
+            main.style.display = 'block';
+            main.style.visibility = 'visible';
+            main.style.opacity = '1';
+            console.log('Main content area forced visible');
+        }
+        
+        // Look for Livewire components
+        const livewireComponents = document.querySelectorAll('[wire\\:id]');
+        console.log(`Found ${livewireComponents.length} Livewire components`);
+        
+        // Check if any have display:none
+        livewireComponents.forEach(comp => {
+            const style = window.getComputedStyle(comp);
+            if (style.display === 'none' || style.visibility === 'hidden') {
+                console.warn('Hidden Livewire component found:', comp.getAttribute('wire:id'));
+                comp.style.display = 'block';
+                comp.style.visibility = 'visible';
+            }
+        });
+        
+    }, 1000);
+})();

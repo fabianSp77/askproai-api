@@ -1,0 +1,22 @@
+/* ================================================================
+   NAVIGATION FIX ONLY - Minimale Änderungen
+   ================================================================ */
+
+/* 1. Entferne doppelte Chevron-Icons in der Navigation */
+.fi-sidebar-item button > svg:last-child {
+    display: none !important;
+}
+
+/* 2. Stelle sicher dass Links klickbar sind */
+.fi-sidebar-item a,
+.fi-sidebar-item button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* 3. Verhindere dass Overlays die Navigation blockieren */
+.fi-modal-close-overlay {
+    pointer-events: none !important;
+}
+
+/* Das ist alles - keine Layout-Änderungen! */

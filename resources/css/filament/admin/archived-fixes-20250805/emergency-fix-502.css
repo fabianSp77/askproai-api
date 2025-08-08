@@ -1,0 +1,133 @@
+/* ================================================================
+   EMERGENCY FIX für GitHub Issue #502
+   Behebt: Navigation nicht klickbar, Content abgeschnitten, Header überlappt
+   ================================================================ */
+
+/* 1. KRITISCH: Alle pointer-events zurücksetzen */
+* {
+    pointer-events: auto !important;
+}
+
+/* 2. Sidebar muss hinter Content sein, aber klickbar */
+.fi-sidebar {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 16rem !important;
+    z-index: 40 !important;
+    overflow-y: auto !important;
+    overflow-x: visible !important;
+}
+
+/* 3. Hauptbereich darf nicht abgeschnitten werden */
+.fi-main {
+    margin-left: 16rem !important;
+    width: calc(100% - 16rem) !important;
+    max-width: none !important;
+    overflow-x: visible !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* 4. Header darf nicht überlappt werden */
+.fi-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;
+    width: 100% !important;
+    background: white !important;
+}
+
+/* 5. Content Container - volle Breite */
+.fi-main-ctn {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+    padding: 1.5rem !important;
+}
+
+/* 6. Entferne ALLE Overlays die Klicks blockieren könnten */
+.fi-modal-overlay,
+.fi-notifications-modal-overlay,
+[class*="overlay"] {
+    pointer-events: none !important;
+}
+
+/* Modals selbst müssen klickbar sein */
+.fi-modal,
+.fi-modal-window,
+.fi-notifications-modal {
+    pointer-events: auto !important;
+}
+
+/* 7. Navigation MUSS klickbar sein */
+.fi-sidebar-nav,
+.fi-sidebar-nav *,
+.fi-sidebar-item,
+.fi-sidebar-item *,
+.fi-sidebar-item a,
+.fi-sidebar-item button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 50 !important;
+}
+
+/* 8. Tabellen dürfen nicht abgeschnitten werden */
+.fi-ta-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
+}
+
+.fi-ta-table {
+    min-width: 100% !important;
+}
+
+/* 9. Body und HTML Reset */
+html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    zoom: 1 !important;
+    transform: none !important;
+}
+
+/* 10. Filament spezifische Container */
+.fi-body {
+    min-height: 100vh !important;
+    display: flex !important;
+    overflow: visible !important;
+}
+
+/* 11. Z-Index Hierarchie klar definieren */
+.fi-sidebar { z-index: 40 !important; }
+.fi-sidebar-nav { z-index: 41 !important; }
+.fi-sidebar-item { z-index: 42 !important; }
+.fi-header { z-index: 30 !important; }
+.fi-main { z-index: 1 !important; }
+.fi-main-ctn { z-index: 2 !important; }
+
+/* 12. Entferne transform von Navigation */
+.fi-sidebar,
+.fi-sidebar-nav,
+.fi-sidebar-item {
+    transform: none !important;
+    -webkit-transform: none !important;
+}
+
+/* 13. Debug Helper - zeigt wenn CSS aktiv ist */
+body::after {
+    content: "Emergency Fix 502 Active" !important;
+    position: fixed !important;
+    bottom: 10px !important;
+    left: 10px !important;
+    background: #ef4444 !important;
+    color: white !important;
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    z-index: 9999 !important;
+    pointer-events: none !important;
+}

@@ -1,0 +1,261 @@
+/* ================================================================
+   CLEAN STRUCTURE CSS - Kompletter Neuaufbau ohne Altlasten
+   Entfernt alle Zoom/Transform Issues und stellt klare Struktur her
+   ================================================================ */
+
+/* 1. RESET - Entferne ALLE Zooms und Transforms */
+*, *::before, *::after {
+    zoom: 1 !important;
+    -webkit-zoom: 1 !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -ms-transform: none !important;
+}
+
+html {
+    font-size: 16px !important; /* Base font size */
+    zoom: 1 !important;
+    transform: none !important;
+}
+
+body {
+    zoom: 1 !important;
+    transform: none !important;
+    font-size: 0.875rem !important; /* 14px */
+}
+
+/* 2. LAYOUT STRUKTUR - Klare Abstände */
+.fi-body {
+    display: flex !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 3. SIDEBAR - Feste Breite, kein Overflow */
+.fi-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 256px !important; /* 16rem */
+    background: white !important;
+    border-right: 1px solid #e5e7eb !important;
+    z-index: 40 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* 4. HAUPTBEREICH - Korrekter Abstand zur Sidebar */
+.fi-main {
+    flex: 1 !important;
+    margin-left: 256px !important; /* Exakt wie Sidebar-Breite */
+    min-height: 100vh !important;
+    background: #f9fafb !important;
+    overflow-x: hidden !important;
+}
+
+/* 5. HEADER - Oben fixiert */
+.fi-header {
+    position: sticky !important;
+    top: 0 !important;
+    height: 64px !important;
+    background: white !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    padding: 0 24px !important;
+    z-index: 30 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* 6. CONTENT CONTAINER - Padding und max-width */
+.fi-main-ctn {
+    padding: 24px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+/* 7. SECTIONS & WIDGETS - Einheitliches Design */
+.fi-section,
+.fi-widget {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    margin-bottom: 24px !important;
+    overflow: hidden !important;
+}
+
+/* 8. STATS GRID - Responsive ohne Overflow */
+.fi-wi-stats-overview-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 16px !important;
+    width: 100% !important;
+}
+
+.fi-wi-stats-overview-stat {
+    padding: 20px !important;
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    min-height: 120px !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-size: 1.75rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    margin-bottom: 4px !important;
+}
+
+.fi-wi-stats-overview-stat-label {
+    font-size: 0.875rem !important;
+    color: #6b7280 !important;
+    margin-bottom: 8px !important;
+}
+
+.fi-wi-stats-overview-stat-description {
+    font-size: 0.75rem !important;
+    color: #9ca3af !important;
+    margin-top: auto !important;
+}
+
+/* 9. NAVIGATION - Clickable und sauber */
+.fi-sidebar-nav {
+    padding: 8px 0 !important;
+}
+
+.fi-sidebar-item > a,
+.fi-sidebar-item > button {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 10px 16px !important;
+    gap: 12px !important;
+    color: #374151 !important;
+    text-decoration: none !important;
+    transition: background 0.15s !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.fi-sidebar-item > a:hover,
+.fi-sidebar-item > button:hover {
+    background: #f3f4f6 !important;
+}
+
+/* Aktives Item */
+.fi-sidebar-item.fi-active > a,
+.fi-sidebar-item.fi-active > button {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+}
+
+/* 10. TABLES - Kein horizontaler Overflow */
+.fi-ta-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+.fi-ta-table {
+    width: 100% !important;
+    table-layout: auto !important;
+}
+
+.fi-ta-table th,
+.fi-ta-table td {
+    padding: 12px 16px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* 11. RESPONSIVE - Mobile Anpassungen */
+@media (max-width: 1024px) {
+    .fi-sidebar {
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s !important;
+    }
+    
+    .fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    .fi-main {
+        margin-left: 0 !important;
+    }
+    
+    .fi-main-ctn {
+        padding: 16px !important;
+    }
+    
+    .fi-wi-stats-overview-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* 12. SCROLLBAR - Dezent */
+::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: #f3f4f6 !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d1d5db !important;
+    border-radius: 4px !important;
+}
+
+/* 13. FORMS & INPUTS */
+.fi-input,
+.fi-select,
+.fi-textarea {
+    width: 100% !important;
+    padding: 8px 12px !important;
+    font-size: 0.875rem !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    background: white !important;
+}
+
+/* 14. BUTTONS */
+.fi-btn {
+    padding: 8px 16px !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.15s !important;
+}
+
+/* 15. Z-INDEX HIERARCHIE */
+.fi-modal { z-index: 50 !important; }
+.fi-sidebar { z-index: 40 !important; }
+.fi-header { z-index: 30 !important; }
+.fi-dropdown-panel { z-index: 35 !important; }
+
+/* 16. ENTFERNE DOPPELTE ELEMENTE */
+.fi-sidebar-nav svg + svg,
+.fi-sidebar-item-icon + .fi-sidebar-item-icon,
+.fi-sidebar-item button svg:nth-child(2) {
+    display: none !important;
+}
+
+/* 17. DEBUG HELPER */
+body[data-debug="1"]::before {
+    content: "Clean Structure CSS Active" !important;
+    position: fixed !important;
+    bottom: 10px !important;
+    right: 10px !important;
+    background: #10b981 !important;
+    color: white !important;
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    z-index: 9999 !important;
+}

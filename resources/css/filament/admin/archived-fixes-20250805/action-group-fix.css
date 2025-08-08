@@ -1,0 +1,112 @@
+/* Action Group Dropdown Fix for Filament Tables */
+
+/* FIX FOR ISSUE #457: Duplicate arrows in action groups */
+/* Hide any duplicate chevron/arrow icons */
+.fi-ta-actions .fi-dropdown-trigger svg.fi-btn-icon + svg,
+.fi-ta-actions .fi-ac-btn-action svg + svg,
+.fi-ta-actions svg[class*="chevron"]:not(:first-of-type) {
+    display: none !important;
+}
+
+/* Remove pseudo-element arrows */
+.fi-ta-actions .fi-dropdown-trigger::after,
+.fi-ta-actions .fi-ac-btn-action::after {
+    content: none !important;
+}
+
+/* Ensure proper z-index for dropdown menus */
+.fi-ta-actions-group-dropdown {
+    z-index: 60 !important;
+}
+
+/* Fix dropdown positioning and width */
+.fi-dropdown-panel {
+    min-width: 200px !important;
+    max-width: 280px !important;
+    z-index: 60 !important;
+    position: relative !important;
+}
+
+/* Specific fix for table action dropdowns */
+.fi-ta-actions .fi-dropdown-panel,
+.fi-ta-record .fi-dropdown-panel,
+.fi-ta-actions-group .fi-dropdown-panel,
+.fi-ac-dropdown .fi-dropdown-panel {
+    z-index: 9999 !important;
+    position: absolute !important;
+}
+
+/* Ensure dropdown items don't overflow */
+.fi-dropdown-list-item {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+}
+
+/* Fix button alignment in table cells */
+.fi-ta-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    justify-content: flex-end !important;
+}
+
+/* Ensure action buttons have consistent sizing */
+.fi-ta-actions .fi-btn {
+    flex-shrink: 0 !important;
+}
+
+/* Fix dropdown menu scrolling */
+.fi-dropdown-list {
+    max-height: 400px !important;
+    overflow-y: auto !important;
+}
+
+/* Ensure proper spacing for action group buttons */
+.fi-ac-btn-group {
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+/* Fix modal z-index issues */
+.fi-modal {
+    z-index: 9999 !important;
+}
+
+/* Fix table overflow to allow dropdowns to show */
+.fi-ta-content {
+    overflow: visible !important;
+}
+
+.fi-ta-content-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* Ensure table wrapper doesn't clip dropdowns */
+.fi-table-wrapper {
+    overflow: visible !important;
+}
+
+/* Fix scrollable table container */
+.fi-table-scrollable {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    position: relative !important;
+}
+
+/* Make sure the dropdown container is properly positioned */
+.fi-dropdown {
+    position: relative !important;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    .fi-ta-actions {
+        justify-content: center !important;
+    }
+    
+    .fi-dropdown-panel {
+        min-width: 180px !important;
+        max-width: 240px !important;
+    }
+}

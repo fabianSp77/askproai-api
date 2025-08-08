@@ -976,20 +976,20 @@ Route::prefix('analytics')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/export', [App\Http\Controllers\Api\AnalyticsApiController::class, 'export']);
 });
 
-// Events API Routes
-Route::prefix('events')->middleware(['auth:sanctum'])->group(function () {
-    Route::get('/', [App\Http\Controllers\Api\EventsApiController::class, 'index']);
-    Route::post('/', [App\Http\Controllers\Api\EventsApiController::class, 'store']);
-    Route::get('/{event}', [App\Http\Controllers\Api\EventsApiController::class, 'show']);
-    Route::put('/{event}', [App\Http\Controllers\Api\EventsApiController::class, 'update']);
-    Route::delete('/{event}', [App\Http\Controllers\Api\EventsApiController::class, 'destroy']);
-    Route::post('/dispatch', [App\Http\Controllers\Api\EventsApiController::class, 'dispatch']);
-    Route::get('/timeline', [App\Http\Controllers\Api\EventsApiController::class, 'timeline']);
-    Route::post('/replay', [App\Http\Controllers\Api\EventsApiController::class, 'replay']);
-    Route::get('/webhooks', [App\Http\Controllers\Api\EventsApiController::class, 'webhooks']);
-    Route::post('/webhooks', [App\Http\Controllers\Api\EventsApiController::class, 'createWebhook']);
-    Route::delete('/webhooks/{webhook}', [App\Http\Controllers\Api\EventsApiController::class, 'deleteWebhook']);
-});
+// Events API Routes - DISABLED (Controller does not exist)
+// Route::prefix('events')->middleware(['auth:sanctum'])->group(function () {
+//     Route::get('/', [App\Http\Controllers\Api\EventsApiController::class, 'index']);
+//     Route::post('/', [App\Http\Controllers\Api\EventsApiController::class, 'store']);
+//     Route::get('/{event}', [App\Http\Controllers\Api\EventsApiController::class, 'show']);
+//     Route::put('/{event}', [App\Http\Controllers\Api\EventsApiController::class, 'update']);
+//     Route::delete('/{event}', [App\Http\Controllers\Api\EventsApiController::class, 'destroy']);
+//     Route::post('/dispatch', [App\Http\Controllers\Api\EventsApiController::class, 'dispatch']);
+//     Route::get('/timeline', [App\Http\Controllers\Api\EventsApiController::class, 'timeline']);
+//     Route::post('/replay', [App\Http\Controllers\Api\EventsApiController::class, 'replay']);
+//     Route::get('/webhooks', [App\Http\Controllers\Api\EventsApiController::class, 'webhooks']);
+//     Route::post('/webhooks', [App\Http\Controllers\Api\EventsApiController::class, 'createWebhook']);
+//     Route::delete('/webhooks/{webhook}', [App\Http\Controllers\Api\EventsApiController::class, 'deleteWebhook']);
+// });
 
 // Monitoring API Routes (Super Admin only)
 Route::prefix('monitoring')->middleware(['auth:sanctum', 'can:viewSystemMonitoring'])->group(function () {

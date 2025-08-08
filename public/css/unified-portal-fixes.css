@@ -1,0 +1,519 @@
+/**
+ * Unified Portal Fixes - CONSOLIDATED CSS
+ * Replaces all emergency-*.css, fix-*.css, and portal-*.css files
+ * Optimized for performance and WCAG compliance
+ * Version: 2.0 - Mobile-first, touch-friendly design
+ */
+
+/* ============================
+   1. ALPINE.JS RACE CONDITION FIX
+   ============================ */
+
+/* Hide Alpine components until ready */
+[x-data]:not([data-alpine-ready]) {
+    visibility: hidden !important;
+}
+
+/* Show when Alpine is ready */
+[x-data][data-alpine-ready] {
+    visibility: visible !important;
+}
+
+/* Alternative for x-cloak */
+[x-cloak] {
+    display: none !important;
+}
+
+/* ============================
+   2. Z-INDEX HIERARCHY (Clean)
+   ============================ */
+
+:root {
+    --z-base: 1;
+    --z-dropdown: 50;
+    --z-sidebar: 60;
+    --z-modal: 80;
+    --z-notification: 90;
+    --z-tooltip: 100;
+}
+
+.fi-main { z-index: var(--z-base) !important; }
+.fi-dropdown-panel { z-index: var(--z-dropdown) !important; }
+.fi-sidebar { z-index: var(--z-sidebar) !important; }
+.fi-modal-window { z-index: var(--z-modal) !important; }
+.fi-notification { z-index: var(--z-notification) !important; }
+.fi-tooltip { z-index: var(--z-tooltip) !important; }
+
+/* ============================
+   3. CRITICAL INTERACTION FIXES
+   ============================ */
+
+/* Ensure all interactive elements are clickable */
+button:not([disabled]),
+a:not([disabled]),
+[role="button"]:not([disabled]),
+[wire\:click]:not([disabled]),
+[x-on\:click]:not([disabled]),
+.fi-btn:not([disabled]),
+.fi-link:not([disabled]),
+.fi-dropdown-item:not([disabled]),
+.fi-sidebar-nav-item:not([disabled]),
+.fi-topbar-item:not([disabled]) {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+}
+
+/* Input cursors */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+    cursor: text !important;
+    pointer-events: auto !important;
+}
+
+/* Select cursors */
+select,
+.fi-fo-select button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+/* ============================
+   4. MOBILE TOUCH TARGETS (WCAG 2.1 AA)
+   ============================ */
+
+@media (max-width: 768px) {
+    /* Minimum 48px x 48px touch targets */
+    button,
+    a,
+    [role="button"],
+    .fi-btn,
+    .fi-link,
+    .fi-dropdown-item,
+    .fi-sidebar-nav-item,
+    .fi-topbar-item,
+    input[type="radio"],
+    input[type="checkbox"],
+    .fi-checkbox-input,
+    .fi-radio-input {
+        min-height: 48px !important;
+        min-width: 48px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 8px !important;
+    }
+    
+    /* Text inputs need height but not width constraint */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+        min-height: 48px !important;
+        min-width: auto !important;
+        padding: 12px 16px !important;
+    }
+    
+    /* Navigation items */
+    .fi-sidebar-nav-item {
+        padding: 12px 16px !important;
+        min-height: 48px !important;
+    }
+    
+    /* Dropdown items */
+    .fi-dropdown-list-item {
+        min-height: 48px !important;
+        padding: 12px 16px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    /* Table action buttons */
+    .fi-ta-action {
+        min-width: 48px !important;
+        min-height: 48px !important;
+        padding: 12px !important;
+    }
+    
+    /* Form field icons */
+    .fi-fo-field-wrp-icon {
+        min-width: 48px !important;
+        min-height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+/* ============================
+   5. DROPDOWN & SELECT FIXES
+   ============================ */
+
+/* Dropdown positioning */
+.fi-dropdown {
+    position: relative !important;
+}
+
+.fi-dropdown-panel {
+    position: absolute !important;
+    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    pointer-events: auto !important;
+}
+
+/* Dark mode */
+.dark .fi-dropdown-panel {
+    background-color: rgb(31 41 55) !important;
+    border-color: rgb(55 65 81) !important;
+}
+
+/* Mobile dropdown positioning */
+@media (max-width: 768px) {
+    .fi-dropdown-panel {
+        position: fixed !important;
+        left: 1rem !important;
+        right: 1rem !important;
+        width: auto !important;
+    }
+}
+
+/* Select components */
+.fi-fo-select [role="listbox"] {
+    z-index: var(--z-dropdown) !important;
+    position: absolute !important;
+    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .fi-fo-select [role="listbox"] {
+    background-color: rgb(31 41 55) !important;
+    border-color: rgb(55 65 81) !important;
+}
+
+.fi-fo-select [role="option"] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    padding: 0.5rem 0.75rem !important;
+}
+
+.fi-fo-select [role="option"]:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* ============================
+   6. ICON SIZE CONTROLS
+   ============================ */
+
+/* Global SVG icon limits */
+svg {
+    max-width: 1.5rem !important;
+    max-height: 1.5rem !important;
+}
+
+/* Dashboard widget icons */
+.fi-wi-stats-overview-stat-icon {
+    width: 3rem !important;
+    height: 3rem !important;
+    padding: 0.75rem !important;
+    flex-shrink: 0 !important;
+}
+
+.fi-wi-stats-overview-stat-icon svg {
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+}
+
+/* Table action icons */
+.fi-ta-action svg,
+.fi-ta-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Sidebar navigation icons */
+.fi-sidebar-item-icon {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    flex-shrink: 0 !important;
+}
+
+.fi-sidebar-item-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Form field icons */
+.fi-fo-field-wrp-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Button icons */
+.fi-btn-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* ============================
+   7. MOBILE SIDEBAR
+   ============================ */
+
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: var(--sidebar-width, 16rem) !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+        background: white !important;
+        z-index: var(--z-sidebar) !important;
+        pointer-events: auto !important;
+    }
+    
+    /* Dark mode sidebar */
+    .dark .fi-sidebar {
+        background: rgb(17 24 39) !important;
+    }
+    
+    /* Sidebar open state */
+    body.fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    /* Sidebar overlay */
+    body.fi-sidebar-open::before {
+        content: "" !important;
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        z-index: calc(var(--z-sidebar) - 1) !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+    
+    /* Topbar positioning */
+    .fi-topbar {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: calc(var(--z-sidebar) - 10) !important;
+        background: white !important;
+        pointer-events: auto !important;
+    }
+    
+    .dark .fi-topbar {
+        background: rgb(17 24 39) !important;
+    }
+    
+    /* Main content */
+    .fi-main {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+/* ============================
+   8. FORM CONTROLS
+   ============================ */
+
+/* Radio buttons and checkboxes */
+input[type="radio"],
+input[type="checkbox"],
+.fi-checkbox-input,
+.fi-radio-input {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+}
+
+/* Form field containers */
+.fi-form-field,
+.fi-form-component {
+    pointer-events: auto !important;
+}
+
+/* ============================
+   9. LOADING & ANIMATION FIXES
+   ============================ */
+
+/* Remove stuck loading spinners on login/simple pages */
+.fi-login .fi-loading-indicator,
+.fi-login .animate-spin,
+.fi-simple-page .fi-loading-indicator,
+.fi-simple-page .animate-spin {
+    display: none !important;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .animate-pulse,
+    .animate-bounce {
+        animation: none !important;
+    }
+    
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.1s !important;
+    }
+    
+    /* Keep functional transitions */
+    .fi-dropdown-panel,
+    .fi-modal,
+    [x-transition] {
+        transition-duration: 0.15s !important;
+    }
+}
+
+/* ============================
+   10. OVERLAY & PSEUDO-ELEMENT CLEANUP
+   ============================ */
+
+/* Remove problematic pseudo-elements that block interactions */
+*::before,
+*::after {
+    pointer-events: none !important;
+}
+
+/* Allow necessary pseudo-elements */
+.fi-icon::before,
+.fi-icon::after,
+svg::before,
+svg::after,
+[class*="heroicon"]::before,
+[class*="heroicon"]::after,
+input[type="checkbox"]::before,
+input[type="radio"]::before,
+.fi-modal::before,
+.fi-notification::before {
+    pointer-events: auto !important;
+}
+
+/* Remove blocking overlays */
+body > div[style*="background"]:not(.fi-modal):not(.fi-notification),
+.fixed.inset-0:not(.fi-modal):not(.fi-notification),
+[class*="overlay"]:not(.fi-modal):not(.fi-notification),
+[class*="backdrop"]:not(.fi-modal):not(.fi-notification) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* ============================
+   11. FOCUS STATES (ACCESSIBILITY)
+   ============================ */
+
+/* Visible focus indicators */
+button:focus,
+a:focus,
+[role="button"]:focus,
+input:focus,
+select:focus,
+textarea:focus,
+.fi-dropdown-list-item:focus {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Remove default focus styles that might conflict */
+*:focus {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+}
+
+/* ============================
+   12. TABLE IMPROVEMENTS
+   ============================ */
+
+@media (max-width: 768px) {
+    /* Make tables horizontally scrollable */
+    .fi-ta-table {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Ensure table cells don't break */
+    .fi-ta-cell {
+        white-space: nowrap !important;
+        min-width: 120px !important;
+    }
+}
+
+/* ============================
+   13. UTILITY OVERRIDES
+   ============================ */
+
+/* Force clickability overrides */
+.pointer-events-none {
+    pointer-events: auto !important;
+}
+
+[style*="pointer-events: none"] {
+    pointer-events: auto !important;
+}
+
+/* Ensure visibility */
+.fi-page [style*="display: none"]:not(.fi-dropdown-panel):not([x-show]) {
+    display: block !important;
+}
+
+/* ============================
+   14. PRINT STYLES
+   ============================ */
+
+@media print {
+    /* Hide interactive elements when printing */
+    .fi-sidebar,
+    .fi-topbar,
+    .fi-dropdown-panel,
+    button:not(.print-visible),
+    [role="button"]:not(.print-visible) {
+        display: none !important;
+    }
+    
+    /* Expand main content */
+    .fi-main {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Ensure text is readable */
+    * {
+        color: black !important;
+        background: white !important;
+    }
+}
+
+/* ============================
+   15. HIGH CONTRAST MODE
+   ============================ */
+
+@media (prefers-contrast: high) {
+    /* Enhance borders and outlines */
+    button,
+    input,
+    select,
+    textarea,
+    .fi-btn {
+        border: 2px solid currentColor !important;
+    }
+    
+    /* Enhance focus indicators */
+    *:focus {
+        outline: 3px solid #000 !important;
+        outline-offset: 2px !important;
+    }
+}

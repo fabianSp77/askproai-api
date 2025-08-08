@@ -1,0 +1,57 @@
+/* Sidebar Dropdown Fix - Focused Solution
+ * Problem: Bulk action dropdowns appear behind the sidebar
+ * Solution: Ensure proper z-index stacking without breaking layout
+ */
+
+/* The main issue: Filament sidebar has z-index: 30 from z-index-fix.css */
+/* We need bulk action dropdowns to be higher than 30 */
+
+/* Bulk Actions Container - ensure it creates a proper stacking context */
+.fi-ta-bulk-actions {
+    position: relative !important;
+    z-index: 35 !important; /* Higher than sidebar (30) */
+}
+
+/* Bulk Action Dropdown Panels */
+.fi-ta-bulk-actions .fi-dropdown-panel,
+.fi-ta-bulk-actions .fi-ac-dropdown-panel {
+    z-index: 40 !important; /* Even higher to ensure visibility */
+    position: absolute !important;
+    /* Don't use fixed positioning - it breaks the dropdown placement */
+}
+
+/* Generic dropdown panels in table actions */
+.fi-ta-actions .fi-dropdown-panel {
+    z-index: 40 !important;
+    position: absolute !important;
+}
+
+/* Ensure the parent containers don't clip the dropdowns */
+.fi-ta-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important; /* Allow vertical overflow for dropdowns */
+}
+
+/* The table content wrapper should allow overflow */
+.fi-ta-content {
+    overflow: visible !important;
+}
+
+/* Specific fix for the createRefund dropdown */
+.fi-ac-action[wire\:key*="createRefund"] .fi-dropdown-panel,
+.fi-ac-action[wire\:key*="markAsNonBillable"] .fi-dropdown-panel {
+    z-index: 40 !important;
+    position: absolute !important;
+}
+
+/* Ensure modals stay on top of everything */
+.fi-modal-window {
+    z-index: 100 !important;
+}
+
+/* Debug helper - uncomment to visualize z-index layers */
+/*
+.fi-sidebar { border: 3px solid red !important; }
+.fi-ta-bulk-actions { border: 3px solid blue !important; }
+.fi-dropdown-panel { border: 3px solid green !important; }
+*/

@@ -1,0 +1,134 @@
+// Replace the empty table with a working one
+
+(function() {
+    console.log('Replacing table completely...');
+    
+    setTimeout(async () => {
+        try {
+            // Fetch the data
+            const response = await fetch('/test-calls-data.php');
+            const data = await response.json();
+            
+            if (!data.recent_calls) {
+                console.error('No data received');
+                return;
+            }
+            
+            console.log(`Creating new table with ${data.recent_calls.length} calls`);
+            
+            // Find the table container
+            let tableContainer = document.querySelector('.fi-ta-ctn');
+            if (!tableContainer) {
+                tableContainer = document.querySelector('.fi-ta-table')?.parentElement;
+            }
+            if (!tableContainer) {
+                tableContainer = document.querySelector('main');
+            }
+            
+            if (!tableContainer) {
+                console.error('No container found for table');
+                return;
+            }
+            
+            // Create a complete new table
+            const newTableHTML = `
+                <div style="background: white; border-radius: 8px; shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 20px; margin: 20px 0;">
+                    <div style="background: #10b981; color: white; padding: 10px; margin-bottom: 20px; border-radius: 4px;">
+                        ✓ Anrufe werden angezeigt (${data.recent_calls.length} von ${data.total_calls} total)
+                    </div>
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; color: #111827;">
+                        Anrufe - Company ${data.company_id}
+                    </h2>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                            <thead>
+                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151;">ID</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151;">Datum & Zeit</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151;">Dauer</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151;">Status</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151;">Von</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151;">Nach</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #374151;">Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.recent_calls.map((call, index) => `
+                                    <tr style="border-bottom: 1px solid #e5e7eb; ${index % 2 === 0 ? 'background: #ffffff;' : 'background: #f9fafb;'}">
+                                        <td style="padding: 12px 8px; color: #111827; font-weight: 500;">#${call.id}</td>
+                                        <td style="padding: 12px 8px; color: #111827;">
+                                            ${new Date(call.date).toLocaleDateString('de-DE')} 
+                                            ${new Date(call.date).toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})}
+                                        </td>
+                                        <td style="padding: 12px 8px; color: #111827;">
+                                            ${call.duration > 0 ? 
+                                                `${Math.floor(call.duration / 60)}:${(call.duration % 60).toString().padStart(2, '0')}` : 
+                                                '—'}
+                                        </td>
+                                        <td style="padding: 12px 8px;">
+                                            <span style="
+                                                display: inline-block;
+                                                padding: 4px 8px;
+                                                border-radius: 4px;
+                                                font-size: 12px;
+                                                font-weight: 500;
+                                                ${call.status === 'completed' ? 
+                                                    'background: #d1fae5; color: #065f46;' : 
+                                                    'background: #f3f4f6; color: #6b7280;'}
+                                            ">
+                                                ${call.status === 'completed' ? 'Abgeschlossen' : call.status}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 12px 8px; color: #111827;">${call.from || '—'}</td>
+                                        <td style="padding: 12px 8px; color: #111827;">${call.to || '—'}</td>
+                                        <td style="padding: 12px 8px;">
+                                            <a href="/admin/calls/${call.id}/edit" 
+                                               style="color: #3b82f6; text-decoration: none; font-weight: 500;">
+                                                Anzeigen →
+                                            </a>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 20px; padding: 10px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 4px;">
+                        <strong>Hinweis:</strong> Dies ist eine temporäre Anzeige. Die normale Filament-Tabelle funktioniert derzeit nicht korrekt.
+                        <br>Benutzer: ${data.user} | Company ID: ${data.company_id}
+                    </div>
+                </div>
+            `;
+            
+            // Find existing table or empty container
+            const existingTable = document.querySelector('.fi-ta-table');
+            if (existingTable) {
+                // Replace the existing table
+                existingTable.parentElement.innerHTML = newTableHTML;
+                console.log('✓ Replaced existing table');
+            } else {
+                // Insert at the beginning of the container
+                tableContainer.insertAdjacentHTML('afterbegin', newTableHTML);
+                console.log('✓ Inserted new table');
+            }
+            
+            // Also update the page title to confirm it's working
+            const pageTitle = document.querySelector('h1');
+            if (pageTitle && !pageTitle.textContent.includes('✓')) {
+                pageTitle.textContent = '✓ Anrufe (Tabelle ersetzt)';
+            }
+            
+        } catch (error) {
+            console.error('Failed to replace table:', error);
+            
+            // Show error message
+            const main = document.querySelector('main');
+            if (main) {
+                main.insertAdjacentHTML('afterbegin', `
+                    <div style="background: #fee2e2; border: 1px solid #ef4444; padding: 15px; margin: 20px; border-radius: 4px;">
+                        <strong>Fehler:</strong> Konnte Tabelle nicht laden. ${error.message}
+                    </div>
+                `);
+            }
+        }
+    }, 1000);
+})();

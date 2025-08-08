@@ -1,0 +1,105 @@
+/* ================================================================
+   EMERGENCY CLICKABLE FIX - KRITISCH
+   Macht ALLES auf der Seite wieder klickbar
+   ================================================================ */
+
+/* 1. NUCLEAR OPTION - Alle pointer-events zurücksetzen */
+* {
+    pointer-events: auto !important;
+    cursor: auto !important;
+}
+
+/* 2. Spezifische Elemente die klickbar sein müssen */
+a, button, input, select, textarea, 
+[role="button"], [role="link"],
+[onclick], [href], 
+.fi-link, .fi-btn,
+.fi-sidebar-item a,
+.fi-sidebar-item button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* 3. Form Elements */
+input, select, textarea, label {
+    pointer-events: auto !important;
+    cursor: text !important;
+}
+
+select, button {
+    cursor: pointer !important;
+}
+
+/* 4. Entferne ALLE blocking overlays */
+*::before,
+*::after {
+    pointer-events: none !important;
+}
+
+/* 5. Aber erlaube spezifische overlays die klickbar sein sollen */
+.fi-modal::before,
+.fi-modal::after,
+.fi-dropdown-panel::before,
+.fi-dropdown-panel::after {
+    pointer-events: auto !important;
+}
+
+/* 6. Z-Index Reset für problematische Elemente */
+.fi-main,
+.fi-main-ctn,
+.fi-page,
+.fi-section,
+.fi-widget {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* 7. Sidebar muss über dem Content sein */
+.fi-sidebar {
+    z-index: 40 !important;
+    pointer-events: auto !important;
+}
+
+.fi-sidebar * {
+    pointer-events: auto !important;
+}
+
+/* 8. Entferne transform die Probleme verursachen könnten */
+body, .fi-body, .fi-main, .fi-sidebar {
+    transform: none !important;
+}
+
+/* 9. Mobile Overlay klickbar zum Schließen */
+@media (max-width: 1024px) {
+    .fi-sidebar-open::before {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+}
+
+/* 10. Debug - Zeige wenn etwas nicht klickbar ist */
+[style*="pointer-events: none"] {
+    outline: 3px solid red !important;
+}
+
+/* 11. Wichtige interaktive Elemente */
+.fi-ta-table td a,
+.fi-ta-table td button,
+.fi-ac-btn,
+.fi-ac-link,
+.fi-dropdown-trigger {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* 12. Entferne alle position: fixed die Probleme machen */
+.fi-main > * {
+    position: relative !important;
+}
+
+/* 13. FORCE - Überschreibe inline styles */
+[style*="pointer-events"] {
+    pointer-events: auto !important;
+}

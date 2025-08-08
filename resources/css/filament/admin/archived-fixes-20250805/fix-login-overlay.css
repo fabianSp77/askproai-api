@@ -1,0 +1,83 @@
+/* ================================================================
+   FIX LOGIN PAGE BLACK OVERLAY
+   Fixes mouse clicks being blocked on login page
+   ================================================================ */
+
+/* Remove ALL overlays on login page */
+.fi-login-page::before,
+.fi-login-page::after,
+.fi-simple-page::before,
+.fi-simple-page::after,
+body.fi-body::before,
+body.fi-body::after {
+    display: none !important;
+}
+
+/* Ensure login form is clickable */
+.fi-login-page {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.fi-simple-page-card {
+    position: relative !important;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+}
+
+/* Make all form elements clickable */
+.fi-login-page input,
+.fi-login-page button,
+.fi-login-page a,
+.fi-login-page label,
+.fi-login-page select,
+.fi-login-page textarea {
+    position: relative !important;
+    z-index: 20 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Specifically target login inputs */
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    cursor: text !important;
+}
+
+/* Remove any absolute positioned overlays */
+.fi-body > div[style*="position: absolute"],
+.fi-body > div[style*="position: fixed"] {
+    pointer-events: none !important;
+}
+
+/* Exception for actual modals/dropdowns */
+.fi-modal,
+.fi-dropdown {
+    pointer-events: auto !important;
+}
+
+/* Remove loading spinners that might block */
+.fi-loading-indicator {
+    pointer-events: none !important;
+}
+
+/* Fix for any invisible blocking elements */
+* {
+    max-z-index: 9999 !important;
+}
+
+/* Ensure the main login container is on top */
+.fi-simple-layout {
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+/* Remove any backdrop filters that might interfere */
+.fi-login-page {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* REMOVED: This was blocking all clicks!
+   Only apply pointer-events: none to specific blocking elements, not the entire body */

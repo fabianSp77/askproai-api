@@ -1,0 +1,284 @@
+/* ================================================================
+   CLEAN LAYOUT FOUNDATION - Saubere Basis für AskProAI Admin
+   Ersetzt das CSS-Chaos durch klare Struktur
+   ================================================================ */
+
+/* 1. CSS Custom Properties - Design System */
+:root {
+    /* Spacing Scale */
+    --space-xs: 0.25rem;   /* 4px */
+    --space-sm: 0.5rem;    /* 8px */
+    --space-md: 1rem;      /* 16px */
+    --space-lg: 1.5rem;    /* 24px */
+    --space-xl: 2rem;      /* 32px */
+    --space-2xl: 3rem;     /* 48px */
+    
+    /* Container Settings */
+    --container-padding: var(--space-lg);
+    --container-max-width: 100%;
+    
+    /* Card & Widget Settings */
+    --card-padding: var(--space-md);
+    --card-gap: var(--space-md);
+    --card-border-radius: 0.5rem;
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    
+    /* Sidebar Settings */
+    --sidebar-width: 16rem;
+    --sidebar-width-mobile: 20rem;
+    
+    /* Z-Index System */
+    --z-base: 1;
+    --z-sticky: 100;
+    --z-dropdown: 1000;
+    --z-sidebar: 1020;
+    --z-overlay: 1030;
+    --z-modal: 1040;
+    --z-notification: 1050;
+    --z-tooltip: 1060;
+    
+    /* Typography */
+    --font-size-xs: 0.75rem;   /* 12px */
+    --font-size-sm: 0.875rem;  /* 14px */
+    --font-size-base: 1rem;    /* 16px */
+    --font-size-lg: 1.125rem;  /* 18px */
+    --font-size-xl: 1.25rem;   /* 20px */
+    --font-size-2xl: 1.5rem;   /* 24px */
+    --font-size-3xl: 1.875rem; /* 30px */
+    
+    /* Line Heights */
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.75;
+}
+
+/* 2. Reset problematischer Overrides */
+* {
+    /* Entferne aggressive pointer-events */
+    pointer-events: unset;
+}
+
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    overflow-x: hidden;
+}
+
+/* 3. Hauptlayout-Struktur */
+.fi-body {
+    min-height: 100vh;
+    display: flex;
+    position: relative;
+}
+
+/* 4. Sidebar Layout */
+.fi-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    z-index: var(--z-sidebar);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Sidebar Navigation */
+.fi-sidebar-nav {
+    padding: var(--space-md) 0;
+}
+
+.fi-sidebar-nav a,
+.fi-sidebar-item {
+    display: block;
+    padding: var(--space-sm) var(--space-md);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+/* Fix doppelte Pfeile */
+.fi-sidebar-nav svg + svg {
+    display: none;
+}
+
+/* 5. Main Content Area */
+.fi-main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    min-width: 0; /* Wichtig für Flexbox */
+}
+
+.fi-main-ctn {
+    padding: var(--container-padding);
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+}
+
+/* 6. Cards & Widgets - Grundstruktur */
+.fi-section,
+.fi-card,
+.fi-widget,
+.fi-wi-stats-overview-stat {
+    background: white;
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
+    padding: var(--card-padding);
+    margin-bottom: var(--card-gap);
+    overflow: hidden; /* Verhindert Overflow */
+}
+
+/* 7. Stats Widget Spezifisch */
+.fi-wi-stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--card-gap);
+}
+
+.fi-wi-stats-overview-stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    line-height: var(--line-height-tight);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fi-wi-stats-overview-stat-label {
+    font-size: var(--font-size-sm);
+    color: #6b7280;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fi-wi-stats-overview-stat-description {
+    font-size: var(--font-size-xs);
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+/* 8. Tabellen */
+.fi-ta-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.fi-ta-table th,
+.fi-ta-table td {
+    padding: var(--space-sm) var(--space-md);
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Responsive Tabellen-Wrapper */
+.fi-ta-ctn {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 9. Forms & Inputs */
+.fi-input,
+.fi-select,
+.fi-textarea {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-base);
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    min-height: 2.5rem;
+}
+
+/* 10. Buttons */
+.fi-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    border-radius: 0.375rem;
+    min-height: 2.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* 11. Mobile Responsive */
+@media (max-width: 1024px) {
+    .fi-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        width: var(--sidebar-width-mobile);
+    }
+    
+    .fi-sidebar-open .fi-sidebar {
+        transform: translateX(0);
+    }
+    
+    /* Overlay für Mobile */
+    .fi-sidebar-open::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: calc(var(--z-sidebar) - 1);
+        pointer-events: auto; /* Klickbar zum Schließen */
+    }
+    
+    .fi-main {
+        margin-left: 0;
+    }
+}
+
+/* 12. Utility Classes */
+.overflow-hidden {
+    overflow: hidden !important;
+}
+
+.text-ellipsis {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.break-words {
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+}
+
+/* 13. Entferne Debug-Indikatoren */
+body::before,
+body::after,
+[data-debug] {
+    display: none !important;
+}
+
+/* 14. Print Styles */
+@media print {
+    .fi-sidebar,
+    .fi-header,
+    .no-print {
+        display: none !important;
+    }
+    
+    .fi-main {
+        margin-left: 0 !important;
+    }
+}

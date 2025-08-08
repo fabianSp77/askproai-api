@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Mobile Sidebar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .test-button { background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        iframe { width: 100%; height: 600px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Mobile Sidebar Debug</h1>
+    
+    <div class="debug-info">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Open this page on mobile device or use browser mobile view (F12 -> Toggle device toolbar)</li>
+            <li>Login to admin panel in the iframe below</li>
+            <li>Click the burger menu</li>
+            <li>Check if text appears next to icons</li>
+        </ol>
+    </div>
+    
+    <iframe src="/admin/login" id="adminFrame"></iframe>
+    
+    <div class="debug-info">
+        <h3>Debug Actions:</h3>
+        <button class="test-button" onclick="checkSidebarState()">Check Sidebar State</button>
+        <button class="test-button" onclick="forceSidebarOpen()">Force Sidebar Open</button>
+        <button class="test-button" onclick="checkAlpineStore()">Check Alpine Store</button>
+    </div>
+    
+    <div id="results" class="debug-info" style="display:none;">
+        <h3>Results:</h3>
+        <pre id="resultsContent"></pre>
+    </div>
+    
+    <script>
+        function checkSidebarState() {
+            const frame = document.getElementById('adminFrame');
+            const frameDoc = frame.contentDocument || frame.contentWindow.document;
+            
+            const results = {
+                bodyClasses: frameDoc.body.className,
+                hasSidebarOpen: frameDoc.body.classList.contains('fi-sidebar-open'),
+                sidebarElement: !!frameDoc.querySelector('.fi-sidebar'),
+                sidebarLabels: frameDoc.querySelectorAll('.fi-sidebar-item-label').length,
+                visibleLabels: Array.from(frameDoc.querySelectorAll('.fi-sidebar-item-label')).filter(el => {
+                    const style = frameDoc.defaultView.getComputedStyle(el);
+                    return style.display !== 'none' && style.opacity !== '0';
+                }).length
+            };
+            
+            showResults(results);
+        }
+        
+        function forceSidebarOpen() {
+            const frame = document.getElementById('adminFrame');
+            const frameDoc = frame.contentDocument || frame.contentWindow.document;
+            
+            frameDoc.body.classList.add('fi-sidebar-open');
+            
+            // Force all labels to be visible
+            frameDoc.querySelectorAll('.fi-sidebar-item-label').forEach(label => {
+                label.style.display = 'block';
+                label.style.opacity = '1';
+            });
+            
+            setTimeout(() => checkSidebarState(), 100);
+        }
+        
+        function checkAlpineStore() {
+            const frame = document.getElementById('adminFrame');
+            const frameWin = frame.contentWindow;
+            
+            const results = {
+                hasAlpine: typeof frameWin.Alpine !== 'undefined',
+                hasSidebarStore: false,
+                sidebarIsOpen: null
+            };
+            
+            if (results.hasAlpine && frameWin.Alpine.store) {
+                try {
+                    const sidebar = frameWin.Alpine.store('sidebar');
+                    results.hasSidebarStore = true;
+                    results.sidebarIsOpen = sidebar.isOpen;
+                } catch (e) {
+                    results.error = e.message;
+                }
+            }
+            
+            showResults(results);
+        }
+        
+        function showResults(data) {
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('resultsContent').textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

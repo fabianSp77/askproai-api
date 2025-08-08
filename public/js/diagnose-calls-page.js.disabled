@@ -1,0 +1,114 @@
+// Diagnostic script for Call page issues
+
+(function() {
+    console.log('=== Call Page Diagnostics ===');
+    
+    // Check current URL
+    console.log('Current URL:', window.location.href);
+    
+    // Check for redirects
+    if (window.location.href.includes('/login')) {
+        console.warn('⚠️ Redirected to login page!');
+    }
+    
+    // Check for Livewire
+    if (typeof Livewire !== 'undefined') {
+        console.log('✓ Livewire loaded');
+        try {
+            if (Livewire.components && Livewire.components.componentsById) {
+                console.log('Livewire components:', Object.keys(Livewire.components.componentsById).length);
+            } else if (Livewire.all) {
+                console.log('Livewire components:', Livewire.all().length);
+            }
+        } catch(e) {
+            console.log('Livewire structure different than expected');
+        }
+    } else {
+        console.error('✗ Livewire not loaded');
+    }
+    
+    // Check for Alpine
+    if (typeof Alpine !== 'undefined') {
+        console.log('✓ Alpine loaded');
+    } else {
+        console.error('✗ Alpine not loaded');
+    }
+    
+    // Check for Filament tables
+    const tables = document.querySelectorAll('.fi-ta-table');
+    console.log('Filament tables found:', tables.length);
+    
+    // Check for any table elements
+    const allTables = document.querySelectorAll('table');
+    console.log('All table elements:', allTables.length);
+    
+    // Check for table rows with data
+    const tableRows = document.querySelectorAll('tbody tr');
+    console.log('Table rows found:', tableRows.length);
+    if (tableRows.length > 0) {
+        console.log('First row content:', tableRows[0].textContent.substring(0, 100));
+    }
+    
+    // Check main content area
+    const mainContent = document.querySelector('main, .fi-main, [role="main"]');
+    if (mainContent) {
+        const text = mainContent.textContent.trim();
+        if (text.length < 100) {
+            console.warn('⚠️ Main content seems empty or very short:', text.length, 'chars');
+        } else {
+            console.log('Main content length:', text.length, 'chars');
+        }
+    }
+    
+    // Check for "Anrufe" or "Calls" text
+    const bodyText = document.body.textContent;
+    if (bodyText.includes('Anrufe') || bodyText.includes('Calls')) {
+        console.log('✓ Page contains "Anrufe/Calls" text');
+    } else {
+        console.warn('✗ No "Anrufe/Calls" text found');
+    }
+    
+    // Check for error messages
+    const errors = document.querySelectorAll('.fi-notification, .alert-danger, [role="alert"]');
+    if (errors.length > 0) {
+        console.warn('Error messages found:', errors.length);
+        errors.forEach(err => console.log('Error:', err.textContent));
+    }
+    
+    // Check page title
+    console.log('Page title:', document.title);
+    
+    // Check for login form
+    const loginForm = document.querySelector('form[action*="login"]');
+    if (loginForm) {
+        console.error('✗ Login form detected - not authenticated!');
+    }
+    
+    // Check cookies
+    console.log('Cookies:', document.cookie);
+    
+    // Check for CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (csrfToken) {
+        console.log('CSRF Token present:', csrfToken.content.substring(0, 10) + '...');
+    } else {
+        console.error('✗ No CSRF token found');
+    }
+    
+    // Check session storage
+    console.log('Session storage items:', Object.keys(sessionStorage).length);
+    console.log('Local storage items:', Object.keys(localStorage).length);
+    
+    // Check for service workers (should be none)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+            console.log('Service Workers registered:', regs.length);
+            if (regs.length > 0) {
+                console.error('⚠️ Service Workers still active! Unregistering...');
+                regs.forEach(reg => reg.unregister());
+            }
+        });
+    }
+    
+    console.log('=== End Diagnostics ===');
+})();

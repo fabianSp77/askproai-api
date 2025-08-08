@@ -1,0 +1,51 @@
+/* Emergency CSS to force table text visibility */
+
+/* Force all table text to be visible */
+.fi-ta-table * {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Ensure text has proper color */
+.fi-ta-table td,
+.fi-ta-table th,
+.fi-ta-text,
+.fi-ta-text-item,
+.fi-ta-col-wrp {
+    color: #111827 !important;
+    visibility: visible !important;
+    display: revert !important;
+    opacity: 1 !important;
+}
+
+/* Fix potential white text on white background */
+.fi-ta-table td span,
+.fi-ta-table td div,
+.fi-ta-table td p {
+    color: inherit !important;
+    visibility: visible !important;
+}
+
+/* Remove any text-indent that might hide content */
+.fi-ta-table * {
+    text-indent: 0 !important;
+    text-overflow: initial !important;
+    white-space: normal !important;
+}
+
+/* Fix potential z-index issues */
+.fi-ta-table tbody tr td {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Ensure cells have minimum height */
+.fi-ta-table td {
+    min-height: 40px !important;
+    padding: 8px !important;
+}
+
+/* Debug: Add border to see cell boundaries */
+.fi-ta-table td {
+    border: 1px solid #e5e7eb !important;
+}

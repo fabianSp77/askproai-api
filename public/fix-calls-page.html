@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Fix Calls Page - Instructions</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .links {
+            background: #eff6ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .links a {
+            display: block;
+            margin: 10px 0;
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Fix Calls Page - Complete Instructions</h1>
+    
+    <div class="step">
+        <h3>Step 1: Clear Browser Data</h3>
+        <p>Öffnen Sie die Browser-Entwicklertools (F12) und:</p>
+        <ol>
+            <li>Gehen Sie zum Tab "Application" (Chrome) oder "Storage" (Firefox)</li>
+            <li>Clear Site Data / Website-Daten löschen</li>
+            <li>Oder: Strg+Shift+Entf → Alle Zeiten → Cookies und Cache löschen</li>
+        </ol>
+    </div>
+    
+    <div class="step">
+        <h3>Step 2: Check Service Workers</h3>
+        <button onclick="checkServiceWorkers()">Check & Remove Service Workers</button>
+        <div id="sw-status"></div>
+    </div>
+    
+    <div class="step">
+        <h3>Step 3: Test Pages</h3>
+        <div class="links">
+            <h4>Test these in order:</h4>
+            <a href="/test-browser-auth.php" target="_blank">1. Test Authentication Status</a>
+            <a href="/direct-calls.php" target="_blank">2. Direct Calls Page (Bypass Filament)</a>
+            <a href="/admin/login" target="_blank">3. Login to Admin Panel</a>
+            <a href="/admin/calls" target="_blank">4. Filament Calls Page (Main)</a>
+        </div>
+    </div>
+    
+    <div class="step">
+        <h3>Step 4: Browser Console Check</h3>
+        <p>When on /admin/calls, open browser console (F12) and check for:</p>
+        <ul>
+            <li>Red errors about authentication</li>
+            <li>Messages from "Call Page Diagnostics"</li>
+            <li>Any 302 redirects in Network tab</li>
+        </ul>
+    </div>
+    
+    <div class="step">
+        <h3>Alternative Solutions:</h3>
+        <ol>
+            <li><strong>Incognito/Private Mode:</strong> Try opening in a new incognito window</li>
+            <li><strong>Different Browser:</strong> Test in a different browser</li>
+            <li><strong>Hard Refresh:</strong> Strg+F5 on the calls page</li>
+        </ol>
+    </div>
+    
+    <script>
+    async function checkServiceWorkers() {
+        const statusDiv = document.getElementById('sw-status');
+        statusDiv.innerHTML = '<p>Checking...</p>';
+        
+        if ('serviceWorker' in navigator) {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                
+                if (registrations.length === 0) {
+                    statusDiv.innerHTML = '<p class="success">✓ No Service Workers found - Good!</p>';
+                } else {
+                    statusDiv.innerHTML = `<p class="error">Found ${registrations.length} Service Worker(s) - Removing...</p>`;
+                    
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                    }
+                    
+                    // Clear caches
+                    const cacheNames = await caches.keys();
+                    for (let cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                    }
+                    
+                    statusDiv.innerHTML += '<p class="success">✓ All Service Workers removed!</p>';
+                    statusDiv.innerHTML += '<p>Please refresh the page now.</p>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        } else {
+            statusDiv.innerHTML = '<p>Service Workers not supported</p>';
+        }
+    }
+    </script>
+</body>
+</html>

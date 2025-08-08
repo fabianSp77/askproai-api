@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>State-of-the-Art Navigation Test - Issue #507</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .test-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-card h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .console {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 4px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .test-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 State-of-the-Art Navigation Test</h1>
+            <p>Testing login functionality and all navigation links - Issue #507</p>
+        </div>
+
+        <div class="test-grid">
+            <!-- Login Page Test -->
+            <div class="test-card">
+                <h3>📝 Login Page Test</h3>
+                <iframe id="loginFrame" src="/admin/login"></iframe>
+                <div style="margin-top: 10px;">
+                    <button onclick="testLogin()">Test Login Form</button>
+                    <button onclick="checkLoginInputs()">Check All Inputs</button>
+                    <button onclick="fillLoginForm()">Auto-Fill Form</button>
+                </div>
+                <div id="loginStatus" style="margin-top: 10px;"></div>
+            </div>
+
+            <!-- Admin Panel Test -->
+            <div class="test-card">
+                <h3>🏠 Admin Panel Test</h3>
+                <iframe id="adminFrame" src="/admin"></iframe>
+                <div style="margin-top: 10px;">
+                    <button onclick="testNavigation()">Test Navigation Links</button>
+                    <button onclick="checkDebugIndicators()">Check Debug Indicators</button>
+                </div>
+                <div id="adminStatus" style="margin-top: 10px;"></div>
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="test-card" style="margin-top: 20px;">
+            <h3>✅ Test Results</h3>
+            <div id="testResults">
+                <div class="test-item">
+                    <strong>Login Form Visible:</strong> <span id="result1">⏳ Pending</span>
+                </div>
+                <div class="test-item">
+                    <strong>Email Field Clickable:</strong> <span id="result2">⏳ Pending</span>
+                </div>
+                <div class="test-item">
+                    <strong>Password Field Visible:</strong> <span id="result3">⏳ Pending</span>
+                </div>
+                <div class="test-item">
+                    <strong>Password Field Clickable:</strong> <span id="result4">⏳ Pending</span>
+                </div>
+                <div class="test-item">
+                    <strong>Submit Button Clickable:</strong> <span id="result5">⏳ Pending</span>
+                </div>
+                <div class="test-item">
+                    <strong>Navigation Links Clickable:</strong> <span id="result6">⏳ Pending</span>
+                </div>
+                <div class="test-item">
+                    <strong>JavaScript Fix Active:</strong> <span id="result7">⏳ Pending</span>
+                </div>
+                <div class="test-item">
+                    <strong>CSS Fix Active:</strong> <span id="result8">⏳ Pending</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console Output -->
+        <div class="test-card" style="margin-top: 20px;">
+            <h3>💻 Console Output</h3>
+            <div class="console" id="console"></div>
+            <button onclick="clearConsole()">Clear Console</button>
+            <button onclick="runAllTests()">🚀 Run All Tests</button>
+        </div>
+    </div>
+
+    <script>
+        const loginFrame = document.getElementById('loginFrame');
+        const adminFrame = document.getElementById('adminFrame');
+        const consoleDiv = document.getElementById('console');
+        let logs = [];
+
+        function log(msg, type = 'INFO') {
+            const time = new Date().toLocaleTimeString();
+            const entry = `[${time}] [${type}] ${msg}`;
+            logs.push(entry);
+            consoleDiv.innerHTML = logs.join('\n');
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function clearConsole() {
+            logs = [];
+            consoleDiv.innerHTML = '';
+        }
+
+        function updateResult(id, success, message) {
+            const element = document.getElementById('result' + id);
+            if (success) {
+                element.innerHTML = `<span class="status status-success">✅ ${message || 'Passed'}</span>`;
+            } else {
+                element.innerHTML = `<span class="status status-error">❌ ${message || 'Failed'}</span>`;
+            }
+        }
+
+        function testLogin() {
+            try {
+                const doc = loginFrame.contentDocument;
+                
+                // Check if form exists
+                const form = doc.querySelector('form[wire\\:submit="authenticate"]');
+                if (form) {
+                    log('Login form found', 'SUCCESS');
+                    updateResult(1, true, 'Form visible');
+                } else {
+                    log('Login form NOT found', 'ERROR');
+                    updateResult(1, false, 'Form not found');
+                }
+
+                // Check email field
+                const emailField = doc.querySelector('input[wire\\:model="data.email"], input[type="email"]');
+                if (emailField) {
+                    const style = loginFrame.contentWindow.getComputedStyle(emailField);
+                    const clickable = style.pointerEvents !== 'none';
+                    log(`Email field: ${clickable ? 'clickable' : 'NOT clickable'}`, clickable ? 'SUCCESS' : 'ERROR');
+                    updateResult(2, clickable, clickable ? 'Clickable' : 'Not clickable');
+                }
+
+                // Check password field
+                const passwordField = doc.querySelector('input[wire\\:model="data.password"], input[type="password"]');
+                if (passwordField) {
+                    const style = loginFrame.contentWindow.getComputedStyle(passwordField);
+                    const visible = style.display !== 'none' && style.visibility !== 'hidden';
+                    const clickable = style.pointerEvents !== 'none';
+                    
+                    log(`Password field: ${visible ? 'visible' : 'NOT visible'}`, visible ? 'SUCCESS' : 'ERROR');
+                    log(`Password field: ${clickable ? 'clickable' : 'NOT clickable'}`, clickable ? 'SUCCESS' : 'ERROR');
+                    
+                    updateResult(3, visible, visible ? 'Visible' : 'Not visible');
+                    updateResult(4, clickable, clickable ? 'Clickable' : 'Not clickable');
+                } else {
+                    log('Password field NOT found!', 'ERROR');
+                    updateResult(3, false, 'Not found');
+                    updateResult(4, false, 'Not found');
+                }
+
+                // Check submit button
+                const submitBtn = doc.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    const style = loginFrame.contentWindow.getComputedStyle(submitBtn);
+                    const clickable = style.pointerEvents !== 'none' && style.cursor === 'pointer';
+                    log(`Submit button: ${clickable ? 'clickable' : 'NOT clickable'}`, clickable ? 'SUCCESS' : 'ERROR');
+                    updateResult(5, clickable, clickable ? 'Clickable' : 'Not clickable');
+                }
+
+                document.getElementById('loginStatus').innerHTML = '<span class="status status-success">Login test completed</span>';
+            } catch (e) {
+                log('Error testing login: ' + e.message, 'ERROR');
+                document.getElementById('loginStatus').innerHTML = '<span class="status status-error">Error: ' + e.message + '</span>';
+            }
+        }
+
+        function checkLoginInputs() {
+            try {
+                const doc = loginFrame.contentDocument;
+                const inputs = doc.querySelectorAll('input:not([type="hidden"])');
+                
+                log(`Found ${inputs.length} visible inputs`, 'INFO');
+                
+                inputs.forEach((input, i) => {
+                    const style = loginFrame.contentWindow.getComputedStyle(input);
+                    const type = input.type || 'text';
+                    const model = input.getAttribute('wire:model') || 'none';
+                    const clickable = style.pointerEvents !== 'none';
+                    
+                    log(`Input ${i+1}: type=${type}, model=${model}, clickable=${clickable}`, clickable ? 'SUCCESS' : 'WARNING');
+                });
+            } catch (e) {
+                log('Error checking inputs: ' + e.message, 'ERROR');
+            }
+        }
+
+        function fillLoginForm() {
+            try {
+                const doc = loginFrame.contentDocument;
+                
+                // Fill email
+                const emailField = doc.querySelector('input[wire\\:model="data.email"], input[type="email"]');
+                if (emailField) {
+                    emailField.value = 'admin@example.com';
+                    emailField.dispatchEvent(new Event('input', { bubbles: true }));
+                    log('Email field filled', 'SUCCESS');
+                }
+                
+                // Fill password
+                const passwordField = doc.querySelector('input[wire\\:model="data.password"], input[type="password"]');
+                if (passwordField) {
+                    passwordField.value = 'password123';
+                    passwordField.dispatchEvent(new Event('input', { bubbles: true }));
+                    log('Password field filled', 'SUCCESS');
+                }
+                
+                // Check remember box
+                const rememberBox = doc.querySelector('input[wire\\:model="data.remember"]');
+                if (rememberBox) {
+                    rememberBox.checked = true;
+                    rememberBox.dispatchEvent(new Event('change', { bubbles: true }));
+                    log('Remember checkbox checked', 'SUCCESS');
+                }
+            } catch (e) {
+                log('Error filling form: ' + e.message, 'ERROR');
+            }
+        }
+
+        function testNavigation() {
+            try {
+                const doc = adminFrame.contentDocument;
+                const navLinks = doc.querySelectorAll('.fi-sidebar a, .fi-sidebar-nav-item a');
+                
+                log(`Found ${navLinks.length} navigation links`, 'INFO');
+                
+                let clickableCount = 0;
+                navLinks.forEach((link, i) => {
+                    const style = adminFrame.contentWindow.getComputedStyle(link);
+                    const clickable = style.pointerEvents !== 'none';
+                    if (clickable) clickableCount++;
+                    
+                    if (i < 5) { // Log first 5
+                        log(`Nav link ${i+1}: "${link.textContent.trim()}" - ${clickable ? 'clickable' : 'NOT clickable'}`, 
+                            clickable ? 'SUCCESS' : 'ERROR');
+                    }
+                });
+                
+                const allClickable = clickableCount === navLinks.length;
+                updateResult(6, allClickable, `${clickableCount}/${navLinks.length} clickable`);
+                
+                document.getElementById('adminStatus').innerHTML = 
+                    `<span class="status ${allClickable ? 'status-success' : 'status-warning'}">
+                        ${clickableCount}/${navLinks.length} links clickable
+                    </span>`;
+            } catch (e) {
+                log('Error testing navigation: ' + e.message, 'ERROR');
+            }
+        }
+
+        function checkDebugIndicators() {
+            try {
+                // Check login page
+                const loginDoc = loginFrame.contentDocument;
+                const loginDebug = loginDoc.querySelector('.fi-simple-page::before') || 
+                                  loginDoc.body.textContent.includes('Login Fix Active');
+                
+                // Check admin page
+                const adminDoc = adminFrame.contentDocument;
+                const jsDebug = adminDoc.getElementById('navigation-fix-debug') || 
+                               adminDoc.getElementById('admin-fix-debug');
+                const cssDebug = adminDoc.body.textContent.includes('NUCLEAR FIX ACTIVE');
+                
+                updateResult(7, !!jsDebug, jsDebug ? 'Debug panel found' : 'Debug panel not found');
+                updateResult(8, cssDebug || loginDebug, 'CSS indicators found');
+                
+                log(`JavaScript debug panel: ${jsDebug ? 'FOUND' : 'NOT FOUND'}`, jsDebug ? 'SUCCESS' : 'WARNING');
+                log(`CSS debug indicators: ${cssDebug || loginDebug ? 'FOUND' : 'NOT FOUND'}`, 
+                    (cssDebug || loginDebug) ? 'SUCCESS' : 'WARNING');
+            } catch (e) {
+                log('Error checking debug indicators: ' + e.message, 'ERROR');
+            }
+        }
+
+        function runAllTests() {
+            log('Starting comprehensive test suite...', 'INFO');
+            
+            // Clear previous results
+            for (let i = 1; i <= 8; i++) {
+                document.getElementById('result' + i).innerHTML = '⏳ Testing...';
+            }
+            
+            setTimeout(() => {
+                testLogin();
+                setTimeout(() => {
+                    testNavigation();
+                    setTimeout(() => {
+                        checkDebugIndicators();
+                        log('All tests completed!', 'SUCCESS');
+                    }, 500);
+                }, 500);
+            }, 1000);
+        }
+
+        // Auto-run tests when frames load
+        loginFrame.onload = () => {
+            log('Login page loaded', 'INFO');
+            setTimeout(testLogin, 1000);
+        };
+        
+        adminFrame.onload = () => {
+            log('Admin panel loaded', 'INFO');
+            setTimeout(() => {
+                testNavigation();
+                checkDebugIndicators();
+            }, 1000);
+        };
+
+        log('Test page initialized. Waiting for iframes to load...', 'INFO');
+    </script>
+</body>
+</html>

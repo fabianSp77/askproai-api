@@ -1,0 +1,381 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "AskProAI MCP vs Webhook Comparison",
+    "tags": ["askproai", "mcp", "webhook", "migration"],
+    "style": "dark",
+    "timezone": "browser",
+    "editable": true,
+    "graphTooltip": 0,
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    },
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Migration Status",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "askproai_mcp_rollout_percentage",
+            "refId": "A",
+            "legendFormat": "MCP Rollout %"
+          },
+          {
+            "expr": "askproai_mcp_migration_mode",
+            "refId": "B",
+            "legendFormat": "Migration Active"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 1},
+                {"color": "green", "value": 50}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Request Volume Comparison",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(askproai_mcp_requests_total[5m])",
+            "refId": "A",
+            "legendFormat": "MCP Requests/sec"
+          },
+          {
+            "expr": "rate(askproai_webhook_requests_total[5m])",
+            "refId": "B",
+            "legendFormat": "Webhook Requests/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests per Second",
+            "min": 0
+          },
+          {"show": false}
+        ],
+        "legend": {"show": true, "values": false, "min": false, "max": false, "current": false, "total": false, "avg": false}
+      },
+      {
+        "id": 3,
+        "title": "Response Time Comparison",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(askproai_mcp_request_duration_seconds_bucket[5m]))",
+            "refId": "A",
+            "legendFormat": "MCP p95 Response Time"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(askproai_webhook_request_duration_seconds_bucket[5m]))",
+            "refId": "B",
+            "legendFormat": "Webhook p95 Response Time"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(askproai_mcp_request_duration_seconds_bucket[5m]))",
+            "refId": "C",
+            "legendFormat": "MCP p50 Response Time"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(askproai_webhook_request_duration_seconds_bucket[5m]))",
+            "refId": "D",
+            "legendFormat": "Webhook p50 Response Time"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Response Time (seconds)",
+            "min": 0
+          },
+          {"show": false}
+        ],
+        "thresholds": [
+          {
+            "value": 0.5,
+            "colorMode": "critical",
+            "op": "gt",
+            "fill": true,
+            "line": true
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Error Rate Comparison",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(askproai_mcp_requests_total{status=~\"5..\"}[5m]) / rate(askproai_mcp_requests_total[5m])",
+            "refId": "A",
+            "legendFormat": "MCP Error Rate"
+          },
+          {
+            "expr": "rate(askproai_webhook_requests_total{status=~\"5..\"}[5m]) / rate(askproai_webhook_requests_total[5m])",
+            "refId": "B",
+            "legendFormat": "Webhook Error Rate"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Error Rate",
+            "min": 0,
+            "max": 1
+          },
+          {"show": false}
+        ],
+        "thresholds": [
+          {
+            "value": 0.05,
+            "colorMode": "critical",
+            "op": "gt"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "MCP Tool Execution Success Rate",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "(rate(askproai_mcp_tool_executions_total[5m]) - rate(askproai_mcp_tool_failures_total[5m])) / rate(askproai_mcp_tool_executions_total[5m]) * 100",
+            "refId": "A",
+            "legendFormat": "Tool Success Rate"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 90},
+                {"color": "green", "value": 95}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Circuit Breaker Status",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 16},
+        "targets": [
+          {
+            "expr": "askproai_mcp_circuit_breaker_state",
+            "refId": "A",
+            "legendFormat": "{{service_name}} - {{state}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 0.5},
+                {"color": "red", "value": 1}
+              ]
+            },
+            "mappings": [
+              {"options": {"0": {"text": "CLOSED", "color": "green"}}},
+              {"options": {"0.5": {"text": "HALF_OPEN", "color": "yellow"}}},
+              {"options": {"1": {"text": "OPEN", "color": "red"}}}
+            ]
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Concurrent Connections",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 16},
+        "targets": [
+          {
+            "expr": "askproai_mcp_concurrent_requests",
+            "refId": "A",
+            "legendFormat": "MCP Concurrent"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 30},
+                {"color": "red", "value": 50}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Business Metrics - Successful Bookings",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 22},
+        "targets": [
+          {
+            "expr": "rate(askproai_mcp_successful_bookings_total[5m])",
+            "refId": "A",
+            "legendFormat": "MCP Bookings/sec"
+          },
+          {
+            "expr": "rate(askproai_webhook_successful_bookings_total[5m])",
+            "refId": "B",
+            "legendFormat": "Webhook Bookings/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Bookings per Second",
+            "min": 0
+          },
+          {"show": false}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Cache Performance",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 22},
+        "targets": [
+          {
+            "expr": "rate(askproai_mcp_cache_hits_total[5m]) / (rate(askproai_mcp_cache_hits_total[5m]) + rate(askproai_mcp_cache_misses_total[5m])) * 100",
+            "refId": "A",
+            "legendFormat": "MCP Cache Hit Rate %"
+          },
+          {
+            "expr": "rate(askproai_mcp_cache_misses_total[5m])",
+            "refId": "B",
+            "legendFormat": "Cache Misses/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Hit Rate %",
+            "min": 0,
+            "max": 100
+          },
+          {
+            "label": "Misses/sec",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Recent Alerts",
+        "type": "logs",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 30},
+        "targets": [
+          {
+            "expr": "{job=\"askproai-mcp\"} |= \"alert\" or \"error\" or \"warning\"",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": false,
+          "showCommonLabels": false,
+          "wrapLogMessage": false,
+          "prettifyLogMessage": false,
+          "enableLogDetails": true,
+          "dedupStrategy": "none",
+          "sortOrder": "Descending"
+        }
+      }
+    ],
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "askproai_deployment_timestamp",
+          "iconColor": "blue",
+          "tags": ["deployment"]
+        },
+        {
+          "name": "MCP Alerts",
+          "datasource": "prometheus",
+          "enable": true,
+          "expr": "ALERTS{service=\"mcp\"}",
+          "iconColor": "red",
+          "tags": ["alert"]
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(askproai_mcp_requests_total, environment)",
+          "current": {
+            "selected": false,
+            "text": "production",
+            "value": "production"
+          },
+          "options": [],
+          "refresh": 1,
+          "includeAll": false,
+          "multi": false
+        },
+        {
+          "name": "company",
+          "type": "query",
+          "query": "label_values(askproai_mcp_requests_total{environment=\"$environment\"}, company_id)",
+          "current": {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          "options": [],
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "links": [
+      {
+        "title": "MCP Health Check",
+        "url": "https://api.askproai.de/api/mcp/retell/health",
+        "type": "link",
+        "icon": "external link"
+      },
+      {
+        "title": "Admin Dashboard",
+        "url": "https://api.askproai.de/admin/system-monitoring",
+        "type": "link",
+        "icon": "external link"
+      }
+    ]
+  },
+  "overwrite": true
+}

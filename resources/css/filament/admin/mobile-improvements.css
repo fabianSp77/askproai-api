@@ -1,0 +1,289 @@
+/* 
+ * Mobile Experience Improvements
+ * Filament v3 Native Mobile Enhancements
+ */
+
+@layer components {
+    /* 1. Mobile-First Navigation */
+    @media (max-width: 1024px) {
+        /* Improve touch targets - minimum 44x44px */
+        .fi-sidebar-nav-item a {
+            @apply min-h-[44px] flex items-center px-4;
+        }
+
+        /* Better mobile sidebar */
+        .fi-sidebar {
+            @apply fixed left-0 top-0 bottom-0 w-[280px] transform transition-transform duration-300 z-40;
+        }
+
+        /* Sidebar closed state */
+        body:not(.fi-sidebar-open) .fi-sidebar {
+            @apply -translate-x-full;
+        }
+
+        /* Sidebar open state */
+        body.fi-sidebar-open .fi-sidebar {
+            @apply translate-x-0;
+        }
+
+        /* Mobile overlay */
+        .fi-sidebar-overlay {
+            @apply fixed inset-0 bg-black/50 z-30 lg:hidden opacity-0 pointer-events-none transition-opacity duration-300;
+        }
+
+        /* Show overlay when sidebar is open */
+        body.fi-sidebar-open .fi-sidebar-overlay {
+            @apply opacity-100 pointer-events-auto;
+        }
+
+        /* Sticky mobile header */
+        .fi-topbar {
+            @apply sticky top-0 z-20 bg-white dark:bg-gray-900 shadow-sm;
+        }
+
+        /* Ensure burger button is visible and clickable */
+        .fi-topbar-open-sidebar-btn {
+            @apply relative z-50 cursor-pointer;
+        }
+        
+        /* Force sidebar text to be visible on mobile when open */
+        body.fi-sidebar-open .fi-sidebar .fi-sidebar-item-label,
+        body.fi-sidebar-open .fi-sidebar .fi-sidebar-group-label {
+            @apply opacity-100 !important;
+            display: block !important;
+        }
+        
+        /* Ensure proper sidebar width on mobile */
+        body.fi-sidebar-open .fi-sidebar {
+            @apply w-[280px];
+        }
+        
+        /* Fix sidebar item layout on mobile */
+        .fi-sidebar-item-button {
+            @apply w-full;
+        }
+    }
+
+    /* 2. Responsive Tables */
+    @media (max-width: 768px) {
+        /* Horizontal scroll for tables */
+        .fi-ta-ctn {
+            @apply -mx-4 px-4 overflow-x-auto;
+        }
+
+        /* Min width for table */
+        .fi-ta-table {
+            @apply min-w-[600px];
+        }
+
+        /* Scroll indicators */
+        .fi-ta-ctn {
+            background: 
+                linear-gradient(to right, white 30%, rgba(255,255,255,0)),
+                linear-gradient(to right, rgba(255,255,255,0), white 70%) 100% 0,
+                linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0)),
+                linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.1)) 100% 0;
+            background-repeat: no-repeat;
+            background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+            background-attachment: local, local, scroll, scroll;
+        }
+
+        /* Sticky first column */
+        .fi-ta-table th:first-child,
+        .fi-ta-table td:first-child {
+            @apply sticky left-0 bg-white dark:bg-gray-900 z-10;
+        }
+    }
+
+    /* 3. Mobile Forms */
+    @media (max-width: 640px) {
+        /* Stack form fields */
+        .fi-fo-field-wrp {
+            @apply !col-span-full;
+        }
+
+        /* Larger inputs for touch */
+        .fi-input {
+            @apply min-h-[44px] text-base;
+        }
+
+        /* Better select dropdowns */
+        select.fi-input {
+            @apply pr-10;
+        }
+
+        /* Floating labels on focus */
+        .fi-fo-field:focus-within .fi-fo-field-lbl {
+            @apply text-sm text-primary-600;
+        }
+    }
+
+    /* 4. Touch-Optimized Buttons */
+    @media (hover: none) and (pointer: coarse) {
+        /* Remove hover effects on touch devices */
+        .fi-btn:hover {
+            @apply transform-none shadow-none;
+        }
+
+        /* Add active state for touch feedback */
+        .fi-btn:active {
+            @apply scale-95 bg-primary-700;
+        }
+
+        /* Larger touch targets */
+        .fi-btn {
+            @apply min-h-[44px] px-6;
+        }
+
+        /* Icon buttons */
+        .fi-btn-icon {
+            @apply w-11 h-11;
+        }
+    }
+
+    /* 5. Mobile Modals */
+    @media (max-width: 640px) {
+        /* Full screen modals on mobile */
+        .fi-modal-window {
+            @apply !max-w-none !w-full !h-full !m-0 !rounded-none;
+        }
+
+        .fi-modal-ctn {
+            @apply !p-0;
+        }
+
+        /* Modal header sticky */
+        .fi-modal-header {
+            @apply sticky top-0 bg-white dark:bg-gray-900 z-10 px-6 py-4;
+        }
+
+        /* Modal content padding */
+        .fi-modal-content {
+            @apply px-6 pb-6;
+        }
+    }
+
+    /* 6. Mobile Stats Widgets */
+    @media (max-width: 640px) {
+        /* Stack stat cards */
+        .fi-wi-stats-overview {
+            @apply grid-cols-1 gap-4;
+        }
+
+        /* Larger stat values */
+        .fi-wi-stats-overview-stat-value {
+            @apply text-3xl;
+        }
+
+        /* Better stat card layout */
+        .fi-wi-stats-overview-card {
+            @apply flex items-center justify-between p-6;
+        }
+    }
+
+    /* 7. Mobile Action Bar */
+    @media (max-width: 768px) {
+        /* Sticky actions */
+        .fi-ac {
+            @apply sticky bottom-0 bg-white dark:bg-gray-900 border-t p-4 z-20;
+        }
+
+        /* Stack actions on very small screens */
+        @media (max-width: 480px) {
+            .fi-ac-btn-group {
+                @apply flex-col w-full;
+            }
+
+            .fi-ac-btn {
+                @apply w-full justify-center;
+            }
+        }
+    }
+
+    /* 8. Swipe Gestures Support */
+    @media (hover: none) and (pointer: coarse) {
+        /* Swipeable list items */
+        .fi-ta-row {
+            @apply relative overflow-hidden;
+        }
+
+        /* Swipe actions container */
+        .fi-ta-row-actions {
+            @apply absolute right-0 top-0 h-full flex items-center px-4 bg-danger-500 text-white transform translate-x-full transition-transform;
+        }
+
+        .fi-ta-row.swiped .fi-ta-row-actions {
+            @apply translate-x-0;
+        }
+    }
+
+    /* 9. Mobile Search */
+    @media (max-width: 640px) {
+        /* Full width search */
+        .fi-global-search {
+            @apply w-full;
+        }
+
+        .fi-global-search-input {
+            @apply w-full text-base;
+        }
+
+        /* Search results dropdown */
+        .fi-global-search-results {
+            @apply fixed left-0 right-0 top-[60px] max-h-[80vh] overflow-y-auto;
+        }
+    }
+
+    /* 10. Performance Optimizations */
+    @media (max-width: 768px) {
+        /* Reduce animations on mobile */
+        * {
+            animation-duration: 0.2s !important;
+        }
+
+        /* Disable complex shadows */
+        .fi-card,
+        .fi-modal-window {
+            @apply shadow-sm;
+        }
+
+        /* Optimize scrolling */
+        .fi-sidebar,
+        .fi-ta-ctn {
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+    }
+
+    /* 11. Accessibility Improvements */
+    @media (max-width: 768px) {
+        /* Larger tap targets */
+        a, button, [role="button"] {
+            @apply relative;
+        }
+
+        a::before,
+        button::before,
+        [role="button"]::before {
+            @apply content-[''] absolute -inset-2;
+        }
+
+        /* Better focus indicators */
+        :focus-visible {
+            @apply outline-2 outline-offset-2 outline-primary-500;
+        }
+    }
+
+    /* 12. Responsive Breadcrumbs */
+    @media (max-width: 640px) {
+        /* Show only current page */
+        .fi-breadcrumbs-item:not(:last-child) {
+            @apply hidden;
+        }
+
+        /* Add back button */
+        .fi-breadcrumbs::before {
+            @apply content-['←'] mr-2;
+        }
+    }
+}

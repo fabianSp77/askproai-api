@@ -1,0 +1,220 @@
+/* ================================================================
+   SIDEBAR HEADER ALIGNMENT FIX - GitHub Issue #499
+   Behebt Ausrichtung und Klickbarkeit der Sidebar
+   ================================================================ */
+
+/* 1. Entferne alle pointer-events Blockierungen */
+.fi-sidebar,
+.fi-sidebar *,
+.fi-sidebar-nav,
+.fi-sidebar-nav * {
+    pointer-events: auto !important;
+}
+
+/* 2. Sidebar Grundstruktur - Mit Header-Bereich */
+.fi-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 16rem !important;
+    background: white !important;
+    border-right: 1px solid #e5e7eb !important;
+    z-index: 40 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important; /* Container selbst nicht scrollbar */
+}
+
+/* 3. Sidebar Header - Gleiche Höhe wie Main Header */
+.fi-sidebar-header {
+    height: 4rem !important; /* Standardhöhe für Header */
+    padding: 0 1rem !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    background: white !important;
+}
+
+/* 4. Sidebar Nav Container - Scrollbar hier */
+.fi-sidebar-nav {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0.5rem 0 !important;
+    pointer-events: auto !important;
+    cursor: default !important;
+}
+
+/* 5. Main Header - Gleiche Höhe */
+.fi-header {
+    height: 4rem !important;
+    padding: 0 1.5rem !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    display: flex !important;
+    align-items: center !important;
+    background: white !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;
+}
+
+/* 6. Main Content Anpassung */
+.fi-main {
+    margin-left: 16rem !important;
+    width: calc(100% - 16rem) !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.fi-main-ctn {
+    flex: 1 !important;
+    padding: 1.5rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* 7. Navigation Items - Klickbar machen */
+.fi-sidebar-item {
+    margin: 0 !important;
+    position: relative !important;
+}
+
+.fi-sidebar-item a,
+.fi-sidebar-item button {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0.625rem 1rem !important;
+    gap: 0.75rem !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 1 !important;
+    background: transparent !important;
+    transition: background-color 0.15s ease !important;
+}
+
+.fi-sidebar-item a:hover,
+.fi-sidebar-item button:hover {
+    background-color: #f3f4f6 !important;
+}
+
+/* 8. Aktiver Menüpunkt */
+.fi-sidebar-item-active a,
+.fi-sidebar-item-active button {
+    background-color: #ddd6fe !important;
+    color: #7c3aed !important;
+}
+
+/* 9. Gruppen Labels */
+.fi-sidebar-group-label {
+    padding: 0.75rem 1rem 0.25rem !important;
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    color: #6b7280 !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* 10. Icons und Labels */
+.fi-sidebar-item-icon {
+    flex-shrink: 0 !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    pointer-events: none !important; /* Icons selbst nicht klickbar */
+}
+
+.fi-sidebar-item-label {
+    flex: 1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    pointer-events: none !important; /* Labels selbst nicht klickbar */
+}
+
+/* 11. Entferne doppelte Arrows/Icons */
+.fi-sidebar-nav svg + svg,
+.fi-sidebar-item-icon + .fi-sidebar-item-icon,
+.fi-sidebar-item-button + .fi-sidebar-item-button {
+    display: none !important;
+}
+
+/* 12. Z-Index Bereinigung */
+.fi-sidebar-nav > * {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* 13. Mobile Anpassungen */
+@media (max-width: 1024px) {
+    .fi-sidebar {
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .fi-sidebar-open .fi-sidebar {
+        transform: translateX(0) !important;
+    }
+    
+    /* Mobile Overlay - Klickbar zum Schließen */
+    .fi-sidebar-open::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 39; /* Unter der Sidebar */
+        pointer-events: auto;
+        cursor: pointer;
+    }
+    
+    .fi-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* 14. Scrollbar Styling */
+.fi-sidebar-nav::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar-track {
+    background: #f3f4f6 !important;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar-thumb {
+    background: #d1d5db !important;
+    border-radius: 3px !important;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af !important;
+}
+
+/* 15. Debug - Entferne alle transform/scale */
+.fi-sidebar,
+.fi-sidebar-nav,
+.fi-sidebar-item,
+.fi-sidebar-item a,
+.fi-sidebar-item button {
+    transform: none !important;
+    transform-origin: unset !important;
+}
+
+/* 16. Focus States für Accessibility */
+.fi-sidebar-item a:focus,
+.fi-sidebar-item button:focus {
+    outline: 2px solid #7c3aed !important;
+    outline-offset: -2px !important;
+}
+
+/* 17. Ensure no overlays block sidebar */
+.fi-sidebar::before,
+.fi-sidebar::after,
+.fi-sidebar-nav::before,
+.fi-sidebar-nav::after {
+    display: none !important;
+}

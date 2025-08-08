@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin JS Test - 2025-08-06 16:06:07</title>
+    <script src="assets/admin-DusoDQ8_.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test-card { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { color: #059669; } .error { color: #dc2626; } .warning { color: #d97706; }
+        .log { background: #f9fafb; padding: 10px; border-left: 4px solid #6b7280; margin: 10px 0; font-family: monospace; }
+        button { background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Admin JavaScript Functionality Test</h1>
+    <p><strong>Generated:</strong> 2025-08-06 16:06:07</p>
+    
+    <div class="test-card">
+        <h3>📊 Load Status</h3>
+        <div id="load-status">Checking...</div>
+    </div>
+    
+    <div class="test-card">
+        <h3>🏔️ Alpine.js Status</h3>
+        <div id="alpine-status">Checking...</div>
+    </div>
+    
+    <div class="test-card">
+        <h3>📱 Sidebar Functionality</h3>
+        <button onclick="testSidebar()">Test Sidebar Toggle</button>
+        <div id="sidebar-status">Ready</div>
+    </div>
+    
+    <div class="test-card">
+        <h3>📱 Mobile Detection</h3>
+        <div id="mobile-status">Checking...</div>
+    </div>
+    
+    <div class="test-card">
+        <h3>🖱️ Click Event Test</h3>
+        <button onclick="testClick()">Test Click Handler</button>
+        <button id="js-click">JS Event Listener</button>
+        <div id="click-status">Ready</div>
+    </div>
+    
+    <div class="test-card">
+        <h3>📝 Console Logs</h3>
+        <div id="console-logs" class="log">Waiting for admin bundle logs...</div>
+    </div>
+    
+    <script>
+        let logs = [];
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
+        function addLog(type, message) {
+            logs.push({type, message, time: new Date().toLocaleTimeString()});
+            updateConsoleDisplay();
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            if (args.join(" ").includes("Admin JS Bundle")) {
+                addLog("info", args.join(" "));
+            }
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            if (args.join(" ").includes("Admin JS Bundle")) {
+                addLog("warning", args.join(" "));
+            }
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            if (args.join(" ").includes("Admin JS Bundle")) {
+                addLog("error", args.join(" "));
+            }
+        };
+        
+        function updateConsoleDisplay() {
+            const display = document.getElementById("console-logs");
+            if (logs.length === 0) {
+                display.innerHTML = "No admin bundle logs yet...";
+                return;
+            }
+            
+            display.innerHTML = logs.map(log => {
+                const className = log.type === "error" ? "error" : log.type === "warning" ? "warning" : "success";
+                return `<div class="${className}">[${log.time}] ${log.message}</div>`;
+            }).join("");
+        }
+        
+        function checkLoadStatus() {
+            const status = document.getElementById("load-status");
+            status.innerHTML = "<span class='success'>✅ Page loaded successfully</span>";
+        }
+        
+        function checkAlpineStatus() {
+            const status = document.getElementById("alpine-status");
+            if (typeof window.Alpine !== "undefined") {
+                status.innerHTML = "<span class='success'>✅ Alpine.js is available</span>";
+                
+                if (window.Alpine.store && window.Alpine.store("sidebar")) {
+                    status.innerHTML += "<br><span class='success'>✅ Sidebar store available</span>";
+                } else {
+                    status.innerHTML += "<br><span class='warning'>⚠ Sidebar store not available</span>";
+                }
+            } else {
+                status.innerHTML = "<span class='error'>❌ Alpine.js not available</span>";
+            }
+        }
+        
+        function checkMobileStatus() {
+            const status = document.getElementById("mobile-status");
+            const isMobile = window.matchMedia("(max-width: 1024px)").matches;
+            status.innerHTML = `Device type: <strong>${isMobile ? "Mobile" : "Desktop"}</strong><br>`;
+            status.innerHTML += `Screen width: ${window.innerWidth}px<br>`;
+            status.innerHTML += `Mobile interactions: ${isMobile ? "Should be loaded" : "Should be skipped"}`;
+        }
+        
+        function testSidebar() {
+            const status = document.getElementById("sidebar-status");
+            let result = "";
+            
+            // Test body class toggle
+            const hadClass = document.body.classList.contains("fi-sidebar-open");
+            document.body.classList.toggle("fi-sidebar-open");
+            const hasClass = document.body.classList.contains("fi-sidebar-open");
+            
+            result += `<div>Body class toggle: <span class="success">✅ Working</span> (${hadClass ? "had" : "didn't have"} → ${hasClass ? "has" : "doesn't have"})</div>`;
+            
+            // Test Alpine store
+            if (window.Alpine && window.Alpine.store && window.Alpine.store("sidebar")) {
+                try {
+                    window.Alpine.store("sidebar").toggle();
+                    result += `<div>Alpine store toggle: <span class="success">✅ Working</span></div>`;
+                } catch (e) {
+                    result += `<div>Alpine store toggle: <span class="error">❌ Error: ${e.message}</span></div>`;
+                }
+            } else {
+                result += `<div>Alpine store toggle: <span class="warning">⚠ Store not available</span></div>`;
+            }
+            
+            status.innerHTML = result;
+        }
+        
+        function testClick() {
+            const status = document.getElementById("click-status");
+            status.innerHTML = "<div class='success'>✅ Onclick handler working at " + new Date().toLocaleTimeString() + "</div>";
+        }
+        
+        // JS Event listener test
+        document.getElementById("js-click").addEventListener("click", function() {
+            const status = document.getElementById("click-status");
+            status.innerHTML += "<div class='success'>✅ JavaScript event listener working at " + new Date().toLocaleTimeString() + "</div>";
+        });
+        
+        // Run tests when page loads
+        window.addEventListener("load", function() {
+            setTimeout(() => {
+                checkLoadStatus();
+                checkAlpineStatus();
+                checkMobileStatus();
+                updateConsoleDisplay();
+            }, 1000);
+        });
+        
+        // Check every 2 seconds for Alpine
+        const alpineCheck = setInterval(() => {
+            if (typeof window.Alpine !== "undefined") {
+                checkAlpineStatus();
+                clearInterval(alpineCheck);
+            }
+        }, 2000);
+        
+        // Update console display every second
+        setInterval(updateConsoleDisplay, 1000);
+    </script>
+</body>
+</html>

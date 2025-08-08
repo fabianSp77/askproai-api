@@ -1,0 +1,127 @@
+/* ================================================================
+   FILAMENT OVERRIDE CSS - Präzise Fixes für Layout-Probleme
+   Respektiert das Filament flex-row-reverse Layout
+   ================================================================ */
+
+/* 1. FIX: Hauptcontainer darf Content nicht abschneiden */
+.fi-layout {
+    overflow-x: visible !important; /* Statt overflow-x-clip */
+    min-height: 100vh !important;
+}
+
+/* 2. FIX: Sidebar muss sticky sein für flex-row-reverse Layout */
+.fi-sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    /* Wichtig: KEINE width Änderung - Filament regelt das */
+}
+
+/* 3. FIX: Main Content Container */
+.fi-main-ctn {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important; /* Erlaubt flex-shrink */
+}
+
+/* 4. FIX: Main Element selbst */
+.fi-main {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+}
+
+/* 5. FIX: Navigation MUSS klickbar sein */
+.fi-sidebar-nav,
+.fi-sidebar-nav *,
+.fi-sidebar-item,
+.fi-sidebar-item a,
+.fi-sidebar-item button,
+.fi-sidebar-group,
+.fi-sidebar-group-button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* 6. FIX: Entferne doppelte Chevron Icons */
+.fi-sidebar-item > a > svg:last-child:not(:first-child),
+.fi-sidebar-item > button > svg:last-child:not(:first-child) {
+    display: none !important;
+}
+
+/* 7. FIX: Sidebar Scrollbar immer sichtbar */
+.fi-sidebar-nav {
+    scrollbar-gutter: stable !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* 8. FIX: Für verschiedene Sidebar-Zustände (Alpine.js) */
+.fi-main-ctn-sidebar-open {
+    /* Keine margin-Änderungen - Filament regelt das */
+}
+
+/* 9. FIX: Mobile Sidebar */
+@media (max-width: 1023px) {
+    .fi-sidebar {
+        position: fixed !important;
+        z-index: 30 !important;
+    }
+}
+
+/* 10. FIX: Tabellen und Content-Overflow */
+.fi-ta-ctn {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    max-width: 100% !important;
+}
+
+.fi-ta-table {
+    min-width: max-content !important;
+}
+
+/* 11. FIX: Page Content volle Breite */
+.fi-page {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* 12. Entferne ALLE blockierenden Overlays */
+.fi-sidebar-close-overlay {
+    pointer-events: none !important;
+}
+
+/* Wenn Overlay sichtbar ist, muss er klickbar sein */
+.fi-sidebar-close-overlay[x-show="true"] {
+    pointer-events: auto !important;
+}
+
+/* 13. Debug Styles - Zeigt wenn CSS aktiv ist */
+body[data-css-debug]::after {
+    content: "Override CSS Active ✓" !important;
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    background: #059669 !important;
+    color: white !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+    z-index: 9999 !important;
+    font-family: monospace !important;
+}
+
+/* 14. Wichtig: Überschreibe theme.css Spezifität */
+body .fi-body .fi-layout .fi-sidebar {
+    position: sticky !important;
+}
+
+body .fi-body .fi-layout .fi-main-ctn {
+    overflow-x: visible !important;
+}

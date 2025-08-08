@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Disable Service Worker</title>
+</head>
+<body>
+    <h1>Disabling Service Worker...</h1>
+    <div id="status"></div>
+    
+    <script>
+    async function disableServiceWorker() {
+        const statusDiv = document.getElementById('status');
+        
+        if ('serviceWorker' in navigator) {
+            try {
+                // Get all registrations
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                
+                statusDiv.innerHTML += `<p>Found ${registrations.length} service worker(s)</p>`;
+                
+                // Unregister each one
+                for (let registration of registrations) {
+                    const success = await registration.unregister();
+                    statusDiv.innerHTML += `<p>Unregistered: ${success ? 'SUCCESS' : 'FAILED'}</p>`;
+                }
+                
+                // Clear all caches
+                const cacheNames = await caches.keys();
+                statusDiv.innerHTML += `<p>Found ${cacheNames.length} cache(s)</p>`;
+                
+                for (let cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                    statusDiv.innerHTML += `<p>Deleted cache: ${cacheName}</p>`;
+                }
+                
+                statusDiv.innerHTML += `<h2 style="color: green;">✓ All service workers disabled!</h2>`;
+                statusDiv.innerHTML += `<p>Please clear your browser cache and cookies, then visit <a href="/admin/calls">/admin/calls</a></p>`;
+                
+            } catch (error) {
+                statusDiv.innerHTML += `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        } else {
+            statusDiv.innerHTML = '<p>Service Workers not supported in this browser</p>';
+        }
+    }
+    
+    // Run immediately
+    disableServiceWorker();
+    </script>
+</body>
+</html>

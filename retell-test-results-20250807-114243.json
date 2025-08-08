@@ -1,0 +1,206 @@
+{
+    "timestamp": "2025-08-07 11:42:43",
+    "summary": {
+        "total": 10,
+        "passed": 6,
+        "failed": 4,
+        "errors": 0
+    },
+    "tests": {
+        "Health Check": {
+            "status": "PASSED",
+            "data": {
+                "healthy": true,
+                "status": true,
+                "message": "Retell API is healthy",
+                "agent_count": 93,
+                "checked_at": "2025-08-07T11:42:42+02:00"
+            }
+        },
+        "Test Connection with Company": {
+            "status": "FAILED",
+            "error": "Unknown error"
+        },
+        "List Agents": {
+            "status": "PASSED",
+            "data": {
+                "agent_count": 93,
+                "first_agent": {
+                    "agent_id": "agent_9a8202a740cd3120d96fcfda1e",
+                    "channel": "voice",
+                    "last_modification_timestamp": 1754494400884,
+                    "agent_name": "Online: Assistent f\u00fcr Fabian Spitzer Rechtliches\/V33",
+                    "response_engine": {
+                        "type": "retell-llm",
+                        "llm_id": "llm_f3209286ed1caf6a75906d2645b9",
+                        "version": 36
+                    },
+                    "webhook_url": "https:\/\/api.askproai.de\/api\/retell\/webhook",
+                    "language": "de-DE",
+                    "opt_out_sensitive_data_storage": false,
+                    "end_call_after_silence_ms": 50000,
+                    "post_call_analysis_data": [
+                        {
+                            "type": "boolean",
+                            "name": "call_successful",
+                            "description": "Whether the call objectives were met (appointment made, rescheduled, or cancelled)"
+                        },
+                        {
+                            "type": "boolean",
+                            "name": "appointment_made",
+                            "description": "Whether a new appointment was successfully scheduled"
+                        },
+                        {
+                            "type": "string",
+                            "name": "appointment_date_time",
+                            "description": "The scheduled appointment date and time in format YYYY-MM-DD HH:MM"
+                        },
+                        {
+                            "type": "string",
+                            "name": "caller_full_name",
+                            "description": "Full name of the caller"
+                        },
+                        {
+                            "type": "string",
+                            "name": "caller_phone",
+                            "description": "Phone number of the caller"
+                        },
+                        {
+                            "type": "string",
+                            "name": "patient_full_name",
+                            "description": "Full name of the patient (may differ from caller)"
+                        },
+                        {
+                            "type": "string",
+                            "name": "patient_birth_date",
+                            "description": "Birth date of the patient in format YYYY-MM-DD"
+                        },
+                        {
+                            "type": "string",
+                            "name": "insurance_type",
+                            "description": "Type of insurance: 'gesetzlich' or 'privat'"
+                        },
+                        {
+                            "type": "string",
+                            "name": "health_insurance_company",
+                            "description": "Name of the health insurance company"
+                        },
+                        {
+                            "type": "string",
+                            "name": "reason_for_visit",
+                            "description": "Primary reason or symptoms for the appointment"
+                        },
+                        {
+                            "type": "boolean",
+                            "name": "first_visit",
+                            "description": "Whether this is the patient's first visit"
+                        },
+                        {
+                            "type": "string",
+                            "name": "urgency_level",
+                            "description": "Urgency: 'routine', 'soon', 'urgent'"
+                        },
+                        {
+                            "type": "string",
+                            "name": "additional_notes",
+                            "description": "Any additional information or special requests"
+                        },
+                        {
+                            "type": "string",
+                            "name": "no_show_count",
+                            "description": "Number of previous no-shows for this patient"
+                        },
+                        {
+                            "type": "string",
+                            "name": "reschedule_count",
+                            "description": "Number of times this appointment was rescheduled"
+                        }
+                    ],
+                    "version": 36,
+                    "is_published": false,
+                    "version_title": "",
+                    "post_call_analysis_model": "gemini-2.0-flash",
+                    "voice_id": "custom_voice_191b11197fd8c3e92dab972a5a",
+                    "voice_model": "eleven_turbo_v2_5",
+                    "voice_temperature": 0.2,
+                    "voice_speed": 1.06,
+                    "volume": 1,
+                    "enable_backchannel": true,
+                    "backchannel_frequency": 0.2,
+                    "backchannel_words": [
+                        "mhm",
+                        "ach",
+                        "so",
+                        "aha",
+                        "okay",
+                        "richtig",
+                        "verstehe",
+                        "na klar"
+                    ],
+                    "max_call_duration_ms": 300000,
+                    "interruption_sensitivity": 0.6,
+                    "boosted_keywords": [],
+                    "ambient_sound_volume": 0.48,
+                    "responsiveness": 0.9,
+                    "pronunciation_dictionary": [],
+                    "normalize_for_speech": true,
+                    "allow_user_dtmf": false,
+                    "user_dtmf_options": [],
+                    "denoising_mode": "noise-and-background-speech-cancellation"
+                }
+            }
+        },
+        "Get Phone Numbers": {
+            "status": "PASSED",
+            "data": {
+                "phone_count": 1,
+                "numbers": [
+                    {
+                        "id": "5b449e91-5376-11f0-b773-0ad77e7a9793",
+                        "number": "+493033081738",
+                        "type": "hotline",
+                        "is_primary": true,
+                        "sms_enabled": false,
+                        "whatsapp_enabled": false,
+                        "branch": {
+                            "id": "34c4d48e-4753-4715-9c30-c55843a943e8",
+                            "name": "Kr\u00fcckeberg Servicegruppe Zentrale"
+                        }
+                    }
+                ]
+            }
+        },
+        "Get Recent Calls": {
+            "status": "PASSED",
+            "data": {
+                "call_count": 5,
+                "total_in_db": 0
+            }
+        },
+        "Get Call Analytics": {
+            "status": "FAILED",
+            "error": "Unknown error"
+        },
+        "Test Webhook Endpoint": {
+            "status": "FAILED",
+            "error": "Unknown error"
+        },
+        "Get Available Appointment Slots": {
+            "status": "PASSED",
+            "data": {
+                "has_slots": false,
+                "slot_count": 0
+            }
+        },
+        "Validate Agent Configuration": {
+            "status": "FAILED",
+            "error": "Unknown error"
+        },
+        "Get Help Documentation": {
+            "status": "PASSED",
+            "data": {
+                "has_content": true
+            }
+        }
+    }
+}

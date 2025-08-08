@@ -1,0 +1,87 @@
+{
+    "timestamp": "2025-08-07T15:50:33+00:00",
+    "endpoint": "https:\/\/api.askproai.de\/api\/v2\/hair-salon-mcp\/mcp",
+    "summary": {
+        "total": 15,
+        "passed": 11,
+        "failed": 4,
+        "pass_rate": 73.3
+    },
+    "results": [
+        {
+            "test": "Initialize: Has protocolVersion",
+            "passed": true,
+            "details": ""
+        },
+        {
+            "test": "Initialize: Has capabilities",
+            "passed": true,
+            "details": ""
+        },
+        {
+            "test": "Initialize: Has tools array",
+            "passed": true,
+            "details": ""
+        },
+        {
+            "test": "Initialize: Has 4 tools",
+            "passed": true,
+            "details": ""
+        },
+        {
+            "test": "Initialize: Has serverInfo",
+            "passed": true,
+            "details": ""
+        },
+        {
+            "test": "List Services: Has services array",
+            "passed": true,
+            "details": ""
+        },
+        {
+            "test": "List Services: Services not empty",
+            "passed": false,
+            "details": ""
+        },
+        {
+            "test": "List Services: Service has required fields",
+            "passed": false,
+            "details": ""
+        },
+        {
+            "test": "Check Availability request",
+            "passed": false,
+            "details": "HTTP 500"
+        },
+        {
+            "test": "Book Appointment: Structure valid",
+            "passed": true,
+            "details": ""
+        },
+        {
+            "test": "Schedule Callback: Structure valid",
+            "passed": true,
+            "details": ""
+        },
+        {
+            "test": "Invalid method returns error",
+            "passed": false,
+            "details": "No error"
+        },
+        {
+            "test": "Missing params returns error",
+            "passed": true,
+            "details": "No error"
+        },
+        {
+            "test": "Accepts 'tool' field (Retell format)",
+            "passed": true,
+            "details": "Success"
+        },
+        {
+            "test": "Accepts 'tools\/list' method",
+            "passed": true,
+            "details": "Success"
+        }
+    ]
+}

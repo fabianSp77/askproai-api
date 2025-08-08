@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Ultimate Login Test - Issue #508</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f4f8; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: #dc2626; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .test-section { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        iframe { width: 100%; height: 700px; border: 3px solid #dc2626; border-radius: 8px; }
+        .status { padding: 5px 10px; border-radius: 4px; font-weight: bold; }
+        .status-success { background: #10b981; color: white; }
+        .status-error { background: #dc2626; color: white; }
+        .status-warning { background: #f59e0b; color: white; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2563eb; }
+        .console { background: #1a1a1a; color: #00ff00; padding: 15px; font-family: monospace; font-size: 12px; height: 300px; overflow-y: auto; border-radius: 8px; }
+        .test-result { padding: 10px; margin: 5px 0; border-left: 4px solid #e5e7eb; }
+        .test-result.pass { border-color: #10b981; background: #d1fae5; }
+        .test-result.fail { border-color: #dc2626; background: #fee2e2; }
+        code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Ultimate Login Test - Issue #508</h1>
+            <p>Der Login funktioniert noch immer nicht - Comprehensive Testing Suite</p>
+        </div>
+
+        <div class="test-section">
+            <h2>📱 Live Login Page</h2>
+            <iframe id="loginFrame" src="/admin/login"></iframe>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Automated Tests</h2>
+            <button onclick="runAllTests()">🚀 Run All Tests</button>
+            <button onclick="autoFillAndSubmit()">📝 Auto-Fill & Submit</button>
+            <button onclick="debugLivewire()">🔍 Debug Livewire</button>
+            <button onclick="manualSubmit()">💪 Force Submit</button>
+            
+            <div id="testResults" style="margin-top: 20px;">
+                <div id="test1" class="test-result">1. Login page loads: <span>⏳ Pending</span></div>
+                <div id="test2" class="test-result">2. Email field exists: <span>⏳ Pending</span></div>
+                <div id="test3" class="test-result">3. Password field exists: <span>⏳ Pending</span></div>
+                <div id="test4" class="test-result">4. Password field visible: <span>⏳ Pending</span></div>
+                <div id="test5" class="test-result">5. Password field interactive: <span>⏳ Pending</span></div>
+                <div id="test6" class="test-result">6. Submit button clickable: <span>⏳ Pending</span></div>
+                <div id="test7" class="test-result">7. JavaScript fixes loaded: <span>⏳ Pending</span></div>
+                <div id="test8" class="test-result">8. Livewire connected: <span>⏳ Pending</span></div>
+                <div id="test9" class="test-result">9. Alpine.js working: <span>⏳ Pending</span></div>
+                <div id="test10" class="test-result">10. Form can submit: <span>⏳ Pending</span></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>💻 Console Output</h2>
+            <div class="console" id="console">Waiting for tests...</div>
+            <button onclick="clearConsole()">Clear</button>
+            <button onclick="exportLogs()">Export Logs</button>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Manual Debugging</h2>
+            <p>Open browser console (F12) and check for:</p>
+            <ul>
+                <li><code>[ULTIMATE-LOGIN-FIX]</code> messages</li>
+                <li><code>[LOGIN-PAGE]</code> messages</li>
+                <li><code>[NAVIGATION-FIX]</code> messages</li>
+                <li>Green indicator "🔐 Login Fix Active" (top-right)</li>
+            </ul>
+            <p>Try in console: <code>window.UltimateLoginFix.getFormData()</code></p>
+        </div>
+    </div>
+
+    <script>
+        const loginFrame = document.getElementById('loginFrame');
+        const consoleDiv = document.getElementById('console');
+        let logs = [];
+
+        function log(msg, type = 'INFO') {
+            const time = new Date().toLocaleTimeString();
+            const entry = `[${time}] [${type}] ${msg}`;
+            logs.push(entry);
+            consoleDiv.innerHTML = logs.join('\n');
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function clearConsole() {
+            logs = [];
+            consoleDiv.innerHTML = 'Console cleared.';
+        }
+
+        function exportLogs() {
+            const blob = new Blob([logs.join('\n')], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'login-test-logs-' + Date.now() + '.txt';
+            a.click();
+        }
+
+        function updateTest(num, passed, detail = '') {
+            const test = document.getElementById('test' + num);
+            test.classList.remove('pass', 'fail');
+            test.classList.add(passed ? 'pass' : 'fail');
+            test.querySelector('span').innerHTML = passed ? 
+                `<span class="status status-success">✅ Passed ${detail}</span>` : 
+                `<span class="status status-error">❌ Failed ${detail}</span>`;
+        }
+
+        async function runAllTests() {
+            log('Starting comprehensive login tests...', 'INFO');
+            
+            try {
+                const doc = loginFrame.contentDocument;
+                const win = loginFrame.contentWindow;
+                
+                // Test 1: Page loads
+                updateTest(1, !!doc, doc ? '' : '- No document');
+                
+                // Test 2: Email field
+                const emailField = doc.querySelector('input[wire\\:model="data.email"], input[type="email"], input#data\\.email');
+                updateTest(2, !!emailField, emailField ? `- Found: ${emailField.id || 'no-id'}` : '');
+                log(`Email field: ${emailField ? 'Found' : 'NOT FOUND'}`, emailField ? 'SUCCESS' : 'ERROR');
+                
+                // Test 3: Password field exists
+                const passwordField = doc.querySelector('input[wire\\:model="data.password"], input#data\\.password');
+                updateTest(3, !!passwordField, passwordField ? `- Found: ${passwordField.id || 'no-id'}` : '');
+                log(`Password field: ${passwordField ? 'Found' : 'NOT FOUND'}`, passwordField ? 'SUCCESS' : 'ERROR');
+                
+                if (passwordField) {
+                    // Test 4: Password field visible
+                    const style = win.getComputedStyle(passwordField);
+                    const visible = style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+                    updateTest(4, visible, `- display: ${style.display}, visibility: ${style.visibility}`);
+                    
+                    // Test 5: Password field interactive
+                    const interactive = style.pointerEvents !== 'none' && !passwordField.disabled && !passwordField.readOnly;
+                    updateTest(5, interactive, `- pointer-events: ${style.pointerEvents}`);
+                    
+                    log(`Password field visible: ${visible}, interactive: ${interactive}`, visible && interactive ? 'SUCCESS' : 'WARNING');
+                } else {
+                    updateTest(4, false, '- No field to check');
+                    updateTest(5, false, '- No field to check');
+                }
+                
+                // Test 6: Submit button
+                const submitBtn = doc.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    const btnStyle = win.getComputedStyle(submitBtn);
+                    const clickable = btnStyle.pointerEvents !== 'none' && !submitBtn.disabled;
+                    updateTest(6, clickable, `- ${submitBtn.textContent.trim()}`);
+                } else {
+                    updateTest(6, false, '- No submit button found');
+                }
+                
+                // Test 7: JavaScript fixes
+                const hasUltimateFix = !!win.UltimateLoginFix;
+                const hasNavigationFix = !!win.NavigationFixer;
+                const hasIndicator = !!doc.getElementById('ultimate-login-fix-indicator') || 
+                                   !!doc.getElementById('navigation-fix-debug');
+                updateTest(7, hasUltimateFix || hasNavigationFix || hasIndicator, 
+                          `- UltimateFix: ${hasUltimateFix}, NavFix: ${hasNavigationFix}`);
+                
+                // Test 8: Livewire
+                const hasLivewire = !!win.Livewire;
+                updateTest(8, hasLivewire, hasLivewire ? '- Livewire object found' : '');
+                
+                // Test 9: Alpine.js
+                const hasAlpine = !!win.Alpine;
+                updateTest(9, hasAlpine, hasAlpine ? '- Alpine object found' : '');
+                
+                // Test 10: Form submission capability
+                const form = doc.querySelector('form[wire\\:submit]');
+                const canSubmit = !!form && !!emailField && !!passwordField && !!submitBtn;
+                updateTest(10, canSubmit, canSubmit ? '- All components ready' : '- Missing components');
+                
+                log('All tests completed!', 'SUCCESS');
+                
+            } catch (e) {
+                log('Test error: ' + e.message, 'ERROR');
+            }
+        }
+
+        function autoFillAndSubmit() {
+            try {
+                const doc = loginFrame.contentDocument;
+                
+                // Fill email
+                const email = doc.querySelector('input[wire\\:model="data.email"], input[type="email"]');
+                if (email) {
+                    email.value = 'admin@example.com';
+                    email.dispatchEvent(new Event('input', { bubbles: true }));
+                    log('Email filled', 'SUCCESS');
+                }
+                
+                // Fill password
+                const password = doc.querySelector('input[wire\\:model="data.password"], input#data\\.password');
+                if (password) {
+                    password.value = 'password';
+                    password.dispatchEvent(new Event('input', { bubbles: true }));
+                    log('Password filled', 'SUCCESS');
+                }
+                
+                // Submit
+                setTimeout(() => {
+                    const form = doc.querySelector('form');
+                    if (form) {
+                        log('Submitting form...', 'INFO');
+                        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                    }
+                }, 500);
+                
+            } catch (e) {
+                log('Auto-fill error: ' + e.message, 'ERROR');
+            }
+        }
+
+        function debugLivewire() {
+            try {
+                const win = loginFrame.contentWindow;
+                if (win.Livewire) {
+                    log('Livewire version: ' + (win.Livewire.version || 'unknown'), 'INFO');
+                    log('Livewire components: ' + Object.keys(win.Livewire.components || {}).length, 'INFO');
+                    
+                    // Try to find login component
+                    const components = win.Livewire.components;
+                    if (components) {
+                        Object.values(components).forEach(comp => {
+                            if (comp.name && comp.name.includes('login')) {
+                                log('Login component found: ' + comp.name, 'SUCCESS');
+                                log('Component data: ' + JSON.stringify(comp.data || {}), 'INFO');
+                            }
+                        });
+                    }
+                } else {
+                    log('Livewire not found!', 'ERROR');
+                }
+            } catch (e) {
+                log('Livewire debug error: ' + e.message, 'ERROR');
+            }
+        }
+
+        function manualSubmit() {
+            try {
+                const win = loginFrame.contentWindow;
+                if (win.UltimateLoginFix) {
+                    const data = win.UltimateLoginFix.getFormData();
+                    log('Form data: ' + JSON.stringify(data), 'INFO');
+                    win.UltimateLoginFix.submitForm();
+                    log('Manual submit triggered', 'SUCCESS');
+                } else {
+                    log('UltimateLoginFix not available', 'ERROR');
+                }
+            } catch (e) {
+                log('Manual submit error: ' + e.message, 'ERROR');
+            }
+        }
+
+        // Auto-run tests when frame loads
+        loginFrame.onload = () => {
+            log('Login page loaded, waiting 2 seconds for JavaScript fixes...', 'INFO');
+            setTimeout(runAllTests, 2000);
+        };
+
+        // Monitor console
+        if (loginFrame.contentWindow) {
+            const originalLog = loginFrame.contentWindow.console.log;
+            const originalError = loginFrame.contentWindow.console.error;
+            
+            loginFrame.contentWindow.console.log = function(...args) {
+                log('[IFRAME LOG] ' + args.join(' '), 'INFO');
+                originalLog.apply(this, args);
+            };
+            
+            loginFrame.contentWindow.console.error = function(...args) {
+                log('[IFRAME ERROR] ' + args.join(' '), 'ERROR');
+                originalError.apply(this, args);
+            };
+        }
+    </script>
+</body>
+</html>

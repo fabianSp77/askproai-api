@@ -1,0 +1,205 @@
+groups:
+  - name: askproai_mcp
+    interval: 30s
+    rules:
+    
+      # MCP Response Time Alerts
+      - alert: MCPHighResponseTime
+        expr: histogram_quantile(0.95, rate(askproai_mcp_request_duration_seconds_bucket[5m])) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "MCP response time is high"
+          description: "95th percentile response time is {{ $value }}s for MCP endpoints"
+          
+      - alert: MCPCriticalResponseTime
+        expr: histogram_quantile(0.95, rate(askproai_mcp_request_duration_seconds_bucket[5m])) > 1.0
+        for: 1m
+        labels:
+          severity: critical
+          service: mcp
+        annotations:
+          summary: "MCP response time is critically high"
+          description: "95th percentile response time is {{ $value }}s for MCP endpoints"
+          
+      # MCP Error Rate Alerts
+      - alert: MCPHighErrorRate
+        expr: |
+          (
+            rate(askproai_mcp_requests_total{status=~"5.."}[5m]) /
+            rate(askproai_mcp_requests_total[5m])
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "MCP error rate is high"
+          description: "MCP error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+          
+      - alert: MCPCriticalErrorRate
+        expr: |
+          (
+            rate(askproai_mcp_requests_total{status=~"5.."}[5m]) /
+            rate(askproai_mcp_requests_total[5m])
+          ) > 0.10
+        for: 1m
+        labels:
+          severity: critical
+          service: mcp
+        annotations:
+          summary: "MCP error rate is critically high"
+          description: "MCP error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+          
+      # MCP Tool Execution Alerts
+      - alert: MCPToolExecutionFailures
+        expr: rate(askproai_mcp_tool_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "MCP tool execution failures detected"
+          description: "{{ $value }} tool execution failures per second in the last 5 minutes"
+          
+      # MCP Circuit Breaker Alerts
+      - alert: MCPCircuitBreakerOpen
+        expr: askproai_mcp_circuit_breaker_state{state="open"} == 1
+        for: 0m
+        labels:
+          severity: critical
+          service: mcp
+        annotations:
+          summary: "MCP circuit breaker is open"
+          description: "Circuit breaker for {{ $labels.service_name }} is open, blocking requests"
+          
+      - alert: MCPCircuitBreakerHalfOpen
+        expr: askproai_mcp_circuit_breaker_state{state="half_open"} == 1
+        for: 1m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "MCP circuit breaker is half-open"
+          description: "Circuit breaker for {{ $labels.service_name }} is in recovery mode"
+          
+      # MCP vs Webhook Performance Comparison
+      - alert: MCPPerformanceDegradation
+        expr: |
+          (
+            histogram_quantile(0.95, rate(askproai_mcp_request_duration_seconds_bucket[10m])) -
+            histogram_quantile(0.95, rate(askproai_webhook_request_duration_seconds_bucket[10m]))
+          ) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "MCP performance degraded compared to webhooks"
+          description: "MCP is {{ $value }}s slower than webhooks on 95th percentile"
+          
+      # MCP Availability Alerts
+      - alert: MCPEndpointDown
+        expr: up{job="askproai-mcp-health"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: mcp
+        annotations:
+          summary: "MCP health endpoint is down"
+          description: "MCP health check endpoint has been down for more than 1 minute"
+          
+      # MCP Rate Limiting Alerts
+      - alert: MCPRateLimitExceeded
+        expr: rate(askproai_mcp_rate_limit_exceeded_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "MCP rate limits being exceeded"
+          description: "{{ $value }} rate limit violations per second in the last 5 minutes"
+          
+      # Migration Progress Alerts
+      - alert: MCPMigrationStalled
+        expr: |
+          (
+            rate(askproai_mcp_requests_total[1h]) == 0 and
+            askproai_mcp_rollout_percentage > 0
+          )
+        for: 10m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "MCP migration appears stalled"
+          description: "No MCP requests received despite {{ $labels.rollout_percentage }}% rollout"
+          
+  - name: askproai_mcp_business
+    interval: 60s
+    rules:
+    
+      # Business Impact Alerts
+      - alert: MCPBookingFailures
+        expr: rate(askproai_mcp_booking_failures_total[10m]) > 0.02
+        for: 5m
+        labels:
+          severity: critical
+          service: mcp
+          impact: revenue
+        annotations:
+          summary: "MCP booking failures detected"
+          description: "{{ $value }} booking failures per second - revenue impact likely"
+          
+      - alert: MCPCalcomIntegrationDown
+        expr: askproai_mcp_calcom_connection_status == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: mcp
+          impact: booking
+        annotations:
+          summary: "MCP Cal.com integration is down"
+          description: "Cannot process appointments through MCP"
+          
+      # Data Consistency Alerts
+      - alert: MCPWebhookDataMismatch
+        expr: |
+          abs(
+            rate(askproai_mcp_processed_calls_total[10m]) -
+            rate(askproai_webhook_processed_calls_total[10m])
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "Data processing mismatch between MCP and webhooks"
+          description: "Processing rate difference: {{ $value }} calls/second"
+          
+  - name: askproai_mcp_capacity
+    interval: 60s
+    rules:
+    
+      # Capacity and Scaling Alerts
+      - alert: MCPHighConcurrency
+        expr: askproai_mcp_concurrent_requests > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "High MCP concurrency detected"
+          description: "{{ $value }} concurrent MCP requests - consider scaling"
+          
+      - alert: MCPMemoryUsage
+        expr: askproai_mcp_memory_usage_bytes / askproai_total_memory_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: mcp
+        annotations:
+          summary: "MCP memory usage is high"
+          description: "MCP processes using {{ $value | humanizePercentage }} of available memory"

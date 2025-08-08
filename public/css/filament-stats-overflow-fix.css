@@ -1,0 +1,126 @@
+/* ================================================================
+   FILAMENT STATS WIDGET OVERFLOW FIX - GitHub Issue #496
+   Specific fixes for Filament stats overview widgets
+   ================================================================ */
+
+/* 1. Fix Filament Stats Overview Widget containers */
+.fi-wi-stats-overview {
+    overflow: hidden !important;
+}
+
+.fi-wi-stats-overview-stat {
+    overflow: hidden !important;
+    padding: 1rem !important;
+}
+
+/* 2. Fix stat values and labels */
+.fi-wi-stats-overview-stat-value {
+    font-size: 1.875rem !important;
+    line-height: 1.2 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+}
+
+.fi-wi-stats-overview-stat-label {
+    font-size: 0.875rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+}
+
+/* 3. Fix stat descriptions */
+.fi-wi-stats-overview-stat-description {
+    font-size: 0.75rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+}
+
+/* 4. Fix stat icons */
+.fi-wi-stats-overview-stat-icon {
+    flex-shrink: 0 !important;
+    width: 1rem !important;
+    height: 1rem !important;
+}
+
+/* 5. Fix grid layout */
+.fi-wi-stats-overview-grid {
+    gap: 1rem !important;
+    overflow: hidden !important;
+}
+
+/* 6. Fix individual stat cards */
+.fi-wi-stats-overview-card {
+    overflow: hidden !important;
+    min-width: 0 !important; /* Allow shrinking in flex/grid */
+}
+
+/* 7. Fix chart containers in stats */
+.fi-wi-stats-overview-stat-chart {
+    overflow: hidden !important;
+    max-width: 100% !important;
+}
+
+/* 8. Responsive adjustments */
+@media (max-width: 640px) {
+    .fi-wi-stats-overview-stat-value {
+        font-size: 1.5rem !important;
+    }
+    
+    .fi-wi-stats-overview-stat-label {
+        font-size: 0.75rem !important;
+    }
+    
+    .fi-wi-stats-overview-stat-description {
+        font-size: 0.625rem !important;
+    }
+}
+
+/* 9. Fix any nested content */
+.fi-wi-stats-overview-stat * {
+    max-width: 100% !important;
+}
+
+/* 10. Fix percentage and trend indicators */
+.fi-wi-stats-overview-stat-change,
+.fi-wi-stats-overview-stat-trend {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* 11. Fix tooltip overflow */
+.fi-wi-stats-overview-stat [data-tooltip] {
+    overflow: visible !important; /* Allow tooltips to show */
+}
+
+/* 12. Ensure proper spacing */
+.fi-wi-stats-overview-stat > * + * {
+    margin-top: 0.5rem !important;
+}
+
+/* 13. Fix any absolute positioned elements */
+.fi-wi-stats-overview-stat [style*="position: absolute"] {
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* 14. Global stats widget fix */
+[class*="stats-overview"] {
+    overflow: hidden !important;
+}
+
+[class*="stats-overview"] [class*="value"],
+[class*="stats-overview"] [class*="label"],
+[class*="stats-overview"] [class*="description"] {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+}

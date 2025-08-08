@@ -1,0 +1,93 @@
+/* ================================================================
+   MacBook Air Normal View Fix - GitHub Issue #494
+   Removes excessive zoom and restores normal display
+   ================================================================ */
+
+/* 1. Reset to normal font sizes */
+html {
+    font-size: 16px !important;
+    zoom: 1 !important;
+    -webkit-zoom: 1 !important;
+}
+
+/* 2. Override the 14px mobile setting that shouldn't apply to MacBook */
+@media (max-width: 640px) {
+    html {
+        font-size: 16px !important;
+    }
+}
+
+/* 3. Normal sizing for MacBook Air (no zoom needed) */
+@media screen and (min-width: 1400px) and (max-width: 1500px) {
+    /* Remove any zoom or scale transforms */
+    html, body {
+        zoom: 1 !important;
+        -webkit-zoom: 1 !important;
+        transform: none !important;
+        transform-origin: unset !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+}
+
+/* 4. Proper base sizes without artificial scaling */
+body {
+    font-size: 1rem !important;
+    transform: none !important;
+}
+
+.fi-body {
+    font-size: 0.875rem !important; /* 14px - Filament default */
+}
+
+.fi-sidebar-nav a,
+.fi-sidebar-item {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
+}
+
+.fi-header-heading {
+    font-size: 1.5rem !important;
+}
+
+.fi-btn {
+    font-size: 0.875rem !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.fi-input,
+.fi-select,
+.fi-textarea {
+    font-size: 0.875rem !important;
+    min-height: 2.5rem !important;
+}
+
+.fi-ta-table {
+    font-size: 0.875rem !important;
+}
+
+.fi-ta-table th,
+.fi-ta-table td {
+    padding: 0.75rem !important;
+}
+
+/* 5. Normal sidebar width */
+.fi-sidebar {
+    width: 16rem !important;
+}
+
+.fi-main-ctn {
+    margin-left: 16rem !important;
+}
+
+/* 6. Remove any debug indicators */
+body::after,
+body::before {
+    display: none !important;
+}
+
+/* 7. Ensure no accidental scaling */
+* {
+    zoom: unset !important;
+    -webkit-zoom: unset !important;
+}
