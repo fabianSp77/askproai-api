@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DocumentationDataController;
 use App\Http\Controllers\Api\GitHubWebhookController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\MCPHealthCheckController;
+use App\Http\Controllers\API\MCPAdminController;
 use App\Http\Controllers\Api\NotionWebhookController;
 use App\Http\Controllers\Api\V2\PortalController;
 use App\Http\Controllers\CalcomWebhookController;
@@ -17,6 +18,8 @@ use App\Http\Controllers\RetellCustomFunctionController;
 use App\Http\Controllers\RetellWebhookController;
 use App\Http\Controllers\TwilioWebhookController;
 use App\Http\Controllers\UnifiedWebhookController;
+use App\Http\Controllers\HairSalonMCPController;
+use App\Http\Controllers\EnhancedHairSalonMCPController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +36,27 @@ Route::get('/health-check', [HealthCheckController::class, 'health']);
 // CSRF Token Route (public)
 Route::get('/csrf-token', [CsrfController::class, 'token']);
 Route::get('/health/detailed', [HealthCheckController::class, 'detailed']);
+
+// MCP Admin API Routes (protected)
+Route::prefix('admin/api/mcp')->middleware(['web', 'auth', \App\Http\Middleware\MCPAdminAccess::class])->group(function () {
+    Route::get('/configuration', [MCPAdminController::class, 'getConfiguration']);
+    Route::put('/configuration', [MCPAdminController::class, 'updateConfiguration']);
+    Route::post('/configuration/validate', [MCPAdminController::class, 'validateConfiguration']);
+    
+    Route::get('/metrics', [MCPAdminController::class, 'getMetrics']);
+    Route::post('/metrics/reset', [MCPAdminController::class, 'resetMetrics']);
+    
+    Route::get('/calls/recent', [MCPAdminController::class, 'getRecentCalls']);
+    
+    Route::get('/circuit-breaker/status', [MCPAdminController::class, 'getCircuitBreakerStatus']);
+    Route::post('/circuit-breaker/toggle', [MCPAdminController::class, 'toggleCircuitBreaker']);
+    
+    Route::post('/tools/{tool}/test', [MCPAdminController::class, 'testTool']);
+    Route::get('/tools', [MCPAdminController::class, 'getAvailableTools']);
+    
+    Route::get('/health', [MCPAdminController::class, 'getSystemHealth']);
+    Route::get('/webhooks/comparison', [MCPAdminController::class, 'getWebhookComparison']);
+});
 
 // Authentication Routes
 Route::prefix('auth')->group(function () {
@@ -171,7 +195,45 @@ Route::get('/zeitinfo', [App\Http\Controllers\ZeitinfoController::class, 'jetzt'
 
 // Test webhook endpoints removed for security
 
-// ---- Retell.ai Custom Function Endpoints ----------------------------
+// ---- Advanced Call Management API Routes ----------------------------
+Route::prefix('admin/api')->middleware(['web', 'auth'])->group(function () {
+    // Smart search
+    Route::get('/smart-search', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'smartSearch']);
+    
+    // Customer timeline
+    Route::get('/customer/{customer}/timeline', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'customerTimeline']);
+    
+    // Call management
+    Route::patch('/calls/{call}/priority', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'updateCallPriority']);
+    Route::get('/calls/{call}/details', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'callDetails']);
+    Route::post('/calls/{call}/voice-note', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'addVoiceNote']);
+    
+    // Filter and analytics
+    Route::get('/filter-preset-counts', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'filterPresetCounts']);
+    Route::get('/call-analytics', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'callAnalytics']);
+    
+    // Real-time data
+    Route::get('/realtime-call-data', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'realtimeCallData']);
+    Route::get('/queue-status', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'queueStatus']);
+    
+    // Export
+    Route::post('/export-calls', [App\Http\Controllers\API\AdvancedCallManagementController::class, 'exportCalls']);
+});
+
+// ---- Retell.ai MCP (Model Context Protocol) Endpoints ----------------------------
+// New MCP endpoint for direct tool calls from Retell.ai agents
+Route::prefix('mcp/retell')->group(function () {
+    // Health check endpoint (no authentication required for monitoring)
+    Route::get('/health', [App\Http\Controllers\API\MCPHealthController::class, 'health'])
+        ->name('api.mcp.retell.health');
+        
+    // Tool calls endpoint (authenticated)
+    Route::post('/tools', [App\Http\Controllers\API\RetellMCPEndpointController::class, 'handleToolCall'])
+        ->middleware(['verify.mcp.token', 'throttle:100,1'])
+        ->name('api.mcp.retell.tools');
+});
+
+// ---- Retell.ai Custom Function Endpoints (Legacy - will be deprecated) ----------------------------
 Route::prefix('retell')->group(function () {
     // Appointment data collection endpoint for Retell custom function
     Route::post('/collect-appointment', [App\Http\Controllers\Api\RetellAppointmentCollectorController::class, 'collect'])
@@ -869,22 +931,11 @@ Route::middleware(['auth:sanctum'])->prefix('v2')->group(function () {
 Route::post('/retell/webhook-bypass', [App\Http\Controllers\Api\RetellWebhookBypassController::class, 'handle'])
     ->name('retell.webhook.bypass');
 
-Route::post('/retell/webhook-simple', [App\Http\Controllers\Api\RetellWebhookWorkingController::class, 'handle'])
+// Optimized Retell webhook with HMAC verification and Quick ACK pattern
+Route::post('/retell/webhook-simple', [App\Http\Controllers\Api\RetellWebhookOptimizedController::class, 'handle'])
+        ->middleware(['verify.retell.signature', 'throttle:120,1']) // Increased to 120/min for Retell retries
         ->name('retell.webhook.simple');
 
-// Debug endpoint for session checking
-Route::get('/debug/session', function (Request $request) {
-    return response()->json([
-        'session_id' => session()->getId(),
-        'is_admin_viewing' => session('is_admin_viewing'),
-        'admin_impersonation' => session('admin_impersonation'),
-        'portal_user_id' => session('portal_user_id'),
-        'portal_auth' => Auth::guard('portal')->check(),
-        'web_auth' => Auth::guard('web')->check(),
-        'web_user' => Auth::guard('web')->user() ? Auth::guard('web')->user()->email : null,
-        'portal_user' => Auth::guard('portal')->user() ? Auth::guard('portal')->user()->email : null,
-    ]);
-});
 
 // Error Catalog API Routes
 Route::prefix('errors')->name('api.errors.')->group(function () {
@@ -952,4 +1003,224 @@ Route::prefix('monitoring')->middleware(['auth:sanctum', 'can:viewSystemMonitori
     Route::post('/report', [App\Http\Controllers\Api\MonitoringApiController::class, 'generateReport']);
     Route::get('/realtime', [App\Http\Controllers\Api\MonitoringApiController::class, 'realtime']);
     Route::post('/test-alert', [App\Http\Controllers\Api\MonitoringApiController::class, 'testAlert']);
+});
+
+// ---- Hair Salon MCP API Routes ----------------------------
+// Professional Hair Salon booking system with MCP integration for Retell.ai
+Route::prefix('hair-salon-mcp')->group(function () {
+    // Public health check for Retell.ai monitoring
+    Route::get('/health', [HairSalonMCPController::class, 'healthCheck'])
+        ->name('api.hair-salon-mcp.health');
+    
+    // Initialize MCP connection (called by Retell.ai)
+    Route::post('/initialize', [HairSalonMCPController::class, 'initialize'])
+        ->middleware(['throttle:30,1'])
+        ->name('api.hair-salon-mcp.initialize');
+    
+    // Core booking endpoints (with rate limiting for Retell.ai calls)
+    Route::middleware(['throttle:100,1'])->group(function () {
+        // Service and staff information
+        Route::post('/services', [HairSalonMCPController::class, 'getServices'])
+            ->name('api.hair-salon-mcp.services');
+        Route::post('/staff', [HairSalonMCPController::class, 'getStaff'])
+            ->name('api.hair-salon-mcp.staff');
+        
+        // Availability checking with caching
+        Route::post('/availability', [HairSalonMCPController::class, 'checkAvailability'])
+            ->name('api.hair-salon-mcp.availability');
+        
+        // Appointment booking (core business function)
+        Route::post('/book', [HairSalonMCPController::class, 'bookAppointment'])
+            ->name('api.hair-salon-mcp.book');
+        
+        // Callback scheduling for consultation services
+        Route::post('/callback', [HairSalonMCPController::class, 'scheduleCallback'])
+            ->name('api.hair-salon-mcp.callback');
+        
+        // Customer lookup for returning clients
+        Route::post('/customer', [HairSalonMCPController::class, 'getCustomer'])
+            ->name('api.hair-salon-mcp.customer');
+    });
+    
+    // Billing and reporting endpoints (authenticated)
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('/usage-stats', [HairSalonMCPController::class, 'getUsageStats'])
+            ->name('api.hair-salon-mcp.usage-stats');
+        Route::post('/monthly-report', [HairSalonMCPController::class, 'getMonthlyReport'])
+            ->name('api.hair-salon-mcp.monthly-report');
+    });
+});
+
+// ---- Enhanced Hair Salon MCP API v2 Routes (Production Grade) -----------
+// Professional Hair Salon booking system v2 with enhanced security and performance
+Route::prefix('v2/hair-salon-mcp')->group(function () {
+    // Public health check with detailed metrics
+    Route::get('/health', [EnhancedHairSalonMCPController::class, 'getHealthStatus'])
+        ->name('api.v2.hair-salon-mcp.health');
+    
+    // Initialize MCP connection with enhanced validation
+    Route::post('/initialize', [EnhancedHairSalonMCPController::class, 'initialize'])
+        ->name('api.v2.hair-salon-mcp.initialize');
+    
+    // Core booking endpoints with authentication and circuit breakers
+    Route::middleware(['mcp.auth'])->group(function () {
+        // Service and staff information
+        Route::get('/services', [EnhancedHairSalonMCPController::class, 'getServices'])
+            ->name('api.v2.hair-salon-mcp.services');
+        
+        Route::get('/staff', [EnhancedHairSalonMCPController::class, 'getStaff'])
+            ->name('api.v2.hair-salon-mcp.staff');
+        
+        // Enhanced availability checking with batch processing
+        Route::post('/availability/check', [EnhancedHairSalonMCPController::class, 'checkAvailability'])
+            ->name('api.v2.hair-salon-mcp.availability.check');
+        
+        // Appointment booking with comprehensive validation
+        Route::post('/appointments/book', [EnhancedHairSalonMCPController::class, 'bookAppointment'])
+            ->name('api.v2.hair-salon-mcp.appointments.book');
+        
+        // Callback scheduling for consultation services
+        Route::post('/callbacks/schedule', [EnhancedHairSalonMCPController::class, 'scheduleCallback'])
+            ->name('api.v2.hair-salon-mcp.callbacks.schedule');
+        
+        // Customer lookup with enhanced data
+        Route::get('/customers/lookup', [EnhancedHairSalonMCPController::class, 'getCustomer'])
+            ->name('api.v2.hair-salon-mcp.customers.lookup');
+        
+        // Advanced analytics and insights
+        Route::get('/analytics/usage', [EnhancedHairSalonMCPController::class, 'getUsageAnalytics'])
+            ->name('api.v2.hair-salon-mcp.analytics.usage');
+        
+        // Billing and cost optimization insights
+        Route::get('/billing/enhanced-report', [EnhancedHairSalonMCPController::class, 'getEnhancedBillingReport'])
+            ->name('api.v2.hair-salon-mcp.billing.enhanced-report');
+    });
+});
+
+// Retell.ai Hair Salon Webhook
+Route::post('/api/v2/hair-salon-mcp/retell-webhook', [\App\Http\Controllers\RetellHairSalonWebhookController::class, 'handleWebhook'])
+    ->name('api.hair-salon.retell.webhook');
+
+// Retell MCP Bridge - Main endpoint for MCP protocol
+Route::any("v2/hair-salon-mcp/mcp", [\App\Http\Controllers\RetellMCPBridgeController::class, "handle"])
+    ->name("api.hair-salon.mcp.bridge");
+
+// MCP Bridge method-specific routes
+Route::post("v2/hair-salon-mcp/mcp/list_services", [\App\Http\Controllers\RetellMCPBridgeController::class, "handle"]);
+Route::post("v2/hair-salon-mcp/mcp/check_availability", [\App\Http\Controllers\RetellMCPBridgeController::class, "handle"]);
+Route::post("v2/hair-salon-mcp/mcp/book_appointment", [\App\Http\Controllers\RetellMCPBridgeController::class, "handle"]);
+Route::post("v2/hair-salon-mcp/mcp/schedule_callback", [\App\Http\Controllers\RetellMCPBridgeController::class, "handle"]);
+Route::get("v2/hair-salon-mcp/mcp/health", [\App\Http\Controllers\RetellMCPBridgeController::class, "health"]);
+
+
+// TEMPORARY: Debug route to log all headers
+Route::any("v2/hair-salon-mcp/debug", function(\Illuminate\Http\Request $request) {
+    \Log::info("DEBUG MCP Request", [
+        "method" => $request->method(),
+        "headers" => $request->headers->all(),
+        "body" => $request->all(),
+        "raw_content" => $request->getContent()
+    ]);
+    
+    // Return a valid MCP response
+    return response()->json([
+        "jsonrpc" => "2.0",
+        "id" => $request->input("id"),
+        "result" => [
+            "debug" => "Headers received",
+            "headers_count" => count($request->headers->all())
+        ]
+    ]);
+});
+
+// UNIVERSAL MCP TEST - Accepts any format
+Route::any("v2/hair-salon-mcp/universal", function(\Illuminate\Http\Request $request) {
+    \Log::info("UNIVERSAL MCP REQUEST", [
+        "timestamp" => now()->toIso8601String(),
+        "method" => $request->method(),
+        "all_headers" => $request->headers->all(),
+        "body" => $request->all(),
+        "raw_body" => $request->getContent(),
+        "query_params" => $request->query(),
+        "ip" => $request->ip(),
+        "user_agent" => $request->userAgent()
+    ]);
+    
+    // Try to detect what Retell wants
+    $method = $request->input("method") 
+        ?? $request->input("tool") 
+        ?? $request->input("function")
+        ?? "unknown";
+    
+    // Always return services for testing
+    if (str_contains($method, "list") || str_contains($method, "services") || $method == "unknown") {
+        return response()->json([
+            "jsonrpc" => "2.0",
+            "id" => $request->input("id") ?? "test",
+            "result" => [
+                "services" => [
+                    ["id" => 26, "name" => "Herrenhaarschnitt", "price" => "35.00", "duration" => 30],
+                    ["id" => 27, "name" => "Damenhaarschnitt", "price" => "55.00", "duration" => 45]
+                ]
+            ]
+        ]);
+    }
+    
+    return response()->json([
+        "jsonrpc" => "2.0",
+        "id" => $request->input("id") ?? "test",
+        "result" => ["message" => "Universal endpoint received: " . $method]
+    ]);
+});
+
+// Retell Webhook Handler
+
+Route::post("v2/hair-salon-mcp/retell-webhook", function(\Illuminate\Http\Request $request) {
+    // Force immediate logging
+    error_log("RETELL WEBHOOK HIT at " . date("Y-m-d H:i:s"));
+    
+    $data = $request->all();
+    $headers = $request->headers->all();
+    
+    // Log to Laravel log
+    \Log::channel("single")->info("RETELL WEBHOOK RECEIVED", [
+        "timestamp" => now()->toIso8601String(),
+        "headers" => $headers,
+        "body" => $data,
+        "raw_body" => substr($request->getContent(), 0, 1000),
+        "method" => $request->method(),
+        "ip" => $request->ip()
+    ]);
+    
+    // Also log to error_log for immediate visibility
+    error_log("RETELL DATA: " . json_encode($data));
+    
+    // Handle different events
+    $event = $data["event"] ?? $data["type"] ?? "unknown";
+    
+    \Log::channel("single")->info("RETELL EVENT TYPE: " . $event);
+    
+    // Always try to create an appointment for testing
+    if (str_contains(strtolower($event), "call") || str_contains(strtolower($event), "end")) {
+        try {
+            $appointment = new \App\Models\Appointment();
+            $appointment->company_id = 1;
+            $appointment->customer_id = 1;
+            $appointment->service_id = 26;
+            $appointment->starts_at = now()->addDay();
+            $appointment->ends_at = now()->addDay()->addMinutes(30);
+            $appointment->status = "confirmed";
+            $appointment->source = "retell_webhook";
+            $appointment->notes = "Webhook event: " . $event . " | Data: " . json_encode($data);
+            $appointment->save();
+            
+            \Log::channel("single")->info("APPOINTMENT CREATED", ["id" => $appointment->id]);
+            error_log("APPOINTMENT CREATED: ID=" . $appointment->id);
+        } catch (\Exception $e) {
+            \Log::channel("single")->error("APPOINTMENT CREATION FAILED", ["error" => $e->getMessage()]);
+            error_log("APPOINTMENT ERROR: " . $e->getMessage());
+        }
+    }
+    
+    return response()->json(["success" => true, "received" => $event]);
 });
