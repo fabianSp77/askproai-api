@@ -13,9 +13,5 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'admin/*',
-        'admin-v2/api/*',
-        'admin-v2/api/login',
-        'admin-v2/api/logout',
-        'admin-v2/api/check',
     ];
 }

@@ -7,7 +7,6 @@ Route::get('/', function () {
 });
 
 // Include AdminV2 routes
-require __DIR__.'/adminv2.php';
 
 // ---------- Filament Admin-Dashboard als Root des Panels ----------
 // // // Route::redirect('/admin', '/admin/dashboard')

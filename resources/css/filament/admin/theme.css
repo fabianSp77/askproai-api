@@ -1,27 +1,84 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* Import Flowbite Components */
+@import 'flowbite';
+
+/* Modern Sky-Blue Theme for AskProAI */
 :root {
-    --color-primary-50: 254 252 232;
-    --color-primary-100: 254 249 195;
-    --color-primary-200: 254 240 138;
-    --color-primary-300: 253 224 71;
-    --color-primary-400: 250 204 21;
-    --color-primary-500: 234 179 8;
-    --color-primary-600: 202 138 4;
-    --color-primary-700: 161 98 7;
-    --color-primary-800: 133 77 14;
-    --color-primary-900: 113 63 18;
-    --color-primary-950: 66 32 6;
+    --color-primary-50: 240 249 255;
+    --color-primary-100: 224 242 254;
+    --color-primary-200: 186 230 253;
+    --color-primary-300: 125 211 252;
+    --color-primary-400: 56 189 248;
+    --color-primary-500: 14 165 233;
+    --color-primary-600: 2 132 199;
+    --color-primary-700: 3 105 161;
+    --color-primary-800: 7 89 133;
+    --color-primary-900: 12 74 110;
+    --color-primary-950: 8 47 73;
+}
+
+/* Modern Sidebar Styling */
+.fi-sidebar {
+    @apply bg-gradient-to-b from-white to-gray-50 border-r border-gray-200;
 }
 
 .fi-sidebar-header {
-    @apply bg-amber-500 text-white;
+    @apply bg-gradient-to-r from-sky-500 to-sky-600 text-white shadow-md;
 }
 
 .fi-sidebar-nav {
-    @apply bg-white dark:bg-gray-900;
+    @apply bg-transparent;
+}
+
+.fi-sidebar-item a {
+    @apply rounded-lg mx-2 transition-all duration-200;
 }
 
 .fi-sidebar-item-active {
-    @apply bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300;
+    @apply bg-sky-50 text-sky-700 shadow-sm;
+}
+
+.fi-sidebar-item:hover:not(.fi-sidebar-item-active) a {
+    @apply bg-gray-100 text-gray-700;
+}
+
+/* Modern Cards with Flowbite styling */
+.fi-wi-widget {
+    @apply rounded-2xl shadow-sm border border-gray-100 overflow-hidden;
+}
+
+.fi-section {
+    @apply rounded-2xl bg-white shadow-sm border border-gray-100;
+}
+
+/* Clean Tables */
+.fi-ta-table {
+    @apply divide-y divide-gray-100;
+}
+
+.fi-ta-row {
+    @apply hover:bg-sky-50 transition-colors duration-150;
+}
+
+/* Modern Form Inputs */
+.fi-input {
+    @apply rounded-lg border-gray-200 focus:border-sky-400 focus:ring-sky-400;
+}
+
+/* Better Buttons with Flowbite style */
+.fi-btn {
+    @apply rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md;
+}
+
+.fi-btn-primary {
+    @apply bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700;
+}
+
+/* Dashboard Stats Cards */
+.fi-stats-card {
+    @apply bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-300;
 }
