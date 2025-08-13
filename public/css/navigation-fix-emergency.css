@@ -1,0 +1,38 @@
+/* EMERGENCY FIX für Issue #479 */
+
+/* Force sidebar visibility */
+.fi-sidebar,
+aside.fi-sidebar,
+.fi-sidebar-nav {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 9999 !important;
+}
+
+/* Remove any overlays */
+.fi-sidebar::before,
+.fi-sidebar::after,
+.fi-sidebar-nav::before,
+.fi-sidebar-nav::after {
+    display: none !important;
+}
+
+/* Force navigation items visible */
+.fi-sidebar-item,
+.fi-sidebar-item a {
+    display: block !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Mobile menu button always visible */
+.fi-sidebar-open-btn,
+.fi-sidebar-close-btn {
+    display: block !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: 99999 !important;
+}

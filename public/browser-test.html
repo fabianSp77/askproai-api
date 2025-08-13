@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>AskProAI - Browser Test Suite</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f3f4f6; }
+        .header { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .test-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-btn { background: #0ea5e9; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        .test-btn:hover { background: #0284c7; }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .warning { color: #f59e0b; font-weight: bold; }
+        .result { background: #f9fafb; padding: 10px; border-radius: 4px; margin-top: 10px; font-family: monospace; }
+        iframe { width: 100%; height: 600px; border: 2px solid #e5e7eb; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 AskProAI Admin Panel - Browser Test Suite</h1>
+        <p>Teste alle Login-Methoden und UI-Komponenten</p>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Test-Accounts</h2>
+        <div class="result">
+            <strong>Hauptaccount:</strong> fabian@askproai.de / password<br>
+            <strong>Test-Account:</strong> test@askproai.de / test123<br>
+            <strong>Admin-Account:</strong> admin@askproai.de / password
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔐 Login Tests</h2>
+        <button class="test-btn" onclick="testEmergencyLogin()">Test Emergency Login</button>
+        <button class="test-btn" onclick="testFilamentLogin()">Test Filament Login</button>
+        <button class="test-btn" onclick="testDirectAdmin()">Test Direct Admin Access</button>
+        <div id="login-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎨 UI/Theme Tests</h2>
+        <button class="test-btn" onclick="checkFlowbite()">Check Flowbite CSS</button>
+        <button class="test-btn" onclick="checkNavigation()">Check Navigation</button>
+        <button class="test-btn" onclick="fixNavigation()">Apply Navigation Fix</button>
+        <div id="ui-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🖼️ Live Preview</h2>
+        <iframe id="preview" src="about:blank"></iframe>
+    </div>
+
+    <script>
+        const baseUrl = 'https://api.askproai.de';
+        const resultsDiv = document.getElementById('login-results');
+        const uiResultsDiv = document.getElementById('ui-results');
+        const preview = document.getElementById('preview');
+
+        async function testEmergencyLogin() {
+            resultsDiv.innerHTML = '<p>Testing Emergency Login...</p>';
+            preview.src = baseUrl + '/emergency-login.php';
+            
+            // Test with fetch
+            try {
+                const response = await fetch(baseUrl + '/emergency-login.php');
+                const text = await response.text();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <p class="success">✅ Emergency Login Page: ${response.status} OK</p>
+                        <p>Page contains login form: ${text.includes('email') ? 'YES' : 'NO'}</p>
+                        <div class="result">
+                            Öffne in neuem Tab: <a href="${baseUrl}/emergency-login.php" target="_blank">${baseUrl}/emergency-login.php</a><br>
+                            Login mit: fabian@askproai.de / password
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">❌ Emergency Login Error: ${response.status}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">❌ Fetch Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testFilamentLogin() {
+            resultsDiv.innerHTML = '<p>Testing Filament Login...</p>';
+            preview.src = baseUrl + '/admin/login';
+            
+            try {
+                const response = await fetch(baseUrl + '/admin/login');
+                const text = await response.text();
+                
+                if (response.ok) {
+                    const hasLivewire = text.includes('livewire');
+                    const hasFilament = text.includes('filament');
+                    
+                    resultsDiv.innerHTML = `
+                        <p class="success">✅ Filament Login Page: ${response.status} OK</p>
+                        <p>Livewire detected: ${hasLivewire ? 'YES' : 'NO'}</p>
+                        <p>Filament detected: ${hasFilament ? 'YES' : 'NO'}</p>
+                        <div class="result">
+                            Öffne in neuem Tab: <a href="${baseUrl}/admin/login" target="_blank">${baseUrl}/admin/login</a><br>
+                            ${hasLivewire ? '<span class="warning">⚠️ Livewire Form - kann Infrastructure-Probleme haben</span>' : ''}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">❌ Filament Login Error: ${response.status}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">❌ Fetch Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testDirectAdmin() {
+            resultsDiv.innerHTML = '<p>Testing Direct Admin Access...</p>';
+            preview.src = baseUrl + '/admin';
+            
+            try {
+                const response = await fetch(baseUrl + '/admin', {
+                    credentials: 'include'
+                });
+                
+                resultsDiv.innerHTML = `
+                    <p class="${response.ok ? 'success' : 'warning'}">
+                        Admin Panel: ${response.status} ${response.statusText}
+                    </p>
+                    <div class="result">
+                        ${response.status === 302 ? 'Redirect to login detected' : ''}
+                        ${response.status === 200 ? 'Direct access possible (might be cached)' : ''}
+                        ${response.status === 403 ? '❌ Forbidden - Login required' : ''}
+                    </div>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">❌ Fetch Error: ${error.message}</p>`;
+            }
+        }
+
+        async function checkFlowbite() {
+            uiResultsDiv.innerHTML = '<p>Checking Flowbite Integration...</p>';
+            
+            try {
+                // Check CSS files
+                const cssResponse = await fetch(baseUrl + '/build/manifest.json');
+                const manifest = await cssResponse.json();
+                
+                const hasFlowbite = JSON.stringify(manifest).includes('flowbite');
+                const hasTheme = JSON.stringify(manifest).includes('theme');
+                
+                uiResultsDiv.innerHTML = `
+                    <p class="${hasFlowbite ? 'success' : 'error'}">
+                        Flowbite in Build: ${hasFlowbite ? '✅ YES' : '❌ NO'}
+                    </p>
+                    <p class="${hasTheme ? 'success' : 'error'}">
+                        Custom Theme in Build: ${hasTheme ? '✅ YES' : '❌ NO'}
+                    </p>
+                    <div class="result">
+                        Build Manifest Check:<br>
+                        ${Object.keys(manifest).slice(0, 5).join('<br>')}
+                    </div>
+                `;
+            } catch (error) {
+                uiResultsDiv.innerHTML = `<p class="error">❌ Could not check build files: ${error.message}</p>`;
+            }
+        }
+
+        async function checkNavigation() {
+            uiResultsDiv.innerHTML = `
+                <p class="warning">⚠️ Navigation Issue #479 bekannt</p>
+                <div class="result">
+                    Known Issue: Sidebar navigation ist versteckt/nicht klickbar<br>
+                    GitHub Issue: <a href="https://github.com/fabianSp77/askproai-api/issues/479" target="_blank">#479</a><br>
+                    <br>
+                    Teste selbst:<br>
+                    1. Login via Emergency Login<br>
+                    2. Öffne Browser DevTools (F12)<br>
+                    3. Suche nach: .fi-sidebar<br>
+                    4. Check CSS: pointer-events, visibility, display
+                </div>
+            `;
+        }
+
+        function fixNavigation() {
+            uiResultsDiv.innerHTML = `
+                <p class="success">✅ Navigation Fix Applied!</p>
+                <div class="result">
+                    Fix CSS injected! Füge dies in Browser Console ein:<br>
+                    <code>
+                    document.querySelectorAll('.fi-sidebar, .fi-sidebar-nav, .fi-sidebar-item').forEach(el => {
+                        el.style.display = 'block';
+                        el.style.visibility = 'visible';
+                        el.style.pointerEvents = 'auto';
+                        el.style.opacity = '1';
+                    });
+                    </code>
+                </div>
+            `;
+            
+            // Inject fix into iframe
+            try {
+                const doc = preview.contentDocument;
+                if (doc) {
+                    const style = doc.createElement('style');
+                    style.innerHTML = `
+                        .fi-sidebar, .fi-sidebar-nav { 
+                            display: block !important; 
+                            visibility: visible !important; 
+                            pointer-events: auto !important; 
+                        }
+                    `;
+                    doc.head.appendChild(style);
+                }
+            } catch (e) {
+                console.log('Could not inject into iframe (CORS)');
+            }
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            testEmergencyLogin();
+        };
+    </script>
+</body>
+</html>
