@@ -24,8 +24,12 @@ Route::middleware(['web'])
         })->name('login.api');
     });
 
-// API Auth routes (JSON responses) - Workaround for 405 error
-Route::middleware(['web'])
+// API Auth routes (JSON responses) - With session but without CSRF
+Route::middleware([
+        \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+    ])
     ->prefix('admin-v2/api')
     ->name('adminv2.api.')
     ->group(function () {
