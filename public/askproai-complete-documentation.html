@@ -1088,7 +1088,7 @@ DB_PASSWORD=your_secure_password
 
 # Cal.com Integration
 CALCOM_API_KEY=cal_live_your_api_key_here
-CALCOM_BASE_URL=https://api.cal.com/v1
+CALCOM_BASE_URL=https://api.cal.com/v2
 CALCOM_WEBHOOK_SECRET=your_webhook_secret
 
 # RetellAI Integration
@@ -1840,7 +1840,7 @@ php artisan horizon --verbose
                     <pre><code>
 # API Key validieren
 curl -H "Authorization: Bearer $CALCOM_API_KEY" \
-     https://api.cal.com/v1/me
+     https://api.cal.com/v2/me
 
 # Log-Ausgabe prüfen
 tail -f storage/logs/laravel.log | grep "Cal.com"

@@ -22,7 +22,7 @@ return [
 
     // ---------- Cal.com -------------
     'calcom' => [
-        'base_url'       => env('CALCOM_BASE_URL', 'https://api.cal.com/v1'),
+        'base_url'       => env('CALCOM_BASE_URL', 'https://api.cal.com/v2'),
         'api_key'        => env('CALCOM_API_KEY'),
         'team_slug'      => env('CALCOM_TEAM_SLUG'),
         'event_type_id'  => env('CALCOM_EVENT_TYPE_ID'),

@@ -13,7 +13,7 @@ class SyncCalcomEventTypes extends Command
     {
         $apiKey = config('services.calcom.api_key');     // siehe services.php unten
         $resp   = Http::withToken($apiKey)
-                     ->get('https://api.cal.com/v1/event-types?limit=200');
+                     ->get('https://api.cal.com/v2/event-types?limit=200');
 
         if ($resp->failed()) {
             $this->error('Cal.com API‑Fehler: '.$resp->body());

@@ -14,7 +14,7 @@ class CalComController extends Controller
     public function __construct()
     {
         $this->apiKey = config('calcom.api_key');
-        $this->baseUrl = env('CALCOM_BASE_URL', 'https://api.cal.com/v1');
+        $this->baseUrl = env('CALCOM_BASE_URL', 'https://api.cal.com/v2');
     }
 
     public function checkAvailability(Request $request)

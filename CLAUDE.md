@@ -467,7 +467,7 @@ DB_PASSWORD=your_password
 
 # Cal.com Integration
 CALCOM_API_KEY=cal_live_your_api_key_here
-CALCOM_BASE_URL=https://api.cal.com/v1
+CALCOM_BASE_URL=https://api.cal.com/v2
 CALCOM_WEBHOOK_SECRET=your_webhook_secret
 
 # RetellAI Integration
@@ -913,7 +913,7 @@ php artisan queue:retry all
 **Lösung:**
 ```bash
 # API Key prüfen
-curl -H "Authorization: Bearer $CALCOM_API_KEY" https://api.cal.com/v1/me
+curl -H "Authorization: Bearer $CALCOM_API_KEY" https://api.cal.com/v2/me
 
 # Webhook Status prüfen
 tail -f storage/logs/laravel.log | grep "Cal.com"

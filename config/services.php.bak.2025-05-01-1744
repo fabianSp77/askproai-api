@@ -37,7 +37,7 @@ return [
 
     'calcom' => [
         'api_key' => env('CALCOM_API_KEY', 'YOUR_CALCOM_API_KEY_HERE'),
-        'base_url' => 'https://api.cal.com/v1',
+        'base_url' => 'https://api.cal.com/v2',
     ],
 
     // ... andere services ...

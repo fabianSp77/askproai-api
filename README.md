@@ -110,7 +110,7 @@ DB_PASSWORD=your_secure_password
 
 # Cal.com Integration
 CALCOM_API_KEY=your_calcom_api_key
-CALCOM_BASE_URL=https://api.cal.com/v1
+CALCOM_BASE_URL=https://api.cal.com/v2
 CALCOM_WEBHOOK_SECRET=your_webhook_secret
 
 # RetellAI Integration  
