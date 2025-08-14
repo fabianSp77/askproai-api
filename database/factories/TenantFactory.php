@@ -28,12 +28,9 @@ class TenantFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->company(), // Generiere einen Firmennamen
-            'api_key' => Str::random(40), // Generiere einen zufälligen API Key (Länge 40)
-            'is_active' => true, // Standardmäßig aktiv
-            // Füge hier ggf. Defaults für Cal.com-Felder hinzu, falls diese existieren
-            // 'calcom_api_key_encrypted' => null,
-            // 'calcom_event_type_id' => null,
+            'name' => 'Test Company '.$this->faker->numberBetween(1000, 9999),
+            // The api_key_hash will be automatically generated in the model's creating event
+            // Don't include 'api_key' here as that column doesn't exist anymore
         ];
     }
 
@@ -44,6 +41,16 @@ class TenantFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_active' => false,
+        ]);
+    }
+
+    /**
+     * Create tenant with a specific API key for testing.
+     */
+    public function withApiKey(string $plainApiKey): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'api_key_hash' => bcrypt($plainApiKey),
         ]);
     }
 }

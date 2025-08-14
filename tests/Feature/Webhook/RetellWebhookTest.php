@@ -40,8 +40,8 @@ class RetellWebhookTest extends TestCase
         // KEINE DB::table()->delete() Aufrufe hier! Das macht RefreshDatabase.
 
         // Erstelle Tenants und User neu für jeden Test.
-        $this->tenant1 = Tenant::factory()->create(['api_key' => 'tenant1-test-key']);
-        $this->tenant2 = Tenant::factory()->create(['api_key' => 'tenant2-test-key']);
+        $this->tenant1 = Tenant::factory()->withApiKey('tenant1-test-key')->create();
+        $this->tenant2 = Tenant::factory()->withApiKey('tenant2-test-key')->create();
         $this->defaultUser = User::factory()->create(['id' => 1]);
     }
 
