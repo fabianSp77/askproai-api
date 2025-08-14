@@ -1,4 +1,0 @@
-AuthType Basic
-AuthName "AskProAI Admin Documentation"
-AuthUserFile /var/www/api-gateway/.htpasswd
-Require valid-user

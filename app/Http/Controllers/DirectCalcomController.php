@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 class DirectCalcomController extends Controller
 {
     const BASE_URL = 'https://api.cal.com/v1';
-    const API_KEY = 'cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da';
+    const API_KEY = null; // Use config('services.calcom.api_key') instead
     const TIMEZONE = 'Europe/Berlin';
     const LANGUAGE = 'de';
 

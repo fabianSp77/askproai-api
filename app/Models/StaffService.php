@@ -8,5 +8,11 @@ class StaffService extends Pivot
 {
     protected $table = 'staff_service';
     public $incrementing = true;
-    protected $guarded = [];
+    /**
+     * The attributes that are mass assignable.
+     */
+    protected $fillable = [
+        'staff_id',
+        'service_id'
+    ];
 }

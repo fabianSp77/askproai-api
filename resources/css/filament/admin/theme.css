@@ -100,8 +100,11 @@
     border-right: 1px solid rgb(229 231 235) !important;
 }
 
-.fi-main {
+.fi-main-ctn {
     grid-column: 2 !important;
+    opacity: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
     min-height: 100vh !important;
     overflow-x: hidden !important;
 }

@@ -31,7 +31,7 @@ class CalComController extends Controller
             $endTimeFormatted = $endTime->format('Y-m-d\TH:i:s.u\Z');
             
             // Cal.com API details
-            $apiKey = 'cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da';
+            $apiKey = config('services.calcom.api_key');
             $userId = '1346408';
             
             // Build the correct format for Cal.com API - matching their exact expected format
@@ -57,12 +57,16 @@ class CalComController extends Controller
             // Log what we're sending
             Log::info('Cal.com Request Payload', ['payload' => $payload]);
             
-            // Make the actual API call
-            $ch = curl_init("https://api.cal.com/v1/bookings?apiKey={$apiKey}");
+            // Make the actual API call using v2
+            $ch = curl_init("https://api.cal.com/v2/bookings");
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'cal-api-version: 2025-01-07',
+                'Authorization: Bearer ' . $apiKey
+            ]);
             
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);

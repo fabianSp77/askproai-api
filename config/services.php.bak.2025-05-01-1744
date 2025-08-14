@@ -36,7 +36,7 @@ return [
     ],
 
     'calcom' => [
-        'api_key' => env('CALCOM_API_KEY', 'cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da'),
+        'api_key' => env('CALCOM_API_KEY', 'YOUR_CALCOM_API_KEY_HERE'),
         'base_url' => 'https://api.cal.com/v1',
     ],
 

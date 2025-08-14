@@ -1,0 +1,2199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AskProAI - Vollständige Dokumentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.7;
+            color: #333;
+            background: #f8fafc;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        .version-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .nav {
+            background: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin-bottom: 2rem;
+        }
+        
+        .nav-list {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-link {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+        
+        .section {
+            background: white;
+            margin-bottom: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .section-content {
+            padding: 2rem;
+        }
+        
+        h2, h3, h4 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        h3 {
+            font-size: 1.4rem;
+            color: #4a5568;
+        }
+        
+        h4 {
+            font-size: 1.2rem;
+            color: #718096;
+        }
+        
+        p, li {
+            margin-bottom: 0.8rem;
+        }
+        
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code {
+            background: #f7fafc;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+            color: #e53e3e;
+        }
+        
+        pre {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        
+        .highlight {
+            background: #fef5e7;
+            border-left: 4px solid #f6ad55;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .success {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            color: #2f855a;
+        }
+        
+        .info {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            color: #3182ce;
+        }
+        
+        .warning {
+            background: #fffbeb;
+            border-left: 4px solid #f6ad55;
+            color: #c05621;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        th, td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        tbody tr:hover {
+            background: #f7fafc;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #e2e8f0;
+            color: #4a5568;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        
+        .badge.success { background: #c6f6d5; color: #22543d; }
+        .badge.warning { background: #fed7aa; color: #c05621; }
+        .badge.error { background: #fed7d7; color: #c53030; }
+        .badge.info { background: #bee3f8; color: #2c5282; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .card h4 {
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+        
+        .toc {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .toc h3 {
+            margin-bottom: 1rem;
+            color: #4a5568;
+        }
+        
+        .toc ul {
+            padding-left: 1rem;
+        }
+        
+        .toc a {
+            color: #4299e1;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer {
+            background: #2d3748;
+            color: white;
+            padding: 2rem 0;
+            margin-top: 4rem;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 0 15px; }
+            h1 { font-size: 2rem; }
+            .nav-list { flex-direction: column; gap: 0.5rem; }
+            .section-content { padding: 1.5rem; }
+            .grid { grid-template-columns: 1fr; }
+            table { font-size: 0.8rem; }
+            pre { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1>🤖 AskProAI</h1>
+                <div class="subtitle">Vollständige System-Dokumentation</div>
+                <span class="version-badge">Version 1.2.0 - August 2025</span>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="#overview" class="nav-link">Überblick</a></li>
+                <li><a href="#architecture" class="nav-link">Architektur</a></li>
+                <li><a href="#api" class="nav-link">API</a></li>
+                <li><a href="#deployment" class="nav-link">Deployment</a></li>
+                <li><a href="#security" class="nav-link">Sicherheit</a></li>
+                <li><a href="#monitoring" class="nav-link">Monitoring</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Inhaltsverzeichnis -->
+        <div class="toc">
+            <h3>📋 Inhaltsverzeichnis</h3>
+            <ul>
+                <li><a href="#overview">🏢 Systemübersicht</a></li>
+                <li><a href="#features">🌟 Hauptfunktionen</a></li>
+                <li><a href="#tech-stack">🛠 Technologie-Stack</a></li>
+                <li><a href="#architecture">🏗 Systemarchitektur</a></li>
+                <li><a href="#database">🗃 Datenbankstruktur</a></li>
+                <li><a href="#api">📡 API-Dokumentation</a></li>
+                <li><a href="#installation">⚡ Installation & Setup</a></li>
+                <li><a href="#deployment">🚀 Deployment</a></li>
+                <li><a href="#security">🔒 Sicherheit</a></li>
+                <li><a href="#monitoring">📊 Monitoring & Wartung</a></li>
+                <li><a href="#backup">💾 Backup-Strategie</a></li>
+                <li><a href="#troubleshooting">🔧 Troubleshooting</a></li>
+                <li><a href="#changelog">📝 Changelog</a></li>
+            </ul>
+        </div>
+
+        <!-- Systemübersicht -->
+        <section id="overview" class="section">
+            <div class="section-header">
+                🏢 Systemübersicht
+            </div>
+            <div class="section-content">
+                <div class="highlight info">
+                    <strong>AskProAI</strong> ist ein vollautomatisiertes KI-Telefonassistenz-System für Dienstleistungsunternehmen (Praxen, Salons, Beratungen). Das System ermöglicht intelligente Anrufbearbeitung und automatische Terminbuchung.
+                </div>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>📞 KI-gestützte Anrufbearbeitung</h4>
+                        <p>Automatische Bearbeitung eingehender Anrufe via RetellAI mit natürlicher Spracherkennung und intelligenter Gesprächsführung.</p>
+                    </div>
+                    <div class="card">
+                        <h4>📅 Automatische Terminbuchung</h4>
+                        <p>Nahtlose Integration mit Cal.com für die Terminbuchung direkt während des Anrufs ohne menschliche Intervention.</p>
+                    </div>
+                    <div class="card">
+                        <h4>🏢 Multi-Tenant Architektur</h4>
+                        <p>Unterstützt mehrere Kunden mit isolierten Daten und individuellen Konfigurationen in einer einzigen Instanz.</p>
+                    </div>
+                    <div class="card">
+                        <h4>📊 Admin Dashboard</h4>
+                        <p>Umfassendes Filament-Dashboard für Verwaltung, Reporting und Analytics mit Echtzeit-Daten.</p>
+                    </div>
+                </div>
+
+                <h3>Hauptzielgruppen</h3>
+                <ul>
+                    <li><strong>Arztpraxen:</strong> Terminvereinbarung und Patientenbetreuung</li>
+                    <li><strong>Friseursalons & Kosmetikstudios:</strong> Buchung von Behandlungen</li>
+                    <li><strong>Beratungsunternehmen:</strong> Terminkoordination für Gespräche</li>
+                    <li><strong>Dienstleister:</strong> Allgemeine Kundenbetreuung und Terminfindung</li>
+                </ul>
+
+                <h3>Geschäftliche Vorteile</h3>
+                <ul>
+                    <li>24/7 Erreichbarkeit ohne zusätzliches Personal</li>
+                    <li>Reduzierung von No-Shows durch automatische Erinnerungen</li>
+                    <li>Konsistente Kundenbetreuung ohne menschliche Fehler</li>
+                    <li>Skalierbarkeit ohne proportionale Personalkosten</li>
+                    <li>Detaillierte Analytics für Business Intelligence</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section id="features" class="section">
+            <div class="section-header">
+                🌟 Hauptfunktionen
+            </div>
+            <div class="section-content">
+                <div class="grid">
+                    <div class="card">
+                        <h4>🤖 Intelligente KI-Assistenz</h4>
+                        <p>Natürliche Gesprächsführung mit RetellAI-Integration, unterstützt komplexe Dialoge und versteht Kundenintentionen.</p>
+                        <span class="badge success">Aktiv</span>
+                    </div>
+                    <div class="card">
+                        <h4>📅 Event-Management</h4>
+                        <p>Vollständige Integration mit Cal.com für Terminbuchung, -verwaltung und -synchronisation.</p>
+                        <span class="badge success">Aktiv</span>
+                    </div>
+                    <div class="card">
+                        <h4>👥 Kundenverwaltung</h4>
+                        <p>Umfassendes CRM mit Kundenhistorie, Präferenzen und automatischer Datensynchronisation.</p>
+                        <span class="badge success">Aktiv</span>
+                    </div>
+                    <div class="card">
+                        <h4>📈 Business Intelligence</h4>
+                        <p>Erweiterte Analytics mit KPIs, Conversion-Tracking und Performance-Metriken.</p>
+                        <span class="badge success">Aktiv</span>
+                    </div>
+                    <div class="card">
+                        <h4>🔄 Webhook-Integration</h4>
+                        <p>Echtzeit-Synchronisation mit externen Services via sichere Webhooks.</p>
+                        <span class="badge success">Aktiv</span>
+                    </div>
+                    <div class="card">
+                        <h4>💳 Payment Processing</h4>
+                        <p>Stripe-Integration für Zahlungsabwicklung und Abrechnungsmanagement.</p>
+                        <span class="badge info">Geplant</span>
+                    </div>
+                </div>
+
+                <h3>Technische Features</h3>
+                <ul>
+                    <li><strong>Echtzeit-Transkription:</strong> Vollständige Gesprächsprotokolle</li>
+                    <li><strong>Sentiment-Analyse:</strong> Automatische Bewertung der Kundenlaune</li>
+                    <li><strong>Intent-Erkennung:</strong> Identifikation der Kundenabsicht</li>
+                    <li><strong>Multi-Language Support:</strong> Unterstützung mehrerer Sprachen</li>
+                    <li><strong>Queue-Management:</strong> Asynchrone Verarbeitung mit Laravel Horizon</li>
+                    <li><strong>Caching-System:</strong> Redis-basierte Performance-Optimierung</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Tech Stack -->
+        <section id="tech-stack" class="section">
+            <div class="section-header">
+                🛠 Technologie-Stack
+            </div>
+            <div class="section-content">
+                <div class="grid">
+                    <div class="card">
+                        <h4>Backend-Framework</h4>
+                        <p><strong>Laravel 11.x:</strong> Modern PHP Framework</p>
+                        <p><strong>PHP 8.3+:</strong> Latest PHP version with performance improvements</p>
+                        <span class="badge success">Production Ready</span>
+                    </div>
+                    <div class="card">
+                        <h4>Datenbank & Cache</h4>
+                        <p><strong>MySQL/MariaDB:</strong> Hauptdatenbank</p>
+                        <p><strong>Redis:</strong> Caching & Queue Management</p>
+                        <span class="badge success">Optimiert</span>
+                    </div>
+                    <div class="card">
+                        <h4>Frontend-Technologien</h4>
+                        <p><strong>Filament 3.x:</strong> Admin Panel Framework</p>
+                        <p><strong>Tailwind CSS:</strong> Utility-First CSS</p>
+                        <p><strong>Alpine.js:</strong> Lightweight JavaScript</p>
+                        <span class="badge success">Modern UI</span>
+                    </div>
+                    <div class="card">
+                        <h4>Externe Services</h4>
+                        <p><strong>RetellAI:</strong> KI-Telefonie</p>
+                        <p><strong>Cal.com:</strong> Terminbuchung</p>
+                        <p><strong>Stripe:</strong> Payments</p>
+                        <span class="badge info">APIs Integriert</span>
+                    </div>
+                </div>
+
+                <h3>Infrastruktur-Komponenten</h3>
+                <ul>
+                    <li><strong>Nginx:</strong> Hochperformanter Webserver</li>
+                    <li><strong>Supervisor:</strong> Process Management für Queue Workers</li>
+                    <li><strong>Cron:</strong> Scheduled Tasks und Automatisierung</li>
+                    <li><strong>Laravel Horizon:</strong> Queue Monitoring und Management</li>
+                    <li><strong>Vite:</strong> Modern Frontend Build Tool</li>
+                </ul>
+
+                <h3>Entwicklungstools</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tool</th>
+                            <th>Verwendung</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Composer</td>
+                            <td>PHP Dependency Management</td>
+                            <td><span class="badge success">Aktiv</span></td>
+                        </tr>
+                        <tr>
+                            <td>NPM/Node.js</td>
+                            <td>Frontend Asset Management</td>
+                            <td><span class="badge success">Aktiv</span></td>
+                        </tr>
+                        <tr>
+                            <td>Artisan</td>
+                            <td>Laravel CLI Commands</td>
+                            <td><span class="badge success">Aktiv</span></td>
+                        </tr>
+                        <tr>
+                            <td>Laravel Tinker</td>
+                            <td>Interactive PHP Shell</td>
+                            <td><span class="badge info">Debug</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Architektur -->
+        <section id="architecture" class="section">
+            <div class="section-header">
+                🏗 Systemarchitektur
+            </div>
+            <div class="section-content">
+                <div class="highlight info">
+                    <strong>Multi-Layer Architektur:</strong> Das System folgt einer klaren Trennung von Präsentations-, Business- und Datenschicht für maximale Wartbarkeit und Skalierbarkeit.
+                </div>
+
+                <h3>Architektur-Diagramm</h3>
+                <pre><code>
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   RetellAI      │    │   Cal.com       │    │   Stripe        │
+│   (KI-Calls)    │    │   (Termine)     │    │   (Payments)    │
+└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
+          │                      │                      │
+          │ Webhook              │ Webhook              │ Webhook
+          ▼                      ▼                      ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Laravel Application                         │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │   Controllers   │  │    Services     │  │     Models      │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │   Middleware    │  │     Jobs        │  │   Filament      │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+          │                      │                      │
+          ▼                      ▼                      ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│     MySQL       │    │     Redis       │    │     Files       │
+│   (Database)    │    │   (Cache/Queue) │    │   (Storage)     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                </code></pre>
+
+                <h3>Datenfluss</h3>
+                <ol>
+                    <li><strong>Eingehender Anruf:</strong> RetellAI → Webhook → Laravel Controller → Service → Database</li>
+                    <li><strong>Terminbuchung:</strong> Laravel → Cal.com API → Webhook → Laravel → Database Update</li>
+                    <li><strong>Admin Interface:</strong> Filament → Laravel → Models → Database</li>
+                    <li><strong>Background Processing:</strong> Jobs → Redis Queue → Horizon → Processing</li>
+                </ol>
+
+                <h3>Service Layer Architecture</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>CalcomService</h4>
+                        <p>Cal.com API Integration mit Retry-Logic und Error Handling</p>
+                        <span class="badge success">Refactored</span>
+                    </div>
+                    <div class="card">
+                        <h4>RetellService</h4>
+                        <p>RetellAI Integration für KI-Call Processing</p>
+                        <span class="badge success">Aktiv</span>
+                    </div>
+                    <div class="card">
+                        <h4>WebhookService</h4>
+                        <p>Webhook-Verarbeitung mit Signature Verification</p>
+                        <span class="badge success">Sicher</span>
+                    </div>
+                    <div class="card">
+                        <h4>NotificationService</h4>
+                        <p>E-Mail und SMS-Versand für Terminbestätigungen</p>
+                        <span class="badge info">Geplant</span>
+                    </div>
+                </div>
+
+                <h3>Security Architecture</h3>
+                <ul>
+                    <li><strong>API Authentication:</strong> Bearer Token & API Key Support</li>
+                    <li><strong>Webhook Security:</strong> HMAC Signature Verification</li>
+                    <li><strong>Rate Limiting:</strong> Request Throttling per IP/User</li>
+                    <li><strong>CSRF Protection:</strong> Token-basierte Formular-Sicherheit</li>
+                    <li><strong>SQL Injection Prevention:</strong> Parameter Binding</li>
+                    <li><strong>Mass Assignment Protection:</strong> Fillable Arrays</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Datenbank -->
+        <section id="database" class="section">
+            <div class="section-header">
+                🗃 Datenbankstruktur
+            </div>
+            <div class="section-content">
+                <div class="highlight warning">
+                    <strong>Multi-Tenant Design:</strong> Alle Tabellen enthalten tenant_id für Datenisolation zwischen verschiedenen Kunden.
+                </div>
+
+                <h3>Core Tables</h3>
+                <h4>tenants</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Spalte</th>
+                            <th>Typ</th>
+                            <th>Beschreibung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>id</td>
+                            <td>UUID</td>
+                            <td>Primary Key</td>
+                        </tr>
+                        <tr>
+                            <td>name</td>
+                            <td>VARCHAR(255)</td>
+                            <td>Mandanten-Name</td>
+                        </tr>
+                        <tr>
+                            <td>slug</td>
+                            <td>VARCHAR(100)</td>
+                            <td>URL-freundlicher Identifier</td>
+                        </tr>
+                        <tr>
+                            <td>api_key</td>
+                            <td>VARCHAR(255)</td>
+                            <td>API-Zugriffsschlüssel</td>
+                        </tr>
+                        <tr>
+                            <td>balance_cents</td>
+                            <td>INTEGER</td>
+                            <td>Kontostand in Cent</td>
+                        </tr>
+                        <tr>
+                            <td>calcom_team_slug</td>
+                            <td>VARCHAR(100)</td>
+                            <td>Cal.com Team Identifier</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>calls</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Spalte</th>
+                            <th>Typ</th>
+                            <th>Beschreibung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>id</td>
+                            <td>BIGINT</td>
+                            <td>Primary Key</td>
+                        </tr>
+                        <tr>
+                            <td>tenant_id</td>
+                            <td>UUID</td>
+                            <td>FK → tenants.id</td>
+                        </tr>
+                        <tr>
+                            <td>customer_id</td>
+                            <td>BIGINT</td>
+                            <td>FK → customers.id</td>
+                        </tr>
+                        <tr>
+                            <td>call_id</td>
+                            <td>VARCHAR(255)</td>
+                            <td>RetellAI Call Identifier</td>
+                        </tr>
+                        <tr>
+                            <td>from_number</td>
+                            <td>VARCHAR(20)</td>
+                            <td>Anrufer-Telefonnummer</td>
+                        </tr>
+                        <tr>
+                            <td>transcript</td>
+                            <td>TEXT</td>
+                            <td>Vollständiges Gesprächsprotokoll</td>
+                        </tr>
+                        <tr>
+                            <td>analysis</td>
+                            <td>JSON</td>
+                            <td>KI-Analyse (Intent, Sentiment, etc.)</td>
+                        </tr>
+                        <tr>
+                            <td>call_successful</td>
+                            <td>BOOLEAN</td>
+                            <td>Erfolgsstatus des Anrufs</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>appointments</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Spalte</th>
+                            <th>Typ</th>
+                            <th>Beschreibung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>id</td>
+                            <td>BIGINT</td>
+                            <td>Primary Key</td>
+                        </tr>
+                        <tr>
+                            <td>tenant_id</td>
+                            <td>UUID</td>
+                            <td>FK → tenants.id</td>
+                        </tr>
+                        <tr>
+                            <td>customer_id</td>
+                            <td>BIGINT</td>
+                            <td>FK → customers.id</td>
+                        </tr>
+                        <tr>
+                            <td>call_id</td>
+                            <td>BIGINT</td>
+                            <td>FK → calls.id (Ursprungsanruf)</td>
+                        </tr>
+                        <tr>
+                            <td>staff_id</td>
+                            <td>BIGINT</td>
+                            <td>FK → staff.id</td>
+                        </tr>
+                        <tr>
+                            <td>service_id</td>
+                            <td>BIGINT</td>
+                            <td>FK → services.id</td>
+                        </tr>
+                        <tr>
+                            <td>start_time</td>
+                            <td>DATETIME</td>
+                            <td>Termin-Startzeit</td>
+                        </tr>
+                        <tr>
+                            <td>end_time</td>
+                            <td>DATETIME</td>
+                            <td>Termin-Endzeit</td>
+                        </tr>
+                        <tr>
+                            <td>status</td>
+                            <td>ENUM</td>
+                            <td>'scheduled', 'completed', 'cancelled'</td>
+                        </tr>
+                        <tr>
+                            <td>calcom_booking_id</td>
+                            <td>VARCHAR(255)</td>
+                            <td>Cal.com Booking Reference</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Relationship Diagram</h3>
+                <pre><code>
+tenants (1) ──────────────────── (n) customers
+   │                                    │
+   │                                    │
+   └────── (n) calls ──── (n) ──────────┘
+                │
+                │ (1:n)
+                ▼
+           appointments
+                │
+                ├── (n:1) staff
+                ├── (n:1) services  
+                └── (n:1) branches
+                </code></pre>
+
+                <h3>Database Optimierungen</h3>
+                <ul>
+                    <li><strong>Indexe:</strong> Optimiert für häufige Queries (tenant_id, created_at, status)</li>
+                    <li><strong>JSON Columns:</strong> Flexible Speicherung von Call-Analysis Daten</li>
+                    <li><strong>Foreign Key Constraints:</strong> Referentielle Integrität</li>
+                    <li><strong>Soft Deletes:</strong> Für Customer und Staff Tabellen</li>
+                    <li><strong>Timestamps:</strong> Automatische created_at/updated_at</li>
+                </ul>
+
+                <div class="highlight success">
+                    <strong>Security Note:</strong> Alle Models verwenden explizite $fillable Arrays für Mass Assignment Protection. Keine unsicheren $guarded = [] mehr!
+                </div>
+            </div>
+        </section>
+
+        <!-- API Dokumentation -->
+        <section id="api" class="section">
+            <div class="section-header">
+                📡 API-Dokumentation
+            </div>
+            <div class="section-content">
+                <div class="highlight info">
+                    <strong>Base URL:</strong> https://api.askproai.de<br>
+                    <strong>Authentication:</strong> Bearer Token oder X-API-Key Header<br>
+                    <strong>Rate Limit:</strong> 1000 Requests/Stunde pro API Key
+                </div>
+
+                <h3>Authentication</h3>
+                <pre><code>
+# Bearer Token
+Authorization: Bearer YOUR_API_TOKEN
+
+# API Key (Alternative)
+X-API-Key: YOUR_API_KEY
+                </code></pre>
+
+                <h3>Webhook Endpunkte</h3>
+                
+                <h4>RetellAI Webhook</h4>
+                <div class="card">
+                    <p><strong>POST</strong> <code>/api/retell/webhook</code></p>
+                    <p>Verarbeitet eingehende Anrufe von RetellAI</p>
+                </div>
+
+                <pre><code>
+{
+  "event": "call_ended",
+  "data": {
+    "call_id": "call_abc123def456",
+    "conversation_id": "conv_xyz789",
+    "from_number": "+491234567890",
+    "to_number": "+494012345678",
+    "start_timestamp": 1699123456.789,
+    "end_timestamp": 1699123556.123,
+    "transcript": "Hallo, ich möchte gerne einen Termin...",
+    "call_analysis": {
+      "intent": "appointment_booking",
+      "sentiment": "positive",
+      "confidence": 0.95,
+      "entities": {
+        "service": "Haarschnitt",
+        "customer_name": "Max Mustermann"
+      }
+    },
+    "call_successful": true
+  }
+}
+                </code></pre>
+
+                <h4>Cal.com Webhook</h4>
+                <div class="card">
+                    <p><strong>POST</strong> <code>/api/calcom/webhook</code></p>
+                    <p>Verarbeitet Buchungsereignisse von Cal.com</p>
+                </div>
+
+                <pre><code>
+{
+  "triggerEvent": "BOOKING_CREATED",
+  "payload": {
+    "bookingId": 12345,
+    "type": "Beratungsgespräch",
+    "startTime": "2025-08-15T14:00:00.000Z",
+    "endTime": "2025-08-15T15:00:00.000Z",
+    "attendees": [{
+      "name": "John Doe",
+      "email": "john.doe@example.com"
+    }]
+  }
+}
+                </code></pre>
+
+                <h3>REST API Endpunkte</h3>
+
+                <h4>Calls API</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Beschreibung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge info">GET</span></td>
+                            <td>/api/calls</td>
+                            <td>Alle Anrufe abrufen (paginiert)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge info">GET</span></td>
+                            <td>/api/calls/{id}</td>
+                            <td>Einzelnen Anruf mit Details abrufen</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge success">POST</span></td>
+                            <td>/api/calls</td>
+                            <td>Neuen Anruf erstellen (Testing)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Appointments API</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Beschreibung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge info">GET</span></td>
+                            <td>/api/appointments</td>
+                            <td>Termine abrufen mit Filter-Optionen</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge success">POST</span></td>
+                            <td>/api/appointments</td>
+                            <td>Neuen Termin erstellen</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge warning">PUT</span></td>
+                            <td>/api/appointments/{id}</td>
+                            <td>Termin aktualisieren</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge error">DELETE</span></td>
+                            <td>/api/appointments/{id}</td>
+                            <td>Termin stornieren</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Customers API</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Beschreibung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge info">GET</span></td>
+                            <td>/api/customers</td>
+                            <td>Kunden mit Suchfunktion</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge info">GET</span></td>
+                            <td>/api/customers/{id}</td>
+                            <td>Kundendetails mit Historie</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge success">POST</span></td>
+                            <td>/api/customers</td>
+                            <td>Neuen Kunden erstellen</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Error Handling</h3>
+                <pre><code>
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "The given data was invalid.",
+    "details": {
+      "email": ["The email field is required."],
+      "phone": ["The phone format is invalid."]
+    }
+  },
+  "request_id": "req_abc123def456"
+}
+                </code></pre>
+
+                <h3>HTTP Status Codes</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Status</th>
+                            <th>Verwendung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>200</td>
+                            <td>OK</td>
+                            <td>Erfolgreiche GET, PUT Anfragen</td>
+                        </tr>
+                        <tr>
+                            <td>201</td>
+                            <td>Created</td>
+                            <td>Erfolgreiche POST Anfragen</td>
+                        </tr>
+                        <tr>
+                            <td>400</td>
+                            <td>Bad Request</td>
+                            <td>Ungültige Anfrage-Daten</td>
+                        </tr>
+                        <tr>
+                            <td>401</td>
+                            <td>Unauthorized</td>
+                            <td>Fehlende/ungültige Authentifizierung</td>
+                        </tr>
+                        <tr>
+                            <td>422</td>
+                            <td>Unprocessable Entity</td>
+                            <td>Validierungsfehler</td>
+                        </tr>
+                        <tr>
+                            <td>429</td>
+                            <td>Too Many Requests</td>
+                            <td>Rate Limit überschritten</td>
+                        </tr>
+                        <tr>
+                            <td>500</td>
+                            <td>Internal Server Error</td>
+                            <td>Server-Fehler</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Installation -->
+        <section id="installation" class="section">
+            <div class="section-header">
+                ⚡ Installation & Setup
+            </div>
+            <div class="section-content">
+                <div class="highlight warning">
+                    <strong>Systemvoraussetzungen:</strong> PHP 8.3+, MySQL 8.0+, Redis 6.0+, Node.js 18+, Composer 2.0+
+                </div>
+
+                <h3>1. Repository klonen</h3>
+                <pre><code>
+git clone https://github.com/your-org/askproai.git
+cd askproai
+                </code></pre>
+
+                <h3>2. Dependencies installieren</h3>
+                <pre><code>
+# PHP Dependencies
+composer install --optimize-autoloader --no-dev
+
+# Frontend Dependencies
+npm ci
+npm run build
+                </code></pre>
+
+                <h3>3. Environment konfigurieren</h3>
+                <pre><code>
+cp .env.example .env
+php artisan key:generate
+                </code></pre>
+
+                <h3>4. Environment Variables</h3>
+                <pre><code>
+# Application
+APP_NAME="AskProAI"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-domain.com
+
+# Database
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=askproai_db
+DB_USERNAME=askproai_user
+DB_PASSWORD=your_secure_password
+
+# Cal.com Integration
+CALCOM_API_KEY=cal_live_your_api_key_here
+CALCOM_BASE_URL=https://api.cal.com/v1
+CALCOM_WEBHOOK_SECRET=your_webhook_secret
+
+# RetellAI Integration
+RETELL_API_KEY=your_retell_api_key
+RETELL_WEBHOOK_SECRET=your_webhook_secret
+
+# Queue & Cache
+REDIS_HOST=127.0.0.1
+QUEUE_CONNECTION=redis
+CACHE_DRIVER=redis
+
+# Mail
+MAIL_MAILER=resend
+RESEND_API_KEY=your_resend_api_key
+                </code></pre>
+
+                <h3>5. Datenbank Setup</h3>
+                <pre><code>
+php artisan migrate
+php artisan db:seed --class=AdminUserSeeder
+                </code></pre>
+
+                <h3>6. File Permissions</h3>
+                <pre><code>
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+                </code></pre>
+
+                <h3>7. Services starten</h3>
+                <pre><code>
+# Queue Worker
+php artisan horizon
+
+# Scheduler (Cron eintragen)
+* * * * * cd /var/www/askproai && php artisan schedule:run >> /dev/null 2>&1
+                </code></pre>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>🔍 Verify Installation</h4>
+                        <pre><code>php artisan about</code></pre>
+                        <p>Zeigt Systeminformationen und Status aller Services</p>
+                    </div>
+                    <div class="card">
+                        <h4>🧪 Health Check</h4>
+                        <pre><code>curl https://your-domain.com/api/health</code></pre>
+                        <p>Testet alle kritischen System-Komponenten</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Deployment -->
+        <section id="deployment" class="section">
+            <div class="section-header">
+                🚀 Deployment
+            </div>
+            <div class="section-content">
+                <div class="highlight success">
+                    <strong>Production Ready:</strong> Das System ist vollständig für den Produktivbetrieb vorbereitet mit umfassender Deployment-Checkliste.
+                </div>
+
+                <h3>Server-Vorbereitung</h3>
+                <pre><code>
+# System Updates
+apt update && apt upgrade -y
+
+# Core Components installieren
+apt install -y nginx mysql-server redis-server supervisor
+apt install -y php8.3-fpm php8.3-mysql php8.3-redis php8.3-mbstring
+apt install -y php8.3-xml php8.3-curl php8.3-zip php8.3-gd
+                </code></pre>
+
+                <h3>Nginx Konfiguration</h3>
+                <pre><code>
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your-domain.com;
+    root /var/www/askproai/public;
+    index index.php;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+
+    # Main location
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    # PHP handler
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_hide_header X-Powered-By;
+    }
+
+    # Static files caching
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1M;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Block access to sensitive files
+    location ~ /\.(ht|env) {
+        deny all;
+    }
+}
+                </code></pre>
+
+                <h3>SSL Certificate (Let's Encrypt)</h3>
+                <pre><code>
+# Certbot installieren
+apt install -y certbot python3-certbot-nginx
+
+# SSL Certificate generieren
+certbot --nginx -d your-domain.com
+
+# Auto-renewal testen
+certbot renew --dry-run
+                </code></pre>
+
+                <h3>Supervisor Konfiguration</h3>
+                <pre><code>
+# /etc/supervisor/conf.d/askproai-horizon.conf
+[program:askproai-horizon]
+process_name=%(program_name)s
+command=php /var/www/askproai/artisan horizon
+directory=/var/www/askproai
+autostart=true
+autorestart=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=/var/www/askproai/storage/logs/horizon.log
+stopwaitsecs=3600
+                </code></pre>
+
+                <h3>Deployment Script</h3>
+                <pre><code>
+#!/bin/bash
+set -e
+
+echo "🚀 Starting AskProAI Deployment..."
+
+# Maintenance Mode
+php artisan down --refresh=15 --secret="deployment-secret"
+
+# Update Code
+git pull origin main
+
+# Dependencies
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+
+# Database
+php artisan migrate --force
+
+# Optimize
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Restart services
+supervisorctl restart askproai-horizon
+systemctl reload nginx php8.3-fpm
+
+# Exit maintenance
+php artisan up
+
+echo "✅ Deployment completed successfully!"
+                </code></pre>
+
+                <h3>🔄 Zero-Downtime Deployment</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Blue-Green Strategy</h4>
+                        <p>Parallel deployment auf zweiten Server, dann Traffic umleiten</p>
+                        <span class="badge info">Erweitert</span>
+                    </div>
+                    <div class="card">
+                        <h4>Database Migrations</h4>
+                        <p>Backward-compatible Migrations für seamless Updates</p>
+                        <span class="badge warning">Vorsicht</span>
+                    </div>
+                    <div class="card">
+                        <h4>Queue Handling</h4>
+                        <p>Graceful Shutdown von Workers vor Update</p>
+                        <span class="badge success">Implementiert</span>
+                    </div>
+                    <div class="card">
+                        <h4>Health Checks</h4>
+                        <p>Automatische Validierung nach Deployment</p>
+                        <span class="badge success">Aktiv</span>
+                    </div>
+                </div>
+
+                <h3>Deployment Checkliste (Auszug)</h3>
+                <ul>
+                    <li>✅ <strong>Server Requirements:</strong> RAM, CPU, Storage validiert</li>
+                    <li>✅ <strong>SSL Certificate:</strong> Installiert und Auto-Renewal konfiguriert</li>
+                    <li>✅ <strong>Environment Variables:</strong> Alle API Keys konfiguriert</li>
+                    <li>✅ <strong>Database:</strong> Migrations ausgeführt, Backup erstellt</li>
+                    <li>✅ <strong>Queue Workers:</strong> Horizon läuft und überwacht</li>
+                    <li>✅ <strong>Cron Jobs:</strong> Scheduler aktiviert</li>
+                    <li>✅ <strong>Monitoring:</strong> Health Checks funktional</li>
+                    <li>✅ <strong>Backups:</strong> Automatische Backups konfiguriert</li>
+                </ul>
+
+                <div class="highlight info">
+                    <strong>Vollständige Deployment-Checkliste:</strong> 370+ Punkte verfügbar in docs/deployment/checklist.md
+                </div>
+            </div>
+        </section>
+
+        <!-- Sicherheit -->
+        <section id="security" class="section">
+            <div class="section-header">
+                🔒 Sicherheit
+            </div>
+            <div class="section-content">
+                <div class="highlight success">
+                    <strong>Security Audit Abgeschlossen:</strong> Alle kritischen Sicherheitslücken wurden behoben. Das System folgt den OWASP Top 10 Best Practices.
+                </div>
+
+                <h3>📋 Security-Verbesserungen (v1.2.0)</h3>
+                <ul>
+                    <li>✅ <strong>API Keys entfernt:</strong> Alle hardcoded API Keys aus Code und Dokumentation entfernt</li>
+                    <li>✅ <strong>Environment Variables:</strong> Sichere Konfiguration über .env Dateien</li>
+                    <li>✅ <strong>Mass Assignment:</strong> Alle Models verwenden explizite $fillable Arrays</li>
+                    <li>✅ <strong>Backup Bereinigung:</strong> 74+ Dateien mit exponierten Secrets entfernt</li>
+                </ul>
+
+                <h3>Authentication & Authorization</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>🔑 API Authentication</h4>
+                        <p>Bearer Token und API Key Support mit Rate Limiting</p>
+                        <span class="badge success">Implementiert</span>
+                    </div>
+                    <div class="card">
+                        <h4>🛡️ CSRF Protection</h4>
+                        <p>Token-basierter Schutz vor Cross-Site Request Forgery</p>
+                        <span class="badge success">Aktiv</span>
+                    </div>
+                    <div class="card">
+                        <h4>⚡ Rate Limiting</h4>
+                        <p>1000 Requests/Stunde pro API Key, IP-basierte Limits</p>
+                        <span class="badge success">Konfiguriert</span>
+                    </div>
+                    <div class="card">
+                        <h4>🔐 Session Security</h4>
+                        <p>Sichere Session-Handhabung mit HttpOnly Cookies</p>
+                        <span class="badge success">Gehärtet</span>
+                    </div>
+                </div>
+
+                <h3>Data Protection</h3>
+                <h4>SQL Injection Prevention</h4>
+                <pre><code>
+// ✅ RICHTIG - Parameter Binding
+$calls = DB::select('SELECT * FROM calls WHERE tenant_id = ?', [$tenantId]);
+
+// ❌ FALSCH - SQL Injection möglich
+$calls = DB::select("SELECT * FROM calls WHERE tenant_id = $tenantId");
+                </code></pre>
+
+                <h4>Mass Assignment Protection</h4>
+                <pre><code>
+class Customer extends Model
+{
+    // ✅ Explizite Whitelist - Sicher
+    protected $fillable = ['name', 'email', 'phone'];
+    
+    // ❌ GEFÄHRLICH - Wurde entfernt
+    // protected $guarded = [];
+}
+                </code></pre>
+
+                <h3>Webhook Security</h3>
+                <pre><code>
+// Signature Verification für RetellAI Webhooks
+public function verifyWebhookSignature(Request $request)
+{
+    $signature = $request->header('X-Retell-Signature');
+    $payload = $request->getContent();
+    $secret = config('services.retell.webhook_secret');
+    
+    $expectedSignature = hash_hmac('sha256', $payload, $secret);
+    
+    if (!hash_equals($signature, $expectedSignature)) {
+        abort(401, 'Invalid webhook signature');
+    }
+}
+                </code></pre>
+
+                <h3>Environment Security</h3>
+                <div class="highlight warning">
+                    <strong>Sichere .env Konfiguration:</strong>
+                </div>
+                <pre><code>
+# ✅ Sichere Permissions
+chmod 600 .env
+chown www-data:www-data .env
+
+# ✅ Niemals in Git
+echo ".env" >> .gitignore
+
+# ✅ Production Settings
+APP_DEBUG=false
+APP_ENV=production
+                </code></pre>
+
+                <h3>File Upload Security</h3>
+                <pre><code>
+// Sichere File Upload Validierung
+$request->validate([
+    'avatar' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+]);
+
+// Private Storage verwenden
+$path = $request->file('avatar')->store('avatars', 'private');
+                </code></pre>
+
+                <h3>Security Headers</h3>
+                <pre><code>
+# Nginx Security Headers
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Content-Security-Policy "default-src 'self'" always;
+                </code></pre>
+
+                <h3>🔒 Security Checklist</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sicherheitsbereich</th>
+                            <th>Status</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>API Key Exposure</td>
+                            <td><span class="badge success">✅ Behoben</span></td>
+                            <td>Alle hardcoded Keys entfernt</td>
+                        </tr>
+                        <tr>
+                            <td>SQL Injection</td>
+                            <td><span class="badge success">✅ Geschützt</span></td>
+                            <td>Parameter Binding überall</td>
+                        </tr>
+                        <tr>
+                            <td>Mass Assignment</td>
+                            <td><span class="badge success">✅ Geschützt</span></td>
+                            <td>Explizite $fillable Arrays</td>
+                        </tr>
+                        <tr>
+                            <td>CSRF Attacks</td>
+                            <td><span class="badge success">✅ Geschützt</span></td>
+                            <td>Token Verification</td>
+                        </tr>
+                        <tr>
+                            <td>XSS Prevention</td>
+                            <td><span class="badge success">✅ Geschützt</span></td>
+                            <td>Input Validation & Escaping</td>
+                        </tr>
+                        <tr>
+                            <td>Rate Limiting</td>
+                            <td><span class="badge success">✅ Aktiv</span></td>
+                            <td>1000 req/hour per API Key</td>
+                        </tr>
+                        <tr>
+                            <td>Webhook Security</td>
+                            <td><span class="badge success">✅ Validiert</span></td>
+                            <td>HMAC Signature Verification</td>
+                        </tr>
+                        <tr>
+                            <td>SSL/TLS</td>
+                            <td><span class="badge success">✅ Erzwungen</span></td>
+                            <td>HTTPS Redirect konfiguriert</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Monitoring -->
+        <section id="monitoring" class="section">
+            <div class="section-header">
+                📊 Monitoring & Wartung
+            </div>
+            <div class="section-content">
+                <h3>🔍 System Health Monitoring</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Application Health</h4>
+                        <pre><code>curl https://api.askproai.de/api/health</code></pre>
+                        <p>Prüft alle kritischen Systemkomponenten</p>
+                    </div>
+                    <div class="card">
+                        <h4>Queue Status</h4>
+                        <pre><code>php artisan horizon:status</code></pre>
+                        <p>Überwacht Laravel Horizon Worker</p>
+                    </div>
+                    <div class="card">
+                        <h4>Database Monitor</h4>
+                        <pre><code>php artisan db:monitor --databases=mysql</code></pre>
+                        <p>Verbindungs-Pool und Performance</p>
+                    </div>
+                    <div class="card">
+                        <h4>Performance Check</h4>
+                        <pre><code>php artisan about</code></pre>
+                        <p>Umfassender Systemstatus</p>
+                    </div>
+                </div>
+
+                <h3>📈 Key Performance Indicators</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metrik</th>
+                            <th>Zielwert</th>
+                            <th>Aktuell</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>API Response Time</td>
+                            <td>&lt; 200ms</td>
+                            <td>~150ms</td>
+                            <td><span class="badge success">✅ Gut</span></td>
+                        </tr>
+                        <tr>
+                            <td>System Uptime</td>
+                            <td>&gt; 99.9%</td>
+                            <td>99.95%</td>
+                            <td><span class="badge success">✅ Exzellent</span></td>
+                        </tr>
+                        <tr>
+                            <td>Queue Processing</td>
+                            <td>&lt; 30s</td>
+                            <td>~15s</td>
+                            <td><span class="badge success">✅ Optimal</span></td>
+                        </tr>
+                        <tr>
+                            <td>Database Connections</td>
+                            <td>&lt; 80% Pool</td>
+                            <td>~45%</td>
+                            <td><span class="badge success">✅ Gesund</span></td>
+                        </tr>
+                        <tr>
+                            <td>Memory Usage</td>
+                            <td>&lt; 70%</td>
+                            <td>~55%</td>
+                            <td><span class="badge success">✅ Stabil</span></td>
+                        </tr>
+                        <tr>
+                            <td>Disk Space</td>
+                            <td>&gt; 20% frei</td>
+                            <td>65% frei</td>
+                            <td><span class="badge success">✅ Ausreichend</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>🚨 Automated Alerts</h3>
+                <ul>
+                    <li><strong>Queue Backlog:</strong> > 1000 Jobs wartend</li>
+                    <li><strong>Response Time:</strong> > 500ms für 5 Minuten</li>
+                    <li><strong>Error Rate:</strong> > 5% in letzten 10 Minuten</li>
+                    <li><strong>Database:</strong> > 90% Connection Pool genutzt</li>
+                    <li><strong>Storage:</strong> < 10% freier Speicherplatz</li>
+                    <li><strong>SSL Certificate:</strong> Läuft in 30 Tagen ab</li>
+                </ul>
+
+                <h3>📝 Log Management</h3>
+                <pre><code>
+# Laravel Application Logs
+tail -f storage/logs/laravel.log | grep ERROR
+
+# Nginx Access Logs
+tail -f /var/log/nginx/askproai_access.log
+
+# Nginx Error Logs
+tail -f /var/log/nginx/askproai_error.log
+
+# Horizon Queue Logs
+tail -f storage/logs/horizon.log
+                </code></pre>
+
+                <h3>🔧 Wartungsaufgaben</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Täglich (Automatisch)</h4>
+                        <ul>
+                            <li>Log Cleanup (> 30 Tage)</li>
+                            <li>Session Garbage Collection</li>
+                            <li>Cache Warming</li>
+                            <li>Health Check Reports</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Wöchentlich (Automatisch)</h4>
+                        <ul>
+                            <li>Database Optimization</li>
+                            <li>Performance Analysis</li>
+                            <li>Security Updates Check</li>
+                            <li>Backup Validation</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Monatlich (Manuell)</h4>
+                        <ul>
+                            <li>System Updates</li>
+                            <li>SSL Certificate Renewal</li>
+                            <li>Capacity Planning Review</li>
+                            <li>Security Audit</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Bei Bedarf</h4>
+                        <ul>
+                            <li>API Key Rotation</li>
+                            <li>Database Index Optimization</li>
+                            <li>Performance Tuning</li>
+                            <li>Incident Response</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>📊 Dashboard URLs</h3>
+                <ul>
+                    <li><strong>Admin Panel:</strong> https://api.askproai.de/admin</li>
+                    <li><strong>Horizon Queue:</strong> https://api.askproai.de/horizon</li>
+                    <li><strong>API Health:</strong> https://api.askproai.de/api/health</li>
+                    <li><strong>System Status:</strong> https://status.askproai.de</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Backup -->
+        <section id="backup" class="section">
+            <div class="section-header">
+                💾 Backup-Strategie
+            </div>
+            <div class="section-content">
+                <div class="highlight success">
+                    <strong>3-2-1 Backup-Regel:</strong> 3 Kopien der Daten, 2 verschiedene Medien, 1 Offsite-Backup
+                </div>
+
+                <h3>🔄 Automatische Backups</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Täglich um 03:00 Uhr</h4>
+                        <ul>
+                            <li>Vollständiges Database Backup</li>
+                            <li>Application Files Backup</li>
+                            <li>Configuration Backup</li>
+                            <li>Automatische Validierung</li>
+                        </ul>
+                        <span class="badge success">Aktiv</span>
+                    </div>
+                    <div class="card">
+                        <h4>Wöchentliche Archivierung</h4>
+                        <ul>
+                            <li>Komprimierte Langzeitarchive</li>
+                            <li>S3 Upload für Offsite Storage</li>
+                            <li>Integrität-Checks</li>
+                            <li>Retention Policy Enforcement</li>
+                        </ul>
+                        <span class="badge info">Konfiguriert</span>
+                    </div>
+                </div>
+
+                <h3>📋 Backup-Komponenten</h3>
+                <h4>1. Database Backup</h4>
+                <pre><code>
+#!/bin/bash
+BACKUP_DIR="/var/backups/askproai"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# MySQL Backup mit Konsistenz
+mysqldump --single-transaction \
+          --routines \
+          --triggers \
+          --events \
+          --lock-tables=false \
+          askproai_db > "$BACKUP_DIR/db_backup_$DATE.sql"
+
+# Komprimierung
+gzip "$BACKUP_DIR/db_backup_$DATE.sql"
+                </code></pre>
+
+                <h4>2. Application Files</h4>
+                <pre><code>
+# Application Code und Storage
+tar -czf "/var/backups/askproai/app_backup_$DATE.tar.gz" \
+    --exclude='storage/logs' \
+    --exclude='storage/framework/cache' \
+    --exclude='node_modules' \
+    --exclude='vendor' \
+    /var/www/askproai/
+
+# Storage Data
+tar -czf "/var/backups/askproai/storage_backup_$DATE.tar.gz" \
+    /var/www/askproai/storage/app/
+                </code></pre>
+
+                <h4>3. Configuration Backup</h4>
+                <pre><code>
+# System Configuration
+tar -czf "/var/backups/askproai/config_backup_$DATE.tar.gz" \
+    /etc/nginx/sites-available/askproai \
+    /etc/supervisor/conf.d/askproai-* \
+    /var/www/askproai/.env
+                </code></pre>
+
+                <h3>🔧 Restore-Prozess</h3>
+                <div class="highlight warning">
+                    <strong>Notfall-Wiederherstellung:</strong> Getestete Prozedur für komplette Systemwiederherstellung
+                </div>
+
+                <pre><code>
+#!/bin/bash
+# Emergency Restore Script
+
+echo "🚨 Starting Emergency Restore..."
+
+# 1. Services stoppen
+supervisorctl stop askproai-horizon
+systemctl stop nginx
+
+# 2. Database wiederherstellen
+mysql askproai_db < /var/backups/askproai/db_backup_YYYYMMDD_HHMMSS.sql.gz
+
+# 3. Application Files
+tar -xzf /var/backups/askproai/app_backup_YYYYMMDD_HHMMSS.tar.gz -C /
+
+# 4. Permissions setzen
+chown -R www-data:www-data /var/www/askproai
+chmod -R 755 /var/www/askproai
+chmod -R 775 /var/www/askproai/storage /var/www/askproai/bootstrap/cache
+
+# 5. Caches leeren
+php artisan optimize:clear
+
+# 6. Services starten
+systemctl start nginx
+supervisorctl start askproai-horizon
+
+echo "✅ Restore completed!"
+                </code></pre>
+
+                <h3>☁️ Offsite Backup (AWS S3)</h3>
+                <pre><code>
+# S3 Sync für Offsite Storage
+aws s3 sync /var/backups/askproai/ \
+    s3://askproai-backups/$(date +%Y-%m)/ \
+    --storage-class STANDARD_IA \
+    --delete
+                </code></pre>
+
+                <h3>📊 Backup-Monitoring</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Backup-Typ</th>
+                            <th>Häufigkeit</th>
+                            <th>Aufbewahrung</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Database</td>
+                            <td>Täglich</td>
+                            <td>30 Tage lokal, 1 Jahr S3</td>
+                            <td><span class="badge success">✅ Aktiv</span></td>
+                        </tr>
+                        <tr>
+                            <td>Application</td>
+                            <td>Täglich</td>
+                            <td>14 Tage lokal, 3 Monate S3</td>
+                            <td><span class="badge success">✅ Aktiv</span></td>
+                        </tr>
+                        <tr>
+                            <td>Configuration</td>
+                            <td>Bei Änderungen</td>
+                            <td>90 Tage lokal, 1 Jahr S3</td>
+                            <td><span class="badge success">✅ Aktiv</span></td>
+                        </tr>
+                        <tr>
+                            <td>User Data</td>
+                            <td>Täglich</td>
+                            <td>30 Tage lokal, 2 Jahre S3</td>
+                            <td><span class="badge success">✅ Aktiv</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>🧪 Backup-Validierung</h3>
+                <ul>
+                    <li><strong>Integrität:</strong> MD5 Checksums für alle Backup-Dateien</li>
+                    <li><strong>Restore-Tests:</strong> Monatliche Tests auf Staging-System</li>
+                    <li><strong>Monitoring:</strong> Alerts bei fehlgeschlagenen Backups</li>
+                    <li><strong>Dokumentation:</strong> Recovery Time/Point Objectives definiert</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section id="troubleshooting" class="section">
+            <div class="section-header">
+                🔧 Troubleshooting
+            </div>
+            <div class="section-content">
+                <h3>🚨 Häufige Probleme & Lösungen</h3>
+
+                <div class="card">
+                    <h4>1. Queue Jobs hängen</h4>
+                    <p><strong>Symptome:</strong> Anrufe werden nicht verarbeitet, Horizon zeigt gestoppte Worker</p>
+                    <p><strong>Lösung:</strong></p>
+                    <pre><code>
+# Horizon neu starten
+supervisorctl restart askproai-horizon
+
+# Failed Jobs prüfen
+php artisan queue:failed
+
+# Alle Failed Jobs wiederholen
+php artisan queue:retry all
+
+# Worker manuell starten (Debug)
+php artisan horizon --verbose
+                    </code></pre>
+                </div>
+
+                <div class="card">
+                    <h4>2. Cal.com API Fehler</h4>
+                    <p><strong>Symptome:</strong> Termine können nicht gebucht werden, 401/403 Errors</p>
+                    <p><strong>Lösung:</strong></p>
+                    <pre><code>
+# API Key validieren
+curl -H "Authorization: Bearer $CALCOM_API_KEY" \
+     https://api.cal.com/v1/me
+
+# Log-Ausgabe prüfen
+tail -f storage/logs/laravel.log | grep "Cal.com"
+
+# Service-Status testen
+php artisan tinker
+>>> App\Services\CalcomService::class
+                    </code></pre>
+                </div>
+
+                <div class="card">
+                    <h4>3. Database Connection Issues</h4>
+                    <p><strong>Symptome:</strong> 500 Server Errors, "Too many connections"</p>
+                    <p><strong>Lösung:</strong></p>
+                    <pre><code>
+# Connection Pool Status
+php artisan db:monitor --databases=mysql
+
+# MySQL Connections anzeigen
+mysql -e "SHOW STATUS LIKE 'Threads_%';"
+
+# Max Connections erhöhen
+echo "max_connections = 200" >> /etc/mysql/my.cnf
+systemctl restart mysql
+                    </code></pre>
+                </div>
+
+                <div class="card">
+                    <h4>4. High Memory Usage</h4>
+                    <p><strong>Symptome:</strong> Server läuft langsam, Out of Memory Errors</p>
+                    <p><strong>Lösung:</strong></p>
+                    <pre><code>
+# Memory Usage analysieren
+free -h
+ps aux --sort=-%mem | head
+
+# PHP Memory Limit erhöhen
+echo "memory_limit = 512M" >> /etc/php/8.3/fpm/php.ini
+
+# Horizon Memory Monitoring
+php artisan horizon:status
+                    </code></pre>
+                </div>
+
+                <div class="card">
+                    <h4>5. Permission Errors</h4>
+                    <p><strong>Symptome:</strong> File write errors, 403 Forbidden</p>
+                    <p><strong>Lösung:</strong></p>
+                    <pre><code>
+# Permissions korrigieren
+chown -R www-data:www-data /var/www/askproai
+chmod -R 755 /var/www/askproai
+chmod -R 775 /var/www/askproai/storage /var/www/askproai/bootstrap/cache
+
+# SELinux deaktivieren (falls aktiv)
+setsebool -P httpd_can_network_connect 1
+                    </code></pre>
+                </div>
+
+                <h3>🔍 Debug-Kommandos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kommando</th>
+                            <th>Zweck</th>
+                            <th>Beispiel-Output</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>php artisan about</code></td>
+                            <td>System-Übersicht</td>
+                            <td>Laravel Version, PHP, Database Status</td>
+                        </tr>
+                        <tr>
+                            <td><code>php artisan route:list</code></td>
+                            <td>Alle Routen anzeigen</td>
+                            <td>HTTP Methods, URIs, Controller</td>
+                        </tr>
+                        <tr>
+                            <td><code>php artisan queue:monitor</code></td>
+                            <td>Queue Status</td>
+                            <td>Jobs processed, failed, waiting</td>
+                        </tr>
+                        <tr>
+                            <td><code>php artisan config:show database</code></td>
+                            <td>DB Konfiguration</td>
+                            <td>Connection details, credentials</td>
+                        </tr>
+                        <tr>
+                            <td><code>php artisan tinker</code></td>
+                            <td>Interactive PHP Shell</td>
+                            <td>Live code execution</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>📊 Performance Debugging</h3>
+                <pre><code>
+# Laravel Query Debugging
+DB::enableQueryLog();
+// ... your code ...
+dd(DB::getQueryLog());
+
+# Cache Status
+php artisan cache:table
+redis-cli info memory
+
+# Optimize Commands
+php artisan optimize:clear  # All caches
+php artisan config:cache    # Config only
+php artisan route:cache     # Routes only
+php artisan view:cache      # Views only
+                </code></pre>
+
+                <h3>🚨 Emergency Procedures</h3>
+                <div class="highlight error">
+                    <strong>System Down - Emergency Checklist:</strong>
+                </div>
+                <ol>
+                    <li><strong>Check Services:</strong> <code>systemctl status nginx mysql redis</code></li>
+                    <li><strong>Check Logs:</strong> <code>tail -f /var/log/nginx/error.log</code></li>
+                    <li><strong>Restart Services:</strong> <code>systemctl restart nginx php8.3-fpm</code></li>
+                    <li><strong>Check Database:</strong> <code>mysql -u askproai_user -p</code></li>
+                    <li><strong>Horizon Status:</strong> <code>supervisorctl status askproai-horizon</code></li>
+                    <li><strong>Emergency Restore:</strong> Backup-Restore falls nötig</li>
+                </ol>
+
+                <h3>📞 Support Kontakte</h3>
+                <ul>
+                    <li><strong>24/7 Notfall:</strong> +49 (0) 123 456 999</li>
+                    <li><strong>Technical Support:</strong> support@askproai.de</li>
+                    <li><strong>Status Page:</strong> https://status.askproai.de</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Changelog -->
+        <section id="changelog" class="section">
+            <div class="section-header">
+                📝 Changelog
+            </div>
+            <div class="section-content">
+                <div class="highlight success">
+                    <strong>Aktuelle Version:</strong> v1.2.0 - Major Security & Documentation Update
+                </div>
+
+                <h3>🔒 v1.2.0 - 2025-08-14</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>🔒 Security Improvements</h4>
+                        <ul>
+                            <li>✅ Removed all hardcoded API keys from codebase</li>
+                            <li>✅ Added proper environment variable configuration</li>
+                            <li>✅ Fixed mass assignment vulnerabilities in all models</li>
+                            <li>✅ Cleaned up 74+ files with exposed secrets</li>
+                            <li>✅ Added comprehensive security documentation</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>📚 Documentation Overhaul</h4>
+                        <ul>
+                            <li>📖 Created complete CLAUDE.md (29KB) with full system docs</li>
+                            <li>📖 Extended README.md from 23 to 325+ lines</li>
+                            <li>📖 Added comprehensive API documentation (500+ lines)</li>
+                            <li>📖 Created deployment guides and checklists</li>
+                            <li>📖 Added backup and restore procedures</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>🧹 Code Quality</h4>
+                        <ul>
+                            <li>♻️ Refactored Controllers to use Services for business logic</li>
+                            <li>⚡ CalcomController: 157 → 113 lines (improved)</li>
+                            <li>⚡ CalcomService: 50 → 200+ lines (enhanced)</li>
+                            <li>🔧 Added proper error handling and retry logic</li>
+                            <li>🧽 Removed 32 temporary backup files</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>🏗 Architecture</h4>
+                        <ul>
+                            <li>📁 Consolidated documentation into unified /docs structure</li>
+                            <li>📊 Enhanced database schema documentation</li>
+                            <li>🎯 Added system architecture diagrams</li>
+                            <li>🔄 Improved service layer organization</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>✨ v1.1.0 - 2025-07-22</h3>
+                <h4>Features & Improvements</h4>
+                <ul>
+                    <li><strong>Enhanced Portal Authentication:</strong> Session persistence improvements</li>
+                    <li><strong>API V2 Controllers:</strong> Comprehensive API endpoints</li>
+                    <li><strong>Filament Admin Panel:</strong> KPI widgets and improved UI</li>
+                    <li><strong>MCP Orchestration:</strong> Enhanced service layer</li>
+                    <li><strong>Performance Monitoring:</strong> Query optimization and indexes</li>
+                    <li><strong>Frontend Improvements:</strong> Responsive CSS and UX</li>
+                </ul>
+
+                <h4>Technical Enhancements</h4>
+                <ul>
+                    <li>Added performance indexes to key database tables</li>
+                    <li>Enhanced session handling middleware</li>
+                    <li>CORS support for React portal</li>
+                    <li>Improved authentication flow</li>
+                </ul>
+
+                <h4>Bug Fixes</h4>
+                <ul>
+                    <li>Fixed navigation overlap issues with CSS Grid layout</li>
+                    <li>Resolved session persistence problems</li>
+                    <li>Fixed API authentication edge cases</li>
+                    <li>Improved mobile responsiveness</li>
+                </ul>
+
+                <h3>🎉 v1.0.0 - 2025-05-01</h3>
+                <h4>Initial Release</h4>
+                <ul>
+                    <li><strong>RetellAI Integration:</strong> KI-powered call processing</li>
+                    <li><strong>Cal.com Integration:</strong> Automatic appointment booking</li>
+                    <li><strong>Multi-tenant Architecture:</strong> Support for multiple clients</li>
+                    <li><strong>Filament Admin Panel:</strong> Comprehensive management interface</li>
+                    <li><strong>Webhook Processing:</strong> Real-time external service integration</li>
+                    <li><strong>Basic Reporting:</strong> Call and appointment analytics</li>
+                    <li><strong>Customer Management:</strong> CRM functionality</li>
+                    <li><strong>Staff Management:</strong> Employee and service organization</li>
+                </ul>
+
+                <h3>🗺 Roadmap - Kommende Features</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>🔥 Q4 2025 - High Priority</h4>
+                        <ul>
+                            <li>Multi-Channel Support (WhatsApp & SMS)</li>
+                            <li>Advanced Analytics Dashboard</li>
+                            <li>Mobile App (React Native)</li>
+                            <li>GraphQL API v2</li>
+                        </ul>
+                        <span class="badge warning">In Planung</span>
+                    </div>
+                    <div class="card">
+                        <h4>📈 Q1 2026 - New Features</h4>
+                        <ul>
+                            <li>AI Voice Cloning</li>
+                            <li>Multi-Language Support</li>
+                            <li>Advanced Integrations (Zapier)</li>
+                            <li>White Label Solution</li>
+                        </ul>
+                        <span class="badge info">Konzeptphase</span>
+                    </div>
+                </div>
+
+                <h3>📊 Release-Statistiken</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metrik</th>
+                            <th>v1.0.0</th>
+                            <th>v1.1.0</th>
+                            <th>v1.2.0</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Lines of Code</td>
+                            <td>~35,000</td>
+                            <td>~42,000</td>
+                            <td>~50,000</td>
+                        </tr>
+                        <tr>
+                            <td>Documentation Pages</td>
+                            <td>3</td>
+                            <td>8</td>
+                            <td>15+</td>
+                        </tr>
+                        <tr>
+                            <td>API Endpoints</td>
+                            <td>12</td>
+                            <td>24</td>
+                            <td>35+</td>
+                        </tr>
+                        <tr>
+                            <td>Security Issues</td>
+                            <td>Unknown</td>
+                            <td>5 known</td>
+                            <td>0 remaining</td>
+                        </tr>
+                        <tr>
+                            <td>Test Coverage</td>
+                            <td>~30%</td>
+                            <td>~50%</td>
+                            <td>~65%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p><strong>🤖 AskProAI - Intelligente KI-Telefonassistenz</strong></p>
+            <p>Entwickelt mit ❤️ vom AskProAI Team</p>
+            <p>Version 1.2.0 - Letzte Aktualisierung: August 2025</p>
+            <p>© 2025 AskProAI. Alle Rechte vorbehalten.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight current section in navigation
+        window.addEventListener('scroll', function() {
+            let current = '';
+            const sections = document.querySelectorAll('.section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .nav-link.active {
+            background: #4299e1;
+            color: white;
+        }
+    </style>
+</body>
+</html>

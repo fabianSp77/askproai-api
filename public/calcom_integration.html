@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>calcom_integration.md - Cal.com Integration Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            color: #334155;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .content {
+            padding: 40px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            color: #1d4ed8;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .info-section {
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .warning-section {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .warning-section h3 {
+            color: #92400e;
+            margin-top: 0;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Cal.com Integration</h1>
+            <p>Kalender-Integration Konfiguration</p>
+        </div>
+        
+        <div class="content">
+            <a href="claude-documentation.html" class="back-link">← Zurück zur Hauptdokumentation</a>
+
+            <h2>🔧 Einrichtung</h2>
+            <div class="info-section">
+                <ul>
+                    <li><strong>API-Schlüssel:</strong> <code>cal_live_e9aa2c4d18e0fd79cf4f8dddb90903da</code></li>
+                    <li><strong>Benutzer-ID:</strong> <code>1346408</code></li>
+                </ul>
+                
+                <h4>Event-Typen:</h4>
+                <ul>
+                    <li><strong>Herren:</strong> <code>2026901</code></li>
+                    <li><strong>Damen:</strong> <code>2031153</code></li>
+                </ul>
+            </div>
+
+            <h2>🚀 API Endpunkte</h2>
+            <div class="code-block">
+# Verfügbarkeit prüfen
+GET /availability
+
+# Termin buchen  
+POST /bookings
+
+# Event-Typen abrufen
+GET /event-types</div>
+
+            <h2>⚠️ Bekannte Probleme</h2>
+            <div class="warning-section">
+                <h3>Aktuelle Issues:</h3>
+                <ul>
+                    <li><strong>Serverfehler bei Cal.com</strong> - Support kontaktiert</li>
+                    <li><strong>Zeitzonenprobleme</strong> - Europe/Berlin verwenden</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280;">
+                <p>📁 Original Datei: <code>calcom_integration.md</code></p>
+                <p>🌐 Live: <a href="https://api.askproai.de/calcom_integration.html">https://api.askproai.de/calcom_integration.html</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

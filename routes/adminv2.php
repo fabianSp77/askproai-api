@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Guest routes (accessible without authentication)
-Route::middleware(['web'])
+// Guest routes (internal network only for security)
+Route::middleware(['web', 'restrict.internal'])
     ->prefix('admin-v2')
     ->name('adminv2.')
     ->group(function () {

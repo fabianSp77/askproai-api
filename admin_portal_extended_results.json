@@ -1,0 +1,297 @@
+{
+  "timestamp": "2025-08-14T09:24:32.056Z",
+  "tests": [
+    {
+      "test": "Detailed page analysis",
+      "status": "SUCCESS",
+      "analysis": {
+        "title": "Anmelden - AskProAI",
+        "url": "https://api.askproai.de/admin/login",
+        "doctype": "html",
+        "charset": "UTF-8",
+        "lang": "de",
+        "totalElements": 113,
+        "metaTags": [
+          {
+            "name": "",
+            "content": ""
+          },
+          {
+            "name": "csrf-token",
+            "content": "F715YW7oyVKXtvyu3FcfupjWXw5aEMrJHH79TaQ9"
+          },
+          {
+            "name": "viewport",
+            "content": "width=device-width, initial-scale=1"
+          }
+        ],
+        "stylesheets": [
+          "https://api.askproai.de/css/filament/forms/forms.css?v=3.3.14.0",
+          "https://api.askproai.de/css/filament/support/support.css?v=3.3.14.0",
+          "https://api.askproai.de/build/assets/theme-C14O-Efx.css",
+          "https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap"
+        ],
+        "scripts": [
+          {
+            "src": "",
+            "inline": true,
+            "type": ""
+          },
+          {
+            "src": "",
+            "inline": true,
+            "type": ""
+          },
+          {
+            "src": "https://api.askproai.de/js/filament/notifications/notifications.js?v=3.3.14.0",
+            "inline": false,
+            "type": ""
+          },
+          {
+            "src": "https://api.askproai.de/js/filament/support/support.js?v=3.3.14.0",
+            "inline": false,
+            "type": ""
+          },
+          {
+            "src": "https://api.askproai.de/js/filament/filament/echo.js?v=3.3.14.0",
+            "inline": false,
+            "type": ""
+          },
+          {
+            "src": "https://api.askproai.de/js/filament/filament/app.js?v=3.3.14.0",
+            "inline": false,
+            "type": ""
+          },
+          {
+            "src": "",
+            "inline": true,
+            "type": ""
+          },
+          {
+            "src": "",
+            "inline": true,
+            "type": ""
+          },
+          {
+            "src": "https://api.askproai.de/vendor/livewire/livewire.min.js?id=df3a17f2",
+            "inline": false,
+            "type": ""
+          }
+        ],
+        "forms": [
+          {
+            "action": "https://api.askproai.de/admin/login",
+            "method": "post",
+            "enctype": "application/x-www-form-urlencoded",
+            "elements": [
+              {
+                "tag": "input",
+                "type": "email",
+                "name": "",
+                "id": "data.email",
+                "required": true,
+                "placeholder": "",
+                "value": ""
+              },
+              {
+                "tag": "input",
+                "type": "password",
+                "name": "",
+                "id": "data.password",
+                "required": true,
+                "placeholder": "",
+                "value": "[HIDDEN]"
+              },
+              {
+                "tag": "button",
+                "type": "button",
+                "name": "",
+                "id": "",
+                "value": ""
+              },
+              {
+                "tag": "button",
+                "type": "button",
+                "name": "",
+                "id": "",
+                "value": ""
+              },
+              {
+                "tag": "input",
+                "type": "checkbox",
+                "name": "",
+                "id": "data.remember",
+                "required": false,
+                "placeholder": "",
+                "value": "on"
+              },
+              {
+                "tag": "button",
+                "type": "submit",
+                "name": "",
+                "id": "",
+                "value": ""
+              }
+            ]
+          },
+          {
+            "action": "https://api.askproai.de/admin/login",
+            "method": "get",
+            "enctype": "application/x-www-form-urlencoded",
+            "elements": []
+          },
+          {
+            "action": "https://api.askproai.de/admin/login",
+            "method": "get",
+            "enctype": "application/x-www-form-urlencoded",
+            "elements": []
+          },
+          {
+            "action": "https://api.askproai.de/admin/login",
+            "method": "get",
+            "enctype": "application/x-www-form-urlencoded",
+            "elements": []
+          }
+        ],
+        "security": {
+          "hasHttps": true,
+          "hasCsrfToken": true,
+          "hasSecureContext": true,
+          "hasServiceWorker": true
+        }
+      }
+    },
+    {
+      "test": "Form validation test",
+      "status": "SUCCESS",
+      "validation": [
+        {
+          "field": "data.email",
+          "message": "Please fill out this field."
+        },
+        {
+          "field": "data.password",
+          "message": "Please fill out this field."
+        }
+      ]
+    },
+    {
+      "test": "Invalid credentials test",
+      "status": "SUCCESS",
+      "currentUrl": "https://api.askproai.de/admin/login",
+      "errorMessages": [],
+      "redirected": false
+    },
+    {
+      "test": "Mobile responsiveness analysis",
+      "status": "SUCCESS",
+      "mobile": {
+        "viewport": {
+          "width": 375,
+          "height": 667
+        },
+        "touchEvents": false,
+        "devicePixelRatio": 1,
+        "layout": {
+          "overflowElements": 0,
+          "formElements": [
+            {
+              "element": "INPUT[email]",
+              "size": {
+                "width": 327,
+                "height": 36
+              },
+              "touchFriendly": false
+            },
+            {
+              "element": "INPUT[password]",
+              "size": {
+                "width": 282,
+                "height": 36
+              },
+              "touchFriendly": false
+            },
+            {
+              "element": "BUTTON[button]",
+              "size": {
+                "width": 32,
+                "height": 32
+              },
+              "touchFriendly": false
+            },
+            {
+              "element": "BUTTON[button]",
+              "size": {
+                "width": 0,
+                "height": 0
+              },
+              "touchFriendly": false
+            },
+            {
+              "element": "INPUT[checkbox]",
+              "size": {
+                "width": 16,
+                "height": 16
+              },
+              "touchFriendly": false
+            },
+            {
+              "element": "BUTTON[submit]",
+              "size": {
+                "width": 327,
+                "height": 36
+              },
+              "touchFriendly": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "test": "Performance analysis",
+      "status": "SUCCESS",
+      "performance": {
+        "navigation": {
+          "domainLookup": 0,
+          "connection": 0,
+          "request": 102.30000019073486,
+          "response": 1.6999998092651367,
+          "domLoading": null,
+          "totalTime": null
+        },
+        "resources": {
+          "total": 10,
+          "byType": {
+            "link": 4,
+            "script": 5,
+            "other": 1
+          },
+          "slowest": []
+        }
+      }
+    }
+  ],
+  "summary": {
+    "totalTests": 5,
+    "successful": 5,
+    "failed": 0,
+    "consoleMessages": [
+      {
+        "type": "log",
+        "text": "✅ Navigation fix applied via JavaScript - Issue #578"
+      },
+      {
+        "type": "log",
+        "text": "✅ Navigation fix applied via JavaScript - Issue #578"
+      }
+    ],
+    "errors": [],
+    "requestCount": 23,
+    "uniqueDomains": [
+      "api.askproai.de",
+      "fonts.bunny.net"
+    ],
+    "jsErrors": 0,
+    "hasNoJSErrors": true
+  }
+}

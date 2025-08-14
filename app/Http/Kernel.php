@@ -29,6 +29,9 @@ class Kernel extends HttpKernel
     protected array $middlewareAliases = [
         // ✨ unsere neue Signatur-Prüfung
         'calcom.signature' => \App\Http\Middleware\VerifyCalcomSignature::class,
+        
+        // 🔒 Admin panel security - internal network only
+        'restrict.internal' => \App\Http\Middleware\RestrictToInternalNetwork::class,
 
         // ── Laravel-Standard ──────────────────────────────────────────────
         'auth'              => \App\Http\Middleware\Authenticate::class,

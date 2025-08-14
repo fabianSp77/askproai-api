@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-08-14T10:10:14.909Z",
+  "testDuration": 1755166214910,
+  "baseUrl": "https://api.askproai.de/admin",
+  "credentials": "admin@askproai.de / password",
+  "loginTest": null,
+  "dashboardTest": null,
+  "navigationTest": null,
+  "pagesTest": {},
+  "functionalityTest": {},
+  "uiIssues": [],
+  "screenshots": [
+    "01-login-page.png",
+    "02-login-filled.png"
+  ],
+  "errors": [
+    "Fatal error: Navigation timeout of 15000 ms exceeded"
+  ]
+}

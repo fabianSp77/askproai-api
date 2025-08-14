@@ -1,0 +1,48 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "isolated": false,
+    "launchOptions": {
+      "headless": false,
+      "channel": "chrome",
+      "args": [
+        "--no-sandbox",
+        "--disable-web-security",
+        "--disable-features=VizDisplayCompositor"
+      ]
+    },
+    "contextOptions": {
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "ignoreHTTPSErrors": true,
+      "locale": "de-DE",
+      "timezoneId": "Europe/Berlin"
+    }
+  },
+  "server": {
+    "port": 8932,
+    "host": "localhost"
+  },
+  "capabilities": [
+    "tabs",
+    "pdf",
+    "vision"
+  ],
+  "outputDir": "/var/www/api-gateway/storage/playwright-output",
+  "network": {
+    "allowedOrigins": [
+      "https://api.askproai.de",
+      "https://localhost",
+      "http://localhost"
+    ],
+    "blockedOrigins": [
+      "https://www.google-analytics.com",
+      "https://googletagmanager.com",
+      "https://facebook.com",
+      "https://twitter.com"
+    ]
+  },
+  "imageResponses": "allow"
+}

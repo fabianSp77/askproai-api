@@ -1,0 +1,135 @@
+{
+  "timestamp": "2025-08-14T09:23:17.702Z",
+  "tests": [
+    {
+      "test": "Navigation to login page",
+      "status": "SUCCESS",
+      "title": "Anmelden - AskProAI",
+      "url": "https://api.askproai.de/admin/login"
+    },
+    {
+      "test": "Desktop viewport test",
+      "status": "SUCCESS",
+      "viewport": {
+        "name": "Desktop",
+        "width": 1920,
+        "height": 1080
+      },
+      "screenshot": "/var/www/api-gateway/public/screenshots/admin-login-desktop.png"
+    },
+    {
+      "test": "Tablet viewport test",
+      "status": "SUCCESS",
+      "viewport": {
+        "name": "Tablet",
+        "width": 768,
+        "height": 1024
+      },
+      "screenshot": "/var/www/api-gateway/public/screenshots/admin-login-tablet.png"
+    },
+    {
+      "test": "Mobile viewport test",
+      "status": "SUCCESS",
+      "viewport": {
+        "name": "Mobile",
+        "width": 375,
+        "height": 667
+      },
+      "screenshot": "/var/www/api-gateway/public/screenshots/admin-login-mobile.png"
+    },
+    {
+      "test": "Accessibility audit",
+      "status": "SUCCESS",
+      "accessibility": {
+        "inputLabeling": {
+          "total": 3,
+          "labeled": 3,
+          "percentage": 100
+        },
+        "imageAltText": {
+          "total": 0,
+          "withAlt": 0,
+          "percentage": 0
+        },
+        "headings": [
+          {
+            "level": "h1",
+            "text": "Melden Sie sich an."
+          }
+        ],
+        "focusableElements": 6
+      }
+    },
+    {
+      "test": "Performance metrics",
+      "status": "SUCCESS",
+      "metrics": {
+        "Timestamp": 3731423.987044,
+        "Documents": 3,
+        "Frames": 1,
+        "JSEventListeners": 98,
+        "Nodes": 835,
+        "LayoutCount": 23,
+        "RecalcStyleCount": 35,
+        "LayoutDuration": 0.036096,
+        "RecalcStyleDuration": 0.070857,
+        "ScriptDuration": 0.088636,
+        "TaskDuration": 0.32817,
+        "JSHeapUsedSize": 2753684,
+        "JSHeapTotalSize": 5767168,
+        "loadTime": 421.59999990463257,
+        "domContentLoaded": 412.19999980926514,
+        "firstPaint": 164.19999980926514
+      }
+    },
+    {
+      "test": "Login form analysis",
+      "status": "SUCCESS",
+      "form": {
+        "found": true,
+        "action": "https://api.askproai.de/admin/login",
+        "method": "post",
+        "inputs": [
+          {
+            "type": "email",
+            "name": "",
+            "id": "data.email",
+            "placeholder": "",
+            "required": true
+          },
+          {
+            "type": "password",
+            "name": "",
+            "id": "data.password",
+            "placeholder": "",
+            "required": true
+          },
+          {
+            "type": "checkbox",
+            "name": "",
+            "id": "data.remember",
+            "placeholder": "",
+            "required": false
+          }
+        ],
+        "buttons": [
+          {
+            "type": "button",
+            "text": "\n                    \n                Passwort anzeigen\n            \n        \n        \n  \n  \n\n        \n            ",
+            "id": ""
+          },
+          {
+            "type": "button",
+            "text": "\n                    \n                Passwort verbergen\n            \n        \n        \n  \n  \n\n        \n            ",
+            "id": ""
+          },
+          {
+            "type": "submit",
+            "text": "\n            \n\n                    \n    \n    \n\n        \n\n                    \n    \n    \n\n        \n    \n\n    \n        Anmelden\n    \n\n            \n    \n\n    \n\n    \n",
+            "id": ""
+          }
+        ]
+      }
+    }
+  ]
+}

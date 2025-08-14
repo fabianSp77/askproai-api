@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Browser Automation - AskProAI</title>
+    <style>
+        :root {
+            --primary-color: #0ea5e9;
+            --primary-light: #38bdf8;
+            --primary-dark: #0284c7;
+            --accent-color: #059669;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 3rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .status-card {
+            background: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 2px solid var(--border-color);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .status-card.active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), #10b981);
+            border-radius: 1rem 1rem 0 0;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #dcfce7;
+            color: #166534;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li::before {
+            content: '✅';
+            margin-right: 0.5rem;
+        }
+
+        .comparison-table {
+            background: var(--bg-primary);
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .table-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .checkmark {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .workflow-section {
+            background: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 1rem;
+            margin: 2rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .workflow-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        .subagent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .subagent-card {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .subagent-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .links-section {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #047857 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin: 2rem 0;
+        }
+
+        .links-section h3 {
+            margin-bottom: 1rem;
+        }
+
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .link-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .link-item a {
+            color: white;
+            text-decoration: none;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .link-item a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎭 MCP Browser Automation</h1>
+            <div class="subtitle">Puppeteer & Playwright Integration für AskProAI Subagents</div>
+        </header>
+
+        <div class="status-grid">
+            <div class="status-card active">
+                <div class="status-indicator">✅ AKTIV</div>
+                <h2 class="card-title">🎭 Playwright MCP</h2>
+                <p class="card-description">Strukturelle Web-Automation mit Accessibility-Tree</p>
+                <ul class="feature-list">
+                    <li>Deterministische Tests ohne Pixel-Raten</li>
+                    <li>Cross-Browser-Support (Chrome, Firefox, Safari)</li>
+                    <li>Accessibility-Tree statt Screenshots</li>
+                    <li>Performance-optimierte Automation</li>
+                    <li>PDF-Generation und Vision-Support</li>
+                </ul>
+            </div>
+
+            <div class="status-card active">
+                <div class="status-indicator">✅ AKTIV</div>
+                <h2 class="card-title">🎪 Puppeteer MCP</h2>
+                <p class="card-description">Pixel-perfekte Browser-Automation</p>
+                <ul class="feature-list">
+                    <li>Pixel-genaue Screenshots</li>
+                    <li>Visual Regression Testing</li>
+                    <li>Chrome DevTools Integration</li>
+                    <li>Performance-Monitoring</li>
+                    <li>Mobile Device Emulation</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="comparison-table">
+            <div class="table-header">🆚 Playwright vs Puppeteer - Wann was verwenden?</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Anwendungsfall</th>
+                        <th>Playwright MCP</th>
+                        <th>Puppeteer MCP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>UI-Struktur-Analyse</strong></td>
+                        <td><span class="checkmark">✅ Optimal</span></td>
+                        <td>❌</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pixel-perfekte Screenshots</strong></td>
+                        <td>⚠️ Möglich</td>
+                        <td><span class="checkmark">✅ Optimal</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cross-Browser-Tests</strong></td>
+                        <td><span class="checkmark">✅ Optimal</span></td>
+                        <td>❌ Nur Chrome</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Performance-Tests</strong></td>
+                        <td><span class="checkmark">✅ Schneller</span></td>
+                        <td>⚠️ Langsamer</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Visual Regression</strong></td>
+                        <td>⚠️ Möglich</td>
+                        <td><span class="checkmark">✅ Optimal</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Responsive Design-Tests</strong></td>
+                        <td><span class="checkmark">✅ Optimal</span></td>
+                        <td><span class="checkmark">✅ Gut</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Accessibility-Audits</strong></td>
+                        <td><span class="checkmark">✅ Optimal</span></td>
+                        <td>❌</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="workflow-section">
+            <h3>🎯 Empfohlene Best Practice: Kombinierter Workflow</h3>
+            <div class="code-block">
+// 1. Strukturelle Analyse mit Playwright
+browser_navigate("https://api.askproai.de/admin")
+browser_snapshot()  // Accessibility-Tree für KI-Analyse
+
+// 2. Visuelle Dokumentation mit Puppeteer  
+puppeteer_screenshot({
+  "path": "/screenshots/admin-dashboard.png",
+  "fullPage": true
+})
+
+// 3. Cross-Browser-Test mit Playwright
+browser_resize(375, 667)  // Mobile viewport
+browser_take_screenshot({"filename": "mobile-view.png"})
+            </div>
+        </div>
+
+        <div class="workflow-section">
+            <h3>🤖 Subagents mit Browser-Automation</h3>
+            <div class="subagent-grid">
+                <div class="subagent-card">
+                    <h4>ui-auditor</h4>
+                    <p><strong>Playwright:</strong> Struktur-Analyse<br>
+                    <strong>Puppeteer:</strong> Screenshots</p>
+                </div>
+                <div class="subagent-card">
+                    <h4>general-purpose</h4>
+                    <p><strong>Playwright:</strong> Multi-Browser-Tests<br>
+                    <strong>Puppeteer:</strong> Visual Reports</p>
+                </div>
+                <div class="subagent-card">
+                    <h4>frontend-developer</h4>
+                    <p><strong>Playwright:</strong> Cross-Browser-Kompatibilität<br>
+                    <strong>Puppeteer:</strong> DevTools-Integration</p>
+                </div>
+                <div class="subagent-card">
+                    <h4>test-writer-fixer</h4>
+                    <p><strong>Playwright:</strong> E2E-Tests<br>
+                    <strong>Puppeteer:</strong> Visual Regression</p>
+                </div>
+                <div class="subagent-card">
+                    <h4>security-auditor</h4>
+                    <p><strong>Playwright:</strong> Authentication-Tests<br>
+                    <strong>Puppeteer:</strong> Security Screenshots</p>
+                </div>
+                <div class="subagent-card">
+                    <h4>performance-profiler</h4>
+                    <p><strong>Playwright:</strong> Network-Analyse<br>
+                    <strong>Puppeteer:</strong> Performance-Metriken</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="workflow-section">
+            <h3>⚙️ Konfiguration & Setup</h3>
+            <div class="code-block">
+# MCP Server Status prüfen
+claude mcp list
+
+# Ausgabe:
+# puppeteer: mcp-server-puppeteer - ✅ Connected
+# playwright: npx @playwright/mcp@latest - ✅ Connected
+
+# Playwright mit erweiterter Konfiguration
+npx @playwright/mcp@latest --config /var/www/api-gateway/playwright-mcp-config.json
+
+# Output-Verzeichnis
+/var/www/api-gateway/storage/playwright-output/
+├── screenshots/
+├── traces/
+├── reports/
+└── logs/
+            </div>
+        </div>
+
+        <div class="workflow-section">
+            <h3>🎯 AskProAI-spezifische Test-URLs</h3>
+            <div class="code-block">
+# Haupt-Admin Panel (Filament)
+https://api.askproai.de/admin
+
+# AdminV2 Portal (SPA)  
+https://api.askproai.de/admin-v2/portal
+
+# Login-Seiten
+https://api.askproai.de/admin/login
+https://api.askproai.de/business/login
+
+# API-Dokumentation
+https://api.askproai.de/docs
+
+# Screenshots & Reports
+https://api.askproai.de/screenshots/
+            </div>
+        </div>
+
+        <div class="links-section">
+            <h3>📚 Dokumentation & Links</h3>
+            <div class="links-grid">
+                <div class="link-item">
+                    <strong>Vollständige Playwright-Anleitung:</strong><br>
+                    <a href="/var/www/api-gateway/PLAYWRIGHT_MCP_SUBAGENT_GUIDE.md">PLAYWRIGHT_MCP_SUBAGENT_GUIDE.md</a>
+                </div>
+                <div class="link-item">
+                    <strong>Puppeteer Integration:</strong><br>
+                    <a href="/var/www/api-gateway/PUPPETEER_SUBAGENT_CONFIG.md">PUPPETEER_SUBAGENT_CONFIG.md</a>
+                </div>
+                <div class="link-item">
+                    <strong>Konfigurationsdatei:</strong><br>
+                    <a href="/var/www/api-gateway/playwright-mcp-config.json">playwright-mcp-config.json</a>
+                </div>
+                <div class="link-item">
+                    <strong>Projekt-Dokumentation:</strong><br>
+                    <a href="https://api.askproai.de/projekt-dokumentation-komplett.html">Vollständige Projektdoku</a>
+                </div>
+                <div class="link-item">
+                    <strong>GitHub Playwright MCP:</strong><br>
+                    <a href="https://github.com/microsoft/playwright-mcp" target="_blank">microsoft/playwright-mcp</a>
+                </div>
+                <div class="link-item">
+                    <strong>UI-Audit Screenshots:</strong><br>
+                    <a href="https://api.askproai.de/screenshots/index.html">Live Screenshots</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="workflow-section">
+            <h3>✅ Installation & Verification</h3>
+            <div class="code-block">
+# Installation (bereits abgeschlossen)
+claude mcp add playwright npx @playwright/mcp@latest
+
+# Status-Check
+claude mcp list
+# ✅ puppeteer: mcp-server-puppeteer - Connected
+# ✅ playwright: npx @playwright/mcp@latest - Connected
+
+# Konfiguration prüfen
+cat /root/.claude.json | grep -A 10 "playwright"
+
+# Output-Verzeichnis erstellen
+mkdir -p /var/www/api-gateway/storage/playwright-output
+
+# Berechtigungen setzen
+chmod 755 /var/www/api-gateway/storage/playwright-output
+            </div>
+            
+            <div style="background: #dcfce7; color: #166534; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+                <strong>✅ STATUS: VOLLSTÄNDIG INSTALLIERT UND KONFIGURIERT</strong><br>
+                Beide MCP Server (Puppeteer & Playwright) sind aktiv und bereit für Subagent-Integration.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

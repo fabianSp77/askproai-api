@@ -7,7 +7,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WorkingHour extends Model
 {
-    protected $guarded = [];
+    /**
+     * The attributes that are mass assignable.
+     */
+    protected $fillable = [
+        'staff_id',
+        'weekday',
+        'start',
+        'end'
+    ];
 
     public function staff(): BelongsTo
     {
