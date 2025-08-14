@@ -1,0 +1,19 @@
+name: phpstan-baseline-guard
+on:
+  pull_request:
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', tools: composer }
+      - run: composer install --no-interaction --prefer-dist
+      - name: Generate temporary baseline
+        run: |
+          vendor/bin/phpstan analyse --no-progress --memory-limit=1G --generate-baseline=phpstan-baseline.new.neon || true
+          SUM_NEW=$(grep -oE 'count:\s*[0-9]+' phpstan-baseline.new.neon | awk '{s+=$2} END{print s+0}')
+          SUM_LIMIT=$(cat phpstan-baseline.limit)
+          echo "SUM_NEW=$SUM_NEW SUM_LIMIT=$SUM_LIMIT"
+          test -n "$SUM_NEW" || { echo "No counts found in generated baseline"; exit 1; }
+          [ "$SUM_NEW" -le "$SUM_LIMIT" ] || { echo "Baseline grew ($SUM_NEW > $SUM_LIMIT)"; exit 1; }
