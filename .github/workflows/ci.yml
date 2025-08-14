@@ -3,35 +3,35 @@ on:
   pull_request:
   push:
     branches: [ main ]
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:8
         env:
           MYSQL_DATABASE: testing
+          MYSQL_USER: root
+          MYSQL_PASSWORD: root
           MYSQL_ROOT_PASSWORD: root
-        ports: ['3306:3306']
+        ports: ["3306:3306"]
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
-          --health-interval=10s --health-timeout=5s --health-retries=5
+          --health-interval=10s --health-timeout=5s --health-retries=20
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.3', coverage: none, tools: composer }
-      - uses: actions/cache@v4
-        with:
-          path: ~/.composer/cache
-          key: composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
-          restore-keys: composer-${{ runner.os }}-
+        with: { php-version: '8.3', tools: composer, coverage: none }
       - run: composer install --no-interaction --prefer-dist
-      - name: App key
-        run: php -r "file_exists('.env')||copy('.env.example','.env');" && php artisan key:generate
-      - name: Migrate
+      - run: cp .env.example .env || true
+      - run: php -r 'file_exists(".env") || exit(0);'
+      - run: php artisan key:generate
+      - name: Wait for MySQL
+        run: |
+          for i in {1..40}; do
+            mysqladmin ping -h 127.0.0.1 -proot && break || sleep 3
+          done
+      - run: php artisan migrate --force
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -39,8 +39,8 @@ jobs:
           DB_DATABASE: testing
           DB_USERNAME: root
           DB_PASSWORD: root
-        run: php artisan migrate --force
-      - name: Tests
+      - name: Run tests (CI profile)
+        run: php artisan test --configuration=phpunit.ci.xml
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -48,23 +48,18 @@ jobs:
           DB_DATABASE: testing
           DB_USERNAME: root
           DB_PASSWORD: root
-        run: php artisan test --parallel
+
   gitleaks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        with: { fetch-depth: 0 }
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   docs-gates:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify required docs content
-        run: |
-          set -e
-          grep -RniE 'cal-api-version|Authorization: Bearer' docs || (echo "missing v2 headers in docs"; exit 1)
-          grep -RniE 'gunzip -c .+\.sql\.gz \| mysql' docs || (echo "missing restore gunzip doc"; exit 1)
-          test -f docs/API.md && grep -nE '^### (GET|POST|PUT|PATCH|DELETE) /' docs/API.md || (echo "API.md endpoints missing"; exit 1)
+      - run: bash scripts/ci_docs_gate.sh

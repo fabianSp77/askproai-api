@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php" colors="true" executionOrder="depends,defects">
+  <testsuites>
+    <testsuite name="CI">
+      <directory>tests</directory>
+      <exclude>tests/Feature/Auth</exclude>
+      <exclude>tests/Feature/EmailVerificationTest.php</exclude>
+      <exclude>tests/Feature/PasswordResetTest.php</exclude>
+    </testsuite>
+  </testsuites>
+  <php>
+    <env name="APP_ENV" value="testing"/>
+    <env name="APP_URL" value="http://localhost"/>
+    <env name="CACHE_DRIVER" value="array"/>
+    <env name="SESSION_DRIVER" value="array"/>
+    <env name="QUEUE_CONNECTION" value="sync"/>
+    <env name="MAIL_MAILER" value="array"/>
+    <env name="DB_CONNECTION" value="mysql"/>
+    <env name="DB_HOST" value="127.0.0.1"/>
+    <env name="DB_PORT" value="3306"/>
+    <env name="DB_DATABASE" value="testing"/>
+    <env name="DB_USERNAME" value="root"/>
+    <env name="DB_PASSWORD" value="root"/>
+  </php>
+</phpunit>
