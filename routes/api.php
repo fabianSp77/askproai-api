@@ -19,5 +19,6 @@ Route::get('calcom/webhook', [CalcomWebhookController::class, 'ping']);
 Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle'])
     ->middleware('calcom.signature');
 
-// Retell Webhook (POST)
+// Retell Webhook (POST) - Multiple endpoint aliases for compatibility
 Route::post('retell/webhook', [RetellWebhookController::class, '__invoke']);
+Route::post('webhooks/retell', [RetellWebhookController::class, '__invoke']);
