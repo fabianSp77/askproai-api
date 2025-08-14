@@ -1896,6 +1896,11 @@ parameters:
 			path: app/Models/Tenant.php
 
 		-
+			message: "#^Class App\\\\Models\\\\Tenant uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Tenant.php
+
+		-
 			message: "#^Method App\\\\Models\\\\Tenant\\:\\:users\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
 			count: 1
 			path: app/Models/Tenant.php
@@ -1924,6 +1929,11 @@ parameters:
 			message: "#^Property App\\\\Models\\\\Termin\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: app/Models/Termin.php
+
+		-
+			message: "#^Class App\\\\Models\\\\User uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/User.php
 
 		-
 			message: "#^Property App\\\\Models\\\\User\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"

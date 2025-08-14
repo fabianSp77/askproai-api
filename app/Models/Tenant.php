@@ -8,9 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
+/**
+ * @method static \Database\Factories\TenantFactory factory()
+ */
 class Tenant extends Model
 {
     use HasFactory;
+
     public $incrementing = false;
 
     protected $keyType = 'string';
