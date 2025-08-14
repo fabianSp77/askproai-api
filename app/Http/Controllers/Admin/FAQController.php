@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\FAQ;
+use App\Models\Faq;
 use Illuminate\Http\Request;
 
 class FAQController extends Controller
 {
     public function index()
     {
-        $faqs = FAQ::all();
+        $faqs = Faq::all();
 
         return view('admin.faqs.index', compact('faqs'));
     }
@@ -28,17 +28,17 @@ class FAQController extends Controller
             'active' => 'boolean',
         ]);
 
-        FAQ::create($validated);
+        Faq::create($validated);
 
         return redirect()->route('admin.faqs.index')->with('success', 'FAQ erstellt');
     }
 
-    public function edit(FAQ $faq)
+    public function edit(Faq $faq)
     {
         return view('admin.faqs.edit', compact('faq'));
     }
 
-    public function update(Request $request, FAQ $faq)
+    public function update(Request $request, Faq $faq)
     {
         $validated = $request->validate([
             'question' => 'required|string',
@@ -51,7 +51,7 @@ class FAQController extends Controller
         return redirect()->route('admin.faqs.index')->with('success', 'FAQ aktualisiert');
     }
 
-    public function destroy(FAQ $faq)
+    public function destroy(Faq $faq)
     {
         $faq->delete();
 

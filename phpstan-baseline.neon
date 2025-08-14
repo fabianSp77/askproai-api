@@ -486,6 +486,11 @@ parameters:
 			path: app/Http/Controllers/Admin/FAQController.php
 
 		-
+			message: "#^Class App\\\\Models\\\\FAQ referenced with incorrect case\\: App\\\\Models\\\\Faq\\.$#"
+			count: 6
+			path: app/Http/Controllers/Admin/FAQController.php
+
+		-
 			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\FAQController\\:\\:create\\(\\) has no return type specified\\.$#"
 			count: 1
 			path: app/Http/Controllers/Admin/FAQController.php
@@ -973,6 +978,11 @@ parameters:
 		-
 			message: "#^Call to an undefined static method App\\\\Models\\\\FAQ\\:\\:where\\(\\)\\.$#"
 			count: 1
+			path: app/Http/Controllers/FAQController.php
+
+		-
+			message: "#^Class App\\\\Models\\\\FAQ referenced with incorrect case\\: App\\\\Models\\\\Faq\\.$#"
+			count: 2
 			path: app/Http/Controllers/FAQController.php
 
 		-

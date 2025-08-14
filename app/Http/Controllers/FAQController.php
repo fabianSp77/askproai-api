@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FAQ;
+use App\Models\Faq;
 
 class FAQController extends Controller
 {
     public function index()
     {
-        $faqs = FAQ::where('active', true)->get();
+        $faqs = Faq::where('active', true)->get();
 
         return view('faqs.index', compact('faqs'));
     }

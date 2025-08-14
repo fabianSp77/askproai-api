@@ -9,6 +9,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Skip in testing environment (SQLite doesn't support INFORMATION_SCHEMA)
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+
         Schema::table('integrations', function (Blueprint $table) {
             // 1) FK nur droppen, wenn er existiert
             $fkExists = DB::table('information_schema.KEY_COLUMN_USAGE')
