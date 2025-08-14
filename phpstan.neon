@@ -1,3 +1,12 @@
 includes:
   - phpstan.neon.dist
   - phpstan-baseline.neon
+
+parameters:
+  paths:
+    - app
+  level: 6
+  checkMissingIterableValueType: true
+  checkGenericClassInNonGenericObjectType: true
+  ignoreErrors:
+    - '#Property .+ does not accept null#'

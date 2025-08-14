@@ -8,28 +8,25 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:8
+        image: mysql:5.7
         env:
           MYSQL_DATABASE: testing
-          MYSQL_USER: root
-          MYSQL_PASSWORD: root
           MYSQL_ROOT_PASSWORD: root
         ports: ["3306:3306"]
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
-          --health-interval=10s --health-timeout=5s --health-retries=20
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with: { php-version: '8.3', tools: composer, coverage: none }
       - run: composer install --no-interaction --prefer-dist
       - run: cp .env.example .env || true
-      - run: php -r 'file_exists(".env") || exit(0);'
       - run: php artisan key:generate
       - name: Wait for MySQL
         run: |
-          for i in {1..40}; do
-            mysqladmin ping -h 127.0.0.1 -proot && break || sleep 3
+          for i in {1..30}; do
+            mysqladmin ping -h 127.0.0.1 -proot && break || sleep 2
           done
       - run: php artisan migrate --force
         env:

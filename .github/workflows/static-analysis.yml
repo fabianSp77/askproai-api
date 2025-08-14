@@ -19,4 +19,13 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with: { php-version: '8.3', tools: composer }
       - run: composer install --no-interaction --prefer-dist
-      - run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G --configuration=phpstan.neon
+      - name: Debug PHPStan config
+        run: |
+          echo "=== PHPStan config files ==="
+          ls -la phpstan*
+          echo "=== PHPStan.neon content ==="
+          cat phpstan.neon || true
+          echo "=== Baseline first 10 lines ==="
+          head -10 phpstan-baseline.neon || true
+      - name: Run PHPStan with explicit config
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G --configuration=phpstan.neon
