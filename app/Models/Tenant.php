@@ -37,7 +37,8 @@ class Tenant extends Model
                 $tenant->api_key_hash = Hash::make($plainApiKey);
 
                 // Store plain key temporarily for initial response
-                $tenant->setRawAttribute('plain_api_key', $plainApiKey);
+                // Use array access instead of setRawAttribute for Laravel 12 compatibility
+                $tenant->attributes['plain_api_key'] = $plainApiKey;
             }
         });
     }
