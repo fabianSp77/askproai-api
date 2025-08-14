@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tenants', function (Blueprint $table) {
-            //
+            // Change id column to UUID
+            $table->dropPrimary(['id']);
+            $table->uuid('id')->primary()->change();
         });
     }
 
@@ -22,7 +24,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tenants', function (Blueprint $table) {
-            //
+            // Revert to BIGINT id
+            $table->dropPrimary(['id']);
+            $table->id()->change();
         });
     }
 };
