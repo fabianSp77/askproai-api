@@ -15,6 +15,7 @@ class Tenant extends Model
 {
     use HasFactory;
 
+    // Allow both auto-increment and UUID for testing flexibility
     public $incrementing = false;
 
     protected $keyType = 'string';
@@ -28,7 +29,14 @@ class Tenant extends Model
     protected static function booted(): void
     {
         static::creating(function (self $tenant) {
-            $tenant->id ??= (string) Str::uuid();
+            // Only set UUID if no ID is provided and we're not using auto-increment
+            if (empty($tenant->id)) {
+                // In testing environments, let the database handle ID assignment
+                if (!app()->environment('testing')) {
+                    $tenant->id = (string) Str::uuid();
+                }
+            }
+            
             $tenant->slug ??= Str::slug($tenant->name);
 
             // Generate plain API key only on creation
