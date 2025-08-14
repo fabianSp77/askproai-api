@@ -32,11 +32,11 @@ class Tenant extends Model
             // Only set UUID if no ID is provided and we're not using auto-increment
             if (empty($tenant->id)) {
                 // In testing environments, let the database handle ID assignment
-                if (!app()->environment('testing')) {
+                if (! app()->environment('testing')) {
                     $tenant->id = (string) Str::uuid();
                 }
             }
-            
+
             $tenant->slug ??= Str::slug($tenant->name);
 
             // Generate plain API key only on creation
