@@ -1,0 +1,14 @@
+name: security-audit
+on:
+  pull_request:
+  schedule:
+    - cron: '0 4 * * 1'  # montags 04:00 UTC
+jobs:
+  composer-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', tools: composer }
+      - run: composer install --no-interaction --prefer-dist
+      - run: composer audit --locked
