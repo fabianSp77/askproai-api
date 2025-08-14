@@ -26,8 +26,8 @@ return new class extends Migration
             $table->unsignedBigInteger('event_type_id')->index();
             $table->uuid('branch_id')->nullable();     // FK → branches.uuid
             $table->string('external_id')->nullable();
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
+            $table->timestamp('starts_at')->nullable();
+            $table->timestamp('ends_at')->nullable();
             $table->timestamps();
 
             $table->foreign('event_type_id')
