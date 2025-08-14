@@ -8,5 +8,3 @@ parameters:
   level: 6
   checkMissingIterableValueType: true
   checkGenericClassInNonGenericObjectType: true
-  ignoreErrors:
-    - '#Property .+ does not accept null#'

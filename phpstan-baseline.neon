@@ -1336,21 +1336,6 @@ parameters:
 			path: app/Http/Middleware/SecureApiKeyAuth.php
 
 		-
-			message: "#^Access to undefined constant Illuminate\\\\Http\\\\Request\\:\\:HEADER_X_FORWARDED_ALL\\.$#"
-			count: 1
-			path: app/Http/Middleware/TrustProxies.php
-
-		-
-			message: "#^Property App\\\\Http\\\\Middleware\\\\TrustProxies\\:\\:\\$headers has no type specified\\.$#"
-			count: 1
-			path: app/Http/Middleware/TrustProxies.php
-
-		-
-			message: "#^Property App\\\\Http\\\\Middleware\\\\TrustProxies\\:\\:\\$proxies has no type specified\\.$#"
-			count: 1
-			path: app/Http/Middleware/TrustProxies.php
-
-		-
 			message: "#^Method App\\\\Http\\\\Middleware\\\\VerifyRetellSignature\\:\\:handle\\(\\) has no return type specified\\.$#"
 			count: 1
 			path: app/Http/Middleware/VerifyRetellSignature.php
