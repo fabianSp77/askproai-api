@@ -3,15 +3,14 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
+use App\Services\HorizonHealth;
 
-class HorizonBadge extends Component { public function render() { return view("livewire.admin.horizon-badge", ["ok" => AppServicesHorizonHealth::ok()]); }}
+class HorizonBadge extends Component
 {
     public function render()
     {
-        return <<<'HTML'
-        <div>
-            {{-- If your happiness depends on money, you will never be happy with yourself. --}}
-        </div>
-        HTML;
+        return view("livewire.admin.horizon-badge", [
+            "ok" => HorizonHealth::ok()
+        ]);
     }
 }

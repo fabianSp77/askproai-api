@@ -1,0 +1,2201 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Console/Commands/RetellImportCommand.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:firstOrCreate\\(\\)\\.$#"
+			count: 2
+			path: app/Console/Commands/RetellImportCommand.php
+
+		-
+			message: "#^Method App\\\\Console\\\\Commands\\\\RetellImportCommand\\:\\:handle\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Console/Commands/RetellImportCommand.php
+
+		-
+			message: "#^Variable \\$callId on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: app/Console/Commands/RetellImportCommand.php
+
+		-
+			message: "#^Method App\\\\Console\\\\Commands\\\\ShortImport\\:\\:handle\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Console/Commands/ShortImport.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\CalcomEventType\\:\\:updateOrCreate\\(\\)\\.$#"
+			count: 1
+			path: app/Console/Commands/SyncCalcomEventTypes.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\CalcomEventType\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Console/Commands/SyncCalcomEventTypes.php
+
+		-
+			message: "#^Property App\\\\Console\\\\Kernel\\:\\:\\$commands type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Console/Kernel.php
+
+		-
+			message: "#^Class App\\\\Filament\\\\Admin\\\\Resources\\\\BookingResource not found\\.$#"
+			count: 1
+			path: app/Filament/Admin/Resources/BookingResource/Pages/CreateBooking.php
+
+		-
+			message: "#^Class App\\\\Filament\\\\Admin\\\\Resources\\\\BookingResource not found\\.$#"
+			count: 1
+			path: app/Filament/Admin/Resources/BookingResource/Pages/EditBooking.php
+
+		-
+			message: "#^Class App\\\\Filament\\\\Admin\\\\Resources\\\\BookingResource not found\\.$#"
+			count: 1
+			path: app/Filament/Admin/Resources/BookingResource/Pages/ListBookings.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\User\\:\\:latest\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/ActivityLogWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Company\\:\\:whereYear\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/CompaniesChartWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Company\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/CompanyOverviewWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Company\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/CompanyOverviewWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Company\\:\\:whereMonth\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/CompanyOverviewWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Staff\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/CompanyOverviewWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:select\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/CustomerChartWidget.php
+
+		-
+			message: "#^Unable to resolve the template type TKey in call to function collect$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/CustomerChartWidget.php
+
+		-
+			message: "#^Unable to resolve the template type TValue in call to function collect$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/CustomerChartWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/CustomerStats.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/DashboardStats.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:whereNotNull\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/DashboardStats.php
+
+		-
+			message: "#^Parameter \\#1 \\$query of method Filament\\\\Tables\\\\Table\\:\\:query\\(\\) expects Closure\\|Illuminate\\\\Database\\\\Eloquent\\\\Builder\\|null, Illuminate\\\\Database\\\\Query\\\\Builder given\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/LatestCustomersWidget.php
+
+		-
+			message: "#^Parameter \\#1 \\$query of method Filament\\\\Tables\\\\Table\\:\\:query\\(\\) expects Closure\\|Illuminate\\\\Database\\\\Eloquent\\\\Builder\\|null, Illuminate\\\\Database\\\\Query\\\\Builder given\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/RecentAppointments.php
+
+		-
+			message: "#^Parameter \\#1 \\$query of method Filament\\\\Tables\\\\Table\\:\\:query\\(\\) expects Closure\\|Illuminate\\\\Database\\\\Eloquent\\\\Builder\\|null, Illuminate\\\\Database\\\\Query\\\\Builder given\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/RecentCalls.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/StatsOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:whereDate\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/StatsOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:whereDate\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/StatsOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:whereNotNull\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/StatsOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Company\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/StatsOverviewWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/StatsOverviewWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:whereMonth\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/StatsOverviewWidget.php
+
+		-
+			message: "#^Method App\\\\Filament\\\\Admin\\\\Widgets\\\\SystemStatus\\:\\:check\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/SystemStatus.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/TotalCustomersWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/TotalCustomersWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/TotalCustomersWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Admin/Widgets/TotalCustomersWidget.php
+
+		-
+			message: "#^Parameter \\#1 \\$query of method Filament\\\\Tables\\\\Table\\:\\:query\\(\\) expects Closure\\|Illuminate\\\\Database\\\\Eloquent\\\\Builder\\|null, Illuminate\\\\Database\\\\Query\\\\Builder given\\.$#"
+			count: 1
+			path: app/Filament/Widgets/ActivityLogWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:select\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/AppointmentsWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:whereDate\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/AskproaiOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:whereBetween\\(\\)\\.$#"
+			count: 2
+			path: app/Filament/Widgets/AskproaiOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:whereDate\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/AskproaiOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/AskproaiOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Company\\:\\:whereYear\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/CompaniesChartWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:select\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/CustomerChartWidget.php
+
+		-
+			message: "#^Unable to resolve the template type TKey in call to function collect$#"
+			count: 1
+			path: app/Filament/Widgets/CustomerChartWidget.php
+
+		-
+			message: "#^Unable to resolve the template type TValue in call to function collect$#"
+			count: 1
+			path: app/Filament/Widgets/CustomerChartWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/DashboardStats.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:whereNotNull\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/DashboardStats.php
+
+		-
+			message: "#^Parameter \\#1 \\$query of method Filament\\\\Tables\\\\Table\\:\\:query\\(\\) expects Closure\\|Illuminate\\\\Database\\\\Eloquent\\\\Builder\\|null, Illuminate\\\\Database\\\\Query\\\\Builder given\\.$#"
+			count: 1
+			path: app/Filament/Widgets/LatestCustomersWidget.php
+
+		-
+			message: "#^Parameter \\#1 \\$query of method Filament\\\\Tables\\\\Table\\:\\:query\\(\\) expects Closure\\|Illuminate\\\\Database\\\\Eloquent\\\\Builder\\|null, Illuminate\\\\Database\\\\Query\\\\Builder given\\.$#"
+			count: 1
+			path: app/Filament/Widgets/RecentAppointments.php
+
+		-
+			message: "#^Parameter \\#1 \\$query of method Filament\\\\Tables\\\\Table\\:\\:query\\(\\) expects Closure\\|Illuminate\\\\Database\\\\Eloquent\\\\Builder\\|null, Illuminate\\\\Database\\\\Query\\\\Builder given\\.$#"
+			count: 1
+			path: app/Filament/Widgets/RecentCalls.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/StatsOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:whereDate\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/StatsOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:whereDate\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/StatsOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:whereNotNull\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/StatsOverview.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Company\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/StatsOverviewWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/StatsOverviewWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:whereMonth\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/StatsOverviewWidget.php
+
+		-
+			message: "#^Method App\\\\Filament\\\\Widgets\\\\SystemStatus\\:\\:check\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Filament/Widgets/SystemStatus.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/TotalCustomersWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/TotalCustomersWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/TotalCustomersWidget.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Filament/Widgets/TotalCustomersWidget.php
+
+		-
+			message: "#^Function features\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Helpers/features.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/AppointmentController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Business\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/BusinessController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/CallController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/CustomerController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\FAQ\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/FaqController.php
+
+		-
+			message: "#^Class App\\\\Models\\\\FAQ referenced with incorrect case\\: App\\\\Models\\\\Faq\\.$#"
+			count: 6
+			path: app/Http/Controllers/API/FaqController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Kunde\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/KundeController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Kunde\\:\\:find\\(\\)\\.$#"
+			count: 3
+			path: app/Http/Controllers/API/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\KundeController\\:\\:destroy\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\KundeController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\KundeController\\:\\:show\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\KundeController\\:\\:store\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\KundeController\\:\\:update\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/KundeController.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Call\\:\\:\\$cost_cents\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/RetellConversationEndedController.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Call\\:\\:\\$duration_sec\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/RetellConversationEndedController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:firstOrCreate\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/RetellConversationEndedController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/RetellInboundWebhookController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\RetellInboundWebhookController\\:\\:__invoke\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/RetellInboundWebhookController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:createAppointment\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:getAccessToken\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:getLocations\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:getServices\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:listBookableTimes\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:test\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:\\$accessToken has no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:\\$baseUrl has no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:\\$clientId has no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Controllers\\\\API\\\\SamediController\\:\\:\\$clientSecret has no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/SamediController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Service\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/ServiceController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Staff\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/API/StaffController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\FAQ\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/FAQController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\FAQController\\:\\:create\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/FAQController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\FAQController\\:\\:destroy\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/FAQController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\FAQController\\:\\:edit\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/FAQController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\FAQController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/FAQController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\FAQController\\:\\:store\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/FAQController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\FAQController\\:\\:update\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/FAQController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\PremiumService\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\PremiumServiceController\\:\\:create\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\PremiumServiceController\\:\\:destroy\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\PremiumServiceController\\:\\:edit\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\PremiumServiceController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\PremiumServiceController\\:\\:store\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Admin\\\\PremiumServiceController\\:\\:update\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Admin/PremiumServiceController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Contracts\\\\Auth\\\\Authenticatable\\:\\:\\$email\\.$#"
+			count: 3
+			path: app/Http/Controllers/AdminV2/Auth/ApiLoginController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Contracts\\\\Auth\\\\Authenticatable\\:\\:\\$id\\.$#"
+			count: 4
+			path: app/Http/Controllers/AdminV2/Auth/ApiLoginController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Contracts\\\\Auth\\\\Authenticatable\\:\\:\\$name\\.$#"
+			count: 2
+			path: app/Http/Controllers/AdminV2/Auth/ApiLoginController.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Auth\\\\Guard\\:\\:attempt\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/AdminV2/Auth/ApiLoginController.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Auth\\\\Guard\\:\\:logout\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/AdminV2/Auth/ApiLoginController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Api\\\\CalcomBookingController\\:\\:createBooking\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Api/CalcomBookingController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$call_duration\\.$#"
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$call_id\\.$#"
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$call_summary\\.$#"
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$call_time\\.$#"
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$successful\\.$#"
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$type\\.$#"
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\ApiController\\:\\:createCall\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\ApiController\\:\\:getStats\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/ApiController.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Auth\\\\Guard\\:\\:logout\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/AuthenticatedSessionController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Auth\\\\AuthenticatedSessionController\\:\\:create\\(\\) should return Illuminate\\\\View\\\\View but returns Illuminate\\\\Contracts\\\\View\\\\View\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/AuthenticatedSessionController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$password\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/ConfirmablePasswordController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Auth\\\\ConfirmablePasswordController\\:\\:show\\(\\) should return Illuminate\\\\View\\\\View but returns Illuminate\\\\Contracts\\\\View\\\\View\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/ConfirmablePasswordController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Auth\\\\ForgotPasswordController\\:\\:sendResetLinkEmail\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/ForgotPasswordController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$password\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/NewPasswordController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Auth\\\\NewPasswordController\\:\\:create\\(\\) should return Illuminate\\\\View\\\\View but returns Illuminate\\\\Contracts\\\\View\\\\View\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/NewPasswordController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Auth\\\\PasswordResetLinkController\\:\\:create\\(\\) should return Illuminate\\\\View\\\\View but returns Illuminate\\\\Contracts\\\\View\\\\View\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/PasswordResetLinkController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$email\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/RegisteredUserController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/RegisteredUserController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$password\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/RegisteredUserController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\User\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/RegisteredUserController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Auth\\\\RegisteredUserController\\:\\:create\\(\\) should return Illuminate\\\\View\\\\View but returns Illuminate\\\\Contracts\\\\View\\\\View\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/RegisteredUserController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\Auth\\\\ResetPasswordController\\:\\:reset\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/Auth/ResetPasswordController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$email\\.$#"
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$password\\.$#"
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\User\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\AuthController\\:\\:login\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\AuthController\\:\\:logout\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Tenant\\:\\:find\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/BillingController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\BillingController\\:\\:checkout\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/BillingController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\BillingController\\:\\:webhook\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/BillingController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\CalComController\\:\\:checkAvailability\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CalComController.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Controllers\\\\CalComController\\:\\:\\$apiKey has no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CalComController.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Controllers\\\\CalComController\\:\\:\\$baseUrl has no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CalComController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\CallController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CallController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\CallController\\:\\:show\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CallController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\CallController\\:\\:show\\(\\) has parameter \\$id with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CallController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$email\\.$#"
+			count: 1
+			path: app/Http/Controllers/CustomerController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Http/Controllers/CustomerController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$phone_number\\.$#"
+			count: 1
+			path: app/Http/Controllers/CustomerController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\CustomerController\\:\\:create\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CustomerController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\CustomerController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CustomerController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\CustomerController\\:\\:show\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CustomerController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\CustomerController\\:\\:show\\(\\) has parameter \\$id with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CustomerController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\CustomerController\\:\\:store\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/CustomerController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:avg\\(\\)\\.$#"
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:count\\(\\)\\.$#"
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:orderBy\\(\\)\\.$#"
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:where\\(\\)\\.$#"
+			count: 5
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:count\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:orderBy\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Service\\:\\:orderBy\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Staff\\:\\:orderBy\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DashboardController\\:\\:appointments\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DashboardController\\:\\:calls\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DashboardController\\:\\:customers\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DashboardController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DashboardController\\:\\:services\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DashboardController\\:\\:staff\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$dateFrom\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$dateTo\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$email\\.$#"
+			count: 2
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$eventTypeId\\.$#"
+			count: 3
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$name\\.$#"
+			count: 2
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$start\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Call to static method error\\(\\) on an unknown class Log\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Call to static method warning\\(\\) on an unknown class Log\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DirectCalcomController\\:\\:callWithRetry\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DirectCalcomController\\:\\:callWithRetry\\(\\) has parameter \\$method with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DirectCalcomController\\:\\:callWithRetry\\(\\) has parameter \\$payload with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DirectCalcomController\\:\\:callWithRetry\\(\\) has parameter \\$url with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DirectCalcomController\\:\\:checkAvailability\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DirectCalcomController\\:\\:createBooking\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DirectCalcomController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DocumentationController\\:\\:show\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DocumentationController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\DocumentationController\\:\\:show\\(\\) has parameter \\$page with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/DocumentationController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\ExampleController\\:\\:example\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/ExampleController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\ExportController\\:\\:arrayToCsv\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/ExportController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\ExportController\\:\\:arrayToCsv\\(\\) has parameter \\$data with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/ExportController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\ExportController\\:\\:exportCalls\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/ExportController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\FAQ\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/FAQController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\FAQController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/FAQController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$answer\\.$#"
+			count: 1
+			path: app/Http/Controllers/FaqController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$category\\.$#"
+			count: 1
+			path: app/Http/Controllers/FaqController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Http\\\\Request\\:\\:\\$question\\.$#"
+			count: 1
+			path: app/Http/Controllers/FaqController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\FaqController\\:\\:create\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/FaqController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\FaqController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/FaqController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\FaqController\\:\\:store\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/FaqController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Integration\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/IntegrationController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\IntegrationController\\:\\:destroy\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/IntegrationController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\IntegrationController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/IntegrationController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\IntegrationController\\:\\:show\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/IntegrationController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\IntegrationController\\:\\:store\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/IntegrationController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\IntegrationController\\:\\:update\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/IntegrationController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Kunde\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\KundeController\\:\\:destroy\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\KundeController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\KundeController\\:\\:show\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\KundeController\\:\\:store\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundeController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\KundeController\\:\\:update\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundeController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Kunde\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundenController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\User\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundenController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\KundenController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundenController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\KundenController\\:\\:login\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundenController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\KundenController\\:\\:store\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/KundenController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\MainCalcomController\\:\\:checkAvailability\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/MainCalcomController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\MainCalcomController\\:\\:createBooking\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/MainCalcomController.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Controllers\\\\MainCalcomController\\:\\:\\$calcomService has no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/MainCalcomController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\PremiumService\\:\\:findOrFail\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/PremiumServiceController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\PremiumService\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\PremiumServiceController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\PremiumServiceController\\:\\:show\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\PremiumServiceController\\:\\:show\\(\\) has parameter \\$id with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/PremiumServiceController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\ProfileController\\:\\:edit\\(\\) should return Illuminate\\\\View\\\\View but returns Illuminate\\\\Contracts\\\\View\\\\View\\.$#"
+			count: 1
+			path: app/Http/Controllers/ProfileController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\ReportsController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/ReportsController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\RetellAIController\\:\\:getCallDetails\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellAIController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\RetellAIController\\:\\:getCallDetails\\(\\) has parameter \\$callId with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellAIController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\RetellAIController\\:\\:getCallTranscript\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellAIController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\RetellAIController\\:\\:getCallTranscript\\(\\) has parameter \\$callId with no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellAIController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\RetellAIController\\:\\:getCalls\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellAIController.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Controllers\\\\RetellAIController\\:\\:\\$retellService has no type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellAIController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\RetellAiController\\:\\:handleIncomingCall\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellAiController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\RetellAiController\\:\\:webhook\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellAiController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Branch\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellWebhookController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\CalcomEventType\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellWebhookController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Customer\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellWebhookController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\PhoneNumber\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellWebhookController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Staff\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellWebhookController.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Tenant\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellWebhookController.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalcomService\\:\\:createBooking\\(\\) invoked with 2 parameters, 1 required\\.$#"
+			count: 1
+			path: app/Http/Controllers/RetellWebhookController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\SamediController\\:\\:testConnection\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/SamediController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\TestController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/TestController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\WebDashboardController\\:\\:index\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/WebDashboardController.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Controllers\\\\ZeitinfoController\\:\\:jetzt\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Controllers/ZeitinfoController.php
+
+		-
+			message: "#^Class App\\\\Http\\\\Middleware\\\\Authenticate not found\\.$#"
+			count: 1
+			path: app/Http/Kernel.php
+
+		-
+			message: "#^Class App\\\\Http\\\\Middleware\\\\RedirectIfAuthenticated not found\\.$#"
+			count: 1
+			path: app/Http/Kernel.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Middleware\\\\CsrfDebugMiddleware\\:\\:handle\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Middleware/CsrfDebugMiddleware.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Middleware\\\\CsrfDebugMiddleware\\:\\:handle\\(\\) has parameter \\$request with no type specified\\.$#"
+			count: 1
+			path: app/Http/Middleware/CsrfDebugMiddleware.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Auth\\\\Factory\\:\\:check\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Middleware/DocumentationAuth.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Middleware\\\\DocumentationAuth\\:\\:handle\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Middleware/DocumentationAuth.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Support\\\\Optional\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Http/Middleware/IdentifyTenant.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Tenant\\:\\:whereSlug\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Middleware/IdentifyTenant.php
+
+		-
+			message: "#^Unable to resolve the template type TInstance in call to method Illuminate\\\\Container\\\\Container\\:\\:instance\\(\\)$#"
+			count: 1
+			path: app/Http/Middleware/IdentifyTenant.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Middleware\\\\LogCalcom\\:\\:handle\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Middleware/LogCalcom.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Middleware\\\\RestrictToInternalNetwork\\:\\:hasEmergencyOverride\\(\\) is unused\\.$#"
+			count: 1
+			path: app/Http/Middleware/RestrictToInternalNetwork.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Middleware\\\\RestrictToInternalNetwork\\:\\:isDevelopmentEnvironment\\(\\) is unused\\.$#"
+			count: 1
+			path: app/Http/Middleware/RestrictToInternalNetwork.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Middleware\\\\RestrictToInternalNetwork\\:\\:\\$allowedIps type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Http/Middleware/RestrictToInternalNetwork.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Middleware\\\\RestrictToInternalNetwork\\:\\:\\$allowedRanges type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Http/Middleware/RestrictToInternalNetwork.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Http/Middleware/SecureApiKeyAuth.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Http/Middleware/SecureApiKeyAuth.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Middleware\\\\SecureApiKeyAuth\\:\\:handle\\(\\) should return Illuminate\\\\Http\\\\Response but returns Illuminate\\\\Http\\\\JsonResponse\\.$#"
+			count: 3
+			path: app/Http/Middleware/SecureApiKeyAuth.php
+
+		-
+			message: "#^Access to undefined constant Illuminate\\\\Http\\\\Request\\:\\:HEADER_X_FORWARDED_ALL\\.$#"
+			count: 1
+			path: app/Http/Middleware/TrustProxies.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Middleware\\\\TrustProxies\\:\\:\\$headers has no type specified\\.$#"
+			count: 1
+			path: app/Http/Middleware/TrustProxies.php
+
+		-
+			message: "#^Property App\\\\Http\\\\Middleware\\\\TrustProxies\\:\\:\\$proxies has no type specified\\.$#"
+			count: 1
+			path: app/Http/Middleware/TrustProxies.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Middleware\\\\VerifyRetellSignature\\:\\:handle\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Http/Middleware/VerifyRetellSignature.php
+
+		-
+			message: "#^Method App\\\\Http\\\\Requests\\\\RetellConversationEndedRequest\\:\\:rules\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Http/Requests/RetellConversationEndedRequest.php
+
+		-
+			message: "#^Call to an undefined method App\\\\Services\\\\CalcomService\\:\\:availableSlots\\(\\)\\.$#"
+			count: 1
+			path: app/Jobs/ProcessRetellCallJob.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Appointment\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Jobs/ProcessRetellCallJob.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Call\\:\\:create\\(\\)\\.$#"
+			count: 1
+			path: app/Jobs/ProcessRetellCallJob.php
+
+		-
+			message: "#^Call to an undefined static method App\\\\Models\\\\Integration\\:\\:where\\(\\)\\.$#"
+			count: 1
+			path: app/Jobs/ProcessRetellCallJob.php
+
+		-
+			message: "#^Method App\\\\Jobs\\\\ProcessRetellCallJob\\:\\:__construct\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Jobs/ProcessRetellCallJob.php
+
+		-
+			message: "#^Unable to resolve the template type TFlatMapKey in call to method Illuminate\\\\Support\\\\Collection\\<\\(int\\|string\\),mixed\\>\\:\\:flatMap\\(\\)$#"
+			count: 1
+			path: app/Jobs/ProcessRetellCallJob.php
+
+		-
+			message: "#^Unable to resolve the template type TFlatMapValue in call to method Illuminate\\\\Support\\\\Collection\\<\\(int\\|string\\),mixed\\>\\:\\:flatMap\\(\\)$#"
+			count: 1
+			path: app/Jobs/ProcessRetellCallJob.php
+
+		-
+			message: "#^Unable to resolve the template type TKey in call to function collect$#"
+			count: 1
+			path: app/Jobs/ProcessRetellCallJob.php
+
+		-
+			message: "#^Unable to resolve the template type TValue in call to function collect$#"
+			count: 1
+			path: app/Jobs/ProcessRetellCallJob.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Call\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Jobs/RefreshCallDataJob.php
+
+		-
+			message: "#^Method App\\\\Livewire\\\\Admin\\\\HorizonBadge\\:\\:render\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Livewire/Admin/HorizonBadge.php
+
+		-
+			message: "#^Method App\\\\Mail\\\\ErrorNotificationMail\\:\\:__construct\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Mail/ErrorNotificationMail.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Appointment uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Appointment\\:\\:customer\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Appointment\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Appointment.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Branch uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Branch.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Business uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: "#^Class App\\\\Models\\\\FAQ referenced with incorrect case\\: App\\\\Models\\\\Faq\\.$#"
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Business\\:\\:appointments\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Business\\:\\:calls\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Business\\:\\:faqs\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Business\\:\\:services\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Business\\:\\:staff\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Business\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Business.php
+
+		-
+			message: "#^Method App\\\\Models\\\\CalcomBooking\\:\\:appointment\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/CalcomBooking.php
+
+		-
+			message: "#^Property App\\\\Models\\\\CalcomBooking\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/CalcomBooking.php
+
+		-
+			message: "#^Method App\\\\Models\\\\CalcomEventType\\:\\:staff\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/CalcomEventType.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Calendar\\:\\:staff\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Models/Calendar.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Calendar\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Calendar.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Call\\:\\:\\$call_successful\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Call\\:\\:\\$disconnect_reason\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Call\\:\\:\\$duration_sec\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Call uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:agent\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:appointments\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:customer\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:scopeDateRange\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:scopeDateRange\\(\\) has parameter \\$endDate with no type specified\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:scopeDateRange\\(\\) has parameter \\$query with no type specified\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:scopeDateRange\\(\\) has parameter \\$startDate with no type specified\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:scopeFailed\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:scopeFailed\\(\\) has parameter \\$query with no type specified\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:scopeSuccessful\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:scopeSuccessful\\(\\) has parameter \\$query with no type specified\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Call\\:\\:tenant\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Call\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Call.php
+
+		-
+			message: "#^Property App\\\\Models\\\\CallLog\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/CallLog.php
+
+		-
+			message: "#^Class App\\\\Models\\\\ApiHealthLog not found\\.$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Company uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Company\\:\\:apiHealthLogs\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Company\\:\\:phoneNumbers\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Company\\:\\:retellAgents\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Company\\:\\:services\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Company\\:\\:staff\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Parameter \\#1 \\$related of method Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:hasMany\\(\\) expects class\\-string\\<Illuminate\\\\Database\\\\Eloquent\\\\Model\\>, string given\\.$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Company\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Unable to resolve the template type TRelatedModel in call to method Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:hasMany\\(\\)$#"
+			count: 1
+			path: app/Models/Company.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$completed_appointments\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$created_at\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$email\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$last_appointment_at\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$last_call_at\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$successful_calls\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$total_appointments\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$total_calls\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Customer\\:\\:\\$upcoming_appointments\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:\\$start_time\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:\\$start_timestamp\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany\\:\\:successful\\(\\)\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Customer uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:appointments\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:branches\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:calls\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:getActivitySummary\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:scopeCreatedAfter\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:scopeCreatedAfter\\(\\) has parameter \\$date with no type specified\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:scopeCreatedAfter\\(\\) has parameter \\$query with no type specified\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:scopeSearch\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:scopeSearch\\(\\) has parameter \\$query with no type specified\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:scopeSearch\\(\\) has parameter \\$search with no type specified\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Customer\\:\\:tenant\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Customer\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Dienstleistung uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Dienstleistung.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Dienstleistung\\:\\:kunde\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Dienstleistung.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Dienstleistung\\:\\:mitarbeiter\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsToMany does not specify its types\\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \\(2\\-4 required\\)$#"
+			count: 1
+			path: app/Models/Dienstleistung.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Dienstleistung\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Dienstleistung.php
+
+		-
+			message: "#^Property App\\\\Models\\\\FAQ\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/FAQ.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Faq uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Faq.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Faq\\:\\:kunde\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Faq.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Faq\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Faq.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Integration\\:\\:customer\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Integration.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Integration\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Integration.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Kunde uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Kunde.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Kunde\\:\\:appointments\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Kunde.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Kunde\\:\\:calls\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Kunde.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Mitarbeiter\\:\\:kunde\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Mitarbeiter.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Mitarbeiter\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Mitarbeiter.php
+
+		-
+			message: "#^Method App\\\\Models\\\\PhoneNumber\\:\\:branch\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Models/PhoneNumber.php
+
+		-
+			message: "#^Property App\\\\Models\\\\PremiumService\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/PremiumService.php
+
+		-
+			message: "#^Class App\\\\Models\\\\RetellAgent uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/RetellAgent.php
+
+		-
+			message: "#^Method App\\\\Models\\\\RetellAgent\\:\\:company\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/RetellAgent.php
+
+		-
+			message: "#^Method App\\\\Models\\\\RetellAgent\\:\\:phoneNumber\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/RetellAgent.php
+
+		-
+			message: "#^Property App\\\\Models\\\\RetellAgent\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/RetellAgent.php
+
+		-
+			message: "#^Property App\\\\Models\\\\RetellWebhook\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/RetellWebhook.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Service\\:\\:staff\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsToMany does not specify its types\\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \\(2\\-4 required\\)$#"
+			count: 1
+			path: app/Models/Service.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Staff uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Staff.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Staff\\:\\:branch\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Staff.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Telefonnummer uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Telefonnummer.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Telefonnummer\\:\\:kunde\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Telefonnummer.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Telefonnummer\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Telefonnummer.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$api_key_hash\\.$#"
+			count: 3
+			path: app/Models/Tenant.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Models/Tenant.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Models/Tenant.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$slug\\.$#"
+			count: 1
+			path: app/Models/Tenant.php
+
+		-
+			message: "#^Call to an undefined method App\\\\Models\\\\Tenant\\:\\:setRawAttribute\\(\\)\\.$#"
+			count: 1
+			path: app/Models/Tenant.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Tenant\\:\\:users\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Tenant.php
+
+		-
+			message: "#^Class App\\\\Models\\\\Termin uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
+			count: 1
+			path: app/Models/Termin.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Termin\\:\\:call\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Termin.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Termin\\:\\:kunde\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Termin.php
+
+		-
+			message: "#^Method App\\\\Models\\\\Termin\\:\\:mitarbeiter\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/Termin.php
+
+		-
+			message: "#^Property App\\\\Models\\\\Termin\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/Termin.php
+
+		-
+			message: "#^Property App\\\\Models\\\\User\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: "#^Method App\\\\Models\\\\WorkingHour\\:\\:staff\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
+			count: 1
+			path: app/Models/WorkingHour.php
+
+		-
+			message: "#^Call to an undefined static method Filament\\\\Facades\\\\Filament\\:\\:registerRenderHook\\(\\)\\.$#"
+			count: 2
+			path: app/Providers/FilamentBadgeServiceProvider.php
+
+		-
+			message: "#^Method App\\\\Providers\\\\HorizonServiceProvider\\:\\:isInternalNetwork\\(\\) has parameter \\$request with no type specified\\.$#"
+			count: 1
+			path: app/Providers/HorizonServiceProvider.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$api_key_generated_at\\.$#"
+			count: 2
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$api_key_hash\\.$#"
+			count: 1
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$created_at\\.$#"
+			count: 3
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$id\\.$#"
+			count: 6
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Tenant\\:\\:\\$updated_at\\.$#"
+			count: 1
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\ApiKeyService\\:\\:auditApiKeyUsage\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\ApiKeyService\\:\\:generateApiKey\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\ApiKeyService\\:\\:getApiKeyStats\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\ApiKeyService\\:\\:rotateApiKey\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\ApiKeyService\\:\\:shouldRotateApiKey\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\ApiKeyService\\:\\:validateApiKeyFormat\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/ApiKeyService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalService\\:\\:createBooking\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Services/CalService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalService\\:\\:createBooking\\(\\) has parameter \\$data with no type specified\\.$#"
+			count: 1
+			path: app/Services/CalService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalService\\:\\:getEventTypes\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Services/CalService.php
+
+		-
+			message: "#^Property App\\\\Services\\\\CalService\\:\\:\\$apiKey has no type specified\\.$#"
+			count: 1
+			path: app/Services/CalService.php
+
+		-
+			message: "#^Property App\\\\Services\\\\CalService\\:\\:\\$baseUrl has no type specified\\.$#"
+			count: 1
+			path: app/Services/CalService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalcomService\\:\\:createBooking\\(\\) has parameter \\$bookingDetails with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/CalcomService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalcomService\\:\\:createBookingFromCall\\(\\) has parameter \\$requestData with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/CalcomService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalcomService\\:\\:createBookingFromCall\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/CalcomService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalcomService\\:\\:getEventType\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/CalcomService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalcomService\\:\\:makeApiCall\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/CalcomService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalendarServiceInterface\\:\\:bookAppointment\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Services/CalendarServiceInterface.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalendarServiceInterface\\:\\:bookAppointment\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/CalendarServiceInterface.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalendarServiceInterface\\:\\:checkAvailability\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Services/CalendarServiceInterface.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalendarServiceInterface\\:\\:checkAvailability\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/CalendarServiceInterface.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalendarServiceInterface\\:\\:getAvailableSlots\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Services/CalendarServiceInterface.php
+
+		-
+			message: "#^Method App\\\\Services\\\\CalendarServiceInterface\\:\\:getAvailableSlots\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/CalendarServiceInterface.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Call\\:\\:\\$call_id\\.$#"
+			count: 1
+			path: app/Services/CallDataRefresher.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Call\\:\\:\\$id\\.$#"
+			count: 3
+			path: app/Services/CallDataRefresher.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellAIService\\:\\:getCallDetails\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Services/RetellAIService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellAIService\\:\\:getCallDetails\\(\\) has parameter \\$callId with no type specified\\.$#"
+			count: 1
+			path: app/Services/RetellAIService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellAIService\\:\\:getCallTranscript\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Services/RetellAIService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellAIService\\:\\:getCallTranscript\\(\\) has parameter \\$callId with no type specified\\.$#"
+			count: 1
+			path: app/Services/RetellAIService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellAIService\\:\\:getCalls\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: app/Services/RetellAIService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellAIService\\:\\:getCalls\\(\\) has parameter \\$limit with no type specified\\.$#"
+			count: 1
+			path: app/Services/RetellAIService.php
+
+		-
+			message: "#^Property App\\\\Services\\\\RetellAIService\\:\\:\\$apiKey has no type specified\\.$#"
+			count: 1
+			path: app/Services/RetellAIService.php
+
+		-
+			message: "#^Property App\\\\Services\\\\RetellAIService\\:\\:\\$baseUrl has no type specified\\.$#"
+			count: 1
+			path: app/Services/RetellAIService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellService\\:\\:buildInboundResponse\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/RetellService.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellV1Service\\:\\:calls\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/RetellV1Service.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellV2Service\\:\\:createPhoneCall\\(\\) has parameter \\$payload with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/RetellV2Service.php
+
+		-
+			message: "#^Method App\\\\Services\\\\RetellV2Service\\:\\:createPhoneCall\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: app/Services/RetellV2Service.php
+
+		-
+			message: "#^Method App\\\\View\\\\Components\\\\AppLayout\\:\\:render\\(\\) should return Illuminate\\\\View\\\\View but returns Illuminate\\\\Contracts\\\\View\\\\View\\.$#"
+			count: 1
+			path: app/View/Components/AppLayout.php
+
+		-
+			message: "#^Method App\\\\View\\\\Components\\\\GuestLayout\\:\\:render\\(\\) should return Illuminate\\\\View\\\\View but returns Illuminate\\\\Contracts\\\\View\\\\View\\.$#"
+			count: 1
+			path: app/View/Components/GuestLayout.php
