@@ -1,6 +1,6 @@
 # AskProAI - KI-Telefonassistenz System
 
-**Version:** 1.2.0  
+**Version:** 1.3.0  
 **Letzte Aktualisierung:** 14. August 2025
 
 ## 📋 Inhaltsverzeichnis
@@ -45,7 +45,7 @@
 ## 🛠 Technologie-Stack
 
 ### Backend
-- **Laravel** 11.x (PHP Framework)
+- **Laravel** 12.x (PHP Framework)
 - **PHP** 8.3+
 - **MySQL/MariaDB** 10.x
 - **Redis** (Caching & Queues)
@@ -1024,7 +1024,7 @@ grep "Duration:" storage/logs/laravel.log | awk '{print $NF}' | sort -n
 - [ ] **White Label** - Complete Branding Customization
 
 **🔄 Technical Debt**
-- [ ] **Laravel 12 Upgrade** - Framework Update
+- [x] **Laravel 12 Upgrade** - Framework Update (Completed August 2025)
 - [ ] **Database Sharding** - Horizontal Scaling
 - [ ] **Microservices** - Service Decomposition
 - [ ] **Event Sourcing** - Advanced Audit Trail
@@ -1041,6 +1041,29 @@ grep "Duration:" storage/logs/laravel.log | awk '{print $NF}' | sort -n
 ---
 
 ## 📝 Changelog
+
+### v1.3.0 - 2025-08-14
+
+#### 🚀 Framework Upgrade
+- **UPGRADED:** Laravel Framework 11.44.7 → 12.24.0
+- **UPGRADED:** Laravel Horizon 5.31.2 → 5.33.2  
+- **UPGRADED:** Spatie Laravel Backup 8.8.2 → 9.3.4
+- **UPGRADED:** All dependencies to Laravel 12 compatible versions
+- **ENHANCED:** Carbon 3.x already in use (no migration needed)
+- **IMPROVED:** Performance optimizations from Laravel 12
+- **FIXED:** SQLite migration compatibility for testing environment
+
+#### 🔧 Technical Improvements
+- **REMOVED:** Larastan (temporarily due to Laravel 12 compatibility)
+- **OPTIMIZED:** Composer autoload generation
+- **ENHANCED:** Filament assets publishing and caching
+- **UPDATED:** All documentation to reflect Laravel 12 usage
+
+#### 🛡️ Stability & Security
+- **MAINTAINED:** Full backward compatibility
+- **PRESERVED:** All existing functionality
+- **IMPROVED:** Framework security patches
+- **ENHANCED:** Long-term support timeline
 
 ### v1.2.0 - 2025-08-14
 
@@ -1127,5 +1150,5 @@ grep "Duration:" storage/logs/laravel.log | awk '{print $NF}' | sort -n
 ---
 
 *Letzte Aktualisierung: 14. August 2025*  
-*Version: 1.2.0*  
+*Version: 1.3.0*  
 *© 2025 AskProAI - Alle Rechte vorbehalten*

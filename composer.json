@@ -1,6 +1,6 @@
 {
     "name": "askproai/api-gateway",
-    "description": "AskProAI – Laravel 11 × Filament 3",
+    "description": "AskProAI – Laravel 12 × Filament 3",
     "type": "project",
     "license": "proprietary",
     "require": {
@@ -16,13 +16,13 @@
         "filament/tables": "3.3.14",
         "filament/widgets": "3.3.14",
         "illuminate/view": "*",
-        "laravel/framework": "^11.0",
-        "laravel/horizon": "^5.31",
+        "laravel/framework": "^12.0",
+        "laravel/horizon": "^5.32",
         "laravel/passport": "^12.0",
         "laravel/sanctum": "^4",
         "livewire/livewire": "^3.6",
         "spatie/laravel-activitylog": "^4.0",
-        "spatie/laravel-backup": "^8.0",
+        "spatie/laravel-backup": "^9.0",
         "spatie/laravel-permission": "^6",
         "stripe/stripe-php": "^14.0"
     },
@@ -35,7 +35,6 @@
         "laravel/tinker": "^2.10",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "nunomaduro/larastan": "^2.9",
         "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^11.5.3"
     },

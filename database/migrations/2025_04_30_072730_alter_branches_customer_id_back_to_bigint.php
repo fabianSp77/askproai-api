@@ -1,21 +1,35 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        // Im Test-Environment (SQLite) komplett überspringen
+        // Skip in testing environment (SQLite doesn't support MODIFY)
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
 
-        DB::statement('ALTER TABLE branches MODIFY customer_id BIGINT UNSIGNED');
+        // For MySQL/MariaDB only
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE branches MODIFY customer_id BIGINT UNSIGNED');
+        }
     }
 
     public function down(): void
     {
+        // Skip in testing environment (SQLite doesn't support MODIFY)
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
 
-        // Live-DB zurückrollen
-        DB::statement('ALTER TABLE branches MODIFY customer_id INTEGER');
+        // For MySQL/MariaDB only
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE branches MODIFY customer_id INTEGER');
+        }
     }
 };
