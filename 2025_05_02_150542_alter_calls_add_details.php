@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('calls', function (Blueprint $t) {
@@ -23,9 +24,9 @@ return new class extends Migration {
     {
         Schema::table('calls', function (Blueprint $t) {
             $t->dropColumn([
-                'duration_sec','user_sentiment','call_status',
-                'disconnection_reason','call_successful',
-                'dynamic_variables','analysis','transcript'
+                'duration_sec', 'user_sentiment', 'call_status',
+                'disconnection_reason', 'call_successful',
+                'dynamic_variables', 'analysis', 'transcript',
             ]);
         });
     }

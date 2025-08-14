@@ -10,8 +10,11 @@ use Illuminate\Support\Facades\Log;
 class SamediController extends Controller
 {
     protected $baseUrl;
+
     protected $clientId;
+
     protected $clientSecret;
+
     protected $accessToken;
 
     public function __construct()
@@ -19,7 +22,7 @@ class SamediController extends Controller
         $this->baseUrl = env('SAMEDI_BASE_URL', 'https://api.samedi.de/api/v1');
         $this->clientId = env('SAMEDI_CLIENT_ID', '');
         $this->clientSecret = env('SAMEDI_CLIENT_SECRET', '');
-        
+
         // Versuche, einen Token aus dem Cache zu bekommen oder einen neuen zu generieren
         $this->accessToken = $this->getAccessToken();
     }
@@ -28,7 +31,7 @@ class SamediController extends Controller
     {
         // Verwende statt Cache-Facade direktes Speichern in einer Datei
         $cacheFile = storage_path('app/samedi_token.json');
-        
+
         if (file_exists($cacheFile)) {
             $data = json_decode(file_get_contents($cacheFile), true);
             if (isset($data['expires_at']) && $data['expires_at'] > time()) {
@@ -47,7 +50,7 @@ class SamediController extends Controller
             if ($response->successful()) {
                 $data = $response->json();
                 $token = $data['access_token'] ?? null;
-                
+
                 if ($token) {
                     $expiresIn = $data['expires_in'] ?? 3600; // Standard: 1 Stunde
 
@@ -56,16 +59,16 @@ class SamediController extends Controller
                         'token' => $token,
                         'expires_at' => time() + $expiresIn - 60, // 60 Sekunden Puffer
                     ];
-                    
+
                     file_put_contents($cacheFile, json_encode($cacheData));
-                    
+
                     return $token;
                 }
             }
-            
-            Log::error('Samedi Token-Antwort: ' . json_encode($response->json()));
+
+            Log::error('Samedi Token-Antwort: '.json_encode($response->json()));
         } catch (\Exception $e) {
-            Log::error('Fehler beim Abrufen des Samedi Access Tokens: ' . $e->getMessage());
+            Log::error('Fehler beim Abrufen des Samedi Access Tokens: '.$e->getMessage());
         }
 
         return null;
@@ -80,9 +83,9 @@ class SamediController extends Controller
                 'message' => 'Samedi API-Zugangsdaten sind nicht vollständig konfiguriert.',
                 'config' => [
                     'base_url' => $this->baseUrl,
-                    'client_id_configured' => !empty($this->clientId),
-                    'client_secret_configured' => !empty($this->clientSecret)
-                ]
+                    'client_id_configured' => ! empty($this->clientId),
+                    'client_secret_configured' => ! empty($this->clientSecret),
+                ],
             ]);
         }
 
@@ -91,7 +94,7 @@ class SamediController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Konnte keinen gültigen Access Token von Samedi erhalten.',
-                'hint' => 'Bitte überprüfe die Client ID und das Client Secret.'
+                'hint' => 'Bitte überprüfe die Client ID und das Client Secret.',
             ], 400);
         }
 
@@ -101,8 +104,8 @@ class SamediController extends Controller
             'message' => 'Samedi API ist konfiguriert und Authentifizierung erfolgreich.',
             'config' => [
                 'base_url' => $this->baseUrl,
-                'authenticated' => true
-            ]
+                'authenticated' => true,
+            ],
         ]);
     }
 
@@ -112,21 +115,21 @@ class SamediController extends Controller
             if (empty($this->accessToken)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Konnte keinen gültigen Access Token von Samedi erhalten.'
+                    'message' => 'Konnte keinen gültigen Access Token von Samedi erhalten.',
                 ], 400);
             }
 
             $response = Http::withToken($this->accessToken)
-                ->get($this->baseUrl . '/bookable-times', [
+                ->get($this->baseUrl.'/bookable-times', [
                     'from_date' => $request->input('from_date', date('Y-m-d')),
-                    'to_date' => $request->input('to_date', date('Y-m-d', strtotime('+7 days')))
+                    'to_date' => $request->input('to_date', date('Y-m-d', strtotime('+7 days'))),
                 ]);
 
             return response()->json($response->json());
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Fehler bei der Verbindung zu Samedi: ' . $e->getMessage()
+                'message' => 'Fehler bei der Verbindung zu Samedi: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -137,18 +140,18 @@ class SamediController extends Controller
             if (empty($this->accessToken)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Konnte keinen gültigen Access Token von Samedi erhalten.'
+                    'message' => 'Konnte keinen gültigen Access Token von Samedi erhalten.',
                 ], 400);
             }
 
             $response = Http::withToken($this->accessToken)
-                ->get($this->baseUrl . '/locations');
+                ->get($this->baseUrl.'/locations');
 
             return response()->json($response->json());
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Fehler bei der Verbindung zu Samedi: ' . $e->getMessage()
+                'message' => 'Fehler bei der Verbindung zu Samedi: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -159,18 +162,18 @@ class SamediController extends Controller
             if (empty($this->accessToken)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Konnte keinen gültigen Access Token von Samedi erhalten.'
+                    'message' => 'Konnte keinen gültigen Access Token von Samedi erhalten.',
                 ], 400);
             }
 
             $response = Http::withToken($this->accessToken)
-                ->get($this->baseUrl . '/services');
+                ->get($this->baseUrl.'/services');
 
             return response()->json($response->json());
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Fehler bei der Verbindung zu Samedi: ' . $e->getMessage()
+                'message' => 'Fehler bei der Verbindung zu Samedi: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -181,7 +184,7 @@ class SamediController extends Controller
             if (empty($this->accessToken)) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Konnte keinen gültigen Access Token von Samedi erhalten.'
+                    'message' => 'Konnte keinen gültigen Access Token von Samedi erhalten.',
                 ], 400);
             }
 
@@ -195,25 +198,25 @@ class SamediController extends Controller
                 'patient.first_name' => 'required|string',
                 'patient.last_name' => 'required|string',
                 'patient.email' => 'required|email',
-                'patient.phone' => 'required|string'
+                'patient.phone' => 'required|string',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Validierungsfehler',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
             $response = Http::withToken($this->accessToken)
-                ->post($this->baseUrl . '/appointments', $request->all());
+                ->post($this->baseUrl.'/appointments', $request->all());
 
             return response()->json($response->json(), $response->status());
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Fehler bei der Verbindung zu Samedi: ' . $e->getMessage()
+                'message' => 'Fehler bei der Verbindung zu Samedi: '.$e->getMessage(),
             ], 500);
         }
     }

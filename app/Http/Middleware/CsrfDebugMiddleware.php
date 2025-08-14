@@ -15,7 +15,7 @@ class CsrfDebugMiddleware
             'session_token' => session()->token(),
             'request_token' => $request->input('_token'),
             'header_token' => $request->header('X-CSRF-TOKEN'),
-            'cookie_token' => $request->cookie('XSRF-TOKEN')
+            'cookie_token' => $request->cookie('XSRF-TOKEN'),
         ]);
 
         return $next($request);

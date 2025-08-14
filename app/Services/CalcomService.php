@@ -2,27 +2,32 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class CalcomService
 {
     protected string $baseUrl;
+
     protected string $apiKey;
+
     protected string $eventTypeId;
+
     protected int $maxRetries;
+
     protected string $timezone;
+
     protected string $language;
 
     public function __construct()
     {
-        $this->baseUrl     = rtrim(config('services.calcom.base_url'), '/');
-        $this->apiKey      = config('services.calcom.api_key');
+        $this->baseUrl = rtrim(config('services.calcom.base_url'), '/');
+        $this->apiKey = config('services.calcom.api_key');
         $this->eventTypeId = config('services.calcom.event_type_id');
-        $this->maxRetries  = config('services.calcom.max_retries', 3);
-        $this->timezone    = config('services.calcom.timezone', 'Europe/Berlin');
-        $this->language    = config('services.calcom.language', 'de');
+        $this->maxRetries = config('services.calcom.max_retries', 3);
+        $this->timezone = config('services.calcom.timezone', 'Europe/Berlin');
+        $this->language = config('services.calcom.language', 'de');
     }
 
     /**
@@ -30,12 +35,12 @@ class CalcomService
      */
     public function getEventType(int $eventTypeId): array
     {
-        $url = $this->baseUrl . "/event-types/{$eventTypeId}";
-        
+        $url = $this->baseUrl."/event-types/{$eventTypeId}";
+
         $response = $this->makeApiCall('GET', $url);
-        
-        if (!$response->successful()) {
-            throw new \Exception("Failed to fetch event type: " . $response->body());
+
+        if (! $response->successful()) {
+            throw new \Exception('Failed to fetch event type: '.$response->body());
         }
 
         return $response->json();
@@ -58,7 +63,7 @@ class CalcomService
 
             // Prepare booking payload
             $bookingData = [
-                'eventTypeId' => (int)$requestData['eventTypeId'],
+                'eventTypeId' => (int) $requestData['eventTypeId'],
                 'start' => $requestData['start'],
                 'end' => $endTime->format('Y-m-d\TH:i:s.000\Z'),
                 'attendees' => [
@@ -66,25 +71,25 @@ class CalcomService
                         'email' => $requestData['email'],
                         'name' => $requestData['name'],
                         'timeZone' => $this->timezone,
-                        'language' => $this->language
-                    ]
+                        'language' => $this->language,
+                    ],
                 ],
                 'timeZone' => $this->timezone,
-                'language' => $this->language
+                'language' => $this->language,
             ];
 
             Log::info('[CalcomService] Creating booking with payload:', $bookingData);
 
             // Make booking request
-            $response = $this->makeApiCall('POST', $this->baseUrl . '/bookings', $bookingData);
+            $response = $this->makeApiCall('POST', $this->baseUrl.'/bookings', $bookingData);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::error('[CalcomService] Booking failed:', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'body' => $response->body(),
                 ]);
-                
-                throw new \Exception("Failed to create booking: " . $response->body());
+
+                throw new \Exception('Failed to create booking: '.$response->body());
             }
 
             $bookingResult = $response->json();
@@ -95,9 +100,9 @@ class CalcomService
         } catch (\Exception $e) {
             Log::error('[CalcomService] Exception during booking:', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             throw $e;
         }
     }
@@ -108,34 +113,34 @@ class CalcomService
     public function createBooking(array $bookingDetails): Response
     {
         $payload = [
-            'eventTypeId' => (int)($bookingDetails['eventTypeId'] ?? $this->eventTypeId),
-            'start'       => $bookingDetails['startTime'],
-            'end'         => $bookingDetails['endTime'],
-            'timeZone'    => $bookingDetails['timeZone'] ?? $this->timezone,
-            'language'    => $bookingDetails['language'] ?? $this->language,
-            'metadata'    => (object)[],
-            'responses'   => [
-                'name'  => $bookingDetails['name'],
+            'eventTypeId' => (int) ($bookingDetails['eventTypeId'] ?? $this->eventTypeId),
+            'start' => $bookingDetails['startTime'],
+            'end' => $bookingDetails['endTime'],
+            'timeZone' => $bookingDetails['timeZone'] ?? $this->timezone,
+            'language' => $bookingDetails['language'] ?? $this->language,
+            'metadata' => (object) [],
+            'responses' => [
+                'name' => $bookingDetails['name'],
                 'email' => $bookingDetails['email'],
             ],
         ];
 
         Log::channel('calcom')->debug('[Cal.com] Sende createBooking Payload:', $payload);
 
-        return $this->makeApiCall('POST', $this->baseUrl . '/bookings', $payload);
+        return $this->makeApiCall('POST', $this->baseUrl.'/bookings', $payload);
     }
 
     /**
      * Make API call with retry logic
      */
-    private function makeApiCall(string $method, string $url, array $data = null): Response
+    private function makeApiCall(string $method, string $url, ?array $data = null): Response
     {
         $attempt = 0;
         $lastResponse = null;
 
         // Add API key to URL
         $separator = str_contains($url, '?') ? '&' : '?';
-        $url .= $separator . 'apiKey=' . $this->apiKey;
+        $url .= $separator.'apiKey='.$this->apiKey;
 
         // Log URL without API key for security
         $logUrl = preg_replace('/apiKey=([^&]+)/', 'apiKey=***', $url);
@@ -148,7 +153,7 @@ class CalcomService
 
                 $http = Http::acceptJson()->timeout(30);
 
-                $response = match(strtoupper($method)) {
+                $response = match (strtoupper($method)) {
                     'GET' => $http->get($url),
                     'POST' => $http->post($url, $data ?? []),
                     'PUT' => $http->put($url, $data ?? []),
@@ -158,20 +163,20 @@ class CalcomService
 
                 // If successful, return immediately
                 if ($response->successful()) {
-                    Log::debug("[CalcomService] API Call successful", [
+                    Log::debug('[CalcomService] API Call successful', [
                         'status' => $response->status(),
-                        'attempt' => $attempt
+                        'attempt' => $attempt,
                     ]);
-                    
+
                     return $response;
                 }
 
                 // Store last response for error handling
                 $lastResponse = $response;
-                
+
                 Log::warning("[CalcomService] API Call failed (attempt {$attempt})", [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'body' => $response->body(),
                 ]);
 
                 // Wait between retries (exponential backoff)
@@ -181,8 +186,8 @@ class CalcomService
                 }
 
             } catch (\Exception $e) {
-                Log::warning("[CalcomService] API Call exception (attempt {$attempt}): " . $e->getMessage());
-                
+                Log::warning("[CalcomService] API Call exception (attempt {$attempt}): ".$e->getMessage());
+
                 if ($attempt < $this->maxRetries) {
                     $waitTime = pow(2, $attempt - 1) * 100000;
                     usleep($waitTime);

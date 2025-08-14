@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
@@ -18,6 +19,7 @@ class HorizonHealth
                         return false;
                     }
                 }
+
                 return true;
             } catch (\Throwable $e) {
                 return false;

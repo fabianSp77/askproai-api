@@ -10,7 +10,8 @@ class PhoneNumber extends Model
     use IsUuid;
 
     public $incrementing = false;
-    protected $keyType   = 'string';
+
+    protected $keyType = 'string';
 
     protected $fillable = [
         'branch_id',

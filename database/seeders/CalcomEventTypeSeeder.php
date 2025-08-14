@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\CalcomEventType;
+use Illuminate\Database\Seeder;
 
 class CalcomEventTypeSeeder extends Seeder
 {
@@ -15,7 +15,7 @@ class CalcomEventTypeSeeder extends Seeder
     {
         CalcomEventType::updateOrCreate(
             ['calcom_id' => 2026302],                   // ➊ Event-Type
-            ['staff_id'  => '9ede975f-2e65-4c85-99f6-301f388dc7eb'] // ➋ Staff-UUID
+            ['staff_id' => '9ede975f-2e65-4c85-99f6-301f388dc7eb'] // ➋ Staff-UUID
         );
     }
 }

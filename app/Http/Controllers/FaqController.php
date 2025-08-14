@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -9,6 +11,7 @@ class FaqController extends Controller
     {
         $faqs = DB::table('faqs')->orderBy('category')->get();
         $categories = DB::table('faqs')->select('category')->distinct()->get();
+
         return view('faqs.index', compact('faqs', 'categories'));
     }
 
@@ -22,7 +25,7 @@ class FaqController extends Controller
         $request->validate([
             'question' => 'required',
             'answer' => 'required',
-            'category' => 'required'
+            'category' => 'required',
         ]);
 
         DB::table('faqs')->insert([
@@ -31,7 +34,7 @@ class FaqController extends Controller
             'category' => $request->category,
             'active' => true,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         return redirect()->route('faqs.index')

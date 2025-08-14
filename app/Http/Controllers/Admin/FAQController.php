@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use App\Models\FAQ;
 use Illuminate\Http\Request;
@@ -9,6 +11,7 @@ class FAQController extends Controller
     public function index()
     {
         $faqs = FAQ::all();
+
         return view('admin.faqs.index', compact('faqs'));
     }
 
@@ -26,6 +29,7 @@ class FAQController extends Controller
         ]);
 
         FAQ::create($validated);
+
         return redirect()->route('admin.faqs.index')->with('success', 'FAQ erstellt');
     }
 
@@ -43,12 +47,14 @@ class FAQController extends Controller
         ]);
 
         $faq->update($validated);
+
         return redirect()->route('admin.faqs.index')->with('success', 'FAQ aktualisiert');
     }
 
     public function destroy(FAQ $faq)
     {
         $faq->delete();
+
         return redirect()->route('admin.faqs.index')->with('success', 'FAQ gelöscht');
     }
 }

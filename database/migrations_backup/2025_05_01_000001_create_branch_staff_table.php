@@ -11,12 +11,12 @@ return new class extends Migration
         Schema::create('branch_staff', function (Blueprint $table) {
             // kein eigenes id-Feld – Kombi-PK reicht
             $table->foreignId('branch_id')
-                  ->constrained('branches')
-                  ->cascadeOnDelete();
+                ->constrained('branches')
+                ->cascadeOnDelete();
 
             $table->foreignId('staff_id')
-                  ->constrained('staff')
-                  ->cascadeOnDelete();
+                ->constrained('staff')
+                ->cascadeOnDelete();
 
             $table->primary(['branch_id', 'staff_id']);
             $table->timestamps();

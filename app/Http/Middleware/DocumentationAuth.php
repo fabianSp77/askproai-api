@@ -9,9 +9,10 @@ class DocumentationAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return redirect('/login');
         }
+
         return $next($request);
     }
 }

@@ -9,26 +9,20 @@ class PortalDisplayHelper
 {
     /**
      * Format currency for display
-     *
-     * @param float $amount
-     * @param string $currency
-     * @return string
      */
     public static function formatCurrency(float $amount, string $currency = 'EUR'): string
     {
-        return number_format($amount, 2, ',', '.') . ' €';
+        return number_format($amount, 2, ',', '.').' €';
     }
 
     /**
      * Format date for display
      *
-     * @param mixed $date
-     * @param string $format
-     * @return string
+     * @param  mixed  $date
      */
     public static function formatDate($date, string $format = 'd.m.Y H:i'): string
     {
-        if (!$date) {
+        if (! $date) {
             return '-';
         }
 
@@ -41,13 +35,10 @@ class PortalDisplayHelper
 
     /**
      * Get status badge HTML
-     *
-     * @param string $status
-     * @return string
      */
     public static function getStatusBadge(string $status): string
     {
-        $classes = match($status) {
+        $classes = match ($status) {
             'active', 'confirmed' => 'bg-green-100 text-green-800',
             'pending' => 'bg-yellow-100 text-yellow-800',
             'cancelled', 'failed' => 'bg-red-100 text-red-800',

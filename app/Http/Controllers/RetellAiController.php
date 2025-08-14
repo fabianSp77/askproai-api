@@ -20,12 +20,12 @@ class RetellAiController extends Controller
         $apiKey = config('retellai.api_key');
 
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $apiKey,
+            'Authorization' => 'Bearer '.$apiKey,
             'Accept' => 'application/json',
         ])->post($url, [
             'from_number' => '+493041735870',  // Deine Retell.ai-Nummer
             'to_number' => $callerNumber,
-            'override_agent_id' => 'agent_7fa6897c142d3060802ffb3285'
+            'override_agent_id' => 'agent_7fa6897c142d3060802ffb3285',
         ]);
 
         if ($response->successful()) {
@@ -56,15 +56,15 @@ class RetellAiController extends Controller
         Log::info('✅ Eingehender Webhook von RetellAI:', $data);
 
         $responsePayload = [
-            "call_inbound" => [
-                "override_agent_id" => "agent_7fa6897c142d3060802ffb3285",
-                "dynamic_variables" => [
-                    "customer_name" => "Max Mustermann"
+            'call_inbound' => [
+                'override_agent_id' => 'agent_7fa6897c142d3060802ffb3285',
+                'dynamic_variables' => [
+                    'customer_name' => 'Max Mustermann',
                 ],
-                "metadata" => [
-                    "callHandledBy" => "AskProAI Laravel Webhook"
-                ]
-            ]
+                'metadata' => [
+                    'callHandledBy' => 'AskProAI Laravel Webhook',
+                ],
+            ],
         ];
 
         return response()->json($responsePayload, 200);

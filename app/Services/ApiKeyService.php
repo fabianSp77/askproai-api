@@ -3,10 +3,9 @@
 namespace App\Services;
 
 use App\Models\Tenant;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class ApiKeyService
 {
@@ -15,9 +14,9 @@ class ApiKeyService
      */
     public function generateApiKey(Tenant $tenant): array
     {
-        $plainKey = 'ask_' . Str::random(32);
+        $plainKey = 'ask_'.Str::random(32);
         $hashedKey = Hash::make($plainKey);
-        
+
         // Update tenant with new hashed key
         $tenant->update([
             'api_key_hash' => $hashedKey,
@@ -31,7 +30,7 @@ class ApiKeyService
 
         return [
             'api_key' => $plainKey,
-            'key_id' => substr($plainKey, 0, 8) . '...' . substr($plainKey, -4),
+            'key_id' => substr($plainKey, 0, 8).'...'.substr($plainKey, -4),
             'generated_at' => now()->toISOString(),
             'tenant_id' => $tenant->id,
         ];
@@ -42,8 +41,8 @@ class ApiKeyService
      */
     public function rotateApiKey(Tenant $tenant, string $reason = 'Manual rotation'): array
     {
-        $oldKeyId = $tenant->api_key_hash ? substr($tenant->api_key_hash, 0, 12) . '...' : 'none';
-        
+        $oldKeyId = $tenant->api_key_hash ? substr($tenant->api_key_hash, 0, 12).'...' : 'none';
+
         $newKeyData = $this->generateApiKey($tenant);
 
         Log::warning('API key rotated', [
@@ -62,9 +61,9 @@ class ApiKeyService
     public function validateApiKeyFormat(string $apiKey): array
     {
         $errors = [];
-        
+
         // Check prefix
-        if (!str_starts_with($apiKey, 'ask_')) {
+        if (! str_starts_with($apiKey, 'ask_')) {
             $errors[] = 'API key must start with "ask_" prefix';
         }
 
@@ -74,7 +73,7 @@ class ApiKeyService
         }
 
         // Check character set (alphanumeric only for security)
-        if (!preg_match('/^ask_[a-zA-Z0-9]+$/', $apiKey)) {
+        if (! preg_match('/^ask_[a-zA-Z0-9]+$/', $apiKey)) {
             $errors[] = 'API key contains invalid characters';
         }
 
@@ -90,13 +89,13 @@ class ApiKeyService
     public function getApiKeyStats(Tenant $tenant, int $days = 30): array
     {
         $startDate = now()->subDays($days);
-        
+
         // This would require an api_requests log table
         // For now, return basic info
         return [
             'tenant_id' => $tenant->id,
             'key_generated_at' => $tenant->api_key_generated_at ?? $tenant->created_at,
-            'key_age_days' => $tenant->api_key_generated_at 
+            'key_age_days' => $tenant->api_key_generated_at
                 ? $tenant->api_key_generated_at->diffInDays(now())
                 : $tenant->created_at->diffInDays(now()),
             'last_used_at' => $tenant->updated_at, // Placeholder
@@ -108,18 +107,18 @@ class ApiKeyService
      */
     public function shouldRotateApiKey(Tenant $tenant): array
     {
-        $keyAge = $tenant->api_key_generated_at 
+        $keyAge = $tenant->api_key_generated_at
             ? $tenant->api_key_generated_at->diffInDays(now())
             : $tenant->created_at->diffInDays(now());
 
         $recommendations = [];
-        
+
         // Recommend rotation after 90 days
         if ($keyAge > 90) {
             $recommendations[] = [
                 'severity' => 'medium',
                 'reason' => 'API key is older than 90 days',
-                'action' => 'Consider rotating for security best practices'
+                'action' => 'Consider rotating for security best practices',
             ];
         }
 
@@ -128,12 +127,12 @@ class ApiKeyService
             $recommendations[] = [
                 'severity' => 'high',
                 'reason' => 'API key is older than 6 months',
-                'action' => 'Immediate rotation recommended'
+                'action' => 'Immediate rotation recommended',
             ];
         }
 
         return [
-            'should_rotate' => !empty($recommendations),
+            'should_rotate' => ! empty($recommendations),
             'key_age_days' => $keyAge,
             'recommendations' => $recommendations,
         ];
@@ -165,7 +164,7 @@ class ApiKeyService
     {
         // This would analyze request logs for suspicious patterns
         // Implementation would depend on logging infrastructure
-        
+
         return [
             'tenant_id' => $tenant->id,
             'audit_date' => now()->toISOString(),

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Business;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class BusinessController extends Controller
 {
@@ -15,6 +15,7 @@ class BusinessController extends Controller
     public function index(): JsonResponse
     {
         $businesses = Business::all();
+
         return response()->json(['data' => $businesses]);
     }
 
@@ -35,6 +36,7 @@ class BusinessController extends Controller
         ]);
 
         $business = Business::create($validatedData);
+
         return response()->json(['message' => 'Unternehmen erfolgreich erstellt', 'data' => $business], 201);
     }
 
@@ -63,6 +65,7 @@ class BusinessController extends Controller
         ]);
 
         $business->update($validatedData);
+
         return response()->json(['message' => 'Unternehmen erfolgreich aktualisiert', 'data' => $business]);
     }
 
@@ -72,6 +75,7 @@ class BusinessController extends Controller
     public function destroy(Business $business): JsonResponse
     {
         $business->delete();
+
         return response()->json(['message' => 'Unternehmen erfolgreich gelöscht'], 200);
     }
 }

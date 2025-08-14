@@ -12,8 +12,8 @@ return new class extends Migration
             $table->uuid('home_branch_id')->nullable()->after('id');
 
             $table->foreign('home_branch_id')
-                  ->references('id')->on('branches')
-                  ->nullOnDelete();
+                ->references('id')->on('branches')
+                ->nullOnDelete();
         });
     }
 

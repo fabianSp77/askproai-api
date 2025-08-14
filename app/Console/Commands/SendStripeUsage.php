@@ -21,27 +21,30 @@ class SendStripeUsage extends Command
         $secret = config('services.stripe.secret') ?: env('STRIPE_SECRET');
         if (! $secret) {
             $this->error('❌  STRIPE_SECRET fehlt – .env prüfen!');
+
             return self::FAILURE;
         }
         Stripe::setApiKey($secret);
 
         /** 2) Parameter einlesen */
-        $itemId    = $this->argument('subscription_item');
-        $quantity  = (int) $this->argument('quantity');
+        $itemId = $this->argument('subscription_item');
+        $quantity = (int) $this->argument('quantity');
         $timestamp = $this->option('timestamp') ?: time();
 
         try {
             /** 3) Usage-Record anlegen (Stripe API) */
             $record = SubscriptionItem::createUsageRecord($itemId, [
-                'quantity'  => $quantity,
+                'quantity' => $quantity,
                 'timestamp' => $timestamp,
-                'action'    => 'increment',
+                'action' => 'increment',
             ]);
 
-            $this->info('✅  UsageRecord gesendet  →  ' . $record->id);
+            $this->info('✅  UsageRecord gesendet  →  '.$record->id);
+
             return self::SUCCESS;
         } catch (\Throwable $e) {
-            $this->error('❌  Stripe-Fehler: ' . $e->getMessage());
+            $this->error('❌  Stripe-Fehler: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }

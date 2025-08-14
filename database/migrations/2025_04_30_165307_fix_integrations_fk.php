@@ -13,7 +13,7 @@ return new class extends Migration
             // 1) FK nur droppen, wenn er existiert
             $fkExists = DB::table('information_schema.KEY_COLUMN_USAGE')
                 ->whereRaw('TABLE_SCHEMA = DATABASE()')
-                ->where('TABLE_NAME',  'integrations')
+                ->where('TABLE_NAME', 'integrations')
                 ->where('CONSTRAINT_NAME', 'integrations_kunde_id_foreign')
                 ->exists();
 
@@ -29,8 +29,8 @@ return new class extends Migration
             // 3) FK neu anlegen, falls noch nicht vorhanden
             if (! $fkExists) {
                 $table->foreign('kunde_id')
-                      ->references('id')->on('customers')
-                      ->cascadeOnDelete();
+                    ->references('id')->on('customers')
+                    ->cascadeOnDelete();
             }
         });
     }

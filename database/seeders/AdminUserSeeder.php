@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class AdminUserSeeder extends Seeder
 {
@@ -13,7 +13,7 @@ class AdminUserSeeder extends Seeder
         $user = User::updateOrCreate(
             ['email' => 'fabian@askproai.de'],
             [
-                'name'     => 'Fabian (Super-Admin)',
+                'name' => 'Fabian (Super-Admin)',
                 'password' => Hash::make('Qwe421as1!1'),
             ],
         );

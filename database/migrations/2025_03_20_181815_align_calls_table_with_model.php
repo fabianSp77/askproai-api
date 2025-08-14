@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -13,11 +12,11 @@ return new class extends Migration
             /* -----------------------------------------------------------------
              | 1) Spalten umbenennen
              * ----------------------------------------------------------------*/
-            if (Schema::hasColumn('calls', 'call_id') && !Schema::hasColumn('calls', 'external_id')) {
+            if (Schema::hasColumn('calls', 'call_id') && ! Schema::hasColumn('calls', 'external_id')) {
                 $t->renameColumn('call_id', 'external_id');
             }
 
-            if (Schema::hasColumn('calls', 'raw_data') && !Schema::hasColumn('calls', 'raw')) {
+            if (Schema::hasColumn('calls', 'raw_data') && ! Schema::hasColumn('calls', 'raw')) {
                 $t->renameColumn('raw_data', 'raw');
             }
 

@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 /**
  * @OA\Info(
  *      version="1.0.0",
@@ -19,11 +17,14 @@ class ExampleController extends Controller
      * @OA\Get(
      *     path="/example",
      *     summary="Beispielroute",
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Erfolgreiche Antwort",
+     *
      *         @OA\JsonContent(
      *             type="object",
+     *
      *             @OA\Property(property="message", type="string", example="Hallo von AskProAI!")
      *         )
      *     )

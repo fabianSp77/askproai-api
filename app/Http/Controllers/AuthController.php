@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -12,12 +11,12 @@ class AuthController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required'
+            'password' => 'required',
         ]);
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !password_verify($request->password, $user->password)) {
+        if (! $user || ! password_verify($request->password, $user->password)) {
             return response(['message' => 'Falsche Login-Daten'], 401);
         }
 
@@ -25,13 +24,14 @@ class AuthController extends Controller
 
         return response([
             'token' => $token,
-            'kunde_id' => $user->kunde_id
+            'kunde_id' => $user->kunde_id,
         ], 200);
     }
 
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
+
         return response(['message' => 'Erfolgreich ausgeloggt'], 200);
     }
 }

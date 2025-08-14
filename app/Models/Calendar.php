@@ -11,7 +11,8 @@ class Calendar extends Model
     use IsUuid, SoftDeletes;
 
     public $incrementing = false;
-    protected $keyType   = 'string';
+
+    protected $keyType = 'string';
 
     protected $fillable = [
         'staff_id',

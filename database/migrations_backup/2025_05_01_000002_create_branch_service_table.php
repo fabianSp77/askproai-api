@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::create('branch_service', function (Blueprint $table) {
             $table->foreignId('branch_id')
-                  ->constrained('branches')
-                  ->cascadeOnDelete();
+                ->constrained('branches')
+                ->cascadeOnDelete();
 
             $table->foreignId('service_id')
-                  ->constrained('services')
-                  ->cascadeOnDelete();
+                ->constrained('services')
+                ->cascadeOnDelete();
 
             $table->primary(['branch_id', 'service_id']);
             $table->timestamps();

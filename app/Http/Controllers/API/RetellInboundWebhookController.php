@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use App\Models\Call;
 use App\Services\RetellService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class RetellInboundWebhookController extends Controller
 {
@@ -16,9 +16,9 @@ class RetellInboundWebhookController extends Controller
 
         $call = Call::create([
             'retell_call_id' => $p['call_id'] ?? Str::uuid(),
-            'from_number'    => data_get($p,'call_inbound.from_number'),
-            'to_number'      => data_get($p,'call_inbound.to_number'),
-            'raw'            => $p,
+            'from_number' => data_get($p, 'call_inbound.from_number'),
+            'to_number' => data_get($p, 'call_inbound.to_number'),
+            'raw' => $p,
         ]);
 
         return response()->json(

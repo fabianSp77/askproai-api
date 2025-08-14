@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response;
-use App\Models\PhoneNumber;
 use App\Models\Branch;
-use App\Models\Tenant;
-use App\Models\Staff;
 use App\Models\CalcomEventType;
 use App\Models\Customer;
+use App\Models\PhoneNumber;
+use App\Models\Staff;
+use App\Models\Tenant;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class RetellWebhookController extends Controller
 {
@@ -28,29 +27,29 @@ class RetellWebhookController extends Controller
         if ($intent === 'booking_create') {
             // a) PhoneNumber suchen
             $phoneNumber = PhoneNumber::where('number', $incomingNumber)->first();
-            if (!$phoneNumber) {
+            if (! $phoneNumber) {
                 return response()->json(['message' => 'Telefonnummer ist keinem Branch zugeordnet!'], 400);
             }
 
             // b) Branch holen
             $branch = Branch::where('id', $phoneNumber->branch_id)->first();
-            if (!$branch) {
+            if (! $branch) {
                 return response()->json(['message' => 'Branch/Filiale nicht gefunden!'], 400);
             }
 
             // c) Customer und Tenant holen (jetzt per Name-Matching)
             $customer = Customer::where('id', $branch->customer_id)->first();
-            if (!$customer) {
+            if (! $customer) {
                 return response()->json(['message' => 'Customer/Kunde nicht gefunden!'], 400);
             }
             $tenant = Tenant::where('name', $customer->name)->first();
-            if (!$tenant) {
+            if (! $tenant) {
                 return response()->json(['message' => 'Mandant/Firma nicht gefunden!'], 400);
             }
 
             // d) Staff im Branch finden (optional: alle, oder nur 1)
             $staff = Staff::where('branch_id', $branch->id)->first();
-            if (!$staff) {
+            if (! $staff) {
                 return response()->json(['message' => 'Kein Mitarbeiter für diese Filiale gefunden!'], 400);
             }
 
@@ -59,19 +58,19 @@ class RetellWebhookController extends Controller
                 ->where('is_active', true)
                 ->first();
 
-            if (!$eventType) {
+            if (! $eventType) {
                 return response()->json(['message' => 'Keine Dienstleistung für diesen Mitarbeiter gefunden!'], 400);
             }
 
             // f) Buchungsdaten zusammenbauen
             $bookingDetails = [
                 'eventTypeId' => $eventType->calcom_numeric_event_type_id,
-                'name'        => $slotsData['name'] ?? 'Unbekannt',
-                'email'       => $slotsData['email'] ?? 'termin@askproai.de',
-                'startTime'   => $slotsData['start'] ?? null,
-                'endTime'     => $slotsData['end'] ?? null,
-                'timeZone'    => $slotsData['timeZone'] ?? 'Europe/Berlin',
-                'language'    => $slotsData['language'] ?? 'de',
+                'name' => $slotsData['name'] ?? 'Unbekannt',
+                'email' => $slotsData['email'] ?? 'termin@askproai.de',
+                'startTime' => $slotsData['start'] ?? null,
+                'endTime' => $slotsData['end'] ?? null,
+                'timeZone' => $slotsData['timeZone'] ?? 'Europe/Berlin',
+                'language' => $slotsData['language'] ?? 'de',
             ];
 
             if (empty($bookingDetails['startTime']) || empty($bookingDetails['endTime'])) {
@@ -91,7 +90,7 @@ class RetellWebhookController extends Controller
                 return response()->json([
                     'message' => 'Fehler bei der Buchungserstellung über Cal.com.',
                     'calcom_status' => $bookingResponse->status(),
-                    'calcom_error' => $bookingResponse->json() ?? $bookingResponse->body()
+                    'calcom_error' => $bookingResponse->json() ?? $bookingResponse->body(),
                 ], 503);
             }
         }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CustomerResource\Pages;
@@ -12,8 +13,11 @@ use Filament\Tables\Table;
 class CustomerResource extends Resource
 {
     protected static ?string $model = Customer::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+
     protected static ?string $navigationLabel = 'Kunden';
+
     protected static ?string $pluralLabel = 'Kunden';
 
     public static function form(Form $form): Form

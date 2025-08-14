@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
@@ -38,7 +38,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $staff->syncPermissions(
             Permission::whereIn('name', [
                 'view_any_User', 'view_User',
-                'view_any_Staff','view_Staff',
+                'view_any_Staff', 'view_Staff',
             ])->get()
         );
     }

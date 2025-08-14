@@ -17,7 +17,7 @@ class IntegrationController extends Controller
         $request->validate([
             'kunde_id' => 'required|exists:kunden,id',
             'system' => 'required|string',
-            'zugangsdaten' => 'required|string'
+            'zugangsdaten' => 'required|string',
         ]);
 
         return Integration::create($request->all());
@@ -32,16 +32,18 @@ class IntegrationController extends Controller
     {
         $request->validate([
             'system' => 'sometimes|required|string',
-            'zugangsdaten' => 'sometimes|required|string'
+            'zugangsdaten' => 'sometimes|required|string',
         ]);
 
         $integrationen->update($request->all());
+
         return $integrationen;
     }
 
     public function destroy(Integration $integrationen)
     {
         $integrationen->delete();
+
         return response(null, 204);
     }
 }

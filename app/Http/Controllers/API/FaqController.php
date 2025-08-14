@@ -4,8 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Faq;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class FaqController extends Controller
 {
@@ -15,6 +15,7 @@ class FaqController extends Controller
     public function index(): JsonResponse
     {
         $faqs = Faq::all();
+
         return response()->json(['data' => $faqs]);
     }
 
@@ -32,6 +33,7 @@ class FaqController extends Controller
         ]);
 
         $faq = Faq::create($validatedData);
+
         return response()->json(['message' => 'FAQ erfolgreich erstellt', 'data' => $faq], 201);
     }
 
@@ -57,6 +59,7 @@ class FaqController extends Controller
         ]);
 
         $faq->update($validatedData);
+
         return response()->json(['message' => 'FAQ erfolgreich aktualisiert', 'data' => $faq]);
     }
 
@@ -66,6 +69,7 @@ class FaqController extends Controller
     public function destroy(Faq $faq): JsonResponse
     {
         $faq->delete();
+
         return response()->json(['message' => 'FAQ erfolgreich gelöscht'], 200);
     }
 }

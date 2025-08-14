@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Models\Concerns;
+
 use Illuminate\Support\Str;
 
 trait IsUuid

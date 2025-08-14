@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 class DocumentationController extends Controller
@@ -11,7 +10,7 @@ class DocumentationController extends Controller
     {
         $filePath = public_path("admin/documentation/$page");
 
-        if (!File::exists($filePath)) {
+        if (! File::exists($filePath)) {
             abort(404, 'Dokument nicht gefunden');
         }
 

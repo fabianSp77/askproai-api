@@ -9,8 +9,10 @@ use Illuminate\Support\Carbon;
 class CompaniesChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Unternehmen pro Monat';
+
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected function getData(): array
     {
@@ -24,6 +26,7 @@ class CompaniesChartWidget extends ChartWidget
             $data[] = $count;
             $labels[] = $month->translatedFormat('F Y'); // Monatsnamen automatisch in Deutsch
         }
+
         return [
             'datasets' => [
                 [

@@ -16,8 +16,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('staff_id')
-                  ->references('id')->on('staff')
-                  ->cascadeOnDelete();
+                ->references('id')->on('staff')
+                ->cascadeOnDelete();
         });
 
         /* ----------------- bookings ----------------- */
@@ -31,12 +31,12 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('event_type_id')
-                  ->references('id')->on('calcom_event_types')
-                  ->cascadeOnDelete();
+                ->references('id')->on('calcom_event_types')
+                ->cascadeOnDelete();
 
             $table->foreign('branch_id')
-                  ->references('id')->on('branches')
-                  ->nullOnDelete();
+                ->references('id')->on('branches')
+                ->nullOnDelete();
         });
     }
 

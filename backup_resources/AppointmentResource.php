@@ -12,8 +12,10 @@ use Filament\Tables\Table;
 class AppointmentResource extends Resource
 {
     /* ───── Basis ───── */
-    protected static ?string $model           = Appointment::class;
-    protected static ?string $navigationIcon  = 'heroicon-o-calendar';
+    protected static ?string $model = Appointment::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+
     protected static ?string $navigationGroup = 'Buchungen';
 
     /** Navigation immer sichtbar (später per Policy einschränken). */

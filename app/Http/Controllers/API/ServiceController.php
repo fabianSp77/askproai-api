@@ -4,8 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
@@ -15,6 +15,7 @@ class ServiceController extends Controller
     public function index(): JsonResponse
     {
         $services = Service::all();
+
         return response()->json(['data' => $services]);
     }
 
@@ -33,6 +34,7 @@ class ServiceController extends Controller
         ]);
 
         $service = Service::create($validatedData);
+
         return response()->json(['message' => 'Dienstleistung erfolgreich erstellt', 'data' => $service], 201);
     }
 
@@ -59,6 +61,7 @@ class ServiceController extends Controller
         ]);
 
         $service->update($validatedData);
+
         return response()->json(['message' => 'Dienstleistung erfolgreich aktualisiert', 'data' => $service]);
     }
 
@@ -68,6 +71,7 @@ class ServiceController extends Controller
     public function destroy(Service $service): JsonResponse
     {
         $service->delete();
+
         return response()->json(['message' => 'Dienstleistung erfolgreich gelöscht'], 200);
     }
 }

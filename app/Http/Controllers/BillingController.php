@@ -1,11 +1,12 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Stripe\Stripe;
-use Stripe\Checkout\Session as Checkout;
-use Stripe\Webhook;
 use App\Models\Tenant;
+use Illuminate\Http\Request;
+use Stripe\Checkout\Session as Checkout;
+use Stripe\Stripe;
+use Stripe\Webhook;
 
 class BillingController extends Controller
 {
@@ -16,7 +17,7 @@ class BillingController extends Controller
 
         $session = Checkout::create([
             'payment_method_types' => ['card'],
-            'mode'   => 'payment',
+            'mode' => 'payment',
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'eur',
@@ -26,8 +27,8 @@ class BillingController extends Controller
                 'quantity' => 1,
             ]],
             'success_url' => url('/billing/success'),
-            'cancel_url'  => url('/billing/cancel'),
-            'metadata'    => ['tenant_id' => $r->user()->tenant_id],
+            'cancel_url' => url('/billing/cancel'),
+            'metadata' => ['tenant_id' => $r->user()->tenant_id],
         ]);
 
         return redirect($session->url);
@@ -37,8 +38,8 @@ class BillingController extends Controller
     public function webhook(Request $r)
     {
         $payload = $r->getContent();
-        $sig     = $r->header('Stripe-Signature');
-        $secret  = config('services.stripe.webhook_secret');
+        $sig = $r->header('Stripe-Signature');
+        $secret = config('services.stripe.webhook_secret');
 
         try {
             $event = Webhook::constructEvent($payload, $sig, $secret);

@@ -275,7 +275,7 @@ return [
     ],
 
     'cleanup' => [
-    'strategy' => Spatie\Backup\Tasks\Cleanup\Strategies\DefaultStrategy::class,
+        'strategy' => Spatie\Backup\Tasks\Cleanup\Strategies\DefaultStrategy::class,
         /*
          * The strategy that will be used to cleanup old backups. The default strategy
          * will keep all backups for a certain amount of days. After that period only

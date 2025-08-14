@@ -7,7 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // CI / PHPUnit verwenden SQLite → einfach überspringen
+        // Skip in testing environment (SQLite doesn't support MySQL commands)
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
 
         // MySQL-/MariaDB-Logic bleibt unverändert
         DB::statement('SET foreign_key_checks = 0');

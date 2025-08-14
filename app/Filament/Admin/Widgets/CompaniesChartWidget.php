@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Admin\Widgets;
 
 use App\Models\Company;
@@ -8,8 +9,10 @@ use Illuminate\Support\Carbon;
 class CompaniesChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Unternehmen pro Monat';
+
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected function getData(): array
     {
@@ -22,7 +25,7 @@ class CompaniesChartWidget extends ChartWidget
             $count = Company::whereYear('created_at', $month->year)
                 ->whereMonth('created_at', $month->month)
                 ->count();
-            
+
             $data[] = $count;
             $labels[] = $month->format('M Y');
         }

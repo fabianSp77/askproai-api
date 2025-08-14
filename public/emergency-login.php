@@ -20,14 +20,14 @@ if (Auth::check()) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
-    
+
     $user = User::where('email', $email)->first();
-    
+
     if ($user && Hash::check($password, $user->password)) {
         Auth::login($user);
         $_SESSION['logged_in'] = true;
         $_SESSION['user_id'] = $user->id;
-        
+
         // Redirect to admin with navigation fix
         header('Location: /admin?fix=nav');
         exit;
@@ -58,9 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             fabian@askproai.de / password<br>
             test@askproai.de / test123
         </div>
-        <?php if (isset($error)): ?>
+        <?php if (isset($error)) { ?>
             <div class="error"><?= $error ?></div>
-        <?php endif; ?>
+        <?php } ?>
         <form method="POST">
             <input type="email" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>

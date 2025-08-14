@@ -22,8 +22,8 @@ return new class extends Migration
 
             // FK-Constraint --------------
             $table->foreign('staff_id')
-                  ->references('id')->on('staff')
-                  ->cascadeOnDelete();
+                ->references('id')->on('staff')
+                ->cascadeOnDelete();
 
             $table->timestamps();
         });

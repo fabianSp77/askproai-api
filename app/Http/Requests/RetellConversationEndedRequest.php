@@ -14,9 +14,9 @@ class RetellConversationEndedRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'call_id'     => ['required', 'uuid'],
+            'call_id' => ['required', 'uuid'],
             'tmp_call_id' => ['nullable', 'uuid'],
-            'duration'    => ['required', 'integer', 'min:0'],
+            'duration' => ['required', 'integer', 'min:0'],
         ];
     }
 }

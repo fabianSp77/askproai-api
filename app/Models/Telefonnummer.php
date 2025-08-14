@@ -10,17 +10,17 @@ class Telefonnummer extends Model
 {
     use HasFactory;
 
-    protected $table = "telefonnummern";
+    protected $table = 'telefonnummern';
 
     protected $fillable = [
-        "kunde_id",
-        "nummer",
-        "beschreibung",
-        "aktiv"
+        'kunde_id',
+        'nummer',
+        'beschreibung',
+        'aktiv',
     ];
 
     protected $casts = [
-        "aktiv" => "boolean",
+        'aktiv' => 'boolean',
     ];
 
     public function kunde(): BelongsTo

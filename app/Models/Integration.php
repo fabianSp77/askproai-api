@@ -16,7 +16,7 @@ class Integration extends Model
 
     protected $casts = [
         'credentials' => 'array',
-        'active'      => 'boolean',
+        'active' => 'boolean',
     ];
 
     public function customer(): BelongsTo

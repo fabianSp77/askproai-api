@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -7,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class CalService
 {
     protected $apiKey;
+
     protected $baseUrl;
 
     public function __construct()
@@ -19,12 +21,13 @@ class CalService
     {
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-            ])->get($this->baseUrl . '/event-types');
+                'Authorization' => 'Bearer '.$this->apiKey,
+            ])->get($this->baseUrl.'/event-types');
 
             return $response->json();
         } catch (\Exception $e) {
-            Log::error('Cal.com API Fehler: ' . $e->getMessage());
+            Log::error('Cal.com API Fehler: '.$e->getMessage());
+
             return null;
         }
     }
@@ -33,12 +36,13 @@ class CalService
     {
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-            ])->post($this->baseUrl . '/bookings', $data);
+                'Authorization' => 'Bearer '.$this->apiKey,
+            ])->post($this->baseUrl.'/bookings', $data);
 
             return $response->json();
         } catch (\Exception $e) {
-            Log::error('Cal.com Buchungsfehler: ' . $e->getMessage());
+            Log::error('Cal.com Buchungsfehler: '.$e->getMessage());
+
             return null;
         }
     }

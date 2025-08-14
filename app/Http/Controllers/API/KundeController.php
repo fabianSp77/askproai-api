@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Kunde;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class KundeController extends Controller
@@ -15,6 +15,7 @@ class KundeController extends Controller
     public function index()
     {
         $kunden = Kunde::all();
+
         return response()->json($kunden);
     }
 
@@ -26,7 +27,7 @@ class KundeController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:kunden',
-            'telefonnummer' => 'required|string|max:20'
+            'telefonnummer' => 'required|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -34,6 +35,7 @@ class KundeController extends Controller
         }
 
         $kunde = Kunde::create($request->all());
+
         return response()->json($kunde, 201);
     }
 
@@ -43,11 +45,11 @@ class KundeController extends Controller
     public function show(string $id)
     {
         $kunde = Kunde::find($id);
-        
-        if (!$kunde) {
+
+        if (! $kunde) {
             return response()->json(['message' => 'Kunde nicht gefunden'], 404);
         }
-        
+
         return response()->json($kunde);
     }
 
@@ -57,15 +59,15 @@ class KundeController extends Controller
     public function update(Request $request, string $id)
     {
         $kunde = Kunde::find($id);
-        
-        if (!$kunde) {
+
+        if (! $kunde) {
             return response()->json(['message' => 'Kunde nicht gefunden'], 404);
         }
-        
+
         $validator = Validator::make($request->all(), [
             'name' => 'string|max:255',
-            'email' => 'string|email|max:255|unique:kunden,email,' . $id,
-            'telefonnummer' => 'string|max:20'
+            'email' => 'string|email|max:255|unique:kunden,email,'.$id,
+            'telefonnummer' => 'string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -73,6 +75,7 @@ class KundeController extends Controller
         }
 
         $kunde->update($request->all());
+
         return response()->json($kunde);
     }
 
@@ -82,12 +85,13 @@ class KundeController extends Controller
     public function destroy(string $id)
     {
         $kunde = Kunde::find($id);
-        
-        if (!$kunde) {
+
+        if (! $kunde) {
             return response()->json(['message' => 'Kunde nicht gefunden'], 404);
         }
-        
+
         $kunde->delete();
+
         return response()->json(['message' => 'Kunde erfolgreich gelöscht']);
     }
 }

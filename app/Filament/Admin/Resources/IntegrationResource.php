@@ -3,22 +3,22 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\IntegrationResource\Pages;
-use App\Filament\Admin\Resources\IntegrationResource\RelationManagers;
 use App\Models\Integration;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class IntegrationResource extends Resource
 {
     protected static ?string $model = Integration::class;
+
     protected static ?string $navigationGroup = 'Stammdaten';
+
     protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';
+
     protected static ?string $navigationLabel = 'Integrations';
+
     protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form

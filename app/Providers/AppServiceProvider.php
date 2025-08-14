@@ -1,8 +1,9 @@
 <?php
+
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Routing\Router;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(Router $router): void
     {
-        /* Alias **jedes Mal** beim Booten registrieren  */
+        /* Alias **jedes Mal** beim Booten registrieren */
         $router->aliasMiddleware(
             'calcom.signature',
             \App\Http\Middleware\VerifyCalcomSignature::class

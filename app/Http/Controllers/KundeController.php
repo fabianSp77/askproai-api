@@ -17,6 +17,7 @@ class KundeController extends Controller
     public function store(Request $request)
     {
         $kunde = Kunde::create($request->all());
+
         return response()->json($kunde, 201);
     }
 
@@ -30,6 +31,7 @@ class KundeController extends Controller
     public function update(Request $request, Kunde $kunden)
     {
         $kunden->update($request->all());
+
         return response()->json($kunden, 200);
     }
 
@@ -37,6 +39,7 @@ class KundeController extends Controller
     public function destroy(Kunde $kunden)
     {
         $kunden->delete();
+
         return response()->json(null, 204);
     }
 }

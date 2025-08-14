@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\CalcomService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,7 +22,7 @@ class MainCalcomController extends Controller
             'eventTypeId' => 'required|integer',
             'dateFrom' => 'required|date',
             'dateTo' => 'required|date|after:dateFrom',
-            'username' => 'required|string'
+            'username' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -31,7 +31,7 @@ class MainCalcomController extends Controller
 
         try {
             $availability = $this->calcomService->checkAvailability($request->only([
-                'eventTypeId', 'dateFrom', 'dateTo', 'username'
+                'eventTypeId', 'dateFrom', 'dateTo', 'username',
             ]));
 
             return response()->json(['status' => 'success', 'availability' => $availability], 200);
@@ -41,7 +41,7 @@ class MainCalcomController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Verfügbarkeitsprüfung fehlgeschlagen',
-                'details' => $e->getMessage()
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
@@ -52,7 +52,7 @@ class MainCalcomController extends Controller
             'eventTypeId' => 'required|integer',
             'start' => 'required|date',
             'name' => 'required|string',
-            'email' => 'required|email'
+            'email' => 'required|email',
         ]);
 
         if ($validator->fails()) {
@@ -73,7 +73,7 @@ class MainCalcomController extends Controller
                 'start' => $startTime->format('c'),
                 'end' => $endTime->format('c'),
                 'name' => $request->input('name'),
-                'email' => $request->input('email')
+                'email' => $request->input('email'),
             ];
 
             $booking = $this->calcomService->createBooking($bookingData);
@@ -85,9 +85,8 @@ class MainCalcomController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Buchung fehlgeschlagen',
-                'details' => $e->getMessage()
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
 }
-

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use App\Services\CalcomService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CalcomController extends Controller
 {
@@ -30,7 +30,7 @@ class CalcomController extends Controller
                 'email' => 'required|email|max:255',
             ]);
 
-            Log::info('[CalcomController] Creating booking for: ' . $validated['email']);
+            Log::info('[CalcomController] Creating booking for: '.$validated['email']);
 
             // Delegate to service
             $booking = $this->calcomService->createBookingFromCall($validated);
@@ -38,32 +38,32 @@ class CalcomController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Booking created successfully',
-                'data' => $booking
+                'data' => $booking,
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::warning('[CalcomController] Validation failed', [
                 'errors' => $e->errors(),
-                'input' => $request->all()
+                'input' => $request->all(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'error' => 'Validation failed',
-                'details' => $e->errors()
+                'details' => $e->errors(),
             ], 422);
 
         } catch (\Exception $e) {
             Log::error('[CalcomController] Booking creation failed', [
                 'message' => $e->getMessage(),
-                'file' => $e->getFile() . ':' . $e->getLine(),
-                'input' => $request->all()
+                'file' => $e->getFile().':'.$e->getLine(),
+                'input' => $request->all(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to create booking',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -80,19 +80,19 @@ class CalcomController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $eventType
+                'data' => $eventType,
             ]);
 
         } catch (\Exception $e) {
             Log::error('[CalcomController] Failed to fetch event type', [
                 'event_type_id' => $eventTypeId,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to fetch event type',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -106,7 +106,7 @@ class CalcomController extends Controller
             'success' => true,
             'service' => 'Cal.com Integration',
             'status' => 'operational',
-            'timestamp' => now()->toISOString()
+            'timestamp' => now()->toISOString(),
         ]);
     }
 }

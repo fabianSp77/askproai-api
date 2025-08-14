@@ -3,17 +3,16 @@
 namespace App\Filament\Admin\Widgets;
 
 use App\Models\Customer;          // dein Customer-Modell
-use Filament\Tables;
+use Filament\Support\Colors\Color;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Support\Colors\Color;
 
 class LatestCustomers extends TableWidget
 {
     /** Überschrift & Spaltenbreite – gerne anpassen */
     protected static ?string $heading = 'Neueste Kunden';
+
     protected int|string|array $columnSpan = 'full';
 
     /**

@@ -1,11 +1,11 @@
 <?php
+
 namespace App\Services;
-use App\Models\CallLog;
-use Illuminate\Support\Facades\Log;
 
 class RetellAIService
 {
     protected $apiKey;
+
     protected $baseUrl;
 
     public function __construct()
@@ -25,7 +25,7 @@ class RetellAIService
                     'start_time' => now()->subHours(2)->toIso8601String(),
                     'end_time' => now()->subHours(1)->toIso8601String(),
                     'duration' => 600,
-                    'status' => 'completed'
+                    'status' => 'completed',
                 ],
                 [
                     'id' => 'call_654321',
@@ -33,13 +33,13 @@ class RetellAIService
                     'start_time' => now()->subDay()->toIso8601String(),
                     'end_time' => now()->subDay()->addMinutes(15)->toIso8601String(),
                     'duration' => 900,
-                    'status' => 'completed'
-                ]
+                    'status' => 'completed',
+                ],
             ],
             'meta' => [
                 'total' => 2,
-                'limit' => $limit
-            ]
+                'limit' => $limit,
+            ],
         ];
     }
 
@@ -52,7 +52,7 @@ class RetellAIService
             'start_time' => now()->subHours(2)->toIso8601String(),
             'end_time' => now()->subHours(1)->toIso8601String(),
             'duration' => 600,
-            'status' => 'completed'
+            'status' => 'completed',
         ];
     }
 
@@ -65,19 +65,19 @@ class RetellAIService
                 [
                     'speaker' => 'ai',
                     'text' => 'Hallo, wie kann ich Ihnen helfen?',
-                    'timestamp' => 0
+                    'timestamp' => 0,
                 ],
                 [
                     'speaker' => 'human',
                     'text' => 'Ich möchte einen Termin für nächste Woche buchen.',
-                    'timestamp' => 5
+                    'timestamp' => 5,
                 ],
                 [
                     'speaker' => 'ai',
                     'text' => 'Gerne. Welcher Tag würde Ihnen passen?',
-                    'timestamp' => 10
-                ]
-            ]
+                    'timestamp' => 10,
+                ],
+            ],
         ];
     }
 }

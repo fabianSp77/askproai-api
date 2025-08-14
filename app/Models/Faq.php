@@ -11,16 +11,16 @@ class Faq extends Model
     use HasFactory;
 
     protected $fillable = [
-        "kunde_id",
-        "question",
-        "answer",
-        "category",
-        "active",
-        "position"
+        'kunde_id',
+        'question',
+        'answer',
+        'category',
+        'active',
+        'position',
     ];
 
     protected $casts = [
-        "active" => "boolean",
+        'active' => 'boolean',
     ];
 
     public function kunde(): BelongsTo

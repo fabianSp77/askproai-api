@@ -3,22 +3,22 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\CallResource\Pages;
-use App\Filament\Admin\Resources\CallResource\RelationManagers;
 use App\Models\Call;
-use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CallResource extends Resource
 {
     protected static ?string $model = Call::class;
+
     protected static ?string $navigationGroup = 'Kommunikation';
+
     protected static ?string $navigationIcon = 'heroicon-o-phone';
+
     protected static ?string $navigationLabel = 'Anrufe';
+
     protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form

@@ -7,7 +7,6 @@ use App\Models\Call;
 use App\Models\Customer;
 use App\Models\Service;
 use App\Models\Staff;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -17,7 +16,7 @@ class DashboardController extends Controller
         // Statistiken
         $stats = [
             'total_calls' => Call::count(),
-            'success_rate' => Call::where('successful', true)->count() > 0 
+            'success_rate' => Call::where('successful', true)->count() > 0
                 ? round((Call::where('successful', true)->count() / Call::count()) * 100, 1)
                 : 0,
             'unique_customers' => Customer::count(),
@@ -55,6 +54,7 @@ class DashboardController extends Controller
     public function customers()
     {
         $customers = Customer::orderBy('name')->paginate(15);
+
         return view('dashboard.customers', compact('customers'));
     }
 
@@ -64,6 +64,7 @@ class DashboardController extends Controller
             ->orderBy('datum', 'desc')
             ->orderBy('uhrzeit', 'desc')
             ->paginate(15);
+
         return view('dashboard.appointments', compact('appointments'));
     }
 
@@ -71,18 +72,21 @@ class DashboardController extends Controller
     {
         $calls = Call::orderBy('call_time', 'desc')
             ->paginate(15);
+
         return view('dashboard.calls', compact('calls'));
     }
 
-    public function services() 
+    public function services()
     {
         $services = Service::orderBy('name')->paginate(15);
+
         return view('dashboard.services', compact('services'));
     }
 
     public function staff()
     {
         $staff = Staff::orderBy('name')->paginate(15);
+
         return view('dashboard.staff', compact('staff'));
     }
 }

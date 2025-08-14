@@ -10,7 +10,7 @@ class VerifyRetellSignature
     public function handle(Request $request, Closure $next)
     {
         $signature = $request->header('X-Retell-Signature');
-        $body      = $request->getContent();
+        $body = $request->getContent();
 
         if (! hash_equals($signature, hash_hmac('sha256', $body, config('services.retell.secret')))) {
             abort(401, 'Invalid Retell signature');

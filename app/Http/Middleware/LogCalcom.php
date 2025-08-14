@@ -15,8 +15,8 @@ class LogCalcom
 
         if ($isCalcom) {
             Log::channel('calcom')->info('[OUT]', [
-                'method'  => $request->method(),
-                'uri'     => $request->path(),
+                'method' => $request->method(),
+                'uri' => $request->path(),
                 'payload' => $request->all(),
             ]);
         }
@@ -26,7 +26,7 @@ class LogCalcom
         if ($isCalcom) {
             Log::channel('calcom')->info('[IN ]', [
                 'status' => $response->status(),
-                'body'   => $response->getContent(),
+                'body' => $response->getContent(),
             ]);
         }
 

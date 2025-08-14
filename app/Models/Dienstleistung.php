@@ -11,21 +11,21 @@ class Dienstleistung extends Model
 {
     use HasFactory;
 
-    protected $table = "dienstleistungen";
+    protected $table = 'dienstleistungen';
 
     protected $fillable = [
-        "kunde_id",
-        "name",
-        "dauer_minuten",
-        "preis",
-        "cal_com_event_type_id",
-        "beschreibung",
-        "aktiv"
+        'kunde_id',
+        'name',
+        'dauer_minuten',
+        'preis',
+        'cal_com_event_type_id',
+        'beschreibung',
+        'aktiv',
     ];
 
     protected $casts = [
-        "preis" => "decimal:2",
-        "aktiv" => "boolean",
+        'preis' => 'decimal:2',
+        'aktiv' => 'boolean',
     ];
 
     public function kunde(): BelongsTo
@@ -35,6 +35,6 @@ class Dienstleistung extends Model
 
     public function mitarbeiter(): BelongsToMany
     {
-        return $this->belongsToMany(Mitarbeiter::class, "mitarbeiter_dienstleistungen");
+        return $this->belongsToMany(Mitarbeiter::class, 'mitarbeiter_dienstleistungen');
     }
 }

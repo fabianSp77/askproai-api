@@ -14,7 +14,7 @@ class WorkingHour extends Model
         'staff_id',
         'weekday',
         'start',
-        'end'
+        'end',
     ];
 
     public function staff(): BelongsTo

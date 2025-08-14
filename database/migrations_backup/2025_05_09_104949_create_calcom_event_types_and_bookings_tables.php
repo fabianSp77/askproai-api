@@ -1,9 +1,11 @@
 <?php
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         /* -------- calcom_event_types -------------------------------------- */
@@ -16,7 +18,7 @@ return new class extends Migration {
             $t->timestamps();
 
             $t->foreign('staff_id')->references('id')->on('staff')
-              ->cascadeOnDelete();
+                ->cascadeOnDelete();
         });
 
         /* -------- calcom_bookings ----------------------------------------- */
@@ -24,9 +26,9 @@ return new class extends Migration {
             $t->id();
             $t->string('calcom_uid')->unique();   // Cal.com Booking‑UID
             $t->foreignId('appointment_id')       // FK → appointments
-              ->constrained()->cascadeOnDelete();
-            $t->enum('status', ['booked','rescheduled','canceled'])
-              ->default('booked');
+                ->constrained()->cascadeOnDelete();
+            $t->enum('status', ['booked', 'rescheduled', 'canceled'])
+                ->default('booked');
             $t->json('raw_payload')->nullable();  // komplette Webhook‑JSON
             $t->timestamps();
         });
@@ -34,7 +36,7 @@ return new class extends Migration {
         /* -------- appointments ➡︎ Referenz auf Cal.com -------------------- */
         Schema::table('appointments', function (Blueprint $t) {
             $t->unsignedBigInteger('calcom_booking_id')
-              ->nullable()->after('id');
+                ->nullable()->after('id');
         });
     }
 

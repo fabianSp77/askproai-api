@@ -15,12 +15,12 @@ class CallLog extends Model
         'transcript',
         'intent',
         'extracted_data',
-        'appointment_id'
+        'appointment_id',
     ];
 
     protected $casts = [
         'extracted_data' => 'array',
         'start_time' => 'datetime',
-        'end_time' => 'datetime'
+        'end_time' => 'datetime',
     ];
 }

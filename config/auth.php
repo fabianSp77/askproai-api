@@ -14,7 +14,7 @@ return [
     */
 
     'defaults' => [
-        'guard'     => 'web',   // <- Browser-Sessions
+        'guard' => 'web',   // <- Browser-Sessions
         'passwords' => 'users', // <- Tabelle password_reset_tokens
     ],
 
@@ -33,21 +33,21 @@ return [
     'guards' => [
         /*  ────────── Standard-Web-Guard ────────── */
         'web' => [
-            'driver'   => 'session',
+            'driver' => 'session',
             'provider' => 'users',
         ],
 
         /*  ────────── Filament-Admin-Panel ───────── */
         'filament' => [
-            'driver'   => 'session',
+            'driver' => 'session',
             'provider' => 'users',
         ],
 
         /*  ────────── API (Token / Passport) ─────── */
         'api' => [
-            'driver'   => 'passport',
+            'driver' => 'passport',
             'provider' => 'users',
-            'hash'     => false,
+            'hash' => false,
         ],
     ],
 
@@ -64,7 +64,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model'  => App\Models\User::class,
+            'model' => App\Models\User::class,
         ],
     ],
 
@@ -80,8 +80,8 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table'    => 'password_reset_tokens',
-            'expire'   => 60,   // Minuten
+            'table' => 'password_reset_tokens',
+            'expire' => 60,   // Minuten
             'throttle' => 60,
         ],
     ],

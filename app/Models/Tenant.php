@@ -4,30 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class Tenant extends Model
 {
     public $incrementing = false;
-    protected $keyType   = 'string';
+
+    protected $keyType = 'string';
 
     // API key security: store hashed, generate plain
     protected $fillable = ['name', 'slug'];
+
     protected $hidden = ['api_key_hash'];
 
     /* -------------------------------------------------------------------- */
     protected static function booted(): void
     {
         static::creating(function (self $tenant) {
-            $tenant->id   ??= (string) Str::uuid();
+            $tenant->id ??= (string) Str::uuid();
             $tenant->slug ??= Str::slug($tenant->name);
-            
+
             // Generate plain API key only on creation
             if (empty($tenant->api_key_hash)) {
-                $plainApiKey = 'ask_' . Str::random(32);
+                $plainApiKey = 'ask_'.Str::random(32);
                 $tenant->api_key_hash = Hash::make($plainApiKey);
-                
+
                 // Store plain key temporarily for initial response
                 $tenant->setRawAttribute('plain_api_key', $plainApiKey);
             }
@@ -47,10 +49,10 @@ class Tenant extends Model
      */
     public function regenerateApiKey(): string
     {
-        $plainApiKey = 'ask_' . Str::random(32);
+        $plainApiKey = 'ask_'.Str::random(32);
         $this->api_key_hash = Hash::make($plainApiKey);
         $this->save();
-        
+
         return $plainApiKey;
     }
 
@@ -65,7 +67,7 @@ class Tenant extends Model
                 return $tenant;
             }
         }
-        
+
         return null;
     }
 

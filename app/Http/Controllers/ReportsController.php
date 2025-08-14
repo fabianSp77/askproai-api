@@ -1,6 +1,7 @@
 <?php
+
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\DB;
 
 class ReportsController extends Controller
@@ -14,7 +15,7 @@ class ReportsController extends Controller
             ->orderBy('date', 'desc')
             ->limit(7)
             ->get();
-            
+
         return view('reports.index', compact('dailyStats'));
     }
 }

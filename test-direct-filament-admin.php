@@ -1,4 +1,5 @@
 <?php
+
 // Direct test of Filament admin with session-based login
 
 $url = 'https://api.askproai.de/admin';
@@ -10,7 +11,7 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_FOLLOWLOCATION => true,
     CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    CURLOPT_TIMEOUT => 10
+    CURLOPT_TIMEOUT => 10,
 ]);
 
 $response = curl_exec($ch);
@@ -19,7 +20,7 @@ $finalUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
 
 echo "HTTP Code: $httpCode\n";
 echo "Final URL: $finalUrl\n";
-echo "Content length: " . strlen($response) . " bytes\n";
+echo 'Content length: '.strlen($response)." bytes\n";
 
 // Check what we got
 if (strpos($response, 'Melden Sie sich an') !== false) {

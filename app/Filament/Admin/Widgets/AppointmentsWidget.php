@@ -9,6 +9,7 @@ use Filament\Widgets\ChartWidget;
 class AppointmentsWidget extends ChartWidget
 {
     protected static ?string $heading = 'Termine pro Monat';
+
     protected int|string|array $columnSpan = 'full';
 
     /**
@@ -31,7 +32,7 @@ class AppointmentsWidget extends ChartWidget
 
         // 12-monatiges Array aufbauen, fehlende mit 0 füllen
         $labels = [];
-        $data   = [];
+        $data = [];
 
         for ($m = 1; $m <= 12; $m++) {
             $labels[] = Carbon::createFromDate($year, $m, 1)
@@ -42,11 +43,11 @@ class AppointmentsWidget extends ChartWidget
         }
 
         return [
-            'labels'   => $labels,
+            'labels' => $labels,
             'datasets' => [
                 [
-                    'label'           => "Termine $year",
-                    'data'            => $data,
+                    'label' => "Termine $year",
+                    'data' => $data,
                     'backgroundColor' => 'rgba(59, 130, 246, 0.50)', // Blau
                 ],
             ],

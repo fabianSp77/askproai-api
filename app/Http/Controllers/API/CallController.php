@@ -4,8 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Call;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CallController extends Controller
 {
@@ -15,6 +15,7 @@ class CallController extends Controller
     public function index(): JsonResponse
     {
         $calls = Call::all();
+
         return response()->json(['data' => $calls]);
     }
 
@@ -37,6 +38,7 @@ class CallController extends Controller
         ]);
 
         $call = Call::create($validatedData);
+
         return response()->json(['message' => 'Anruf erfolgreich erstellt', 'data' => $call], 201);
     }
 
@@ -67,6 +69,7 @@ class CallController extends Controller
         ]);
 
         $call->update($validatedData);
+
         return response()->json(['message' => 'Anruf erfolgreich aktualisiert', 'data' => $call]);
     }
 
@@ -76,6 +79,7 @@ class CallController extends Controller
     public function destroy(Call $call): JsonResponse
     {
         $call->delete();
+
         return response()->json(['message' => 'Anruf erfolgreich gelöscht'], 200);
     }
 }

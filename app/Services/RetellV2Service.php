@@ -7,11 +7,12 @@ use Illuminate\Support\Facades\Http;
 class RetellV2Service          //  Telefon- & Agent-API (AWS)
 {
     private string $url;   // z. B. https://api.retellai.com
+
     private string $token;
 
     public function __construct()
     {
-        $this->url   = rtrim(config('services.retell.base_url'), '/');
+        $this->url = rtrim(config('services.retell.base_url'), '/');
         $this->token = config('services.retell.api_key');
     }
 
@@ -23,8 +24,8 @@ class RetellV2Service          //  Telefon- & Agent-API (AWS)
     public function createPhoneCall(array $payload): array
     {
         return Http::withToken($this->token)
-                   ->post($this->url . '/v2/create-phone-call', $payload)
-                   ->throw()               // wirft Exception bei HTTP-Fehler
-                   ->json();
+            ->post($this->url.'/v2/create-phone-call', $payload)
+            ->throw()               // wirft Exception bei HTTP-Fehler
+            ->json();
     }
 }

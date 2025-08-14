@@ -24,9 +24,9 @@ return new class extends Migration
     {
         Schema::table('calls', function (Blueprint $t) {
             $t->dropColumn([
-                'duration_sec','user_sentiment','call_status',
-                'disconnection_reason','call_successful',
-                'dynamic_variables','analysis','transcript'
+                'duration_sec', 'user_sentiment', 'call_status',
+                'disconnection_reason', 'call_successful',
+                'dynamic_variables', 'analysis', 'transcript',
             ]);
         });
     }

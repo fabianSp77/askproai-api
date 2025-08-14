@@ -3,13 +3,9 @@
 /**
  * Feature flags helper functions
  */
-
-if (!function_exists('feature')) {
+if (! function_exists('feature')) {
     /**
      * Check if a feature is enabled
-     *
-     * @param string $feature
-     * @return bool
      */
     function feature(string $feature): bool
     {
@@ -19,11 +15,9 @@ if (!function_exists('feature')) {
     }
 }
 
-if (!function_exists('features')) {
+if (! function_exists('features')) {
     /**
      * Get all features configuration
-     *
-     * @return array
      */
     function features(): array
     {

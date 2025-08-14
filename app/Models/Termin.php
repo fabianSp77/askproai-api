@@ -10,29 +10,29 @@ class Termin extends Model
 {
     use HasFactory;
 
-    protected $table = "termine";
+    protected $table = 'termine';
 
     protected $fillable = [
-        "kunde_id",
-        "mitarbeiter_id",
-        "call_id",
-        "anrufer_name",
-        "anrufer_telefon",
-        "anrufer_email",
-        "datum",
-        "uhrzeit",
-        "dauer_minuten",
-        "dienstleistung",
-        "notizen",
-        "cal_com_event_id",
-        "status",
-        "erinnerung_gesendet"
+        'kunde_id',
+        'mitarbeiter_id',
+        'call_id',
+        'anrufer_name',
+        'anrufer_telefon',
+        'anrufer_email',
+        'datum',
+        'uhrzeit',
+        'dauer_minuten',
+        'dienstleistung',
+        'notizen',
+        'cal_com_event_id',
+        'status',
+        'erinnerung_gesendet',
     ];
 
     protected $casts = [
-        "datum" => "date",
-        "uhrzeit" => "datetime",
-        "erinnerung_gesendet" => "boolean",
+        'datum' => 'date',
+        'uhrzeit' => 'datetime',
+        'erinnerung_gesendet' => 'boolean',
     ];
 
     public function kunde(): BelongsTo

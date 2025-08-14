@@ -17,11 +17,11 @@ class RetellConversationEndedController extends Controller
         /** @var Call $call */
         $call = Call::firstOrCreate(
             ['retell_call_id' => $data['call_id']],
-            ['tmp_call_id'    => $data['tmp_call_id'] ?? null]
+            ['tmp_call_id' => $data['tmp_call_id'] ?? null]
         );
 
         $call->duration_sec = $data['duration'];
-	$call->cost_cents   = $call->duration_sec * config('billing.price_per_second_cents', 3);
+        $call->cost_cents = $call->duration_sec * config('billing.price_per_second_cents', 3);
         $call->save();
 
         Log::info('Retell conversation ended', $data);

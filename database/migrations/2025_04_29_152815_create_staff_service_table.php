@@ -13,12 +13,12 @@ return new class extends Migration
                 $table->id();                      // BIGINT PK
                 $table->char('staff_id', 36);      // UUID
                 $table->foreign('staff_id')
-                      ->references('id')->on('staff')
-                      ->cascadeOnDelete();
+                    ->references('id')->on('staff')
+                    ->cascadeOnDelete();
 
                 $table->foreignId('service_id')    // BIGINT unsigned
-                      ->constrained('services')
-                      ->cascadeOnDelete();
+                    ->constrained('services')
+                    ->cascadeOnDelete();
 
                 $table->timestamps();
                 $table->unique(['staff_id', 'service_id']);
@@ -31,4 +31,3 @@ return new class extends Migration
         Schema::dropIfExists('staff_service');
     }
 };
-

@@ -1,8 +1,6 @@
 <?php
 
 use Monolog\Handler\NullHandler;
-use Monolog\Handler\StreamHandler;
-use Monolog\Handler\SyslogUdpHandler;
 
 return [
 
@@ -10,33 +8,33 @@ return [
 
     'deprecations' => [
         'channel' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
-        'trace'   => false,
+        'trace' => false,
     ],
 
     'channels' => [
         'stack' => [
-            'driver'   => 'stack',
+            'driver' => 'stack',
             'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
 
         'single' => [
             'driver' => 'single',
-            'path'   => storage_path('logs/laravel.log'),
-            'level'  => env('LOG_LEVEL', 'debug'),
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
         ],
 
         'mail' => [
             'driver' => 'single',
-            'path'   => storage_path('logs/mail.log'),
-            'level'  => 'debug',
+            'path' => storage_path('logs/mail.log'),
+            'level' => 'debug',
         ],
 
         // Calcom-Log
         'calcom' => [
             'driver' => 'single',
-            'path'   => storage_path('logs/calcom.log'),
-            'level'  => 'debug',
+            'path' => storage_path('logs/calcom.log'),
+            'level' => 'debug',
         ],
 
         'null' => [
@@ -47,4 +45,3 @@ return [
     ],
 
 ];
-

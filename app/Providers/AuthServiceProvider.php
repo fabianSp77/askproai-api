@@ -25,6 +25,7 @@ class AuthServiceProvider extends ServiceProvider
             if ($ability === 'viewFilament') {
                 return true;
             }
+
             return null; // andere Abilities normal prüfen
         });
 

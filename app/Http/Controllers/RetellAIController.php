@@ -18,21 +18,21 @@ class RetellAIController extends Controller
     {
         $limit = $request->input('limit', 10);
         $calls = $this->retellService->getCalls($limit);
-        
+
         return response()->json($calls);
     }
 
     public function getCallDetails($callId)
     {
         $callDetails = $this->retellService->getCallDetails($callId);
-        
+
         return response()->json($callDetails);
     }
 
     public function getCallTranscript($callId)
     {
         $transcript = $this->retellService->getCallTranscript($callId);
-        
+
         return response()->json($transcript);
     }
 }

@@ -5,9 +5,9 @@ namespace App\Providers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Log; // <-- Log importieren
+use Illuminate\Support\Facades\Route; // <-- Log importieren
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -30,19 +30,19 @@ class RouteServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         $this->routes(function () {
-             Log::channel('single')->debug('RouteServiceProvider: Loading API routes...'); // <-- Logging hier
+            Log::channel('single')->debug('RouteServiceProvider: Loading API routes...'); // <-- Logging hier
             Route::middleware('api') // Stelle sicher, dass die 'api' Gruppe verwendet wird
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
-             Log::channel('single')->debug('RouteServiceProvider: Loading Web routes...'); // <-- Logging hier
+            Log::channel('single')->debug('RouteServiceProvider: Loading Web routes...'); // <-- Logging hier
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
-             Log::channel('single')->debug('RouteServiceProvider: Route loading complete.'); // <-- Logging hier
+            Log::channel('single')->debug('RouteServiceProvider: Route loading complete.'); // <-- Logging hier
         });
 
-         Log::channel('single')->debug('RouteServiceProvider: boot() method FINISHED.'); // <-- Logging hier
+        Log::channel('single')->debug('RouteServiceProvider: boot() method FINISHED.'); // <-- Logging hier
     }
 
     /**
@@ -51,7 +51,7 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting(): void
     {
         RateLimiter::for('api', function (Request $request) {
-             // Rate Limiting anpassen oder vorerst deaktivieren zum Testen: return Limit::none();
+            // Rate Limiting anpassen oder vorerst deaktivieren zum Testen: return Limit::none();
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
     }

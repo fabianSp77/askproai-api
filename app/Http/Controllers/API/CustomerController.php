@@ -4,8 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
@@ -15,6 +15,7 @@ class CustomerController extends Controller
     public function index(): JsonResponse
     {
         $customers = Customer::all();
+
         return response()->json(['data' => $customers]);
     }
 
@@ -32,6 +33,7 @@ class CustomerController extends Controller
         ]);
 
         $customer = Customer::create($validatedData);
+
         return response()->json(['message' => 'Kunde erfolgreich erstellt', 'data' => $customer], 201);
     }
 
@@ -57,6 +59,7 @@ class CustomerController extends Controller
         ]);
 
         $customer->update($validatedData);
+
         return response()->json(['message' => 'Kunde erfolgreich aktualisiert', 'data' => $customer]);
     }
 
@@ -66,6 +69,7 @@ class CustomerController extends Controller
     public function destroy(Customer $customer): JsonResponse
     {
         $customer->delete();
+
         return response()->json(['message' => 'Kunde erfolgreich gelöscht'], 200);
     }
 }

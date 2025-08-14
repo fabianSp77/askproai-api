@@ -13,7 +13,7 @@ class Mitarbeiter extends Model
         'nachname',
         'email',
         'telefonnummer',
-        'kalender_verfuegbarkeit'
+        'kalender_verfuegbarkeit',
     ];
 
     protected $casts = [
@@ -25,4 +25,4 @@ class Mitarbeiter extends Model
         return $this->belongsTo(Kunde::class, 'kunden_id');
     }
 }
-#
+//

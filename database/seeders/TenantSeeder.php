@@ -15,7 +15,7 @@ class TenantSeeder extends Seeder
         $tenant = Tenant::firstOrCreate(
             ['slug' => 'askproai'],
             [
-                'name'    => 'AskProAI',
+                'name' => 'AskProAI',
                 'api_key' => Str::random(32),
             ],
         );
@@ -24,8 +24,8 @@ class TenantSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'fabian@askproai.de'],
             [
-                'name'              => 'Fabian',
-                'password'          => bcrypt('Qwe421as1!1'),
+                'name' => 'Fabian',
+                'password' => bcrypt('Qwe421as1!1'),
                 'email_verified_at' => now(),
             ],
         );

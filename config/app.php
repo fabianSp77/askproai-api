@@ -3,18 +3,18 @@
 return [
 
     /* ------------------------------------------------ Basics ------------ */
-    'name'            => env('APP_NAME', 'AskProAI'),
-    'env'             => env('APP_ENV', 'production'),
-    'debug'           => (bool) env('APP_DEBUG', false),
-    'url'             => env('APP_URL', 'https://api.askproai.de'),
-    'asset_url'       => env('ASSET_URL'),
+    'name' => env('APP_NAME', 'AskProAI'),
+    'env' => env('APP_ENV', 'production'),
+    'debug' => (bool) env('APP_DEBUG', false),
+    'url' => env('APP_URL', 'https://api.askproai.de'),
+    'asset_url' => env('ASSET_URL'),
 
-    'timezone'        => 'Europe/Berlin',
-    'locale'          => 'de',
+    'timezone' => 'Europe/Berlin',
+    'locale' => 'de',
     'fallback_locale' => 'en',
-    'faker_locale'    => 'de_DE',
+    'faker_locale' => 'de_DE',
 
-    'key'    => env('APP_KEY'),
+    'key' => env('APP_KEY'),
     'cipher' => 'AES-256-CBC',
 
     /* ------------- Service-Provider – jeder Eintrag genau EINMAL -------- */
@@ -47,7 +47,7 @@ return [
         /* Packages */
         Laravel\Horizon\HorizonServiceProvider::class,
         Filament\FilamentServiceProvider::class,
-//         App\Providers\Filament\TestPanelProvider::class,
+        //         App\Providers\Filament\TestPanelProvider::class,
         BezhanSalleh\FilamentShield\FilamentShieldServiceProvider::class,
 
         /* App */
@@ -60,19 +60,19 @@ return [
     ],
     /* --------------------------- Facades -------------------------------- */
     'aliases' => [
-        'App'    => Illuminate\Support\Facades\App::class,
-        'Arr'    => Illuminate\Support\Arr::class,
-        'Auth'   => Illuminate\Support\Facades\Auth::class,
-        'Cache'  => Illuminate\Support\Facades\Cache::class,
+        'App' => Illuminate\Support\Facades\App::class,
+        'Arr' => Illuminate\Support\Arr::class,
+        'Auth' => Illuminate\Support\Facades\Auth::class,
+        'Cache' => Illuminate\Support\Facades\Cache::class,
         'Config' => Illuminate\Support\Facades\Config::class,
-        'DB'     => Illuminate\Support\Facades\DB::class,
-        'Event'  => Illuminate\Support\Facades\Event::class,
-        'File'   => Illuminate\Support\Facades\File::class,
-        'Gate'   => Illuminate\Support\Facades\Gate::class,
-        'Log'    => Illuminate\Support\Facades\Log::class,
-        'Queue'  => Illuminate\Support\Facades\Queue::class,
-        'Route'  => Illuminate\Support\Facades\Route::class,
+        'DB' => Illuminate\Support\Facades\DB::class,
+        'Event' => Illuminate\Support\Facades\Event::class,
+        'File' => Illuminate\Support\Facades\File::class,
+        'Gate' => Illuminate\Support\Facades\Gate::class,
+        'Log' => Illuminate\Support\Facades\Log::class,
+        'Queue' => Illuminate\Support\Facades\Queue::class,
+        'Route' => Illuminate\Support\Facades\Route::class,
         'Schema' => Illuminate\Support\Facades\Schema::class,
-        'Str'    => Illuminate\Support\Str::class,
+        'Str' => Illuminate\Support\Str::class,
     ],
 ];

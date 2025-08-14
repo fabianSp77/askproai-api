@@ -1,18 +1,18 @@
 <?php
+
 /**
  * Navigation Fix Verification Script
  * Tests the fix for Issue #578 - Navigation Overlap
  */
-
 echo "=== NAVIGATION FIX VERIFICATION ===\n";
-echo "Timestamp: " . date('Y-m-d H:i:s') . "\n\n";
+echo 'Timestamp: '.date('Y-m-d H:i:s')."\n\n";
 
 $baseUrl = 'https://api.askproai.de';
 $testResults = [];
 
 // Test 1: Check if navigation test page is accessible
 echo "Test 1: Navigation Test Page Accessibility\n";
-$testPageUrl = $baseUrl . '/navigation-test.html';
+$testPageUrl = $baseUrl.'/navigation-test.html';
 $response = @file_get_contents($testPageUrl);
 
 if ($response && strpos($response, 'Navigation Fix for Issue #578') !== false) {
@@ -25,13 +25,13 @@ if ($response && strpos($response, 'Navigation Fix for Issue #578') !== false) {
 
 // Test 2: Check if CSS fix file exists
 echo "\nTest 2: CSS Fix File\n";
-$cssFixUrl = $baseUrl . '/css/navigation-repair.css';
+$cssFixUrl = $baseUrl.'/css/navigation-repair.css';
 $cssResponse = @file_get_contents($cssFixUrl);
 
 if ($cssResponse) {
     echo "✅ Navigation repair CSS is accessible\n";
     $testResults['css_file'] = 'pass';
-    
+
     // Check if the CSS contains the Grid fix
     if (strpos($cssResponse, 'grid-template-columns: 16rem 1fr') !== false) {
         echo "✅ CSS contains CSS Grid fix (16rem sidebar)\n";
@@ -48,11 +48,11 @@ if ($cssResponse) {
 
 // Test 3: Check if theme.css has been updated
 echo "\nTest 3: Theme CSS File Update\n";
-$themeCssPath = __DIR__ . '/resources/css/filament/admin/theme.css';
+$themeCssPath = __DIR__.'/resources/css/filament/admin/theme.css';
 
 if (file_exists($themeCssPath)) {
     $themeCss = file_get_contents($themeCssPath);
-    
+
     if (strpos($themeCss, 'grid-template-columns: 16rem 1fr !important') !== false) {
         echo "✅ Theme CSS contains CSS Grid fix\n";
         $testResults['theme_css_fix'] = 'pass';
@@ -60,7 +60,7 @@ if (file_exists($themeCssPath)) {
         echo "❌ CSS Grid fix not found in theme CSS\n";
         $testResults['theme_css_fix'] = 'fail';
     }
-    
+
     // Check for specific fix comment
     if (strpos($themeCss, 'Issue #578') !== false) {
         echo "✅ Theme CSS contains Issue #578 fix marker\n";
@@ -77,16 +77,16 @@ if (file_exists($themeCssPath)) {
 
 // Test 4: Check if compiled CSS includes the fix
 echo "\nTest 4: Compiled CSS Check\n";
-$publicCssPath = __DIR__ . '/public/build/assets';
+$publicCssPath = __DIR__.'/public/build/assets';
 
 if (is_dir($publicCssPath)) {
-    $cssFiles = glob($publicCssPath . '/app-*.css');
-    
-    if (!empty($cssFiles)) {
+    $cssFiles = glob($publicCssPath.'/app-*.css');
+
+    if (! empty($cssFiles)) {
         $latestCss = end($cssFiles);
         $compiledCss = file_get_contents($latestCss);
-        
-        if (strpos($compiledCss, 'grid-template-columns:16rem 1fr') !== false || 
+
+        if (strpos($compiledCss, 'grid-template-columns:16rem 1fr') !== false ||
             strpos($compiledCss, 'display:grid') !== false) {
             echo "✅ Compiled CSS contains grid layout\n";
             $testResults['compiled_css'] = 'pass';
@@ -94,7 +94,7 @@ if (is_dir($publicCssPath)) {
             echo "❌ Grid layout not found in compiled CSS\n";
             $testResults['compiled_css'] = 'fail';
         }
-        echo "Checked file: " . basename($latestCss) . "\n";
+        echo 'Checked file: '.basename($latestCss)."\n";
     } else {
         echo "❌ No compiled CSS files found\n";
         $testResults['compiled_css'] = 'fail';
@@ -106,12 +106,12 @@ if (is_dir($publicCssPath)) {
 
 // Test 5: Simple HTTP test to admin (without authentication)
 echo "\nTest 5: Admin Panel HTTP Response\n";
-$adminUrl = $baseUrl . '/admin';
+$adminUrl = $baseUrl.'/admin';
 $context = stream_context_create([
     'http' => [
         'timeout' => 10,
-        'user_agent' => 'Navigation Fix Tester'
-    ]
+        'user_agent' => 'Navigation Fix Tester',
+    ],
 ]);
 
 $adminResponse = @file_get_contents($adminUrl, false, $context);
@@ -119,9 +119,9 @@ $adminResponse = @file_get_contents($adminUrl, false, $context);
 if ($adminResponse) {
     echo "✅ Admin panel is responding\n";
     $testResults['admin_response'] = 'pass';
-    
+
     // Check if it contains Filament classes
-    if (strpos($adminResponse, 'fi-sidebar') !== false || 
+    if (strpos($adminResponse, 'fi-sidebar') !== false ||
         strpos($adminResponse, 'fi-main') !== false) {
         echo "✅ Response contains Filament layout classes\n";
         $testResults['filament_classes'] = 'pass';
@@ -140,9 +140,9 @@ $passedTests = array_count_values($testResults)['pass'] ?? 0;
 $totalTests = count($testResults);
 $failedTests = array_count_values($testResults)['fail'] ?? 0;
 
-echo "\n" . str_repeat("=", 50) . "\n";
+echo "\n".str_repeat('=', 50)."\n";
 echo "VERIFICATION SUMMARY\n";
-echo str_repeat("=", 50) . "\n";
+echo str_repeat('=', 50)."\n";
 
 echo "Tests passed: $passedTests/$totalTests\n";
 echo "Tests failed: $failedTests\n";
@@ -172,7 +172,7 @@ $report = [
     'tests_passed' => $passedTests,
     'tests_total' => $totalTests,
     'results' => $testResults,
-    'recommendations' => []
+    'recommendations' => [],
 ];
 
 if ($overallStatus === 'WORKING') {
@@ -188,10 +188,10 @@ if ($overallStatus === 'WORKING') {
     $report['recommendations'][] = 'Run npm run build to compile assets';
 }
 
-$reportFile = __DIR__ . '/public/screenshots/navigation-verification-' . date('Y-m-d-H-i-s') . '.json';
+$reportFile = __DIR__.'/public/screenshots/navigation-verification-'.date('Y-m-d-H-i-s').'.json';
 file_put_contents($reportFile, json_encode($report, JSON_PRETTY_PRINT));
 
-echo "\n📄 Report saved: " . basename($reportFile) . "\n";
+echo "\n📄 Report saved: ".basename($reportFile)."\n";
 echo "\n🔗 Quick Links:\n";
 echo "  Navigation Test Page: $baseUrl/navigation-test.html\n";
 echo "  Admin Panel: $baseUrl/admin\n";
@@ -206,4 +206,3 @@ if ($overallStatus === 'WORKING') {
 }
 
 echo "\n";
-?>

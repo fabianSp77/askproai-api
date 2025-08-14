@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class CalComController extends Controller
 {
     protected $apiKey;
+
     protected $baseUrl;
 
     public function __construct()
@@ -24,32 +25,32 @@ class CalComController extends Controller
                 'dateFrom' => 'required',
                 'dateTo' => 'required',
                 'eventTypeId' => 'required',
-                'userId' => 'required'
+                'userId' => 'required',
             ]);
 
-            $response = Http::get($this->baseUrl . '/availability', [
+            $response = Http::get($this->baseUrl.'/availability', [
                 'apiKey' => $this->apiKey,
                 'dateFrom' => $validated['dateFrom'],
                 'dateTo' => $validated['dateTo'],
                 'eventTypeId' => $validated['eventTypeId'],
-                'userId' => $validated['userId']
+                'userId' => $validated['userId'],
             ]);
 
             Log::info('Cal.com API Response', [
                 'statusCode' => $response->status(),
-                'response' => $response->json()
+                'response' => $response->json(),
             ]);
 
             return response()->json($response->json());
         } catch (\Exception $e) {
             Log::error('Cal.com API Error', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'error' => 'Failed to check availability',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

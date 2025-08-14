@@ -4,8 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Staff;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class StaffController extends Controller
 {
@@ -15,6 +15,7 @@ class StaffController extends Controller
     public function index(): JsonResponse
     {
         $staff = Staff::all();
+
         return response()->json(['data' => $staff]);
     }
 
@@ -32,6 +33,7 @@ class StaffController extends Controller
         ]);
 
         $staff = Staff::create($validatedData);
+
         return response()->json(['message' => 'Mitarbeiter erfolgreich erstellt', 'data' => $staff], 201);
     }
 
@@ -57,6 +59,7 @@ class StaffController extends Controller
         ]);
 
         $staff->update($validatedData);
+
         return response()->json(['message' => 'Mitarbeiter erfolgreich aktualisiert', 'data' => $staff]);
     }
 
@@ -66,6 +69,7 @@ class StaffController extends Controller
     public function destroy(Staff $staff): JsonResponse
     {
         $staff->delete();
+
         return response()->json(['message' => 'Mitarbeiter erfolgreich gelöscht'], 200);
     }
 }

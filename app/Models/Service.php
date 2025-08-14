@@ -12,6 +12,6 @@ class Service extends Model
     public function staff(): BelongsToMany
     {
         return $this->belongsToMany(Staff::class, 'staff_service')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 }

@@ -1,10 +1,12 @@
-<?php // database/factories/TenantFactory.php
+<?php
+
+// database/factories/TenantFactory.php
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str; // Import Str für random Strings
-use App\Models\Tenant; // Import Tenant Model
+use App\Models\Tenant;
+use Illuminate\Database\Eloquent\Factories\Factory; // Import Str für random Strings
+use Illuminate\Support\Str; // Import Tenant Model
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Tenant>
@@ -35,13 +37,13 @@ class TenantFactory extends Factory
         ];
     }
 
-     /**
-      * Indicate that the tenant is inactive.
-      */
-     public function inactive(): static
-     {
-         return $this->state(fn (array $attributes) => [
-             'is_active' => false,
-         ]);
-     }
+    /**
+     * Indicate that the tenant is inactive.
+     */
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
+    }
 }

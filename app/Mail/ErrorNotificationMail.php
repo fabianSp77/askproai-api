@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -16,9 +15,13 @@ class ErrorNotificationMail extends Mailable
 
     // Öffentliche Eigenschaften für die Daten, die wir in der Mail brauchen
     public string $errorMessage;
+
     public string $errorFile;
+
     public int $errorLine;
+
     public ?string $retellCallId;
+
     public string $payloadSnippet;
 
     /**

@@ -11,7 +11,8 @@ use Filament\Tables\Columns\TextColumn;
 class ServicesRelationManager extends RelationManager
 {
     protected static string $relationship = 'services';
-    protected static ?string $title       = 'Leistungen';
+
+    protected static ?string $title = 'Leistungen';
 
     /* -------------------------------------------------------------------- */
     public function form(Forms\Form $form): Forms\Form

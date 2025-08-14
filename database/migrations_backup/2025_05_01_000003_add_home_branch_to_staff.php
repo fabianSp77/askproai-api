@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::table('staff', function (Blueprint $table) {
             $table->foreignId('home_branch_id')
-                  ->nullable()
-                  ->after('id')
-                  ->constrained('branches')
-                  ->nullOnDelete();
+                ->nullable()
+                ->after('id')
+                ->constrained('branches')
+                ->nullOnDelete();
         });
     }
 

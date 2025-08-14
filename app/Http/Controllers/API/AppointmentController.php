@@ -4,8 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
@@ -15,6 +15,7 @@ class AppointmentController extends Controller
     public function index(): JsonResponse
     {
         $appointments = Appointment::all();
+
         return response()->json(['data' => $appointments]);
     }
 
@@ -37,6 +38,7 @@ class AppointmentController extends Controller
         ]);
 
         $appointment = Appointment::create($validatedData);
+
         return response()->json(['message' => 'Termin erfolgreich erstellt', 'data' => $appointment], 201);
     }
 
@@ -67,6 +69,7 @@ class AppointmentController extends Controller
         ]);
 
         $appointment->update($validatedData);
+
         return response()->json(['message' => 'Termin erfolgreich aktualisiert', 'data' => $appointment]);
     }
 
@@ -76,6 +79,7 @@ class AppointmentController extends Controller
     public function destroy(Appointment $appointment): JsonResponse
     {
         $appointment->delete();
+
         return response()->json(['message' => 'Termin erfolgreich gelöscht'], 200);
     }
 }

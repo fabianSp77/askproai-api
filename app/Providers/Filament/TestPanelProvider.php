@@ -11,9 +11,9 @@ class TestPanelProvider extends PanelProvider
     {
         return $panel
             ->id('testpanel')
-            ->path('testpanel')      # -> /testpanel
-            ->login()                # -> /testpanel/login
-            ->default()              # startet auf TestDashboard
+            ->path('testpanel')      // -> /testpanel
+            ->login()                // -> /testpanel/login
+            ->default()              // startet auf TestDashboard
             ->discoverPages(
                 in: app_path('Filament/TestPanel/Pages'),
                 for: 'App\\Filament\\TestPanel\\Pages',

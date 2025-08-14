@@ -27,7 +27,7 @@ class Kunde extends Model
         'name',
         'email',
         'telefonnummer',
-        'notizen'
+        'notizen',
         // Füge ggf. weitere Felder hinzu, die über create/update befüllt werden
     ];
 
@@ -50,7 +50,7 @@ class Kunde extends Model
         // Wenn das Appointment-Model nicht existiert oder anders heißt, passe es hier an.
         // return $this->hasMany(Appointment::class, 'kunde_id');
         // Da wir kein Appointment-Model haben, kommentieren wir dies vorerst aus
-         return $this->hasMany(\App\Models\Appointment::class, 'kunde_id'); // Annahme des Namens, prüfen!
+        return $this->hasMany(\App\Models\Appointment::class, 'kunde_id'); // Annahme des Namens, prüfen!
 
     }
 }

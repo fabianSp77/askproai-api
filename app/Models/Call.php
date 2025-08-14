@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -16,19 +16,19 @@ class Call extends Model
      */
     protected $fillable = [
         'tenant_id',
-        'customer_id', 
+        'customer_id',
         'agent_id',
         'call_id',
         'conversation_id',
         'from_number',
         'to_number',
         'start_timestamp',
-        'end_timestamp', 
+        'end_timestamp',
         'duration_sec',
         'call_successful',
         'disconnect_reason',
         'transcript',
-        'analysis'
+        'analysis',
     ];
 
     /**
@@ -40,7 +40,7 @@ class Call extends Model
         'start_timestamp' => 'datetime',
         'end_timestamp' => 'datetime',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -104,13 +104,13 @@ class Call extends Model
      */
     public function getFormattedDurationAttribute(): string
     {
-        if (!$this->duration_sec) {
+        if (! $this->duration_sec) {
             return '0:00';
         }
 
         $minutes = floor($this->duration_sec / 60);
         $seconds = $this->duration_sec % 60;
-        
+
         return sprintf('%d:%02d', $minutes, $seconds);
     }
 
@@ -119,11 +119,11 @@ class Call extends Model
      */
     public function getStatusAttribute(): string
     {
-        if (!$this->call_successful) {
+        if (! $this->call_successful) {
             return 'failed';
         }
 
-        return match($this->disconnect_reason) {
+        return match ($this->disconnect_reason) {
             'hangup_by_customer' => 'completed',
             'hangup_by_agent' => 'completed',
             'transferred' => 'transferred',

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ZeitinfoController extends Controller
@@ -13,10 +13,10 @@ class ZeitinfoController extends Controller
         $locale = strtolower($request->query('locale', 'de'));
         $supportedLocales = ['de', 'en'];
 
-        if (!in_array($locale, $supportedLocales)) {
+        if (! in_array($locale, $supportedLocales)) {
             Log::warning('Ungültiges Locale übergeben, fallback auf "de"', [
                 'übergebenes_locale' => $locale,
-                'client_ip' => $request->ip()
+                'client_ip' => $request->ip(),
             ]);
             $locale = 'de';
         }
@@ -24,22 +24,22 @@ class ZeitinfoController extends Controller
         try {
             $now = Carbon::now('Europe/Berlin')->locale($locale);
         } catch (\Exception $e) {
-            Log::error('Fehler beim Setzen des Locale: ' . $e->getMessage(), [
+            Log::error('Fehler beim Setzen des Locale: '.$e->getMessage(), [
                 'client_ip' => $request->ip(),
-                'gewünschtes_locale' => $locale
+                'gewünschtes_locale' => $locale,
             ]);
             $now = Carbon::now('Europe/Berlin')->locale('de');
         }
 
         Log::info('Zeitinfo abgerufen', [
             'locale' => $locale,
-            'client_ip' => $request->ip()
+            'client_ip' => $request->ip(),
         ]);
 
         return response()->json([
-            'date'    => $now->format('d.m.Y'),
-            'time'    => $now->format('H:i'),
-            'weekday' => $now->isoFormat('dddd')
+            'date' => $now->format('d.m.Y'),
+            'time' => $now->format('H:i'),
+            'weekday' => $now->isoFormat('dddd'),
         ]);
     }
 }

@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Customer extends Model
@@ -18,10 +18,10 @@ class Customer extends Model
     protected $fillable = [
         'tenant_id',
         'name',
-        'email', 
+        'email',
         'phone',
         'birthdate',
-        'notes'
+        'notes',
     ];
 
     /**
@@ -31,7 +31,7 @@ class Customer extends Model
         'birthdate' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
     ];
 
     /**
@@ -73,8 +73,8 @@ class Customer extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('phone', 'like', "%{$search}%");
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
         });
     }
 
@@ -91,7 +91,7 @@ class Customer extends Model
      */
     public function getDisplayNameAttribute(): string
     {
-        return $this->name . ' (' . $this->email . ')';
+        return $this->name.' ('.$this->email.')';
     }
 
     /**
@@ -143,6 +143,7 @@ class Customer extends Model
     public function getLastCallAtAttribute(): ?string
     {
         $lastCall = $this->calls()->latest('start_timestamp')->first();
+
         return $lastCall?->start_timestamp?->format('Y-m-d H:i:s');
     }
 
@@ -152,6 +153,7 @@ class Customer extends Model
     public function getLastAppointmentAtAttribute(): ?string
     {
         $lastAppointment = $this->appointments()->latest('start_time')->first();
+
         return $lastAppointment?->start_time?->format('Y-m-d H:i:s');
     }
 
@@ -169,7 +171,7 @@ class Customer extends Model
     public function hasRecentActivity(): bool
     {
         $thirtyDaysAgo = now()->subDays(30);
-        
+
         return $this->calls()->where('start_timestamp', '>=', $thirtyDaysAgo)->exists() ||
                $this->appointments()->where('start_time', '>=', $thirtyDaysAgo)->exists();
     }
@@ -205,7 +207,7 @@ class Customer extends Model
             'last_call_at' => $this->last_call_at,
             'last_appointment_at' => $this->last_appointment_at,
             'has_recent_activity' => $this->hasRecentActivity(),
-            'preferred_contact_method' => $this->getPreferredContactMethod()
+            'preferred_contact_method' => $this->getPreferredContactMethod(),
         ];
     }
 }

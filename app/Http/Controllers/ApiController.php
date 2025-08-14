@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
 
 class ApiController extends Controller
 {
@@ -17,7 +16,7 @@ class ApiController extends Controller
             'call_duration' => 'required|string',
             'type' => 'required|string',
             'user_sentiment' => 'nullable|string',
-            'successful' => 'required|boolean'
+            'successful' => 'required|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -35,7 +34,7 @@ class ApiController extends Controller
             'successful' => $request->successful,
             'call_summary' => $request->call_summary,
             'created_at' => now(),
-            'updated_at' => now()
+            'updated_at' => now(),
         ]);
 
         return response()->json(['message' => 'Call created successfully'], 201);
@@ -50,7 +49,7 @@ class ApiController extends Controller
             'sentiments' => DB::table('calls')
                 ->select('user_sentiment', DB::raw('count(*) as count'))
                 ->groupBy('user_sentiment')
-                ->get()
+                ->get(),
         ];
 
         return response()->json($stats);

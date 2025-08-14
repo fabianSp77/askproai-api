@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StaffResource\Pages;
@@ -12,8 +13,11 @@ use Filament\Tables\Table;
 class StaffResource extends Resource
 {
     protected static ?string $model = Staff::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-user';
+
     protected static ?string $navigationLabel = 'Mitarbeiter';
+
     protected static ?string $pluralLabel = 'Mitarbeiter';
 
     public static function form(Form $form): Form

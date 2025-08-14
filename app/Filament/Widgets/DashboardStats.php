@@ -13,14 +13,14 @@ class DashboardStats extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $total        = Customer::count();
+        $total = Customer::count();
         $withBirthday = Schema::hasColumn('customers', 'birthdate')
             ? Customer::whereNotNull('birthdate')->count()
             : 0;
 
         return [
-            Stat::make('Gesamtkunden',      $total),
-            Stat::make('Mit Geburtsdatum',  $withBirthday),
+            Stat::make('Gesamtkunden', $total),
+            Stat::make('Mit Geburtsdatum', $withBirthday),
         ];
     }
 }

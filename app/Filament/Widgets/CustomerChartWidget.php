@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\DB;
 class CustomerChartWidget extends ChartWidget
 {
     protected static ?string $heading = 'Kunden pro Monat';
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?int $sort = 3;
 
     protected function getData(): array

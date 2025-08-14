@@ -9,12 +9,13 @@ use Illuminate\Support\Facades\Http;
 class CalcomBookingController extends Controller
 {
     private string $baseUrl;
+
     private string $apiKey;
 
     public function __construct()
     {
         $this->baseUrl = rtrim(config('calcom.base_url'), '/');
-        $this->apiKey  = config('calcom.api_key');
+        $this->apiKey = config('calcom.api_key');
     }
 
     /**  POST /api/calcom/bookings  */
@@ -22,21 +23,21 @@ class CalcomBookingController extends Controller
     {
         /* ---------- 1. Validieren -------------------------------------- */
         $data = $request->validate([
-            'eventTypeId'       => 'required|integer',
-            'start'             => 'required|date',
-            'timeZone'          => 'required|string',
-            'language'          => 'required|string',
+            'eventTypeId' => 'required|integer',
+            'start' => 'required|date',
+            'timeZone' => 'required|string',
+            'language' => 'required|string',
 
-            'metadata'          => 'sometimes',   // kein Typ-Zwang!
-            'responses'         => 'sometimes|array',
+            'metadata' => 'sometimes',   // kein Typ-Zwang!
+            'responses' => 'sometimes|array',
 
-            'attendee.name'     => 'required|string',
-            'attendee.email'    => 'required|email',
+            'attendee.name' => 'required|string',
+            'attendee.email' => 'required|email',
             'attendee.timeZone' => 'required|string',
         ]);
 
         /* ---------- 2. metadata immer als Object ----------------------- */
-        if (! array_key_exists('metadata', $data) || $data['metadata'] === []){
+        if (! array_key_exists('metadata', $data) || $data['metadata'] === []) {
             $data['metadata'] = (object) [];
         } else {
             // Array → Objekt casten
@@ -46,20 +47,20 @@ class CalcomBookingController extends Controller
         /* ---------- 3. responses nur senden, wenn notwendig ------------ */
         if (empty($data['responses'] ?? null)) {
             $data['responses'] = (object) [
-                'name'  => $data['attendee']['name'],
+                'name' => $data['attendee']['name'],
                 'email' => $data['attendee']['email'],
             ];
         }
 
         /* ---------- 4. Call an Cal.com --------------------------------- */
-        $url   = "{$this->baseUrl}/v1/bookings?apiKey={$this->apiKey}";
-        $resp  = Http::acceptJson()->post($url, $data);
+        $url = "{$this->baseUrl}/v1/bookings?apiKey={$this->apiKey}";
+        $resp = Http::acceptJson()->post($url, $data);
 
         return $resp->successful()
             ? response()->json($resp->json(), 201)
             : response()->json(
-                  ['error' => 'Cal.com-Fehler', 'details' => $resp->json()],
-                  $resp->status() ?: 400
-              );
+                ['error' => 'Cal.com-Fehler', 'details' => $resp->json()],
+                $resp->status() ?: 400
+            );
     }
 }

@@ -13,8 +13,11 @@ use Filament\Tables\Table;
 class CallResource extends Resource
 {
     protected static ?string $model = Call::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-phone';
+
     protected static ?string $navigationGroup = 'Operations';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -56,6 +59,7 @@ class CallResource extends Resource
                         if ($record->started_at && $record->ended_at) {
                             return $record->started_at->diffForHumans($record->ended_at, true);
                         }
+
                         return '-';
                     }),
                 Tables\Columns\BadgeColumn::make('status')

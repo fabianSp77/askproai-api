@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Filament\Admin\Widgets;
+
 use App\Models\Appointment;
 use App\Models\Call;
 use Filament\Widgets\StatsOverviewWidget;
@@ -20,7 +21,7 @@ class StatsOverview extends StatsOverviewWidget
         return [
             Stat::make('Anrufe heute', $callsToday),
             Stat::make('Termine heute', $appointmentsToday),
-            Stat::make('Ø Gesprächsdauer', $avgDuration . ' s'),
+            Stat::make('Ø Gesprächsdauer', $avgDuration.' s'),
             Stat::make('No-Shows diese Woche', $noShowsWeek),
         ];
     }

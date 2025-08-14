@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CalcomWebhookController;
-use App\Http\Controllers\RetellWebhookController;   // ← HIERHER!
+use App\Http\Controllers\RetellWebhookController;
+use Illuminate\Support\Facades\Route;   // ← HIERHER!
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +17,7 @@ Route::get('calcom/webhook', [CalcomWebhookController::class, 'ping']);
 
 // 2) Produktiver Webhook (POST) ➜ mit Signaturprüfung
 Route::post('calcom/webhook', [CalcomWebhookController::class, 'handle'])
-     ->middleware('calcom.signature');
+    ->middleware('calcom.signature');
 
 // Retell Webhook (POST)
 Route::post('retell/webhook', [RetellWebhookController::class, '__invoke']);

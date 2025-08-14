@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class CalcomWebhookController extends Controller
@@ -25,7 +25,7 @@ class CalcomWebhookController extends Controller
     {
         /* ───── TEMP-DEBUG – Header & Body in calcom-Channel loggen ───── */
         Log::channel('calcom')->info('[Debug] headers', $request->headers->all());
-        Log::channel('calcom')->info('[Debug] body',    ['raw' => $request->getContent()]);
+        Log::channel('calcom')->info('[Debug] body', ['raw' => $request->getContent()]);
         /* ──────────────────────────────────────────────────────────────── */
 
         // TODO: Event-Typen auswerten (booking.created …)
