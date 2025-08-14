@@ -351,13 +351,8 @@ parameters:
 			path: app/Http/Controllers/API/CustomerController.php
 
 		-
-			message: "#^Call to an undefined static method App\\\\Models\\\\FAQ\\:\\:create\\(\\)\\.$#"
+			message: "#^Call to an undefined static method App\\\\Models\\\\Faq\\:\\:create\\(\\)\\.$#"
 			count: 1
-			path: app/Http/Controllers/API/FaqController.php
-
-		-
-			message: "#^Class App\\\\Models\\\\FAQ referenced with incorrect case\\: App\\\\Models\\\\Faq\\.$#"
-			count: 6
 			path: app/Http/Controllers/API/FaqController.php
 
 		-
@@ -481,13 +476,8 @@ parameters:
 			path: app/Http/Controllers/API/StaffController.php
 
 		-
-			message: "#^Call to an undefined static method App\\\\Models\\\\FAQ\\:\\:create\\(\\)\\.$#"
+			message: "#^Call to an undefined static method App\\\\Models\\\\Faq\\:\\:create\\(\\)\\.$#"
 			count: 1
-			path: app/Http/Controllers/Admin/FAQController.php
-
-		-
-			message: "#^Class App\\\\Models\\\\FAQ referenced with incorrect case\\: App\\\\Models\\\\Faq\\.$#"
-			count: 6
 			path: app/Http/Controllers/Admin/FAQController.php
 
 		-
@@ -976,13 +966,8 @@ parameters:
 			path: app/Http/Controllers/ExportController.php
 
 		-
-			message: "#^Call to an undefined static method App\\\\Models\\\\FAQ\\:\\:where\\(\\)\\.$#"
+			message: "#^Call to an undefined static method App\\\\Models\\\\Faq\\:\\:where\\(\\)\\.$#"
 			count: 1
-			path: app/Http/Controllers/FAQController.php
-
-		-
-			message: "#^Class App\\\\Models\\\\FAQ referenced with incorrect case\\: App\\\\Models\\\\Faq\\.$#"
-			count: 2
 			path: app/Http/Controllers/FAQController.php
 
 		-
@@ -1431,11 +1416,6 @@ parameters:
 			path: app/Models/Business.php
 
 		-
-			message: "#^Class App\\\\Models\\\\FAQ referenced with incorrect case\\: App\\\\Models\\\\Faq\\.$#"
-			count: 1
-			path: app/Models/Business.php
-
-		-
 			message: "#^Method App\\\\Models\\\\Business\\:\\:appointments\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\HasMany does not specify its types\\: TRelatedModel, TDeclaringModel$#"
 			count: 1
 			path: app/Models/Business.php
@@ -1781,17 +1761,7 @@ parameters:
 			path: app/Models/Dienstleistung.php
 
 		-
-			message: "#^Property App\\\\Models\\\\FAQ\\:\\:\\$casts type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: app/Models/FAQ.php
-
-		-
 			message: "#^Class App\\\\Models\\\\Faq uses generic trait Illuminate\\\\Database\\\\Eloquent\\\\Factories\\\\HasFactory but does not specify its types\\: TFactory$#"
-			count: 1
-			path: app/Models/Faq.php
-
-		-
-			message: "#^Method App\\\\Models\\\\Faq\\:\\:kunde\\(\\) return type with generic class Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\BelongsTo does not specify its types\\: TRelatedModel, TDeclaringModel$#"
 			count: 1
 			path: app/Models/Faq.php
 
