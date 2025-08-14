@@ -1,0 +1,46 @@
+name: cd
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_KEY:  ${{ secrets.DEPLOY_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip if secrets missing
+        if: ${{ env.DEPLOY_HOST == '' || env.DEPLOY_USER == '' || env.DEPLOY_KEY == '' }}
+        run: |
+          echo "Skipping deploy: missing secrets DEPLOY_HOST/DEPLOY_USER/DEPLOY_KEY"
+          exit 0
+
+      - name: Write SSH key
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          printf "Host %s\n\tStrictHostKeyChecking no\n" "${DEPLOY_HOST}" >> ~/.ssh/config
+
+      - name: Deploy to server
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" '
+            set -euo pipefail
+            cd /var/www/api-gateway
+            git fetch origin
+            git checkout main
+            git pull --ff-only
+            if [ -x scripts/netcup-deploy.sh ]; then
+              bash scripts/netcup-deploy.sh
+            else
+              composer install --no-dev --prefer-dist --optimize-autoloader
+              php artisan migrate --force
+              php artisan config:cache
+              php artisan route:cache || true
+            fi
+          '
