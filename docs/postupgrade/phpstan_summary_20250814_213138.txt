@@ -1,0 +1,1 @@
+phpstan RC=1

@@ -1,0 +1,3 @@
+STAN_RC=1
+TEST_RC=0
+Hinweis: phpstan.neon inkludiert Baseline; .dist unverändert

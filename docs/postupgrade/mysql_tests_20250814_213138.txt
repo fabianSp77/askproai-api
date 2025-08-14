@@ -1,0 +1,342 @@
+
+   WARN  Metadata found in doc-comment for method Tests\Feature\ExampleTest::root_returns_not_found(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead.
+
+   FAIL  Tests\Feature\Auth\AuthenticationTest
+  ⨯ login screen can be rendered
+  ⨯ users can authenticate using the login screen
+  ⨯ users can not authenticate with invalid password
+  ⨯ users can logout
+
+   FAIL  Tests\Feature\Auth\EmailVerificationTest
+  ⨯ email verification screen can be rendered
+  ⨯ email can be verified
+  ⨯ email is not verified with invalid hash
+
+   FAIL  Tests\Feature\Auth\PasswordConfirmationTest
+  ⨯ confirm password screen can be rendered
+  ⨯ password can be confirmed
+  ⨯ password is not confirmed with invalid password
+
+   FAIL  Tests\Feature\Auth\PasswordResetTest
+  ⨯ reset password link screen can be rendered
+  ⨯ reset password link can be requested
+  ⨯ reset password screen can be rendered
+  ⨯ password can be reset with valid token
+
+   FAIL  Tests\Feature\Auth\PasswordUpdateTest
+  ⨯ password can be updated
+  ⨯ correct password must be provided to update password
+
+   FAIL  Tests\Feature\Auth\RegistrationTest
+  ⨯ registration screen can be rendered
+  ⨯ new users can register
+
+   FAIL  Tests\Feature\ExampleTest
+  ⨯ root returns not found                                               0.06s  
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\AuthenticationTest > login scr…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\AuthenticationTest > users can…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\AuthenticationTest > users can…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\AuthenticationTest > users can…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\EmailVerificationTest > email…   QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\EmailVerificationTest > email…   QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\EmailVerificationTest > email…   QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\PasswordConfirmationTest > con…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\PasswordConfirmationTest > pas…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\PasswordConfirmationTest > pas…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\PasswordResetTest > reset pass…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\PasswordResetTest > reset pass…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\PasswordResetTest > reset pass…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\PasswordResetTest > password c…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\PasswordUpdateTest > password…   QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\PasswordUpdateTest > correct p…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\RegistrationTest > registratio…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\Auth\RegistrationTest > new users c…  QueryException   
+  SQLSTATE[HY000] [1044] Access denied for user 'askproai_user'@'localhost' to database 'testing_20250814_213138' (Connection: mysql, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:824
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕ 
+  ➜ 824▕             throw new QueryException(
+    825▕                 $this->getName(), $query, $this->prepareBindings($bindings), $e
+    826▕             );
+    827▕         }
+    828▕     }
+
+
+  ────────────────────────────────────────────────────────────────────────────  
+   FAILED  Tests\Feature\ExampleTest > root returns not found                   
+  Expected response status code [404] but received 200.
+Failed asserting that 200 is identical to 404.
+
+  at tests/Feature/ExampleTest.php:12
+      8▕ {
+      9▕     /** @test */
+     10▕     public function root_returns_not_found(): void
+     11▕     {
+  ➜  12▕         $this->get('/')->assertStatus(404);
+     13▕     }
+     14▕ }
+     15▕
+
+
+  Tests:    19 failed, [2m13 pending[22m (1 assertions)
+  Duration: 1.07s
+
