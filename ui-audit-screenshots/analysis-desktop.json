@@ -1,0 +1,261 @@
+{
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "navigation": {
+    "nav": {
+      "exists": true,
+      "position": {
+        "x": 320,
+        "y": 0,
+        "width": 1600,
+        "height": 64
+      },
+      "styles": {
+        "position": "static",
+        "zIndex": "auto",
+        "display": "flex",
+        "visibility": "visible",
+        "overflow": "visible",
+        "transform": "none"
+      },
+      "classes": "flex h-16 items-center gap-x-4 bg-white px-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 md:px-6 lg:px-8",
+      "isVisible": true,
+      "overlapping": [
+        {
+          "tag": "HTML",
+          "classes": "fi min-h-screen",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1920,
+            "height": 4665
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "BODY",
+          "classes": "fi-body fi-panel-admin min-h-screen bg-gray-50 font-normal text-gray-950 antialiased dark:bg-gray-950 dark:text-white",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1920,
+            "height": 4665
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-layout flex min-h-screen w-full flex-row-reverse overflow-x-clip",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1920,
+            "height": 4665
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-main-ctn w-screen flex-1 flex-col opacity-0",
+          "position": {
+            "x": 320,
+            "y": 0,
+            "width": 1600,
+            "height": 4665
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-topbar sticky top-0 z-20 overflow-x-clip",
+          "position": {
+            "x": 320,
+            "y": 0,
+            "width": 1600,
+            "height": 64
+          },
+          "zIndex": "20"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-no pointer-events-none fixed inset-4 z-50 mx-auto flex gap-3 items-end flex-col-reverse justify-end",
+          "position": {
+            "x": 16,
+            "y": 16,
+            "width": 1888,
+            "height": 1048
+          },
+          "zIndex": "50"
+        }
+      ]
+    },
+    "aside": {
+      "exists": true,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 1080
+      },
+      "styles": {
+        "position": "sticky",
+        "zIndex": "0",
+        "display": "flex",
+        "visibility": "visible",
+        "overflow": "visible",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "classes": "fi-sidebar fixed inset-y-0 start-0 z-30 flex flex-col h-screen content-start bg-white transition-all dark:bg-gray-900 lg:z-0 lg:bg-transparent lg:shadow-none lg:ring-0 lg:transition-none dark:lg:bg-transparent lg:translate-x-0 rtl:lg:-translate-x-0 fi-main-sidebar fi-sidebar-open w-[--sidebar-width] translate-x-0 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10 rtl:-translate-x-0 lg:sticky",
+      "isVisible": true,
+      "overlapping": [
+        {
+          "tag": "HTML",
+          "classes": "fi min-h-screen",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1920,
+            "height": 4665
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "BODY",
+          "classes": "fi-body fi-panel-admin min-h-screen bg-gray-50 font-normal text-gray-950 antialiased dark:bg-gray-950 dark:text-white",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1920,
+            "height": 4665
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-layout flex min-h-screen w-full flex-row-reverse overflow-x-clip",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 1920,
+            "height": 4665
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "overflow-x-clip",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 320,
+            "height": 64
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "HEADER",
+          "classes": "fi-sidebar-header flex h-16 items-center bg-white px-6 ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 lg:shadow-sm",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 320,
+            "height": 64
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "",
+          "position": {
+            "x": 24,
+            "y": 22,
+            "width": 86.265625,
+            "height": 20
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "A",
+          "classes": "",
+          "position": {
+            "x": 24,
+            "y": 22,
+            "width": 86.265625,
+            "height": 20
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-logo flex text-xl font-bold leading-5 tracking-tight text-gray-950 dark:text-white",
+          "position": {
+            "x": 24,
+            "y": 22,
+            "width": 86.265625,
+            "height": 20
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "NAV",
+          "classes": "fi-sidebar-nav flex-grow flex flex-col gap-y-7 overflow-y-auto overflow-x-hidden px-6 py-8",
+          "position": {
+            "x": 0,
+            "y": 64,
+            "width": 320,
+            "height": 1016
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "UL",
+          "classes": "fi-sidebar-nav-groups -mx-2 flex flex-col gap-y-7",
+          "position": {
+            "x": 16,
+            "y": 96,
+            "width": 273,
+            "height": 40
+          },
+          "zIndex": "auto"
+        }
+      ]
+    }
+  },
+  "issues": [],
+  "navigationLinks": [
+    {
+      "text": "AskProAI",
+      "href": "https://api.askproai.de/admin/login",
+      "position": {
+        "x": 24,
+        "y": 22,
+        "width": 86.265625,
+        "height": 20
+      },
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "inline"
+      }
+    },
+    {
+      "text": "Dashboard",
+      "href": "https://api.askproai.de/admin",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "flex"
+      }
+    }
+  ]
+}

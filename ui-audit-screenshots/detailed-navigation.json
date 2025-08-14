@@ -1,0 +1,406 @@
+{
+  "allNavElements": [
+    {
+      "selector": "nav",
+      "index": 0,
+      "tag": "NAV",
+      "classes": "flex h-16 items-center gap-x-4 bg-white px-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 md:px-6 lg:px-8",
+      "text": "Seitenleiste ausklappen\n            \n        \n        \n  \n\n        \n            \n\n            \n                    \n                Seitenleiste einklappen",
+      "position": {
+        "x": 320,
+        "y": 0,
+        "width": 1600,
+        "height": 64
+      },
+      "styles": {
+        "position": "static",
+        "display": "flex",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": "nav",
+      "index": 1,
+      "tag": "NAV",
+      "classes": "fi-pagination grid grid-cols-[1fr_auto_1fr] items-center gap-x-3 fi-simple fi-ta-pagination px-3 py-3 sm:px-6",
+      "text": "5\n                            \n                                                    \n                                10\n                            \n                                                    ",
+      "position": {
+        "x": 512,
+        "y": 1749,
+        "width": 1216,
+        "height": 61
+      },
+      "styles": {
+        "position": "static",
+        "display": "grid",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": "nav",
+      "index": 2,
+      "tag": "NAV",
+      "classes": "fi-pagination grid grid-cols-[1fr_auto_1fr] items-center gap-x-3 fi-simple fi-ta-pagination px-3 py-3 sm:px-6",
+      "text": "5\n                            \n                                                    \n                                10\n                            \n                                                    ",
+      "position": {
+        "x": 512,
+        "y": 2570,
+        "width": 1216,
+        "height": 61
+      },
+      "styles": {
+        "position": "static",
+        "display": "grid",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": "nav",
+      "index": 3,
+      "tag": "NAV",
+      "classes": "fi-pagination grid grid-cols-[1fr_auto_1fr] items-center gap-x-3 fi-simple fi-ta-pagination px-3 py-3 sm:px-6",
+      "text": "5\n                            \n                                                    \n                                10\n                            \n                                                    ",
+      "position": {
+        "x": 512,
+        "y": 3555,
+        "width": 1216,
+        "height": 61
+      },
+      "styles": {
+        "position": "static",
+        "display": "grid",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": "nav",
+      "index": 4,
+      "tag": "NAV",
+      "classes": "fi-sidebar-nav flex-grow flex flex-col gap-y-7 overflow-y-auto overflow-x-hidden px-6 py-8",
+      "text": "Dashboard\n        \n\n            \n\n    \n            \n\n                    \n\n        \n            var collapsedGroups = JSON.parse(\n                localStorage.getItem('collapsedGroups'),\n            )",
+      "position": {
+        "x": 0,
+        "y": 64,
+        "width": 320,
+        "height": 1016
+      },
+      "styles": {
+        "position": "static",
+        "display": "flex",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": "aside",
+      "index": 0,
+      "tag": "ASIDE",
+      "classes": "fi-sidebar fixed inset-y-0 start-0 z-30 flex flex-col h-screen content-start bg-white transition-all dark:bg-gray-900 lg:z-0 lg:bg-transparent lg:shadow-none lg:ring-0 lg:transition-none dark:lg:bg-transparent lg:translate-x-0 rtl:lg:-translate-x-0 fi-main-sidebar fi-sidebar-open w-[--sidebar-width] translate-x-0 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10 rtl:-translate-x-0 lg:sticky",
+      "text": "AskProAI\n        \n    \n            \n\n                    \n                            \n\n            \n                    \n    \n\n    \n        \n\n        \n        \n                            \n    \n    \n",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 1080
+      },
+      "styles": {
+        "position": "sticky",
+        "display": "flex",
+        "visibility": "visible",
+        "zIndex": "0",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      }
+    },
+    {
+      "selector": "ul li a",
+      "index": 0,
+      "tag": "A",
+      "classes": "fi-sidebar-item-button relative flex items-center justify-center gap-x-3 rounded-lg px-2 py-2 outline-none transition duration-75 hover:bg-gray-100 focus-visible:bg-gray-100 dark:hover:bg-white/5 dark:focus-visible:bg-white/5 bg-gray-100 dark:bg-white/5",
+      "text": "Dashboard",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "styles": {
+        "position": "relative",
+        "display": "flex",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": "[role=\"navigation\"]",
+      "index": 0,
+      "tag": "NAV",
+      "classes": "fi-pagination grid grid-cols-[1fr_auto_1fr] items-center gap-x-3 fi-simple fi-ta-pagination px-3 py-3 sm:px-6",
+      "text": "5\n                            \n                                                    \n                                10\n                            \n                                                    ",
+      "position": {
+        "x": 512,
+        "y": 1749,
+        "width": 1216,
+        "height": 61
+      },
+      "styles": {
+        "position": "static",
+        "display": "grid",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": "[role=\"navigation\"]",
+      "index": 1,
+      "tag": "NAV",
+      "classes": "fi-pagination grid grid-cols-[1fr_auto_1fr] items-center gap-x-3 fi-simple fi-ta-pagination px-3 py-3 sm:px-6",
+      "text": "5\n                            \n                                                    \n                                10\n                            \n                                                    ",
+      "position": {
+        "x": 512,
+        "y": 2570,
+        "width": 1216,
+        "height": 61
+      },
+      "styles": {
+        "position": "static",
+        "display": "grid",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": "[role=\"navigation\"]",
+      "index": 2,
+      "tag": "NAV",
+      "classes": "fi-pagination grid grid-cols-[1fr_auto_1fr] items-center gap-x-3 fi-simple fi-ta-pagination px-3 py-3 sm:px-6",
+      "text": "5\n                            \n                                                    \n                                10\n                            \n                                                    ",
+      "position": {
+        "x": 512,
+        "y": 3555,
+        "width": 1216,
+        "height": 61
+      },
+      "styles": {
+        "position": "static",
+        "display": "grid",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": ".fi-sidebar-nav",
+      "index": 0,
+      "tag": "NAV",
+      "classes": "fi-sidebar-nav flex-grow flex flex-col gap-y-7 overflow-y-auto overflow-x-hidden px-6 py-8",
+      "text": "Dashboard\n        \n\n            \n\n    \n            \n\n                    \n\n        \n            var collapsedGroups = JSON.parse(\n                localStorage.getItem('collapsedGroups'),\n            )",
+      "position": {
+        "x": 0,
+        "y": 64,
+        "width": 320,
+        "height": 1016
+      },
+      "styles": {
+        "position": "static",
+        "display": "flex",
+        "visibility": "visible",
+        "zIndex": "auto",
+        "transform": "none"
+      }
+    },
+    {
+      "selector": ".fi-sidebar",
+      "index": 0,
+      "tag": "ASIDE",
+      "classes": "fi-sidebar fixed inset-y-0 start-0 z-30 flex flex-col h-screen content-start bg-white transition-all dark:bg-gray-900 lg:z-0 lg:bg-transparent lg:shadow-none lg:ring-0 lg:transition-none dark:lg:bg-transparent lg:translate-x-0 rtl:lg:-translate-x-0 fi-main-sidebar fi-sidebar-open w-[--sidebar-width] translate-x-0 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10 rtl:-translate-x-0 lg:sticky",
+      "text": "AskProAI\n        \n    \n            \n\n                    \n                            \n\n            \n                    \n    \n\n    \n        \n\n        \n        \n                            \n    \n    \n",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 1080
+      },
+      "styles": {
+        "position": "sticky",
+        "display": "flex",
+        "visibility": "visible",
+        "zIndex": "0",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      }
+    }
+  ],
+  "menuItems": [
+    {
+      "selector": ".fi-sidebar-nav a",
+      "index": 0,
+      "tag": "A",
+      "text": "Dashboard",
+      "href": "https://api.askproai.de/admin",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "isVisible": true,
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "flex"
+      }
+    },
+    {
+      "selector": ".fi-sidebar-nav li",
+      "index": 0,
+      "tag": "LI",
+      "text": "Dashboard",
+      "href": "",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "isVisible": true,
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "flex"
+      }
+    },
+    {
+      "selector": ".fi-sidebar-nav li",
+      "index": 1,
+      "tag": "LI",
+      "text": "Dashboard",
+      "href": "",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "isVisible": true,
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "flex"
+      }
+    },
+    {
+      "selector": "nav ul li",
+      "index": 0,
+      "tag": "LI",
+      "text": "Dashboard",
+      "href": "",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "isVisible": true,
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "flex"
+      }
+    },
+    {
+      "selector": "nav ul li",
+      "index": 1,
+      "tag": "LI",
+      "text": "Dashboard",
+      "href": "",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "isVisible": true,
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "flex"
+      }
+    },
+    {
+      "selector": "aside ul li",
+      "index": 0,
+      "tag": "LI",
+      "text": "Dashboard",
+      "href": "",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "isVisible": true,
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "flex"
+      }
+    },
+    {
+      "selector": "aside ul li",
+      "index": 1,
+      "tag": "LI",
+      "text": "Dashboard",
+      "href": "",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "isVisible": true,
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "flex"
+      }
+    }
+  ],
+  "sidebarState": {
+    "exists": true,
+    "classes": "fi-sidebar fixed inset-y-0 start-0 z-30 flex flex-col h-screen content-start bg-white transition-all dark:bg-gray-900 lg:z-0 lg:bg-transparent lg:shadow-none lg:ring-0 lg:transition-none dark:lg:bg-transparent lg:translate-x-0 rtl:lg:-translate-x-0 fi-main-sidebar fi-sidebar-open w-[--sidebar-width] translate-x-0 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10 rtl:-translate-x-0 lg:sticky",
+    "position": {
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 1080
+    },
+    "styles": {
+      "position": "sticky",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "visibility": "visible",
+      "display": "flex",
+      "zIndex": "0"
+    },
+    "isOpen": true,
+    "isVisible": true
+  },
+  "possibleMenus": []
+}

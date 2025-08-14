@@ -1,0 +1,305 @@
+{
+  "viewport": {
+    "width": 375,
+    "height": 667
+  },
+  "navigation": {
+    "nav": {
+      "exists": true,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "width": 375,
+        "height": 64
+      },
+      "styles": {
+        "position": "static",
+        "zIndex": "auto",
+        "display": "flex",
+        "visibility": "visible",
+        "overflow": "visible",
+        "transform": "none"
+      },
+      "classes": "flex h-16 items-center gap-x-4 bg-white px-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 md:px-6 lg:px-8",
+      "isVisible": true,
+      "overlapping": [
+        {
+          "tag": "HTML",
+          "classes": "fi min-h-screen",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 3134
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "BODY",
+          "classes": "fi-body fi-panel-admin min-h-screen bg-gray-50 font-normal text-gray-950 antialiased dark:bg-gray-950 dark:text-white",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 3134
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-layout flex min-h-screen w-full flex-row-reverse overflow-x-clip",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 3134
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-main-ctn w-screen flex-1 flex-col opacity-0",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 3134
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-topbar sticky top-0 z-20 overflow-x-clip",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 64
+          },
+          "zIndex": "20"
+        },
+        {
+          "tag": "BUTTON",
+          "classes": "fi-icon-btn relative flex items-center justify-center rounded-lg outline-none transition duration-75 focus-visible:ring-2 -m-1.5 h-9 w-9 text-gray-400 hover:text-gray-500 focus-visible:ring-primary-600 dark:text-gray-500 dark:hover:text-gray-400 dark:focus-visible:ring-primary-500 fi-color-gray fi-topbar-close-sidebar-btn lg:hidden",
+          "position": {
+            "x": 10,
+            "y": 14,
+            "width": 36,
+            "height": 36
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "SPAN",
+          "classes": "sr-only",
+          "position": {
+            "x": 27.5,
+            "y": 31.5,
+            "width": 1,
+            "height": 1
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "svg",
+          "classes": {},
+          "position": {
+            "x": 16,
+            "y": 20,
+            "width": 24,
+            "height": 24
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "path",
+          "classes": {},
+          "position": {
+            "x": 22,
+            "y": 26,
+            "width": 12,
+            "height": 12
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-sidebar-close-overlay fixed inset-0 z-30 bg-gray-950/50 transition duration-500 dark:bg-gray-950/75 lg:hidden",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 667
+          },
+          "zIndex": "30"
+        }
+      ]
+    },
+    "aside": {
+      "exists": true,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "width": 320,
+        "height": 667
+      },
+      "styles": {
+        "position": "fixed",
+        "zIndex": "30",
+        "display": "flex",
+        "visibility": "visible",
+        "overflow": "visible",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)"
+      },
+      "classes": "fi-sidebar fixed inset-y-0 start-0 z-30 flex flex-col h-screen content-start bg-white transition-all dark:bg-gray-900 lg:z-0 lg:bg-transparent lg:shadow-none lg:ring-0 lg:transition-none dark:lg:bg-transparent lg:translate-x-0 rtl:lg:-translate-x-0 fi-main-sidebar fi-sidebar-open w-[--sidebar-width] translate-x-0 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10 rtl:-translate-x-0 lg:sticky",
+      "isVisible": true,
+      "overlapping": [
+        {
+          "tag": "HTML",
+          "classes": "fi min-h-screen",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 3134
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "BODY",
+          "classes": "fi-body fi-panel-admin min-h-screen bg-gray-50 font-normal text-gray-950 antialiased dark:bg-gray-950 dark:text-white",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 3134
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-layout flex min-h-screen w-full flex-row-reverse overflow-x-clip",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 3134
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-main-ctn w-screen flex-1 flex-col opacity-0",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 3134
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "DIV",
+          "classes": "fi-topbar sticky top-0 z-20 overflow-x-clip",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 64
+          },
+          "zIndex": "20"
+        },
+        {
+          "tag": "NAV",
+          "classes": "flex h-16 items-center gap-x-4 bg-white px-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 md:px-6 lg:px-8",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 375,
+            "height": 64
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "BUTTON",
+          "classes": "fi-icon-btn relative flex items-center justify-center rounded-lg outline-none transition duration-75 focus-visible:ring-2 -m-1.5 h-9 w-9 text-gray-400 hover:text-gray-500 focus-visible:ring-primary-600 dark:text-gray-500 dark:hover:text-gray-400 dark:focus-visible:ring-primary-500 fi-color-gray fi-topbar-close-sidebar-btn lg:hidden",
+          "position": {
+            "x": 10,
+            "y": 14,
+            "width": 36,
+            "height": 36
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "SPAN",
+          "classes": "sr-only",
+          "position": {
+            "x": 27.5,
+            "y": 31.5,
+            "width": 1,
+            "height": 1
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "svg",
+          "classes": {},
+          "position": {
+            "x": 16,
+            "y": 20,
+            "width": 24,
+            "height": 24
+          },
+          "zIndex": "auto"
+        },
+        {
+          "tag": "path",
+          "classes": {},
+          "position": {
+            "x": 22,
+            "y": 26,
+            "width": 12,
+            "height": 12
+          },
+          "zIndex": "auto"
+        }
+      ]
+    }
+  },
+  "issues": [],
+  "navigationLinks": [
+    {
+      "text": "AskProAI",
+      "href": "https://api.askproai.de/admin/login",
+      "position": {
+        "x": 24,
+        "y": 22,
+        "width": 86.265625,
+        "height": 20
+      },
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "inline"
+      }
+    },
+    {
+      "text": "Dashboard",
+      "href": "https://api.askproai.de/admin",
+      "position": {
+        "x": 16,
+        "y": 96,
+        "width": 273,
+        "height": 40
+      },
+      "isClickable": true,
+      "styles": {
+        "pointerEvents": "auto",
+        "visibility": "visible",
+        "display": "flex"
+      }
+    }
+  ]
+}

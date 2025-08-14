@@ -1,0 +1,99 @@
+/* EMERGENCY FIX for Issue #578 - Overlapping Navigation */
+
+/* Reset all navigation positioning */
+.fi-sidebar {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 16rem !important; /* 256px standard width */
+    height: 100vh !important;
+    z-index: 40 !important;
+    background: white !important;
+    border-right: 1px solid #e5e7eb !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+/* Fix main content area */
+.fi-main {
+    margin-left: 16rem !important; /* Match sidebar width */
+    min-height: 100vh !important;
+    width: calc(100% - 16rem) !important;
+}
+
+/* Fix overlapping nav items */
+.fi-sidebar-nav {
+    padding: 1rem !important;
+}
+
+.fi-sidebar-item {
+    margin-bottom: 0.25rem !important;
+    display: block !important;
+}
+
+.fi-sidebar-item a {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0.75rem 1rem !important;
+    width: 100% !important;
+    border-radius: 0.5rem !important;
+    text-decoration: none !important;
+}
+
+/* Fix text overlap */
+.fi-sidebar-item-label {
+    margin-left: 0.75rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Fix icons */
+.fi-sidebar-item-icon {
+    flex-shrink: 0 !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 1024px) {
+    .fi-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .fi-sidebar.fi-sidebar-open {
+        transform: translateX(0);
+    }
+    
+    .fi-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}
+
+/* Remove any duplicate or overlapping elements */
+.fi-sidebar::before,
+.fi-sidebar::after {
+    display: none !important;
+}
+
+/* Fix z-index stacking */
+.fi-topbar {
+    z-index: 30 !important;
+}
+
+.fi-sidebar-overlay {
+    z-index: 35 !important;
+}
+
+/* Ensure proper spacing */
+.fi-sidebar-header {
+    padding: 1rem !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+.fi-sidebar-footer {
+    padding: 1rem !important;
+    border-top: 1px solid #e5e7eb !important;
+}

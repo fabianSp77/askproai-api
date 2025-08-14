@@ -1,0 +1,15 @@
+{
+  "hasNav": true,
+  "navText": "\n        \n\n                    \n                    \n                Seitenleiste ausklappen\n            \n        \n        \n  \n\n        \n            \n\n            \n                    \n               ",
+  "linkCount": 2,
+  "links": [
+    {
+      "text": "AskProAI",
+      "href": "https://api.askproai.de/admin/login"
+    },
+    {
+      "text": "Dashboard",
+      "href": "https://api.askproai.de/admin"
+    }
+  ]
+}
