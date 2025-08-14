@@ -1,0 +1,345 @@
+=== CONTEXT ===
+/var/www/api-gateway
+rescue/filament-restore-20250813-213619
+
+=== 1) GIT SUMMARY ===
+fbe34ad6 fix: Navigation overlap issue #578 - CSS Grid layout fix
+09d53007 fix: Add missing Filament Resources to fix navigation (Issue #577)
+9430301a feat: Filament rescue with Flowbite modern theme
+86b1dac6 fix: AdminV2 portal authentication and CSRF issues
+1397610f feat: Add AdminV2 portal with JSON API authentication
+379385f4 Alle weiteren lokalen Änderungen sichern
+d93482d7 Lokale Änderungen: Stand vor Codex-Synchronisierung
+49ce592c Gitignore-Konflikt behoben, Dashboard-Widgets final restored
+b19cdf45 Restore alle gefundenen Widget-Dateien aus Backup
+72fd7ee3 Restore Dashboard-Widgets und Features aus Backup, take 2
+8fe2bee1 Update .gitignore (exclude .env and .bak files)
+00dc0f86 Update .gitignore (exclude all .env and .bak files)
+caafde45 Entferne versehentlich gepushte .env-Dateien mit Secrets
+7770fb02 Alle Änderungen lokal für Deployment committet (Dashboard-Widgets, Backend, Ressourcen etc.)
+875529f2 test: skip SET foreign_key_checks migration on SQLite
+c2e9a692 test: skip branch→customer FK migration on SQLite
+20039cb5 test: skip MODIFY migration on SQLite + adjust ExampleTest
+0d42ab05 ci: run tests sequentially (no ParaTest required)
+1758c224 test: add ParaTest 7.x for parallel test runner
+ad7696dd chore(ci): add workflow_dispatch trigger
+ab1ed86f chore(ci): trigger after secret purge
+e27be17f feat: clean snapshot after secret purge
+A	ADMINV2_SOLUTION_REPORT.md
+A	COMPREHENSIVE_UI_AUDIT_REPORT_2025-08-13.md
+A	UI_AUDIT_REPORT.md
+A	app/Filament/Resources/AppointmentResource.php
+A	app/Filament/Resources/AppointmentResource/Pages/CreateAppointment.php
+A	app/Filament/Resources/AppointmentResource/Pages/EditAppointment.php
+A	app/Filament/Resources/AppointmentResource/Pages/ListAppointments.php
+A	app/Filament/Resources/CallResource.php
+A	app/Filament/Resources/CallResource/Pages/CreateCall.php
+A	app/Filament/Resources/CallResource/Pages/EditCall.php
+A	app/Filament/Resources/CallResource/Pages/ListCalls.php
+A	app/Filament/Resources/ServiceResource.php
+A	app/Filament/Resources/ServiceResource/Pages/CreateService.php
+A	app/Filament/Resources/ServiceResource/Pages/EditService.php
+A	app/Filament/Resources/ServiceResource/Pages/ListServices.php
+A	app/Filament/Widgets/AskproaiOverview.php
+A	app/Helpers/PortalDisplayHelper.php
+A	app/Helpers/features.php
+A	app/Http/Controllers/AdminV2/Auth/ApiLoginController.php
+A	audit.mjs
+A	backups/2025-06-17/disabled_files/cache.backup/packages.php
+A	backups/2025-06-17/disabled_files/cache.backup/services.php
+A	demonstrate-adminv2-solution.sh
+A	detailed-audit.mjs
+A	navigation-test.mjs
+M	package-lock.json
+M	package.json
+A	public/browser-test.html
+A	public/css/navigation-fix-emergency.css
+A	public/css/navigation-repair.css
+A	public/emergency-login.php
+A	public/navigation-test.html
+M	resources/css/filament/admin/theme.css
+A	resources/js/flowbite.js
+A	resources/views/adminv2/auth/login-api.blade.php
+A	resources/views/adminv2/portal-standalone.blade.php
+A	resources/views/filament/widgets/askproai-overview.blade.php
+A	routes/adminv2.php
+M	routes/web.php
+A	simple-audit.mjs
+A	simple-ui-test.js
+M	tailwind.config.js
+A	test-json-api-login.sh
+A	test_login.cjs
+A	ui-audit-puppeteer.js
+A	ui-audit-screenshots/01-login.png
+A	ui-audit-screenshots/02-dashboard.png
+A	ui-audit-screenshots/analysis-desktop.json
+A	ui-audit-screenshots/analysis-mobile.json
+A	ui-audit-screenshots/analysis-tablet.json
+A	ui-audit-screenshots/dashboard-desktop.png
+A	ui-audit-screenshots/dashboard-mobile.png
+A	ui-audit-screenshots/dashboard-tablet.png
+A	ui-audit-screenshots/data.json
+A	ui-audit-screenshots/detailed-navigation.json
+A	ui-audit-screenshots/navigation-focus.png
+A	ui-comprehensive-test.js
+M	vite.config.js
+
+=== 2) CAL.COM v2 CHECKS ===
+README.md:113:CALCOM_BASE_URL=https://api.cal.com/v1
+app/Console/Commands/SyncCalcomEventTypes.php.bak.1746781601:16:                     ->get('https://api.cal.com/v1/event-types?limit=200');
+app/Console/Commands/SyncCalcomEventTypes.php.bak.1746781788:16:                     ->get('https://api.cal.com/v1/event-types?limit=200');
+app/Console/Commands/SyncCalcomEventTypes.php.bak.1746781880:16:                     ->get('https://api.cal.com/v1/event-types?limit=200');
+app/Console/Commands/SyncCalcomEventTypes.php.bak.1746783952:16:                     ->get('https://api.cal.com/v1/event-types?limit=200');
+app/Http/Controllers/CalComController.php:17:        $this->baseUrl = env('CALCOM_BASE_URL', 'https://api.cal.com/v1');
+app/Http/Controllers/DirectCalcomController.php:10:    const BASE_URL = 'https://api.cal.com/v1';
+askproai_server_analyse_20250324.txt:383:CALCOM_BASE_URL=https://api.cal.com/v1
+config/services.php:11:        'base_url'       => env('CALCOM_BASE_URL', 'https://api.cal.com/v1'),
+config/services.php.bak.2025-05-01-1744:40:        'base_url' => 'https://api.cal.com/v1',
+config/services.php.bak.2025-05-14-1810:27:        'base_url'      => env('CALCOM_BASE_URL', 'https://api.cal.com/v1'),
+config/services.php.bak.2025-05-15-1411:25:        'base_url'       => env('CALCOM_BASE_URL', 'https://api.cal.com/v1'),
+Schwerwiegend: die Option '-n' muss vor den Argumenten kommen, die keine Optionen sind
+WARN: cal-api-version not found in code
+Schwerwiegend: die Option '-n' muss vor den Argumenten kommen, die keine Optionen sind
+WARN: Bearer auth not found in code
+docs/api/cal.com-v2-migration.md:10:- **v2:** Bearer token authentication (`Authorization: Bearer cal_live_xyz`)
+docs/api/cal.com-v2-migration.md:13:All v2 API calls require the `cal-api-version` header:
+docs/api/cal.com-v2-migration.md:15:cal-api-version: 2025-01-07
+docs/api/cal.com-v2-migration.md:26:# Cal.com Integration - API v2 (Bearer Auth)
+docs/api/cal.com-v2-migration.md:37:  -H "cal-api-version: 2025-01-07" \
+docs/api/cal.com-v2-migration.md:38:  -H "Authorization: Bearer cal_live_your_api_key_here" \
+docs/api/cal.com-v2-migration.md:60:    'cal-api-version: 2025-01-07',
+docs/api/cal.com-v2-migration.md:61:    'Authorization: Bearer ' . $apiKey
+docs/api/cal.com-v2-migration.md:69:- [x] Add Bearer token authentication
+docs/api/cal.com-v2-migration.md:70:- [x] Add cal-api-version header
+docs/api/cal.com-v2-migration.md:79:- Bearer token authentication follows OAuth 2.0 standards
+docs/api/cal.com-v2-migration.md:90:  -H "cal-api-version: 2025-01-07" \
+docs/api/cal.com-v2-migration.md:91:  -H "Authorization: Bearer $CALCOM_API_KEY" \
+docs/api/cal.com-v2-migration.md:100:2. Remove Bearer authentication headers
+docs/api/README.md:5:**Authentication:** Bearer Token / API Key
+docs/api/README.md:23:### Bearer Token
+docs/api/README.md:25:Authorization: Bearer YOUR_API_TOKEN
+docs/api/README.md:198:curl -H "Authorization: Bearer YOUR_TOKEN" \
+docs/api/README.md:882:curl -H "Authorization: Bearer YOUR_TOKEN" \
+docs/api/README.md:905:  -H "Authorization: Bearer YOUR_TOKEN" \
+docs/migration/api-auth-deprecation-plan.md:18:| Bearer Token (`Authorization: Bearer`) | ✅ High | 25% | **Active** |
+docs/migration/api-auth-deprecation-plan.md:37:X-Preferred-Method: Authorization: Bearer
+docs/migration/api-auth-deprecation-plan.md:119:Authorization: Bearer admin_token
+docs/migration/api-auth-deprecation-plan.md:143:            'bearer_token_supported' => $this->testBearerAuth($tenant),
+docs/security/api-key-management.md:44:### 2.1 Recommended: Bearer Token
+docs/security/api-key-management.md:46:Authorization: Bearer ask_8x7v2p9k1m3n4b5c6v7a8s9d0f1g2h3j4k5l
+docs/security/api-key-management.md:157:Authorization: Bearer admin_token
+docs/security/api-key-management.md:171:Authorization: Bearer admin_token
+docs/security/api-key-management.md:182:Authorization: Bearer admin_token
+docs/security/api-key-management.md:192:Authorization: Bearer admin_token
+docs/security/api-key-management.md:213:- **Use Bearer token** authentication method
+WARN: docs do not show v2 headers
+
+=== 3) NGINX HARDENING CHECKS ===
+NGINX_CONF=/etc/nginx/sites-available/askproai.conf
+18:    location / {
+19:        try_files $uri $uri/ /index.php?$query_string;
+23:    location ~ \.php$ {
+33:    location ~ /\.ht {
+34:        deny all;
+38:    location ~ \.md$ {
+43:    location /admin/documentation/ {
+47:        try_files $uri $uri/index.html =404;
+50:    location /admin/documentation/assets/ {
+52:        try_files $uri $uri/ =404;
+WARN: sensitive file denies not detected
+
+=== 4) BACKUP RESTORE DOC/CMD CHECKS ===
+insgesamt 2588
+-rw-r--r-- 1 root root   61440 14. Aug 00:00 alternatives.tar.0
+-rw-r--r-- 1 root root    2769 12. Aug 00:00 alternatives.tar.1.gz
+-rw-r--r-- 1 root root    2767 11. Aug 00:00 alternatives.tar.2.gz
+-rw-r--r-- 1 root root    2561 10. Aug 00:00 alternatives.tar.3.gz
+-rw-r--r-- 1 root root    2564  9. Aug 00:00 alternatives.tar.4.gz
+-rw-r--r-- 1 root root    2558  8. Aug 00:00 alternatives.tar.5.gz
+-rw-r--r-- 1 root root    2562  7. Aug 00:00 alternatives.tar.6.gz
+-rw-r--r-- 1 root root   68208 13. Aug 13:26 apt.extended_states.0
+-rw-r--r-- 1 root root    7249 10. Aug 13:54 apt.extended_states.1.gz
+-rw-r--r-- 1 root root    6809  2. Jul 20:06 apt.extended_states.2.gz
+-rw-r--r-- 1 root root    1332  2. Jul 07:45 apt.extended_states.3.gz
+-rw-r--r-- 1 root root    1021  2. Jul 06:52 apt.extended_states.4.gz
+drwxr-xr-x 5 root root    4096 10. Aug 08:17 askproai
+-rw-r--r-- 1 root root       0 14. Aug 00:00 dpkg.arch.0
+-rw-r--r-- 1 root root      32 11. Aug 00:00 dpkg.arch.1.gz
+-rw-r--r-- 1 root root      32  5. Aug 00:00 dpkg.arch.2.gz
+-rw-r--r-- 1 root root      32 15. Jul 00:00 dpkg.arch.3.gz
+-rw-r--r-- 1 root root      32  3. Jul 00:00 dpkg.arch.4.gz
+-rw-r--r-- 1 root root     186  1. Aug 2023  dpkg.diversions.0
+-rw-r--r-- 1 root root     126  1. Aug 2023  dpkg.diversions.1.gz
+-rw-r--r-- 1 root root     126  1. Aug 2023  dpkg.diversions.2.gz
+-rw-r--r-- 1 root root     126  1. Aug 2023  dpkg.diversions.3.gz
+-rw-r--r-- 1 root root     126  1. Aug 2023  dpkg.diversions.4.gz
+-rw-r--r-- 1 root root     175  2. Jul 07:47 dpkg.statoverride.0
+-rw-r--r-- 1 root root     159  2. Jul 07:47 dpkg.statoverride.1.gz
+-rw-r--r-- 1 root root     159  2. Jul 07:47 dpkg.statoverride.2.gz
+-rw-r--r-- 1 root root     159  2. Jul 07:47 dpkg.statoverride.3.gz
+-rw-r--r-- 1 root root     159  2. Jul 07:47 dpkg.statoverride.4.gz
+-rw-r--r-- 1 root root 1294777 13. Aug 13:26 dpkg.status.0
+-rw-r--r-- 1 root root  304733 10. Aug 13:54 dpkg.status.1.gz
+-rw-r--r-- 1 root root  265972  4. Aug 21:18 dpkg.status.2.gz
+-rw-r--r-- 1 root root  264632 14. Jul 11:18 dpkg.status.3.gz
+-rw-r--r-- 1 root root  264562  2. Jul 20:07 dpkg.status.4.gz
+drwxr-xr-x 2 root root    4096 10. Aug 22:19 flowbite
+LAST_SQL=
+INFO: no .sql.gz found
+WARN: restore command not documented
+
+=== 5) DSGVO DOC CHECKS ===
+docs/security/nginx-hardening.md
+docs/security/api-key-management.md
+docs/security/admin-network-restrictions.md
+docs/api/README.md
+docs/endkunden/faq-endkunden.md
+docs/endkunden/anleitung-ki-telefonassistent.md
+docs/analytics/kpi-measurement.md
+docs/compliance/dsgvo-compliance.md
+docs/deployment/checklist.md
+docs/deployment/backup-strategie.md
+docs/migration/api-auth-deprecation-plan.md
+
+=== 6) KPI / ANALYTICS DOC CHECKS ===
+docs/security/nginx-hardening.md
+docs/security/api-key-management.md
+docs/api/README.md
+docs/analytics/kpi-measurement.md
+docs/compliance/dsgvo-compliance.md
+docs/deployment/production.md
+docs/deployment/rollback-strategy.md
+docs/deployment/checklist.md
+docs/deployment/backup-strategie.md
+docs/migration/api-auth-deprecation-plan.md
+
+=== 7) API KEY SECURITY (HASHED) CHECKS ===
+app/Models/Tenant.php:29:                $tenant->api_key_hash = Hash::make($plainApiKey);
+app/Models/Tenant.php:51:        $this->api_key_hash = Hash::make($plainApiKey);
+
+=== 8) ADMIN NETWORK RESTRICTION CHECKS ===
+WARN: admin network restriction middleware not detected
+34:        deny all;
+
+=== 9) API AUTH DEPRECATION PLAN DOC CHECKS ===
+docs/security/api-key-management.md
+docs/api/cal.com-v2-migration.md
+docs/api/README.md
+docs/migration/api-auth-deprecation-plan.md
+
+=== 10) ROUTES vs. API DOC ===
+
+  GET|HEAD  / ................................................................ 
+  GET|HEAD  admin filament.admin.pages.dashboard › App\Filament\Admin\Pages\D…
+  GET|HEAD  admin/appointments filament.admin.resources.appointments.index › …
+  GET|HEAD  admin/appointments/create filament.admin.resources.appointments.c…
+  GET|HEAD  admin/appointments/{record}/edit filament.admin.resources.appoint…
+  GET|HEAD  admin/benutzer filament.admin.resources.benutzer.index › App\Fila…
+  GET|HEAD  admin/benutzer/create filament.admin.resources.benutzer.create › …
+  GET|HEAD  admin/benutzer/{record}/edit filament.admin.resources.benutzer.ed…
+  GET|HEAD  admin/calls filament.admin.resources.calls.index › App\Filament\A…
+  GET|HEAD  admin/calls/create filament.admin.resources.calls.create › App\Fi…
+  GET|HEAD  admin/calls/{record}/edit filament.admin.resources.calls.edit › A…
+  GET|HEAD  admin/companies filament.admin.resources.companies.index › App\Fi…
+  GET|HEAD  admin/companies/create filament.admin.resources.companies.create …
+  GET|HEAD  admin/companies/{record}/edit filament.admin.resources.companies.…
+  GET|HEAD  admin/customers filament.admin.resources.customers.index › App\Fi…
+  GET|HEAD  admin/customers/create filament.admin.resources.customers.create …
+  GET|HEAD  admin/customers/{record}/edit filament.admin.resources.customers.…
+  GET|HEAD  admin/filialen filament.admin.resources.filialen.index › App\Fila…
+  GET|HEAD  admin/filialen/create filament.admin.resources.filialen.create › …
+  GET|HEAD  admin/filialen/{record}/edit filament.admin.resources.filialen.ed…
+  GET|HEAD  admin/integrations filament.admin.resources.integrations.index › …
+  GET|HEAD  admin/integrations/create filament.admin.resources.integrations.c…
+  GET|HEAD  admin/integrations/{record}/edit filament.admin.resources.integra…
+  GET|HEAD  admin/leistungen filament.admin.resources.leistungen.index › App\…
+  GET|HEAD  admin/leistungen/create filament.admin.resources.leistungen.creat…
+  GET|HEAD  admin/leistungen/{record}/edit filament.admin.resources.leistunge…
+  GET|HEAD  admin/login ... filament.admin.auth.login › Filament\Pages › Login
+  POST      admin/logout filament.admin.auth.logout › Filament\Http › LogoutC…
+  GET|HEAD  admin/mitarbeiter filament.admin.resources.mitarbeiter.index › Ap…
+  GET|HEAD  admin/mitarbeiter/create filament.admin.resources.mitarbeiter.cre…
+  GET|HEAD  admin/mitarbeiter/{record}/edit filament.admin.resources.mitarbei…
+  GET|HEAD  admin/services filament.admin.resources.services.index › App\Fila…
+  GET|HEAD  admin/services/create filament.admin.resources.services.create › …
+  GET|HEAD  admin/services/{record}/edit filament.admin.resources.services.ed…
+  GET|HEAD  admin/staff filament.admin.resources.staff.index › App\Filament\R…
+  GET|HEAD  admin/staff/create filament.admin.resources.staff.create › App\Fi…
+  GET|HEAD  admin/staff/{record}/edit filament.admin.resources.staff.edit › A…
+  GET|HEAD  admin/working-hours filament.admin.resources.working-hours.index …
+  GET|HEAD  admin/working-hours/create filament.admin.resources.working-hours…
+  GET|HEAD  admin/working-hours/{record}/edit filament.admin.resources.workin…
+  GET|HEAD  api/calcom/webhook .................. CalcomWebhookController@ping
+  POST      api/calcom/webhook ................ CalcomWebhookController@handle
+  POST      api/retell/webhook .............. RetellWebhookController@__invoke
+  GET|HEAD  filament/exports/{export}/download filament.exports.download › Fi…
+  GET|HEAD  filament/imports/{import}/failed-rows/download filament.imports.f…
+  GET|HEAD  horizon/api/batches horizon.jobs-batches.index › Laravel\Horizon …
+  POST      horizon/api/batches/retry/{id} horizon.jobs-batches.retry › Larav…
+  GET|HEAD  horizon/api/batches/{id} horizon.jobs-batches.show › Laravel\Hori…
+  GET|HEAD  horizon/api/jobs/completed horizon.completed-jobs.index › Laravel…
+  GET|HEAD  horizon/api/jobs/failed horizon.failed-jobs.index › Laravel\Horiz…
+  GET|HEAD  horizon/api/jobs/failed/{id} horizon.failed-jobs.show › Laravel\H…
+  GET|HEAD  horizon/api/jobs/pending horizon.pending-jobs.index › Laravel\Hor…
+  POST      horizon/api/jobs/retry/{id} horizon.retry-jobs.show › Laravel\Hor…
+  GET|HEAD  horizon/api/jobs/silenced horizon.silenced-jobs.index › Laravel\H…
+  GET|HEAD  horizon/api/jobs/{id} horizon.jobs.show › Laravel\Horizon › JobsC…
+  GET|HEAD  horizon/api/masters horizon.masters.index › Laravel\Horizon › Mas…
+  GET|HEAD  horizon/api/metrics/jobs horizon.jobs-metrics.index › Laravel\Hor…
+  GET|HEAD  horizon/api/metrics/jobs/{id} horizon.jobs-metrics.show › Laravel…
+  GET|HEAD  horizon/api/metrics/queues horizon.queues-metrics.index › Laravel…
+  GET|HEAD  horizon/api/metrics/queues/{id} horizon.queues-metrics.show › Lar…
+  GET|HEAD  horizon/api/monitoring horizon.monitoring.index › Laravel\Horizon…
+  POST      horizon/api/monitoring horizon.monitoring.store › Laravel\Horizon…
+  GET|HEAD  horizon/api/monitoring/{tag} horizon.monitoring-tag.paginate › La…
+  DELETE    horizon/api/monitoring/{tag} horizon.monitoring-tag.destroy › Lar…
+  GET|HEAD  horizon/api/stats horizon.stats.index › Laravel\Horizon › Dashboa…
+  GET|HEAD  horizon/api/workload horizon.workload.index › Laravel\Horizon › W…
+  GET|HEAD  horizon/{view?} horizon.index › Laravel\Horizon › HomeController@…
+  GET|HEAD  livewire/livewire.min.js Livewire\Mechanisms › FrontendAssets@ret…
+  GET|HEAD  livewire/livewire.min.js.map Livewire\Mechanisms › FrontendAssets…
+  GET|HEAD  livewire/preview-file/{filename} livewire.preview-file › Livewire…
+  POST      livewire/update livewire.update › Livewire\Mechanisms › HandleReq…
+  POST      livewire/upload-file livewire.upload-file › Livewire\Features › F…
+  GET|HEAD  oauth/authorize passport.authorizations.authorize › Laravel\Passp…
+  POST      oauth/authorize passport.authorizations.approve › Laravel\Passpor…
+  DELETE    oauth/authorize passport.authorizations.deny › Laravel\Passport  …
+  GET|HEAD  oauth/clients passport.clients.index › Laravel\Passport › ClientC…
+  POST      oauth/clients passport.clients.store › Laravel\Passport › ClientC…
+  PUT       oauth/clients/{client_id} passport.clients.update › Laravel\Passp…
+  DELETE    oauth/clients/{client_id} passport.clients.destroy › Laravel\Pass…
+  GET|HEAD  oauth/personal-access-tokens passport.personal.tokens.index › Lar…
+  POST      oauth/personal-access-tokens passport.personal.tokens.store › Lar…
+  DELETE    oauth/personal-access-tokens/{token_id} passport.personal.tokens.…
+  GET|HEAD  oauth/scopes passport.scopes.index › Laravel\Passport › ScopeCont…
+  POST      oauth/token passport.token › Laravel\Passport › AccessTokenContro…
+  POST      oauth/token/refresh passport.token.refresh › Laravel\Passport › T…
+  GET|HEAD  oauth/tokens passport.tokens.index › Laravel\Passport › Authorize…
+  DELETE    oauth/tokens/{token_id} passport.tokens.destroy › Laravel\Passpor…
+  GET|HEAD  sanctum/csrf-cookie sanctum.csrf-cookie › Laravel\Sanctum › CsrfC…
+  GET|HEAD  storage/{path} ..................................... storage.local
+  GET|HEAD  up ............................................................... 
+
+                                                           Showing [90] routes
+
+WARN: API.md endpoints not found
+
+=== 11) TESTS ===
+
+   ERROR  Command "test" is not defined. Did you mean one of these?  
+
+  ⇂ make:test  
+  ⇂ schedule:test  
+
+
+   ERROR  Command "test" is not defined. Did you mean one of these?  
+
+  ⇂ make:test  
+  ⇂ schedule:test  
+
+
+=== 12) FINAL SECRET SCAN (excluding .env*) ===
+OK: no secrets found
+
+=== DONE ===
+Report saved to: /tmp/PR_EVIDENCE_20250814_125919.txt
