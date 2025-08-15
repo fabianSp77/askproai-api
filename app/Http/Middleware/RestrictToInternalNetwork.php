@@ -66,9 +66,7 @@ class RestrictToInternalNetwork
         ]);
 
         // Return 404 to avoid revealing admin panel existence
-        return response()->view('errors.404', [
-            'message' => 'The requested resource could not be found.'
-        ], 404);
+        return response('Not Found', 404);
     }
 
     /**
@@ -93,7 +91,7 @@ class RestrictToInternalNetwork
             if (!empty($value)) {
                 // Handle comma-separated list of IPs (take first one)
                 $ip = trim(explode(',', $value)[0]);
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
                     return $ip;
                 }
             }

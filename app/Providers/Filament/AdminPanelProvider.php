@@ -12,7 +12,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')->path('admin')
             ->login()->default()
-            ->authGuard('web')->middleware(['web', 'restrict.internal'])
+            ->authGuard('web')->middleware(['web'])
             ->discoverPages(
                 in: app_path('Filament/Admin/Pages'),
                 for: 'App\\Filament\\Admin\\Pages'
@@ -25,18 +25,6 @@ class AdminPanelProvider extends PanelProvider
                 in: app_path('Filament/Admin/Resources'),
                 for: 'App\\Filament\\Admin\\Resources'
             )
-            ->viteTheme('resources/css/filament/admin/theme.css')
-            // State-of-the-Art: Reihenfolge selbst festlegen!
-            ->widgets([
-                \App\Filament\Widgets\StatsOverviewWidget::class,
-                \App\Filament\Widgets\SystemStatus::class,
-                \App\Filament\Widgets\AppointmentsWidget::class,
-                \App\Filament\Widgets\CustomerChartWidget::class,
-                \App\Filament\Widgets\CompaniesChartWidget::class,
-                \App\Filament\Widgets\LatestCustomersWidget::class,
-                \App\Filament\Widgets\RecentAppointments::class,
-                \App\Filament\Widgets\RecentCalls::class,
-                \App\Filament\Widgets\ActivityLogWidget::class,
-            ]);
+            ->viteTheme('resources/css/filament/admin/theme.css');
     }
 }
